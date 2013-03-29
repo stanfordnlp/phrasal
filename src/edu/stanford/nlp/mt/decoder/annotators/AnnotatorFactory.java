@@ -8,12 +8,12 @@ package edu.stanford.nlp.mt.decoder.annotators;
  */
 public class AnnotatorFactory {
 	  @SuppressWarnings("unchecked")
-	  static public <TK, FV> Class<Annotator<TK>> loadAnnotator(
+	  static public <TK, FV> Class<Annotator<TK,FV>> loadAnnotator(
 	      String name) {
-	   Class<Annotator<TK>> annotatorClass = null;
+	   Class<Annotator<TK,FV>> annotatorClass = null;
 
 	    try {
-	      annotatorClass = (Class<Annotator<TK>>) ClassLoader
+	      annotatorClass = (Class<Annotator<TK,FV>>) ClassLoader
 	          .getSystemClassLoader().loadClass(name);
 	    } catch (ClassNotFoundException c) {
 	      System.err.printf("Failed to load featurizer %s (class name: %s)\n",

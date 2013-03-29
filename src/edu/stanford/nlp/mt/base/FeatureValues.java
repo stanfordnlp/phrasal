@@ -11,9 +11,19 @@ import edu.stanford.nlp.stats.Counter;
  * 
  */
 public class FeatureValues {
-  private FeatureValues() {
-  }
+  
+  private FeatureValues() {}
 
+  /**
+   * Return true of the feature is cacheable and false otherwise.
+   * 
+   * @param feature
+   * @return
+   */
+  public static <T> boolean isCacheable(FeatureValue<T> feature) {
+    return feature instanceof CacheableFeatureValue;
+  }
+  
   /**
    * 
    * @param <T>

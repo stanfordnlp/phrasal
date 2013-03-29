@@ -43,7 +43,7 @@ public class StepFunctionDistortionFeaturizer<TK> implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<TK>> options,
+  public void initialize(List<ConcreteTranslationOption<TK,String>> options,
       Sequence<TK> foreign, Index<String> featureIndex) {
   }
 

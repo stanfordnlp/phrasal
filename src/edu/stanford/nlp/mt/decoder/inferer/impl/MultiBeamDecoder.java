@@ -177,7 +177,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     if (DEBUG)
       System.err.println("Generating Translation Options");
 
-    List<ConcreteTranslationOption<TK>> options = phraseGenerator
+    List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
         .translationOptions(foreign, targets, translationId, scorer);
 
     System.err.printf("Translation options: %d\n", options.size());
@@ -186,7 +186,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int sentId = translationId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
-        for (ConcreteTranslationOption<TK> option : options)
+        for (ConcreteTranslationOption<TK,FV> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
               option.abstractOption.foreign, option.abstractOption.translation,
               option.isolationScore, option.foreignCoverage);
@@ -202,10 +202,10 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               options.size());
     }
 
-    OptionGrid<TK> optionGrid = new OptionGrid<TK>(options, foreign);
+    OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, foreign);
 
     // insert initial hypothesis
-    List<List<ConcreteTranslationOption<TK>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK>>>();
+    List<List<ConcreteTranslationOption<TK,FV>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK,FV>>>();
     allOptions.add(options);
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign,
         heuristic, scorer, annotators, allOptions);
@@ -225,7 +225,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     long decodeLoopTime = -System.currentTimeMillis();
     for (int i = 0; i < beams.length; i++) {
 
-      // List<ConcreteTranslationOption<TK>> applicableOptions =
+      // List<ConcreteTranslationOption<TK,FV>> applicableOptions =
       // ConcreteTranslationOptions.filterOptions(HypothesisBeams.coverageIntersection(beams[i]),
       // foreign.size(), options);
       if (DEBUG) {
@@ -288,7 +288,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
         System.err.printf("Annotator output for best hypothesis (%d vs %d)\n", bestHyp.annotators.size(), annotators.size());
         System.err.println("===========================================");
-        for (Annotator<TK> annotator: bestHyp.annotators) {
+        for (Annotator<TK,FV> annotator: bestHyp.annotators) {
         	System.err.println(annotator);
         }
         try {
@@ -367,7 +367,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   private int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-      int foreignSz, OptionGrid<TK> optionGrid,
+      int foreignSz, OptionGrid<TK,FV> optionGrid,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       int translationId) {
     int optionsApplied = 0;
@@ -438,12 +438,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           // System.err.printf("okay\n");
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
-          List<ConcreteTranslationOption<TK>> applicableOptions = optionGrid
+          List<ConcreteTranslationOption<TK,FV>> applicableOptions = optionGrid
               .get(startPos, endPos);
           if (applicableOptions == null)
             continue;
 
-          for (ConcreteTranslationOption<TK> option : applicableOptions) {
+          for (ConcreteTranslationOption<TK,FV> option : applicableOptions) {
             // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
             // // TODO: put back
 

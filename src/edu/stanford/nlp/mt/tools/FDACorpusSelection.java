@@ -44,7 +44,7 @@ public class FDACorpusSelection {
    
    static public void usage() {
       err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
-          "(bitext.en) (bitext.fr) (test.fr) (selected.en) (selected.fr) " +
+          "(bitext.tgt) (bitext.src) (test.src) (selected.tgt) (selected.src) " +
           "[selected.ln]");
    }
    

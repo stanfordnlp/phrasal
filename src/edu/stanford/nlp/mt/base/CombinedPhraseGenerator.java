@@ -35,12 +35,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   final Type type;
   final int phraseLimit;
 
-  private void addToMap(ConcreteTranslationOption<TK> opt,
-      Map<CoverageSet, List<ConcreteTranslationOption<TK>>> optsMap) {
-    List<ConcreteTranslationOption<TK>> optList = optsMap
+  private void addToMap(ConcreteTranslationOption<TK,FV> opt,
+      Map<CoverageSet, List<ConcreteTranslationOption<TK,FV>>> optsMap) {
+    List<ConcreteTranslationOption<TK,FV>> optList = optsMap
         .get(opt.foreignCoverage);
     if (optList == null) {
-      optList = new LinkedList<ConcreteTranslationOption<TK>>();
+      optList = new LinkedList<ConcreteTranslationOption<TK,FV>>();
       optsMap.put(opt.foreignCoverage, optList);
     }
     optList.add(opt);
@@ -51,9 +51,9 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   }
 
   @Override
-  public List<ConcreteTranslationOption<TK>> translationOptions(
+  public List<ConcreteTranslationOption<TK,FV>> translationOptions(
       Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer) {
-    Map<CoverageSet, List<ConcreteTranslationOption<TK>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK>>>();
+    Map<CoverageSet, List<ConcreteTranslationOption<TK,FV>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK,FV>>>();
     
     if (DEBUG) {
       System.err.printf(
@@ -70,7 +70,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
             System.err.println("PhraseGenerator: "+phraseGenerator.getClass().getCanonicalName());
          }
          try {
-           for (ConcreteTranslationOption<TK> opt : phraseGenerator
+           for (ConcreteTranslationOption<TK,FV> opt : phraseGenerator
               .translationOptions(sequence, targets, translationId, scorer)) {
              if (DEBUG) {
                System.err.println("  opt: " + opt);
@@ -90,10 +90,10 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
           System.err.printf("Generator: %s\n", phraseGenerator.getClass()
               .getName());
         }
-        List<ConcreteTranslationOption<TK>> potentialOptions = phraseGenerator
+        List<ConcreteTranslationOption<TK,FV>> potentialOptions = phraseGenerator
             .translationOptions(sequence, targets, translationId, scorer);
         BitSet novelCoverage = new CoverageSet(sequence.size());
-        for (ConcreteTranslationOption<TK> option : potentialOptions) {
+        for (ConcreteTranslationOption<TK,FV> option : potentialOptions) {
           if (DEBUG) {
             System.err.println("  opt: " + option);
           }
@@ -118,27 +118,27 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     if (DEBUG) { 
        System.err.println("All preCutOpts:");
        System.err.println("===============");
-       for (List<ConcreteTranslationOption<TK>> preCutOpts : optsMap.values()) {       
+       for (List<ConcreteTranslationOption<TK,FV>> preCutOpts : optsMap.values()) {       
              System.err.println(preCutOpts);
        }   
     }
     
-    List<ConcreteTranslationOption<TK>> cutoffOpts = new LinkedList<ConcreteTranslationOption<TK>>();
-    for (List<ConcreteTranslationOption<TK>> preCutOpts : optsMap.values()) {
+    List<ConcreteTranslationOption<TK,FV>> cutoffOpts = new LinkedList<ConcreteTranslationOption<TK,FV>>();
+    for (List<ConcreteTranslationOption<TK,FV>> preCutOpts : optsMap.values()) {
       int sz = preCutOpts.size();
       if (sz <= phraseLimit) {
         cutoffOpts.addAll(preCutOpts);
         continue;
       }
 
-      List<ConcreteTranslationOption<TK>> preCutOptsArray = new ArrayList<ConcreteTranslationOption<TK>>(
+      List<ConcreteTranslationOption<TK,FV>> preCutOptsArray = new ArrayList<ConcreteTranslationOption<TK,FV>>(
           preCutOpts);
 
       Collections.sort(preCutOptsArray);
 
       if (DEBUG) {
         System.err.println("Sorted Options");
-        for (ConcreteTranslationOption<TK> opt : preCutOpts) {
+        for (ConcreteTranslationOption<TK,FV> opt : preCutOpts) {
           System.err.println("--");
           System.err.printf("%s => %s : %f\n", opt.abstractOption.foreign,
               opt.abstractOption.translation, opt.isolationScore);
@@ -226,11 +226,11 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       String[] tokens = line.split("\\s+");
       SimpleSequence<IString> sequence = new SimpleSequence<IString>(
           IStrings.toIStringArray(tokens));
-      List<ConcreteTranslationOption<IString>> options = ptGen
+      List<ConcreteTranslationOption<IString,String>> options = ptGen
           .translationOptions(sequence, null, -1, null);
       System.out.printf("Sequence: '%s'\n", sequence);
       System.out.println("Translation Options:\n");
-      for (ConcreteTranslationOption<IString> option : options) {
+      for (ConcreteTranslationOption<IString,String> option : options) {
         System.out.printf("\t%s -> %s coverage: %s score: %s\n",
             sequence.subsequence(option.foreignCoverage),
             option.abstractOption.translation, option.foreignCoverage,

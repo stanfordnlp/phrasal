@@ -18,6 +18,7 @@ if [ $# -ne 4 ]; then
     echo "  5  Pre-process dev set for OOVs"
     echo "  6  Decode test set"
     echo "  7  Output results file"
+    echo "  8  Generate a learning curve from an online run"
     exit 0
 fi
 VAR_FILE=$1
@@ -70,7 +71,7 @@ function extract {
 #
 # Prepare a file for decoding by removing OOVs. Also extract a vocabulary.
 #
-function prep_source {
+function prep-source {
     INFILE=$1
     OUTFILE=$2
     PTABLEDIR=$3
@@ -96,7 +97,7 @@ function tune-batch {
 	--phrasal-flags="" \
 	--java-flags="$JAVA_OPTS $DECODER_OPTS" \
 	--mert-java-flags="$JAVA_OPTS $MERT_OPTS" \
-	--nbest=$NBEST $TUNE_FILE $TUNE_REF \
+	--nbest=$TUNE_NBEST $TUNE_FILE $TUNE_REF \
 	$OBJECTIVE $TUNE_INI_FILE \
 	>& logs/"$TUNEDIR".log
 }
@@ -159,7 +160,7 @@ function make-ini-from-online-run {
 function decode {
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
 	-config-file "$RUNNAME".ini -moses-n-best-list true \
-	< $DECODE_FILE > "$RUNNAME".out 2> logs/"$RUNNAME".log
+	< $DECODE_FILE > "$RUNNAME".trans 2> logs/"$RUNNAME".log
 }
 
 #
@@ -172,7 +173,7 @@ function evaluate {
 	    | nbest2uniq \
 	    > "$RUNNAME"."$NBEST"best.uniq 2> /dev/null
     fi
-    cat "$RUNNAME".out | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
+    cat "$RUNNAME".trans | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
 
     # TODO Output Tune BLEU
 
@@ -181,6 +182,18 @@ function evaluate {
     # TODO Copy over the html from JavaNLP (if necesary)
 }
 
+#
+# Generate a learning curve from an online run
+#
+function create-learn-curve {
+    REFS=`ls "$REFDIR"/$DECODE_SET_NAME/ref* | tr '\n' ','`
+    java $JAVA_OPTS $DECODER_OPTS \
+	edu.stanford.nlp.mt.tools.OnlineLearningCurve \
+	"$RUNNAME".ini \
+	$DECODE_FILE \
+	$REFS \
+	"$TUNERUNNAME"*binwts | sort -n > "$RUNNAME".learn-curve
+}
 
 ######################################################################
 ######################################################################
@@ -221,7 +234,7 @@ do
     fi
     if [ $step -eq 2 ]; then
 	step-status $step
-	prep_source $TUNE_SET $TUNE_FILE $TUNE_PTABLE_DIR $TUNE_SET_NAME
+	prep-source $TUNE_SET $TUNE_FILE $TUNE_PTABLE_DIR $TUNE_SET_NAME
     fi
     if [ $step -eq 3 ]; then
 	step-status $step
@@ -237,7 +250,7 @@ do
     fi
     if [ $step -eq 5 ]; then
 	step-status $step
-	prep_source $DECODE_SET $DECODE_FILE $DECODE_PTABLE_DIR $DECODE_SET_NAME
+	prep-source $DECODE_SET $DECODE_FILE $DECODE_PTABLE_DIR $DECODE_SET_NAME
     fi
     if [ $step -eq 6 ]; then
 	step-status $step
@@ -251,5 +264,9 @@ do
     if [ $step -eq 7 ]; then
 	step-status $step
 	evaluate
+    fi
+    if [ $step -eq 8 ]; then
+	step-status $step
+	create-learn-curve
     fi
 done

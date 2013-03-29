@@ -356,7 +356,7 @@ public class Phrasal {
       discriminativeLMOrder = DEFAULT_DISCRIMINATIVE_LM_ORDER;
     }
 
-    List<Annotator<IString>> additionalAnnotators = new ArrayList<Annotator<IString>>();
+    List<Annotator<IString,String>> additionalAnnotators = new ArrayList<Annotator<IString,String>>();
     if (config.containsKey(ADDITIONAL_ANNOTATORS)) {
     	// todo make some general method that can parse both additional annotators
     	// and additional featurizers
@@ -364,13 +364,13 @@ public class Phrasal {
         String annotatorName = null;
         String args = null;
         for (String token : tokens) {
-          Annotator<IString> annotator = null;
+          Annotator<IString,String> annotator = null;
           if (annotatorName == null) {
             if (token.endsWith("()")) {
               String name = token.replaceFirst("\\(\\)$", "");
-              Class<Annotator<IString>> annotatorClass = AnnotatorFactory
+              Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
                   .loadAnnotator(name);
-              annotator = (Annotator<IString>) annotatorClass
+              annotator = (Annotator<IString,String>) annotatorClass
                   .newInstance();
               additionalAnnotators.add(annotator);
             } else if (token.contains("(")) {
@@ -386,7 +386,7 @@ public class Phrasal {
                     annotatorName, Arrays.toString(argsList));
                 Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
                     .loadFeaturizer(annotatorName);
-                annotator = (Annotator<IString>) featurizerClass
+                annotator = (Annotator<IString,String>) featurizerClass
                     .getConstructor(argsList.getClass()).newInstance(
                         new Object[] { argsList });
                 additionalAnnotators.add(annotator);
@@ -411,9 +411,9 @@ public class Phrasal {
               args = args.replaceAll("\\s+$", "");
               String[] argsList = args.split(",");
               System.err.printf("args: %s\n", Arrays.toString(argsList));
-              Class<Annotator<IString>> annotatorClass = AnnotatorFactory
+              Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
                   .loadAnnotator(annotatorName);
-              annotator = (Annotator<IString>) annotatorClass
+              annotator = (Annotator<IString,String>) annotatorClass
                   .getConstructor(argsList.getClass()).newInstance(
                       (Object) argsList);
               additionalAnnotators.add(annotator);
@@ -1226,6 +1226,44 @@ public class Phrasal {
   }
   
   /**
+   * Load an instance of phrasal from an ini file.
+   * 
+   * @param phrasalIniFile
+   * @throws IOException 
+   */
+  public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
+    Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
+    return loadDecoder(config);  
+  }
+
+  private static Phrasal loadDecoder(Map<String, List<String>> config) {
+    try {
+      Phrasal.initStaticMembers(config);
+      Phrasal phrasal = new Phrasal(config);
+      FlatPhraseTable.lockIndex();
+      return phrasal;
+      
+    } catch (IllegalArgumentException e) {
+      e.printStackTrace();
+    } catch (SecurityException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+    throw new RuntimeException("Could not load Phrasal from config file!");
+  }
+  
+  /**
    * Run Phrasal from the command line.
    * 
    * @param args
@@ -1251,9 +1289,7 @@ public class Phrasal {
 
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
         : readArgs(args);
-    initStaticMembers(config);
-    Phrasal p = new Phrasal(config);
-    FlatPhraseTable.lockIndex();
+    Phrasal p = Phrasal.loadDecoder(config);
     p.lockFeatureIndex();
     p.decodeFromConsole();
     p.shutdown();

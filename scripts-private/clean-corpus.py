@@ -86,7 +86,7 @@ def main():
     parser.add_argument('-m','--length-min',
                         dest='min_chars',
                         type=int,
-                        default=5,
+                        default=1,
                         help='Minimum line length (in characters).')
     args = parser.parse_args()
     

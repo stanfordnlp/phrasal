@@ -22,7 +22,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   }
 
   public DTUFeaturizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK> concreteOpt, int translationId, int dtuId) {
+      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId, int dtuId) {
     super(foreignSequence, concreteOpt, translationId,
         ((DTUOption<TK>) concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
@@ -50,7 +50,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   }
 
   @Override
-  protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
+  protected void augmentAlignments(ConcreteTranslationOption<TK,FV> concreteOpt) {
     /* effectively disable augmentAlignments */
   }
 

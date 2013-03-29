@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.tune;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -20,14 +18,12 @@ import java.util.logging.SimpleFormatter;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.BLEUOracleCost;
 import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
@@ -105,7 +101,7 @@ public class OnlineTuner {
   private boolean doParameterAveraging = false;
   
   // Weight vector for Phrasal
-  private Counter<String> wts;
+  private Counter<String> wtsAccumulator;
   private Index<String> featureIndex;
   private final int expectedNumFeatures;
 
@@ -124,8 +120,8 @@ public class OnlineTuner {
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
-    wts = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
-    logger.info("Initial weights: " + wts.toString());
+    wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
+    logger.info("Initial weights: " + wtsAccumulator.toString());
 
     // Load the tuning set
     tuneSource = IStrings.fileSplitToIStrings(srcFile);
@@ -134,7 +130,12 @@ public class OnlineTuner {
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
     
     // Load Phrasal
-    decoder = loadDecoder(phrasalIniFile);
+    try {
+      decoder = Phrasal.loadDecoder(phrasalIniFile);
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(-1);
+    }
     featureIndex = decoder.getFeatureIndex();
     logger.info("Loaded Phrasal from: " + phrasalIniFile);
     
@@ -142,40 +143,6 @@ public class OnlineTuner {
     // by OnlineTuner.
     optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
     logger.info("Loaded optimizer: " + optimizer.toString());
-  }
-  
-  /**
-   * Load an instance of phrasal from an ini file.
-   * 
-   * @param phrasalIniFile
-   * @return
-   */
-  private static Phrasal loadDecoder(String phrasalIniFile) {
-    try {
-      Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
-      Phrasal.initStaticMembers(config);
-      Phrasal phrasal = new Phrasal(config);
-      FlatPhraseTable.lockIndex();
-      return phrasal;
-      
-    } catch (IllegalArgumentException e) {
-      e.printStackTrace();
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InstantiationException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-    throw new RuntimeException("Could not load Phrasal from: " + phrasalIniFile);
   }
 
   /**
@@ -221,6 +188,7 @@ public class OnlineTuner {
       this.translationIds = translationIds;
       this.references = references;
       this.inputId = inputId;
+      // TODO(spenceg) This is bad since the decoder will copy the weights again
       this.weights = new OpenAddressCounter<String>(weights);
     }
   }
@@ -271,8 +239,12 @@ public class OnlineTuner {
     @Override
     public ProcessorOutput process(ProcessorInput input) {
       assert input.weights != null;
-      // Set the decoder weights and decode
+      // The decoder will copy the weight vector. Prevent updates in applyGradientUpdates() 
+      // to the weight vector while the decoder is copying it.
+      // TODO(spenceg) This lock causes deadlock??
+//      synchronized(input.weights) {
       decoder.getScorer(threadId).updateWeights(input.weights);
+//      }
       
       int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = 
@@ -282,6 +254,9 @@ public class OnlineTuner {
         // Online learning with gradient updates for each instance
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
+        // Garbage collect the decoder's weight vector
+        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
+
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestList, input.references.get(0), lossFunction);
         nbestLists.add(nbestList);
@@ -295,6 +270,9 @@ public class OnlineTuner {
               threadId);
           nbestLists.add(nbestList);
         }
+        // Garbage collect the decoder's weight vector
+        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
+
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, lossFunction);
       }
@@ -321,7 +299,7 @@ public class OnlineTuner {
    */
   private int applyGradientUpdatesTo(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
-      OnlineUpdateRule<String> updater, Map<Integer, List<RichTranslation<IString, String>>> nbestLists, 
+      OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
       boolean doExpectedBleu) {
     assert threadpool != null;
     assert currentWts != null;
@@ -332,13 +310,12 @@ public class OnlineTuner {
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
 
-      // Don't assume that the OnlineOptimizers that compute the gradient will populate the feature
-      // index.
-      featureIndex.addAll(result.gradient.keySet());
+      logger.info(String.format("Weight update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
+      logger.info(String.format("Weight update %d decoder feature index size: %d", updateStep, featureIndex.size()));
       
-      // Apply update rule
+      // Apply update rule. Don't let decoders copy the weight vector while it is being updated
       updater.update(currentWts, result.gradient, updateStep);
-      
+
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
@@ -348,7 +325,7 @@ public class OnlineTuner {
 
       // Accumulate for parameter averaging
       if (doParameterAveraging) {
-        wts.addAll(currentWts);
+        wtsAccumulator.addAll(currentWts);
       }
 
       // Add n-best lists from this update step
@@ -356,7 +333,8 @@ public class OnlineTuner {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int translationId = result.translationIds[i];
           assert ! nbestLists.containsKey(translationId);
-          nbestLists.put(translationId, result.nbestLists.get(i));
+          // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
+          nbestLists.put(translationId, result.nbestLists.get(i).get(0).translation);
         }
       }
     }
@@ -381,9 +359,9 @@ public class OnlineTuner {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
-    Counter<String> currentWts = new OpenAddressCounter<String>(wts, 1.0f);
-    // Clear the global weight vector, which we will use for parameter averaging.
-    wts.clear();
+    Counter<String> currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
+    // Clear the accumulator, which we will use for parameter averaging.
+    wtsAccumulator.clear();
     
     final int tuneSetSize = tuneSource.size();
     final int[] indices = ArrayMath.range(0, tuneSetSize);
@@ -402,8 +380,8 @@ public class OnlineTuner {
       logger.info("Start of epoch: " + epoch);
 
       // n-best lists. Purge for each epoch
-      Map<Integer,List<RichTranslation<IString, String>>> nbestLists = doExpectedBleu ? 
-          new HashMap<Integer,List<RichTranslation<IString, String>>>(tuneSetSize) : null;
+      Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
+          new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
 
       // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
       // to finish at the end of the epoch
@@ -413,13 +391,16 @@ public class OnlineTuner {
               new GradientProcessor(optimizer,lossFunction,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
+      Runtime r = Runtime.getRuntime();
       ArrayMath.shuffle(indices);
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
       for (int t = 0; t < numBatches; ++t) {
+        logger.info(String.format("Epoch %d batch %d memory free: %d  max: %d", epoch, t, r.freeMemory(), r.maxMemory()));
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
+        logger.info("Threadpool.status: " + wrapper.toString());
         updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
         
         if((t+1) % weightWriteOutInterval == 0) {
@@ -439,7 +420,7 @@ public class OnlineTuner {
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
-        currentWts = new OpenAddressCounter<String>(wts, 1.0f);
+        currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
         Counters.divideInPlace(currentWts, (epoch+1)*numBatches);
       }
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
@@ -449,7 +430,7 @@ public class OnlineTuner {
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
       double expectedBleu = 0.0;
       if (doExpectedBleu) {
-        expectedBleu = evaluate(currentWts, nbestLists, epoch);
+        expectedBleu = approximateBLEUObjective(nbestLists);
         logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
       }
       // Purge history if we're not picking the best weight vector
@@ -458,6 +439,27 @@ public class OnlineTuner {
     }
     
     saveFinalWeights(epochResults);
+  }
+
+  /**
+   * Sort the list of 1-best translations and score with BLEU.
+   * 
+   * @param nbestLists
+   * @param epoch
+   * @return
+   */
+  private double approximateBLEUObjective(Map<Integer, Sequence<IString>> nbestLists) {
+    assert nbestLists.keySet().size() == references.size();
+
+    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
+    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
+        .getIncrementalMetric();
+    Map<Integer, Sequence<IString>> sortedMap = 
+        new TreeMap<Integer, Sequence<IString>>(nbestLists);
+    for (Map.Entry<Integer, Sequence<IString>> entry : sortedMap.entrySet()) {
+      incMetric.add(new ScoredFeaturizedTranslation<IString,String>(entry.getValue(), null, 0.0));
+    }
+    return incMetric.score() * 100.0;
   }
 
   /**
@@ -499,49 +501,51 @@ public class OnlineTuner {
   /**
    * Calculate BLEU under a weight vector using a set of existing n-best lists.
    * 
+   * TODO(spenceg): This is the old MERT way of doing things. Doesn't scale to large data sets.
+   * 
    * @param currentWts
    * @param nbestLists
    * @return
    */
-  private double evaluate(Counter<String> currentWts,
-      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int epoch) {
-    assert currentWts != null && currentWts.size() > 0;
-    assert nbestLists.keySet().size() == references.size();
-
-    PrintStream nbestListWriter = writeNbestLists ? 
-        IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
-
-    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
-    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
-        .getIncrementalMetric();
-    Scorer<String> scorer = new StaticScorer(currentWts, featureIndex);
-    Map<Integer, List<RichTranslation<IString, String>>> sortedMap = 
-        new TreeMap<Integer, List<RichTranslation<IString, String>>>(nbestLists);
-    for (Map.Entry<Integer, List<RichTranslation<IString, String>>> entry : sortedMap.entrySet()) {
-      // Write n-best list to file
-      if (nbestListWriter != null) {
-        IOTools.writeNbest(entry.getValue(), entry.getKey(), true, nbestListWriter);
-      }
-
-      // Score n-best list under current weight vector
-      double bestScore = Double.NEGATIVE_INFINITY;
-      int bestIndex = Integer.MIN_VALUE;
-      int nbestIndex = 0;
-      for (RichTranslation<IString, String> translation : entry.getValue()) {
-        double score = scorer.getIncrementalScore(translation.features);
-        if (score > bestScore) {
-          bestScore = score;
-          bestIndex = nbestIndex;
-        }
-        ++nbestIndex;
-      }
-      incMetric.add(entry.getValue().get(bestIndex));
-    }
-    
-    if (nbestListWriter != null) nbestListWriter.close();
-
-    return incMetric.score() * 100.0;
-  }
+//  private double evaluate(Counter<String> currentWts,
+//      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int epoch) {
+//    assert currentWts != null && currentWts.size() > 0;
+//    assert nbestLists.keySet().size() == references.size();
+//
+//    PrintStream nbestListWriter = writeNbestLists ? 
+//        IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
+//
+//    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
+//    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
+//        .getIncrementalMetric();
+//    Scorer<String> scorer = new StaticScorer(currentWts, featureIndex);
+//    Map<Integer, List<RichTranslation<IString, String>>> sortedMap = 
+//        new TreeMap<Integer, List<RichTranslation<IString, String>>>(nbestLists);
+//    for (Map.Entry<Integer, List<RichTranslation<IString, String>>> entry : sortedMap.entrySet()) {
+//      // Write n-best list to file
+//      if (nbestListWriter != null) {
+//        IOTools.writeNbest(entry.getValue(), entry.getKey(), true, nbestListWriter);
+//      }
+//
+//      // Score n-best list under current weight vector
+//      double bestScore = Double.NEGATIVE_INFINITY;
+//      int bestIndex = Integer.MIN_VALUE;
+//      int nbestIndex = 0;
+//      for (RichTranslation<IString, String> translation : entry.getValue()) {
+//        double score = scorer.getIncrementalScore(translation.features);
+//        if (score > bestScore) {
+//          bestScore = score;
+//          bestIndex = nbestIndex;
+//        }
+//        ++nbestIndex;
+//      }
+//      incMetric.add(entry.getValue().get(bestIndex));
+//    }
+//    
+//    if (nbestListWriter != null) nbestListWriter.close();
+//
+//    return incMetric.score() * 100.0;
+//  }
 
   /**
    * Load multiple references for accurate expected BLEU evaluation during
@@ -626,9 +630,9 @@ public class OnlineTuner {
       return new MIRA1BestHopeFearOptimizer(optimizerFlags);
 
     } else if (optimizerAlg.equals("pro-sgd")) {
-      assert wts != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
+      assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
-      Counters.normalize(wts);
+      Counters.normalize(wtsAccumulator);
       return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
     } else {

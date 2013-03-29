@@ -41,7 +41,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   public static class PendingPhrase<TK, FV> implements
       Comparable<PendingPhrase<TK, FV>> {
 
-    public final ConcreteTranslationOption<TK> concreteOpt;
+    public final ConcreteTranslationOption<TK,FV> concreteOpt;
 
     public int segmentIdx; // Current segment of the translation option.
                            // For instance, segmentIdx=0 selects "ne" and
@@ -64,7 +64,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       this.futureCosts = old.futureCosts;
     }
 
-    public PendingPhrase(ConcreteTranslationOption<TK> concreteOpt,
+    public PendingPhrase(ConcreteTranslationOption<TK,FV> concreteOpt,
         int translationId, Hypothesis<TK, FV> hyp,
         CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
         int segmentIdx, int firstPosition, int lastPosition) {
@@ -274,7 +274,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     double score = 0.0;
 
     for (PendingPhrase<TK, FV> pendingPhrase : pendingPhrases) {
-      ConcreteTranslationOption<TK> opt = pendingPhrase.concreteOpt;
+      ConcreteTranslationOption<TK,FV> opt = pendingPhrase.concreteOpt;
       assert (opt.abstractOption instanceof DTUOption);
       DTUOption<TK> dtuOpt = (DTUOption<TK>) opt.abstractOption;
       for (int i = pendingPhrase.segmentIdx + 1; i < dtuOpt.dtus.length; ++i) {
@@ -329,7 +329,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
    * Constructor used for 1st segment of a discontinuous phrase.
    */
   public DTUHypothesis(int translationId,
-      ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
+      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
 
@@ -380,7 +380,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
   // Constructor used with successors:
   public DTUHypothesis(int translationId,
-      ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
+      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       PendingPhrase<TK, FV> currentPhrase, int currentSegmentIdx,
@@ -441,7 +441,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
   // Constructor used during nbest list generation:
   public DTUHypothesis(int translationId,
-      ConcreteTranslationOption<TK> translationOpt, int insertionPosition,
+      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, Hypothesis<TK, FV> nextHyp,
       CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
       SearchHeuristic<TK, FV> heuristic, Set<TranslationOption<TK>> seenOptions) {
@@ -536,7 +536,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
    * some pending phrases still need to be appended to translation.
    */
   private static <TK, FV> boolean hasPendingPhrases(
-      ConcreteTranslationOption<TK> translationOpt, Hypothesis<TK, FV> baseHyp,
+      ConcreteTranslationOption<TK,FV> translationOpt, Hypothesis<TK, FV> baseHyp,
       boolean firstSegmentInOpt, boolean lastSegmentInOpt) {
     boolean pendingPhrases = false;
 

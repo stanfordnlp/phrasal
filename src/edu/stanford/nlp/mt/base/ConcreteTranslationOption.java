@@ -10,16 +10,17 @@ import edu.stanford.nlp.mt.Phrasal;
  * 
  * @author danielcer
  * 
- * @param <T>
+ * @param <TK>
  */
-public class ConcreteTranslationOption<T> implements
-    Comparable<ConcreteTranslationOption<T>> {
+public class ConcreteTranslationOption<TK,FV> implements
+    Comparable<ConcreteTranslationOption<TK,FV>> {
 
-  public final TranslationOption<T> abstractOption;
+  public final TranslationOption<TK> abstractOption;
   public final CoverageSet foreignCoverage;
   public final String phraseTableName;
   public final int foreignPos;
   public final double isolationScore;
+  public final List<FeatureValue<FV>> cachedFeatureList;
 
   public enum LinearDistortionType {
     standard, first_contiguous_segment, last_contiguous_segment, closest_contiguous_segment, min_first_last_contiguous_segment, average_distance
@@ -36,42 +37,29 @@ public class ConcreteTranslationOption<T> implements
           .println("warning: standard linear distortion with DTU phrases.");
   }
 
-  public ConcreteTranslationOption(TranslationOption<T> abstractOption,
-      CoverageSet foreignCoverage, int foreignPos, String phraseTableName,
-      double isolationScore) {
-    this.abstractOption = abstractOption;
-    this.foreignCoverage = foreignCoverage;
-    this.foreignPos = foreignPos;
-    this.phraseTableName = phraseTableName;
-    this.isolationScore = isolationScore;
-  }
-
-  /**
-   * 
-   * @param <FV>
-   */
-  public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption,
+  public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet foreignCoverage,
-      IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<T> foreignSequence, String phraseTableName, int translationId) {
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+      Sequence<TK> foreignSequence, String phraseTableName, int translationId) {
     this.abstractOption = abstractOption;
     this.foreignCoverage = foreignCoverage;
     this.phraseTableName = phraseTableName;
     this.foreignPos = foreignCoverage.nextSetBit(0);
-    Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this,
+    Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, this,
         translationId);
     List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    for (FeatureValue<FV> feature : features) {
+      if (FeatureValues.isCacheable(feature))
+        cachedFeatureList.add(feature);
+    }
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
-  /**
-   * 
-   * @param <FV>
-   */
-  public <FV> ConcreteTranslationOption(TranslationOption<T> abstractOption,
+  public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet foreignCoverage,
-      IsolatedPhraseFeaturizer<T, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<T> foreignSequence, String phraseTableName, int translationId,
+      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+      Sequence<TK> foreignSequence, String phraseTableName, int translationId,
       boolean hasTargetGap) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);
     assert (hasTargetGap);
@@ -80,21 +68,27 @@ public class ConcreteTranslationOption<T> implements
     this.phraseTableName = phraseTableName;
     this.foreignPos = foreignCoverage.nextSetBit(0);
 
+    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    
     // TM scores:
     double totalScore = 0.0;
     {
-      Featurizable<T, FV> f = new Featurizable<T, FV>(foreignSequence, this,
+      Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence, this,
           translationId);
       List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+      for (FeatureValue<FV> feature : features) {
+        if (FeatureValues.isCacheable(feature))
+          cachedFeatureList.add(feature);
+      }
       totalScore += scorer.getIncrementalScore(features);
       // for(FeatureValue<FV> fv : features)
       // System.err.printf("feature(global): %s\n", fv);
     }
     // Get all other feature scores (LM, word penalty):
     if (abstractOption instanceof DTUOption) {
-      DTUOption<T> dtuOpt = (DTUOption<T>) abstractOption;
+      DTUOption<TK> dtuOpt = (DTUOption<TK>) abstractOption;
       for (int i = 0; i < dtuOpt.dtus.length; ++i) {
-        Featurizable<T, FV> f = new DTUFeaturizable<T, FV>(foreignSequence,
+        Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(foreignSequence,
             this, translationId, i);
         assert (f.translationScores.length == 0);
         assert (f.phraseScoreNames.length == 0);
@@ -122,11 +116,11 @@ public class ConcreteTranslationOption<T> implements
     return sbuf.toString();
   }
 
-  public int linearDistortion(ConcreteTranslationOption<T> opt) {
+  public int linearDistortion(ConcreteTranslationOption<TK,FV> opt) {
     return linearDistortion(opt, linearDistortionType);
   }
 
-  public int linearDistortion(ConcreteTranslationOption<T> opt,
+  public int linearDistortion(ConcreteTranslationOption<TK,FV> opt,
       LinearDistortionType type) {
     final int nextForeignToken;
     if (type != LinearDistortionType.standard)
@@ -174,14 +168,14 @@ public class ConcreteTranslationOption<T> implements
     return Math.abs(nextForeignToken - opt.foreignPos);
   }
 
-  public int signedLinearDistortion(ConcreteTranslationOption<T> opt) {
+  public int signedLinearDistortion(ConcreteTranslationOption<TK,FV> opt) {
     assert (linearDistortionType == LinearDistortionType.standard);
     int nextForeignToken = foreignPos + abstractOption.foreign.size();
     return nextForeignToken - opt.foreignPos;
   }
 
   @Override
-  public int compareTo(ConcreteTranslationOption<T> o) {
+  public int compareTo(ConcreteTranslationOption<TK,FV> o) {
     return (int) Math.signum(o.isolationScore - this.isolationScore);
   }
 

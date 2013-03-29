@@ -1,15 +1,21 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -41,23 +47,63 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
 
   private Counter<String> featureCounter;
   private Index<String> featureIndex;
+  
+  private final boolean createOOVClasses;
 
+  private Map<String,String> srcWordToClassMap;
+  private boolean mapSrcWord = false;
+  private Map<String,String> tgtWordToClassMap;
+  private boolean mapTgtWord = false;
+  
   public DiscriminativeAlignmentFeaturizer() { 
     addUnalignedSourceWords = false;
     addUnalignedTargetWords = false;
     unseenThreshold = DEFAULT_UNSEEN_THRESHOLD;
+    createOOVClasses = unseenThreshold > 0.0;
   }
 
   public DiscriminativeAlignmentFeaturizer(String...args) {
     addUnalignedSourceWords = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
     addUnalignedTargetWords = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     unseenThreshold = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_UNSEEN_THRESHOLD;
+    createOOVClasses = unseenThreshold > 0.0;
+    String srcClassFile = args.length > 3 ? args[3] : null;
+    String tgtClassFile = args.length > 4 ? args[4] : null;
+    if (srcClassFile != null) {
+      srcWordToClassMap = loadWordClassMap(srcClassFile);
+      mapSrcWord = true;
+    }
+    if (tgtClassFile != null) {
+      tgtWordToClassMap = loadWordClassMap(tgtClassFile);
+      mapTgtWord = true;
+    }
+  }
+
+  private static Map<String, String> loadWordClassMap(String wordClassFile) {
+    LineNumberReader reader = IOTools.getReaderFromFile(wordClassFile);
+    Map<String,String> map = new HashMap<String,String>(60000);
+    try {
+      for (String line; (line = reader.readLine()) != null;) {
+        String[] toks = line.trim().split("\\s+");
+        if (toks.length == 2) {
+          map.put(toks[0], toks[1]);
+        } else {
+          System.err.printf("%s: Ignoring line %s (line: %d)%n", DiscriminativeAlignmentFeaturizer.class.getName(),
+              line.trim(), reader.getLineNumber());
+        }
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Could not load: " + wordClassFile);
+    }
+    return map;
   }
 
   @Override
   public void initialize(Index<String> featureIndex) {
     this.featureIndex = featureIndex;
-    featureCounter = featureIndex.isLocked() ? null : new ThreadsafeCounter<String>(100*featureIndex.size());
+    featureCounter = !featureIndex.isLocked() && createOOVClasses ? 
+        new ThreadsafeCounter<String>(100*featureIndex.size()) : null;
   }
 
   @Override
@@ -81,11 +127,13 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     for (int i = 0; i < eLength; ++i) {
       int[] fIndices = alignment.e2f(i);
       String eWord = f.translatedPhrase.get(i).toString();
+      if (mapTgtWord) eWord = mapToClass(eWord, tgtWordToClassMap);
+      
       if (fIndices == null) {
         // Unaligned target word
         if (addUnalignedTargetWords) {
           String feature = makeFeatureString(FEATURE_NAME_TGT, eWord, 0, incrementCount);
-          features.add(new FeatureValue<String>(feature, 1.0));
+          features.add(new CacheableFeatureValue<String>(feature, 1.0));
         }
 
       } else {
@@ -99,6 +147,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
             f2e.get(fInsertionIndex).add(eWord);
           } else {
             String fWord = f.foreignPhrase.get(fIndex).toString();
+            if (mapSrcWord) fWord = mapToClass(fWord, srcWordToClassMap);
             f2e.get(fInsertionIndex).add(fWord);
           }
           fIsAligned[fIndex] = true;
@@ -110,10 +159,11 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     for (int i = 0; i < fLength; ++i) {
       Set<String> eWords = f2e.get(i);
       String fWord = f.foreignPhrase.get(i).toString();
+      if (mapSrcWord) fWord = mapToClass(fWord, srcWordToClassMap);
       if ( ! fIsAligned[i]) {
         if (addUnalignedSourceWords) {
           String feature = makeFeatureString(FEATURE_NAME_SRC, fWord, 0, incrementCount);
-          features.add(new FeatureValue<String>(feature, 1.0));
+          features.add(new CacheableFeatureValue<String>(feature, 1.0));
         }
       } else if (eWords.size() > 0){
         List<String> alignedWords = new ArrayList<String>(eWords.size() + 1);
@@ -127,15 +177,20 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
           sb.append(alignedWords.get(j));
         }
         String feature = makeFeatureString(FEATURE_NAME, sb.toString(), fLength, incrementCount);
-        features.add(new FeatureValue<String>(feature, 1.0));
+        features.add(new CacheableFeatureValue<String>(feature, 1.0));
       }
     }
     return features;
   }
 
+  private static String mapToClass(String word, Map<String, String> wordToClassMap) {
+    return wordToClassMap.containsKey(word) ? wordToClassMap.get(word) : "UNK";
+  }
+
   private String makeFeatureString(String featureName, String featureSuffix, int fLength, boolean incrementCount) {
     String featureString = String.format("%s:%s", featureName, featureSuffix);
-
+    if ( ! createOOVClasses) return featureString;
+    
     // Collect statistics and detect unseen events
     if (featureCounter == null) {
       // Test time
@@ -156,28 +211,29 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     return featureString;
   }
 
-
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
+  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
     return null;
   }
 
   @Override
-  public void reset() {}
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    // TODO(spenceg) Return null if we re-factor the featurizer interface
-    return featurizeRule(f, false);
-  }
-
-  @Override
-  public void initialize(List<ConcreteTranslationOption<IString>> options,
+  public void initialize(
+      List<ConcreteTranslationOption<IString, String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
+  public void reset() {
+  }
+
+  @Override
+  public List<FeatureValue<String>> listFeaturize(
+      Featurizable<IString, String> f) {
+    return null;
+  }
+
+  @Override
+  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     return null;
   }
 }

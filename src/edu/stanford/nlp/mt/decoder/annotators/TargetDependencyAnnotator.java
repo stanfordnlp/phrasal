@@ -19,7 +19,7 @@ import edu.stanford.nlp.trees.TypedDependency;
  * @author daniel
  *
  */
-public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
+public class TargetDependencyAnnotator<TK,FV> implements Annotator<TK,FV> {
   final DepDAGParser parser;
   final int index;
   public final Structure struct;
@@ -57,14 +57,14 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
   }
 
   @Override
-  public Annotator<TK> initialize(Sequence<TK> source) {
-    TargetDependencyAnnotator<TK> pa = new TargetDependencyAnnotator<TK>(parser, new Structure(), 1);
+  public Annotator<TK,FV> initialize(Sequence<TK> source) {
+    TargetDependencyAnnotator<TK,FV> pa = new TargetDependencyAnnotator<TK,FV>(parser, new Structure(), 1);
     return pa;
   }
 
 
   @Override
-  public Annotator<TK> extend(ConcreteTranslationOption<TK> option) {
+  public Annotator<TK,FV> extend(ConcreteTranslationOption<TK,FV> option) {
     //System.out.println("Extend Called!");
     int localIndex = index;
     Structure localStruct = struct.clone();
@@ -87,7 +87,7 @@ public class TargetDependencyAnnotator<TK> implements Annotator<TK> {
       tagger.tagWord(w, seq);
       parser.parseToken(localStruct, w);
     }
-    TargetDependencyAnnotator<TK> pa = new TargetDependencyAnnotator<TK>(parser, localStruct, localIndex);
+    TargetDependencyAnnotator<TK,FV> pa = new TargetDependencyAnnotator<TK,FV>(parser, localStruct, localIndex);
 
     return pa;
   }

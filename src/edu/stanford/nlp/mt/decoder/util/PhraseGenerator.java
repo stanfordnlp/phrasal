@@ -15,7 +15,7 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
   /**
 	 * 
 	 */
-  public List<ConcreteTranslationOption<TK>> translationOptions(
+  public List<ConcreteTranslationOption<TK,FV>> translationOptions(
       Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer);
 
   public Object clone() throws CloneNotSupportedException;

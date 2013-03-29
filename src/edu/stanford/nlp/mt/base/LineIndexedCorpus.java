@@ -27,7 +27,10 @@ public class LineIndexedCorpus extends AbstractList<String> {
       fh = new File(filename);
       lineIndex = new ArrayList<Long>();      
       lineIndex.add(0L);
-      // there has to be an easier way to find the actual byte locations of line terminators      
+      // there has to be an easier way to find the actual byte locations of line terminators
+      if (filename.endsWith("gz")) {
+        throw new RuntimeException("Cannot open gzip'd files.");
+      }
       InputStreamReader fin = new InputStreamReader(new FileInputStream(fh), "UTF-8");
       long pos = 0;
       char[] charArray = new char[2]; 

@@ -20,7 +20,7 @@ public interface SearchHeuristic<TK, FV> extends Cloneable {
    * Note reset semantics
    */
   double getInitialHeuristic(Sequence<TK> sequence,
-      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId);
+      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId);
 
   /**
 	 * 

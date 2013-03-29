@@ -300,7 +300,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString>> options,
+  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 

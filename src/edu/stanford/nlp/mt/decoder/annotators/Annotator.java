@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  *
  * @param <TK>
  */
-public interface Annotator<TK> {
-  public Annotator<TK> initialize(Sequence<TK> source);
-  public Annotator<TK> extend(ConcreteTranslationOption<TK> option);
+public interface Annotator<TK,FV> {
+  public Annotator<TK,FV> initialize(Sequence<TK> source);
+  public Annotator<TK,FV> extend(ConcreteTranslationOption<TK,FV> option);
 }

@@ -10,9 +10,20 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
- * Extract features from hypotheses as they are built incrementally.
+ * Extract features from hypotheses. The featurizer is called each
+ * time a new rule is applied to a partial hypothesis.  initialize()
+ * is called once on a new sentence.  Then, each time the hypothesis
+ * is extended with a new rule application, both listFeaturize and
+ * featurize are called.  Only one of these should return non-null.
+ * Features should have unique prefixes so that the Featurizer does
+ * not conflict with any other Featurizer.
+ * <br>
+ * IncrementalFeaturizers will not be called in a reentrant manner.
+ * Information calculated during <code>initialize</code> can be stored
+ * directly in the Featurizer.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
@@ -26,7 +37,7 @@ public interface IncrementalFeaturizer<TK, FV> {
    * @param foreign
    * @param featureIndex 
    */
-  void initialize(List<ConcreteTranslationOption<TK>> options,
+  void initialize(List<ConcreteTranslationOption<TK,FV>> options,
       Sequence<TK> foreign, Index<String> featureIndex);
 
   /**
@@ -35,12 +46,14 @@ public interface IncrementalFeaturizer<TK, FV> {
   void reset();
 
   /**
-	 * Extract one or more features
-	 */
+   * Return a list of features or null.  
+   * <br>
+   * If features overlap in the list, their values will be added.
+   */
   List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f);
 
   /**
-	 * Extract one feature.
-	 */
+   * Return a single feature or null. 
+   */
   FeatureValue<FV> featurize(Featurizable<TK, FV> f);
 }

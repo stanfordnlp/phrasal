@@ -20,12 +20,12 @@ public class Featurizable<TK, FV> {
   public final int translationId;
 
   /**
-   * Most recently translated foreign phrase
+   * Most recently translated foreign phrase (source side)
    */
   public final Sequence<TK> foreignPhrase;
 
   /**
-   * Translated Phrase produced for the most recently translated foreign phrase
+   * Translated Phrase produced for the most recently translated foreign phrase (target side)
    */
   public final Sequence<TK> translatedPhrase;
 
@@ -44,11 +44,8 @@ public class Featurizable<TK, FV> {
    */
   public final String[] phraseScoreNames;
 
-  public final ConcreteTranslationOption<TK> option;
+  public final ConcreteTranslationOption<TK,FV> option;
 
-  /**
-	 * 
-	 */
   public final int translationPosition;
 
   /**
@@ -83,6 +80,11 @@ public class Featurizable<TK, FV> {
    */
   public final boolean done;
 
+  /**
+   * Can walk back through the lattice of hypotheses with <code>hyp</code>
+   * <br>
+   * You can do the same thing with <code>prior</code>
+   */
   public final Hypothesis<TK, FV> hyp;
 
   /**
@@ -154,7 +156,7 @@ public class Featurizable<TK, FV> {
     done = hypothesis.isDone();
     option = hypothesis.translationOpt;
     TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
-    ConcreteTranslationOption<TK> concreteOpt = hypothesis.translationOpt;
+    ConcreteTranslationOption<TK,FV> concreteOpt = hypothesis.translationOpt;
     foreignPhrase = transOpt.foreign;
     translatedPhrase = transOpt.translation;
     phraseTableName = concreteOpt.phraseTableName;
@@ -204,7 +206,7 @@ public class Featurizable<TK, FV> {
     done = hypothesis.isDone() && !hasPendingPhrases;
     option = hypothesis.translationOpt;
     TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
-    ConcreteTranslationOption<TK> concreteOpt = hypothesis.translationOpt;
+    ConcreteTranslationOption<TK,FV> concreteOpt = hypothesis.translationOpt;
     foreignPhrase = transOpt.foreign;
     this.translatedPhrase = translatedPhrase;
     phraseTableName = concreteOpt.phraseTableName;
@@ -287,7 +289,7 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   public Featurizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK> concreteOpt, int translationId) {
+      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId) {
     this.translationId = translationId;
     option = concreteOpt;
     done = false;
@@ -315,7 +317,7 @@ public class Featurizable<TK, FV> {
   }
 
   protected Featurizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK> concreteOpt, int translationId,
+      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId,
       Sequence<TK> translatedPhrase) {
     assert (concreteOpt.abstractOption.getClass().equals(DTUOption.class));
     this.translationId = translationId;
@@ -348,7 +350,7 @@ public class Featurizable<TK, FV> {
   /**
 	 * 
 	 */
-  protected void augmentAlignments(ConcreteTranslationOption<TK> concreteOpt) {
+  protected void augmentAlignments(ConcreteTranslationOption<TK,FV> concreteOpt) {
     if (concreteOpt.abstractOption.translation == null)
       return;
     int transSz = concreteOpt.abstractOption.translation.elements.length;
@@ -388,7 +390,7 @@ public class Featurizable<TK, FV> {
           pos = preceedingTokens.length);
     }
 
-    ConcreteTranslationOption<TK> concreteOpt = h.translationOpt;
+    ConcreteTranslationOption<TK,FV> concreteOpt = h.translationOpt;
     Object[] newTokens = concreteOpt.abstractOption.translation.elements;
     System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
     return tokens;

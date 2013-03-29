@@ -17,9 +17,9 @@ public class FeatureValue<T> {
   /**
 	 */
   @SuppressWarnings("unchecked")
-  public FeatureValue(T name, double value, boolean cacheName) {
+  public FeatureValue(T name, double value, boolean cacheFeatureName) {
     this.value = value;
-    if (cacheName) {
+    if (cacheFeatureName) {
       synchronized(nameCache) {
         WeakReference<Object> nameSub = nameCache.get(name);
         if (nameSub == null) {

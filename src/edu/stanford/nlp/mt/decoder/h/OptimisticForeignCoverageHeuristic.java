@@ -40,7 +40,7 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> sequence,
-      List<List<ConcreteTranslationOption<TK>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
     return 0;
   }
 }

@@ -21,7 +21,7 @@ public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, 
     static public final boolean DEBUG = true;
     
 	@Override
-	public void initialize(List<ConcreteTranslationOption<IString>> options,
+	public void initialize(List<ConcreteTranslationOption<IString,String>> options,
 			Sequence<IString> foreign, Index<String> featureIndex) { }
 
 	@Override
@@ -38,13 +38,13 @@ public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, 
 		
 	    boolean rootMatch = false;
 	    // TODO: fix API so that this isn't necessary
-	    SourceDependencyAnnotator<IString> srcDepAnnotator = null;
-	    TargetDependencyAnnotator<IString> trgDepAnnotator = null;
-	    for (Annotator<IString> annotator : f.hyp.annotators) {
+	    SourceDependencyAnnotator<IString,String> srcDepAnnotator = null;
+	    TargetDependencyAnnotator<IString,String> trgDepAnnotator = null;
+	    for (Annotator<IString,String> annotator : f.hyp.annotators) {
 	    	if (annotator instanceof SourceDependencyAnnotator) {
-	    		srcDepAnnotator = (SourceDependencyAnnotator<IString>)annotator;
+	    		srcDepAnnotator = (SourceDependencyAnnotator<IString,String>)annotator;
 	    	} else if (annotator instanceof TargetDependencyAnnotator) {
-	    		trgDepAnnotator = (TargetDependencyAnnotator<IString>)annotator;
+	    		trgDepAnnotator = (TargetDependencyAnnotator<IString,String>)annotator;
 	    	}
 	    }
 	    if (srcDepAnnotator == null || trgDepAnnotator == null) {

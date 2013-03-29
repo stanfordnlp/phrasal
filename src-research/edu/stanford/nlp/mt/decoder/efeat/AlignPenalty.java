@@ -65,7 +65,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString>> options,
+  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
       Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
