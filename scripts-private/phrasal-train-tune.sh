@@ -192,7 +192,11 @@ function create-learn-curve {
 	"$RUNNAME".ini \
 	$DECODE_FILE \
 	$REFS \
-	"$TUNERUNNAME"*binwts | sort -n > "$RUNNAME".learn-curve
+	"$TUNERUNNAME"*binwts > "$RUNNAME".learn-curve.tmp
+    cat "$RUNNAME".learn-curve.tmp | tr '.' ' ' | awk '{ print $4 }' \
+	| paste - "$RUNNAME".learn-curve.tmp | grep -v final | sort -n \
+	>  "$RUNNAME".learn-curve
+    rm -f "$RUNNAME".learn-curve.tmp
 }
 
 ######################################################################
