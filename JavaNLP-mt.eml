@@ -27,7 +27,8 @@
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/terp.jar!/"/>
 	</lib>
 	<lib name="jopt-simple.jar" scope="COMPILE">
-		<srcroot url="file://$USER_HOME$/javanlp/projects/mt/libsrc/jopt-simple-3.1-sources.jar"/>
+		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-4.3-sources.jar!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-4.3-sources.jar!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/jopt-simple.jar!/"/>
 	</lib>
 	<lib name="tercom.jar" scope="COMPILE">
@@ -37,6 +38,8 @@
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/start.jetty-7.4.2.jar!/"/>
 	</lib>
 	<lib name="gson-1.7.1.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/libsrc/gson-1.7.1-sources.jar!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/gson-1.7.1-sources.jar!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/gson-1.7.1.jar!/"/>
 	</lib>
 	<lib name="jetty-ajp-7.4.2.v20110526.jar" scope="COMPILE">
