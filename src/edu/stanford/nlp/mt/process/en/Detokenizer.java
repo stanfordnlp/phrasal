@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools;
+package edu.stanford.nlp.mt.process.en;
 
 import edu.stanford.nlp.process.PTBTokenizer;
 import java.io.BufferedReader;
@@ -10,7 +10,7 @@ import java.io.IOException;
  * 
  * @author Daniel Cer
  */
-class EnglishDetokenizer {
+class Detokenizer {
   static public void main(String args[]) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     for (String line = reader.readLine(); line != null; line = reader

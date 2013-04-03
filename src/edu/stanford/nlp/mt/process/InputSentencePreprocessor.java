@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.preproc;
+package edu.stanford.nlp.mt.process;
 
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
