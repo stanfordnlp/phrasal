@@ -14,28 +14,36 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
+ * Indicator features for each rule in a derivation.
  * 
  * @author danielcer
  * @author Spence Green
  * 
  */
-public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,String>, IsolatedPhraseFeaturizer<IString, String> {
-  public static final String FEATURE_NAME = "DiscPT";
-  public static final String SOURCE = "src";
-  public static final String TARGET = "trg";
-  public static final String SOURCE_AND_TARGET = "s+t";
+public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,String>, 
+IsolatedPhraseFeaturizer<IString, String> {
+  
+  private static final String FEATURE_NAME = "DiscPT";
+  private static final String SOURCE = "src";
+  private static final String TARGET = "trg";
+  private static final String SOURCE_AND_TARGET = "s+t";
 
+  private static final double DEFAULT_FEATURE_VALUE = 1.0;
+  
   private final boolean doSource;
   private final boolean doTarget;
+  private final double featureValue;
   
   public DiscriminativePhraseTable() {
     doSource = true;
     doTarget = true;
+    featureValue = DEFAULT_FEATURE_VALUE;
   }
 
   public DiscriminativePhraseTable(String... args) {
     doSource = args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
     doTarget = args.length > 1 ? Boolean.parseBoolean(args[1]) : true;
+    featureValue = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_FEATURE_VALUE;
   }
   
   @Override
@@ -52,24 +60,23 @@ public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,
       String suffix = srcPhrase + ">"
           + tgtPhrase;
       fvalues.add(new CacheableFeatureValue<String>(
-          makeFeatureString(FEATURE_NAME, SOURCE_AND_TARGET, suffix, f.foreignPhrase.size()), 
-          1.0));
+          makeFeatureString(FEATURE_NAME, SOURCE_AND_TARGET, suffix), 
+          featureValue));
 
     } else if (doSource) {
       fvalues.add(new CacheableFeatureValue<String>(
-          makeFeatureString(FEATURE_NAME, SOURCE, srcPhrase, f.foreignPhrase.size()), 
-          1.0));
+          makeFeatureString(FEATURE_NAME, SOURCE, srcPhrase), 
+          featureValue));
 
     } else if (doTarget) {
       fvalues.add(new CacheableFeatureValue<String>(
-          makeFeatureString(FEATURE_NAME, TARGET, tgtPhrase, f.foreignPhrase.size()), 
-          1.0));
+          makeFeatureString(FEATURE_NAME, TARGET, tgtPhrase), 
+          featureValue));
     }
     return fvalues;
   }
 
-  private String makeFeatureString(String featurePrefix, String featureType, String value, 
-      int length) {
+  private String makeFeatureString(String featurePrefix, String featureType, String value) {
     return String.format("%s.%s:%s", featurePrefix, featureType, value);
   }
 

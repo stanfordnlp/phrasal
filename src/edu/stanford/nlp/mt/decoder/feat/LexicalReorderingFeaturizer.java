@@ -28,16 +28,24 @@ public class LexicalReorderingFeaturizer implements
       ARPALanguageModel.START_TOKEN);
   final boolean useAlignmentConstellations;
 
+  private static final double DEFAULT_DISCRIMINATIVE_FEATURE_VALUE = 1.0;
+  private double discriminativeFeatureValue = DEFAULT_DISCRIMINATIVE_FEATURE_VALUE;
+
   /**
    * Discriminative Lexical Reordering - using all reordering types
    * 
    */
   public LexicalReorderingFeaturizer() {
+    this(DEFAULT_DISCRIMINATIVE_FEATURE_VALUE);
+  }
+  
+  public LexicalReorderingFeaturizer(double featureValue) {
     // by default include everything
     discriminativeSet = LexicalReorderingTable.ReorderingTypes.values();
     mlrt = null;
     featureTags = null;
     useAlignmentConstellations = false;
+    discriminativeFeatureValue = featureValue;
   }
 
   /**
@@ -102,7 +110,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = priorAlignConst.toString();
           }
           values.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + mrt + ":"
-              + condRep, 1.0));
+              + condRep, discriminativeFeatureValue));
         } else {
           String condRep; // = null;
           if (!useAlignmentConstellations) {
@@ -112,7 +120,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = f.option.abstractOption.alignment.toString();
           }
           values.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + mrt + ":"
-              + condRep, 1.0));
+              + condRep, discriminativeFeatureValue));
         }
       }
     }

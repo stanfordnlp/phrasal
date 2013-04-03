@@ -32,17 +32,22 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
   private static final String FEATURE_NAME_TGT = "UnAlignTgt";
   private static final String FEATURE_NAME_SRC = "UnAlignSrc";
 
+  private static final double DEFAULT_FEATURE_VALUE = 1.0;
+  
   private final boolean addSourceDeletions;
   private final boolean addTargetInsertions;
+  private final double featureValue;
   
   public DiscriminativeAlignmentFeaturizer() { 
     addSourceDeletions = false;
     addTargetInsertions = false;
+    featureValue = DEFAULT_FEATURE_VALUE;
   }
 
   public DiscriminativeAlignmentFeaturizer(String...args) {
     addSourceDeletions = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
     addTargetInsertions = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
+    featureValue = args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_FEATURE_VALUE;
   }
 
   @Override
@@ -70,7 +75,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
         // Unaligned target word
         if (addTargetInsertions) {
           String feature = makeFeatureString(FEATURE_NAME_TGT, eWord);
-          features.add(new CacheableFeatureValue<String>(feature, 1.0));
+          features.add(new CacheableFeatureValue<String>(feature, featureValue));
         }
 
       } else {
@@ -98,7 +103,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
       if ( ! fIsAligned[i]) {
         if (addSourceDeletions) {
           String feature = makeFeatureString(FEATURE_NAME_SRC, fWord);
-          features.add(new CacheableFeatureValue<String>(feature, 1.0));
+          features.add(new CacheableFeatureValue<String>(feature, featureValue));
         }
       } else if (eWords.size() > 0){
         List<String> alignedWords = new ArrayList<String>(eWords.size() + 1);
@@ -112,7 +117,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
           sb.append(alignedWords.get(j));
         }
         String feature = makeFeatureString(FEATURE_NAME, sb.toString());
-        features.add(new CacheableFeatureValue<String>(feature, 1.0));
+        features.add(new CacheableFeatureValue<String>(feature, featureValue));
       }
     }
     return features;
