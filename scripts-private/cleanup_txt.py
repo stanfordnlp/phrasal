@@ -83,7 +83,6 @@ def clean_text(no_sql, no_html, latin_only):
             continue
         if latin_only:
             m = p_not_latin.findall(line)
-            assert len(line) > 0
             perc = float(len(m)) / float(len(line))
             if perc > latin_skip_threshold:
                 print
@@ -111,6 +110,10 @@ def clean_text(no_sql, no_html, latin_only):
         line = p_symbol.sub('', line)
         line = p_soft.sub('', line)
 
+        if len(line) == 0:
+            print
+            continue
+        
         # Check for too much punctuation
         m = p_punct.findall(line)
         perc = float(len(m)) / float(len(line))
