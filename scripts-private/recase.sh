@@ -21,12 +21,12 @@ infile=$2
 model_path=/scr/nlp/data/WMT/recasers
 
 if [ $lang == "French" ]; then
-	model=${model_path}/french.hmm.recaser.bin
+	model=kenlm:${model_path}/french.hmm.recaser.bin
 else
-	model=${model_path}/german.hmm.recaser.bin
+	model=kenlm:${model_path}/german.hmm.recaser.bin
 fi
 
-JVM_OPTS="-server -Xmx2g -Xms2g -XX:UseParallelGC"
+JVM_OPTS="-server -Xmx2g -Xms2g -XX:+UseParallelGC"
 JNI_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOST}:/scr/nlp/data/gale3/SRILM-JNI/${HOST}"
 
 java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile
