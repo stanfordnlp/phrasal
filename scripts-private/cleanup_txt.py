@@ -83,6 +83,7 @@ def clean_text(no_sql, no_html, latin_only):
             continue
         if latin_only:
             m = p_not_latin.findall(line)
+            assert len(line) > 0
             perc = float(len(m)) / float(len(line))
             if perc > latin_skip_threshold:
                 print
