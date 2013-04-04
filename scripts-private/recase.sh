@@ -21,9 +21,9 @@ infile=$2
 model_path=/scr/nlp/data/WMT/recasers
 
 if [ $lang == "French" ]; then
-	model=${model_path}/french.hmm.recaser.bin
+	model=kenlm:${model_path}/french.hmm.recaser.bin
 else
-	model=${model_path}/german.hmm.recaser.bin
+	model=kenlm:${model_path}/german.hmm.recaser.bin
 fi
 
 JVM_OPTS="-server -Xmx2g -Xms2g -XX:+UseParallelGC"
