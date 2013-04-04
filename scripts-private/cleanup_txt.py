@@ -78,6 +78,9 @@ def clean_text(no_sql, no_html, latin_only):
     for line in sys.stdin:
         line = line.decode('utf-8').strip()
         # Heuristics for skipping lines
+        if len(line) == 0:
+            print
+            continue
         if latin_only:
             m = p_not_latin.findall(line)
             perc = float(len(m)) / float(len(line))
