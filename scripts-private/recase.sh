@@ -29,5 +29,5 @@ fi
 JVM_OPTS="-server -Xmx2g -Xms2g -XX:+UseParallelGC"
 JNI_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOST}:/scr/nlp/data/gale3/SRILM-JNI/${HOST}"
 
-java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile
+java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile 2>/dev/null
 
