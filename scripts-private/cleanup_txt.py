@@ -26,6 +26,14 @@ import string
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 sys.stderr = codecs.getwriter('utf-8')(sys.stderr)
 
+# When --latin is enabled, percentage of non-latin characters
+# in a string before the line skipped.
+latin_skip_threshold = 0.8
+
+# Percentage of punctuation characters in a sentence before it is
+# skipped
+punct_skip_threshold = 0.8
+
 # Match various forms of whitespace, including spaces and newline
 # characters. Normalize to a single ASCII space character.
 p_ws = re.compile(ur'[ \t\u00A0\u2000-\u200A\u2028\u2029\u000B\u000C\u0085\u3000]+')
@@ -71,8 +79,9 @@ def clean_text(no_sql, no_html, latin_only):
         line = line.decode('utf-8').strip()
         # Heuristics for skipping lines
         if latin_only:
-            m = p_not_latin.search(line)
-            if m:
+            m = p_not_latin.findall(line)
+            perc = float(len(m)) / float(len(line))
+            if perc > latin_skip_threshold:
                 print
                 continue
         if no_html:
@@ -100,7 +109,8 @@ def clean_text(no_sql, no_html, latin_only):
 
         # Check for too much punctuation
         m = p_punct.findall(line)
-        if len(m) > 15:
+        perc = float(len(m)) / float(len(line))
+        if perc > punct_skip_threshold:
             print
             continue
         else:

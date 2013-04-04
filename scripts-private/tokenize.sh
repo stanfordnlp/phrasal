@@ -65,8 +65,7 @@ for op in $*; do
     elif [ $op == "tolower" ]; then
 	EN_TOK="$EN_TOK -lowerCase"
 	FR_TOK="$FR_TOK -lowerCase"
-	DE_TOK="$DE_TOK -lowerCase"
-	tolower="tr [:upper:] [:lower:]"
+	tolower=tolower-utf8.py
     fi
 done
 
@@ -86,7 +85,7 @@ elif [ $lang == "German" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
     fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | gzip -c > ${outfile}.gz
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower | gzip -c > ${outfile}.gz
     
 elif [ $lang == "English" ]; then
     if [ "$fixnl" != "tee" ]; then
