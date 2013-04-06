@@ -715,7 +715,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
       System.out.printf("%.3f", ngramPrecisions[i] * 100);
     }
-    System.out.printf(" (BP=%.3f, ration=%.3f %d/%d)\n", incMetric
+    System.out.printf(" (BP=%.3f, ratio=%.3f %d/%d)\n", incMetric
         .brevityPenalty(), ((1.0 * incMetric.candidateLength()) / incMetric
         .effectiveReferenceLength()), incMetric.candidateLength(), incMetric
         .effectiveReferenceLength());
