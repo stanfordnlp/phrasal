@@ -2,8 +2,12 @@ package edu.stanford.nlp.mt.detokenize;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Properties;
-import java.util.Stack;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,7 +36,10 @@ public class FrenchDetokenizer {
   
   //these patterns compile only once when INSTANCE is first loaded
   private Pattern quotesPattern = Pattern.compile("\" .*? \"");
-  
+  private Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\(|,|:|;|\\.|\\?|!) ");
+  private Pattern leftPunctuation = Pattern.compile("(^| )\\) ");
+  private Pattern leftGrammatical = Pattern.compile("(^| )(l'|n'|d'|j'|s'|t'|c'|qu') ",Pattern.CASE_INSENSITIVE);
+  private Pattern rightGrammatical = Pattern.compile(" -[^ ]+ ",Pattern.CASE_INSENSITIVE);
   
   /** get singleton instance */
   public static FrenchDetokenizer getInstance() {
@@ -54,43 +61,53 @@ public class FrenchDetokenizer {
   }
  
   private String detokImpl(String input) {
-    String output = input;
+    //Indexes of spaces that need deleting
+    Set<Integer> toBeDeleted = new HashSet<Integer>(); 
     
-    //double quotes
-    // " abc "  ->  "abc"
-    output = handleQuotes(output);
+    toBeDeleted.addAll(handleQuotes(input));
+    toBeDeleted.addAll(handlePunctuation(input));
+    toBeDeleted.addAll(handleGrammatical(input));
+
+    //sort
+    List<Integer> sorted = new ArrayList<Integer>(toBeDeleted);
+    Collections.sort(sorted);
     
-    //punctuation
-    output = handlePunctuation(output);
+    //delete spaces
+    StringBuilder output = new StringBuilder(input);
+    for(int i = sorted.size() - 1; i >= 0; i--) {
+      output.deleteCharAt(sorted.get(i));
+    }
     
-    //grammatical detokenizations
-    output = handleGrammatical(output);
-    
-    return output;
+    return output.toString().trim();
   }
   
   //double quotes
   // " abc "  ->  "abc"
   // " abc" abc " -> "abc" abc"
   // " abc "abc " abc " -> "abc"abc "abc"
-  // " abc " abc " abc -> "abc" abc " abc
-  //TODO see line 402 of reference.  It turns out that even a single " should
-  //  glom onto nearest word
-  private String handleQuotes(String input) {
+  //
+  //Note: see line 402 of 2012 reference; a single "
+  // is glommed onto next word
+  // TODO decide what to do with extra/singleton instances
+  //
+  //returns indexes of spaces to be deleted
+  private Set<Integer> handleQuotes(String input) {
+    Set<Integer> toBeDeleted = new HashSet<Integer>();
+
     Matcher quotesMatcher = quotesPattern.matcher(input);
-    Stack<Integer> toBeDeleted = new Stack<Integer>();
+    int endIdx = 0; //tracks end of 
     while(quotesMatcher.find()) {
-      toBeDeleted.push(quotesMatcher.start(0) + 1);
-      toBeDeleted.push(quotesMatcher.end(0) - 2);
+      toBeDeleted.add(quotesMatcher.start() + 1);
+      endIdx = quotesMatcher.end();
+      toBeDeleted.add(endIdx - 2);
     }
-    StringBuilder sb = new StringBuilder(input);
-    while(!toBeDeleted.isEmpty()) {
-      sb.deleteCharAt(toBeDeleted.pop());
-    }
-    return sb.toString();
+        
+    return toBeDeleted;
   }
     
-  //punctation
+  //punctuation
+  //
+  //right punctuation:
   // a ,  ->  a,
   // a .  ->  a.
   // a :  ->  a:
@@ -99,38 +116,37 @@ public class FrenchDetokenizer {
   // a !  ->  a!
   // a %  ->  a%
   // a ... -> a...
-  // ( a   -> (a
   // a )   -> a)
-  private String handlePunctuation(String input) {
+  //
+  //left punctuation:
+  // ( a   -> (a
+  //
+  //returns indexes of spaces to be deleted
+  private Set<Integer> handlePunctuation(String input) {
     //append space for simpler regex
-    String output = input + " ";
+    input = input + " ";
+    
+    Set<Integer> toBeDeleted = new HashSet<Integer>();
+    
+    Matcher rightPuncMatcher = rightPunctuation.matcher(input);
+    while(rightPuncMatcher.find()) {
+      toBeDeleted.add(rightPuncMatcher.start());
+    }
+    
+    Matcher leftPuncMatcher = leftPunctuation.matcher(input);
+    while(leftPuncMatcher.find()) {
+      toBeDeleted.add(leftPuncMatcher.end() - 1);
+    }
+    
+    //remove appended space from remove set
+    toBeDeleted.remove(input.length() - 1);
 
-    //TODO wrap into single regex
-    //TODO order matters.  With wrong order, we may get
-    //  a % .   ->  a %.   Can we fix this?
-    //TODO fix bug where a . "  ->  a ."
-    output = output.replace(" % ", "% ");
-    output = output.replace(" ... ", "... ");
-
-    output = output.replace(" ( ", " (");
-    output = output.replace(" ) ", ") ");
-    
-    output = output.replace(" , ", ", ");
-    output = output.replace(" : ", ": ");
-    output = output.replace(" ; ", "; ");
-    output = output.replace(" . ", ". ");
-    output = output.replace(" ? ", "? ");
-    output = output.replace(" ! ", "! ");
-    
-        
-    //remove the appended space
-    if(output.charAt(output.length() - 1) == ' ')
-      output = output.substring(0, output.length() - 1);
-    
-    return output;
+    return toBeDeleted;
   }
   
   //a closed class of grammatical detokenizations
+  //
+  //left grammaticals:
   // l' a  ->  l'a
   // n' a  ->  n'a
   // d' a  ->  d'a
@@ -139,47 +155,38 @@ public class FrenchDetokenizer {
   // t' a  ->  t'a
   // c' a  ->  c'a
   // qu' a  -> qu'a
+  //
+  //right grammaticals:
   // a -il ->  a-il  (as in question formation)
   // a -ils -> a-ils
   // a -elle -> a-elle
   // a -elles -> a-elles
   // a -on   -> a-on
-  // est -ce  -> est-ce
+  // a -toi -> a-toi  (as in imperative + pronoun)
+  // a -moi -> a-moi
+  //   etc.
+  // a -ce  -> a-ce  (as in est -ce -> est-ce)
+  //
   //Note: we also allow capitalized forms
-  private String handleGrammatical(String input) {
+  //
+  //returns indexes of spaces to be deleted
+  private Set<Integer> handleGrammatical(String input) {
     //append space for simpler regex
-    String output = input + " ";
+    input = input + " ";
     
-    //TODO use a single regex
-    output = output.replace("l' ", "l'");
-    output = output.replace("L' ", "L'");
-    output = output.replace("n' ", "n'");
-    output = output.replace("N' ", "N'");
-    output = output.replace("d' ","d'");
-    output = output.replace("D' ","D'");
-    output = output.replace("j' ","j'");
-    output = output.replace("J' ","j'");
-    output = output.replace("s' ","s'");
-    output = output.replace("S' ","S'");
-    output = output.replace("t' ","t'");
-    output = output.replace("T' ","T'");
-    output = output.replace("c' ","c'");
-    output = output.replace("C' ","C'");
-    output = output.replace("qu' ","qu'");
-    output = output.replace("Qu' ","Qu'");
-    output = output.replace(" -il ","-il ");
-    output = output.replace(" -ils ","-ils ");
-    output = output.replace(" -elle ","-elle ");
-    output = output.replace(" -elles ","-elles ");
-    output = output.replace(" -on ","-on ");
-    output = output.replace("est -ce ","est-ce ");
-    output = output.replace("Est -ce ","Est-ce ");
+    Set<Integer> toBeDeleted = new HashSet<Integer>();
+
+    Matcher leftGramMatcher = leftGrammatical.matcher(input);
+    while(leftGramMatcher.find()) {
+      toBeDeleted.add(leftGramMatcher.end() - 1);
+    }
+
+    Matcher rightGramMatcher = rightGrammatical.matcher(input);
+    while(rightGramMatcher.find()) {
+      toBeDeleted.add(rightGramMatcher.start());
+    }
     
-    //remove the appended space
-    if(output.charAt(output.length() - 1) == ' ')
-      output = output.substring(0, output.length() - 1);
-    
-    return output;
+    return toBeDeleted;
   }
   
   /**
@@ -189,10 +196,10 @@ public class FrenchDetokenizer {
    * Usage: java FrenchDetonenizer -input inputFile -output outputFile
    */
   public static void main(String args[]) throws Exception{
-	Properties props = StringUtils.argsToProperties(args);
-	String inputFile = props.getProperty("input");
-	String outputFile = props.getProperty("output");
-	
+  Properties props = StringUtils.argsToProperties(args);
+  String inputFile = props.getProperty("input");
+  String outputFile = props.getProperty("output");
+  
     FrenchDetokenizer fd = getInstance();
     
     BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
