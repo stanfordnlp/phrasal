@@ -73,7 +73,9 @@ public class DumpPossibleWordCoOccurrences {
         sents.add(sentId);
       }
     }
-
+    
+    reader.close();
+    
     List<String> sortedWords = new ArrayList<String>(wordSents.size());
     for (IString word : wordSents.keySet()) {
       sortedWords.add(word.toString());

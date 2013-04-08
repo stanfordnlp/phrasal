@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
-import java.util.regex.Pattern;;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
