@@ -36,10 +36,10 @@ public class FrenchDetokenizer {
   
   //these patterns compile only once when INSTANCE is first loaded
   private Pattern quotesPattern = Pattern.compile("\" .*? \"");
-  private Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\(|,|:|;|\\.|\\?|!) ");
-  private Pattern leftPunctuation = Pattern.compile("(^| )\\) ");
-  private Pattern leftGrammatical = Pattern.compile("(^| )(l'|n'|d'|j'|s'|t'|c'|qu') ",Pattern.CASE_INSENSITIVE);
-  private Pattern rightGrammatical = Pattern.compile(" -[^ ]+ ",Pattern.CASE_INSENSITIVE);
+  private Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\)|,|:|;|\\.|\\?|!)(?= )");
+  private Pattern leftPunctuation = Pattern.compile("(^| )\\((?= )");
+  private Pattern leftGrammatical = Pattern.compile("(^| )(l'|n'|d'|j'|s'|t'|c'|qu')(?= )",Pattern.CASE_INSENSITIVE);
+  private Pattern rightGrammatical = Pattern.compile(" -[^ ]+(?= )",Pattern.CASE_INSENSITIVE);
   
   /** get singleton instance */
   public static FrenchDetokenizer getInstance() {
@@ -135,7 +135,7 @@ public class FrenchDetokenizer {
     
     Matcher leftPuncMatcher = leftPunctuation.matcher(input);
     while(leftPuncMatcher.find()) {
-      toBeDeleted.add(leftPuncMatcher.end() - 1);
+      toBeDeleted.add(leftPuncMatcher.end());
     }
     
     //remove appended space from remove set
@@ -178,7 +178,7 @@ public class FrenchDetokenizer {
 
     Matcher leftGramMatcher = leftGrammatical.matcher(input);
     while(leftGramMatcher.find()) {
-      toBeDeleted.add(leftGramMatcher.end() - 1);
+      toBeDeleted.add(leftGramMatcher.end());
     }
 
     Matcher rightGramMatcher = rightGrammatical.matcher(input);
