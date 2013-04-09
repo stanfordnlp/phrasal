@@ -24,9 +24,9 @@ public class TargetSidePunctuationFeaturizer implements IncrementalFeaturizer<IS
   /**
    * All features will start with this prefix
    */
-  public static final String FEATURE_NAME = "PUNCT-";
+  public static final String FEATURE_NAME = "PUNCT";
 
-  public static final Pattern PUNCT_PATTERN = Pattern.compile("[\"\\#/$%'(),-:;!?.]+");
+  public static final Pattern PUNCT_PATTERN = Pattern.compile("\\p{Punct}+");
 
   public TargetSidePunctuationFeaturizer() {
   }
@@ -68,9 +68,8 @@ public class TargetSidePunctuationFeaturizer implements IncrementalFeaturizer<IS
     for (IString targetWord : f.foreignSentence) {
       String word = targetWord.toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
-        String feature = FEATURE_NAME + word.charAt(0);
-        features.add(new FeatureValue<String>(feature, 1.0));
-        features.add(new FeatureValue<String>("PUNCT-char", 1.0));
+        features.add(new FeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
+        features.add(new FeatureValue<String>(FEATURE_NAME, 1.0));
       }
     }
 
