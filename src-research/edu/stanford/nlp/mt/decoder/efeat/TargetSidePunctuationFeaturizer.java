@@ -23,11 +23,18 @@ public class TargetSidePunctuationFeaturizer implements IsolatedPhraseFeaturizer
   /**
    * All features will start with this prefix
    */
-  public static final String FEATURE_NAME = "PUNCT";
+  public static final String FEATURE_NAME = "TgtPunc";
 
   public static final Pattern PUNCT_PATTERN = Pattern.compile("\\p{Punct}+");
 
+  private final boolean addDifferenceCounts;
+
   public TargetSidePunctuationFeaturizer() {
+    addDifferenceCounts = false;
+  }
+
+  public TargetSidePunctuationFeaturizer(String...args) {
+    addDifferenceCounts = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
   }
 
   @Override
@@ -38,12 +45,31 @@ public class TargetSidePunctuationFeaturizer implements IsolatedPhraseFeaturizer
   public List<FeatureValue<String>> phraseListFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
-    
+
+    int nTargetSidePunctuationChars = 0;
     for (IString targetWord : f.targetPhrase) {
       String word = targetWord.toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
         features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
         features.add(new CacheableFeatureValue<String>(FEATURE_NAME, 1.0));
+        ++nTargetSidePunctuationChars;
+      }
+    }
+
+    if (addDifferenceCounts) {
+      int nSourceSidePunctuationChars = 0;
+      for (IString sourceWord : f.sourcePhrase) {
+        String word = sourceWord.toString();
+        if (PUNCT_PATTERN.matcher(word).matches()) {
+          ++nSourceSidePunctuationChars;
+        }
+      }
+
+      int diff = nTargetSidePunctuationChars - nSourceSidePunctuationChars;
+      if (diff > 0) {
+        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".ins", diff));
+      } else if (diff < 0) {
+        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".del", -1 * diff));
       }
     }
 
