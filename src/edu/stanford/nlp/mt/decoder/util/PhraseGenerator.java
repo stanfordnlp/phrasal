@@ -23,5 +23,5 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
   public void setCurrentSequence(Sequence<TK> foreign,
       List<Sequence<TK>> tranList);
 
-  public int longestForeignPhrase();
+  public int longestSourcePhrase();
 }

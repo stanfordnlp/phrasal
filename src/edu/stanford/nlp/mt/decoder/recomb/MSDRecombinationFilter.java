@@ -60,13 +60,13 @@ public class MSDRecombinationFilter implements
   private static int lastOptionLeftEdge(Hypothesis<IString, String> hyp) {
     if (hyp.translationOpt == null)
       return -1;
-    return hyp.translationOpt.foreignPos - 1;
+    return hyp.translationOpt.sourcePosition - 1;
   }
 
   private static int lastOptionRightEdge(Hypothesis<IString, String> hyp) {
     if (hyp.translationOpt == null)
       return 0;
-    return hyp.translationOpt.foreignCoverage.length();
+    return hyp.translationOpt.sourceCoverage.length();
   }
 
   @Override
@@ -114,14 +114,14 @@ public class MSDRecombinationFilter implements
       // Nothing to the left of either hypA or hypB, so (D) is impossible:
       return true;
 
-    if (!hypA.foreignCoverage.get(leftA) && !hypB.foreignCoverage.get(leftA)) {
+    if (!hypA.sourceCoverage.get(leftA) && !hypB.sourceCoverage.get(leftA)) {
       // (D) is possible as shown here:
       // hypA: y y . . n x x x . . . z z
       // hypB: y y y . n . x x . . . z z
       return false;
     }
 
-    if (!hypA.foreignCoverage.get(leftB) && !hypB.foreignCoverage.get(leftB)) {
+    if (!hypA.sourceCoverage.get(leftB) && !hypB.sourceCoverage.get(leftB)) {
       // (D) is possible as shown here:
       // hypA: y y . . n . x x . . . z z
       // hypB: y y y . n x x x . . . z z

@@ -35,7 +35,7 @@ public class MandarinNumberPhraseGeneratorTest extends TestCase {
           boolean good = false;
           for (TranslationOption<IString> opt : opts) {
             // if (("$num_(" + inputs[i] + "||" + outputs[i] + ")").equals(opt.translation.toString())) {
-            if ((outputs[i]).equals(opt.translation.toString())) {
+            if ((outputs[i]).equals(opt.target.toString())) {
               good = true;
               break;
             }
@@ -44,7 +44,7 @@ public class MandarinNumberPhraseGeneratorTest extends TestCase {
             assertEquals("Wrong number/date translation(s), choices were " + opts,
                   // "$num_(" + inputs[i] + "||" + outputs[i] + ")",
                   outputs[i],
-                  opts.get(0).translation.toString());
+                  opts.get(0).target.toString());
           }
         }
       } catch (Exception e) {

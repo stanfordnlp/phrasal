@@ -27,7 +27,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
       Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer) {
     List<ConcreteTranslationOption<TK,FV>> opts = new LinkedList<ConcreteTranslationOption<TK,FV>>();
     int sequenceSz = sequence.size();
-    int longestForeignPhrase = this.longestForeignPhrase();
+    int longestForeignPhrase = this.longestSourcePhrase();
     if (longestForeignPhrase < 0)
       longestForeignPhrase = -longestForeignPhrase;
     for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
@@ -65,6 +65,6 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
       Sequence<TK> sequence);
 
   @Override
-  abstract public int longestForeignPhrase();
+  abstract public int longestSourcePhrase();
 
 }

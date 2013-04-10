@@ -122,7 +122,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
 
               int curIdx = segIdx - 1;
               int szCurF = dtus[curIdx].size();
-              int distance = f.translationPosition - curF.translationPosition
+              int distance = f.targetPosition - curF.targetPosition
                   - szCurF;
 
               // f.translationPosition
@@ -207,8 +207,8 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
         TranslationOption<IString> curOption = ((DTUFeaturizable<IString, String>) curF).abstractOption;
         if (curOption != endF.abstractOption) {
           // Detect bon-bons:
-          if (CoverageSet.cross(curF.option.foreignCoverage,
-              endF.option.foreignCoverage))
+          if (CoverageSet.cross(curF.option.sourceCoverage,
+              endF.option.sourceCoverage))
             ++bonbonCount;
           seenOptions.put(curOption, (DTUFeaturizable<IString, String>) curF);
         }
@@ -254,7 +254,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
   private static int getGapCount(Featurizable<IString, String> f) {
     TranslationOption<IString> opt = f.option.abstractOption;
     int sz = 0;
-    for (IString el : f.translatedPhrase)
+    for (IString el : f.targetPhrase)
       if (el.equals(DTUTable.GAP_STR))
         ++sz;
     return sz;

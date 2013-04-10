@@ -158,16 +158,16 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     List<String> features = new ArrayList<String>();
 
-    CoverageSet cur = f.hyp.foreignCoverage;
+    CoverageSet cur = f.hyp.sourceCoverage;
     CoverageSet pre;
     if (f.prior != null)
-      pre = f.prior.hyp.foreignCoverage;
+      pre = f.prior.hyp.sourceCoverage;
     else
       pre = new CoverageSet();
     StringBuilder preTranslation = new StringBuilder();
-    for (int i = 0; i < f.translatedPhrase.size(); i++) {
-      preTranslation.append(f.translatedPhrase.get(i));
-      if (i != f.translatedPhrase.size() - 1)
+    for (int i = 0; i < f.targetPhrase.size(); i++) {
+      preTranslation.append(f.targetPhrase.get(i));
+      if (i != f.targetPhrase.size() - 1)
         preTranslation.append(" ");
     }
     String preTranslationStr = preTranslation.toString();
@@ -186,47 +186,47 @@ public class DiscrimTypedDependencyReorderingFeaturizer implements
       if (usePathFile)
         pathMap = pathMaps.get(sentId);
 
-      CoverageSet fCoverage = f.hyp.foreignCoverage;
-      int flen = f.foreignPhrase.size();
+      CoverageSet fCoverage = f.hyp.sourceCoverage;
+      int flen = f.sourcePhrase.size();
       int prevflen = 1;
       int prevelen = 1;
-      int currC = f.foreignPosition;
+      int currC = f.sourcePosition;
       int prevC = -1;
       int prevE = -1;
       if (f.prior != null) {
-        prevC = f.prior.foreignPosition;
-        prevflen = f.prior.foreignPhrase.size();
-        prevE = f.prior.translationPosition;
-        prevelen = f.prior.translatedPhrase.size();
+        prevC = f.prior.sourcePosition;
+        prevflen = f.prior.sourcePhrase.size();
+        prevE = f.prior.targetPosition;
+        prevelen = f.prior.targetPhrase.size();
       }
       if (DEBUG) {
         System.err.printf("----\n");
         System.err.printf("Partial translation (pos=%d): %s\n",
-            f.translationPosition, f.partialTranslation);
-        System.err.printf("Foreign sentence (pos=%d): %s\n", f.foreignPosition,
-            f.foreignSentence);
+            f.targetPosition, f.targetPrefix);
+        System.err.printf("Foreign sentence (pos=%d): %s\n", f.sourcePosition,
+            f.sourceSentence);
         System.err.printf("Coverage: %s (size=%d)\n", fCoverage,
-            f.hyp.foreignCoverage.length());
-        System.err.printf("%s(%d) => %s(%d)\n", f.foreignPhrase,
-            f.foreignPosition, f.translatedPhrase, f.translationPosition);
+            f.hyp.sourceCoverage.length());
+        System.err.printf("%s(%d) => %s(%d)\n", f.sourcePhrase,
+            f.sourcePosition, f.targetPhrase, f.targetPosition);
 
         if (f.prior == null)
           System.err.printf("Prior <s> => <s>\n");
         else
-          System.err.printf("Prior %s(%d) => %s(%d)\n", f.prior.foreignPhrase,
-              f.prior.foreignPosition, f.prior.translatedPhrase,
-              f.prior.translationPosition);
+          System.err.printf("Prior %s(%d) => %s(%d)\n", f.prior.sourcePhrase,
+              f.prior.sourcePosition, f.prior.targetPhrase,
+              f.prior.targetPosition);
         System.err.printf(
             "i = %d, j = %d, j' = %d, lenE = %d, lenC = %d, lenC2 = %d\n",
             prevE, prevC, currC, prevelen, prevflen, flen);
       }
 
-      List<String> feats = extractWordFeatures(f.foreignSentence, prevC,
-          prevflen, currC, flen, f.partialTranslation, prevE, prevelen);
+      List<String> feats = extractWordFeatures(f.sourceSentence, prevC,
+          prevflen, currC, flen, f.targetPrefix, prevE, prevelen);
 
       if (usePathFile)
-        feats.addAll(extractPathFeatures(f.foreignSentence, prevC, prevflen,
-            currC, flen, f.partialTranslation, prevE, prevelen, pathMap));
+        feats.addAll(extractPathFeatures(f.sourceSentence, prevC, prevflen,
+            currC, flen, f.targetPrefix, prevE, prevelen, pathMap));
       if (DEBUG) {
         for (String feat : feats) {
           System.err.println(" feat += " + feat);

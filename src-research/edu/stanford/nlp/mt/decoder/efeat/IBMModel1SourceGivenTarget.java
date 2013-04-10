@@ -36,7 +36,7 @@ public class IBMModel1SourceGivenTarget implements
     if (psfs == null)
       psfs = basePSFS;
 
-    for (IString targetWord : f.translatedPhrase) {
+    for (IString targetWord : f.targetPhrase) {
       psfs = psfs.appendSourceWord(targetWord);
     }
     h.put(f, psfs);

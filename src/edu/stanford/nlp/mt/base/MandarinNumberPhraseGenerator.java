@@ -607,7 +607,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    }
 
    @Override
-   public int longestForeignPhrase() {
+   public int longestSourcePhrase() {
       return 6; // change to the longest Mandarin phrase this phrase generator can reasonably process
    }
 

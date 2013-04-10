@@ -44,19 +44,19 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
       CoverageSet newCoverage) {
     double oldH = newHypothesis.preceedingHyp.h;
     double newH = 0;
-    CoverageSet coverage = newHypothesis.foreignCoverage;
+    CoverageSet coverage = newHypothesis.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);
 
     // System.out.printf("getHeuristicDelta:\n");
     // System.out.printf("coverage: %s", newHypothesis.foreignCoverage);
 
-    int foreignSize = newHypothesis.foreignSequence.size();
+    int foreignSize = newHypothesis.sourceSequence.size();
     for (int endEdge; startEdge < foreignSize; startEdge = coverage
         .nextClearBit(endEdge)) {
       endEdge = coverage.nextSetBit(startEdge);
 
       if (endEdge == -1) {
-        endEdge = newHypothesis.foreignSequence.size();
+        endEdge = newHypothesis.sourceSequence.size();
       }
       double localH = hSpanScores.getScore(startEdge, endEdge - 1);
 
@@ -92,15 +92,15 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
           .phraseListFeaturize(f);
       double score = scorer.getIncrementalScore(phraseFeatures);
-      int terminalPos = option.foreignPos
-          + option.abstractOption.foreign.size() - 1;
-      if (score > viterbiSpanScores.getScore(option.foreignPos, terminalPos)) {
-        viterbiSpanScores.setScore(option.foreignPos, terminalPos, score);
+      int terminalPos = option.sourcePosition
+          + option.abstractOption.source.size() - 1;
+      if (score > viterbiSpanScores.getScore(option.sourcePosition, terminalPos)) {
+        viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
       }
       if (DEBUG) {
-        System.err.printf("\t%d:%d %s->%s score: %.3f\n", option.foreignPos,
-            terminalPos, option.abstractOption.foreign,
-            option.abstractOption.translation, score);
+        System.err.printf("\t%d:%d %s->%s score: %.3f\n", option.sourcePosition,
+            terminalPos, option.abstractOption.source,
+            option.abstractOption.target, score);
         System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
       }
     }

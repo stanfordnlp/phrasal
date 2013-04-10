@@ -39,20 +39,20 @@ public class VPRotationalFeaturizer implements
       // we have a swap
       int end_foreignSwapPos = Featurizables.endLocationOfSwappedPhrase(f);
 
-      IString fBInitialWord = f.foreignSentence.get(beg_foreignSwapPos);
-      IString fBFinalWord = f.foreignSentence.get(end_foreignSwapPos);
+      IString fBInitialWord = f.sourceSentence.get(beg_foreignSwapPos);
+      IString fBFinalWord = f.sourceSentence.get(end_foreignSwapPos);
 
-      IString fAFinalWord = f.foreignSentence.get(beg_foreignSwapPos - 1);
-      IString fAInitialWord = f.foreignSentence.get(f.foreignPosition);
+      IString fAFinalWord = f.sourceSentence.get(beg_foreignSwapPos - 1);
+      IString fAInitialWord = f.sourceSentence.get(f.sourcePosition);
 
       if (DEBUG) {
-        System.err.printf("t: %s\n", f.partialTranslation);
-        System.err.printf("f: %s\n", f.foreignSentence);
-        System.err.printf("tp: %s\n", f.translatedPhrase);
-        System.err.printf("fp: %s\n", f.foreignPhrase);
-        System.err.printf("c: %s\n", f.hyp.foreignCoverage);
-        System.err.printf("f pos: %d\n", f.foreignPosition);
-        System.err.printf("t pos: %d\n", f.translationPosition);
+        System.err.printf("t: %s\n", f.targetPrefix);
+        System.err.printf("f: %s\n", f.sourceSentence);
+        System.err.printf("tp: %s\n", f.targetPhrase);
+        System.err.printf("fp: %s\n", f.sourcePhrase);
+        System.err.printf("c: %s\n", f.hyp.sourceCoverage);
+        System.err.printf("f pos: %d\n", f.sourcePosition);
+        System.err.printf("t pos: %d\n", f.targetPosition);
         System.err.printf(
             "foreignSwap -- Translated: (%s-%s); Untrans: (%s-%s)\n",
             fBInitialWord, fBFinalWord, fAInitialWord, fAFinalWord);

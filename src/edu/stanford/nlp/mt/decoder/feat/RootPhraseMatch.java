@@ -93,7 +93,7 @@ public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, 
 	    */
 	    for (Integer possibleRoot : possibleRoots) {
 	       int targetRoot = possibleRoot;
-	       if (f.f2tAlignmentIndex[sourceRoot-1][0] <= targetRoot && f.f2tAlignmentIndex[sourceRoot-1][1] >= targetRoot)  {
+	       if (f.s2tAlignmentIndex[sourceRoot-1][0] <= targetRoot && f.s2tAlignmentIndex[sourceRoot-1][1] >= targetRoot)  {
 	    	   return new FeatureValue<String>(FEATURE_NAME_MATCH, 1.0);
 	       }    
 	    }

@@ -27,7 +27,7 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
   public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
       CoverageSet newCoverage) {
 
-    int foreignLength = newHypothesis.foreignSequence.size();
+    int foreignLength = newHypothesis.sourceSequence.size();
     double scorePerTranslatedWord = newHypothesis.score
         / (foreignLength - newHypothesis.untranslatedTokens);
     double newH = scorePerTranslatedWord * newHypothesis.untranslatedTokens;

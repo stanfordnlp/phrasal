@@ -237,11 +237,11 @@ public class DiscrimDistortionFeaturizer extends
   public Pair<Integer, Double> outFeaturize(Featurizable<IString, String> f,
       int lastSIdx) {
 
-    final int sOffset = f.foreignPosition;
+    final int sOffset = f.sourcePosition;
 
     double optScore = 0.0;
     if (f.option.abstractOption.alignment.hasAlignment()) {
-      final int tOptLen = f.translatedPhrase.size();
+      final int tOptLen = f.targetPhrase.size();
       for (int i = 0; i < tOptLen; i++) {
 
         final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
@@ -268,11 +268,11 @@ public class DiscrimDistortionFeaturizer extends
         int cacheIndex = (useDelims) ? lastSIdx + 1 : lastSIdx;
         optScore += getScoreFromCache(outLogProbCache, cacheIndex, distortion);
       }
-      lastSIdx = sOffset + f.foreignPhrase.size() - 1;
+      lastSIdx = sOffset + f.sourcePhrase.size() - 1;
     }
 
     if (useDelims && f.done) {
-      int distortion = getDistortion(lastSIdx, f.foreignSentence.size());
+      int distortion = getDistortion(lastSIdx, f.sourceSentence.size());
       int cacheIndex = (useDelims) ? lastSIdx + 1 : lastSIdx;
       optScore += getScoreFromCache(outLogProbCache, cacheIndex, distortion);
     }
@@ -286,11 +286,11 @@ public class DiscrimDistortionFeaturizer extends
     // final int translationId = f.translationId + (Phrasal.local_procs > 1 ? 2
     // : 0);
 
-    final int sOffset = f.foreignPosition;
+    final int sOffset = f.sourcePosition;
 
     double optScore = 0.0;
     if (f.option.abstractOption.alignment.hasAlignment()) {
-      final int tOptLen = f.translatedPhrase.size();
+      final int tOptLen = f.targetPhrase.size();
       for (int i = 0; i < tOptLen; i++) {
 
         final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
@@ -309,11 +309,11 @@ public class DiscrimDistortionFeaturizer extends
       int distortion = getDistortion(lastSIdx, sOffset);
       int cacheIndex = (useDelims) ? sOffset + 1 : sOffset;
       optScore += getScoreFromCache(inLogProbCache, cacheIndex, distortion);
-      lastSIdx = sOffset + f.foreignPhrase.size() - 1;
+      lastSIdx = sOffset + f.sourcePhrase.size() - 1;
     }
 
     if (useDelims && f.done) {
-      int distortion = getDistortion(lastSIdx, f.foreignSentence.size());
+      int distortion = getDistortion(lastSIdx, f.sourceSentence.size());
       int cacheIndex = inLogProbCache.length - 1;
       optScore += getScoreFromCache(inLogProbCache, cacheIndex, distortion);
     }
@@ -525,15 +525,15 @@ public class DiscrimDistortionFeaturizer extends
             .getState(this);
 
         System.err.printf("T STEP %d\n", iter++);
-        System.err.println(" partial: " + thisF.partialTranslation);
+        System.err.println(" partial: " + thisF.targetPrefix);
         System.err
-            .println(" coverage: " + thisF.hyp.foreignCoverage.toString());
+            .println(" coverage: " + thisF.hyp.sourceCoverage.toString());
         System.err.println(" algn: "
             + thisF.option.abstractOption.alignment.toString());
         System.err.printf(" opt: %s --> %s\n\n",
-            thisF.foreignPhrase.toString(), thisF.translatedPhrase.toString());
-        System.err.printf(" tpos: %d\n", thisF.translationPosition);
-        System.err.printf(" spos: %d\n", thisF.foreignPosition);
+            thisF.sourcePhrase.toString(), thisF.targetPhrase.toString());
+        System.err.printf(" tpos: %d\n", thisF.targetPosition);
+        System.err.printf(" spos: %d\n", thisF.sourcePosition);
         System.err.printf(" lastSIdx: %d\n", numNulls);
       }
     }

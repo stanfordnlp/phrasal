@@ -158,7 +158,7 @@ public class VerbLinkageFeaturizerCorpus implements
     double sumNumf = 0;
     double sumNumt = 0;
 
-    int fPhrSz = f.foreignPhrase.size();
+    int fPhrSz = f.sourcePhrase.size();
     String fConLexP = "";
     String fConLexS = "";
     String fWord = "";
@@ -173,49 +173,49 @@ public class VerbLinkageFeaturizerCorpus implements
     String fConSNoun = "";
 
     for (int fPos = 0; fPos < fPhrSz; fPos++) {
-      fWord = f.foreignPhrase.get(fPos).toString();
+      fWord = f.sourcePhrase.get(fPos).toString();
       if (fVVs.contains(fWord)) {
-        int foreignPhrasePos = f.foreignPosition;
+        int foreignPhrasePos = f.sourcePosition;
         int fWordPos = fPos + foreignPhrasePos;
         for (int sourcePos = fWordPos - 1; sourcePos > 0; sourcePos--) {
-          if (fCrosss.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fCrosss.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConPCross = "non-first-clause";
             break;
           }
-          if (fVVs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fVVs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConPVerb = "Verb";
           }
-          if (fVAs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fVAs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConPAdj = "Adj";
           }
-          if (fNouns.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fNouns.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConPNoun = "Noun";
           }
-          if (fAdvs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fAdvs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConPAdv = "Adv";
           }
-          if (fFuns.contains(f.foreignSentence.get(sourcePos).toString())) {
-            fConLexP = fConLexP + f.foreignSentence.get(sourcePos).toString();
+          if (fFuns.contains(f.sourceSentence.get(sourcePos).toString())) {
+            fConLexP = fConLexP + f.sourceSentence.get(sourcePos).toString();
           }
         }
 
-        int lastPos = f.foreignSentence.size();
+        int lastPos = f.sourceSentence.size();
         for (int sourcePos = fWordPos + 1; sourcePos < lastPos; sourcePos++) {
-          if (fCrosss.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fCrosss.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConSCross = "non-end-clause";
             break;
           }
-          if (fVVs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fVVs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConSVerb = "Verb2";
           }
-          if (fVAs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fVAs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConSAdj = "Adj2";
           }
-          if (fNouns.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fNouns.contains(f.sourceSentence.get(sourcePos).toString())) {
             fConSNoun = "Noun2";
           }
-          if (fFuns.contains(f.foreignSentence.get(sourcePos).toString())) {
-            fConLexS = fConLexS + f.foreignSentence.get(sourcePos).toString();
+          if (fFuns.contains(f.sourceSentence.get(sourcePos).toString())) {
+            fConLexS = fConLexS + f.sourceSentence.get(sourcePos).toString();
           }
         }
       }
@@ -224,13 +224,13 @@ public class VerbLinkageFeaturizerCorpus implements
     fCon = fConPVerb + fConPAdj + fConPNoun + fConPAdv + fConSVerb + fConSAdj
         + fConSNoun + fConLexP + "P" + fConLexS + "S" + fConPCross + fConSCross;
 
-    int tPhrSz = f.translatedPhrase.size();
+    int tPhrSz = f.targetPhrase.size();
     String tCon = "";
     for (int tPos = 0; tPos < tPhrSz; tPos++) {
-      IString tWord = f.translatedPhrase.get(tPos);
+      IString tWord = f.targetPhrase.get(tPos);
       if (tVerbs.contains(tWord.toString())) {
         if (tPos > 0) {
-          IString tWordP = f.translatedPhrase.get(tPos - 1);
+          IString tWordP = f.targetPhrase.get(tPos - 1);
           if (tNouns.contains(tWordP.toString())) {
             tCon = "Enoun";
           } else if (tAnds.contains(tWordP.toString())) {

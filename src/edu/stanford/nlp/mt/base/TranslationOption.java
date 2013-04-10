@@ -13,47 +13,47 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   public final int id;
   public final float[] scores;
   public final String[] phraseScoreNames;
-  public final RawSequence<T> translation;
-  public final RawSequence<T> foreign;
+  public final RawSequence<T> target;
+  public final RawSequence<T> source;
   public final PhraseAlignment alignment;
   public final boolean forceAdd;
   private int hashCode = -1;
 
   public TranslationOption(float[] scores, String[] phraseScoreNames,
-      RawSequence<T> translation, RawSequence<T> foreign,
+      RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
-    this(0, scores, phraseScoreNames, translation, foreign, alignment);
+    this(0, scores, phraseScoreNames, target, source, alignment);
   }
 
   public TranslationOption(float[] scores, String[] phraseScoreNames,
-      RawSequence<T> translation, RawSequence<T> foreign,
+      RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment, boolean forceAdd) {
-    this(0, scores, phraseScoreNames, translation, foreign, alignment, forceAdd);
+    this(0, scores, phraseScoreNames, target, source, alignment, forceAdd);
   }
 
   /**
 	 *
 	 */
   public TranslationOption(int id, float[] scores, String[] phraseScoreNames,
-      RawSequence<T> translation, RawSequence<T> foreign,
+      RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
     this.id = id;
     this.alignment = alignment;
     this.scores = Arrays.copyOf(scores, scores.length);
-    this.translation = translation;
-    this.foreign = foreign;
+    this.target = target;
+    this.source = source;
     this.phraseScoreNames = phraseScoreNames;
     this.forceAdd = false;
   }
 
   public TranslationOption(int id, float[] scores, String[] phraseScoreNames,
-      RawSequence<T> translation, RawSequence<T> foreign,
+      RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment, boolean forceAdd) {
     this.id = id;
     this.alignment = alignment;
     this.scores = Arrays.copyOf(scores, scores.length);
-    this.translation = translation;
-    this.foreign = foreign;
+    this.target = target;
+    this.source = source;
     this.phraseScoreNames = phraseScoreNames;
     this.forceAdd = forceAdd;
   }
@@ -62,7 +62,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   public String toString() {
     StringBuilder sbuf = new StringBuilder();
     sbuf.append(String.format("TranslationOption: \"%s\" scores: %s\n",
-        translation, Arrays.toString(scores)));
+        target, Arrays.toString(scores)));
     return sbuf.toString();
   }
 

@@ -120,7 +120,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         Double score = fcCache.get(id);
         if (score == null) {
           Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(
-              hyp.foreignSequence, concreteOpt, translationId, i);
+              hyp.sourceSequence, concreteOpt, translationId, i);
           List<FeatureValue<FV>> phraseFeatures = featurizer
               .phraseListFeaturize(f);
           score = scorer.getIncrementalScore(phraseFeatures);
@@ -509,7 +509,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     }
 
-    return hyp.translationOpt.abstractOption.translation;
+    return hyp.translationOpt.abstractOption.target;
   }
 
   private static <TK, FV> TranslationOption<TK> getAbstractOption(
@@ -522,7 +522,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       int idx) {
     if (option instanceof DTUOption)
       return ((DTUOption<TK>) option).dtus[idx];
-    return option.translation;
+    return option.target;
   }
 
   private static <TK> int getNumberSegments(TranslationOption<TK> option) {
@@ -564,12 +564,12 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     System.err.printf(
         "hypothesis [class=%s,id=%d,pos=%d,expired=%s,pending=%d]: %s\n",
         getClass(), System.identityHashCode(this),
-        featurizable.translationPosition, hasExpired, pendingPhrases.size(),
+        featurizable.targetPosition, hasExpired, pendingPhrases.size(),
         this);
     System.err.printf(
         "parent hypothesis [class=%s,id=%d,pos=%d,expired=%s]: %s\n",
         preceedingHyp.getClass(), System.identityHashCode(preceedingHyp),
-        preceedingHyp.featurizable.translationPosition,
+        preceedingHyp.featurizable.targetPosition,
         preceedingHyp.hasExpired(), preceedingHyp);
     System.err.println("pendingPhrasesCost: " + pendingPhrasesCost);
 

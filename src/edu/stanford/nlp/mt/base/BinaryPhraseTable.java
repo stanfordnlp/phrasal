@@ -91,7 +91,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     Database meta = dbEnv.openDatabase(null, "meta", dbConfig);
     DatabaseEntry metaKey = new DatabaseEntry("longestForeignPhrase".getBytes());
     DatabaseEntry metaValue = new DatabaseEntry();
-    IntegerBinding.intToEntry(flatPhraseTable.longestForeignPhrase(), metaValue);
+    IntegerBinding.intToEntry(flatPhraseTable.longestSourcePhrase(), metaValue);
     meta.put(null, metaKey, metaValue);
     System.err.println("metavalue: "+metaValue);
     
@@ -120,7 +120,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
       DataOutputStream dostrm = new DataOutputStream(bostrm);
       dostrm.writeInt(translationOpts.size());
       for (TranslationOption<IString> opt : translationOpts) {       
-        dostrm.writeUTF(opt.translation.toString());
+        dostrm.writeUTF(opt.target.toString());
         dostrm.write(opt.scores.length);
         for (int i = 0; i < opt.scores.length; i++) {
           dostrm.writeFloat(opt.scores[i]);
@@ -177,7 +177,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   }
 
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return longestForeignPhrase;
   }
   public static void main(String[] args) throws IOException {

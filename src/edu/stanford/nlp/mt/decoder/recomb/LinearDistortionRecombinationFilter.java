@@ -23,7 +23,7 @@ public class LinearDistortionRecombinationFilter<TK, FV> implements
     if (hyp.translationOpt == null) {
       return 0;
     }
-    return hyp.translationOpt.foreignCoverage.length();
+    return hyp.translationOpt.sourceCoverage.length();
   }
 
   @Override

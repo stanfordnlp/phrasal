@@ -58,13 +58,13 @@ public class SourcePhraseContextBOW implements
 
     fList = new LinkedList<FeatureValue<String>>();
     Sequence<IString> wrappedSource = new InsertedStartEndToken<IString>(
-        f.foreignSentence, ARPALanguageModel.START_TOKEN,
+        f.sourceSentence, ARPALanguageModel.START_TOKEN,
         ARPALanguageModel.END_TOKEN);
     int sz = wrappedSource.size();
-    int startBoundry = f.foreignPosition + 1;
-    int endBoundry = f.foreignPosition + f.foreignPhrase.size() + 1;
-    String trans = f.foreignPhrase.toString("_") + ">"
-        + f.translatedPhrase.toString("_");
+    int startBoundry = f.sourcePosition + 1;
+    int endBoundry = f.sourcePosition + f.sourcePhrase.size() + 1;
+    String trans = f.sourcePhrase.toString("_") + ">"
+        + f.targetPhrase.toString("_");
 
     for (int i = 0; i < windowSize; i++) {
       int lWordPos = startBoundry - i - 1;

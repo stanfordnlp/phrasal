@@ -88,11 +88,11 @@ public class MultinomialDistortionFeaturizer extends
 
     int lastSIdx = (f.prior == null) ? -1 : (Integer) f.prior.getState(this);
 
-    final int sOffset = f.foreignPosition;
+    final int sOffset = f.sourcePosition;
 
     double optScore = 0.0;
     if (f.option.abstractOption.alignment.hasAlignment()) {
-      final int tOptLen = f.translatedPhrase.size();
+      final int tOptLen = f.targetPhrase.size();
       for (int i = 0; i < tOptLen; i++) {
 
         final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
@@ -113,7 +113,7 @@ public class MultinomialDistortionFeaturizer extends
       DistortionModel.Class thisClass = DistortionModel
           .discretizeDistortion(distortion);
       optScore += paramCache[thisClass.ordinal()];
-      lastSIdx = sOffset + f.foreignPhrase.size() - 1;
+      lastSIdx = sOffset + f.sourcePhrase.size() - 1;
     }
 
     f.setState(this, lastSIdx);

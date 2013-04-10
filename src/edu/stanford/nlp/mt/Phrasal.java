@@ -804,8 +804,8 @@ public class Phrasal {
     IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
     SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
         isolatedPhraseFeaturizer,
-        withGaps ? HeuristicFactory.ISOLATED_DTU_FOREIGN_COVERAGE
-            : HeuristicFactory.ISOLATED_PHRASE_FOREIGN_COVERAGE);
+        withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
+            : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
     
     // Create Inferers and scorers
     if (config.containsKey(LOCAL_PROCS))
@@ -1002,13 +1002,13 @@ public class Phrasal {
       // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation.translation);
       System.err.printf("Final score: %.3f%n", (float) bestTranslation.score);
-      if (bestTranslation.foreignCoverage != null) {
-        System.err.printf("Coverage: %s%n", bestTranslation.foreignCoverage);
+      if (bestTranslation.sourceCoverage != null) {
+        System.err.printf("Coverage: %s%n", bestTranslation.sourceCoverage);
         System.err.printf(
             "Foreign words covered: %d (/%d)  - %.3f %%%n",
-            bestTranslation.foreignCoverage.cardinality(),
+            bestTranslation.sourceCoverage.cardinality(),
             sourceLength,
-            bestTranslation.foreignCoverage.cardinality() * 100.0
+            bestTranslation.sourceCoverage.cardinality() * 100.0
             / sourceLength);
       } else {
         System.err.println("Coverage: {}");
@@ -1122,9 +1122,9 @@ public class Phrasal {
    */
   public List<RichTranslation<IString, String>> decode(String[] tokens,
       int translationId, int threadId) {
-    Sequence<IString> foreign = new SimpleSequence<IString>(true,
+    Sequence<IString> source = new SimpleSequence<IString>(true,
         IStrings.toSyncIStringArray(tokens));
-    return decode(foreign, translationId, threadId);
+    return decode(source, translationId, threadId);
   }
   
   /**
@@ -1132,11 +1132,11 @@ public class Phrasal {
    * 
    * NOTE: This call is threadsafe.
    * 
-   * @param foreign
+   * @param source
    * @param translationId
    * @param threadId -- Inferer object to use (one per thread)
    */
-  public List<RichTranslation<IString, String>> decode(Sequence<IString> foreign,
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int translationId, int threadId) {
     assert threadId >= 0 && threadId < numThreads;
     assert translationId >= 0;
@@ -1144,7 +1144,7 @@ public class Phrasal {
     ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
         : new EnumeratedConstrainedOutputSpace<IString, String>(
             constrainedToRefs.get(translationId),
-            phraseGenerator.longestForeignPhrase()));
+            phraseGenerator.longestSourcePhrase()));
 
     List<RichTranslation<IString, String>> translations = 
         new ArrayList<RichTranslation<IString, String>>(1);
@@ -1152,7 +1152,7 @@ public class Phrasal {
     if (nbestListSize > 1) {
       translations = inferers
           .get(threadId).nbest(
-              foreign,
+              source,
               translationId,
               constrainedOutputSpace,
               (constrainedOutputSpace == null ? null : constrainedOutputSpace
@@ -1166,7 +1166,7 @@ public class Phrasal {
       // calling nbest() with a list size of 1. Therefore, this call is *not* a special
       // case of the condition above.
       RichTranslation<IString, String> translation = inferers.get(threadId).translate(
-          foreign,
+          source,
           translationId,
           constrainedOutputSpace,
           (constrainedOutputSpace == null ? null : constrainedOutputSpace

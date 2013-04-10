@@ -189,13 +189,13 @@ public class VerbLinkageFeaturizer implements
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
 
-    int fPhrSz = f.foreignPhrase.size();
+    int fPhrSz = f.sourcePhrase.size();
     String fCon = "";
     String fWord = "";
     for (int fPos = 0; fPos < fPhrSz; fPos++) {
-      fWord = f.foreignPhrase.get(fPos).toString();
+      fWord = f.sourcePhrase.get(fPos).toString();
       if (knownVerbs.contains(fWord)) {
-        int foreignPhrasePos = f.foreignPosition;
+        int foreignPhrasePos = f.sourcePosition;
         int fWordPos = fPos + foreignPhrasePos;
         String fverb = "f";
         String fVAverb = "f";
@@ -226,42 +226,42 @@ public class VerbLinkageFeaturizer implements
 
         for (int sourcePos = fWordPos - 1; sourcePos > 0; sourcePos--) {
 
-          if (fVerbs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fVerbs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fverb = "t";
           }
 
-          if (fNouns.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fNouns.contains(f.sourceSentence.get(sourcePos).toString())) {
             fnoun = "t";
           }
 
-          if (fSHIs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fSHIs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fSHI = "t";
           }
 
-          if (fYOUs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fYOUs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fYOU = "t";
           }
 
-          if (fBPUs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fBPUs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fBPU = "t";
             break;
           }
 
-          if (fnBPUs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fnBPUs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fnBPU = "t";
           }
         }
 
-        if ((fWordPos + 1) < f.foreignSentence.size()
-            && fDEs.contains(f.foreignSentence.get(fWordPos + 1))) {
+        if ((fWordPos + 1) < f.sourceSentence.size()
+            && fDEs.contains(f.sourceSentence.get(fWordPos + 1))) {
           fDE = "t";
         }
-        if ((fWordPos + 1) < f.foreignSentence.size()
-            && fASs.contains(f.foreignSentence.get(fWordPos + 1))) {
+        if ((fWordPos + 1) < f.sourceSentence.size()
+            && fASs.contains(f.sourceSentence.get(fWordPos + 1))) {
           fAS = "t";
         }
         if ((fWordPos - 1) >= 0
-            && fADs.contains(f.foreignSentence.get(fWordPos + 1))) {
+            && fADs.contains(f.sourceSentence.get(fWordPos + 1))) {
           fAD = "t";
         }
 
@@ -273,7 +273,7 @@ public class VerbLinkageFeaturizer implements
     }
 
     // List<IString> transVerbs = new LinkedList<IString>();
-    int tPhrSz = f.translatedPhrase.size();
+    int tPhrSz = f.targetPhrase.size();
     String tBeVerb = "f";
     String tHaveVerb = "f";
     String tVerb = "f";
@@ -287,7 +287,7 @@ public class VerbLinkageFeaturizer implements
     String tIN = "f";
 
     for (int tPos = 0; tPos < tPhrSz; tPos++) {
-      IString tWord = f.translatedPhrase.get(tPos);
+      IString tWord = f.targetPhrase.get(tPos);
       if (tBeVerbs.contains(tWord.toString())) {
         tBeVerb = "t";
         tVerb = "t";

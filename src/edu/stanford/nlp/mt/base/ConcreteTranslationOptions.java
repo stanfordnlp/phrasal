@@ -21,7 +21,7 @@ public class ConcreteTranslationOptions {
     flippedCoverage.or(coverage);
     flippedCoverage.flip(0, foreignLength);
     for (ConcreteTranslationOption<TK,FV> option : options) {
-      if (flippedCoverage.intersects(option.foreignCoverage)) {
+      if (flippedCoverage.intersects(option.sourceCoverage)) {
         applicableOptions.add(option);
       }
     }

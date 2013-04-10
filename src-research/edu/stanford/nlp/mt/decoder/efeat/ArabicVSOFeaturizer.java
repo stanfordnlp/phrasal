@@ -55,7 +55,7 @@ public class ArabicVSOFeaturizer implements
     if (f == null)
       return false;
 
-    boolean verbCovered = f.hyp.foreignCoverage.get(span.first());
+    boolean verbCovered = f.hyp.sourceCoverage.get(span.first());
 
     return verbCovered;
   }
@@ -85,7 +85,7 @@ public class ArabicVSOFeaturizer implements
       final int verbIdx, Featurizable<IString, String> f, boolean VERBOSE) {
 
     final int length = subject.second() - subject.first() + 1;
-    final BitSet fCoverage = f.hyp.foreignCoverage.get(subject.first(),
+    final BitSet fCoverage = f.hyp.sourceCoverage.get(subject.first(),
         subject.second() + 1);
 
     final boolean subjCovered = (fCoverage.cardinality() == length);
@@ -123,7 +123,7 @@ public class ArabicVSOFeaturizer implements
       Featurizable<IString, String> f) {
     int minLeftIndex = Integer.MAX_VALUE;
     for (int i = span.first(); i <= span.second(); i++) {
-      final int[] eRange = f.f2tAlignmentIndex[i];
+      final int[] eRange = f.s2tAlignmentIndex[i];
       if (eRange == null)
         continue;
 
@@ -139,7 +139,7 @@ public class ArabicVSOFeaturizer implements
       Featurizable<IString, String> f) {
     int maxRightIndex = Integer.MIN_VALUE;
     for (int i = span.first(); i <= span.second(); i++) {
-      final int[] eRange = f.f2tAlignmentIndex[i];
+      final int[] eRange = f.s2tAlignmentIndex[i];
       if (eRange == null)
         continue;
 
@@ -185,22 +185,22 @@ public class ArabicVSOFeaturizer implements
         System.err.printf(" vb %d lsb %d rsb %d\n", activeSubjectGroup.first(),
             activeSubjectGroup.second(), activeSubjectGroup.third());
         System.err.println("=== Current Featurizer ===");
-        System.err.printf(" TransOpt: %s ||| %s\n", f.foreignPhrase.toString(),
-            f.translatedPhrase.toString());
-        System.err.printf(" cov: %s\n", f.option.foreignCoverage.toString());
-        System.err.printf(" hyp: %s\n", f.partialTranslation.toString());
-        System.err.printf(" hyp cov: %s\n", f.hyp.foreignCoverage.toString());
+        System.err.printf(" TransOpt: %s ||| %s\n", f.sourcePhrase.toString(),
+            f.targetPhrase.toString());
+        System.err.printf(" cov: %s\n", f.option.sourceCoverage.toString());
+        System.err.printf(" hyp: %s\n", f.targetPrefix.toString());
+        System.err.printf(" hyp cov: %s\n", f.hyp.sourceCoverage.toString());
         System.err.println("=== Prior Featurizer ===");
         if (f.prior != null) {
           System.err.printf(" TransOpt: %s ||| %s\n",
-              f.prior.foreignPhrase.toString(),
-              f.prior.translatedPhrase.toString());
+              f.prior.sourcePhrase.toString(),
+              f.prior.targetPhrase.toString());
           System.err.printf(" cov: %s\n",
-              f.prior.option.foreignCoverage.toString());
+              f.prior.option.sourceCoverage.toString());
           System.err
-              .printf(" hyp: %s\n", f.prior.partialTranslation.toString());
+              .printf(" hyp: %s\n", f.prior.targetPrefix.toString());
           System.err.printf(" hyp cov: %s\n",
-              f.prior.hyp.foreignCoverage.toString());
+              f.prior.hyp.sourceCoverage.toString());
         }
       }
 

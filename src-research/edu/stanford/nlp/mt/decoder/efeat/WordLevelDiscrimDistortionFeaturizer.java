@@ -112,32 +112,32 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
      * in the foreignSentence
      */
     if (currentWordTag != null) {
-      if (currentWordTag.size() != f.foreignSentence.size()) {
-        System.err.println("f.foreignSentence=" + f.foreignSentence);
+      if (currentWordTag.size() != f.sourceSentence.size()) {
+        System.err.println("f.foreignSentence=" + f.sourceSentence);
         throw new RuntimeException("line " + lineCount + " of "
             + wordTagFilename + " has different #words(="
             + currentWordTag.size()
             + " from what's in the f.foreignSentence(size="
-            + f.foreignSentence.size() + ")");
+            + f.sourceSentence.size() + ")");
       }
     }
 
     if (DETAILED_DEBUG) {
       System.err.println("in WordLevelDiscrimDistortionFeaturizer.");
-      System.err.println("  foreignPhrase=" + f.foreignPhrase);
-      System.err.println("  foreignPhrase.size=" + f.foreignPhrase.size());
+      System.err.println("  foreignPhrase=" + f.sourcePhrase);
+      System.err.println("  foreignPhrase.size=" + f.sourcePhrase.size());
       int foreignAdjancentNextPhrasePosition = foreignAdjancentNextPhrasePosition(f);
       System.err.println("  foreignAdjancentNextPhrasePosition="
           + foreignAdjancentNextPhrasePosition);
-      System.err.println("  foreignPosition=" + f.foreignPosition);
-      int prevForeignWordPosition = f.foreignPosition - 1;
+      System.err.println("  foreignPosition=" + f.sourcePosition);
+      int prevForeignWordPosition = f.sourcePosition - 1;
       System.err.println("  lastPositionOfAdjacentPreviousPhrase="
           + prevForeignWordPosition);
       System.err.println("  priorPhraseTranslated=" + priorPhraseTranslated(f));
       System.err.println("  nextPhraseTranslated=" + nextPhraseTranslated(f));
-      System.err.println("  translatedPhrase=" + f.translatedPhrase);
-      System.err.println("  partialTranslation=" + f.partialTranslation);
-      System.err.println("  foreignSentence=" + f.foreignSentence);
+      System.err.println("  translatedPhrase=" + f.targetPhrase);
+      System.err.println("  partialTranslation=" + f.targetPrefix);
+      System.err.println("  foreignSentence=" + f.sourceSentence);
       System.err.println("  hyp=" + f.hyp);
       System.err.println("  hyp.parent()=" + f.hyp.parent());
     }
@@ -173,8 +173,8 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
 
     // instead, take the startPos and EndPos of current foreign translation?
-    int start = f.foreignPosition;
-    int end = f.foreignPosition + f.foreignPhrase.size() - 1;
+    int start = f.sourcePosition;
+    int end = f.sourcePosition + f.sourcePhrase.size() - 1;
 
     for (int curr = start; curr < end; curr++) {
       int next = curr + 1;
@@ -239,8 +239,8 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
     if (!wordTranslated(f, cidx1) || !wordTranslated(f, cidx2))
       return features; // empty features
 
-    int[] ephrase1_range = f.f2tAlignmentIndex[cidx1];
-    int[] ephrase2_range = f.f2tAlignmentIndex[cidx2];
+    int[] ephrase1_range = f.s2tAlignmentIndex[cidx1];
+    int[] ephrase2_range = f.s2tAlignmentIndex[cidx2];
 
     // sanity check
     if (ephrase1_range.length != 2 || ephrase2_range.length != 2) {
@@ -249,13 +249,13 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
     }
 
     int relative_cidx1_AlignedEnglishIndex = getAlignedEnglishWordIndex(
-        f.foreignSentence.get(cidx1),
-        f.partialTranslation.subsequence(ephrase1_range[0], ephrase1_range[1]),
+        f.sourceSentence.get(cidx1),
+        f.targetPrefix.subsequence(ephrase1_range[0], ephrase1_range[1]),
         model1);
 
     int relative_cidx2_AlignedEnglishIndex = getAlignedEnglishWordIndex(
-        f.foreignSentence.get(cidx2),
-        f.partialTranslation.subsequence(ephrase2_range[0], ephrase2_range[1]),
+        f.sourceSentence.get(cidx2),
+        f.targetPrefix.subsequence(ephrase2_range[0], ephrase2_range[1]),
         model1);
 
     int cidx1_AlignedEnglishIndex = ephrase1_range[0]
@@ -265,9 +265,9 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
 
     if (DETAILED_DEBUG)
       System.err.printf("word pair %s %s (%d %d) --> %s %s (%d %d)\n",
-          f.foreignSentence.get(cidx1), f.foreignSentence.get(cidx2), cidx1,
-          cidx2, f.partialTranslation.get(cidx1_AlignedEnglishIndex),
-          f.partialTranslation.get(cidx2_AlignedEnglishIndex),
+          f.sourceSentence.get(cidx1), f.sourceSentence.get(cidx2), cidx1,
+          cidx2, f.targetPrefix.get(cidx1_AlignedEnglishIndex),
+          f.targetPrefix.get(cidx2_AlignedEnglishIndex),
           cidx1_AlignedEnglishIndex, cidx2_AlignedEnglishIndex);
 
     int distance = cidx2_AlignedEnglishIndex - cidx1_AlignedEnglishIndex;
@@ -277,8 +277,8 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
     for (String distortionType : distortionTypes) {
       if (PAIR_OF_SOURCE_WORDS) {
         StringBuilder sb = new StringBuilder();
-        sb.append(featPrefix).append(f.foreignSentence.get(cidx1)).append("-")
-            .append(f.foreignSentence.get(cidx2)).append("-")
+        sb.append(featPrefix).append(f.sourceSentence.get(cidx1)).append("-")
+            .append(f.sourceSentence.get(cidx2)).append("-")
             .append(distortionType);
         if (DETAILED_DEBUG)
           System.err.println("adding feature: " + sb.toString());
@@ -299,7 +299,7 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
       if (FIRST_OF_SOURCE_WORDS) {
         StringBuilder sb = new StringBuilder();
         sb.append(featPrefix).append("SW1:")
-            .append(f.foreignSentence.get(cidx1)).append("-")
+            .append(f.sourceSentence.get(cidx1)).append("-")
             .append(distortionType);
         if (DETAILED_DEBUG)
           System.err.println("adding feature: " + sb.toString());
@@ -319,7 +319,7 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
       if (SECOND_OF_SOURCE_WORDS) {
         StringBuilder sb = new StringBuilder();
         sb.append(featPrefix).append("SW2:")
-            .append(f.foreignSentence.get(cidx2)).append("-")
+            .append(f.sourceSentence.get(cidx2)).append("-")
             .append(distortionType);
         if (DETAILED_DEBUG)
           System.err.println("adding feature: " + sb.toString());
@@ -429,8 +429,8 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
   private List<FeatureValue<String>> extractConnectionFeaturesWithPreviousPhrase(
       Featurizable<TK, String> f) {
     // guranteed to be not negative, because we checked "priorPhraseTranslated"
-    int lastWordPositionOfPreviousPhrase = f.foreignPosition - 1;
-    int curr = f.foreignPosition;
+    int lastWordPositionOfPreviousPhrase = f.sourcePosition - 1;
+    int curr = f.sourcePosition;
 
     return extractDistortionFeatureForPairOfSourceWords(
         lastWordPositionOfPreviousPhrase, curr, f, currentWordTag, model1);
@@ -438,9 +438,9 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
 
   private List<FeatureValue<String>> extractConnectionFeaturesWithNextPhrase(
       Featurizable<TK, String> f) {
-    int curr = f.foreignPosition + f.foreignPhrase.size() - 1;
-    int firstWordPositionOfNextPhrase = f.foreignPosition
-        + f.foreignPhrase.size();
+    int curr = f.sourcePosition + f.sourcePhrase.size() - 1;
+    int firstWordPositionOfNextPhrase = f.sourcePosition
+        + f.sourcePhrase.size();
 
     return extractDistortionFeatureForPairOfSourceWords(curr,
         firstWordPositionOfNextPhrase, f, currentWordTag, model1);
@@ -451,7 +451,7 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
    *         It is the start position of the linearly adjancent next phrase
    **/
   private int foreignAdjancentNextPhrasePosition(Featurizable<TK, String> f) {
-    return f.foreignPosition + f.foreignPhrase.size();
+    return f.sourcePosition + f.sourcePhrase.size();
   }
 
   /**
@@ -464,7 +464,7 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
     if (wordPosition < 0)
       return false;
 
-    return f.hyp.foreignCoverage.get(wordPosition);
+    return f.hyp.sourceCoverage.get(wordPosition);
   }
 
   /**
@@ -472,7 +472,7 @@ public class WordLevelDiscrimDistortionFeaturizer<TK> implements
    *         translated or not
    **/
   private boolean priorPhraseTranslated(Featurizable<TK, String> f) {
-    int lastWordPositionOfPreviousPhrase = f.foreignPosition - 1;
+    int lastWordPositionOfPreviousPhrase = f.sourcePosition - 1;
     return wordTranslated(f, lastWordPositionOfPreviousPhrase);
   }
 

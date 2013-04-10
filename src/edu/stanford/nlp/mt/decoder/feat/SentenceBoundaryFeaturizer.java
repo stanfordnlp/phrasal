@@ -26,15 +26,15 @@ public class SentenceBoundaryFeaturizer implements
     double cost = BAD_SENTENCE_BOUNDARY_PENALTY;
     double totalCost = 0.0;
 
-    for (int i = 0; i < f.translatedPhrase.size(); ++i) {
-      if (f.translatedPhrase.get(i).id == startToken.id) {
-        if (i == 0 && f.translationPosition == 0)
+    for (int i = 0; i < f.targetPhrase.size(); ++i) {
+      if (f.targetPhrase.get(i).id == startToken.id) {
+        if (i == 0 && f.targetPosition == 0)
           totalCost -= cost; // reward hypothesis if starts with <s>
         else
           totalCost += cost; // bad: <s> in the middle of the sentence
       }
-      if (f.translatedPhrase.get(i).id == endToken.id) {
-        if (i + 1 == f.translatedPhrase.size() && f.done)
+      if (f.targetPhrase.get(i).id == endToken.id) {
+        if (i + 1 == f.targetPhrase.size() && f.done)
           totalCost -= cost; // reward hypothesis if ends with </s>
         else
           totalCost += cost; // bad: </s> in the middle of the sentence

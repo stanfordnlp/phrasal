@@ -323,7 +323,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
 
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return longestForeignPhrase;
   }
 
@@ -386,7 +386,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
     System.out.printf("Options:\n");
     for (TranslationOption<IString> opt : translationOptions) {
-      System.out.printf("\t%s : %s\n", opt.translation,
+      System.out.printf("\t%s : %s\n", opt.target,
           Arrays.toString(opt.scores));
     }
   }

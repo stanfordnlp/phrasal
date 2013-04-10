@@ -62,11 +62,11 @@ public class RotationalBoundryFeaturizer implements
     if (foreignSwapPos != -1) {
       // we have a swap
       type = "swp:";
-      IString tAInitialWord = f.translatedPhrase.get(0);
-      IString fBInitialWord = f.foreignSentence.get(foreignSwapPos);
+      IString tAInitialWord = f.targetPhrase.get(0);
+      IString fBInitialWord = f.sourceSentence.get(foreignSwapPos);
 
-      IString tBFinalWord = f.partialTranslation.get(f.translationPosition - 1);
-      IString fAFinalWord = f.foreignSentence.get(foreignSwapPos - 1);
+      IString tBFinalWord = f.targetPrefix.get(f.targetPosition - 1);
+      IString fAFinalWord = f.sourceSentence.get(foreignSwapPos - 1);
 
       englishSwapCue = EnglishSwapCues.contains(tAInitialWord) ? tAInitialWord
           : EnglishSwapCues.contains(tBFinalWord) ? tBFinalWord : noCue;
@@ -74,13 +74,13 @@ public class RotationalBoundryFeaturizer implements
           : ForeignSwapCues.contains(fAFinalWord) ? fAFinalWord : noCue;
 
       if (DEBUG) {
-        System.err.printf("t: %s\n", f.partialTranslation);
-        System.err.printf("f: %s\n", f.foreignSentence);
-        System.err.printf("tp: %s\n", f.translatedPhrase);
-        System.err.printf("fp: %s\n", f.foreignPhrase);
-        System.err.printf("c: %s\n", f.hyp.foreignCoverage);
-        System.err.printf("f pos: %d\n", f.foreignPosition);
-        System.err.printf("t pos: %d\n", f.translationPosition);
+        System.err.printf("t: %s\n", f.targetPrefix);
+        System.err.printf("f: %s\n", f.sourceSentence);
+        System.err.printf("tp: %s\n", f.targetPhrase);
+        System.err.printf("fp: %s\n", f.sourcePhrase);
+        System.err.printf("c: %s\n", f.hyp.sourceCoverage);
+        System.err.printf("f pos: %d\n", f.sourcePosition);
+        System.err.printf("t pos: %d\n", f.targetPosition);
         System.err.printf(
             "englishSwapCue: %s (%s-%s) foreignSwapCue: %s (%s-%s)\n",
             englishSwapCue, tAInitialWord, tBFinalWord, foreignSwapCue,
@@ -88,13 +88,13 @@ public class RotationalBoundryFeaturizer implements
       }
     } else {
       type = "cmp:";
-      IString tAInitialWord = f.translatedPhrase.get(0);
-      IString fAInitialWord = f.foreignPhrase.get(0);
+      IString tAInitialWord = f.targetPhrase.get(0);
+      IString fAInitialWord = f.sourcePhrase.get(0);
 
-      IString tBFinalWord = (f.translationPosition > 0 ? f.partialTranslation
-          .get(f.translationPosition - 1) : START_SEQ);
-      IString fBFinalWord = (f.foreignPosition > 0 ? f.foreignSentence
-          .get(f.foreignPosition - 1) : START_SEQ);
+      IString tBFinalWord = (f.targetPosition > 0 ? f.targetPrefix
+          .get(f.targetPosition - 1) : START_SEQ);
+      IString fBFinalWord = (f.sourcePosition > 0 ? f.sourceSentence
+          .get(f.sourcePosition - 1) : START_SEQ);
       // we have no swap
       englishSwapCue = EnglishSwapCues.contains(tAInitialWord) ? tAInitialWord
           : EnglishSwapCues.contains(tBFinalWord) ? tBFinalWord : noCue;

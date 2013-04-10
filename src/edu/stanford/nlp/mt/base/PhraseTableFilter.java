@@ -108,9 +108,9 @@ public class PhraseTableFilter {
       // Print phrases to keep:
       System.err.printf("Translations for {%s}: %d -> %d\n", rawForeign, opts.size(), keptOptions.size());
       for (TranslationOption<IString> opt : keptOptions) {
-        oStream.print(opt.foreign);
+        oStream.print(opt.source);
         oStream.print(" ||| ");
-        oStream.print(opt.translation);
+        oStream.print(opt.target);
         oStream.print(" ||| ");
         oStream.print(opt.alignment.f2eStr());
         oStream.print(" ||| ");

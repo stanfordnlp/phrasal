@@ -49,7 +49,7 @@ public class MergePhraseTableEntries {
             iOpt.translation, IString.identityIndex());
         List<TranslationOption<IString>> rOpts = pptr.getTranslationOptions(tPhrase);
         for (TranslationOption<IString> rOpt : rOpts) {
-          mergeCandidates.add(rOpt.translation);
+          mergeCandidates.add(rOpt.target);
         }
       }
       if (DEBUG) {
@@ -119,7 +119,7 @@ public class MergePhraseTableEntries {
     }
     for (TranslationOption<IString> opt : opts) {
       for (int i = 0; i < opt.scores.length; i++) {
-        listCounters.get(i).setCount(opt.translation.toString(), 
+        listCounters.get(i).setCount(opt.target.toString(), 
             (Math.abs(Math.exp(opt.scores[i]) - 2.718) < 0.01 ? -1 : Math.exp(opt.scores[i])));
       }
     }
@@ -128,7 +128,7 @@ public class MergePhraseTableEntries {
   static public Counter<String> toCounter(List<TranslationOption<IString>> opts) {
      ClassicCounter<String> counter = new ClassicCounter<String>();
      for (TranslationOption<IString> opt : opts) {
-        counter.setCount(opt.translation.toString(), Math.exp(opt.scores[0])); 
+        counter.setCount(opt.target.toString(), Math.exp(opt.scores[0])); 
      }
      return counter;
   }

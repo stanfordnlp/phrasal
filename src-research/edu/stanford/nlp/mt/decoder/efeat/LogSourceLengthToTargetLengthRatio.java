@@ -41,8 +41,8 @@ public class LogSourceLengthToTargetLengthRatio implements
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     if (lexicalized)
       return null;
-    return new FeatureValue<String>(FEATURE_NAME, Math.log(f.foreignPhrase
-        .size()) - Math.log(f.translatedPhrase.size()));
+    return new FeatureValue<String>(FEATURE_NAME, Math.log(f.sourcePhrase
+        .size()) - Math.log(f.targetPhrase.size()));
   }
 
   @Override
@@ -65,14 +65,14 @@ public class LogSourceLengthToTargetLengthRatio implements
 
     blist = new LinkedList<FeatureValue<String>>();
 
-    double logRatio = Math.log(f.foreignPhrase.size())
-        - Math.log(f.translatedPhrase.size());
-    for (IString srcToken : f.option.abstractOption.foreign) {
+    double logRatio = Math.log(f.sourcePhrase.size())
+        - Math.log(f.targetPhrase.size());
+    for (IString srcToken : f.option.abstractOption.source) {
       blist.add(new FeatureValue<String>(FEATURE_NAME + SRC_TAG + ":"
           + srcToken, logRatio));
     }
 
-    for (IString trgToken : f.option.abstractOption.translation) {
+    for (IString trgToken : f.option.abstractOption.target) {
       blist.add(new FeatureValue<String>(FEATURE_NAME + TRG_TAG + ":"
           + trgToken, logRatio));
     }

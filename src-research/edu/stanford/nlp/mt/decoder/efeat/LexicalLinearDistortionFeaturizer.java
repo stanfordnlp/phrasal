@@ -78,7 +78,7 @@ public class LexicalLinearDistortionFeaturizer implements
     List<FeatureValue<String>> flist = new LinkedList<FeatureValue<String>>();
     String prefix;
     if (lrDistance) {
-      int signedLinearDistortion = (f.prior == null ? -f.foreignPosition
+      int signedLinearDistortion = (f.prior == null ? -f.sourcePosition
           : f.prior.hyp.translationOpt
               .signedLinearDistortion(f.hyp.translationOpt));
       String type = (signedLinearDistortion < 0 ? LEFT_SHIFT : RIGHT_SHIFT);
@@ -90,10 +90,10 @@ public class LexicalLinearDistortionFeaturizer implements
     for (int i = 0; i < 2; i++) {
       if (i == 1 && !doPrior)
         break;
-      Sequence<IString> foreignPhrase = (i == 0 ? f.foreignPhrase
-          : f.prior != null ? f.prior.foreignPhrase : INIT_PHRASE);
-      Sequence<IString> translatedPhrase = (i == 0 ? f.translatedPhrase
-          : f.prior != null ? f.prior.translatedPhrase : INIT_PHRASE);
+      Sequence<IString> foreignPhrase = (i == 0 ? f.sourcePhrase
+          : f.prior != null ? f.prior.sourcePhrase : INIT_PHRASE);
+      Sequence<IString> translatedPhrase = (i == 0 ? f.targetPhrase
+          : f.prior != null ? f.prior.targetPhrase : INIT_PHRASE);
       String type = (i == 0 ? CURRENT : PRIOR);
       if (doSource)
         for (IString sourceWord : foreignPhrase) {

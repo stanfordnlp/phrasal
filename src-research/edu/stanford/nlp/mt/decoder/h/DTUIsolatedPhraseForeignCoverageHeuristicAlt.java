@@ -41,9 +41,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK, FV> extends
 
     double oldH = hyp.preceedingHyp.h;
 
-    CoverageSet coverage = hyp.foreignCoverage;
+    CoverageSet coverage = hyp.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);
-    int endEdge = hyp.foreignSequence.size() - 1;
+    int endEdge = hyp.sourceSequence.size() - 1;
     if (endEdge < startEdge)
       return 0.0;
 

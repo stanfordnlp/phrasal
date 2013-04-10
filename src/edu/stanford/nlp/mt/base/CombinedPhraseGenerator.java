@@ -38,10 +38,10 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   private void addToMap(ConcreteTranslationOption<TK,FV> opt,
       Map<CoverageSet, List<ConcreteTranslationOption<TK,FV>>> optsMap) {
     List<ConcreteTranslationOption<TK,FV>> optList = optsMap
-        .get(opt.foreignCoverage);
+        .get(opt.sourceCoverage);
     if (optList == null) {
       optList = new LinkedList<ConcreteTranslationOption<TK,FV>>();
-      optsMap.put(opt.foreignCoverage, optList);
+      optsMap.put(opt.sourceCoverage, optList);
     }
     optList.add(opt);
   }
@@ -97,15 +97,15 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
           if (DEBUG) {
             System.err.println("  opt: " + option);
           }
-          if (coverage.intersects(option.foreignCoverage)) {
+          if (coverage.intersects(option.sourceCoverage)) {
             if (DEBUG) {
               System.err.printf("Skipping %s intersects %s\n", coverage,
-                  option.foreignCoverage);
+                  option.sourceCoverage);
               System.err.printf("%s\n--\n", option);
             }
             continue;
           }
-          novelCoverage.or(option.foreignCoverage);
+          novelCoverage.or(option.sourceCoverage);
           addToMap(option, optsMap);
         }
         coverage.or(novelCoverage);
@@ -140,8 +140,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
         System.err.println("Sorted Options");
         for (ConcreteTranslationOption<TK,FV> opt : preCutOpts) {
           System.err.println("--");
-          System.err.printf("%s => %s : %f\n", opt.abstractOption.foreign,
-              opt.abstractOption.translation, opt.isolationScore);
+          System.err.printf("%s => %s : %f\n", opt.abstractOption.source,
+              opt.abstractOption.target, opt.isolationScore);
           System.err.printf("%s\n", Arrays.toString(opt.abstractOption.scores));
         }
       }
@@ -232,8 +232,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       System.out.println("Translation Options:\n");
       for (ConcreteTranslationOption<IString,String> option : options) {
         System.out.printf("\t%s -> %s coverage: %s score: %s\n",
-            sequence.subsequence(option.foreignCoverage),
-            option.abstractOption.translation, option.foreignCoverage,
+            sequence.subsequence(option.sourceCoverage),
+            option.abstractOption.target, option.sourceCoverage,
             Arrays.toString(option.abstractOption.scores));
       }
     }
@@ -249,11 +249,11 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   }
 
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     int longest = -1;
     for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
-      if (longest < phraseGenerator.longestForeignPhrase())
-        longest = phraseGenerator.longestForeignPhrase();
+      if (longest < phraseGenerator.longestSourcePhrase())
+        longest = phraseGenerator.longestSourcePhrase();
     }
     return longest;
   }

@@ -201,7 +201,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     return list;
   }
 
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return 1;
   }
 

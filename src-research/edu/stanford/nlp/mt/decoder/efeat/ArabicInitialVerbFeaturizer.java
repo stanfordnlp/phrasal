@@ -131,8 +131,8 @@ public class ArabicInitialVerbFeaturizer implements
     if (!vso)
       return null;
 
-    int f1 = f.foreignPosition;
-    int f2 = f1 + f.foreignPhrase.size();
+    int f1 = f.sourcePosition;
+    int f2 = f1 + f.sourcePhrase.size();
 
     Featurizable<IString, String> pf = f.prior;
 
@@ -141,9 +141,9 @@ public class ArabicInitialVerbFeaturizer implements
         System.err
             .println(name + ": tagged sentence: " + Arrays.toString(tags));
         System.err.println(name + ": partial translation: "
-            + f.partialTranslation.toString());
+            + f.targetPrefix.toString());
         System.err.println(name + ": current target phrase: "
-            + f.translatedPhrase.toString());
+            + f.targetPhrase.toString());
         System.err.printf(
             "%s: now translating range [%d,%d) containing verb (%d) of VSO.\n",
             name, f1, f2, vsoVerbIdx);
@@ -152,8 +152,8 @@ public class ArabicInitialVerbFeaturizer implements
         // Currently translating the verb of a VSO construction, but not the
         // subject:
         while (pf != null) {
-          int pf1 = pf.foreignPosition;
-          int pf2 = pf1 + f.foreignPhrase.size();
+          int pf1 = pf.sourcePosition;
+          int pf2 = pf1 + f.sourcePhrase.size();
           if (verbose) {
             System.err.printf(
                 "%s: checking previous phrase of range [%d,%d)....\n", name,

@@ -335,7 +335,7 @@ public class DependencyLanguageModelFeaturizer extends
     assert (f.getState(this) == null);
 
     // Determine if surface string was seen before:
-    String partialTranslation = CACHE_PARTIAL ? (f.partialTranslation
+    String partialTranslation = CACHE_PARTIAL ? (f.targetPrefix
         .toString() + " | " + f.done) : null;
     if (CACHE_PARTIAL) {
       if (debug)
@@ -353,8 +353,8 @@ public class DependencyLanguageModelFeaturizer extends
     }
 
     // Find position where we need to start tagging and parsing:
-    int loc = f.translationPosition;
-    int sz = f.translatedPhrase.size();
+    int loc = f.targetPosition;
+    int sz = f.targetPhrase.size();
 
     // POS tagging:
     float tagScore = 0.0f;
@@ -363,7 +363,7 @@ public class DependencyLanguageModelFeaturizer extends
       // faster, better POS accuracy, lower BLEU
       int sp = Math.max(0, loc - prefixTagger.getOrder());
       int ep = loc + sz;
-      Sequence<IString> seq = f.partialTranslation.subsequence(sp, ep);
+      Sequence<IString> seq = f.targetPrefix.subsequence(sp, ep);
       IString[] context = new IString[seq.size()];
       for (int j = 0; j < context.length; ++j)
         context[j] = seq.get(j);
@@ -375,7 +375,7 @@ public class DependencyLanguageModelFeaturizer extends
       for (int i = 0; i < sz; ++i) {
         int s = Math.max(0, loc + i - prefixTagger.getOrder());
         int e = loc + Math.min(sz, i + 1);
-        Sequence<IString> seq = f.partialTranslation.subsequence(s, e);
+        Sequence<IString> seq = f.targetPrefix.subsequence(s, e);
         IString[] context = new IString[seq.size()];
         for (int j = 0; j < context.length; ++j)
           context[j] = seq.get(j);
@@ -429,24 +429,24 @@ public class DependencyLanguageModelFeaturizer extends
           if (align == null || i >= align.size()) {
             System.err.printf("Array index: %d >= %d\n", i, align.size());
             System.err.printf("Phrase pair: [%s] [%s]\n",
-                f.foreignPhrase.toString(), f.translatedPhrase.toString());
+                f.sourcePhrase.toString(), f.targetPhrase.toString());
             System.err.printf("Alignment: %s\n", align.toString());
             System.err.printf("Alignment (local): %s\n",
                 Arrays.toString(localAlign));
-            System.err.printf("Hypothesis: [%s]\n", f.partialTranslation);
-            System.err.printf("Position: [%d] [%d]\n", f.foreignPosition,
-                f.partialTranslation.size());
+            System.err.printf("Hypothesis: [%s]\n", f.targetPrefix);
+            System.err.printf("Position: [%d] [%d]\n", f.sourcePosition,
+                f.targetPrefix.size());
             throw new RuntimeException();
           }
           if (localAlign != null) {
             pAlign = new int[localAlign.length];
             for (int j = 0; j < localAlign.length; ++j) {
-              pAlign[j] = localAlign[j] + f.foreignPosition + 1;
+              pAlign[j] = localAlign[j] + f.sourcePosition + 1;
             }
           }
         }
       }
-      add(dep, f.translatedPhrase.get(i).word(), tags[i].first().word(), pAlign);
+      add(dep, f.targetPhrase.get(i).word(), tags[i].first().word(), pAlign);
     }
 
     // Dependency parsing:
@@ -455,7 +455,7 @@ public class DependencyLanguageModelFeaturizer extends
       if (verboseDebug) {
         System.err.printf(
             "\n===============\ndep of phrase: %s\nin sentence: %s\n",
-            f.translatedPhrase, f.partialTranslation);
+            f.targetPhrase, f.targetPrefix);
         parser.debugHeadScores(dep);
       }
       for (int j = loc; j < loc + sz + (f.done ? 1 : 0); ++j) { // 1 word delay,
@@ -575,7 +575,7 @@ public class DependencyLanguageModelFeaturizer extends
     Deque<String> phrases = new LinkedList<String>();
     Featurizable<IString, String> curf = f;
     while (curf != null) {
-      phrases.addFirst(curf.translatedPhrase.toString());
+      phrases.addFirst(curf.targetPhrase.toString());
       curf = curf.prior;
     }
     int i = 0;

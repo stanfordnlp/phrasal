@@ -252,14 +252,14 @@ public class AlignmentGrid {
       PrintStream out) {
     if (!f.done)
       throw new RuntimeException("AlignmentGrid: not finished decoding!");
-    Sequence<IString> eSeq = f.partialTranslation, fSeq = f.foreignSentence;
+    Sequence<IString> eSeq = f.targetPrefix, fSeq = f.sourceSentence;
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(fSeq, eSeq);
     AlignmentGrid alGrid = new AlignmentGrid(eSeq.size(), fSeq.size());
     while (f != null) {
-      for (int fi = f.foreignPosition; fi < f.foreignPosition
-          + f.foreignPhrase.size(); ++fi)
-        for (int ei = f.translationPosition; ei < f.translationPosition
-            + f.translatedPhrase.size(); ++ei)
+      for (int fi = f.sourcePosition; fi < f.sourcePosition
+          + f.sourcePhrase.size(); ++fi)
+        for (int ei = f.targetPosition; ei < f.targetPosition
+            + f.targetPhrase.size(); ++ei)
           sent.addAlign(fi, ei);
       f = f.prior;
     }

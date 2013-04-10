@@ -50,8 +50,8 @@ public class PhraseTranslationWordPairs implements
 
     blist = new LinkedList<FeatureValue<String>>();
 
-    for (IString srcWord : opt.foreign) {
-      for (IString trgWord : opt.translation) {
+    for (IString srcWord : opt.source) {
+      for (IString trgWord : opt.target) {
         blist.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + srcWord
             + "=>" + trgWord, 1.0));
       }

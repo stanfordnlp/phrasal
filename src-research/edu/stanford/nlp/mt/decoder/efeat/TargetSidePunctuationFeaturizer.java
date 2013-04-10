@@ -39,7 +39,7 @@ public class TargetSidePunctuationFeaturizer implements IsolatedPhraseFeaturizer
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
     
-    for (IString targetWord : f.translatedPhrase) {
+    for (IString targetWord : f.targetPhrase) {
       String word = targetWord.toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
         features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));

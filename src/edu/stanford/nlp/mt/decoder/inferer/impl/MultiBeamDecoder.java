@@ -150,12 +150,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   @Override
   protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
-      Sequence<TK> foreign, int translationId,
+      Sequence<TK> source, int translationId,
       RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
     featurizer.reset();
-    int foreignSz = foreign.size();
+    int sourceSz = source.size();
     BufferedWriter alignmentDump = null;
 
     if (ALIGNMENT_DUMP != null) {
@@ -170,7 +170,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // create beams
     if (DEBUG)
       System.err.println("Creating beams");
-    Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(foreign
+    Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(source
         .size() + 1, beamCapacity, filter, recombinationHistory);
 
     // retrieve translation options
@@ -178,7 +178,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.println("Generating Translation Options");
 
     List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
-        .translationOptions(foreign, targets, translationId, scorer);
+        .translationOptions(source, targets, translationId, scorer);
 
     System.err.printf("Translation options: %d\n", options.size());
 
@@ -188,8 +188,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK,FV> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
-              option.abstractOption.foreign, option.abstractOption.translation,
-              option.isolationScore, option.foreignCoverage);
+              option.abstractOption.source, option.abstractOption.target,
+              option.isolationScore, option.sourceCoverage);
         System.err.println(">> End translation options <<");
       }
     }
@@ -202,12 +202,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               options.size());
     }
 
-    OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, foreign);
+    OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source);
 
     // insert initial hypothesis
     List<List<ConcreteTranslationOption<TK,FV>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK,FV>>>();
     allOptions.add(options);
-    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, foreign,
+    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
@@ -219,7 +219,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     int totalHypothesesGenerated = 1;
 
-    featurizer.initialize(options, foreign, scorer.getFeatureIndex());
+    featurizer.initialize(options, source, scorer.getFeatureIndex());
 
     // main translation loop
     long decodeLoopTime = -System.currentTimeMillis();
@@ -244,7 +244,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (DEBUG)
         System.err.println();
 
-      expandBeam(beams, i, foreignSz, optionGrid, 
+      expandBeam(beams, i, sourceSz, optionGrid, 
           constrainedOutputSpace, translationId);
       
       if (DEBUG) {
@@ -326,7 +326,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     ClassicCounter<String> finalFeatureVector = new ClassicCounter<String>();
     if (bestHyp != null && bestHyp.featurizable != null) {
-      System.err.printf("hyp: %s\n", bestHyp.featurizable.partialTranslation);
+      System.err.printf("hyp: %s\n", bestHyp.featurizable.targetPrefix);
       System.err.printf("score: %e\n", bestHyp.score());
       System.err.printf("Trace:\n");
       System.err.printf("--------------\n");
@@ -335,12 +335,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.printf("%d:\n", hyp.id);
         if (hyp.translationOpt != null) {
           System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-              hyp.translationOpt.abstractOption.foreign,
-              hyp.featurizable.foreignPosition,
-              hyp.translationOpt.abstractOption.translation,
-              hyp.featurizable.translationPosition);
+              hyp.translationOpt.abstractOption.source,
+              hyp.featurizable.sourcePosition,
+              hyp.translationOpt.abstractOption.target,
+              hyp.featurizable.targetPosition);
         }
-        System.err.printf("\tCoverage: %s\n", hyp.foreignCoverage);
+        System.err.printf("\tCoverage: %s\n", hyp.sourceCoverage);
         System.err.printf("\tFeatures: %s\n", hyp.localFeatures);
         if (hyp.localFeatures != null) {
           for (FeatureValue<FV> featureValue : hyp.localFeatures) {
@@ -367,7 +367,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   private int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
-      int foreignSz, OptionGrid<TK,FV> optionGrid,
+      int sourceSz, OptionGrid<TK,FV> optionGrid,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       int translationId) {
     int optionsApplied = 0;
@@ -379,17 +379,17 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (hyp == null)
         continue;
       int localOptionsApplied = 0;
-      int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);
+      int firstCoverageGap = hyp.sourceCoverage.nextClearBit(0);
       int priorStartPos = (hyp.featurizable == null ? 0
-          : hyp.featurizable.foreignPosition);
+          : hyp.featurizable.sourcePosition);
       int priorEndPos = (hyp.featurizable == null ? 0
-          : hyp.featurizable.foreignPosition
-          + hyp.featurizable.foreignPhrase.size());
+          : hyp.featurizable.sourcePosition
+          + hyp.featurizable.sourcePhrase.size());
 
       if (DETAILED_DEBUG)
-        System.err.printf("ForeignSz is: %d\n", foreignSz);
-      for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
-        int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
+        System.err.printf("ForeignSz is: %d\n", sourceSz);
+      for (int startPos = firstCoverageGap; startPos < sourceSz; startPos++) {
+        int endPosMax = hyp.sourceCoverage.nextSetBit(startPos);
         if (DETAILED_DEBUG)
           System.err.printf("Current startPos: %d, endPosMax: %d\n", startPos, endPosMax);
 
@@ -397,9 +397,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         if (endPosMax < 0) {
           if (maxDistortion >= 0 && startPos != firstCoverageGap) {
             endPosMax = Math.min(firstCoverageGap + maxDistortion + 1,
-                foreignSz);
+                sourceSz);
           } else {
-            endPosMax = foreignSz;
+            endPosMax = sourceSz;
           }
           if (DETAILED_DEBUG)
             System.err.printf("after checking distortion limit, endPosMax: %d\n", endPosMax);
@@ -410,8 +410,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             // System.err.printf("startPos(%d) > priorStartPos(%d)\n",
             // startPos, priorStartPos);
             for (int pos = priorEndPos + 1; pos < startPos; pos++) {
-              if (hyp.foreignCoverage.get(pos)
-                  && !hyp.foreignCoverage.get(pos - 1)) {
+              if (hyp.sourceCoverage.get(pos)
+                  && !hyp.sourceCoverage.get(pos - 1)) {
                 // System.err.printf("not okay-1 %d & %d - %s\n" ,pos, pos-1,
                 // hyp.foreignCoverage);
                 ITGOK = false;
@@ -422,8 +422,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             // System.err.printf("startPos(%d) < priorStartPos(%d)\n",
             // startPos, priorStartPos);
             for (int pos = startPos; pos < priorStartPos; pos++) {
-              if (hyp.foreignCoverage.get(pos)
-                  && !hyp.foreignCoverage.get(pos + 1)) {
+              if (hyp.sourceCoverage.get(pos)
+                  && !hyp.sourceCoverage.get(pos + 1)) {
                 // System.err.printf("not okay-2 %d & %d - %s\n" ,pos, pos+1,
                 // hyp.foreignCoverage);
                 ITGOK = false;
@@ -467,20 +467,20 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               System.err.printf("creating hypothesis %d from %d\n",
                   newHyp.id, hyp.id);
               System.err.printf("hyp: %s\n",
-                  newHyp.featurizable.partialTranslation);
-              System.err.printf("coverage: %s\n", newHyp.foreignCoverage);
+                  newHyp.featurizable.targetPrefix);
+              System.err.printf("coverage: %s\n", newHyp.sourceCoverage);
               if (hyp.featurizable != null) {
                 System.err.printf("par: %s\n",
-                    hyp.featurizable.partialTranslation);
-                System.err.printf("coverage: %s\n", hyp.foreignCoverage);
+                    hyp.featurizable.targetPrefix);
+                System.err.printf("coverage: %s\n", hyp.sourceCoverage);
               }
               System.err.printf("\tbase score: %.3f\n", hyp.score);
               System.err.printf("\tcovering: %s\n",
-                  newHyp.translationOpt.foreignCoverage);
+                  newHyp.translationOpt.sourceCoverage);
               System.err.printf("\tforeign: %s\n",
-                  newHyp.translationOpt.abstractOption.foreign);
+                  newHyp.translationOpt.abstractOption.source);
               System.err.printf("\ttranslated as: %s\n",
-                  newHyp.translationOpt.abstractOption.translation);
+                  newHyp.translationOpt.abstractOption.target);
               System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n",
                   newHyp.score, newHyp.h, newHyp.score());
 
@@ -516,8 +516,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               continue;
             }
 
-            int foreignWordsCovered = newHyp.foreignCoverage.cardinality();
-            beams[foreignWordsCovered].put(newHyp);
+            int sourceWordsCovered = newHyp.sourceCoverage.cardinality();
+            beams[sourceWordsCovered].put(newHyp);
 
             optionsApplied++;
             localOptionsApplied++;
@@ -540,18 +540,18 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       throws IOException {
     if (alignmentDump == null)
       return;
-    alignmentDump.append(bestHyp.featurizable.partialTranslation.toString())
+    alignmentDump.append(bestHyp.featurizable.targetPrefix.toString())
         .append("\n");
-    alignmentDump.append(bestHyp.featurizable.foreignSentence.toString())
+    alignmentDump.append(bestHyp.featurizable.sourceSentence.toString())
         .append("\n");
     for (Hypothesis<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingHyp) {
       alignmentDump.append(String.format("%d:%d => %d:%d # %s => %s\n",
-          hyp.featurizable.foreignPosition, hyp.featurizable.foreignPosition
-              + hyp.featurizable.foreignPhrase.size() - 1,
-          hyp.featurizable.translationPosition,
-          hyp.featurizable.translationPosition
-              + hyp.featurizable.translatedPhrase.size() - 1,
-          hyp.featurizable.foreignPhrase, hyp.featurizable.translatedPhrase));
+          hyp.featurizable.sourcePosition, hyp.featurizable.sourcePosition
+              + hyp.featurizable.sourcePhrase.size() - 1,
+          hyp.featurizable.targetPosition,
+          hyp.featurizable.targetPosition
+              + hyp.featurizable.targetPhrase.size() - 1,
+          hyp.featurizable.sourcePhrase, hyp.featurizable.targetPhrase));
     }
     alignmentDump.append("\n");
   }

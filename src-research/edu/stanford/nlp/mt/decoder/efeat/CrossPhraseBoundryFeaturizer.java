@@ -74,9 +74,9 @@ public class CrossPhraseBoundryFeaturizer implements
     List<FeatureValue<String>> fList = new LinkedList<FeatureValue<String>>();
 
     if (doTarget) {
-      Sequence<IString> priorSource = (f.prior != null ? f.prior.translatedPhrase
+      Sequence<IString> priorSource = (f.prior != null ? f.prior.targetPhrase
           : INITIAL_PHRASE);
-      Sequence<IString> currentSource = f.translatedPhrase;
+      Sequence<IString> currentSource = f.targetPhrase;
 
       fList.add(new FeatureValue<String>(FEATURE_PREFIX + PREFIX_TRG + size
           + ":" + rSequence(priorSource).toString("_") + "|"
@@ -92,7 +92,7 @@ public class CrossPhraseBoundryFeaturizer implements
 
     if (doSource) {
       Sequence<IString> wrappedSource = new InsertedStartEndToken<IString>(
-          f.foreignSentence, ARPALanguageModel.START_TOKEN,
+          f.sourceSentence, ARPALanguageModel.START_TOKEN,
           ARPALanguageModel.END_TOKEN);
       int wrappedForeignSz = wrappedSource.size();
       fList.add(new FeatureValue<String>(FEATURE_PREFIX
@@ -100,11 +100,11 @@ public class CrossPhraseBoundryFeaturizer implements
           + size
           + ":"
           + wrappedSource.subsequence(
-              Math.max(0, f.foreignPosition + 1 - size), f.foreignPosition + 1)
+              Math.max(0, f.sourcePosition + 1 - size), f.sourcePosition + 1)
               .toString("_")
           + "|"
-          + wrappedSource.subsequence(f.foreignPosition + 1,
-              Math.min(f.foreignPosition + 1 + size, wrappedForeignSz))
+          + wrappedSource.subsequence(f.sourcePosition + 1,
+              Math.min(f.sourcePosition + 1 + size, wrappedForeignSz))
               .toString("_"), 1.0));
 
       if (f.done) {

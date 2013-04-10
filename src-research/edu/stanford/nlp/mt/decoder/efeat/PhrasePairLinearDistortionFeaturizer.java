@@ -60,12 +60,12 @@ public class PhrasePairLinearDistortionFeaturizer implements
       if (i == 1 && !doPrior)
         break;
 
-      String phrasePair = (i == 0 ? f.foreignPhrase.toString("_") + "=>"
-          + f.translatedPhrase.toString("_")
-          : f.prior != null ? f.prior.foreignPhrase.toString("_") + "=>"
-              + f.prior.translatedPhrase.toString("_") : "<s>=><s>");
+      String phrasePair = (i == 0 ? f.sourcePhrase.toString("_") + "=>"
+          + f.targetPhrase.toString("_")
+          : f.prior != null ? f.prior.sourcePhrase.toString("_") + "=>"
+              + f.prior.targetPhrase.toString("_") : "<s>=><s>");
 
-      int signedLinearDistortion = (f.prior == null ? -f.foreignPosition
+      int signedLinearDistortion = (f.prior == null ? -f.sourcePosition
           : f.prior.hyp.translationOpt
               .signedLinearDistortion(f.hyp.translationOpt));
       String pType = (i == 0 ? CURRENT : PRIOR);

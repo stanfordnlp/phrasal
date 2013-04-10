@@ -61,7 +61,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
     if (featurizable == null)
       return false;
 
-    Sequence<TK> translation = featurizable.partialTranslation;
+    Sequence<TK> translation = featurizable.targetPrefix;
 
     for (Sequence<TK> allowableSequence : allowableSequences) {
       if (allowableSequence.equals(translation)) {
@@ -84,7 +84,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
       ConcreteTranslationOption<TK,FV> option) {
 
-    Sequence<TK> nextPhrase = option.abstractOption.translation;
+    Sequence<TK> nextPhrase = option.abstractOption.target;
 
     if (featurizable == null) {
       for (Sequence<TK> allowableSequence : allowableSequences) {
@@ -95,7 +95,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       return false;
     }
 
-    Sequence<TK> partialTranslation = featurizable.partialTranslation;
+    Sequence<TK> partialTranslation = featurizable.targetPrefix;
 
     asfor: for (Sequence<TK> allowableSequence : allowableSequences) {
       if (allowableSequence.startsWith(partialTranslation)) {
@@ -113,7 +113,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
         int tMissing = allowableSequence.size()
             - (partialTranslation.size() + nextPhrase.size());
         int fMissing = featurizable.untranslatedTokens
-            - option.abstractOption.foreign.size();
+            - option.abstractOption.source.size();
         if ((fMissing == 0 && tMissing != 0)
             || (fMissing != 0 && tMissing == 0))
           continue;
@@ -154,10 +154,10 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
     for (ConcreteTranslationOption<TK,FV> option : optionList) {
       if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
         System.err.printf("Examining: %s %s\n",
-            option.abstractOption.translation, option.foreignCoverage);
+            option.abstractOption.target, option.sourceCoverage);
       }
       for (Sequence<TK> allowableSequence : allowableSequences) {
-        if (allowableSequence.contains(option.abstractOption.translation)) {
+        if (allowableSequence.contains(option.abstractOption.target)) {
           filteredOptions.add(option);
           if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
             System.err.printf("\tAccepted!\n");
@@ -176,8 +176,8 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       System.err.println("Filtered options");
       System.err.println("----------------");
       for (ConcreteTranslationOption<TK,FV> option : filteredOptions) {
-        System.err.printf("\t%s %s\n", option.abstractOption.translation,
-            option.foreignCoverage);
+        System.err.printf("\t%s %s\n", option.abstractOption.target,
+            option.sourceCoverage);
       }
       System.err.println("--\n");
     }

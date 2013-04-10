@@ -18,7 +18,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
         retrieveDTUTokens(hypothesis, toks), hasPendingPhrases, segmentIdx > 0);
     this.segmentIdx = segmentIdx;
     this.abstractOption = abstractOption;
-    assert (translatedPhrase.size() > 0);
+    assert (targetPhrase.size() > 0);
   }
 
   public DTUFeaturizable(Sequence<TK> foreignSequence,
@@ -27,7 +27,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
         ((DTUOption<TK>) concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
     this.segmentIdx = 0;
-    assert (translatedPhrase.size() > 0);
+    assert (targetPhrase.size() > 0);
   }
 
   protected static <TK, FV> Object[] retrieveDTUTokens(Hypothesis<TK, FV> h,
@@ -36,10 +36,10 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
     Featurizable<TK, FV> preceedingF = h.preceedingHyp.featurizable;
     int sz = newTokens.size();
     if (preceedingF != null)
-      sz += preceedingF.partialTranslationRaw.elements.length;
+      sz += preceedingF.targetPrefixRaw.elements.length;
     Object[] tokens = new Object[sz];
     if (preceedingF != null) {
-      Object[] preceedingTokens = preceedingF.partialTranslationRaw.elements;
+      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
       System.arraycopy(preceedingTokens, 0, tokens, 0,
           pos = preceedingTokens.length);
     }

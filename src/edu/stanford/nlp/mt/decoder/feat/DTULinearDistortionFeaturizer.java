@@ -74,10 +74,10 @@ public class DTULinearDistortionFeaturizer extends
     // /////////////////////////////////////////
 
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
-    int span = f.option.foreignCoverage.length()
-        - f.option.foreignCoverage.nextSetBit(0);
+    int span = f.option.sourceCoverage.length()
+        - f.option.sourceCoverage.nextSetBit(0);
     int totalSz = 0;
-    for (IString fw : f.foreignPhrase)
+    for (IString fw : f.sourcePhrase)
       if (fw.id != DTUTable.GAP_STR.id)
         ++totalSz;
     int gapSz = span - totalSz;
@@ -112,7 +112,7 @@ public class DTULinearDistortionFeaturizer extends
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(1);
     int minTotalSz = 0;
-    for (IString fw : f.foreignPhrase)
+    for (IString fw : f.sourcePhrase)
       if (fw.id == DTUTable.GAP_STR.id)
         ++minTotalSz;
     if (minTotalSz > 0)
