@@ -1,18 +1,14 @@
-package edu.stanford.nlp.mt.detokenize;
+package edu.stanford.nlp.mt.process.fr;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Handles detokenization for french output from
@@ -29,10 +25,10 @@ import edu.stanford.nlp.util.StringUtils;
  * @author kevinreschke
  *
  */
-public class FrenchDetokenizer {
+public class Detokenizer {
 
   //singleton instance
-  private static FrenchDetokenizer INSTANCE;
+  private static Detokenizer INSTANCE;
   
   //these patterns compile only once when INSTANCE is first loaded
   private Pattern quotesPattern = Pattern.compile("\" .*? \"");
@@ -42,15 +38,15 @@ public class FrenchDetokenizer {
   private Pattern rightGrammatical = Pattern.compile(" -[^ ]+(?= )",Pattern.CASE_INSENSITIVE);
   
   /** get singleton instance */
-  public static FrenchDetokenizer getInstance() {
+  public static Detokenizer getInstance() {
     if(INSTANCE == null) {
-      INSTANCE = new FrenchDetokenizer();
+      INSTANCE = new Detokenizer();
     }
     return INSTANCE;
   }
   
   //private constructor forces callers to use getInstance()
-  private FrenchDetokenizer() {}
+  private Detokenizer() {}
   
   /** detokenize input string 
    *   true-cased and non-true-cased inputs are both acceptable
@@ -193,23 +189,14 @@ public class FrenchDetokenizer {
    * Detokenizes a file of sentences, one sentence per line.
    * Write output to new file, one sentence per line.
    * 
-   * Usage: java FrenchDetonenizer -input inputFile -output outputFile
+   * Usage: java FrenchDetonenizer < infile > outfile
    */
-  public static void main(String args[]) throws Exception{
-  Properties props = StringUtils.argsToProperties(args);
-  String inputFile = props.getProperty("input");
-  String outputFile = props.getProperty("output");
-  
-    FrenchDetokenizer fd = getInstance();
-    
-    BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
-    
-    for(String input : ObjectBank.getLineIterator(inputFile)) {
-      String output = fd.detok(input);
-      bw.write(output);
-      bw.write("\n");
+  public static void main(String args[]) throws Exception {
+    Detokenizer detokenizer = getInstance();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    for (String line; (line = reader.readLine()) != null;) {
+      String detokenizedLine = detokenizer.detok(line.trim());
+      System.out.println(detokenizedLine);
     }
-    
-    bw.close();
   }
 }
