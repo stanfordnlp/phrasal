@@ -27,14 +27,17 @@ public class TargetSidePunctuationFeaturizer implements IsolatedPhraseFeaturizer
 
   public static final Pattern PUNCT_PATTERN = Pattern.compile("\\p{Punct}+");
 
+  private final boolean addLexicalFeatures;
   private final boolean addDifferenceCounts;
 
   public TargetSidePunctuationFeaturizer() {
+    addLexicalFeatures = true;
     addDifferenceCounts = false;
   }
 
   public TargetSidePunctuationFeaturizer(String...args) {
-    addDifferenceCounts = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
+    addLexicalFeatures = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
+    addDifferenceCounts = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
   }
 
   @Override
@@ -50,8 +53,10 @@ public class TargetSidePunctuationFeaturizer implements IsolatedPhraseFeaturizer
     for (IString targetWord : f.targetPhrase) {
       String word = targetWord.toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME, 1.0));
+        if (addLexicalFeatures) {
+          features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
+          features.add(new CacheableFeatureValue<String>(FEATURE_NAME, 1.0));
+        }
         ++nTargetSidePunctuationChars;
       }
     }
