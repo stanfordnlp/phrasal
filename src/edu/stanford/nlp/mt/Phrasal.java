@@ -52,7 +52,7 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 /**
  * Phrasal: a phrase-based machine translation system.
- * 
+ *
  * @author danielcer
  *
  */
@@ -117,10 +117,10 @@ public class Phrasal {
         DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
         DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
-        DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS, 
+        DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS,
         RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE,
         BEAM_SIZE, WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
-        MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS, 
+        MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
         MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
@@ -140,7 +140,7 @@ public class Phrasal {
    */
   private static final int DEFAULT_NUM_THREADS = 1;
   private int numThreads = DEFAULT_NUM_THREADS;
-  
+
   /**
    * Hard distortion limit for phrase-based decoder
    */
@@ -168,13 +168,13 @@ public class Phrasal {
    * Phrase table type
    */
   private PhraseGenerator<IString,String> phraseGenerator;
-  
+
   /**
    * Whether to filter unknown words in the output
    */
   private static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
   private boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
-  
+
   /**
    * n-best list options
    */
@@ -198,25 +198,25 @@ public class Phrasal {
   /**
    * Access the decoder's scorer, which contains the model weights. THere is one scorer
    * per thread.
-   * 
+   *
    * @return the scorer
    */
-  public Scorer<String> getScorer(int threadId) { 
+  public Scorer<String> getScorer(int threadId) {
     assert threadId >= 0 && threadId < numThreads;
-    return scorers.get(threadId); 
+    return scorers.get(threadId);
   }
-  
+
   /**
    * Get the decoder's feature index.
    */
   public Index<String> getFeatureIndex() { return featureIndex; }
-  
+
   /**
    * Lock the decoder's feature index (for example, at test time). This prevents
    * unseen features from being extracted an inserted into the model.
    */
   public void lockFeatureIndex() { featureIndex.lock(); }
-  
+
   /**
    * @return the number of threads specified in the ini file.
    */
@@ -598,8 +598,8 @@ public class Phrasal {
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s\n", config.get(WEIGHTS_FILE).get(0));
-      
-      weightConfig = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));      
+
+      weightConfig = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     } else {
       if (config.containsKey(INLINE_WEIGHTS)) {
         List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);
@@ -657,7 +657,7 @@ public class Phrasal {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
       }
     }
-    
+
     // Setup the feature index from the initial weight vector
     // HashIndex is threadsafe, while OAIndex is not.
     featureIndex = new HashIndex<String>(weightConfig.size());
@@ -806,7 +806,7 @@ public class Phrasal {
         isolatedPhraseFeaturizer,
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
-    
+
     // Create Inferers and scorers
     if (config.containsKey(LOCAL_PROCS))
       numThreads = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
@@ -880,7 +880,7 @@ public class Phrasal {
         assert nbestListSize >= 0;
         System.err.printf("Generating n-best lists (size: %d)%n",
             nbestListSize);
-        
+
       } else if (nbestOpt.size() == 2) {
         String nbestListFilename = nbestOpt.get(0);
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
@@ -891,10 +891,10 @@ public class Phrasal {
 
       } else {
         throw new RuntimeException(
-            String.format("%s requires 1 or 2 arguments, not %d", NBEST_LIST_OPT, 
+            String.format("%s requires 1 or 2 arguments, not %d", NBEST_LIST_OPT,
                 nbestOpt.size()));
       }
-      
+
     } else {
       nbestListSize = -1;
       nbestListWriter = null;
@@ -907,14 +907,15 @@ public class Phrasal {
 
   /**
    * Lightweight container for decoder input.
-   * 
+   *
    * @author Spence Green
    *
    */
-  private class DecoderInput {
+  private static class DecoderInput {
     public final String[] tokens;
     public final Sequence<IString> sequence;
     public final int translationId;
+
     public DecoderInput(String[] tokens, int translationId) {
       this.tokens = tokens;
       this.translationId = translationId;
@@ -926,37 +927,38 @@ public class Phrasal {
       this.tokens = null;
     }
   }
-  
+
   /**
    * Lightweight container for decoder output.
-   * 
+   *
    * @author Spence Green
    *
    */
-  private class DecoderOutput {
+  private static class DecoderOutput {
     public final List<RichTranslation<IString, String>> translations;
     public final int translationId;
     public final int sourceLength;
+
     public DecoderOutput(int sourceLength, List<RichTranslation<IString, String>> translations, int translationId) {
       this.sourceLength = sourceLength;
       this.translations = translations;
       this.translationId = translationId;
     }
   }
-  
+
   /**
    * Wrapper class to submit this decoder instance to the thread pool.
-   * 
+   *
    * @author Spence Green
    *
    */
   private class PhrasalProcessor implements ThreadsafeProcessor<DecoderInput,DecoderOutput> {
     private final int infererId;
     private int childInfererId;
-    
+
     /**
      * Constructor.
-     * 
+     *
      * @param parentInfererId - the bast infererId for this instance. Calls to newInstance()
      * will increment from this value.
      */
@@ -964,12 +966,12 @@ public class Phrasal {
       this.infererId = parentInfererId;
       this.childInfererId = parentInfererId+1;
     }
-    
+
     @Override
     public DecoderOutput process(DecoderInput input) {
       int inputLength = input.sequence == null ? input.tokens.length : input.sequence.size();
-      List<RichTranslation<IString, String>> translations = input.sequence == null ? 
-          decode(input.tokens, input.translationId, infererId) : 
+      List<RichTranslation<IString, String>> translations = input.sequence == null ?
+          decode(input.tokens, input.translationId, infererId) :
             decode(input.sequence, input.translationId, infererId);
       return new DecoderOutput(inputLength, translations, input.translationId);
     }
@@ -979,18 +981,18 @@ public class Phrasal {
       return new PhrasalProcessor(childInfererId++);
     }
   }
-  
+
   /**
-   * Output the result of decodeFromConsole(), and write to the n-best list 
+   * Output the result of decodeFromConsole(), and write to the n-best list
    * if necessary.
-   * 
+   *
    * NOTE: This call is *not* threadsafe.
-   * 
+   *
    * @param translations
    * @param translationId
    */
-  private void processConsoleResult(List<RichTranslation<IString, String>> translations, 
-      int sourceLength, 
+  private void processConsoleResult(List<RichTranslation<IString, String>> translations,
+      int sourceLength,
       int translationId) {
 
     if (translations.size() > 0) {
@@ -998,7 +1000,7 @@ public class Phrasal {
       // inserted after each translation
       RichTranslation<IString, String> bestTranslation = translations.get(0);
       System.out.printf("%s \n", bestTranslation.translation);
-      
+
       // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation.translation);
       System.err.printf("Final score: %.3f%n", (float) bestTranslation.score);
@@ -1013,27 +1015,27 @@ public class Phrasal {
       } else {
         System.err.println("Coverage: {}");
       }
-      
+
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
         IOTools.writeNbest(translations, translationId, generateMosesNBestList, nbestListWriter);
       }
-      
+
     } else {
       // Decoder failure. Print an empty line.
       System.out.println();
       System.err.printf("<<< decoder failure for id: %d >>>%n", translationId);
     }
   }
-  
+
   /**
    * Decode input from stdin and write translations to stdout.
-   * 
+   *
    * @throws IOException
    */
   private void decodeFromConsole() throws IOException {
     System.err.println("Entering main translation loop");
-    final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper = 
+    final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
         new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
     final LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in, "UTF-8"));
@@ -1047,14 +1049,14 @@ public class Phrasal {
             maxSentenceSize);
         continue;
       }
-      
+
       wrapper.put(new DecoderInput(tokens, translationId));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
         processConsoleResult(result.translations, result.sourceLength, result.translationId);
       }
     }
-    
+
     // Finished reading the input. Wait for threadpool to finish, then process
     // last few translations.
     wrapper.join();
@@ -1062,26 +1064,26 @@ public class Phrasal {
       DecoderOutput result = wrapper.poll();
       processConsoleResult(result.translations, result.sourceLength, result.translationId);
     }
-    
+
     long totalTime = System.nanoTime() - startTime;
     System.err.printf("Total Decoding time: %.3f seconds%n", totalTime / 1000000000.0);
   }
-  
-  
+
+
   /**
    * Decode an input list according to the current decoder settings. Returns
    * null for inputs that are shorter than <code>minSentenceSize</code> or
    * longer than <code>maxSentenceSize</code>.
-   * 
+   *
    * @param sourceList
    * @return
    */
   public List<Sequence<IString>> decode(List<Sequence<IString>> sourceList) {
-    List<Sequence<IString>> translations = 
+    List<Sequence<IString>> translations =
         new ArrayList<Sequence<IString>>(sourceList.size());
     for (int i = 0; i < sourceList.size(); ++i) translations.add(null);
-    
-    final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper = 
+
+    final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
         new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
     int translationId = 0;
     for (Sequence<IString> sequence : sourceList) {
@@ -1092,14 +1094,14 @@ public class Phrasal {
         translationId++;
         continue;
       }
-      
+
       wrapper.put(new DecoderInput(sequence, translationId++));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
         translations.set(result.translationId, result.translations.get(0).translation);
       }
     }
-    
+
     // Finished reading the input. Wait for threadpool to finish, then process
     // last few translations.
     wrapper.join();
@@ -1107,15 +1109,15 @@ public class Phrasal {
       DecoderOutput result = wrapper.poll();
       translations.set(result.translationId, result.translations.get(0).translation);
     }
-    
+
     return translations;
   }
 
   /**
    * Decode a tokenized input string. Returns an n-best list of translations.
-   * 
+   *
    * NOTE: This call is threadsafe.
-   * 
+   *
    * @param tokens
    * @param translationId
    * @param threadId -- Inferer object to use (one per thread)
@@ -1126,12 +1128,12 @@ public class Phrasal {
         IStrings.toSyncIStringArray(tokens));
     return decode(source, translationId, threadId);
   }
-  
+
   /**
    * Decode a tokenized input string. Returns an n-best list of translations.
-   * 
+   *
    * NOTE: This call is threadsafe.
-   * 
+   *
    * @param source
    * @param translationId
    * @param threadId -- Inferer object to use (one per thread)
@@ -1146,9 +1148,9 @@ public class Phrasal {
             constrainedToRefs.get(translationId),
             phraseGenerator.longestSourcePhrase()));
 
-    List<RichTranslation<IString, String>> translations = 
+    List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);
-    
+
     if (nbestListSize > 1) {
       translations = inferers
           .get(threadId).nbest(
@@ -1157,12 +1159,12 @@ public class Phrasal {
               constrainedOutputSpace,
               (constrainedOutputSpace == null ? null : constrainedOutputSpace
                   .getAllowableSequences()), nbestListSize);
-      
+
       // Return an empty n-best list
       if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
-      
+
     } else {
-      // The 1-best translation in this case is potentially different from 
+      // The 1-best translation in this case is potentially different from
       // calling nbest() with a list size of 1. Therefore, this call is *not* a special
       // case of the condition above.
       RichTranslation<IString, String> translation = inferers.get(threadId).translate(
@@ -1177,7 +1179,7 @@ public class Phrasal {
     }
     return translations;
   }
-  
+
   /**
    * Free resources and cleanup.
    */
@@ -1189,7 +1191,7 @@ public class Phrasal {
         System.err.println("Unable to shutdown inferer: " + inferer.getClass().getName());
       }
     }
-    
+
     // Close the n-best list writer
     if (nbestListWriter != null) {
       System.err.printf("Closing n-best writer%n");
@@ -1199,7 +1201,7 @@ public class Phrasal {
 
   /**
    * Load options from a Moses-style ini file.
-   * 
+   *
    * @param filename
    * @throws IOException
    */
@@ -1253,7 +1255,7 @@ public class Phrasal {
 
   /**
    * Read a combination of config file and other command line arguments.
-   * 
+   *
    * @param args
    * @return
    * @throws IOException
@@ -1277,16 +1279,16 @@ public class Phrasal {
     configFinal.putAll(configArgs); // command line args overwrite config file options
     return configFinal;
   }
-  
+
   /**
    * Load an instance of phrasal from an ini file.
-   * 
+   *
    * @param phrasalIniFile
-   * @throws IOException 
+   * @throws IOException
    */
   public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
     Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
-    return loadDecoder(config);  
+    return loadDecoder(config);
   }
 
   private static Phrasal loadDecoder(Map<String, List<String>> config) {
@@ -1295,7 +1297,7 @@ public class Phrasal {
       Phrasal phrasal = new Phrasal(config);
       FlatPhraseTable.lockIndex();
       return phrasal;
-      
+
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
     } catch (SecurityException e) {
@@ -1315,10 +1317,10 @@ public class Phrasal {
     }
     throw new RuntimeException("Could not load Phrasal from config file!");
   }
-  
+
   /**
    * Run Phrasal from the command line.
-   * 
+   *
    * @param args
    * @throws Exception
    */
