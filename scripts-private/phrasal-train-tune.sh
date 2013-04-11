@@ -177,7 +177,7 @@ function evaluate {
 
     # Aggregate results from many decoding runs
     grep BLEU "$RUNNAME".bleu | awk '{ print $3 }' | tr -d ',' | echo $(cat -) "$TUNERUNNAME" >> "$DECODE_SET_NAME".BLEU
-    cat "$DECODE_SET_NAME".BLEU | sort -n -o "$DECODE_SET_NAME".BLEU
+    cat "$DECODE_SET_NAME".BLEU | sort -nr -o "$DECODE_SET_NAME".BLEU
 }
 
 #
