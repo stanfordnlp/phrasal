@@ -1,0 +1,86 @@
+#!/usr/bin/perl
+
+sub get_bucket {
+  my $bucket = int(($_[0]-1)/5);
+  $bucket = 11 if ($bucket > 11);
+  return $bucket;
+}
+
+if ($#ARGV != 5) {
+  print stderr "Usage:\n\t$0 bitext.source bitext.target testset selected.source selected.target selected.ids\n";
+  exit -1;
+}
+
+$bitext_source_fn = $ARGV[0];
+$bitext_target_fn = $ARGV[1];
+$testset_fn = $ARGV[2];
+$selected_source_fn = $ARGV[3];
+$selected_target_fn = $ARGV[4];
+$selected_ids_fn = $ARGV[5];
+
+system("/u/packages/kenlm/bin/lmplz -o 5 < $testset_fn > /tmp/$$.select.arpa");
+@lines = `/u/packages/kenlm/query /tmp/$$.select.arpa < $bitext_source_fn`;
+
+$id = 0;
+for $line (@lines) {
+  chomp $line;
+  $log_p = $line; $log_p =~ s/.*Total: //g; $log_p =~ s/ .*//g;
+  $id_scores{$id} = $log_p;
+  $id++;
+}
+
+open fh, $testset_fn or die;
+$total_snt = 0;
+while (<fh>) {
+   chomp;
+   @toks = split / +/;
+   $bucket = get_bucket($#toks+1);
+   $cnts{$bucket} += 1;
+   $total_snt++;
+}
+
+@cnt_keys = sort {$a <=> $b} keys %cnts;
+for $k (@cnt_keys) {
+   $range_start = $k*5;
+   $range_end = ($k+1)*5;
+   print "len($range_start-$range_end): cnt: $cnts{$k} p: ".($cnts{$k}/$total_snt)."\n";
+} 
+
+open fh, $bitext_source_fn or die;
+$id = 0;
+while (<fh>) {
+   chomp;
+   @toks = split / +/;
+   $bucket = get_bucket($#toks+1);
+   $id_scores{$id} = $id_scores{$id}/($#toks+1) + log($cnts{$bucket}/$total_snt);
+   $id++;
+}
+
+@sorted_ids = sort { ($id_scores{$b} <=> $id_scores{$a}) || ($a cmp $b) } keys %id_scores;
+
+
+open isfh, $bitext_source_fn or die "can't open $bitext_source_fn";
+open itfh, $bitext_target_fn or die "can't open $bitext_target_fn";
+open osfh, ">$selected_source_fn" or die "can't open $selected_source_fn";
+open otfh, ">$selected_target_fn" or die "can't open $selected_target_fn";
+open oidfh, ">$selected_ids_fn" or die "can't open $selected_ids_fn";
+
+@source_lines = <isfh>;
+@target_lines = <itfh>;
+
+for $id (@sorted_ids) {
+  print stderr "$id $id_scores{$id}\n";
+  print osfh "$source_lines[$id]";
+  print otfh "$target_lines[$id]";
+  @toks = split / +/, $source_lines[$id];
+  $bucket = get_bucket($#toks+1);
+  $len_model_score = log($cnts{$bucket}/$total_snt);
+  print oidfh "$id\t$id_scores{$id}\t$len_model_score\n";
+}
+
+close isfh;
+close itfh;
+close osfh;
+close otfh;
+close oidfh;
+
