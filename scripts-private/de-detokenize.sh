@@ -13,4 +13,4 @@ fi
 infile=$1
 
 cat $infile | de-rules.py | en_detokenizer | recase.sh German \
-$infile.detok > $infile.cased
+> $infile.cased
