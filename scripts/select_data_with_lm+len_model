@@ -18,8 +18,8 @@ $selected_source_fn = $ARGV[3];
 $selected_target_fn = $ARGV[4];
 $selected_ids_fn = $ARGV[5];
 
-system("/u/packages/kenlm/bin/lmplz -o 5 < $testset_fn > /tmp/$$.select.arpa");
-@lines = `/u/packages/kenlm/query /tmp/$$.select.arpa < $bitext_source_fn`;
+system("/u/nlp/packages/moses/bin/lmplz -o 5 < $testset_fn > /tmp/$$.select.arpa");
+@lines = `/u/nlp/packages/moses/bin/query /tmp/$$.select.arpa < $bitext_source_fn`;
 
 $id = 0;
 for $line (@lines) {
