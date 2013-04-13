@@ -68,7 +68,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
 
     // Iterate over target side of phrase
     for (int i = 0; i < eLength; ++i) {
-      int[] fIndices = alignment.e2f(i);
+      int[] fIndices = alignment.t2s(i);
       String eWord = f.targetPhrase.get(i).toString();
       
       if (fIndices == null) {

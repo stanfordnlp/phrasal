@@ -11,7 +11,9 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 
@@ -21,7 +23,8 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
  *
  *@author John Bauer
  */
-public class TargetSidePunctuationFeaturizer implements IncrementalFeaturizer<IString,String>,
+public class TargetSidePunctuationFeaturizer implements AlignmentFeaturizer,
+IncrementalFeaturizer<IString,String>,
 IsolatedPhraseFeaturizer<IString, String> {
 
   /**
@@ -33,15 +36,18 @@ IsolatedPhraseFeaturizer<IString, String> {
 
   private final boolean addLexicalFeatures;
   private final boolean addDifferenceCounts;
+  private final boolean addCommaFeatures;
 
   public TargetSidePunctuationFeaturizer() {
     addLexicalFeatures = true;
     addDifferenceCounts = false;
+    addCommaFeatures = false;
   }
 
   public TargetSidePunctuationFeaturizer(String...args) {
     addLexicalFeatures = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
     addDifferenceCounts = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
+    addCommaFeatures = args.length > 2 ? Boolean.parseBoolean(args[2]) : false;
   }
 
   @Override
@@ -52,19 +58,49 @@ IsolatedPhraseFeaturizer<IString, String> {
   public List<FeatureValue<String>> phraseListFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
-
+    PhraseAlignment alignment = f.option.abstractOption.alignment;
     int nTargetSidePunctuationChars = 0;
-    for (IString targetWord : f.targetPhrase) {
-      String word = targetWord.toString();
+    int nTgtTokens = f.targetPhrase.size();
+    int nInsertedCommas = 0;
+    int nCommaContentAlignments = 0;
+
+    // Iterate over the target
+    for (int i = 0; i < nTgtTokens; ++i) {
+      String word = f.targetPhrase.get(i).toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
         if (addLexicalFeatures) {
           features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
           features.add(new CacheableFeatureValue<String>(FEATURE_NAME, 1.0));
         }
+        if (addCommaFeatures && word.equals(",")) {
+          int[] srcIndices = alignment.t2s(i);
+          if (srcIndices == null || srcIndices.length == 0) {
+            ++nInsertedCommas;
+          } else {
+            for (int j : srcIndices) {
+              if ( ! PUNCT_PATTERN.matcher(f.sourcePhrase.get(j).toString()).matches()) {
+                ++nCommaContentAlignments;
+              }
+            }
+          }
+        }
         ++nTargetSidePunctuationChars;
       }
     }
 
+    // Features for:
+    //   , --> NULL
+    //   , --> content word
+    if (addCommaFeatures) {
+      if (nInsertedCommas > 0) {
+        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".comma.ins", nInsertedCommas));
+      }
+      if (nCommaContentAlignments > 0) {
+        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".comma.content", nCommaContentAlignments));
+      }
+    }
+
+    // Iterate over the source
     if (addDifferenceCounts) {
       int nSourceSidePunctuationChars = 0;
       for (IString sourceWord : f.sourcePhrase) {

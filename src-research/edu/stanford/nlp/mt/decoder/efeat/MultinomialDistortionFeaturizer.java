@@ -95,7 +95,7 @@ public class MultinomialDistortionFeaturizer extends
       final int tOptLen = f.targetPhrase.size();
       for (int i = 0; i < tOptLen; i++) {
 
-        final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+        final int[] sIndices = f.option.abstractOption.alignment.t2s(i);
         if (sIndices == null || sIndices.length == 0)
           continue; // skip over null aligned target tokens
 

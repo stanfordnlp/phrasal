@@ -32,7 +32,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
     if (f.option.abstractOption.alignment.hasAlignment()) {
       for (int i = 0; i < tOptLen; i++) {
 
-        final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+        final int[] sIndices = f.option.abstractOption.alignment.t2s(i);
         if (sIndices == null)
           numNullAlignments++;
         else if (sIndices.length != 1)

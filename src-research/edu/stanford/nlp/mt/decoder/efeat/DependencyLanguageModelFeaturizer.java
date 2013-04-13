@@ -425,7 +425,7 @@ public class DependencyLanguageModelFeaturizer extends
       int[] pAlign = new int[0];
       if (bilingual) {
         if (align.hasAlignment()) {
-          int[] localAlign = align.e2f(i);
+          int[] localAlign = align.t2s(i);
           if (align == null || i >= align.size()) {
             System.err.printf("Array index: %d >= %d\n", i, align.size());
             System.err.printf("Phrase pair: [%s] [%s]\n",
