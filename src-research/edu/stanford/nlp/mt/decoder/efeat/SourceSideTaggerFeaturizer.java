@@ -91,8 +91,8 @@ public class SourceSideTaggerFeaturizer implements IncrementalFeaturizer<IString
         int sourceIndex = i;
         int targetIndex = f.s2tAlignmentIndex[i][j];
 
-        String sourceTag = tagged.get(i).tag();
-        String targetWord = f.sourceSentence.get(j).toString();
+        String sourceTag = tagged.get(sourceIndex).tag();
+        String targetWord = f.targetPrefix.get(targetIndex).toString();
         String feature = FEATURE_NAME + sourceTag + "-" + targetWord;
         // no attempt to look for repeated features; 
         // the system will find and sum those for us
