@@ -197,10 +197,10 @@ public final class IOTools {
    * Write an n-best list to file.
    * 
    * @param translations
-   * @param translationId
+   * @param sourceInputId
    */
   public static void writeNbest(List<RichTranslation<IString, String>> translations, 
-      int translationId,
+      int sourceInputId,
       boolean generateMosesNBestList,
       PrintStream nbestListWriter) {
     assert translations != null;
@@ -209,9 +209,9 @@ public final class IOTools {
     StringBuilder sb = new StringBuilder(translations.size() * 500);
     for (RichTranslation<IString, String> tran : translations) {
       if (generateMosesNBestList) {
-        tran.nbestToMosesStringBuilder(translationId, sb);
+        tran.nbestToMosesStringBuilder(sourceInputId, sb);
       } else {
-        tran.nbestToStringBuilder(translationId, sb);
+        tran.nbestToStringBuilder(sourceInputId, sb);
       }
       sb.append('\n');
     }

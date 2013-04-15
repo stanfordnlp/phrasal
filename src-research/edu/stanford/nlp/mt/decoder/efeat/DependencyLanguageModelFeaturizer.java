@@ -401,7 +401,7 @@ public class DependencyLanguageModelFeaturizer extends
       dep = new DependencyInstance(pipe);
       dep.add("<root>", "<root-LEMMA>", "<root-CPOS>", "<root-POS>", new int[0]);
       if (!srcInstances.isEmpty()) {
-        int transId = f.translationId;
+        int transId = f.sourceInputId;
         assert (transId >= 0);
         assert (transId < srcInstances.size());
         DependencyInstance instance = srcInstances.get(transId);

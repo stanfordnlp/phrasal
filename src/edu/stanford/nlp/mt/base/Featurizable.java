@@ -15,9 +15,10 @@ import edu.stanford.nlp.mt.Phrasal;
 public class Featurizable<TK, FV> {
 
   /**
-   * Unique id associated with the current hypothesis
+   * Unique id associated with the source input sentence. Usually this is
+   * the zero-indexed line number of the newline-delimited input file.
    */
-  public final int translationId;
+  public final int sourceInputId;
 
   /**
    * Most recently translated foreign phrase (source side)
@@ -150,9 +151,9 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   @SuppressWarnings("unchecked")
-  public Featurizable(Hypothesis<TK, FV> hypothesis, int translationId,
+  public Featurizable(Hypothesis<TK, FV> hypothesis, int sourceInputId,
       int nbStatefulFeaturizers) {
-    this.translationId = translationId;
+    this.sourceInputId = sourceInputId;
     done = hypothesis.isDone();
     option = hypothesis.translationOpt;
     TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
@@ -199,10 +200,10 @@ public class Featurizable<TK, FV> {
   }
 
   @SuppressWarnings("unchecked")
-  protected Featurizable(Hypothesis<TK, FV> hypothesis, int translationId,
+  protected Featurizable(Hypothesis<TK, FV> hypothesis, int sourceInputId,
       int nbStatefulFeaturizers, Sequence<TK> targetPhrase,
       Object[] tokens, boolean hasPendingPhrases, boolean targetOnly) {
-    this.translationId = translationId;
+    this.sourceInputId = sourceInputId;
     done = hypothesis.isDone() && !hasPendingPhrases;
     option = hypothesis.translationOpt;
     TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
@@ -289,8 +290,8 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   public Featurizable(Sequence<TK> sourceSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId) {
-    this.translationId = translationId;
+      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId) {
+    this.sourceInputId = sourceInputId;
     option = concreteOpt;
     done = false;
     TranslationOption<TK> transOpt = concreteOpt.abstractOption;
@@ -317,10 +318,10 @@ public class Featurizable<TK, FV> {
   }
 
   protected Featurizable(Sequence<TK> sourceSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId,
+      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId,
       Sequence<TK> targetPhrase) {
     assert (concreteOpt.abstractOption.getClass().equals(DTUOption.class));
-    this.translationId = translationId;
+    this.sourceInputId = sourceInputId;
     option = concreteOpt;
     done = false;
     TranslationOption<TK> transOpt = concreteOpt.abstractOption;

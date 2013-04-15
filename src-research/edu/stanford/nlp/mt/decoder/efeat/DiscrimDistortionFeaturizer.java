@@ -502,7 +502,7 @@ public class DiscrimDistortionFeaturizer extends
     if (!DEBUG)
       return;
 
-    final int translationId = f.translationId;
+    final int translationId = f.sourceInputId;
 
     // Walk back through the priors so that the output
     // is in the correct translation order

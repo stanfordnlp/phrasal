@@ -97,7 +97,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
    */  
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    int problemId = f.translationId;
+    int problemId = f.sourceInputId;
     if (problemId < 0 || problemId >= sentences.size()) {
       // TODO: now what do we do?  Return null or blow up?
       throw new RuntimeException("Given translation problem for sentence that wasn't cached, " + problemId + "; cached " + sentences.size() + " sentences");

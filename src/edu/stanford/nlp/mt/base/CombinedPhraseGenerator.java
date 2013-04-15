@@ -52,7 +52,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
 
   @Override
   public List<ConcreteTranslationOption<TK,FV>> translationOptions(
-      Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer) {
+      Sequence<TK> sequence, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
     Map<CoverageSet, List<ConcreteTranslationOption<TK,FV>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK,FV>>>();
     
     if (DEBUG) {
@@ -71,7 +71,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
          }
          try {
            for (ConcreteTranslationOption<TK,FV> opt : phraseGenerator
-              .translationOptions(sequence, targets, translationId, scorer)) {
+              .translationOptions(sequence, targets, sourceInputId, scorer)) {
              if (DEBUG) {
                System.err.println("  opt: " + opt);
              }
@@ -91,7 +91,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
               .getName());
         }
         List<ConcreteTranslationOption<TK,FV>> potentialOptions = phraseGenerator
-            .translationOptions(sequence, targets, translationId, scorer);
+            .translationOptions(sequence, targets, sourceInputId, scorer);
         BitSet novelCoverage = new CoverageSet(sequence.size());
         for (ConcreteTranslationOption<TK,FV> option : potentialOptions) {
           if (DEBUG) {
