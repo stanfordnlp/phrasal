@@ -15,7 +15,7 @@ import edu.stanford.nlp.util.Generics;
  * Basic AdaGrad update rule from Duchi et al. (2010).
  * 
  * @author Sida Wang
- *         Mengqiu Wang (Elitist Lasso)
+ *         Mengqiu Wang
  *
  */
 public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
@@ -31,6 +31,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 
   private Counter<String> sumGradSquare;
   private Norm norm;
+  
 
   public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm) {
     this.rate = initialRate;
@@ -94,8 +95,27 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 
   public void updateElitistLasso(Counter<String> weights,
 		     Counter<String> gradient, int timeStep) {
-
+	String PTFeat = "DiscPT.s+t:";
+	String OTHERS = "OTHERS";
+	int PTLen = PTFeat.length();
     Map<String, Set<String>> featureGroups = new DefaultHashMap();
+    for (String feature: weights.keySet())
+    {
+    	if(feature.startsWith(PTFeat))
+    	{
+    		String strip=feature.substring(PTLen);
+    		String[] sourceTarget = strip.split(">");
+    		String source = sourceTarget[0];
+    		assert(sourceTarget.length == 2);
+    		Set<String> currentGroup = featureGroups.get(source);
+    	    currentGroup.add(feature);
+    	}
+    	else
+    	{
+    		Set<String> currentGroup = featureGroups.get(OTHERS);
+    		currentGroup.add(feature);
+    	}
+    }
     //TODO implement feature grouping logic here
     // the key of the map should be group signature
     // value of the map is the set of features that maps to a feature group signature
