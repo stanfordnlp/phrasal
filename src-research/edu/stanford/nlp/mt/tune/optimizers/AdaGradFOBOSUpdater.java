@@ -26,7 +26,8 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   // magnification factor over the base learning rate
   private final double eps = 1e-3;
   private double lambda;
-
+  
+  public Map<String, Set<String>> featureGroups;
   public enum Norm { LASSO, aeLASSO; }
 
   private Counter<String> sumGradSquare;
@@ -37,6 +38,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     this.rate = initialRate;
     this.lambda = lambda;
     this.norm = norm;
+    this.featureGroups = new DefaultHashMap();
     sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
@@ -98,8 +100,8 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 	String PTFeat = "DiscPT.s+t:";
 	String OTHERS = "OTHERS";
 	int PTLen = PTFeat.length();
-    Map<String, Set<String>> featureGroups = new DefaultHashMap();
-    for (String feature: weights.keySet())
+    
+    for (String feature: gradient.keySet())
     {
     	if(feature.startsWith(PTFeat))
     	{
