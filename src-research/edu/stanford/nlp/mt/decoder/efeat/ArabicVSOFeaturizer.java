@@ -155,7 +155,7 @@ public class ArabicVSOFeaturizer implements
 
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
 
-    final int translationId = f.translationId;
+    final int translationId = f.sourceInputId;
 
     // Get the subject triplets Return if there aren't any
     List<Triple<Integer, Integer, Integer>> subjectSpans = subjectBank

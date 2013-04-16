@@ -104,7 +104,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   @SuppressWarnings("unchecked")
   public List<ConcreteTranslationOption<IString,FV>> translationOptions(
       Sequence<IString> sequence, List<Sequence<IString>> targets,
-      int translationId, Scorer<FV> scorer) {
+      int sourceInputId, Scorer<FV> scorer) {
 
     assert (targets == null);
     List<ConcreteTranslationOption<IString,FV>> opts = new LinkedList<ConcreteTranslationOption<IString,FV>>();
@@ -159,11 +159,11 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
               if (abstractOpt instanceof DTUOption)
                 opts.add(new ConcreteTranslationOption<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
-                        .getName(), translationId, true));
+                        .getName(), sourceInputId, true));
               else
                 opts.add(new ConcreteTranslationOption<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
-                        .getName(), translationId));
+                        .getName(), sourceInputId));
             }
           }
         }

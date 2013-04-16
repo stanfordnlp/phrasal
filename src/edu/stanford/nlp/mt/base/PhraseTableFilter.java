@@ -112,9 +112,9 @@ public class PhraseTableFilter {
         oStream.print(" ||| ");
         oStream.print(opt.target);
         oStream.print(" ||| ");
-        oStream.print(opt.alignment.f2eStr());
+        oStream.print(opt.alignment.s2tStr());
         oStream.print(" ||| ");
-        oStream.print(opt.alignment.e2fStr());
+        oStream.print(opt.alignment.t2sStr());
         oStream.print(" ||| ");
         for (int j=0; j<opt.scores.length; ++j) {
           if (j>0) oStream.print(" ");

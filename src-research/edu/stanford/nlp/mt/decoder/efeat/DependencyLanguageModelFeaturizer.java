@@ -401,7 +401,7 @@ public class DependencyLanguageModelFeaturizer extends
       dep = new DependencyInstance(pipe);
       dep.add("<root>", "<root-LEMMA>", "<root-CPOS>", "<root-POS>", new int[0]);
       if (!srcInstances.isEmpty()) {
-        int transId = f.translationId;
+        int transId = f.sourceInputId;
         assert (transId >= 0);
         assert (transId < srcInstances.size());
         DependencyInstance instance = srcInstances.get(transId);
@@ -425,7 +425,7 @@ public class DependencyLanguageModelFeaturizer extends
       int[] pAlign = new int[0];
       if (bilingual) {
         if (align.hasAlignment()) {
-          int[] localAlign = align.e2f(i);
+          int[] localAlign = align.t2s(i);
           if (align == null || i >= align.size()) {
             System.err.printf("Array index: %d >= %d\n", i, align.size());
             System.err.printf("Phrase pair: [%s] [%s]\n",

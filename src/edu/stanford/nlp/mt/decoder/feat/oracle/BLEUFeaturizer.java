@@ -147,7 +147,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
   }
 
   private int getId(Featurizable<IString, String> f) {
-    int sentId = f.translationId;
+    int sentId = f.sourceInputId;
     assert (sentId >= 0);
     assert (sentId < refTries.length);
     return sentId;

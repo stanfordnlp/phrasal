@@ -40,15 +40,15 @@ public class SmoothBLEU {
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
 
-    int translationId = 0;
+    int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ) {
       line = NISTTokenizer.tokenize(line).trim();
       Sequence<IString> translation = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       double score = 
-          BLEUMetric.computeLocalSmoothScore(translation, referencesList.get(translationId), BLEUOrder);
-      System.out.printf("%d\t%.4f%n", translationId, score);
-      ++translationId;
+          BLEUMetric.computeLocalSmoothScore(translation, referencesList.get(sourceInputId), BLEUOrder);
+      System.out.printf("%d\t%.4f%n", sourceInputId, score);
+      ++sourceInputId;
     }
   }
 }

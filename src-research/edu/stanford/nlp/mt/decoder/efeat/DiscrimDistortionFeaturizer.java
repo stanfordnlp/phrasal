@@ -244,7 +244,7 @@ public class DiscrimDistortionFeaturizer extends
       final int tOptLen = f.targetPhrase.size();
       for (int i = 0; i < tOptLen; i++) {
 
-        final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+        final int[] sIndices = f.option.abstractOption.alignment.t2s(i);
         if (sIndices == null || sIndices.length == 0)
           continue; // skip over null aligned target tokens
 
@@ -293,7 +293,7 @@ public class DiscrimDistortionFeaturizer extends
       final int tOptLen = f.targetPhrase.size();
       for (int i = 0; i < tOptLen; i++) {
 
-        final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+        final int[] sIndices = f.option.abstractOption.alignment.t2s(i);
         if (sIndices == null || sIndices.length == 0)
           continue; // skip over null aligned target tokens
 
@@ -502,7 +502,7 @@ public class DiscrimDistortionFeaturizer extends
     if (!DEBUG)
       return;
 
-    final int translationId = f.translationId;
+    final int translationId = f.sourceInputId;
 
     // Walk back through the priors so that the output
     // is in the correct translation order

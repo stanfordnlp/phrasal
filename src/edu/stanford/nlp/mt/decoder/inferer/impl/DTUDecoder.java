@@ -139,7 +139,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   @Override
   protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
-      Sequence<TK> source, int translationId,
+      Sequence<TK> source, int sourceInputId,
       RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
@@ -167,7 +167,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.println("Generating Translation Options");
 
     List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
-        .translationOptions(source, targets, translationId, scorer);
+        .translationOptions(source, targets, sourceInputId, scorer);
 
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:
@@ -192,7 +192,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       allOptions.add(optionsWithGaps);
 
     if (OPTIONS_DUMP || DETAILED_DEBUG) {
-      int sentId = translationId;
+      int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK,FV> option : options)
@@ -214,7 +214,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     DTUOptionGrid optionGrid = new DTUOptionGrid(options, source);
 
     // insert initial hypothesis
-    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, source,
+    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
@@ -247,7 +247,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.println();
 
       BeamExpander beamExpander = new BeamExpander(beams, i, sourceSz,
-            optionGrid, constrainedOutputSpace, translationId);
+            optionGrid, constrainedOutputSpace, sourceInputId);
       beamExpander.expandBeam();
 
       if (DEBUG) {
@@ -391,27 +391,27 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     int sourceSz;
     DTUOptionGrid optionGrid;
     ConstrainedOutputSpace<TK, FV> constrainedOutputSpace;
-    int translationId;
+    int sourceInputId;
 
     public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
         int sourceSz, DTUOptionGrid optionGrid,
         ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-        int translationId) {
+        int sourceInputId) {
       this.beams = beams;
       this.beamId = beamId;
       this.sourceSz = sourceSz;
       this.optionGrid = optionGrid;
       this.constrainedOutputSpace = constrainedOutputSpace;
-      this.translationId = translationId;
+      this.sourceInputId = sourceInputId;
     }
 
     private void expandBeam() {
-      expandBeam(beams, beamId, sourceSz, optionGrid, constrainedOutputSpace, translationId);
+      expandBeam(beams, beamId, sourceSz, optionGrid, constrainedOutputSpace, sourceInputId);
     }
 
     public int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
         int sourceSz, DTUOptionGrid optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, int translationId) {
+        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, int sourceInputId) {
 
       int optionsApplied = 0;
       int hypPos = -1;
@@ -436,7 +436,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               mergedHyps.add(currentHyp);
             }
             for (DTUHypothesis<TK, FV> nextHyp : currentHyp
-                .mergeHypothesisAndPendingPhrase(translationId, featurizer,
+                .mergeHypothesisAndPendingPhrase(sourceInputId, featurizer,
                     scorer, heuristic)) {
               if (!nextHyp.hasExpired()) {
                 currentHyps.add(nextHyp);
@@ -497,8 +497,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               }
 
               Hypothesis<TK, FV> newHyp = (option.abstractOption instanceof DTUOption || hyp instanceof DTUHypothesis) ? new DTUHypothesis<TK, FV>(
-                  translationId, option, hyp.length, hyp, featurizer, scorer,
-                  heuristic) : new Hypothesis<TK, FV>(translationId, option,
+                  sourceInputId, option, hyp.length, hyp, featurizer, scorer,
+                  heuristic) : new Hypothesis<TK, FV>(sourceInputId, option,
                   hyp.length, hyp, featurizer, scorer, heuristic);
               {
                 // Discard hypothesis if ill-formed:

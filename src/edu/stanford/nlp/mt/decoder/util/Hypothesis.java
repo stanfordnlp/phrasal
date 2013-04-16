@@ -87,14 +87,14 @@ State<Hypothesis<TK, FV>> {
   /**
    * 
    */
-  public Hypothesis(int translationId, Sequence<TK> sourceSequence,
+  public Hypothesis(int sourceInputId, Sequence<TK> sourceSequence,
       SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
       List<Annotator<TK,FV>> annotators,
       List<List<ConcreteTranslationOption<TK,FV>>> options) {
     this.id = nextId.incrementAndGet();
     score = 0;
-    h = heuristic.getInitialHeuristic(sourceSequence, options, scorer, translationId);
+    h = heuristic.getInitialHeuristic(sourceSequence, options, scorer, sourceInputId);
     insertionPosition = 0;
     length = 0;
     translationOpt = null;
@@ -115,7 +115,7 @@ State<Hypothesis<TK, FV>> {
   /**
    * 
    */
-  public Hypothesis(int translationId,
+  public Hypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
@@ -134,7 +134,7 @@ State<Hypothesis<TK, FV>> {
     - this.sourceCoverage.cardinality();
     linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
         : baseHyp.translationOpt.linearDistortion(translationOpt));
-    featurizable = new Featurizable<TK, FV>(this, translationId, featurizer
+    featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumberStatefulFeaturizers());
 
     annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
@@ -166,7 +166,7 @@ State<Hypothesis<TK, FV>> {
   }
 
 
-  protected Hypothesis(int translationId,
+  protected Hypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt,
       TranslationOption<TK> abstractOption, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
@@ -186,7 +186,7 @@ State<Hypothesis<TK, FV>> {
     linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
         : baseHyp.translationOpt.linearDistortion(translationOpt));
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
-        translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
+        sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
     annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());

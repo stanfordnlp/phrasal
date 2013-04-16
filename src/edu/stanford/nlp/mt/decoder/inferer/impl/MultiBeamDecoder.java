@@ -150,7 +150,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   @Override
   protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
-      Sequence<TK> source, int translationId,
+      Sequence<TK> source, int sourceInputId,
       RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
@@ -178,12 +178,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.println("Generating Translation Options");
 
     List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
-        .translationOptions(source, targets, translationId, scorer);
+        .translationOptions(source, targets, sourceInputId, scorer);
 
     System.err.printf("Translation options: %d\n", options.size());
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
-      int sentId = translationId;
+      int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteTranslationOption<TK,FV> option : options)
@@ -207,7 +207,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // insert initial hypothesis
     List<List<ConcreteTranslationOption<TK,FV>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK,FV>>>();
     allOptions.add(options);
-    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(translationId, source,
+    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
@@ -245,7 +245,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.println();
 
       expandBeam(beams, i, sourceSz, optionGrid, 
-          constrainedOutputSpace, translationId);
+          constrainedOutputSpace, sourceInputId);
       
       if (DEBUG) {
         displayBeams(beams);
@@ -369,7 +369,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   private int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
       int sourceSz, OptionGrid<TK,FV> optionGrid,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-      int translationId) {
+      int sourceInputId) {
     int optionsApplied = 0;
     int hypPos = -1;
     int totalHypothesesGenerated = 0;
@@ -460,7 +460,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
              * phrases to float around randomly }
              */
 
-            Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(translationId,
+            Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(sourceInputId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
 
             if (DETAILED_DEBUG) {

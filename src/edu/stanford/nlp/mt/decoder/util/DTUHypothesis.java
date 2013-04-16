@@ -65,7 +65,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     }
 
     public PendingPhrase(ConcreteTranslationOption<TK,FV> concreteOpt,
-        int translationId, Hypothesis<TK, FV> hyp,
+        int sourceInputId, Hypothesis<TK, FV> hyp,
         CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
         int segmentIdx, int firstPosition, int lastPosition) {
       this.segmentIdx = segmentIdx;
@@ -73,7 +73,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       this.firstPosition = firstPosition;
       this.lastPosition = lastPosition;
       this.concreteOpt = concreteOpt;
-      this.futureCosts = setFutureCosts(translationId, hyp, featurizer, scorer);
+      this.futureCosts = setFutureCosts(sourceInputId, hyp, featurizer, scorer);
     }
 
     private static final ThreadLocal<MutableInteger> tlTranslationId = new ThreadLocal<MutableInteger>() {
@@ -99,16 +99,16 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     };
 
-    private double[] setFutureCosts(int translationId, Hypothesis<TK, FV> hyp,
+    private double[] setFutureCosts(int sourceInputId, Hypothesis<TK, FV> hyp,
         CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer) {
 
       // Do we clear the cache of future cost?
       MutableInteger lastId = tlTranslationId.get();
       @SuppressWarnings("rawtypes")
       Map<SegId, Double> fcCache = tlCache.get();
-      if (lastId.intValue() != translationId) {
+      if (lastId.intValue() != sourceInputId) {
         fcCache.clear();
-        lastId.set(translationId);
+        lastId.set(sourceInputId);
       }
 
       DTUOption<TK> opt = (DTUOption<TK>) concreteOpt.abstractOption;
@@ -120,7 +120,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         Double score = fcCache.get(id);
         if (score == null) {
           Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(
-              hyp.sourceSequence, concreteOpt, translationId, i);
+              hyp.sourceSequence, concreteOpt, sourceInputId, i);
           List<FeatureValue<FV>> phraseFeatures = featurizer
               .phraseListFeaturize(f);
           score = scorer.getIncrementalScore(phraseFeatures);
@@ -290,7 +290,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
    * Merge current DTUHypothesis with PendingPhrase instances.
    */
   public List<DTUHypothesis<TK, FV>> mergeHypothesisAndPendingPhrase(
-      int translationId, CombinedFeaturizer<TK, FV> featurizer,
+      int sourceInputId, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
 
     if (hasExpired)
@@ -314,7 +314,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         int currentSegmentIdx = currentPhrase.segmentIdx + 1;
 
         if (currentPhrase.firstPosition <= length) {
-          nextHyps.add(new DTUHypothesis<TK, FV>(translationId,
+          nextHyps.add(new DTUHypothesis<TK, FV>(sourceInputId,
               currentPhrase.concreteOpt, length, this, featurizer, scorer,
               heuristic, currentPhrase, currentSegmentIdx,
               currentPhrase.concreteOpt.abstractOption));
@@ -328,12 +328,12 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   /**
    * Constructor used for 1st segment of a discontinuous phrase.
    */
-  public DTUHypothesis(int translationId,
+  public DTUHypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
 
-    super(translationId, translationOpt, translationOpt.abstractOption,
+    super(sourceInputId, translationOpt, translationOpt.abstractOption,
         insertionPosition, baseHyp, featurizer, scorer, heuristic, /*
                                                                     * targetPhrase=
                                                                     */
@@ -364,7 +364,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     // assert (MAX_TARGET_PHRASE_SPAN >= 0);
     if (translationOpt.abstractOption instanceof DTUOption) {
       PendingPhrase<TK, FV> newPhrase = new PendingPhrase<TK, FV>(
-          translationOpt, translationId, this, featurizer, scorer, 0,
+          translationOpt, sourceInputId, this, featurizer, scorer, 0,
           this.length + MIN_GAP_SIZE, this.length + MAX_TARGET_PHRASE_SPAN);
       pendingPhrases.add(newPhrase);
     }
@@ -379,7 +379,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   }
 
   // Constructor used with successors:
-  public DTUHypothesis(int translationId,
+  public DTUHypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
@@ -387,7 +387,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       TranslationOption<TK> actualTranslationOption) {
 
     super(
-        translationId,
+        sourceInputId,
         translationOpt,
         actualTranslationOption,
         insertionPosition,
@@ -440,13 +440,13 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   }
 
   // Constructor used during nbest list generation:
-  public DTUHypothesis(int translationId,
+  public DTUHypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, Hypothesis<TK, FV> nextHyp,
       CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
       SearchHeuristic<TK, FV> heuristic, Set<TranslationOption<TK>> seenOptions) {
 
-    super(translationId, translationOpt,
+    super(sourceInputId, translationOpt,
         getAbstractOption(nextHyp.featurizable), insertionPosition, baseHyp,
         featurizer, scorer, heuristic, getTranslation(nextHyp),
         !nextHyp.featurizable.done, nextHyp.featurizable.getSegmentIdx());

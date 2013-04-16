@@ -40,13 +40,13 @@ public class ConcreteTranslationOption<TK,FV> implements
   public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet sourceCoverage,
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<TK> sourceSequence, String phraseTableName, int translationId) {
+      Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
     this.abstractOption = abstractOption;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
-        translationId);
+        sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
     cachedFeatureList = new LinkedList<FeatureValue<FV>>();
     for (FeatureValue<FV> feature : features) {
@@ -59,7 +59,7 @@ public class ConcreteTranslationOption<TK,FV> implements
   public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet sourceCoverage,
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<TK> sourceSequence, String phraseTableName, int translationId,
+      Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
       boolean hasTargetGap) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);
     assert (hasTargetGap);
@@ -74,7 +74,7 @@ public class ConcreteTranslationOption<TK,FV> implements
     double totalScore = 0.0;
     {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
-          translationId);
+          sourceInputId);
       List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
       for (FeatureValue<FV> feature : features) {
         if (FeatureValues.isCacheable(feature))
@@ -89,7 +89,7 @@ public class ConcreteTranslationOption<TK,FV> implements
       DTUOption<TK> dtuOpt = (DTUOption<TK>) abstractOption;
       for (int i = 0; i < dtuOpt.dtus.length; ++i) {
         Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(sourceSequence,
-            this, translationId, i);
+            this, sourceInputId, i);
         assert (f.translationScores.length == 0);
         assert (f.phraseScoreNames.length == 0);
         List<FeatureValue<FV>> features = phraseFeaturizer

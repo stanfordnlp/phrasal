@@ -11,10 +11,10 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   public final TranslationOption<TK> abstractOption;
 
   public DTUFeaturizable(Hypothesis<TK, FV> hypothesis,
-      TranslationOption<TK> abstractOption, int translationId,
+      TranslationOption<TK> abstractOption, int sourceInputId,
       int nbStatefulFeaturizers, RawSequence<TK> toks,
       boolean hasPendingPhrases, int segmentIdx) {
-    super(hypothesis, translationId, nbStatefulFeaturizers, toks,
+    super(hypothesis, sourceInputId, nbStatefulFeaturizers, toks,
         retrieveDTUTokens(hypothesis, toks), hasPendingPhrases, segmentIdx > 0);
     this.segmentIdx = segmentIdx;
     this.abstractOption = abstractOption;
@@ -22,8 +22,8 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   }
 
   public DTUFeaturizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId, int dtuId) {
-    super(foreignSequence, concreteOpt, translationId,
+      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId, int dtuId) {
+    super(foreignSequence, concreteOpt, sourceInputId,
         ((DTUOption<TK>) concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
     this.segmentIdx = 0;
