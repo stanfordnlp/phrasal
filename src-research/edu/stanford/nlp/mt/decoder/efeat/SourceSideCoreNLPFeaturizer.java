@@ -19,6 +19,7 @@ import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
@@ -108,22 +109,30 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     List<FeatureValue<String>> features = Generics.newArrayList();
     
     List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
-    for (int i = 0; i < words.size(); ++i) {
-      if (f.s2tAlignmentIndex[i] == null) {
-        // this word is not aligned to anything yet
-        continue;
-      }
+    PhraseAlignment reverseAlignment = 
+          PhraseAlignment.getPhraseAlignment(
+             f.option.abstractOption.alignment.s2tStr().replace(" ", ";"));
+    
+    for (int i : f.option.sourceCoverage) {
+       int phraseI = i - f.sourcePosition;
+       int phraseJs[] = reverseAlignment.t2s(phraseI);
+       if (phraseJs == null) {
+         // this word is not aligned to anything yet
+         continue;         
+       }
+       
+       for (int phraseJ : phraseJs) {
+         int j = f.targetPosition + phraseJ;
+         int sourceIndex = i;
+         int targetIndex = j;
 
-      for (int j = 0; j < f.s2tAlignmentIndex[i].length; ++j) {
-        int sourceIndex = i;
-        int targetIndex = f.s2tAlignmentIndex[i][j];
-
-        String sourceTag = words.get(sourceIndex).tag();
-        String targetWord = f.targetPrefix.get(targetIndex).toString();
-        String feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
-        // no attempt to look for repeated features; 
-        // the system will find and sum those for us
-        features.add(new FeatureValue<String>(feature, 1.0));
+         String sourceTag = words.get(sourceIndex).tag();
+         String targetWord = f.targetPrefix.get(targetIndex).toString();
+         String feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
+         
+         // no attempt to look for repeated features; 
+         // the system will find and sum those for us
+         features.add(new FeatureValue<String>(feature, 1.0));
       }
     }
 
@@ -131,15 +140,18 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     for (SemanticGraphEdge edge : basicDependencies.edgeIterable()) {
       String relation = edge.getRelation().toString();
       int sourceIndex = edge.getSource().index() - 1; // IndexedWords are indexed from 1, not 0
+      if (sourceIndex < f.sourcePosition || sourceIndex >= f.sourcePosition + f.sourcePhrase.size()) {
+        continue;
+      }
 
-      if (f.s2tAlignmentIndex[sourceIndex] == null) {
+      if (reverseAlignment.t2s(sourceIndex-f.sourcePosition) == null) {
         // this word is not aligned to anything yet
         continue;
       }
 
-
-      for (int j = 0; j < f.s2tAlignmentIndex[sourceIndex].length; ++j) {
-        int targetIndex = f.s2tAlignmentIndex[sourceIndex][j];
+      int[] targetAlignments = reverseAlignment.t2s(sourceIndex-f.sourcePosition);
+      for (int j = 0; j < targetAlignments.length; ++j) {
+        int targetIndex = targetAlignments[j];
         String targetWord = f.targetPrefix.get(targetIndex).toString();
         String feature = DEP_FEATURE_NAME + relation + "-" + targetWord;
         features.add(new FeatureValue<String>(feature, 1.0));
