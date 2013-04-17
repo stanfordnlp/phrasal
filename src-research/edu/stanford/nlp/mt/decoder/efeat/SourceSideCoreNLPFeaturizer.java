@@ -109,8 +109,9 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     List<FeatureValue<String>> features = Generics.newArrayList();
     
     List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
-    
-    PhraseAlignment reverseAlignment = PhraseAlignment.getPhraseAlignment(f.option.abstractOption.alignment.s2tStr());
+    PhraseAlignment reverseAlignment = 
+          PhraseAlignment.getPhraseAlignment(
+             f.option.abstractOption.alignment.s2tStr().replace(" ", ";"));
     
     for (int i : f.option.sourceCoverage) {
        int phraseI = i - f.sourcePosition;
@@ -139,6 +140,9 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     for (SemanticGraphEdge edge : basicDependencies.edgeIterable()) {
       String relation = edge.getRelation().toString();
       int sourceIndex = edge.getSource().index() - 1; // IndexedWords are indexed from 1, not 0
+      if (sourceIndex < f.sourcePosition || sourceIndex >= f.sourcePosition + f.sourcePhrase.size()) {
+        continue;
+      }
 
       if (reverseAlignment.t2s(sourceIndex-f.sourcePosition) == null) {
         // this word is not aligned to anything yet
