@@ -27,7 +27,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   private final double eps = 1e-3;
   private double lambda;
   
-  public Map<String, Set<String>> featureGroups;
+  
   public enum Norm { LASSO, aeLASSO; }
 
   private Counter<String> sumGradSquare;
@@ -38,7 +38,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     this.rate = initialRate;
     this.lambda = lambda;
     this.norm = norm;
-    this.featureGroups = new DefaultHashMap();
+    
     sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
@@ -97,32 +97,40 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 
   public void updateElitistLasso(Counter<String> weights,
 		     Counter<String> gradient, int timeStep) {
-	String PTFeat = "DiscPT.s+t:";
-	String OTHERS = "OTHERS";
-	int PTLen = PTFeat.length();
+    String PTFeat = "DiscPT.s+t:";
+    String OTHERS = "OTHERS";
+    int PTLen = PTFeat.length();
     
     for (String feature: gradient.keySet())
     {
+        double tempgrad = gradient.getCount(feature);
+        sumGradSquare.incrementCount(feature, tempgrad * tempgrad);
+    }
+
+    // Build featureGroups
+    Map<String, Set<String>> featureGroups = new DefaultHashMap();
+    for (String feature: sumGradSquare.keySet())
+    {
     	if(feature.startsWith(PTFeat))
     	{
-    		String strip=feature.substring(PTLen);
-    		String[] sourceTarget = strip.split(">");
-    		String source = sourceTarget[0];
-    		assert(sourceTarget.length == 2);
-    		Set<String> currentGroup = featureGroups.get(source);
+    	    String strip=feature.substring(PTLen);
+    	    String[] sourceTarget = strip.split(">");
+    	    String source = sourceTarget[0];
+    	    assert(sourceTarget.length == 2);
+    	    Set<String> currentGroup = featureGroups.get(source);
     	    currentGroup.add(feature);
     	}
-    	else
-    	{
-    		Set<String> currentGroup = featureGroups.get(OTHERS);
-    		currentGroup.add(feature);
-    	}
+    	//else
+    	//{
+    	//    Set<String> currentGroup = featureGroups.get(OTHERS);
+    	//    currentGroup.add(feature);
+    	//}
     }
-    //TODO implement feature grouping logic here
+
     // the key of the map should be group signature
     // value of the map is the set of features that maps to a feature group signature
-    if (featureGroups.size() == 0)
-      throw new RuntimeException("In invoking elitist LASSO, featureGroups must be instantiated"); 
+    // if (featureGroups.size() == 0)
+    //  throw new RuntimeException("In invoking elitist LASSO, featureGroups must be instantiated"); 
 
     // need to iterate over the groups of features twice
     // in first itr, calculate per-group L1-norm
@@ -130,11 +138,11 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     for (Set<String> fGroup: featureGroups.values()) {
       double testUpdateAbsSum = 0;
       int groupSize = fGroup.size();
-      Counter<String> testUpdateCache = new OpenAddressCounter<String>(groupSize, 0.0f);
-      Counter<String> currentRateCache = new OpenAddressCounter<String>(groupSize, 0.0f);
+      Counter<String> testUpdateCache = new OpenAddressCounter<String>(groupSize, 1.0f);
+      Counter<String> currentRateCache = new OpenAddressCounter<String>(groupSize, 1.0f);
       for (String feature: fGroup) {
         gValue = gradient.getCount(feature);
-        sgsValue = sumGradSquare.incrementCount(feature, gValue*gValue);
+        sgsValue = sumGradSquare.getCount(feature);
         wValue = weights.getCount(feature);
         currentrate = rate / (Math.sqrt(sgsValue)+eps);
         testupdate = wValue - (currentrate * gValue);
@@ -150,7 +158,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
         if (realupdate == 0.0) {
           // Filter zeros
           weights.remove(feature);
-          fGroup.remove(feature);
+          // fGroup.remove(feature);
         } else {
           weights.setCount(feature, realupdate);
         }
