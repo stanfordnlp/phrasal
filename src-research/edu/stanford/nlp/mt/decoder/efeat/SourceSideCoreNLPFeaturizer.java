@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.io.RuntimeIOException;
@@ -91,6 +93,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     return null;
   }
+  private Set<Integer> warnSet = new HashSet<Integer>();
 
   /**
    * Return a set of features for the tagged sentence.
@@ -109,12 +112,47 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     List<FeatureValue<String>> features = Generics.newArrayList();
     
     List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
+    
+    if (words.size() != f.sourceSentence.size()) {
+       if (!warnSet.contains(problemId)) {
+         System.err.printf("WARNING: tokenization mismatch for %d - Phrasal: <%s> CoreNLP <%s>\n", problemId, f.sourceSentence, words);
+         warnSet.add(problemId);
+       }
+       return null;
+    }
+    /*
+    System.err.printf("f.source: %s\n", f.option.abstractOption.source);
+    System.err.printf("f.target: %s\n", f.option.abstractOption.target);
+    System.err.printf("f.option.abstractOption: %s\n",  
+      f.option.abstractOption); 
+    System.err.printf("f.option.sourceCoverage: %s\n", f.option.sourceCoverage); 
+    System.err.printf("alignment: %s\n",  f.option.abstractOption.alignment);
+    */
     PhraseAlignment reverseAlignment = 
           PhraseAlignment.getPhraseAlignment(
              f.option.abstractOption.alignment.s2tStr().replace(" ", ";"));
-    
+    /* System.err.printf("reverseAlignment: %s\n",  reverseAlignment);
+    System.err.printf("t-s\n"); 
+    if (f.option.abstractOption.alignment.t2s != null) {
+    for (int[] row : f.option.abstractOption.alignment.t2s) {
+       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
+    }
+    } */
+  
+    /* System.err.printf("/t-s\n");
+
+    System.err.printf("t-s reverse\n"); 
+    if (reverseAlignment.t2s != null) {
+    for (int[] row : reverseAlignment.t2s) {
+       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
+    }
+    }
+    System.err.printf("/t-s reverse\n");
+   */
+
     for (int i : f.option.sourceCoverage) {
        int phraseI = i - f.sourcePosition;
+//       System.err.printf("phraseI: %d i: %d f.sourcePosition: %d\n", phraseI, i, f.sourcePosition); 
        int phraseJs[] = reverseAlignment.t2s(phraseI);
        if (phraseJs == null) {
          // this word is not aligned to anything yet
@@ -124,10 +162,9 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
        for (int phraseJ : phraseJs) {
          int j = f.targetPosition + phraseJ;
          int sourceIndex = i;
-         int targetIndex = j;
 
          String sourceTag = words.get(sourceIndex).tag();
-         String targetWord = f.targetPrefix.get(targetIndex).toString();
+         String targetWord = f.option.abstractOption.target.get(phraseJ).toString();
          String feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
          
          // no attempt to look for repeated features; 
@@ -151,8 +188,8 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
 
       int[] targetAlignments = reverseAlignment.t2s(sourceIndex-f.sourcePosition);
       for (int j = 0; j < targetAlignments.length; ++j) {
-        int targetIndex = targetAlignments[j];
-        String targetWord = f.targetPrefix.get(targetIndex).toString();
+        int phraseJ = targetAlignments[j];
+        String targetWord = f.option.abstractOption.target.get(phraseJ).toString();
         String feature = DEP_FEATURE_NAME + relation + "-" + targetWord;
         features.add(new FeatureValue<String>(feature, 1.0));
       }
