@@ -149,7 +149,7 @@ public class NewDynamicPhraseTable extends
           IStrings.toIStringArray(line.split("\\s+")));
       System.out.printf("Foreign Phrase: %s\n", phrase);
       for (TranslationOption<IString> opt : ndpt.getTranslationOptions(phrase)) {
-        System.out.printf("--->%s Scores: %s\n", opt.translation,
+        System.out.printf("--->%s Scores: %s\n", opt.target,
             Arrays.toString(opt.scores));
       }
     }
@@ -313,7 +313,7 @@ public class NewDynamicPhraseTable extends
   }
 
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return phraseLengthLimit;
   }
 

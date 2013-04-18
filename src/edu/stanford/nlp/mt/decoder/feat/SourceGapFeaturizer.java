@@ -156,7 +156,7 @@ public class SourceGapFeaturizer implements
 
   private static int getGapCount(Featurizable<IString, String> f) {
     int gapCount = 0;
-    for (IString w : f.foreignPhrase) {
+    for (IString w : f.sourcePhrase) {
       if (w.id == DTUTable.GAP_STR.id)
         ++gapCount;
     }
@@ -184,13 +184,13 @@ public class SourceGapFeaturizer implements
 
     // Gap size feature:
     if (DTUTable.MIN_GAP_SIZE > 0 && addGapSizeProb && gapCount >= 1) {
-      CoverageSet cs = f.hyp.translationOpt.foreignCoverage;
+      CoverageSet cs = f.hyp.translationOpt.sourceCoverage;
       List<Integer> binIds = DTUFeatureExtractor.getBins(cs);
       if (gapCount != binIds.size()) {
         System.err
             .printf(
                 "Error: gapCount = %d, binIds = %d, phrase = {%s}, input = {%s}, fc = {%s}\n",
-                gapCount, binIds.size(), f.foreignPhrase, f.foreignSentence, cs);
+                gapCount, binIds.size(), f.sourcePhrase, f.sourceSentence, cs);
         throw new RuntimeException();
       }
       if (featureForEachBin) {
@@ -216,9 +216,9 @@ public class SourceGapFeaturizer implements
     // Crossing feature:
     if (crossingOnValue != 0.0 && gapCount >= 1) {
 
-      CoverageSet phraseCS = f.hyp.translationOpt.foreignCoverage; // e.g.
+      CoverageSet phraseCS = f.hyp.translationOpt.sourceCoverage; // e.g.
                                                                    // .x...x...
-      CoverageSet hypCS = f.hyp.foreignCoverage; // e.g. xxx..xx..
+      CoverageSet hypCS = f.hyp.sourceCoverage; // e.g. xxx..xx..
 
       int phraseStartIdx = phraseCS.nextSetBit(0);
       int phraseEndIdx = phraseCS.length();
@@ -231,7 +231,7 @@ public class SourceGapFeaturizer implements
       int crossings = 0;
       while (middleCS.cardinality() > 0) {
         boolean inside = false, outside = false;
-        CoverageSet curCS = curF.hyp.translationOpt.foreignCoverage;
+        CoverageSet curCS = curF.hyp.translationOpt.sourceCoverage;
         int idx = -1;
         while (true) {
           idx = curCS.nextSetBit(idx + 1);

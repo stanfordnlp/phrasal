@@ -46,7 +46,7 @@ State<Hypothesis<TK, FV>> {
   // hypothesis creation and just receive an additional
   // reference here
   public final ConcreteTranslationOption<TK,FV> translationOpt;
-  public final Sequence<TK> foreignSequence;
+  public final Sequence<TK> sourceSequence;
 
   // right now, translations are built up strictly in sequence.
   // however, we don't want to encourage people writing feature
@@ -54,7 +54,7 @@ State<Hypothesis<TK, FV>> {
   public final Hypothesis<TK, FV> preceedingHyp;
 
   // non-primitives created anew for each hypothesis
-  public final CoverageSet foreignCoverage;
+  public final CoverageSet sourceCoverage;
   public final Featurizable<TK, FV> featurizable;
 
   public final List<FeatureValue<FV>> localFeatures;
@@ -87,35 +87,35 @@ State<Hypothesis<TK, FV>> {
   /**
    * 
    */
-  public Hypothesis(int translationId, Sequence<TK> foreignSequence,
+  public Hypothesis(int sourceInputId, Sequence<TK> sourceSequence,
       SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
       List<Annotator<TK,FV>> annotators,
       List<List<ConcreteTranslationOption<TK,FV>>> options) {
     this.id = nextId.incrementAndGet();
     score = 0;
-    h = heuristic.getInitialHeuristic(foreignSequence, options, scorer, translationId);
+    h = heuristic.getInitialHeuristic(sourceSequence, options, scorer, sourceInputId);
     insertionPosition = 0;
     length = 0;
     translationOpt = null;
-    this.foreignSequence = foreignSequence;
+    this.sourceSequence = sourceSequence;
     preceedingHyp = null;
     featurizable = null;
-    untranslatedTokens = foreignSequence.size();
-    foreignCoverage = new CoverageSet(foreignSequence.size());
+    untranslatedTokens = sourceSequence.size();
+    sourceCoverage = new CoverageSet(sourceSequence.size());
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
     this.annotators = new ArrayList<Annotator<TK,FV>>(annotators.size());
     for (Annotator<TK,FV> annotator : annotators) {
-      this.annotators.add(annotator.initialize(foreignSequence));
+      this.annotators.add(annotator.initialize(sourceSequence));
     }
   }
 
   /**
    * 
    */
-  public Hypothesis(int translationId,
+  public Hypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
@@ -123,18 +123,18 @@ State<Hypothesis<TK, FV>> {
     this.insertionPosition = insertionPosition;
     this.translationOpt = translationOpt;
     this.preceedingHyp = baseHyp;
-    this.foreignCoverage = baseHyp.foreignCoverage.clone();
-    this.foreignCoverage.or(translationOpt.foreignCoverage);
+    this.sourceCoverage = baseHyp.sourceCoverage.clone();
+    this.sourceCoverage.or(translationOpt.sourceCoverage);
     this.length = (insertionPosition < baseHyp.length ? baseHyp.length : // internal
       // insertion
-      insertionPosition + translationOpt.abstractOption.translation.size()); // edge
+      insertionPosition + translationOpt.abstractOption.target.size()); // edge
     // insertion
-    foreignSequence = baseHyp.foreignSequence;
-    untranslatedTokens = this.foreignSequence.size()
-    - this.foreignCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos
+    sourceSequence = baseHyp.sourceSequence;
+    untranslatedTokens = this.sourceSequence.size()
+    - this.sourceCoverage.cardinality();
+    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
         : baseHyp.translationOpt.linearDistortion(translationOpt));
-    featurizable = new Featurizable<TK, FV>(this, translationId, featurizer
+    featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumberStatefulFeaturizers());
 
     annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
@@ -157,7 +157,7 @@ State<Hypothesis<TK, FV>> {
     localFeatures.addAll(translationOpt.cachedFeatureList);
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
-        + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
+        + heuristic.getHeuristicDelta(this, translationOpt.sourceCoverage);
     // System.err.printf("h: %f %f %d %s\n", baseHyp.h,
     // heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage),
     // untranslatedTokens, foreignCoverage);
@@ -166,7 +166,7 @@ State<Hypothesis<TK, FV>> {
   }
 
 
-  protected Hypothesis(int translationId,
+  protected Hypothesis(int sourceInputId,
       ConcreteTranslationOption<TK,FV> translationOpt,
       TranslationOption<TK> abstractOption, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
@@ -176,17 +176,17 @@ State<Hypothesis<TK, FV>> {
     this.insertionPosition = insertionPosition;
     this.translationOpt = translationOpt;
     this.preceedingHyp = baseHyp;
-    this.foreignCoverage = baseHyp.foreignCoverage.clone();
-    this.foreignCoverage.or(translationOpt.foreignCoverage);
+    this.sourceCoverage = baseHyp.sourceCoverage.clone();
+    this.sourceCoverage.or(translationOpt.sourceCoverage);
     this.length = (insertionPosition < baseHyp.length) ? baseHyp.length
         : insertionPosition + targetPhrase.size();
-    foreignSequence = baseHyp.foreignSequence;
-    untranslatedTokens = this.foreignSequence.size()
-    - this.foreignCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.foreignPos
+    sourceSequence = baseHyp.sourceSequence;
+    untranslatedTokens = this.sourceSequence.size()
+    - this.sourceCoverage.cardinality();
+    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
         : baseHyp.translationOpt.linearDistortion(translationOpt));
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
-        translationId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
+        sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
     annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
@@ -207,7 +207,7 @@ State<Hypothesis<TK, FV>> {
     score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
     depth = baseHyp.depth + 1;
     h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
-        + heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage);
+        + heuristic.getHeuristicDelta(this, translationOpt.sourceCoverage);
     assert (!Double.isNaN(h));
   }
 
@@ -219,9 +219,9 @@ State<Hypothesis<TK, FV>> {
       Hypothesis<TK, FV> hyp) {
     if (hyp.preceedingHyp != null)
       injectSegmentationBuffer(sbuf, hyp.preceedingHyp);
-    sbuf.append("\t").append(hyp.translationOpt.abstractOption.translation)
+    sbuf.append("\t").append(hyp.translationOpt.abstractOption.target)
     .append(" ");
-    sbuf.append(hyp.translationOpt.foreignCoverage).append(" ");
+    sbuf.append(hyp.translationOpt.sourceCoverage).append(" ");
     sbuf.append(Arrays.toString(hyp.translationOpt.abstractOption.scores));
     sbuf.append("\n");
   }
@@ -233,11 +233,11 @@ State<Hypothesis<TK, FV>> {
   public String toString(int verbosity) {
     StringBuffer sbuf = new StringBuffer();
     if (featurizable != null) {
-      sbuf.append(featurizable.partialTranslation);
+      sbuf.append(featurizable.targetPrefix);
     } else {
       sbuf.append("<NONE>");
     }
-    sbuf.append("  ").append(foreignCoverage);
+    sbuf.append("  ").append(sourceCoverage);
     sbuf.append(String.format(" [%.3f h: %.3f]", score + h, h));
     if (verbosity > 0) {
       sbuf.append("\nSegmentation:\n");

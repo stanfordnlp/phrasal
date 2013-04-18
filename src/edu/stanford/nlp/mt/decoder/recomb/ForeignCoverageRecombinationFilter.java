@@ -19,12 +19,12 @@ public class ForeignCoverageRecombinationFilter<TK, FV> implements
 
   @Override
   public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
-    return hypA.foreignCoverage.equals(hypB.foreignCoverage);
+    return hypA.sourceCoverage.equals(hypB.sourceCoverage);
   }
 
   @Override
   public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
-    return hyp.foreignCoverage.hashCode();
+    return hyp.sourceCoverage.hashCode();
   }
 
 }

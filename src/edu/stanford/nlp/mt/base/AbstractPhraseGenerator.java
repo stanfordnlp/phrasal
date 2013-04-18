@@ -24,10 +24,10 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
 
   @Override
   public List<ConcreteTranslationOption<TK,FV>> translationOptions(
-      Sequence<TK> sequence, List<Sequence<TK>> targets, int translationId, Scorer<FV> scorer) {
+      Sequence<TK> sequence, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
     List<ConcreteTranslationOption<TK,FV>> opts = new LinkedList<ConcreteTranslationOption<TK,FV>>();
     int sequenceSz = sequence.size();
-    int longestForeignPhrase = this.longestForeignPhrase();
+    int longestForeignPhrase = this.longestSourcePhrase();
     if (longestForeignPhrase < 0)
       longestForeignPhrase = -longestForeignPhrase;
     for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
@@ -45,7 +45,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
         for (TranslationOption<TK> abstractOpt : abstractOpts) {
           opts.add(new ConcreteTranslationOption<TK,FV>(abstractOpt,
               foreignCoverage, phraseFeaturizer, scorer, sequence, this
-                  .getName(), translationId));
+                  .getName(), sourceInputId));
         }
       }
     }
@@ -65,6 +65,6 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
       Sequence<TK> sequence);
 
   @Override
-  abstract public int longestForeignPhrase();
+  abstract public int longestSourcePhrase();
 
 }

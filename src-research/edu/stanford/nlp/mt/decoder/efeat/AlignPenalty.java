@@ -25,14 +25,14 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
 
   private static Pair<Integer, Integer> internalFeaturize(
       Featurizable<IString, String> f) {
-    final int tOptLen = f.translatedPhrase.size();
+    final int tOptLen = f.targetPhrase.size();
 
     int numAlignments = 0;
     int numNullAlignments = 0;
     if (f.option.abstractOption.alignment.hasAlignment()) {
       for (int i = 0; i < tOptLen; i++) {
 
-        final int[] sIndices = f.option.abstractOption.alignment.e2f(i);
+        final int[] sIndices = f.option.abstractOption.alignment.t2s(i);
         if (sIndices == null)
           numNullAlignments++;
         else if (sIndices.length != 1)
@@ -45,7 +45,7 @@ public class AlignPenalty implements IncrementalFeaturizer<IString, String> {
           numAlignments++;
       }
     } else
-      numNullAlignments += f.translatedPhrase.size();
+      numNullAlignments += f.targetPhrase.size();
 
     return new Pair<Integer, Integer>(numAlignments, numNullAlignments);
   }

@@ -88,11 +88,11 @@ public class ArabicVSOkbestFeaturizer extends
     if (f == null)
       return false;
 
-    boolean verbCovered = f.hyp.foreignCoverage.get(verbIdx);
+    boolean verbCovered = f.hyp.sourceCoverage.get(verbIdx);
 
     final int subjLength = rightSubjectBoundary - leftSubjectBoundary + 1;
 
-    final BitSet fSubjCoverage = f.hyp.foreignCoverage.get(leftSubjectBoundary,
+    final BitSet fSubjCoverage = f.hyp.sourceCoverage.get(leftSubjectBoundary,
         rightSubjectBoundary + 1);
 
     boolean subjCovered = (fSubjCoverage.cardinality() == subjLength);
@@ -104,7 +104,7 @@ public class ArabicVSOkbestFeaturizer extends
       final Featurizable<IString, String> f) {
     int maxRightIndex = -1;
     for (int i = sLeft; i <= sRight; i++) {
-      final int[] eRange = f.f2tAlignmentIndex[i];
+      final int[] eRange = f.s2tAlignmentIndex[i];
       if (eRange == null)
         continue;
 
@@ -125,7 +125,7 @@ public class ArabicVSOkbestFeaturizer extends
           subject.second(), f);
       int rightVerbTargetBoundary = getRightTargetSideBoundary(thisVerbIdx,
           thisVerbIdx, f);
-      int leftVerbTargetBoundary = f.f2tAlignmentIndex[thisVerbIdx][Featurizable.PHRASE_START];
+      int leftVerbTargetBoundary = f.s2tAlignmentIndex[thisVerbIdx][Featurizable.PHRASE_START];
 
       if (rightSubjTargetBoundary == rightVerbTargetBoundary
           || rightSubjTargetBoundary + 1 == leftVerbTargetBoundary)
@@ -155,7 +155,7 @@ public class ArabicVSOkbestFeaturizer extends
       return null; // We're done
 
     // Score as soon as the verb is laid down
-    if (f.hyp.foreignCoverage.get(thisVerbIdx)) {
+    if (f.hyp.sourceCoverage.get(thisVerbIdx)) {
 
       List<Triple<Integer, Integer, Double>> subjectAnalyses = verbMap
           .get(thisVerbIdx);

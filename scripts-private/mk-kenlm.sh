@@ -26,14 +26,14 @@ MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp
 ORDER=$1
 NAME=$2
-type=$3
+TYPE=$3
 
 shift 3
 
 mkdir -p $TEMPDIR
 
 echo "Building ARPA LM..."
-zcat $* | grep -v '<s>' | tr '[:upper:]' '[:lower:]' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR > "$NAME".arpa
+zcat $* | perl -ne 's/<s>//g; print' | $MAKELM -o $ORDER -S 90% -T $TEMPDIR > "$NAME".arpa
 
 echo "Binarizing ARPA LM with standard settings"
-$MAKEBIN $type "$NAME".arpa "$NAME".bin
+$MAKEBIN $TYPE "$NAME".arpa "$NAME".bin

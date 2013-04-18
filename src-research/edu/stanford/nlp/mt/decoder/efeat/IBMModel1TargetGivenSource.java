@@ -58,7 +58,7 @@ public class IBMModel1TargetGivenSource implements
     IBMModel1.PartialTargetFeatureState ptfs = priorPtfs;
 
     IBMModel1.PhrasePrecomputePTarget precompute = precomputeMap
-        .get(f.translatedPhrase);
+        .get(f.targetPhrase);
 
     ptfs = ptfs.appendPhrasePrecompute(precompute);
 
@@ -79,10 +79,10 @@ public class IBMModel1TargetGivenSource implements
     basePTFS = ibmModel1.partialTargetFeatureState(foreign);
     precomputeMap = new HashMap<Sequence<IString>, IBMModel1.PhrasePrecomputePTarget>();
     for (ConcreteTranslationOption<IString,String> option : options) {
-      if (precomputeMap.containsKey(option.abstractOption.translation))
+      if (precomputeMap.containsKey(option.abstractOption.target))
         continue;
-      precomputeMap.put(option.abstractOption.translation, ibmModel1
-          .phrasePrecomputePTarget(option.abstractOption.translation, foreign));
+      precomputeMap.put(option.abstractOption.target, ibmModel1
+          .phrasePrecomputePTarget(option.abstractOption.target, foreign));
     }
   }
 
@@ -97,7 +97,7 @@ public class IBMModel1TargetGivenSource implements
     if (fullModel1)
       return null;
     return new FeatureValue<String>(featureName, ibmModel1.scoreTMOnly(
-        f.foreignSentence, f.translatedPhrase));
+        f.sourceSentence, f.targetPhrase));
   }
 
   @Override

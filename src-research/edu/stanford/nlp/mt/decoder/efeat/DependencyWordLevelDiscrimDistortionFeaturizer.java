@@ -95,24 +95,24 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements
      * in the foreignSentence
      */
     if (currentDep2Head != null) {
-      if (currentDep2Head.length != f.foreignSentence.size()) {
-        System.err.println("f.foreignSentence=" + f.foreignSentence);
+      if (currentDep2Head.length != f.sourceSentence.size()) {
+        System.err.println("f.foreignSentence=" + f.sourceSentence);
         throw new RuntimeException("line " + lineCount + " of " + parseFilename
             + ". has different #words(=" + currentDep2Head.length
             + " from what's in the f.foreignSentence(size="
-            + f.foreignSentence.size() + ")");
+            + f.sourceSentence.size() + ")");
       }
     }
 
-    int fStartIdx = f.foreignPosition;
-    int fEndIdx = f.foreignPosition + f.foreignPhrase.size() - 1;
+    int fStartIdx = f.sourcePosition;
+    int fEndIdx = f.sourcePosition + f.sourcePhrase.size() - 1;
 
     if (DETAILED_DEBUG) {
       System.err.println("in DependencyWordLevelDiscrimDistortionFeaturizer.");
-      System.err.printf("  foreignPhrase = %s [%d-%d]\n", f.foreignPhrase,
+      System.err.printf("  foreignPhrase = %s [%d-%d]\n", f.sourcePhrase,
           fStartIdx, fEndIdx);
-      System.err.println("  partialTranslation=" + f.partialTranslation);
-      System.err.println("  foreignSentence=" + f.foreignSentence);
+      System.err.println("  partialTranslation=" + f.targetPrefix);
+      System.err.println("  foreignSentence=" + f.sourceSentence);
     }
 
     for (int fidx = fStartIdx; fidx <= fEndIdx; fidx++) {
@@ -181,8 +181,8 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements
         || !WordLevelDiscrimDistortionFeaturizer.wordTranslated(f, cidx2))
       return features; // empty features
 
-    int[] ephrase1_range = f.f2tAlignmentIndex[cidx1];
-    int[] ephrase2_range = f.f2tAlignmentIndex[cidx2];
+    int[] ephrase1_range = f.s2tAlignmentIndex[cidx1];
+    int[] ephrase2_range = f.s2tAlignmentIndex[cidx2];
 
     // sanity check
     if (ephrase1_range.length != 2 || ephrase2_range.length != 2) {
@@ -191,13 +191,13 @@ public class DependencyWordLevelDiscrimDistortionFeaturizer<TK> implements
     }
 
     int relative_cidx1_AlignedEnglishIndex = WordLevelDiscrimDistortionFeaturizer
-        .getAlignedEnglishWordIndex(f.foreignSentence.get(cidx1),
-            f.partialTranslation.subsequence(ephrase1_range[0],
+        .getAlignedEnglishWordIndex(f.sourceSentence.get(cidx1),
+            f.targetPrefix.subsequence(ephrase1_range[0],
                 ephrase1_range[1]), model1);
 
     int relative_cidx2_AlignedEnglishIndex = WordLevelDiscrimDistortionFeaturizer
-        .getAlignedEnglishWordIndex(f.foreignSentence.get(cidx2),
-            f.partialTranslation.subsequence(ephrase2_range[0],
+        .getAlignedEnglishWordIndex(f.sourceSentence.get(cidx2),
+            f.targetPrefix.subsequence(ephrase2_range[0],
                 ephrase2_range[1]), model1);
 
     int cidx1_AlignedEnglishIndex = ephrase1_range[0]

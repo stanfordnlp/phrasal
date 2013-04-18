@@ -147,7 +147,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
   }
 
   private int getId(Featurizable<IString, String> f) {
-    int sentId = f.translationId;
+    int sentId = f.sourceInputId;
     assert (sentId >= 0);
     assert (sentId < refTries.length);
     return sentId;
@@ -166,16 +166,16 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
     double oldBLEU = (scorer != null) ? scorer.score : 0.0;
 
     // Find new ngram localCounts:
-    for (int i = 0; i < f.translatedPhrase.size(); ++i) {
+    for (int i = 0; i < f.targetPhrase.size(); ++i) {
 
-      IString tok = f.translatedPhrase.get(i);
+      IString tok = f.targetPhrase.get(i);
       // System.err.println("new word: "+tok);
 
       BLEUIncrementalScorer newScorer = scorer != null ? new BLEUIncrementalScorer(
           scorer, i == 0) : new BLEUIncrementalScorer();
 
       // Update normalization counts:
-      int pos = f.translationPosition + i;
+      int pos = f.targetPosition + i;
       for (int j = 0; j <= Math.min(pos, ORDER - 1); ++j)
         ++newScorer.localPossibleMatchCounts[j];
 
@@ -221,7 +221,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
     // double percentDone =
     // (f.foreignSentence.size()-f.untranslatedTokens)*1.0/f.foreignSentence.size();
 
-    int hypLength = f.translationPosition + f.translatedPhrase.size();
+    int hypLength = f.targetPosition + f.targetPhrase.size();
     // scorer.updateScore(sentId, hypLength, percentDone, false);
     scorer.updateScore(sentId, hypLength, f.done || BP_BEFORE_FINAL, false);
 
@@ -252,9 +252,9 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
 
     for (int i = 0; i < lines.length; ++i)
       System.err.printf("ref%d: %s\n", i, lines[i][sentId]);
-    System.err.printf("hyp: %s\n", f.partialTranslation);
+    System.err.printf("hyp: %s\n", f.targetPrefix);
 
-    int hypLength = f.translationPosition + f.translatedPhrase.size();
+    int hypLength = f.targetPosition + f.targetPhrase.size();
     // scorer.updateScore(sentId, hypLength, 1.0, true);
     scorer.updateScore(sentId, hypLength, true, false);
     System.err.println("unigram matches:");

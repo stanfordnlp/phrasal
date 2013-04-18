@@ -15,19 +15,20 @@ import edu.stanford.nlp.mt.Phrasal;
 public class Featurizable<TK, FV> {
 
   /**
-   * Unique id associated with the current hypothesis
+   * Unique id associated with the source input sentence. Usually this is
+   * the zero-indexed line number of the newline-delimited input file.
    */
-  public final int translationId;
+  public final int sourceInputId;
 
   /**
    * Most recently translated foreign phrase (source side)
    */
-  public final Sequence<TK> foreignPhrase;
+  public final Sequence<TK> sourcePhrase;
 
   /**
    * Translated Phrase produced for the most recently translated foreign phrase (target side)
    */
-  public final Sequence<TK> translatedPhrase;
+  public final Sequence<TK> targetPhrase;
 
   /**
    * Phrase table used to produce the most recently translated phrase.
@@ -46,12 +47,12 @@ public class Featurizable<TK, FV> {
 
   public final ConcreteTranslationOption<TK,FV> option;
 
-  public final int translationPosition;
+  public final int targetPosition;
 
   /**
    * First position in the source sequence covered by the most recently phrase
    */
-  public final int foreignPosition;
+  public final int sourcePosition;
 
   /**
    * Number of tokens in the source sequence that are still untranslated
@@ -61,12 +62,12 @@ public class Featurizable<TK, FV> {
   /**
    * Partial Target sequence associated with the current hypothesis
    */
-  public final Sequence<TK> partialTranslation;
+  public final Sequence<TK> targetPrefix;
 
   /**
    * Source sequence
    */
-  public final Sequence<TK> foreignSentence;
+  public final Sequence<TK> sourceSentence;
 
   /**
    * Degree of linear distortion associated with the most recently translated
@@ -92,7 +93,7 @@ public class Featurizable<TK, FV> {
    * partial translations are represented using RawSequence, I don't want to
    * make that part of the API for people involved with writing features.
    */
-  protected final RawSequence<TK> partialTranslationRaw;
+  protected final RawSequence<TK> targetPrefixRaw;
 
   /**
    * Featurizable associated with the partial hypothesis that was used to
@@ -129,16 +130,16 @@ public class Featurizable<TK, FV> {
    * 
    * For positions where no alignment exists, null is used.
    */
-  final public int[][] t2fAlignmentIndex;
+  final public int[][] t2sAlignmentIndex;
 
   /**
    * Foreign sentence to partial translation alignment index. By default, it is
    * set to null. It is constructed only if any featurizer implements
    * AlignmentFeaturizer.
    * 
-   * Same guarantees as t2fAlignmentIndex
+   * Same guarantees as t2sAlignmentIndex
    */
-  final public int[][] f2tAlignmentIndex;
+  final public int[][] s2tAlignmentIndex;
 
   /**
    * For stateful featurizers. If multiple featurizers require access to this
@@ -150,45 +151,45 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   @SuppressWarnings("unchecked")
-  public Featurizable(Hypothesis<TK, FV> hypothesis, int translationId,
+  public Featurizable(Hypothesis<TK, FV> hypothesis, int sourceInputId,
       int nbStatefulFeaturizers) {
-    this.translationId = translationId;
+    this.sourceInputId = sourceInputId;
     done = hypothesis.isDone();
     option = hypothesis.translationOpt;
     TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
     ConcreteTranslationOption<TK,FV> concreteOpt = hypothesis.translationOpt;
-    foreignPhrase = transOpt.foreign;
-    translatedPhrase = transOpt.translation;
+    sourcePhrase = transOpt.source;
+    targetPhrase = transOpt.target;
     phraseTableName = concreteOpt.phraseTableName;
     translationScores = transOpt.scores;
     phraseScoreNames = transOpt.phraseScoreNames;
-    translationPosition = hypothesis.insertionPosition;
-    foreignPosition = concreteOpt.foreignPos;
+    targetPosition = hypothesis.insertionPosition;
+    sourcePosition = concreteOpt.sourcePosition;
     linearDistortion = hypothesis.linearDistortion;
 
     Object[] tokens = retrieveTokens(hypothesis.length, hypothesis);
-    partialTranslation = partialTranslationRaw = new RawSequence<TK>(
+    targetPrefix = targetPrefixRaw = new RawSequence<TK>(
         (TK[]) tokens);
-    foreignSentence = hypothesis.foreignSequence;
+    sourceSentence = hypothesis.sourceSequence;
     untranslatedTokens = hypothesis.untranslatedTokens;
     prior = hypothesis.preceedingHyp.featurizable;
     if (prior != null) {
       if (constructAlignment) {
-        t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex,
+        t2sAlignmentIndex = copyOfIndex(prior.t2sAlignmentIndex,
             hypothesis.length);
-        f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex,
-            prior.f2tAlignmentIndex.length);
+        s2tAlignmentIndex = copyOfIndex(prior.s2tAlignmentIndex,
+            prior.s2tAlignmentIndex.length);
       } else {
-        t2fAlignmentIndex = f2tAlignmentIndex = null;
+        t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
       states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
           : null;
     } else {
       if (constructAlignment) {
-        t2fAlignmentIndex = new int[hypothesis.length][];
-        f2tAlignmentIndex = new int[foreignSentence.size()][];
+        t2sAlignmentIndex = new int[hypothesis.length][];
+        s2tAlignmentIndex = new int[sourceSentence.size()][];
       } else {
-        t2fAlignmentIndex = f2tAlignmentIndex = null;
+        t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
       states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
           : null;
@@ -199,16 +200,16 @@ public class Featurizable<TK, FV> {
   }
 
   @SuppressWarnings("unchecked")
-  protected Featurizable(Hypothesis<TK, FV> hypothesis, int translationId,
-      int nbStatefulFeaturizers, Sequence<TK> translatedPhrase,
+  protected Featurizable(Hypothesis<TK, FV> hypothesis, int sourceInputId,
+      int nbStatefulFeaturizers, Sequence<TK> targetPhrase,
       Object[] tokens, boolean hasPendingPhrases, boolean targetOnly) {
-    this.translationId = translationId;
+    this.sourceInputId = sourceInputId;
     done = hypothesis.isDone() && !hasPendingPhrases;
     option = hypothesis.translationOpt;
     TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
     ConcreteTranslationOption<TK,FV> concreteOpt = hypothesis.translationOpt;
-    foreignPhrase = transOpt.foreign;
-    this.translatedPhrase = translatedPhrase;
+    sourcePhrase = transOpt.source;
+    this.targetPhrase = targetPhrase;
     phraseTableName = concreteOpt.phraseTableName;
     if (targetOnly) {
       translationScores = nullScores;
@@ -217,32 +218,32 @@ public class Featurizable<TK, FV> {
       translationScores = transOpt.scores;
       phraseScoreNames = transOpt.phraseScoreNames;
     }
-    translationPosition = hypothesis.insertionPosition;
-    foreignPosition = concreteOpt.foreignPos;
+    targetPosition = hypothesis.insertionPosition;
+    sourcePosition = concreteOpt.sourcePosition;
     linearDistortion = hypothesis.linearDistortion;
 
-    partialTranslation = partialTranslationRaw = new RawSequence<TK>(
+    targetPrefix = targetPrefixRaw = new RawSequence<TK>(
         (TK[]) tokens);
-    foreignSentence = hypothesis.foreignSequence;
+    sourceSentence = hypothesis.sourceSequence;
     untranslatedTokens = hypothesis.untranslatedTokens;
     prior = hypothesis.preceedingHyp.featurizable;
     if (prior != null) {
       if (constructAlignment) {
-        t2fAlignmentIndex = copyOfIndex(prior.t2fAlignmentIndex,
+        t2sAlignmentIndex = copyOfIndex(prior.t2sAlignmentIndex,
             hypothesis.length);
-        f2tAlignmentIndex = copyOfIndex(prior.f2tAlignmentIndex,
-            prior.f2tAlignmentIndex.length);
+        s2tAlignmentIndex = copyOfIndex(prior.s2tAlignmentIndex,
+            prior.s2tAlignmentIndex.length);
       } else {
-        t2fAlignmentIndex = f2tAlignmentIndex = null;
+        t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
       states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
           : null;
     } else {
       if (constructAlignment) {
-        t2fAlignmentIndex = new int[hypothesis.length][];
-        f2tAlignmentIndex = new int[foreignSentence.size()][];
+        t2sAlignmentIndex = new int[hypothesis.length][];
+        s2tAlignmentIndex = new int[sourceSentence.size()][];
       } else {
-        t2fAlignmentIndex = f2tAlignmentIndex = null;
+        t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
       states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
           : null;
@@ -288,60 +289,60 @@ public class Featurizable<TK, FV> {
   /**
 	 * 
 	 */
-  public Featurizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId) {
-    this.translationId = translationId;
+  public Featurizable(Sequence<TK> sourceSequence,
+      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId) {
+    this.sourceInputId = sourceInputId;
     option = concreteOpt;
     done = false;
     TranslationOption<TK> transOpt = concreteOpt.abstractOption;
-    foreignPhrase = transOpt.foreign;
-    translatedPhrase = transOpt.translation;
+    sourcePhrase = transOpt.source;
+    targetPhrase = transOpt.target;
     phraseTableName = concreteOpt.phraseTableName;
     translationScores = transOpt.scores;
     phraseScoreNames = transOpt.phraseScoreNames;
-    translationPosition = 0;
-    foreignPosition = concreteOpt.foreignPos;
-    partialTranslation = translatedPhrase;
-    partialTranslationRaw = null;
-    foreignSentence = foreignSequence;
-    untranslatedTokens = foreignSequence.size() - foreignPhrase.size();
+    targetPosition = 0;
+    sourcePosition = concreteOpt.sourcePosition;
+    targetPrefix = targetPhrase;
+    targetPrefixRaw = null;
+    sourceSentence = sourceSequence;
+    untranslatedTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;
-    t2fAlignmentIndex = new int[translatedPhrase != null ? translatedPhrase
+    t2sAlignmentIndex = new int[targetPhrase != null ? targetPhrase
         .size() : 0][];
-    f2tAlignmentIndex = new int[foreignSentence.size()][];
+    s2tAlignmentIndex = new int[sourceSentence.size()][];
     if (constructAlignment)
       augmentAlignments(concreteOpt);
     hyp = null;
   }
 
-  protected Featurizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId,
-      Sequence<TK> translatedPhrase) {
+  protected Featurizable(Sequence<TK> sourceSequence,
+      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId,
+      Sequence<TK> targetPhrase) {
     assert (concreteOpt.abstractOption.getClass().equals(DTUOption.class));
-    this.translationId = translationId;
+    this.sourceInputId = sourceInputId;
     option = concreteOpt;
     done = false;
     TranslationOption<TK> transOpt = concreteOpt.abstractOption;
-    foreignPhrase = transOpt.foreign;
-    this.translatedPhrase = translatedPhrase;
+    sourcePhrase = transOpt.source;
+    this.targetPhrase = targetPhrase;
     phraseTableName = concreteOpt.phraseTableName;
     translationScores = nullScores;
     // translationScores = transOpt.scores;
     phraseScoreNames = nullNames;
     // phraseScoreNames = transOpt.phraseScoreNames;
-    translationPosition = 0;
-    foreignPosition = concreteOpt.foreignPos;
-    partialTranslation = translatedPhrase;
-    partialTranslationRaw = null;
-    foreignSentence = foreignSequence;
-    untranslatedTokens = foreignSequence.size() - foreignPhrase.size();
+    targetPosition = 0;
+    sourcePosition = concreteOpt.sourcePosition;
+    targetPrefix = targetPhrase;
+    targetPrefixRaw = null;
+    sourceSentence = sourceSequence;
+    untranslatedTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;
-    t2fAlignmentIndex = new int[translatedPhrase.size()][];
-    f2tAlignmentIndex = new int[foreignSentence.size()][];
+    t2sAlignmentIndex = new int[targetPhrase.size()][];
+    s2tAlignmentIndex = new int[sourceSentence.size()][];
     if (constructAlignment)
       augmentAlignments(concreteOpt);
     hyp = null;
@@ -351,32 +352,32 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   protected void augmentAlignments(ConcreteTranslationOption<TK,FV> concreteOpt) {
-    if (concreteOpt.abstractOption.translation == null)
+    if (concreteOpt.abstractOption.target == null)
       return;
-    int transSz = concreteOpt.abstractOption.translation.elements.length;
-    int foreignSz = Phrasal.withGaps ?
+    int targetSz = concreteOpt.abstractOption.target.elements.length;
+    int sourceSz = Phrasal.withGaps ?
     // MG2009: these two lines should achieve the same result for phrases
     // without gaps,
     // though the first one is slower:
-    concreteOpt.foreignCoverage.length()
-        - concreteOpt.foreignCoverage.nextSetBit(0)
-        : concreteOpt.abstractOption.foreign.elements.length;
+    concreteOpt.sourceCoverage.length()
+        - concreteOpt.sourceCoverage.nextSetBit(0)
+        : concreteOpt.abstractOption.source.elements.length;
     int limit;
     int[] range = new int[2];
-    range[PHRASE_START] = foreignPosition;
-    range[PHRASE_END] = foreignPosition + foreignSz;
-    limit = translationPosition + transSz;
-    for (int i = translationPosition; i < limit; i++) {
-      t2fAlignmentIndex[i] = range;
+    range[PHRASE_START] = sourcePosition;
+    range[PHRASE_END] = sourcePosition + sourceSz;
+    limit = targetPosition + targetSz;
+    for (int i = targetPosition; i < limit; i++) {
+      t2sAlignmentIndex[i] = range;
     }
 
     range = new int[2];
-    range[PHRASE_START] = translationPosition;
-    range[PHRASE_END] = translationPosition + transSz;
-    limit = foreignPosition + foreignSz;
-    for (int i = foreignPosition; i < limit; i++) {
-      if (concreteOpt.foreignCoverage.get(i))
-        f2tAlignmentIndex[i] = range;
+    range[PHRASE_START] = targetPosition;
+    range[PHRASE_END] = targetPosition + targetSz;
+    limit = sourcePosition + sourceSz;
+    for (int i = sourcePosition; i < limit; i++) {
+      if (concreteOpt.sourceCoverage.get(i))
+        s2tAlignmentIndex[i] = range;
     }
   }
 
@@ -385,13 +386,13 @@ public class Featurizable<TK, FV> {
     int pos = 0;
     Featurizable<TK, FV> preceedingF = h.preceedingHyp.featurizable;
     if (preceedingF != null) {
-      Object[] preceedingTokens = preceedingF.partialTranslationRaw.elements;
+      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
       System.arraycopy(preceedingTokens, 0, tokens, 0,
           pos = preceedingTokens.length);
     }
 
     ConcreteTranslationOption<TK,FV> concreteOpt = h.translationOpt;
-    Object[] newTokens = concreteOpt.abstractOption.translation.elements;
+    Object[] newTokens = concreteOpt.abstractOption.target.elements;
     System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
     return tokens;
   }

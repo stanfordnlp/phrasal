@@ -189,8 +189,8 @@ public class HierarchicalReorderingFeaturizer extends
     List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
-    boolean locallySwapping = (f.prior != null && f.hyp.translationOpt.foreignCoverage
-        .length() == f.prior.foreignPosition);
+    boolean locallySwapping = (f.prior != null && f.hyp.translationOpt.sourceCoverage
+        .length() == f.prior.sourcePosition);
     boolean discont2 = (f.prior != null && fEnd(f) <= fStart(f.prior));
 
     float[] scores = mlrt
@@ -201,22 +201,22 @@ public class HierarchicalReorderingFeaturizer extends
     ReorderingTypes forwardOrientation = ReorderingTypes.discontinuousWithPrevious, backwardOrientation = ReorderingTypes.discontinuousWithNext;
 
     if (DETAILED_DEBUG) {
-      CoverageSet fCoverage = f.hyp.foreignCoverage;
+      CoverageSet fCoverage = f.hyp.sourceCoverage;
       System.err.printf("----\n");
       System.err.printf("Partial translation (pos=%d): %s\n",
-          f.translationPosition, f.partialTranslation);
-      System.err.printf("Foreign sentence (pos=%d): %s\n", f.foreignPosition,
-          f.foreignSentence);
+          f.targetPosition, f.targetPrefix);
+      System.err.printf("Foreign sentence (pos=%d): %s\n", f.sourcePosition,
+          f.sourceSentence);
       System.err.printf("Coverage: %s (size=%d)\n", fCoverage,
           fCoverage.length());
-      System.err.printf("%s(%d) => %s(%d)\n", f.foreignPhrase,
-          f.foreignPosition, f.translatedPhrase, f.translationPosition);
+      System.err.printf("%s(%d) => %s(%d)\n", f.sourcePhrase,
+          f.sourcePosition, f.targetPhrase, f.targetPosition);
       if (f.prior == null)
         System.err.printf("Prior <s> => <s>\n");
       else
-        System.err.printf("Prior %s(%d) => %s(%d)\n", f.prior.foreignPhrase,
-            f.prior.foreignPosition, f.prior.translatedPhrase,
-            f.prior.translationPosition);
+        System.err.printf("Prior %s(%d) => %s(%d)\n", f.prior.sourcePhrase,
+            f.prior.sourcePosition, f.prior.targetPhrase,
+            f.prior.targetPosition);
       System.err.printf("Monotone: %s\nSwap: %s\n", locallyMonotone,
           locallySwapping);
       System.err.printf("PriorScores: %s\nScores: %s\n",
@@ -226,8 +226,8 @@ public class HierarchicalReorderingFeaturizer extends
 
     boolean containmentOrientation = false;
     if (hasContainment && f.prior != null) {
-      CoverageSet prevCS = f.prior.hyp.translationOpt.foreignCoverage;
-      CoverageSet curCS = f.hyp.translationOpt.foreignCoverage;
+      CoverageSet prevCS = f.prior.hyp.translationOpt.sourceCoverage;
+      CoverageSet curCS = f.hyp.translationOpt.sourceCoverage;
       containmentOrientation = CoverageSet.cross(prevCS, curCS);
     }
 
@@ -358,8 +358,8 @@ public class HierarchicalReorderingFeaturizer extends
 
     // Add backward model score on last phrase (missing/inconsistent in Moses):
     if (f.done && finalizeFeature) {
-      int fEndPos = f.hyp.translationOpt.foreignCoverage.length();
-      int fLen = f.foreignSentence.size();
+      int fEndPos = f.hyp.translationOpt.sourceCoverage.length();
+      int fLen = f.sourceSentence.size();
       assert (fEndPos <= fLen);
       ReorderingTypes finalBackwardOrientation = (fEndPos == fLen) ? ReorderingTypes.monotoneWithNext
           : ReorderingTypes.discontinuousWithNext;
@@ -424,8 +424,8 @@ public class HierarchicalReorderingFeaturizer extends
 
   private void buildHierarchicalBlocks(Featurizable<IString, String> f) {
 
-    CoverageSet curCS = new CoverageSet(f.option.foreignCoverage.size());
-    curCS.or(f.option.foreignCoverage);
+    CoverageSet curCS = new CoverageSet(f.option.sourceCoverage.size());
+    curCS.or(f.option.sourceCoverage);
     Featurizable<IString, String> curF = f;
     boolean canMerge = true;
 
@@ -437,7 +437,7 @@ public class HierarchicalReorderingFeaturizer extends
 
         prevBlock = (HierBlock) curF.prior.getState(this);
         // Check if new Block should contain curBlock:
-        if (isBinarizable(curCS, prevBlock.cs, f.hyp.foreignCoverage)) {
+        if (isBinarizable(curCS, prevBlock.cs, f.hyp.sourceCoverage)) {
           if (DETAILED_DEBUG)
             System.err.printf(
                 "HierarchicalReorderingFeaturizer: merged (%s) with (%s)\n",
@@ -515,7 +515,7 @@ public class HierarchicalReorderingFeaturizer extends
       }
       return false;
     }
-    CoverageSet fCoverage = nextF.hyp.foreignCoverage;
+    CoverageSet fCoverage = nextF.hyp.sourceCoverage;
     for (int i = fEnd(currentF) + 1; i < fStart(nextF); ++i)
       if (fCoverage.get(i))
         return false;
@@ -533,7 +533,7 @@ public class HierarchicalReorderingFeaturizer extends
       Featurizable<IString, String> nextF) {
     if (nextF.prior == null)
       return false;
-    CoverageSet fCoverage = nextF.hyp.foreignCoverage;
+    CoverageSet fCoverage = nextF.hyp.sourceCoverage;
     Featurizable<IString, String> currentF = nextF.prior;
     if (fStart(currentF) <= fEnd(nextF)) {
       if (fEnd(currentF) >= fStart(nextF)) {
@@ -560,8 +560,8 @@ public class HierarchicalReorderingFeaturizer extends
       return;
     System.err.printf(
         "Stack for hierarchical reordering (length of input sentence: %d)\n",
-        f.foreignSentence.size());
-    if (DEBUG && f.foreignSentence.size() < 20) {
+        f.sourceSentence.size());
+    if (DEBUG && f.sourceSentence.size() < 20) {
       AlignmentGrid.printDecoderGrid(f, System.err);
       System.err.println();
     }
@@ -580,11 +580,11 @@ public class HierarchicalReorderingFeaturizer extends
   }
 
   private static int fStart(Featurizable<IString, String> f) {
-    return f.foreignPosition;
+    return f.sourcePosition;
   }
 
   private static int fEnd(Featurizable<IString, String> f) {
-    return f.hyp.translationOpt.foreignCoverage.length() - 1;
+    return f.hyp.translationOpt.sourceCoverage.length() - 1;
   }
 
   private static boolean contiguous(BitSet bs) {
@@ -628,7 +628,7 @@ public class HierarchicalReorderingFeaturizer extends
    * infer that the current phrase is globally monotone with what comes next.
    */
   static boolean isStronglyMonotone(Featurizable<IString, String> f) {
-    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    CoverageSet fCoverage = f.hyp.sourceCoverage;
     return (fCoverage.length() - fCoverage.cardinality() == 0);
   }
 
@@ -664,7 +664,7 @@ public class HierarchicalReorderingFeaturizer extends
 
     // Case 4: Analyze gap between previous and current phrase. If any
     // untranslated word, monotone is impossible.
-    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    CoverageSet fCoverage = f.hyp.sourceCoverage;
     for (int i = indexRightPreviousPhrase; i <= indexLeftCurrentPhrase; ++i) {
       if (!fCoverage.get(i))
         return false;
@@ -725,7 +725,7 @@ public class HierarchicalReorderingFeaturizer extends
 
     // Case 4: Analyze gap between previous and current phrase. If any
     // untranslated word, monotone is impossible.
-    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    CoverageSet fCoverage = f.hyp.sourceCoverage;
     for (int i = indexRightCurrentPhrase; i <= indexLeftPreviousPhrase; ++i) {
       if (!fCoverage.get(i))
         return false;
@@ -772,7 +772,7 @@ public class HierarchicalReorderingFeaturizer extends
 
     // If previous foreign isn't yet translated, current block can't be monotone
     // with what comes before:
-    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    CoverageSet fCoverage = f.hyp.sourceCoverage;
     if (!fCoverage.get(indexPreviousForeign)) {
       return false;
     }
@@ -814,7 +814,7 @@ public class HierarchicalReorderingFeaturizer extends
     int indexNextForeign = fEnd(f) + 1;
     // If next foreign isn't yet translated, current block can't be swapping
     // with what comes next:
-    CoverageSet fCoverage = f.hyp.foreignCoverage;
+    CoverageSet fCoverage = f.hyp.sourceCoverage;
     if (!fCoverage.get(indexNextForeign))
       return false;
     // Traverse previous blocks until we reach the one translating

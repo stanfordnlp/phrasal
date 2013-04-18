@@ -11,23 +11,23 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   public final TranslationOption<TK> abstractOption;
 
   public DTUFeaturizable(Hypothesis<TK, FV> hypothesis,
-      TranslationOption<TK> abstractOption, int translationId,
+      TranslationOption<TK> abstractOption, int sourceInputId,
       int nbStatefulFeaturizers, RawSequence<TK> toks,
       boolean hasPendingPhrases, int segmentIdx) {
-    super(hypothesis, translationId, nbStatefulFeaturizers, toks,
+    super(hypothesis, sourceInputId, nbStatefulFeaturizers, toks,
         retrieveDTUTokens(hypothesis, toks), hasPendingPhrases, segmentIdx > 0);
     this.segmentIdx = segmentIdx;
     this.abstractOption = abstractOption;
-    assert (translatedPhrase.size() > 0);
+    assert (targetPhrase.size() > 0);
   }
 
   public DTUFeaturizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int translationId, int dtuId) {
-    super(foreignSequence, concreteOpt, translationId,
+      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId, int dtuId) {
+    super(foreignSequence, concreteOpt, sourceInputId,
         ((DTUOption<TK>) concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
     this.segmentIdx = 0;
-    assert (translatedPhrase.size() > 0);
+    assert (targetPhrase.size() > 0);
   }
 
   protected static <TK, FV> Object[] retrieveDTUTokens(Hypothesis<TK, FV> h,
@@ -36,10 +36,10 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
     Featurizable<TK, FV> preceedingF = h.preceedingHyp.featurizable;
     int sz = newTokens.size();
     if (preceedingF != null)
-      sz += preceedingF.partialTranslationRaw.elements.length;
+      sz += preceedingF.targetPrefixRaw.elements.length;
     Object[] tokens = new Object[sz];
     if (preceedingF != null) {
-      Object[] preceedingTokens = preceedingF.partialTranslationRaw.elements;
+      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
       System.arraycopy(preceedingTokens, 0, tokens, 0,
           pos = preceedingTokens.length);
     }

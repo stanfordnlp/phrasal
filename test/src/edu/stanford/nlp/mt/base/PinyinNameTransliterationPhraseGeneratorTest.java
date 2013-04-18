@@ -26,7 +26,7 @@ public class PinyinNameTransliterationPhraseGeneratorTest extends TestCase {
           fail("No translation available for " + str);
         } else {
           assertEquals("Too many options generated", 1, opts.size());
-          assertEquals(outputs.next(), opts.get(0).translation.toString());
+          assertEquals(outputs.next(), opts.get(0).target.toString());
         }
       } catch (Exception e) {
         fail(e.toString());

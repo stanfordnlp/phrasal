@@ -88,8 +88,8 @@ public class LexicalReorderingFeaturizer implements
     List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
 
     boolean monotone = f.linearDistortion == 0;
-    boolean swap = (f.prior != null && f.foreignPosition
-        + f.foreignPhrase.size() == f.prior.foreignPosition);
+    boolean swap = (f.prior != null && f.sourcePosition
+        + f.sourcePhrase.size() == f.prior.sourcePosition);
 
     if (discriminativeSet != null) {
       for (LexicalReorderingTable.ReorderingTypes mrt : discriminativeSet) {
@@ -98,9 +98,9 @@ public class LexicalReorderingFeaturizer implements
         if (usePrior(mrt)) {
           String condRep; // = null;
           if (!useAlignmentConstellations) {
-            Sequence<IString> priorForeignPhrase = (f.prior != null ? f.prior.foreignPhrase
+            Sequence<IString> priorForeignPhrase = (f.prior != null ? f.prior.sourcePhrase
                 : INITIAL_PHRASE);
-            Sequence<IString> priorTranslatedPhrase = (f.prior != null ? f.prior.translatedPhrase
+            Sequence<IString> priorTranslatedPhrase = (f.prior != null ? f.prior.targetPhrase
                 : INITIAL_PHRASE);
             condRep = priorForeignPhrase.toString("_") + "=>"
                 + priorTranslatedPhrase.toString("_");
@@ -114,8 +114,8 @@ public class LexicalReorderingFeaturizer implements
         } else {
           String condRep; // = null;
           if (!useAlignmentConstellations) {
-            condRep = f.foreignPhrase.toString("_") + "=>"
-                + f.translatedPhrase.toString("_");
+            condRep = f.sourcePhrase.toString("_") + "=>"
+                + f.targetPhrase.toString("_");
           } else {
             condRep = f.option.abstractOption.alignment.toString();
           }
@@ -126,19 +126,19 @@ public class LexicalReorderingFeaturizer implements
     }
 
     if (mlrt != null) {
-      double[] scores = mlrt.getReorderingScores(f.foreignPhrase,
-          f.translatedPhrase);
+      double[] scores = mlrt.getReorderingScores(f.sourcePhrase,
+          f.targetPhrase);
       double[] priorScores = (f.prior == null ? null : mlrt
-          .getReorderingScores(f.prior.foreignPhrase, f.prior.translatedPhrase));
+          .getReorderingScores(f.prior.sourcePhrase, f.prior.targetPhrase));
 
       if (DETAILED_DEBUG) {
-        System.err.printf("%s(%d) => %s(%d)\n", f.foreignPhrase,
-            f.foreignPosition, f.translatedPhrase, f.translationPosition);
+        System.err.printf("%s(%d) => %s(%d)\n", f.sourcePhrase,
+            f.sourcePosition, f.targetPhrase, f.targetPosition);
         if (f.prior == null)
           System.err.printf("Prior <s> => <s>\n");
         else
-          System.err.printf("Prior %s(%d) => %s(%d)\n", f.foreignPhrase,
-              f.foreignPosition, f.translatedPhrase, f.translationPosition);
+          System.err.printf("Prior %s(%d) => %s(%d)\n", f.sourcePhrase,
+              f.sourcePosition, f.targetPhrase, f.targetPosition);
         System.err.printf("Monotone: %s\nSwap: %s\n", monotone, swap);
         System.err.printf("PriorScores: %s\nScores: %s\n",
             (priorScores == null ? "null" : Arrays.toString(priorScores)),

@@ -54,7 +54,7 @@ p_soft = re.compile(ur'\u00AD+')
 p_symbol = re.compile(ur'[¦\u00A7¨\u00A9\u00AC\u00AE¯\u00B0-\u00B3\u00B4-\u00BA\u00D7\u00F7\u0387\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0600-\u0603\u0606-\u060A\u060C\u0614\u061B\u061E\u066A\u066D\u0703-\u070D\u07F6\u07F7\u07F8\u0964\u0965\u0E4F\u1FBD\u2016\u2017\u2020-\u2023\u2030-\u2038\u203B\u203E-\u2042\u2044\u207A-\u207F\u208A-\u208E\u2100-\u214F\u2190-\u21FF\u2200-\u2BFF\u3012\u30FB\uFF01-\uFF0F\uFF1A-\uFF20\uFF3B-\uFF40\uFF5B-\uFF65\uFF65]+')
 
 # Heuristic match of HTML pages
-p_html = re.compile(ur'(br|td|tr|doctype|abbr|head|title|html|img|href|body|frame|iframe|meta|script|span|div|style|cdata|attlist|vspace|hspace)', re.IGNORECASE)
+p_html = re.compile(ur'<(br|td|tr|doctype|abbr|img|href|body|frame|iframe|meta|script|span|div|style|cdata|attlist|vspace|hspace)', re.IGNORECASE)
 
 # Heuristic match of SQL queries
 p_sql = re.compile(ur'(select|insert|join|create|table|between|foreign|column|distinct|with|exists|add)', re.IGNORECASE)

@@ -43,7 +43,7 @@ public class DumpPossibleWordCoOccurrences {
           IStrings.toIStringArray(line.split("\\s+")));
       int tokensSz = tokens.size();
       Set<IString> possibleTranslationWords = new HashSet<IString>();
-      int longestForeign = ppt.longestForeignPhrase();
+      int longestForeign = ppt.longestSourcePhrase();
       if (longestForeign < 0)
         longestForeign = -longestForeign;
       for (int i = 0; i < tokensSz; i++) {
@@ -55,7 +55,7 @@ public class DumpPossibleWordCoOccurrences {
           if (opts == null)
             continue;
           for (TranslationOption<IString> opt : opts) {
-            for (IString word : opt.translation) {
+            for (IString word : opt.target) {
               possibleTranslationWords.add(word);
             }
           }
@@ -73,7 +73,9 @@ public class DumpPossibleWordCoOccurrences {
         sents.add(sentId);
       }
     }
-
+    
+    reader.close();
+    
     List<String> sortedWords = new ArrayList<String>(wordSents.size());
     for (IString word : wordSents.keySet()) {
       sortedWords.add(word.toString());

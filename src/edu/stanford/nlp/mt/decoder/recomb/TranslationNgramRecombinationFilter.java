@@ -53,8 +53,8 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
       return null;
     }
     Sequence<TK> trans = (!hyp.isDone() ? new InsertedStartToken<TK>(
-        hyp.featurizable.partialTranslation, lgModel.getStartToken())
-        : new InsertedStartEndToken<TK>(hyp.featurizable.partialTranslation,
+        hyp.featurizable.targetPrefix, lgModel.getStartToken())
+        : new InsertedStartEndToken<TK>(hyp.featurizable.targetPrefix,
             lgModel.getStartToken(), lgModel.getEndToken()));
     int transSize = trans.size();
     if (transSize <= tokenHistoryExamined) {
@@ -122,9 +122,9 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
     Sequence<TK> ngramB = getNgram(hypB);
     if (DETAILED_DEBUG) {
       if (ngramA.equals(ngramB)) {
-        System.err.printf("hypA: %s\n", hypA.featurizable.partialTranslation);
+        System.err.printf("hypA: %s\n", hypA.featurizable.targetPrefix);
         System.err.printf("\tn-gram: %s\n", ngramA);
-        System.err.printf("hypB: %s\n", hypB.featurizable.partialTranslation);
+        System.err.printf("hypB: %s\n", hypB.featurizable.targetPrefix);
         System.err.printf("\tn-gram: %s\n", ngramB);
       }
     }

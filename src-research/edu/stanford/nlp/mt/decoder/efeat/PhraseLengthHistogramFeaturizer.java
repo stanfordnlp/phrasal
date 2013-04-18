@@ -49,14 +49,14 @@ public class PhraseLengthHistogramFeaturizer implements
 
     switch (config) {
     case source:
-      sbuf.append("s:").append(f.foreignPhrase.size());
+      sbuf.append("s:").append(f.sourcePhrase.size());
       break;
     case target:
-      sbuf.append("t:").append(f.translatedPhrase.size());
+      sbuf.append("t:").append(f.targetPhrase.size());
       break;
     case sourceAndTarget:
-      sbuf.append("st:").append(f.foreignPhrase.size()).append(">")
-          .append(f.translatedPhrase.size());
+      sbuf.append("st:").append(f.sourcePhrase.size()).append(">")
+          .append(f.targetPhrase.size());
       break;
     }
     return new FeatureValue<String>(sbuf.toString(), 1.0);

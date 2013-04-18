@@ -110,7 +110,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   }
 
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return -Integer.MAX_VALUE;
   }
 

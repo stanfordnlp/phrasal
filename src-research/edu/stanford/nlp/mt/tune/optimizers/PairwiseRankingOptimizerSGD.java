@@ -346,11 +346,13 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   
   @Override
   public OnlineUpdateRule<String> newUpdater() {
-	if(this.updaterType.equals("adagrad"))
+	if(this.updaterType.equalsIgnoreCase("adagrad"))
 		return new AdaGradUpdater(learningRate, expectedNumFeatures);
-	if(this.updaterType.equals("adagradl1"))
-		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda);
-	if(this.updaterType.equals("adagradl1f"))
+	if(this.updaterType.equalsIgnoreCase("adagradl1"))
+		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO);
+	if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
+		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.aeLASSO);
+	if(this.updaterType.equalsIgnoreCase("adagradl1f"))
     return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda);
 	
 	return new SGDUpdater(learningRate);

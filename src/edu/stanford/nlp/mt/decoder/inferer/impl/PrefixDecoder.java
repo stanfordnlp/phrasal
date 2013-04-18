@@ -78,7 +78,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   }
   
   @Override
-  public RichTranslation<IString, FV> translate(Sequence<IString> foreign,
+  public RichTranslation<IString, FV> translate(Sequence<IString> source,
       int translationId, ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
       List<Sequence<IString>> targets) {
     throw new UnsupportedOperationException();
@@ -87,7 +87,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 
   @Override
   public RichTranslation<IString, FV> translate(Scorer<FV> scorer,
-      Sequence<IString> foreign, int translationId,
+      Sequence<IString> source, int translationId,
       ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
       List<Sequence<IString>> targets) {
     throw new UnsupportedOperationException();
@@ -99,7 +99,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   @SuppressWarnings({ "rawtypes", "unchecked" })
 @Override
   public List<RichTranslation<IString, FV>> nbest(Scorer<FV> scorer,
-      Sequence<IString> foreign, int translationId,
+      Sequence<IString> source, int translationId,
       ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
       List<Sequence<IString>> targets, int size) {
     
@@ -108,7 +108,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int windowSize = 100;
     int maxPrefixCompletion = 0;
     
-    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(foreign, targets, translationId, scorer);
+    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(source, targets, translationId, scorer);
     List<ConcreteTranslationOption<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
@@ -117,24 +117,24 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     	System.err.println("filtered options (for prefix)");
     	System.err.println("========================================");
     	for (ConcreteTranslationOption<IString,FV> cto : filteredOptions) {
-    	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
+    	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
     	}
     	
     	System.err.println("unfiltered options (for suffix)");
     	System.err.println("========================================");
     	for (ConcreteTranslationOption<IString,FV> cto : options) {
-    	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.foreign, cto.abstractOption.translation, cto.foreignPos);
+    	   System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
     	}
     }
     
     Arrays.fill(autoInsertScores, -10000);
-    OptionGrid<IString,FV> optionGrid = new OptionGrid<IString,FV>(options, foreign);
-    OptionGrid<IString,FV> filteredOptionGrid = new OptionGrid<IString,FV>(filteredOptions, foreign);
+    OptionGrid<IString,FV> optionGrid = new OptionGrid<IString,FV>(options, source);
+    OptionGrid<IString,FV> filteredOptionGrid = new OptionGrid<IString,FV>(filteredOptions, source);
     
     
     // use *UNFILTERED* options for heuristic calculation
-    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(translationId, foreign, heuristic, scorer, annotators, Arrays.asList(options));
-    featurizer.initialize(options, foreign, scorer.getFeatureIndex());
+    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(translationId, source, heuristic, scorer, annotators, Arrays.asList(options));
+    featurizer.initialize(options, source, scorer.getFeatureIndex());
     if (DEBUG) {
     	System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
     }
@@ -158,10 +158,10 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       agenda.add(nullHyp);
     } */
     Hypothesis waHyp = nullHyp;
-    int foreignSz = foreign.size();
+    int sourceSz = source.size();
     
 
-    List<String> fWords = new ArrayList<String>(foreign.size());
+    List<String> fWords = new ArrayList<String>(source.size());
     List<String> eWords;
     if (targets == null || targets.size() == 0) {
     	eWords = new ArrayList<String>(0);
@@ -169,8 +169,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     	eWords = new ArrayList<String>(targets.get(0).size());
     }
     
-    for (int i = 0; i < foreign.size(); i++) {
-       fWords.add(foreign.get(i).toString());
+    for (int i = 0; i < source.size(); i++) {
+       fWords.add(source.get(i).toString());
     }
     
     for (int i = 0; targets != null && i < targets.get(0).size(); i++) {
@@ -193,7 +193,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 	    	for (Integer a : e2fA) {
             if (sureAlignment == -1 || 
                 (Math.abs(sureAlignment - lastF)  > Math.abs(a - lastF) && 
-                waHyp.foreignCoverage.get(a) == false)) {
+                waHyp.sourceCoverage.get(a) == false)) {
                 sureAlignment = a;
             }
 	    	    /* if (aRv.containsSureAlignment(i, a)) {
@@ -204,7 +204,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 	    	if (DEBUG) {
 	    		System.out.printf("e.%d -> f.%d\n", i, sureAlignment);
 	    	}
-	      CoverageSet foreignCoverage = new CoverageSet();
+	      CoverageSet sourceCoverage = new CoverageSet();
     	  TranslationOption<IString> fakeOpt;
 	    	if (sureAlignment == -1) {
     	    	fakeOpt = 
@@ -218,21 +218,21 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
             new TranslationOption<IString>(
 	    			new float[0], new String[0], 
 	    			new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
-	    			new RawSequence<IString>(new IString[]{foreign.get(sureAlignment)}), null);
-	        	foreignCoverage.set(sureAlignment);
+	    			new RawSequence<IString>(new IString[]{source.get(sureAlignment)}), null);
+	        	sourceCoverage.set(sureAlignment);
         }
 	    	ConcreteTranslationOption<IString,FV> fakeConcreteOpt = 
 	    			new ConcreteTranslationOption<IString,FV>(
 	    			  fakeOpt,
-	    		      foreignCoverage,
+	    		      sourceCoverage,
 	    		      featurizer, scorer,
-	    		      foreign, "forcedAlignment", 0);
+	    		      source, "forcedAlignment", 0);
 	    
 	    	waHyp = new Hypothesis<IString, FV>(translationId,
 	                fakeConcreteOpt, waHyp.length, waHyp, featurizer, scorer, heuristic);    
 	    	if (DEBUG) {
-	        	   System.out.printf("new waHyp: %s\n", waHyp.featurizable.partialTranslation);
-	        	   System.out.printf("Coverage: %s\n", waHyp.foreignCoverage);
+	        	   System.out.printf("new waHyp: %s\n", waHyp.featurizable.targetPrefix);
+	        	   System.out.printf("Coverage: %s\n", waHyp.sourceCoverage);
 	    	}
 	        
 	    }
@@ -240,8 +240,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     agenda.clear();
     if (DEBUG) {
     	if (waHyp.featurizable != null) {
-    	   System.out.printf("waHyp: %s\n", waHyp.featurizable.partialTranslation);
-    	   System.out.printf("Coverage: %s\n", waHyp.foreignCoverage);
+    	   System.out.printf("waHyp: %s\n", waHyp.featurizable.targetPrefix);
+    	   System.out.printf("Coverage: %s\n", waHyp.sourceCoverage);
     	} else {
     		System.out.printf("waHyp: null hyp\n");
     	}
@@ -254,17 +254,17 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       if (DEBUG) {
         System.err.printf("[pred loop] Removing hyp from agenda: %s\n", hyp);
       }
-      int firstCoverageGap = hyp.foreignCoverage.nextClearBit(0);     
-      for (int startPos = firstCoverageGap; startPos < foreignSz; startPos++) {
-        int endPosMax = hyp.foreignCoverage.nextSetBit(startPos);
+      int firstCoverageGap = hyp.sourceCoverage.nextClearBit(0);     
+      for (int startPos = firstCoverageGap; startPos < sourceSz; startPos++) {
+        int endPosMax = hyp.sourceCoverage.nextSetBit(startPos);
 
         // check distortion limit
         if (endPosMax < 0) {
           if (maxDistortion >= 0 && startPos != firstCoverageGap) {
             endPosMax = Math.min(firstCoverageGap + maxDistortion + 1,
-                foreignSz);
+                sourceSz);
           } else {
-            endPosMax = foreignSz;
+            endPosMax = sourceSz;
           }
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
@@ -272,10 +272,10 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
           List<ConcreteTranslationOption<IString,FV>> applicableOptions = optionGrid
               .get(startPos, endPos);
           for (ConcreteTranslationOption<IString,FV> option : applicableOptions) {
-        	if (option.abstractOption.foreign.equals(option.abstractOption.translation)) {
+        	if (option.abstractOption.source.equals(option.abstractOption.target)) {
         		if (DEBUG) {
         			System.err.println("ignoring option since source phrase == target phrase");
-        			System.err.printf("'%s'='%s'\n", option.abstractOption.foreign, option.abstractOption.translation);
+        			System.err.printf("'%s'='%s'\n", option.abstractOption.source, option.abstractOption.target);
         		}
         		continue;
         	}
@@ -301,8 +301,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     	//System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
     	List<String> alignments = new LinkedList<String>();
     	for (Hypothesis<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
-    		alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.foreignPhrase, 
-    				hyp.featurizable.translatedPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
+    		alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.sourcePhrase, 
+    				hyp.featurizable.targetPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
     	}
         Collections.reverse(alignments);
     /*	for (String alignment : alignments) {
@@ -317,10 +317,10 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   static public final int PREFIX_ALIGNMENTS = 100;
   static public final int PREDICTIONS = 100;
   @Override
-  public List<RichTranslation<IString, FV>> nbest(Sequence<IString> foreign,
+  public List<RichTranslation<IString, FV>> nbest(Sequence<IString> source,
       int translationId, ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
       List<Sequence<IString>> targets, int size) {
-    return nbest(scorer, foreign, translationId, constrainedOutputSpace, targets, size);
+    return nbest(scorer, source, translationId, constrainedOutputSpace, targets, size);
   }
 }
 

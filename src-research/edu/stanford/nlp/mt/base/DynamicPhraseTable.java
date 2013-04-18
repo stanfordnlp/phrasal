@@ -108,7 +108,7 @@ public class DynamicPhraseTable<FV> extends
   }
 
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return phraseLengthLimit;
   }
 

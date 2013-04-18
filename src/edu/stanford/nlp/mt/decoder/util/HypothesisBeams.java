@@ -22,9 +22,9 @@ public class HypothesisBeams {
     for (Hypothesis<TK, FV> hyp : hypotheses) {
       if (c == null) {
         c = new CoverageSet();
-        c.or(hyp.foreignCoverage);
+        c.or(hyp.sourceCoverage);
       } else {
-        c.and(hyp.foreignCoverage);
+        c.and(hyp.sourceCoverage);
       }
     }
     return (c == null ? new CoverageSet() : c);

@@ -186,7 +186,7 @@ public class PhrasalUnifiedServlet extends HttpServlet {
         System.err.println("Prefix decoder");
       }
       EnumeratedConstrainedOutputSpace<IString, String> prefixConstraints = 
-        new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), decoder.getPhraseGenerator().longestForeignPhrase());
+        new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), decoder.getPhraseGenerator().longestSourcePhrase());
       List<RichTranslation<IString, String>> translations = decoder.nbest(source, 0, prefixConstraints, null, -1);
       if(DEBUG) {
         System.err.printf("n-best list: %s\n", translations);
@@ -198,7 +198,7 @@ public class PhrasalUnifiedServlet extends HttpServlet {
         if (prefixCoverage == null) {
           prefixCoverage = getPrefixSourceCoverage(translation);
         }
-        String srcPhrase = translation.featurizable.foreignPhrase.toString();
+        String srcPhrase = translation.featurizable.sourcePhrase.toString();
         String tgtPhrase = translation.translation.subsequence(prefix.size(), translation.translation.size()).toString();
         String completionCoverage = getCompletionSourceCoverage(translation);
         scoredOpts.add(new ScoredCompletion(prefixCoverage, srcPhrase, tgtPhrase, completionCoverage, translation.score));
@@ -244,7 +244,7 @@ public class PhrasalUnifiedServlet extends HttpServlet {
    * @param opt The rich hypothesis object
    */
   private static String getCompletionSourceCoverage(RichTranslation<IString, String> opt) {
-    CoverageSet coverage = opt.featurizable.option.foreignCoverage;
+    CoverageSet coverage = opt.featurizable.option.sourceCoverage;
     StringBuilder sb = new StringBuilder();
     for (int coveredBit : coverage) {
       if (sb.length() > 0) sb.append("-");
@@ -258,8 +258,8 @@ public class PhrasalUnifiedServlet extends HttpServlet {
     for (Featurizable<IString, String> featurizer = opt.featurizable.prior; 
           featurizer != null; 
           featurizer = featurizer.prior) {
-      int offset = featurizer.foreignPosition;
-      for (int i = 0; i < featurizer.foreignPhrase.size(); ++i) {
+      int offset = featurizer.sourcePosition;
+      for (int i = 0; i < featurizer.sourcePhrase.size(); ++i) {
         if (sb.length() > 0) sb.append("-");
         sb.append(String.valueOf(i + offset));
       }

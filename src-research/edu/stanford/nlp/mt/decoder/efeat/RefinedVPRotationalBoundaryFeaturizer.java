@@ -128,7 +128,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
     Map<Integer, Pair<Integer, String>> map = rotBs.get(sentId);
 
     int foreignSwapPos = Featurizables.locationOfSwappedPhrase(f);
-    int firstUntranslatedFword = f.foreignPosition;
+    int firstUntranslatedFword = f.sourcePosition;
 
     String type = null;
     String label = null;
@@ -153,7 +153,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
           Hypothesis<IString, String> prevhyp = f.hyp.preceedingHyp;
           if (prevhyp != null) {
             for (int checkI = startp1; checkI <= foreignSwapPos - 1; checkI++) {
-              if (prevhyp.foreignCoverage.get(checkI)) {
+              if (prevhyp.sourceCoverage.get(checkI)) {
                 firstInP1 = false;
               }
             }
@@ -203,26 +203,26 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
           System.err.println("       FprevTrans   translationPosition");
           System.err.println("  English");
           // System.err.printf("foreignSentence: %s\n", f.foreignSentence);
-          for (int i = 0; i < f.foreignSentence.size(); i++) {
-            IString w = f.foreignSentence.get(i);
+          for (int i = 0; i < f.sourceSentence.size(); i++) {
+            IString w = f.sourceSentence.get(i);
             System.err.printf("%s (%d) ", w, i);
           }
           System.err.println();
-          System.err.printf("(fill) foreignPhrase: %s\n", f.foreignPhrase);
+          System.err.printf("(fill) foreignPhrase: %s\n", f.sourcePhrase);
           System.err
-              .printf("(fill) translatedPhrase: %s\n", f.translatedPhrase);
+              .printf("(fill) translatedPhrase: %s\n", f.targetPhrase);
           System.err.printf("(fill) partialTranslation: %s\n",
-              f.partialTranslation);
-          System.err.printf("(fill) c: %s\n", f.hyp.foreignCoverage);
-          System.err.printf("(fill) foreignPosition: %d\n", f.foreignPosition);
+              f.targetPrefix);
+          System.err.printf("(fill) c: %s\n", f.hyp.sourceCoverage);
+          System.err.printf("(fill) foreignPosition: %d\n", f.sourcePosition);
           System.err.printf("(fill) foreignSwapPos: %d\n", foreignSwapPos);
           System.err.printf("(fill) translationPosition: %d\n",
-              f.translationPosition);
+              f.targetPosition);
           System.err.printf("type=%s; label: %s\n", type, label);
         }
       }
     } else {
-      int foreignSentEnd = f.foreignPosition + f.foreignPhrase.size() - 1;
+      int foreignSentEnd = f.sourcePosition + f.sourcePhrase.size() - 1;
       Pair<Integer, String> p = map.get(foreignSentEnd);
       if (p != null) {
         label = p.second();
@@ -243,7 +243,7 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
           System.err
               .printf(
                   "                 first untranslated word is at:%d, cur phrase len=%d\n)",
-                  firstUntranslatedFword, f.foreignPhrase.size());
+                  firstUntranslatedFword, f.sourcePhrase.size());
           System.err.printf("                %s - (%d-%d)\n", label, startp1,
               foreignSentEnd);
 
@@ -263,19 +263,19 @@ public class RefinedVPRotationalBoundaryFeaturizer implements
           System.err.println("                      ^");
           System.err.println("                      label");
           // System.err.printf("foreignSentence: %s\n", f.foreignSentence);
-          for (int i = 0; i < f.foreignSentence.size(); i++) {
-            IString w = f.foreignSentence.get(i);
+          for (int i = 0; i < f.sourceSentence.size(); i++) {
+            IString w = f.sourceSentence.get(i);
             System.err.printf("%s (%d) ", w, i);
           }
           System.err.println();
-          System.err.printf("(end) foreignPhrase: %s\n", f.foreignPhrase);
-          System.err.printf("(end) translatedPhrase: %s\n", f.translatedPhrase);
+          System.err.printf("(end) foreignPhrase: %s\n", f.sourcePhrase);
+          System.err.printf("(end) translatedPhrase: %s\n", f.targetPhrase);
           System.err.printf("(end) partialTranslation: %s\n",
-              f.partialTranslation);
-          System.err.printf("(end) c: %s\n", f.hyp.foreignCoverage);
-          System.err.printf("(end) foreignPosition: %d\n", f.foreignPosition);
+              f.targetPrefix);
+          System.err.printf("(end) c: %s\n", f.hyp.sourceCoverage);
+          System.err.printf("(end) foreignPosition: %d\n", f.sourcePosition);
           System.err.printf("(end) translationPosition: %d\n",
-              f.translationPosition);
+              f.targetPosition);
           System.err.printf("type=%s; label: %s\n", type, label);
         }
       }

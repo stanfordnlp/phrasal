@@ -23,13 +23,13 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
 
   
   @Override
-  abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign,
-      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+  abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
+      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size);
 
   @Override
-  abstract public RichTranslation<TK, FV> translate(Sequence<TK> foreign,
-      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+  abstract public RichTranslation<TK, FV> translate(Sequence<TK> source,
+      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets);
   
   protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
@@ -82,7 +82,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
         continue;
       int teIdx = hyp.length - 1;
       int tsIdx = hyp.preceedingHyp == null ? 0 : hyp.length - 1;
-      CoverageSet cs = opt.foreignCoverage;
+      CoverageSet cs = opt.sourceCoverage;
       int feIdx = -1;
       while (true) {
         int fsIdx = cs.nextSetBit(feIdx + 1);

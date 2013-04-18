@@ -16,8 +16,8 @@ import java.util.*;
 public class RichTranslation<TK, FV> extends
     ScoredFeaturizedTranslation<TK, FV> {
 
-  public final Sequence<TK> foreign;
-  public final CoverageSet foreignCoverage;
+  public final Sequence<TK> source;
+  public final CoverageSet sourceCoverage;
   // public final int[][] t2fAlignmentIndex;
   // public final int[][] f2tAlignmentIndex;
   public final List<String> alignmentIndex;
@@ -42,19 +42,19 @@ public class RichTranslation<TK, FV> extends
 	 */
   public RichTranslation(Featurizable<TK, FV> f, double score,
       FeatureValueCollection<FV> features) {
-    super((f == null ? new EmptySequence<TK>() : f.partialTranslation),
+    super((f == null ? new EmptySequence<TK>() : f.targetPrefix),
         features, score);
     this.featurizable = f;
     this.alignmentIndex = null;
     if (f == null) {
-      this.foreign = new EmptySequence<TK>();
-      this.foreignCoverage = null;
+      this.source = new EmptySequence<TK>();
+      this.sourceCoverage = null;
       // this.t2fAlignmentIndex = null;
       // this.f2tAlignmentIndex = null;
       return;
     }
-    this.foreign = f.foreignSentence;
-    this.foreignCoverage = (f.t2fAlignmentIndex != null) ? constructCoverageSet(f.t2fAlignmentIndex)
+    this.source = f.sourceSentence;
+    this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
         : null;
     // this.t2fAlignmentIndex = f.t2fAlignmentIndex;
     // this.f2tAlignmentIndex = f.f2tAlignmentIndex;
@@ -66,19 +66,19 @@ public class RichTranslation<TK, FV> extends
   public RichTranslation(Featurizable<TK, FV> f, double score,
       FeatureValueCollection<FV> features, List<String> alignmentIndex,
       long latticeSourceId) {
-    super((f == null ? new EmptySequence<TK>() : f.partialTranslation),
+    super((f == null ? new EmptySequence<TK>() : f.targetPrefix),
         features, score, latticeSourceId);
     this.featurizable = f;
     this.alignmentIndex = alignmentIndex;
     if (f == null) {
-      this.foreign = new EmptySequence<TK>();
-      this.foreignCoverage = null;
+      this.source = new EmptySequence<TK>();
+      this.sourceCoverage = null;
       // this.t2fAlignmentIndex = null;
       // this.f2tAlignmentIndex = null;
       return;
     }
-    this.foreign = f.foreignSentence;
-    this.foreignCoverage = (f.t2fAlignmentIndex != null) ? constructCoverageSet(f.t2fAlignmentIndex)
+    this.source = f.sourceSentence;
+    this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
         : null;
     // this.t2fAlignmentIndex = f.t2fAlignmentIndex;
     // this.f2tAlignmentIndex = f.f2tAlignmentIndex;
@@ -198,15 +198,15 @@ public class RichTranslation<TK, FV> extends
      */
      if (System.getProperty("VERY_VERBOSE_NBEST") != null) {
        sbuf.append(' ').append(NBEST_SEP).append(' ');
-       sbuf.append(this.featurizable.foreignSentence.toString());
+       sbuf.append(this.featurizable.sourceSentence.toString());
        sbuf.append(' ').append(NBEST_SEP).append(' ');
        List<Featurizable<TK,FV>> featurizables = featurizables();
        for (Featurizable<TK,FV> f : featurizables) {
          sbuf.append(' ');
          double parentScore = (f.prior == null ? 0 : f.prior.hyp.score);
          sbuf.append("|").append(f.hyp.score - parentScore).append(" ");
-         sbuf.append(f.hyp.translationOpt.foreignCoverage).append(" ");
-         sbuf.append(f.hyp.translationOpt.abstractOption.translation.toString());
+         sbuf.append(f.hyp.translationOpt.sourceCoverage).append(" ");
+         sbuf.append(f.hyp.translationOpt.abstractOption.target.toString());
        }
      }
     

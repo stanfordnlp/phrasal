@@ -123,13 +123,13 @@ public class VerbLinkageFeaturizerTwo implements
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
 
-    int fPhrSz = f.foreignPhrase.size();
+    int fPhrSz = f.sourcePhrase.size();
     String fCon = "";
     String fWord = "";
     for (int fPos = 0; fPos < fPhrSz; fPos++) {
-      fWord = f.foreignPhrase.get(fPos).toString();
+      fWord = f.sourcePhrase.get(fPos).toString();
       if (fNouns.contains(fWord)) {
-        int foreignPhrasePos = f.foreignPosition;
+        int foreignPhrasePos = f.sourcePosition;
         int fWordPos = fPos + foreignPhrasePos;
         String fPU = "f";
         String fPN = "f";
@@ -143,23 +143,23 @@ public class VerbLinkageFeaturizerTwo implements
         }
 
         for (int sourcePos = fWordPos - 1; sourcePos > 0; sourcePos--) {
-          if (fSingles.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fSingles.contains(f.sourceSentence.get(sourcePos).toString())) {
             fsingle = "t";
           }
-          if (fDTs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fDTs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fDT = "t";
           }
-          if (fPNs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fPNs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fPN = "t";
           }
-          if (fPUs.contains(f.foreignSentence.get(sourcePos).toString())) {
+          if (fPUs.contains(f.sourceSentence.get(sourcePos).toString())) {
             fPUi = "t";
             break;
           }
         }
 
-        if ((fWordPos + 1) < f.foreignSentence.size()
-            && fPUs.contains(f.foreignSentence.get(fWordPos + 1))) {
+        if ((fWordPos + 1) < f.sourceSentence.size()
+            && fPUs.contains(f.sourceSentence.get(fWordPos + 1))) {
           fPU = "t";
         }
 
@@ -170,12 +170,12 @@ public class VerbLinkageFeaturizerTwo implements
     }
 
     // List<IString> transVerbs = new LinkedList<IString>();
-    int tPhrSz = f.translatedPhrase.size();
+    int tPhrSz = f.targetPhrase.size();
     String tSg = "f";
     String tPl = "f";
 
     for (int tPos = 0; tPos < tPhrSz; tPos++) {
-      IString tWord = f.translatedPhrase.get(tPos);
+      IString tWord = f.targetPhrase.get(tPos);
 
       if (tNNs.contains(tWord.toString())) {
         tSg = "t";

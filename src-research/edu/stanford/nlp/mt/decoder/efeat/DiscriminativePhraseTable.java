@@ -53,8 +53,8 @@ IsolatedPhraseFeaturizer<IString, String> {
   public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> fvalues = new LinkedList<FeatureValue<String>>();
 
-    String srcPhrase = f.foreignPhrase.toString("_");
-    String tgtPhrase = f.translatedPhrase.toString("_");
+    String srcPhrase = f.sourcePhrase.toString("_");
+    String tgtPhrase = f.targetPhrase.toString("_");
     
     if (doSource && doTarget) {
       String suffix = srcPhrase + ">"

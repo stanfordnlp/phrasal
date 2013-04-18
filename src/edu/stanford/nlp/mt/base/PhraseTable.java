@@ -18,7 +18,7 @@ public interface PhraseTable<T> {
   /**
 	 * 
 	 */
-  int longestForeignPhrase();
+  int longestSourcePhrase();
 
   /**
 	 * 

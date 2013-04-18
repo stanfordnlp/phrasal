@@ -98,8 +98,8 @@ public class PhraseTableScoresFeaturizer<T> implements
     }
     if (phraseReweighting) {
       featureValues = new FeatureValue[1];
-      String featureName = featurizable.foreignPhrase.toString("DTM:", "_",
-          featurizable.translatedPhrase.toString("=>", "_"));
+      String featureName = featurizable.sourcePhrase.toString("DTM:", "_",
+          featurizable.targetPhrase.toString("=>", "_"));
       featureValues[0] = new FeatureValue<String>(featureName, 1.0);
     } else {
       // lookup/construct the list of feature names
@@ -120,7 +120,7 @@ public class PhraseTableScoresFeaturizer<T> implements
 
       if (DEBUG) {
         System.err.printf("Translation Phrase Pair: %s/%s\n",
-            featurizable.translatedPhrase, featurizable.foreignPhrase);
+            featurizable.targetPhrase, featurizable.sourcePhrase);
         System.err.printf("Feature Values: %s\n",
             Arrays.toString(featureValues));
       }

@@ -69,23 +69,23 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
     double oldH = hyp.preceedingHyp.h;
     double newH = 0.0;
 
-    CoverageSet coverage = hyp.foreignCoverage;
+    CoverageSet coverage = hyp.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);
 
     if (Double.isNaN(oldH)) {
       System.err.printf("getHeuristicDelta:\n");
-      System.err.printf("coverage: %s\n", hyp.foreignCoverage);
+      System.err.printf("coverage: %s\n", hyp.sourceCoverage);
       System.err.println("old H: " + oldH);
       throw new RuntimeException();
     }
 
-    int foreignSize = hyp.foreignSequence.size();
+    int foreignSize = hyp.sourceSequence.size();
     for (int endEdge; startEdge < foreignSize; startEdge = coverage
         .nextClearBit(endEdge)) {
       endEdge = coverage.nextSetBit(startEdge);
 
       if (endEdge == -1) {
-        endEdge = hyp.foreignSequence.size();
+        endEdge = hyp.sourceSequence.size();
       }
 
       double localH = hSpanScores.getScore(startEdge, endEdge - 1);
@@ -155,28 +155,28 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         double score = scorer.getIncrementalScore(phraseFeatures), childScore = 0.0;
         final int terminalPos;
         if (i == 0) {
-          terminalPos = option.foreignPos
-              + option.abstractOption.foreign.size() - 1;
+          terminalPos = option.sourcePosition
+              + option.abstractOption.source.size() - 1;
           if (score > viterbiSpanScores
-              .getScore(option.foreignPos, terminalPos)) {
-            viterbiSpanScores.setScore(option.foreignPos, terminalPos, score);
+              .getScore(option.sourcePosition, terminalPos)) {
+            viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
             if (Double.isNaN(score)) {
               System.err.printf("Bad Viterbi score: score[%d,%d]=%.3f\n",
-                  option.foreignPos, terminalPos, score);
+                  option.sourcePosition, terminalPos, score);
               throw new RuntimeException();
             }
           }
           if (debug) {
             System.err.printf("\t%d:%d:%d %s->%s score: %.3f %.3f\n",
-                option.foreignPos, terminalPos, i,
-                option.abstractOption.foreign,
-                option.abstractOption.translation, score, childScore);
+                option.sourcePosition, terminalPos, i,
+                option.abstractOption.source,
+                option.abstractOption.target, score, childScore);
             System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
           }
         } else {
           // Discontinuous phrase: save it for later:
-          int startPos = option.foreignCoverage.nextSetBit(0);
-          terminalPos = option.foreignCoverage.length() - 1;
+          int startPos = option.sourceCoverage.nextSetBit(0);
+          terminalPos = option.sourceCoverage.length() - 1;
           if (dtuLists[startPos][terminalPos] == null)
             dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteTranslationOption<TK,FV>, Double>>();
           dtuLists[startPos][terminalPos]
@@ -221,9 +221,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         if (dtuLists[startPos][terminalPos] != null) {
           for (Pair<ConcreteTranslationOption<TK,FV>, Double> dtu : dtuLists[startPos][terminalPos]) {
             ConcreteTranslationOption<TK,FV> option = dtu.first;
-            assert (option.foreignPos == startPos);
+            assert (option.sourcePosition == startPos);
             double dtuScore = dtu.second;
-            CoverageSet cs = option.foreignCoverage;
+            CoverageSet cs = option.sourceCoverage;
             int startIdx, endIdx = 0;
             double childScore = 0.0;
             while (true) {
@@ -234,22 +234,22 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
               childScore += viterbiSpanScores.getScore(startIdx, endIdx);
             }
             double totalScore = dtuScore + childScore;
-            double oldScore = viterbiSpanScores.getScore(option.foreignPos,
+            double oldScore = viterbiSpanScores.getScore(option.sourcePosition,
                 terminalPos);
             if (totalScore > oldScore) {
               if (Double.isNaN(totalScore)) {
                 System.err.printf(
                     "Bad Viterbi score[%d,%d]: score=%.3f childScore=%.3f\n",
-                    option.foreignPos, terminalPos, dtuScore, childScore);
+                    option.sourcePosition, terminalPos, dtuScore, childScore);
                 throw new RuntimeException();
               }
-              viterbiSpanScores.setScore(option.foreignPos, terminalPos,
+              viterbiSpanScores.setScore(option.sourcePosition, terminalPos,
                   totalScore);
               if (debug)
                 System.err
                     .printf(
                         "Improved score with a DTU %s at [%d,%d]: %.3f -> %.3f (childScore=%.3f)\n",
-                        option.foreignCoverage, startPos, terminalPos,
+                        option.sourceCoverage, startPos, terminalPos,
                         oldScore, totalScore, childScore);
             }
           }

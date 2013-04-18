@@ -38,16 +38,16 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   }
 
   @Override
-  public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign,
-      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+  public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
+      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size) {
-    return nbest(scorer, foreign, translationId, constrainedOutputSpace,
+    return nbest(scorer, source, sourceInputId, constrainedOutputSpace,
         targets, size);
   }
 
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
-      Sequence<TK> foreign, int translationId,
+      Sequence<TK> source, int sourceInputId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size) {
     /*
@@ -57,7 +57,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
      */
     RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory = new RecombinationHistory<Hypothesis<TK, FV>>();
 
-    Beam<Hypothesis<TK, FV>> beam = decode(scorer, foreign, translationId,
+    Beam<Hypothesis<TK, FV>> beam = decode(scorer, source, sourceInputId,
         recombinationHistory, constrainedOutputSpace, targets, size);
     if (beam == null)
       return null;
@@ -98,11 +98,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         if (nextHyp.translationOpt.abstractOption instanceof DTUOption)
           withDTUs = true;
         if (withDTUs) {
-          hyp = new DTUHypothesis<TK, FV>(translationId,
+          hyp = new DTUHypothesis<TK, FV>(sourceInputId,
               nextHyp.translationOpt, hyp.length, hyp, nextHyp, featurizer,
               scorer, heuristic, seenOptions);
         } else {
-          hyp = new Hypothesis<TK, FV>(translationId, nextHyp.translationOpt,
+          hyp = new Hypothesis<TK, FV>(sourceInputId, nextHyp.translationOpt,
               hyp.length, hyp, featurizer, scorer, heuristic);
         }
       }
@@ -118,7 +118,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
         // Get surface string:
         assert (hyp != null);
-        AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.partialTranslation;
+        AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.targetPrefix;
 
         // If seen this string before and not among the top-k, skip it:
         if (hypCount > SAFE_LIST && distinctSurfaceTranslations.contains(seq)) {
@@ -194,19 +194,19 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   }
 
   @Override
-  public RichTranslation<TK, FV> translate(Sequence<TK> foreign,
-      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+  public RichTranslation<TK, FV> translate(Sequence<TK> source,
+      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets) {
-    return translate(scorer, foreign, translationId, constrainedOutputSpace,
+    return translate(scorer, source, sourceInputId, constrainedOutputSpace,
         targets);
   }
 
   @Override
   public RichTranslation<TK, FV> translate(Scorer<FV> scorer,
-      Sequence<TK> foreign, int translationId,
+      Sequence<TK> source, int sourceInputId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets) {
-    Beam<Hypothesis<TK, FV>> beam = decode(scorer, foreign, translationId,
+    Beam<Hypothesis<TK, FV>> beam = decode(scorer, source, sourceInputId,
         null, constrainedOutputSpace, targets, 1);
     if (beam == null)
       return null;
@@ -219,7 +219,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 	 * 
 	 */
   abstract protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
-      Sequence<TK> foreign, int translationId,
+      Sequence<TK> source, int sourceInputId,
       RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest);
@@ -263,17 +263,17 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     final private RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory;
 
     @SuppressWarnings("unchecked")
-    public CoverageBeams(int foreignSize,
+    public CoverageBeams(int sourceSize,
         RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory) {
-      coverageCountToCoverageSets = new Set[foreignSize + 1];
-      for (int i = 0; i < foreignSize + 1; i++) {
+      coverageCountToCoverageSets = new Set[sourceSize + 1];
+      for (int i = 0; i < sourceSize + 1; i++) {
         coverageCountToCoverageSets[i] = new HashSet<CoverageSet>();
       }
       this.recombinationHistory = recombinationHistory;
     }
 
     public void put(Hypothesis<TK, FV> hypothesis) {
-      get(hypothesis.foreignCoverage).put(hypothesis);
+      get(hypothesis.sourceCoverage).put(hypothesis);
     }
 
     private Beam<Hypothesis<TK, FV>> get(CoverageSet coverage) {

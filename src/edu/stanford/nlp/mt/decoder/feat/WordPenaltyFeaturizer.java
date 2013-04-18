@@ -25,10 +25,10 @@ public class WordPenaltyFeaturizer<TK> implements
   @Override
   public FeatureValue<String> featurize(Featurizable<TK, String> f) {
     // if (f.translatedPhrase == null) return null;
-    if (f.translatedPhrase == null)
+    if (f.targetPhrase == null)
       return new FeatureValue<String>(FEATURE_NAME, 0.0);
     return new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
-        * f.translatedPhrase.size());
+        * f.targetPhrase.size());
   }
 
   @Override

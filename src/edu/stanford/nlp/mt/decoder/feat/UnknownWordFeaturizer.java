@@ -32,7 +32,7 @@ public class UnknownWordFeaturizer<TK> implements
     // FeatureValue<String>(FEATURE_NAME, 0.0);
     // if (f.phraseScoreNames[0] != UNKNOWN_PHRASE_TAG) return new
     // FeatureValue<String>(FEATURE_NAME, 0.0);
-    int size = f.translatedPhrase.size();
+    int size = f.targetPhrase.size();
     return (size == 0) ? null : new FeatureValue<String>(FEATURE_NAME,
         MOSES_UNKNOWN_WORD_MUL * size);
   }

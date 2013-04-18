@@ -18,23 +18,23 @@ public interface Inferer<TK, FV> {
   /**
    * Produce a 1-best translation.
    */
-  public RichTranslation<TK, FV> translate(Sequence<TK> foreign, int translationId,
+  public RichTranslation<TK, FV> translate(Sequence<TK> source, int sourceInputId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets);
 
-  public RichTranslation<TK, FV> translate(Scorer<FV> scorer, Sequence<TK> foreign,
-      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+  public RichTranslation<TK, FV> translate(Scorer<FV> scorer, Sequence<TK> source,
+      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets);
 
   /**
    * Produce an n-best list of translations.
    */
-  public List<RichTranslation<TK, FV>> nbest(Sequence<TK> foreign, int translationId,
+  public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source, int sourceInputId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size);
 
-  public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> foreign,
-      int translationId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+  public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> source,
+      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size);
 
   /**

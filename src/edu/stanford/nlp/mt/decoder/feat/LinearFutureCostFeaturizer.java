@@ -85,8 +85,8 @@ public class LinearFutureCostFeaturizer extends
   }
 
   static int futureCost(Featurizable<IString, String> f) {
-    int nextWordIndex = f.hyp.translationOpt.foreignCoverage.length();
-    int firstGapIndex = f.hyp.foreignCoverage.nextClearBit(0);
+    int nextWordIndex = f.hyp.translationOpt.sourceCoverage.length();
+    int firstGapIndex = f.hyp.sourceCoverage.nextClearBit(0);
     if (firstGapIndex > nextWordIndex)
       firstGapIndex = nextWordIndex;
     int futureCost = nextWordIndex - firstGapIndex;
@@ -103,7 +103,7 @@ public class LinearFutureCostFeaturizer extends
     // j i
     int p = firstGapIndex - 1;
     while (true) {
-      p = f.hyp.foreignCoverage.nextSetBit(p + 1);
+      p = f.hyp.sourceCoverage.nextSetBit(p + 1);
       if (p < 0)
         break;
       ++futureCost;
@@ -113,7 +113,7 @@ public class LinearFutureCostFeaturizer extends
 
   private static int getEOSDistortion(Featurizable<IString, String> f) {
     if (f.done) {
-      int endGap = f.foreignSentence.size() - f.option.foreignCoverage.length();
+      int endGap = f.sourceSentence.size() - f.option.sourceCoverage.length();
       assert (endGap >= 0);
       return endGap;
     }

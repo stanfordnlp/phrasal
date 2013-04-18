@@ -65,17 +65,17 @@ public class LRPhraseBoundryFeaturizer implements
     List<FeatureValue<String>> blist = new LinkedList<FeatureValue<String>>();
 
     if (doSource) {
-      int foreignPhraseSz = f.foreignPhrase.size();
+      int foreignPhraseSz = f.sourcePhrase.size();
       int sourceMax = Math.min(size, foreignPhraseSz);
       for (int i = 0; i < sourceMax; i++) {
-        Sequence<IString> sourceB = f.foreignPhrase.subsequence(0, i + 1);
+        Sequence<IString> sourceB = f.sourcePhrase.subsequence(0, i + 1);
         blist.add(new FeatureValue<String>(FEATURE_PREFIX + PREFIX_L
             + PREFIX_SRC + ":" + sourceB.toString("_"), 1.0));
       }
       int sourceMin = Math.max(0, foreignPhraseSz - size);
 
       for (int i = foreignPhraseSz - 1; i >= sourceMin; i--) {
-        Sequence<IString> sourceB = f.foreignPhrase.subsequence(i,
+        Sequence<IString> sourceB = f.sourcePhrase.subsequence(i,
             foreignPhraseSz);
         blist.add(new FeatureValue<String>(FEATURE_PREFIX + PREFIX_R
             + PREFIX_SRC + ":" + sourceB.toString("_"), 1.0));
@@ -83,17 +83,17 @@ public class LRPhraseBoundryFeaturizer implements
     }
 
     if (doTarget) {
-      int translationPhraseSz = f.translatedPhrase.size();
+      int translationPhraseSz = f.targetPhrase.size();
       int targetMax = Math.min(size, translationPhraseSz);
       for (int i = 0; i < targetMax; i++) {
-        Sequence<IString> targetB = f.translatedPhrase.subsequence(0, i + 1);
+        Sequence<IString> targetB = f.targetPhrase.subsequence(0, i + 1);
         blist.add(new FeatureValue<String>(FEATURE_PREFIX + PREFIX_L
             + PREFIX_TRG + ":" + targetB.toString("_"), 1.0));
       }
 
       int targetMin = Math.max(0, translationPhraseSz - size);
       for (int i = translationPhraseSz - 1; i >= targetMin; i--) {
-        Sequence<IString> targetB = f.translatedPhrase.subsequence(i,
+        Sequence<IString> targetB = f.targetPhrase.subsequence(i,
             translationPhraseSz);
         blist.add(new FeatureValue<String>(FEATURE_PREFIX + PREFIX_R
             + PREFIX_TRG + ":" + targetB.toString("_"), 1.0));

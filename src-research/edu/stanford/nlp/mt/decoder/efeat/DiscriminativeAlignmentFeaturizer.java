@@ -57,8 +57,8 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
   @Override
   public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
     PhraseAlignment alignment = f.option.abstractOption.alignment;
-    final int eLength = f.translatedPhrase.size();
-    final int fLength = f.foreignPhrase.size();
+    final int eLength = f.targetPhrase.size();
+    final int fLength = f.sourcePhrase.size();
     List<Set<String>> f2e = new ArrayList<Set<String>>(fLength);
     for (int i = 0; i < fLength; ++i) {
       f2e.add(new HashSet<String>());
@@ -68,8 +68,8 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
 
     // Iterate over target side of phrase
     for (int i = 0; i < eLength; ++i) {
-      int[] fIndices = alignment.e2f(i);
-      String eWord = f.translatedPhrase.get(i).toString();
+      int[] fIndices = alignment.t2s(i);
+      String eWord = f.targetPhrase.get(i).toString();
       
       if (fIndices == null) {
         // Unaligned target word
@@ -88,7 +88,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
             fInsertionIndex = fIndex;
             f2e.get(fInsertionIndex).add(eWord);
           } else {
-            String fWord = f.foreignPhrase.get(fIndex).toString();
+            String fWord = f.sourcePhrase.get(fIndex).toString();
             f2e.get(fInsertionIndex).add(fWord);
           }
           fIsAligned[fIndex] = true;
@@ -99,7 +99,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
     // Iterate over source side of phrase
     for (int i = 0; i < fLength; ++i) {
       Set<String> eWords = f2e.get(i);
-      String fWord = f.foreignPhrase.get(i).toString();
+      String fWord = f.sourcePhrase.get(i).toString();
       if ( ! fIsAligned[i]) {
         if (addSourceDeletions) {
           String feature = makeFeatureString(FEATURE_NAME_SRC, fWord);

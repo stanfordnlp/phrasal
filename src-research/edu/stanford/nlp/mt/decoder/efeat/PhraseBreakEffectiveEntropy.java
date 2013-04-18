@@ -31,7 +31,7 @@ public class PhraseBreakEffectiveEntropy implements
       Sequence<IString> foreign, Index<String> featureIndex) {
     Set<IString> possibleNextTargetWords = new HashSet<IString>();
     for (ConcreteTranslationOption<IString,String> opt : options) {
-      possibleNextTargetWords.add(opt.abstractOption.translation.get(0));
+      possibleNextTargetWords.add(opt.abstractOption.target.get(0));
     }
 
     this.possibleNextTargetWords = possibleNextTargetWords

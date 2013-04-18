@@ -29,8 +29,8 @@ public class OptionGrid<TK,FV> {
       }
     }
     for (ConcreteTranslationOption<TK,FV> opt : options) {
-      int startPos = opt.foreignPos;
-      int endPos = opt.foreignCoverage.nextClearBit(opt.foreignPos) - 1;
+      int startPos = opt.sourcePosition;
+      int endPos = opt.sourceCoverage.nextClearBit(opt.sourcePosition) - 1;
       grid[getIndex(startPos, endPos)].add(opt);
     }
   }

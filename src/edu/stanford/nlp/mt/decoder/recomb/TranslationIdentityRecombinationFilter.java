@@ -28,14 +28,14 @@ public class TranslationIdentityRecombinationFilter<TK, FV> implements
       return false;
 
     if (noisy) {
-      System.err.printf("%s vs. %s\n", hypA.featurizable.partialTranslation,
-          hypB.featurizable.partialTranslation);
+      System.err.printf("%s vs. %s\n", hypA.featurizable.targetPrefix,
+          hypB.featurizable.targetPrefix);
       System.err.printf("tirf equal: %s\n",
-          hypA.featurizable.partialTranslation
-              .equals(hypB.featurizable.partialTranslation));
+          hypA.featurizable.targetPrefix
+              .equals(hypB.featurizable.targetPrefix));
     }
-    return hypA.featurizable.partialTranslation
-        .equals(hypB.featurizable.partialTranslation);
+    return hypA.featurizable.targetPrefix
+        .equals(hypB.featurizable.targetPrefix);
   }
 
   @Override
@@ -43,7 +43,7 @@ public class TranslationIdentityRecombinationFilter<TK, FV> implements
     if (hyp.featurizable == null) {
       return 0;
     }
-    return hyp.featurizable.partialTranslation.longHashCode();
+    return hyp.featurizable.targetPrefix.longHashCode();
   }
 
 }

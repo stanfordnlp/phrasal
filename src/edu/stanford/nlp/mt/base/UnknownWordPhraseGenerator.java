@@ -105,7 +105,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
   
   @Override
-  public int longestForeignPhrase() {
+  public int longestSourcePhrase() {
     return -Integer.MAX_VALUE;
   }
 
