@@ -1,12 +1,14 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.io.RuntimeIOException;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -57,7 +59,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
    * Sentence-specific data structures
    */
   private boolean[] isHead;
-  private String[] posTag;
+  private String[] posTags;
   
   /**
    * All tag features will start with this prefix
@@ -92,13 +94,28 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
 
   /**
    * Initialize on a new translation.  
-   * TODO: would be nice to cache values for the sentence here
    */
   @Override
   public void initialize(int sourceInputId,
                          List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
     int length = foreign.size();
+    CoreMap currentSentence = sentences.get(sourceInputId);
+    assert length == currentSentence.size();
     
+    isHead = new boolean[length];
+    // Sanity check
+    Arrays.fill(isHead, false);
+    SemanticGraph basicDependencies = currentSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
+    for (SemanticGraphEdge edge : basicDependencies.edgeIterable()) {
+      IndexedWord head = edge.getGovernor();
+      isHead[head.index()] = true;
+    }
+    
+    posTags = new String[length];
+    List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
+    for(int i = 0; i < length; ++i) {
+      posTags[i] = words.get(i).tag();
+    }
   }
 
   /**
