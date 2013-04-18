@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.Index;
 public interface IsolatedPhraseFeaturizer<TK, FV> {
   
   /**
-   * Initialize the featurizer.
+   * This call is made *before* decoding a phrase is featurized. Do any setup here.
    * 
    * @param featureIndex
    */

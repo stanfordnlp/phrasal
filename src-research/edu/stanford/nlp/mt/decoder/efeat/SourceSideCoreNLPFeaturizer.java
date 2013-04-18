@@ -41,13 +41,28 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
  *@author John Bauer
  */
 public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
-  Annotation annotation;
-  List<CoreMap> sentences;
+  
+  /*
+   * The CoreNLP annotation
+   */
+  private final Annotation annotation;
+  
+  /**
+   * The list of sentences annotations
+   */
+  private final List<CoreMap> sentences;
+  private final int numSentences;
 
+  /**
+   * Sentence-specific data structures
+   */
+  private boolean[] isHead;
+  private String[] posTag;
+  
   /**
    * All tag features will start with this prefix
    */
-  public static final String TAG_FEATURE_NAME = "TAGGER-";
+  public static final String TAG_FEATURE_NAME = "Syn-";
 
   /**
    * All dep features will start with this prefix
@@ -69,6 +84,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     if (sentences == null) {
       throw new RuntimeException("Unusable annotation (no sentences) in " + args[0]);
     }
+    numSentences = sentences.size();
   }
 
   @Override
@@ -79,8 +95,10 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
    * TODO: would be nice to cache values for the sentence here
    */
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString, String>> options,
-                         Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+                         List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+    int length = foreign.size();
+    
   }
 
   /**

@@ -31,17 +31,17 @@ import edu.stanford.nlp.mt.base.Sequence;
 public interface IncrementalFeaturizer<TK, FV> {
   
   /**
-   * Initialize the featurizer.
-   * 
+   * This call is made *before* decoding a new input begins.
+   * @param sourceInputId TODO
    * @param options
    * @param foreign
    * @param featureIndex 
    */
-  void initialize(List<ConcreteTranslationOption<TK,FV>> options,
-      Sequence<TK> foreign, Index<String> featureIndex);
+  void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex);
 
   /**
-   * Reset featurizer state.
+   * This call is made *after* decoding an input ends.
    */
   void reset();
 

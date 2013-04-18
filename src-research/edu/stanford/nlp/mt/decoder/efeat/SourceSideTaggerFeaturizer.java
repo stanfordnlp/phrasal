@@ -55,8 +55,8 @@ public class SourceSideTaggerFeaturizer implements IncrementalFeaturizer<IString
    * Initialize on a new translation.  Will run the tagger over the source side text.
    */
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString, String>> options,
-                         Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+                         List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
     List<Word> sentence = Generics.newArrayList();
     for (IString word : foreign) {
       sentence.add(new Word(word.toString()));

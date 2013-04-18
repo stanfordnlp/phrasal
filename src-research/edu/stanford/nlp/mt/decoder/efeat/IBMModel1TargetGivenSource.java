@@ -73,8 +73,8 @@ public class IBMModel1TargetGivenSource implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
     h = new FastFeaturizableHash<IBMModel1.PartialTargetFeatureState>();
     basePTFS = ibmModel1.partialTargetFeatureState(foreign);
     precomputeMap = new HashMap<Sequence<IString>, IBMModel1.PhrasePrecomputePTarget>();

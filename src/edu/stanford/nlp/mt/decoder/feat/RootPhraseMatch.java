@@ -21,8 +21,8 @@ public class RootPhraseMatch implements IncrementalFeaturizer<IString, String>, 
     static public final boolean DEBUG = true;
     
 	@Override
-	public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-			Sequence<IString> foreign, Index<String> featureIndex) { }
+	public void initialize(int sourceInputId,
+			List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) { }
 
 	@Override
 	public void reset() { }

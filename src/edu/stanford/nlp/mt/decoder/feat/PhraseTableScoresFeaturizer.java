@@ -142,8 +142,8 @@ public class PhraseTableScoresFeaturizer<T> implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<T,String>> options,
-      Sequence<T> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<T,String>> options, Sequence<T> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

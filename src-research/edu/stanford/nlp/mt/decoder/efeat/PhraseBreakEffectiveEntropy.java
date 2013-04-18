@@ -27,8 +27,8 @@ public class PhraseBreakEffectiveEntropy implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
     Set<IString> possibleNextTargetWords = new HashSet<IString>();
     for (ConcreteTranslationOption<IString,String> opt : options) {
       possibleNextTargetWords.add(opt.abstractOption.target.get(0));

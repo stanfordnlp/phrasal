@@ -134,7 +134,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     
     // use *UNFILTERED* options for heuristic calculation
     Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(translationId, source, heuristic, scorer, annotators, Arrays.asList(options));
-    featurizer.initialize(options, source, scorer.getFeatureIndex());
+    featurizer.initialize(null, options, source, scorer.getFeatureIndex());
     if (DEBUG) {
     	System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
     }

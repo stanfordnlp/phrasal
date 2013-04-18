@@ -200,8 +200,8 @@ public class ArabicInitialVerbFeaturizer implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
 
     String[] words = IStrings.toStringArray(Sequences.toIntArray(foreign));
     ArrayList<TaggedWord> sentence = tagger.tagSentence(Sentence
@@ -279,8 +279,8 @@ public class ArabicInitialVerbFeaturizer implements
     for (String line : IOUtils.slurpFileNoExceptions(args[0]).split("\\n")) {
       f.initialize(
           null,
-          new SimpleSequence<IString>(true, IStrings.toIStringArray(line
-              .split("\\s+"))), null);
+          null, new SimpleSequence<IString>(true, IStrings.toIStringArray(line
+                  .split("\\s+"))), null);
     }
   }
 }

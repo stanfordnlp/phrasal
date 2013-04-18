@@ -171,8 +171,8 @@ public class VerbLinkageFeaturizer implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
     previousForeign = currentForeign;
     currentForeign = foreign;
     previousForeignWords.clear();

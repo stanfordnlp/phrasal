@@ -25,8 +25,8 @@ public class PhraseTranslationWordPairs implements
   final Map<TranslationOption<IString>, List<FeatureValue<String>>> featureCache = new HashMap<TranslationOption<IString>, List<FeatureValue<String>>>();
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<IString,String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

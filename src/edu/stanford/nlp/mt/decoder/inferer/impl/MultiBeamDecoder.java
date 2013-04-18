@@ -219,7 +219,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     int totalHypothesesGenerated = 1;
 
-    featurizer.initialize(options, source, scorer.getFeatureIndex());
+    featurizer.initialize(null, options, source, scorer.getFeatureIndex());
 
     // main translation loop
     long decodeLoopTime = -System.currentTimeMillis();

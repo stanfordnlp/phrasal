@@ -180,10 +180,10 @@ public class CombinedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public void initialize(List<ConcreteTranslationOption<TK,FV>> options,
-      Sequence<TK> foreign, Index<String> featureIndex) {
+  public void initialize(int sourceInputId,
+      List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
     for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
-      featurizer.initialize(options, foreign, featureIndex);
+      featurizer.initialize(null, options, foreign, featureIndex);
     }
   }
 
