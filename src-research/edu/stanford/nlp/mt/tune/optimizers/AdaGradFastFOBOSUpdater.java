@@ -57,11 +57,16 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
       lastUpdated.setCount(feature, (double)timeStep);
       
       double l1 = this.L1lambda;
-      if(customL1 != null || customL1.size()==0)
+      if(customL1 != null && customL1.size()>0)
       for (String prefix : customL1.keySet())
       {
     	  if(feature.startsWith(prefix))
-    		  l1 = customL1.getCount(prefix);
+	  {
+
+    	      l1 = customL1.getCount(prefix);
+     	      // System.out.println("Using custom L1 for "+prefix + " valued " + l1);
+	      break;
+	  }
       }
       
       double trunc = pospart( Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*l1);

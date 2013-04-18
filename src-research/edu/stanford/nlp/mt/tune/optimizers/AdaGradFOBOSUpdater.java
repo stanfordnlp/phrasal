@@ -32,18 +32,19 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 
   private Counter<String> sumGradSquare;
   private Norm norm;
-  
+  private Counter<String> customL1;
 
-  public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm) {
+  public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm, Counter<String> customL1) {
     this.rate = initialRate;
     this.lambda = lambda;
     this.norm = norm;
+    this.customL1 = customL1;
     
     sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
   }
 
   public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda) {
-    this(initialRate, expectedNumFeatures, lambda, Norm.LASSO);
+      this(initialRate, expectedNumFeatures, lambda, Norm.LASSO, null);
   }
 
   // public void setFeatureGroups(List<Set<String>> groups) {
@@ -116,15 +117,15 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     	    String strip=feature.substring(PTLen);
     	    String[] sourceTarget = strip.split(">");
     	    String source = sourceTarget[0];
-    	    assert(sourceTarget.length == 2);
+    	    //assert(sourceTarget.length == 2);
     	    Set<String> currentGroup = featureGroups.get(source);
     	    currentGroup.add(feature);
     	}
-    	//else
-    	//{
-    	//    Set<String> currentGroup = featureGroups.get(OTHERS);
-    	//    currentGroup.add(feature);
-    	//}
+    	else
+    	{
+    	    Set<String> currentGroup = featureGroups.get(OTHERS);
+    	    currentGroup.add(feature);
+    	}
     }
 
     // the key of the map should be group signature
@@ -153,7 +154,20 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
       for (String feature: fGroup) {
         currentrate = currentRateCache.getCount(feature);
         testupdate = testUpdateCache.getCount(feature);
-        tau = (currentrate * lambda) / (1 + currentrate * lambda * groupSize) * testUpdateAbsSum;
+        double l1 = this.lambda;
+	if(customL1 != null && customL1.size()>0)
+	    for (String prefix : customL1.keySet())
+		{
+		    if(feature.startsWith(prefix))
+			{
+
+			    l1 = customL1.getCount(prefix);
+			    // System.out.println("Using custom L1 for "+prefix + " valued " + l1);                                  
+			    break;
+			}
+		}
+
+        tau = (currentrate * l1) / (1 + currentrate * l1 * groupSize) * testUpdateAbsSum;
         realupdate = Math.signum(testupdate) * pospart(Math.abs(testupdate) - tau);
         if (realupdate == 0.0) {
           // Filter zeros

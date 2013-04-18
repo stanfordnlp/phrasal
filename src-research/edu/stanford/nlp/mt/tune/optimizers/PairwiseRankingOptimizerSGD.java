@@ -356,29 +356,27 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   @Override
   public OnlineUpdateRule<String> newUpdater() {
 	if(this.updaterType.equalsIgnoreCase("adagrad"))
-		return new AdaGradUpdater(learningRate, expectedNumFeatures);
-	if(this.updaterType.equalsIgnoreCase("adagradl1"))
-		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO);
-	if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
-		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.aeLASSO);
-	if(this.updaterType.equalsIgnoreCase("adagradl1f"))
+	  return new AdaGradUpdater(learningRate, expectedNumFeatures);
+	Counter<String> customl1 = new ClassicCounter<String>();
+	try{
+	  Scanner scanner = new Scanner(new FileReader(regconfig));
+	  while (scanner.hasNextLine()) {
+	    String[] columns = scanner.nextLine().split(" ");
+	    customl1.incrementCount(columns[0], Double.parseDouble(columns[1]));
+	  }
+	  System.out.println("Using custom L1: "+customl1);
+	}
+	catch(FileNotFoundException ex)
 	{
-		Counter<String> customl1 = new ClassicCounter<String>();;
-		try{
-			Scanner scanner = new Scanner(new FileReader(regconfig));
-	        while (scanner.hasNextLine()) {
-	            String[] columns = scanner.nextLine().split(" ");
-	            customl1.incrementCount(columns[0], Double.parseDouble(columns[1]));
-	        }
-	
-	        System.out.println("Using custom L1: "+customl1);
-		}
-		catch(FileNotFoundException ex)
-		{
-		    System.out.println("Not using custom L1");
-		}
-		
-		return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, customl1);
+          System.out.println("Not using custom L1");
+	}
+	if(this.updaterType.equalsIgnoreCase("adagradl1"))
+	    return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO, customl1);
+        if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
+	  return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.aeLASSO, customl1);
+	if(this.updaterType.equalsIgnoreCase("adagradl1f"))
+        {
+	  return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, customl1);
 	}
 	return new SGDUpdater(learningRate);
   }
