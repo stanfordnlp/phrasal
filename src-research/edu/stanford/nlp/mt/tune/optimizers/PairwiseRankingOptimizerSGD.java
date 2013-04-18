@@ -1,10 +1,13 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -15,6 +18,7 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineTuner;
+import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -358,8 +362,24 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 	if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
 		return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.aeLASSO);
 	if(this.updaterType.equalsIgnoreCase("adagradl1f"))
-    return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda);
+	{
+		Counter<String> customl1 = new ClassicCounter<String>();;
+		try{
+			Scanner scanner = new Scanner(new FileReader(regconfig));
+	        while (scanner.hasNextLine()) {
+	            String[] columns = scanner.nextLine().split(" ");
+	            customl1.incrementCount(columns[0], Double.parseDouble(columns[1]));
+	        }
 	
+	        System.out.println("Using custom L1: "+customl1);
+		}
+		catch(FileNotFoundException ex)
+		{
+		    System.out.println("Not using custom L1");
+		}
+		
+		return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, customl1);
+	}
 	return new SGDUpdater(learningRate);
   }
 
