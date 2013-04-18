@@ -23,13 +23,15 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
 
   private Counter<String> sumGradSquare;
   private Counter<String> lastUpdated;
+  private Counter<String> customL1;
   //private ArrayList<Double> sumL1Lambda;
 
-  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda) {
+  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
     this.rate = initialRate;
     this.L1lambda = L1lambda;
     sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
     lastUpdated = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
+    this.customL1 = customL1;
   }
 
   // the gradient here should NOT include L2 regularization, or else there is no point
@@ -53,7 +55,16 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
       double lastUpdateTimeStep = lastUpdated.getCount(feature);
       double idleinterval = timeStep - lastUpdateTimeStep-1;
       lastUpdated.setCount(feature, (double)timeStep);
-      double trunc = pospart( Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*this.L1lambda);
+      
+      double l1 = this.L1lambda;
+      if(customL1 != null || customL1.size()==0)
+      for (String prefix : customL1.keySet())
+      {
+    	  if(feature.startsWith(prefix))
+    		  l1 = customL1.getCount(prefix);
+      }
+      
+      double trunc = pospart( Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*l1);
       double realupdate = Math.signum(testupdate) * trunc;
       if (realupdate == 0.0) {
         featuresToRemove.add(feature);
