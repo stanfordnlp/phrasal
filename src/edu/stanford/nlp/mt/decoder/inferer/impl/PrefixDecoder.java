@@ -99,7 +99,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   @SuppressWarnings({ "rawtypes", "unchecked" })
 @Override
   public List<RichTranslation<IString, FV>> nbest(Scorer<FV> scorer,
-      Sequence<IString> source, int translationId,
+      Sequence<IString> source, int sourceInputId,
       ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
       List<Sequence<IString>> targets, int size) {
     
@@ -108,7 +108,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int windowSize = 100;
     int maxPrefixCompletion = 0;
     
-    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(source, targets, translationId, scorer);
+    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(source, targets, sourceInputId, scorer);
     List<ConcreteTranslationOption<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
@@ -133,8 +133,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     
     
     // use *UNFILTERED* options for heuristic calculation
-    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(translationId, source, heuristic, scorer, annotators, Arrays.asList(options));
-    featurizer.initialize(null, options, source, scorer.getFeatureIndex());
+    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(sourceInputId, source, heuristic, scorer, annotators, Arrays.asList(options));
+    featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
     if (DEBUG) {
     	System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
     }
@@ -228,7 +228,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 	    		      featurizer, scorer,
 	    		      source, "forcedAlignment", 0);
 	    
-	    	waHyp = new Hypothesis<IString, FV>(translationId,
+	    	waHyp = new Hypothesis<IString, FV>(sourceInputId,
 	                fakeConcreteOpt, waHyp.length, waHyp, featurizer, scorer, heuristic);    
 	    	if (DEBUG) {
 	        	   System.out.printf("new waHyp: %s\n", waHyp.featurizable.targetPrefix);
@@ -279,7 +279,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
         		}
         		continue;
         	}
-            Hypothesis<IString, FV> newHyp = new Hypothesis<IString, FV>(translationId,
+            Hypothesis<IString, FV> newHyp = new Hypothesis<IString, FV>(sourceInputId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
             if (DEBUG) {
             	System.out.printf("constructed new hyp: %s\n", newHyp);

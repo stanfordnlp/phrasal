@@ -278,7 +278,7 @@ public class ArabicInitialVerbFeaturizer implements
     IncrementalFeaturizer<IString, String> f = new ArabicInitialVerbFeaturizer();
     for (String line : IOUtils.slurpFileNoExceptions(args[0]).split("\\n")) {
       f.initialize(
-          null,
+          0,
           null, new SimpleSequence<IString>(true, IStrings.toIStringArray(line
                   .split("\\s+"))), null);
     }

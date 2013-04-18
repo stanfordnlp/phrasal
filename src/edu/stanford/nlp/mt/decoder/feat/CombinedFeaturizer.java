@@ -183,7 +183,7 @@ public class CombinedFeaturizer<TK, FV> implements
   public void initialize(int sourceInputId,
       List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
     for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
-      featurizer.initialize(null, options, foreign, featureIndex);
+      featurizer.initialize(sourceInputId, options, foreign, featureIndex);
     }
   }
 
