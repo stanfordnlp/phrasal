@@ -28,7 +28,7 @@ public class PhraseAlignment {
   // pointer in memory.
 
   final IString str;
-  final int[][] t2s;
+  public final int[][] t2s;
 
   private PhraseAlignment(String s) {
     // System.err.println("align: "+s);
@@ -68,7 +68,7 @@ public class PhraseAlignment {
   }
 
   public int[] t2s(int i) {
-    return (t2s != null) ? t2s[i] : new int[] { i };
+    return (t2s != null) ? (i < t2s.length ? t2s[i] : null) : new int[] { i };
   }
 
   private static String toStr(int[][] t2s) {
@@ -93,6 +93,7 @@ public class PhraseAlignment {
   }
 
   public String s2tStr() {
+    if (t2s == null) return "I-I";
     List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
     for (int ei=0; ei<t2s.length; ++ei) {
       if (t2s[ei] != null) {
