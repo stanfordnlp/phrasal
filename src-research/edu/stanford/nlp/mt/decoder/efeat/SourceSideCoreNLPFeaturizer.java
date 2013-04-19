@@ -95,6 +95,27 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
   }
   private Set<Integer> warnSet = new HashSet<Integer>();
 
+  private static CoreMap findSentence(List<CoreMap> sentences, int id) {
+    return findSentence(sentences, id, 0, sentences.size() - 1);
+  }
+
+  private static CoreMap findSentence(List<CoreMap> sentences, int id, int start, int end) {
+    if (start > end) {
+      return null;
+    }
+    int midpoint = (start + end) / 2;
+    int currentId = sentences.get(midpoint).get(CoreAnnotations.LineNumberAnnotation.class);
+    if (currentId == id) {
+      return sentences.get(midpoint);
+    } else if (start == end) {
+      return null;
+    } else if (currentId < id) {
+      return findSentence(sentences, id, midpoint + 1, end);
+    } else {
+      return findSentence(sentences, id, start, midpoint - 1);
+    }
+  }
+
   /**
    * Return a set of features for the tagged sentence.
    * Each feature will be of the form TAGGER-sourcetag-targetword
@@ -107,7 +128,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
       throw new RuntimeException("Given translation problem for sentence that wasn't cached, " + problemId + "; cached " + sentences.size() + " sentences");
     }
 
-    CoreMap currentSentence = sentences.get(problemId);
+    CoreMap currentSentence = findSentence(sentences, problemId);
 
     List<FeatureValue<String>> features = Generics.newArrayList();
     
