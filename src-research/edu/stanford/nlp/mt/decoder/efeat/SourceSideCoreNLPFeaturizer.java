@@ -123,12 +123,14 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
     int problemId = f.sourceInputId;
-    if (problemId < 0 || problemId >= sentences.size()) {
-      // TODO: now what do we do?  Return null or blow up?
-      throw new RuntimeException("Given translation problem for sentence that wasn't cached, " + problemId + "; cached " + sentences.size() + " sentences");
-    }
 
-    CoreMap currentSentence = findSentence(sentences, problemId);
+    CoreMap currentSentence = findSentence(sentences, problemId+1);
+
+    if (currentSentence == null) {
+      // TODO: now what do we do?  Return null or blow up?
+      System.err.println("WARNING: Given translation problem for sentence that wasn't cached, " + problemId + "; cached " + sentences.size() + " sentences");
+      return null;
+    }
 
     List<FeatureValue<String>> features = Generics.newArrayList();
     
@@ -142,35 +144,12 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
        return null;
     }
     /*
-    System.err.printf("f.source: %s\n", f.option.abstractOption.source);
-    System.err.printf("f.target: %s\n", f.option.abstractOption.target);
-    System.err.printf("f.option.abstractOption: %s\n",  
-      f.option.abstractOption); 
-    System.err.printf("f.option.sourceCoverage: %s\n", f.option.sourceCoverage); 
-    System.err.printf("alignment: %s\n",  f.option.abstractOption.alignment);
     */
     PhraseAlignment reverseAlignment = 
           PhraseAlignment.getPhraseAlignment(
              f.option.abstractOption.alignment.s2tStr().replace(" ", ";"));
-    /* System.err.printf("reverseAlignment: %s\n",  reverseAlignment);
-    System.err.printf("t-s\n"); 
-    if (f.option.abstractOption.alignment.t2s != null) {
-    for (int[] row : f.option.abstractOption.alignment.t2s) {
-       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
-    }
-    } */
-  
-    /* System.err.printf("/t-s\n");
 
-    System.err.printf("t-s reverse\n"); 
-    if (reverseAlignment.t2s != null) {
-    for (int[] row : reverseAlignment.t2s) {
-       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
-    }
-    }
-    System.err.printf("/t-s reverse\n");
-   */
-
+    if (f.option.abstractOption.target.size() != 0) 
     for (int i : f.option.sourceCoverage) {
        int phraseI = i - f.sourcePosition;
 //       System.err.printf("phraseI: %d i: %d f.sourcePosition: %d\n", phraseI, i, f.sourcePosition); 
@@ -185,8 +164,38 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
          int sourceIndex = i;
 
          String sourceTag = words.get(sourceIndex).tag();
+         String feature = "";
+         try {
          String targetWord = f.option.abstractOption.target.get(phraseJ).toString();
-         String feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
+         feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
+         } catch (Exception e) {
+    System.err.printf("phraseJ: %d\n", phraseJ);
+    System.err.printf("phraseI: %d\n", phraseI);
+    System.err.printf("f.source: %s\n", f.option.abstractOption.source);
+    System.err.printf("f.target: %s\n", f.option.abstractOption.target);
+    System.err.printf("f.option.abstractOption: %s\n",  
+      f.option.abstractOption); 
+    System.err.printf("f.option.sourceCoverage: %s\n", f.option.sourceCoverage); 
+    System.err.printf("alignment: %s\n",  f.option.abstractOption.alignment);
+    System.err.printf("reverseAlignment: %s\n",  reverseAlignment);
+    System.err.printf("t-s\n"); 
+    if (f.option.abstractOption.alignment.t2s != null) {
+    for (int[] row : f.option.abstractOption.alignment.t2s) {
+       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
+    }
+    } 
+  
+     System.err.printf("/t-s\n");
+
+    System.err.printf("t-s reverse\n"); 
+    if (reverseAlignment.t2s != null) {
+    for (int[] row : reverseAlignment.t2s) {
+       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
+    }
+    }
+    System.err.printf("/t-s reverse\n");
+            System.exit(-1); 
+         }
          
          // no attempt to look for repeated features; 
          // the system will find and sum those for us
@@ -195,6 +204,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     }
 
     SemanticGraph basicDependencies = currentSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
+    if (f.option.abstractOption.target.size() != 0) 
     for (SemanticGraphEdge edge : basicDependencies.edgeIterable()) {
       String relation = edge.getRelation().toString();
       int sourceIndex = edge.getSource().index() - 1; // IndexedWords are indexed from 1, not 0
