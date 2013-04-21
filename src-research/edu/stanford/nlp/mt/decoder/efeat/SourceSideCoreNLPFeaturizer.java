@@ -119,7 +119,7 @@ AlignmentFeaturizer {
       for(String line; (line = reader.readLine()) != null && reader.getLineNumber() < topK;) {
         String[] toks = line.split("\\s+");
         assert toks.length == 2;
-        wordSet.add(new IString(toks[0]));
+        wordSet.add(new IString(toks[1]));
       }
       reader.close();
     } catch (IOException e) {
