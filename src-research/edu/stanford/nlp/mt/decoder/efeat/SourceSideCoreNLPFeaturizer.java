@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import edu.stanford.nlp.io.IOUtils;
@@ -55,7 +57,7 @@ AlignmentFeaturizer {
   /**
    * The list of sentence annotations
    */
-  private final CoreMap[] sentences;
+  private final Map<Integer,CoreMap> sentences;
 
   /**
    * Sentence-specific data structures
@@ -84,12 +86,11 @@ AlignmentFeaturizer {
       if (sentenceList == null) {
         throw new RuntimeException("Unusable annotation (no sentences) in " + args[0]);
       }
-      int numSentences = sentenceList.size();
-      sentences = new CoreMap[numSentences];
+      sentences = new HashMap<Integer,CoreMap>(sentenceList.size());
       for (CoreMap annotationSet : sentenceList) {
         // 1-indexed
-        int id = annotationSet.get(CoreAnnotations.LineNumberAnnotation.class);
-        sentences[id-1] = annotationSet;
+        int lineId = annotationSet.get(CoreAnnotations.LineNumberAnnotation.class);
+        sentences.put(lineId-1, annotationSet);
       }
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
@@ -129,7 +130,10 @@ AlignmentFeaturizer {
   }
 
   @Override
-  public void reset() {}
+  public void reset() {
+    isHead = null;
+    posTags = null;
+  }
 
   
   /**
@@ -140,7 +144,8 @@ AlignmentFeaturizer {
                          List<ConcreteTranslationOption<IString, String>> options, 
                          Sequence<IString> foreign, Index<String> featureIndex) {
     int length = foreign.size();
-    CoreMap currentSentence = sentences[sourceInputId];
+    CoreMap currentSentence = sentences.get(sourceInputId);
+    if (currentSentence == null) return;
     
     if(length != currentSentence.size()) {
       throw new RuntimeException(String.format(
@@ -170,6 +175,7 @@ AlignmentFeaturizer {
    */  
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
+    if (posTags == null) return null;
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
     PhraseAlignment alignment = f.option.abstractOption.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
