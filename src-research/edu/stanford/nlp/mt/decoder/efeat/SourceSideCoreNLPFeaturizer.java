@@ -146,10 +146,12 @@ AlignmentFeaturizer {
     int length = foreign.size();
     CoreMap currentSentence = sentences.get(sourceInputId);
     if (currentSentence == null) return;
-    
-    if(length != currentSentence.size()) {
+
+    List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
+    if(length != words.size()) {
       throw new RuntimeException(String.format(
-          "Annotation mismatch at source line %d (%d vs. %d)", sourceInputId, length, currentSentence.size()));
+          "Annotation mismatch at source line %d (input: %d vs. annotation: %d)", 
+          sourceInputId, length, words.size()));
     }
     
     isHead = new boolean[length];
@@ -162,7 +164,6 @@ AlignmentFeaturizer {
     }
     
     posTags = new String[length];
-    List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
     for(int i = 0; i < length; ++i) {
       posTags[i] = words.get(i).tag();
     }
