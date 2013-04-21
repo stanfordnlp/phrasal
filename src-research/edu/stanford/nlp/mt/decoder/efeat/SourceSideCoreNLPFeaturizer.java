@@ -3,6 +3,8 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.io.RuntimeIOException;
@@ -126,6 +128,28 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
   public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     return null;
   }
+  private Set<Integer> warnSet = new HashSet<Integer>();
+
+  private static CoreMap findSentence(List<CoreMap> sentences, int id) {
+    return findSentence(sentences, id, 0, sentences.size() - 1);
+  }
+
+  private static CoreMap findSentence(List<CoreMap> sentences, int id, int start, int end) {
+    if (start > end) {
+      return null;
+    }
+    int midpoint = (start + end) / 2;
+    int currentId = sentences.get(midpoint).get(CoreAnnotations.LineNumberAnnotation.class);
+    if (currentId == id) {
+      return sentences.get(midpoint);
+    } else if (start == end) {
+      return null;
+    } else if (currentId < id) {
+      return findSentence(sentences, id, midpoint + 1, end);
+    } else {
+      return findSentence(sentences, id, start, midpoint - 1);
+    }
+  }
 
   /**
    * Return a set of features for the tagged sentence.
@@ -134,22 +158,36 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
     int problemId = f.sourceInputId;
-    if (problemId < 0 || problemId >= sentences.size()) {
-      // TODO: now what do we do?  Return null or blow up?
-      throw new RuntimeException("Given translation problem for sentence that wasn't cached, " + problemId + "; cached " + sentences.size() + " sentences");
-    }
 
-    CoreMap currentSentence = sentences.get(problemId);
+    CoreMap currentSentence = findSentence(sentences, problemId+1);
+
+    if (currentSentence == null) {
+      // TODO: now what do we do?  Return null or blow up?
+      System.err.println("WARNING: Given translation problem for sentence that wasn't cached, " + problemId + "; cached " + sentences.size() + " sentences");
+      return null;
+    }
 
     List<FeatureValue<String>> features = Generics.newArrayList();
     
     List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
+    
+    if (words.size() != f.sourceSentence.size()) {
+       if (!warnSet.contains(problemId)) {
+         System.err.printf("WARNING: tokenization mismatch for %d - Phrasal: <%s> CoreNLP <%s>\n", problemId, f.sourceSentence, words);
+         warnSet.add(problemId);
+       }
+       return null;
+    }
+    /*
+    */
     PhraseAlignment reverseAlignment = 
           PhraseAlignment.getPhraseAlignment(
              f.option.abstractOption.alignment.s2tStr().replace(" ", ";"));
-    
+
+    if (f.option.abstractOption.target.size() != 0) 
     for (int i : f.option.sourceCoverage) {
        int phraseI = i - f.sourcePosition;
+//       System.err.printf("phraseI: %d i: %d f.sourcePosition: %d\n", phraseI, i, f.sourcePosition); 
        int phraseJs[] = reverseAlignment.t2s(phraseI);
        if (phraseJs == null) {
          // this word is not aligned to anything yet
@@ -159,11 +197,40 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
        for (int phraseJ : phraseJs) {
          int j = f.targetPosition + phraseJ;
          int sourceIndex = i;
-         int targetIndex = j;
 
          String sourceTag = words.get(sourceIndex).tag();
-         String targetWord = f.targetPrefix.get(targetIndex).toString();
-         String feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
+         String feature = "";
+         try {
+         String targetWord = f.option.abstractOption.target.get(phraseJ).toString();
+         feature = TAG_FEATURE_NAME + sourceTag + "-" + targetWord;
+         } catch (Exception e) {
+    System.err.printf("phraseJ: %d\n", phraseJ);
+    System.err.printf("phraseI: %d\n", phraseI);
+    System.err.printf("f.source: %s\n", f.option.abstractOption.source);
+    System.err.printf("f.target: %s\n", f.option.abstractOption.target);
+    System.err.printf("f.option.abstractOption: %s\n",  
+      f.option.abstractOption); 
+    System.err.printf("f.option.sourceCoverage: %s\n", f.option.sourceCoverage); 
+    System.err.printf("alignment: %s\n",  f.option.abstractOption.alignment);
+    System.err.printf("reverseAlignment: %s\n",  reverseAlignment);
+    System.err.printf("t-s\n"); 
+    if (f.option.abstractOption.alignment.t2s != null) {
+    for (int[] row : f.option.abstractOption.alignment.t2s) {
+       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
+    }
+    } 
+  
+     System.err.printf("/t-s\n");
+
+    System.err.printf("t-s reverse\n"); 
+    if (reverseAlignment.t2s != null) {
+    for (int[] row : reverseAlignment.t2s) {
+       System.err.printf("\t%s\n", java.util.Arrays.toString(row));
+    }
+    }
+    System.err.printf("/t-s reverse\n");
+            System.exit(-1); 
+         }
          
          // no attempt to look for repeated features; 
          // the system will find and sum those for us
@@ -172,6 +239,7 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
     }
 
     SemanticGraph basicDependencies = currentSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
+    if (f.option.abstractOption.target.size() != 0) 
     for (SemanticGraphEdge edge : basicDependencies.edgeIterable()) {
       String relation = edge.getRelation().toString();
       int sourceIndex = edge.getSource().index() - 1; // IndexedWords are indexed from 1, not 0
@@ -186,8 +254,8 @@ public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IStrin
 
       int[] targetAlignments = reverseAlignment.t2s(sourceIndex-f.sourcePosition);
       for (int j = 0; j < targetAlignments.length; ++j) {
-        int targetIndex = targetAlignments[j];
-        String targetWord = f.targetPrefix.get(targetIndex).toString();
+        int phraseJ = targetAlignments[j];
+        String targetWord = f.option.abstractOption.target.get(phraseJ).toString();
         String feature = DEP_FEATURE_NAME + relation + "-" + targetWord;
         features.add(new FeatureValue<String>(feature, 1.0));
       }

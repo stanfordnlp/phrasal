@@ -26,8 +26,10 @@ else
 	model=kenlm:${model_path}/german.hmm.recaser.bin
 fi
 
+HOST=`hostname -s`
 JVM_OPTS="-server -Xmx2g -Xms2g -XX:+UseParallelGC"
 JNI_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOST}:/scr/nlp/data/gale3/SRILM-JNI/${HOST}"
 
-java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile 2>/dev/null
+java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile 
+# 2>/dev/null
 
