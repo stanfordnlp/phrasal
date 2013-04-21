@@ -160,7 +160,11 @@ AlignmentFeaturizer {
     SemanticGraph basicDependencies = currentSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
     for (SemanticGraphEdge edge : basicDependencies.edgeIterable()) {
       IndexedWord head = edge.getGovernor();
-      isHead[head.index()] = true;
+      int idx = head.index();
+      if (idx >= 0 && idx < isHead.length) {
+        // Filter out the root
+        isHead[idx] = true;
+      }
     }
     
     posTags = new String[length];
