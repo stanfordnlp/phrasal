@@ -53,7 +53,7 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
  */
 public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IString, String>, 
 AlignmentFeaturizer {
-   
+
   /**
    * The list of sentence annotations
    */
@@ -64,10 +64,10 @@ AlignmentFeaturizer {
    */
   private boolean[] isHead;
   private String[] posTags;
-  
+
   private final boolean addHeadAlignmentFeature;
   private final boolean addContentWordDeletionFeature;
-  
+
   private final Set<IString> targetFunctionWordList; 
   /**
    * All tag features will start with this prefix
@@ -78,7 +78,7 @@ AlignmentFeaturizer {
     if (args.length < 3) {
       throw new IllegalArgumentException("Required arguments: serialized Annotation, target frequency file, top-k count");
     }
-        
+
     // Load CoreNLP annotations
     try {
       Annotation annotation = IOUtils.readObjectFromFile(args[0]);
@@ -97,7 +97,7 @@ AlignmentFeaturizer {
     } catch (IOException e) {
       throw new RuntimeIOException(e);
     }
-    
+
     // Load target frequency annotation
     String targetFrequencyFile = args[1];
     int topK = Integer.parseInt(args[2]);
@@ -135,14 +135,14 @@ AlignmentFeaturizer {
     posTags = null;
   }
 
-  
+
   /**
    * Initialize annotations for a new source input. 
    */
   @Override
   public void initialize(int sourceInputId,
-                         List<ConcreteTranslationOption<IString, String>> options, 
-                         Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteTranslationOption<IString, String>> options, 
+      Sequence<IString> foreign, Index<String> featureIndex) {
     int length = foreign.size();
     CoreMap currentSentence = sentences.get(sourceInputId);
     if (currentSentence == null) return;
@@ -153,7 +153,7 @@ AlignmentFeaturizer {
           "Annotation mismatch at source line %d (input: %d vs. annotation: %d)", 
           sourceInputId, length, words.size()));
     }
-    
+
     isHead = new boolean[length];
     // Sanity check
     Arrays.fill(isHead, false);
@@ -166,7 +166,7 @@ AlignmentFeaturizer {
         isHead[idx] = true;
       }
     }
-    
+
     posTags = new String[length];
     for(int i = 0; i < length; ++i) {
       posTags[i] = words.get(i).tag();
@@ -185,40 +185,42 @@ AlignmentFeaturizer {
     PhraseAlignment alignment = f.option.abstractOption.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
     final int sourcePhraseLength = f.sourcePhrase.size();
-    
+
     List<Set<Integer>> s2tAlignments = new ArrayList<Set<Integer>>(sourcePhraseLength);
     for (int i = 0; i < sourcePhraseLength; ++i) {
       s2tAlignments.add(new HashSet<Integer>());
     }
-    
+
     if (addContentWordDeletionFeature) {
       int numContentDeletions = 0;
       for (int i = 0; i < targetPhraseLength; ++i) {
         int[] sourceIndices = alignment.t2s(i);
         IString targetWord = f.targetPhrase.get(i);
-        for (int j : sourceIndices) {
-          int sourceIndex = f.sourcePosition + j;
-          assert sourceIndex < posTags.length;
-          s2tAlignments.get(j).add(i);
-          ++numContentDeletions;
-          if (targetFunctionWordList.contains(targetWord)) {
-            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".fnalign." + posTags[sourceIndex], 1.0));
-            if (isHead[sourceIndex] && addHeadAlignmentFeature) {
-              featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".headalign." + posTags[sourceIndex], 1.0));  
+        if (sourceIndices != null) {
+          for (int j : sourceIndices) {
+            int sourceIndex = f.sourcePosition + j;
+            assert sourceIndex < posTags.length;
+            s2tAlignments.get(j).add(i);
+            if (targetFunctionWordList.contains(targetWord)) {
+              ++numContentDeletions;
+              featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".fnalign." + posTags[sourceIndex], 1.0));
+              if (isHead[sourceIndex] && addHeadAlignmentFeature) {
+                featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".headalign." + posTags[sourceIndex], 1.0));  
+              }
             }
           }
         }
       }
       featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".fntot", numContentDeletions));
     }
-    
+
     if (addHeadAlignmentFeature) {
       // TODO Implement DCA per Hwa et al. (2002) ACL paper.
     }
-    
+
     return featureList;
   }
-  
+
   /**
    * We care about the features produced by the list of words, so
    * listFeaturize returns results and featurize does not.
