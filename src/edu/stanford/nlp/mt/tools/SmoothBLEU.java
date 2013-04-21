@@ -46,7 +46,7 @@ public class SmoothBLEU {
       Sequence<IString> translation = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       double score = 
-          BLEUMetric.computeLocalSmoothScore(translation, referencesList.get(sourceInputId), BLEUOrder);
+          BLEUMetric.computeLocalSmoothScore(translation, referencesList.get(sourceInputId), BLEUOrder, false);
       System.out.printf("%d\t%.4f%n", sourceInputId, score);
       ++sourceInputId;
     }

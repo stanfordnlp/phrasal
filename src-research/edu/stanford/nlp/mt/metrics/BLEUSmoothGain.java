@@ -38,7 +38,7 @@ public class BLEUSmoothGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
     }
     
     // Scale the score by the min reference length
-    return BLEUMetric.computeLocalSmoothScore(translation, references, order) * minLength;
+    return BLEUMetric.computeLocalSmoothScore(translation, references, order, false) * minLength;
   }
 
   @Override

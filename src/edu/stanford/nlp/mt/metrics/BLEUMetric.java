@@ -81,10 +81,12 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     for (int i = 0; i < strRefs.size(); i++) {
       refs.add(new SimpleSequence<String>(strRefs.get(i).split("\\s+")));
     }
-    return computeLocalSmoothScore(seq, refs, order);
+    return computeLocalSmoothScore(seq, refs, order, false);
   }
 
-  public static <TK> double computeLocalSmoothScore(Sequence<TK> seq, List<Sequence<TK>> refs, int order) {
+  public static <TK> double computeLocalSmoothScore(Sequence<TK> seq, 
+      List<Sequence<TK>> refs, 
+      int order, boolean doNakovExtension) {
     Map<Sequence<TK>, Integer> candidateCounts = Metrics.getNGramCounts(seq,
         order);
     Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(refs, order);
@@ -103,7 +105,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       refLengths[i] = refs.get(i).size();
     }
     int localR = bestMatchLength(refLengths, seq.size());
-
+    if (doNakovExtension) ++localR;
+    
     double localLogBP;
     if (localC < localR) {
       localLogBP = 1 - localR / (1.0 * localC);
@@ -113,7 +116,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     double[] localPrecisions = new double[order];
     for (int i = 0; i < order; i++) {
-      if (i == 0) {
+      if (i == 0 && !doNakovExtension) {
         localPrecisions[i] = (1.0 * localCounts[i])
             / localPossibleMatchCounts[i];
       } else {

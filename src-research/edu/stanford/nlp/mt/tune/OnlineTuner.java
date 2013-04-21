@@ -27,6 +27,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.BLEUOracleCost;
 import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
+import edu.stanford.nlp.mt.metrics.NakovBLEUGain;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
@@ -651,19 +652,20 @@ public class OnlineTuner {
       String lossFunctionStr, String[] lossFunctionOpts) {
     assert lossFunctionStr != null;
 
+    int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
     if (lossFunctionStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU
-      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
       return new BLEUSmoothGain<IString,String>(order);
 
+    } else if (lossFunctionStr.equals("bleu-nakov")) {
+      return new NakovBLEUGain<IString,String>(order);
+      
     } else if (lossFunctionStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
-      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
       return new BLEUOracleCost<IString,String>(order, false);
 
     } else if (lossFunctionStr.equals("bleu-cherry")) {
       // Cherry and Foster (2012)
-      int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
       return new BLEUOracleCost<IString,String>(order, true);
 
     } else {
