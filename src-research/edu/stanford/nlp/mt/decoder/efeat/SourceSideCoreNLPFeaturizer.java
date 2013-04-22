@@ -180,7 +180,7 @@ AlignmentFeaturizer {
    */  
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    if (posTags == null) return null;
+    if (posTags == null || isHead == null) return null;
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
     PhraseAlignment alignment = f.option.abstractOption.alignment;
     final int targetPhraseLength = f.targetPhrase.size();

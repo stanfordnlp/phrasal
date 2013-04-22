@@ -10,6 +10,9 @@ import edu.stanford.nlp.mt.base.Sequence;
  * 
  * http://ttic.uchicago.edu/~kgimpel/papers/gimpel+smith.naacl12.addendum.pdf
  * 
+ * NOTE: This metric returns a pseudo-percentage in the range [0,100.0], i.e.,
+ * 100 * BLEU.
+ * 
  * @author Spence Green
  *
  * @param <TK>
@@ -32,7 +35,7 @@ public class NakovBLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
   @Override
   public double score(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {
-    return BLEUMetric.computeLocalSmoothScore(translation, references, order, true);
+    return 100.0 * BLEUMetric.computeLocalSmoothScore(translation, references, order, true);
   }
 
   @Override
