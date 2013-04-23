@@ -68,7 +68,7 @@ public class LexicalReorderingFeaturizer implements
       if (argument.startsWith("classes")) {
         String[] toks = argument.trim().split(":");
         assert toks.length == 2;
-        String[] typeStrings = toks[1].split(",");
+        String[] typeStrings = toks[1].split("-");
         discriminativeSet = new ArrayList<LexicalReorderingTable.ReorderingTypes>();
         for (String type : typeStrings) {
           discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
