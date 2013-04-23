@@ -69,12 +69,11 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
   
   // Data structures for content word deletion features
   protected final Set<IString> targetFunctionWordList; 
-  protected static final Set<String> sourceFunctionPOSTags = new HashSet<String>(4);
+  protected static final Set<String> sourceFunctionPOSTags;
   static {
-    sourceFunctionPOSTags.add("IN");
-    sourceFunctionPOSTags.add("DT");
-    sourceFunctionPOSTags.add("RP");
-    sourceFunctionPOSTags.add("PUNC");
+    // POS tags to ignore with the content word deletion feature
+    String[] tags = {"IN","DT","RP","CC",":",",","MD","PDT","TO","``","''"};
+    sourceFunctionPOSTags = new HashSet<String>(Arrays.asList(tags));
   }
   
   public SourceSideCoreNLPFeaturizer(String ... args) {
