@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,49 +30,53 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 
 /**
  * Adds features to the MT system based on various data calculated by
- * CoreNLP.  
+ * CoreNLP.
  * <br>
- * Just like the SourceSideTaggerFeaturizer, it adds combination of
- * source side POS tags and the target side words.  For example, dog
- * in English is tagged as NN, and in Chinese dog is 狗, so the
- * resulting feature would be TAGGER-NN-狗.
- * <br>
- * Furthermore, this featurizer adds dependency features over the
- * basic dependencies.  Each head word is mapped to the word that it
- * is translated to, if that word is part of the hypothesis, and the
- * feature DEP-reln-targetword is added.
+ * CoreNLP features that extract features beyond basic annotation lookups 
+ * should inherit from this featurizer.
  *
  * @author John Bauer
  * @author Spence Green
  * 
  */
 public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IString, String>, 
-AlignmentFeaturizer {
+AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
+
+  public static final String FEATURE_PREFIX = "CoreNLP:";
+
+  // The list of raw English CoreNLP annotations
+  protected final Map<Integer,CoreMap> sentences;
 
   /**
-   * The list of sentence annotations
+   * Sentence-specific data structures for faster lookup
    */
-  private final Map<Integer,CoreMap> sentences;
-
-  /**
-   * Sentence-specific data structures
-   */
-  private boolean[] isHead;
-  private String[] posTags;
-
+  protected boolean[] isHead;
+  protected String[] posTags;
+  
+  // src-head word -> target word
   private final boolean addHeadAlignmentFeature;
+  
+  // src word -> target-content word
   private final boolean addContentWordDeletionFeature;
-
-  private final Set<IString> targetFunctionWordList; 
-  /**
-   * All tag features will start with this prefix
-   */
-  public static final String FEATURE_PREFIX = "SRC";
-
+  
+  // src-tag -> target word
+  private final boolean addTagAlignmentFeature;
+  
+  // Data structures for content word deletion features
+  protected final Set<IString> targetFunctionWordList; 
+  protected static final Set<String> sourceFunctionPOSTags = new HashSet<String>(4);
+  static {
+    sourceFunctionPOSTags.add("IN");
+    sourceFunctionPOSTags.add("DT");
+    sourceFunctionPOSTags.add("RP");
+    sourceFunctionPOSTags.add("PUNC");
+  }
+  
   public SourceSideCoreNLPFeaturizer(String ... args) {
     if (args.length < 3) {
       throw new IllegalArgumentException("Required arguments: serialized Annotation, target frequency file, top-k count");
@@ -101,11 +104,19 @@ AlignmentFeaturizer {
     // Load target frequency annotation
     String targetFrequencyFile = args[1];
     int topK = Integer.parseInt(args[2]);
+    targetFunctionWordList = loadList(targetFrequencyFile, topK);
+    
+    // Enable features
     addContentWordDeletionFeature = args.length > 3 ? Boolean.parseBoolean(args[3]) : true;
     addHeadAlignmentFeature = args.length > 4 ? Boolean.parseBoolean(args[4]) : false;
-    targetFunctionWordList = loadList(targetFrequencyFile, topK);
+    addTagAlignmentFeature = args.length > 5 ? Boolean.parseBoolean(args[5]) : false;
   }
 
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
+  
   /**
    * Load the target word frequency counts for content word deletion.
    * 
@@ -143,8 +154,8 @@ AlignmentFeaturizer {
   public void initialize(int sourceInputId,
       List<ConcreteTranslationOption<IString, String>> options, 
       Sequence<IString> foreign, Index<String> featureIndex) {
-    int length = foreign.size();
-    CoreMap currentSentence = sentences.get(sourceInputId);
+    final int length = foreign.size();
+    final CoreMap currentSentence = sentences.get(sourceInputId);
     if (currentSentence == null) return;
 
     List<CoreLabel> words = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
@@ -180,42 +191,44 @@ AlignmentFeaturizer {
    */  
   @Override
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
-    if (posTags == null || isHead == null) return null;
+    if (posTags == null || isHead == null) return null;    
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
     PhraseAlignment alignment = f.option.abstractOption.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
-    final int sourcePhraseLength = f.sourcePhrase.size();
 
-    List<Set<Integer>> s2tAlignments = new ArrayList<Set<Integer>>(sourcePhraseLength);
-    for (int i = 0; i < sourcePhraseLength; ++i) {
-      s2tAlignments.add(new HashSet<Integer>());
-    }
+    int numContentDeletions = 0;
+    for (int i = 0; i < targetPhraseLength; ++i) {
+      // Get tgt -> src alignments
+      int[] sourceIndices = alignment.t2s(i);
+      IString targetWord = f.targetPhrase.get(i);
+      if (sourceIndices != null) {
+        for (int j : sourceIndices) {
+          final int sourceIndex = f.sourcePosition + j;
+          assert sourceIndex < posTags.length : String.format("%d vs. %d", sourceIndex, posTags.length);
 
-    if (addContentWordDeletionFeature) {
-      int numContentDeletions = 0;
-      for (int i = 0; i < targetPhraseLength; ++i) {
-        int[] sourceIndices = alignment.t2s(i);
-        IString targetWord = f.targetPhrase.get(i);
-        if (sourceIndices != null) {
-          for (int j : sourceIndices) {
-            int sourceIndex = f.sourcePosition + j;
-            assert sourceIndex < posTags.length;
-            s2tAlignments.get(j).add(i);
-            if (targetFunctionWordList.contains(targetWord)) {
-              ++numContentDeletions;
-              featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".fnalign." + posTags[sourceIndex], 1.0));
-              if (isHead[sourceIndex] && addHeadAlignmentFeature) {
-                featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".headalign." + posTags[sourceIndex], 1.0));  
-              }
-            }
+          if (addTagAlignmentFeature) {
+            String sourceTag = posTags[sourceIndex];
+            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "srctag:" + sourceTag + ">" + targetWord, 1.0));
+          }
+
+          String sourceTag = posTags[sourceIndex];
+          if (addContentWordDeletionFeature &&
+              ! sourceFunctionPOSTags.contains(sourceTag) &&
+              targetFunctionWordList.contains(targetWord)) {
+            ++numContentDeletions;
+            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:" + sourceTag, 1.0));
+          }
+          
+          if (addHeadAlignmentFeature && isHead[sourceIndex]) {
+            String sourceWord = f.sourceSentence.get(sourceIndex).toString();
+            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "head:" + sourceWord + ">" + targetWord, 1.0));
           }
         }
       }
-      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ".fntot", numContentDeletions));
     }
 
-    if (addHeadAlignmentFeature) {
-      // TODO Implement DCA per Hwa et al. (2002) ACL paper.
+    if (addContentWordDeletionFeature) {
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:all", numContentDeletions));
     }
 
     return featureList;
