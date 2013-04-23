@@ -19,11 +19,12 @@ import edu.stanford.nlp.util.Index;
 public class LexicalReorderingFeaturizer implements
     MSDFeaturizer<IString, String> {
 
+  public static final String DISCRIMINATIVE_PREFIX = "Disc";
   static final String FEATURE_PREFIX = "LexR:";
   public final String[] featureTags;
   public final LexicalReorderingTable mlrt;
   final boolean DETAILED_DEBUG = false;
-  final LexicalReorderingTable.ReorderingTypes[] discriminativeSet;
+  private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
   public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
       ARPALanguageModel.START_TOKEN);
   final boolean useAlignmentConstellations;
@@ -41,7 +42,7 @@ public class LexicalReorderingFeaturizer implements
   
   public LexicalReorderingFeaturizer(double featureValue) {
     // by default include everything
-    discriminativeSet = LexicalReorderingTable.ReorderingTypes.values();
+    discriminativeSet = new ArrayList<LexicalReorderingTable.ReorderingTypes>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     mlrt = null;
     featureTags = null;
     useAlignmentConstellations = false;
@@ -52,13 +53,26 @@ public class LexicalReorderingFeaturizer implements
    * Discriminative lexical reordering - using selected reordering types
    * 
    */
-  public LexicalReorderingFeaturizer(String... strTypes) {
-    discriminativeSet = LexicalReorderingTable.ReorderingTypes.values();
+  public LexicalReorderingFeaturizer(String... args) {
+    discriminativeSet = new ArrayList<LexicalReorderingTable.ReorderingTypes>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     boolean useAlignmentConstellations = false;
-    for (String strType : strTypes) {
-      if (strType.equals("conditionOnConstellations")) {
+    for (String argument : args) {
+      
+      // Condition the classes on constellations
+      if (argument.equals("conditionOnConstellations")) {
         useAlignmentConstellations = true;
-        System.err.printf("using constillations\n");
+        System.err.printf("using constellations\n");
+      }
+      
+      // Specify the re-ordering classes
+      if (argument.startsWith("classes")) {
+        String[] toks = argument.trim().split(":");
+        assert toks.length == 2;
+        String[] typeStrings = toks[1].split(",");
+        discriminativeSet = new ArrayList<LexicalReorderingTable.ReorderingTypes>();
+        for (String type : typeStrings) {
+          discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
+        }
       }
     }
     this.useAlignmentConstellations = useAlignmentConstellations;
@@ -109,7 +123,7 @@ public class LexicalReorderingFeaturizer implements
                 .toIString() : INITIAL_PHRASE.get(0));
             condRep = priorAlignConst.toString();
           }
-          values.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + mrt + ":"
+          values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + condRep, discriminativeFeatureValue));
         } else {
           String condRep; // = null;
@@ -119,7 +133,7 @@ public class LexicalReorderingFeaturizer implements
           } else {
             condRep = f.option.abstractOption.alignment.toString();
           }
-          values.add(new FeatureValue<String>(FEATURE_PREFIX + ":" + mrt + ":"
+          values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + condRep, discriminativeFeatureValue));
         }
       }
