@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,11 +59,14 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
   protected boolean[] isHead;
   protected String[] posTags;
   
-  // src-head word -> target word
-  private final boolean addHeadAlignmentFeature;
+  // src-head word -> target-function word
+  private final boolean addHeadDeletionFeature;
   
-  // src word -> target-content word
+  // src word -> target-function word
   private final boolean addContentWordDeletionFeature;
+  
+  // Source POS span | last POS span
+  private final boolean addPOSReorderingFeature;
   
   // src-tag -> target word
   private final boolean addTagAlignmentFeature;
@@ -72,9 +76,13 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
   protected static final Set<String> sourceFunctionPOSTags;
   static {
     // PTB POS tags to ignore with the content word deletion feature
-    String[] tags = {"IN","DT","RP","CC",":",",","MD","PDT","TO","``","''",".","$"};
+    String[] tags = {"IN","DT","RP","CC",":",",","MD","PDT","TO","``","''",".","$","EX"};
     sourceFunctionPOSTags = new HashSet<String>(Arrays.asList(tags));
   }
+  
+  // POS reordering feature
+  private static final String START_POS = "<S>";
+  private static final String END_POS = "</S>";
   
   public SourceSideCoreNLPFeaturizer(String ... args) {
     if (args.length < 3) {
@@ -107,8 +115,9 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
     
     // Enable features
     addContentWordDeletionFeature = args.length > 3 ? Boolean.parseBoolean(args[3]) : true;
-    addHeadAlignmentFeature = args.length > 4 ? Boolean.parseBoolean(args[4]) : false;
-    addTagAlignmentFeature = args.length > 5 ? Boolean.parseBoolean(args[5]) : false;
+    addHeadDeletionFeature = args.length > 4 ? Boolean.parseBoolean(args[4]) : false;
+    addPOSReorderingFeature = args.length > 5 ? Boolean.parseBoolean(args[5]) : false;
+    addTagAlignmentFeature = args.length > 6 ? Boolean.parseBoolean(args[6]) : false;
   }
 
   @Override
@@ -183,7 +192,6 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
     }
   }
 
-
   /**
    * Return a set of features for the tagged sentence.
    * Each feature will be of the form TAGGER-sourcetag-targetword
@@ -196,7 +204,12 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
     final int targetPhraseLength = f.targetPhrase.size();
     boolean[] srcIsAligned = new boolean[f.sourcePhrase.size()];
     
+    if (addPOSReorderingFeature) {
+      featureList.addAll(computePOSReorderingFeatures(f));
+    }
+    
     int numContentDeletions = 0;
+    int numHeadDeletions = 0;
     for (int i = 0; i < targetPhraseLength; ++i) {
       // Get tgt -> src alignments
       int[] sourceIndices = alignment.t2s(i);
@@ -214,37 +227,79 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
           }
 
           String sourceTag = posTags[sourceIndex];
-          if (addContentWordDeletionFeature &&
-              ! sourceFunctionPOSTags.contains(sourceTag) &&
+          if (! sourceFunctionPOSTags.contains(sourceTag) &&
               targetFunctionWordList.contains(targetWord)) {
             ++numContentDeletions;
-            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:" + sourceTag, 1.0));
-          }
-          
-          if (addHeadAlignmentFeature && isHead[sourceIndex]) {
-            String sourceWord = f.sourceSentence.get(sourceIndex).toString();
-            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "head:" + sourceWord + ">" + targetWord, 1.0));
-          }
+            if (isHead[sourceIndex]) ++numHeadDeletions;
+            if (addContentWordDeletionFeature) {
+              featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:" + sourceTag, 1.0));
+            }
+          }          
         }
       }
     }
 
+    // Add unaligned source words
+    for (int i = 0; i < srcIsAligned.length; ++i) {
+      if ( ! srcIsAligned[i]) {
+        final int sourceIndex = f.sourcePosition + i;
+        String sourceTag = posTags[sourceIndex];
+        if ( ! sourceFunctionPOSTags.contains(sourceTag)) {
+          if (isHead[sourceIndex]) ++numHeadDeletions;
+          ++numContentDeletions;
+          if (addContentWordDeletionFeature) {
+            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:" + sourceTag, 1.0));
+          }
+        }
+      }
+    }
+    
     if (addContentWordDeletionFeature) {
-      // Add unaligned source words
-      for (int i = 0; i < srcIsAligned.length; ++i) {
-        if ( ! srcIsAligned[i]) {
-          final int sourceIndex = f.sourcePosition + i;
-          String sourceTag = posTags[sourceIndex];
-          if ( ! sourceFunctionPOSTags.contains(sourceTag)) {
-            ++numContentDeletions;
-            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:" + sourceTag, 1.0));
-          }
-        }
-      }
-      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:all", numContentDeletions));
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:content", numContentDeletions));
     }
-
+    
+    if (addHeadDeletionFeature) {
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:head", numHeadDeletions));
+    }
+    
     return featureList;
+  }
+
+  private List<FeatureValue<String>> computePOSReorderingFeatures(
+      Featurizable<IString, String> f) {
+    List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
+    final int sourcePosition = f.sourcePosition;
+    final int spanLength = f.sourcePhrase.size();
+    final String posSpan = getSpan(sourcePosition, spanLength);
+    
+    // Previous class
+    String lastPos = START_POS;
+    String lastPosSpan = START_POS;
+    if (f.prior != null) {
+      int lastPosIndex = f.prior.sourcePosition + f.prior.sourcePhrase.size() - 1;
+      lastPos = posTags[lastPosIndex];
+      lastPosSpan = getSpan(f.prior.sourcePosition, f.prior.sourcePhrase.size());
+    }
+    featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "prev:" + lastPos + ":" + posSpan, 1.0));      
+    
+    // Next class
+    if (f.done) {
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "next:" + END_POS + ":" + posSpan, 1.0));
+    } 
+    String nextPos = posTags[sourcePosition];
+    featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "next:" + nextPos + ":" + lastPosSpan, 1.0));
+    
+    return featureList;
+  }
+
+  private String getSpan(int sourcePosition, int spanLength) {
+    assert sourcePosition + spanLength - 1 < posTags.length;
+    StringBuilder sb = new StringBuilder();
+    sb.append(posTags[sourcePosition]);
+    for (int i = sourcePosition+1; i < spanLength; ++i) {
+      sb.append("-").append(posTags[i]);
+    }
+    return sb.toString();
   }
 
   /**
