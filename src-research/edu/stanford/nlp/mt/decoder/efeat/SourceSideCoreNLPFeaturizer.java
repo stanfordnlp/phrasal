@@ -194,7 +194,8 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
     PhraseAlignment alignment = f.option.abstractOption.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
-
+    boolean[] srcIsAligned = new boolean[f.sourcePhrase.size()];
+    
     int numContentDeletions = 0;
     for (int i = 0; i < targetPhraseLength; ++i) {
       // Get tgt -> src alignments
@@ -202,6 +203,8 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
       IString targetWord = f.targetPhrase.get(i);
       if (sourceIndices != null) {
         for (int j : sourceIndices) {
+          // Mark aligned source words
+          srcIsAligned[j] = true;
           final int sourceIndex = f.sourcePosition + j;
           assert sourceIndex < posTags.length : String.format("%d vs. %d", sourceIndex, posTags.length);
 
@@ -227,6 +230,17 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
     }
 
     if (addContentWordDeletionFeature) {
+      // Add unaligned source words
+      for (int i = 0; i < srcIsAligned.length; ++i) {
+        if ( ! srcIsAligned[i]) {
+          final int sourceIndex = f.sourcePosition + i;
+          String sourceTag = posTags[sourceIndex];
+          if ( ! sourceFunctionPOSTags.contains(sourceTag)) {
+            ++numContentDeletions;
+            featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:" + sourceTag, 1.0));
+          }
+        }
+      }
       featureList.add(new FeatureValue<String>(FEATURE_PREFIX + "delete:all", numContentDeletions));
     }
 
