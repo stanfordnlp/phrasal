@@ -71,8 +71,8 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
   protected final Set<IString> targetFunctionWordList; 
   protected static final Set<String> sourceFunctionPOSTags;
   static {
-    // POS tags to ignore with the content word deletion feature
-    String[] tags = {"IN","DT","RP","CC",":",",","MD","PDT","TO","``","''","."};
+    // PTB POS tags to ignore with the content word deletion feature
+    String[] tags = {"IN","DT","RP","CC",":",",","MD","PDT","TO","``","''",".","$"};
     sourceFunctionPOSTags = new HashSet<String>(Arrays.asList(tags));
   }
   
