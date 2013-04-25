@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.base;
 
 /**
- * Immutable sequence
+ * Immutable sequence.
  *
- * Contract: - Implementations should provide cheap construction of
+ * Contract: Implementations should provide cheap construction of
  * subsequences.
  *
  * Notes: In the future, Sequence may be made into a subtype of
@@ -52,9 +52,9 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>> {
    */
   public boolean contains(Sequence<T> subsequence);
 
-  public String toString(String delim);
+  public String toString(String delimiter);
 
-  public String toString(String prefix, String delim);
+  public String toString(String prefix, String delimiter);
 
-  public String toString(String prefix, String delimeter, String suffix);
+  public String toString(String prefix, String delimiter, String suffix);
 }
