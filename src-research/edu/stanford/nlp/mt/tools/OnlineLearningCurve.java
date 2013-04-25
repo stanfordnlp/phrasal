@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.tools;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -39,7 +40,7 @@ public class OnlineLearningCurve {
    * @param args
    */
   public static void main(String[] args) {
-    if (args.length < 5) {
+    if (args.length < 4) {
       System.err.printf("Usage: java %s ini_file input_file ref_csv_list wts [wts]%n", 
           OnlineLearningCurve.class.getName());
       System.exit(-1);
@@ -59,12 +60,14 @@ public class OnlineLearningCurve {
     System.err.println("Loading Phrasal...");
     Phrasal p = null;
     try {
-      p = Phrasal.loadDecoder(iniFile);
+      Map<String, List<String>> config = Phrasal.readConfig(iniFile);
+      // Don't write an nbest list
+      config.remove(Phrasal.NBEST_LIST_OPT);
+      p = Phrasal.loadDecoder(config);
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(-1);
     }
-    // Don't lock the feature index.
 
     final int numThreads = p.getNumThreads();
     for (String wtsFile : wts) {

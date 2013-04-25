@@ -1291,7 +1291,7 @@ public class Phrasal {
     return loadDecoder(config);
   }
 
-  private static Phrasal loadDecoder(Map<String, List<String>> config) {
+  public static Phrasal loadDecoder(Map<String, List<String>> config) {
     try {
       Phrasal.initStaticMembers(config);
       Phrasal phrasal = new Phrasal(config);
