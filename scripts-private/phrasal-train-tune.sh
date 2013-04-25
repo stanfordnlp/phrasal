@@ -167,12 +167,6 @@ function decode {
 # Evaluate the target output
 #
 function evaluate {
-    if [ $NBEST -gt 1 ]; then
-	cat "$RUNNAME"."$NBEST"best \
-	    | nbest_sort \
-	    | nbest2uniq \
-	    > "$RUNNAME"."$NBEST"best.uniq 2> /dev/null
-    fi
     cat "$RUNNAME".trans | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
 
     # Aggregate results from many decoding runs
