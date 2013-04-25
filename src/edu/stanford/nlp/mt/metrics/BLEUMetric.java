@@ -3,11 +3,13 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.*;
 import java.io.*;
 
+import edu.berkeley.nlp.util.StringUtils;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
  *
@@ -669,45 +671,60 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
   }
 
+  private static String usage() {
+    StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
+    sb.append("Usage: java ").append(BLEUMetric.class.getName()).append(" ref [ref] < candidateTranslations").append(nl);
+    sb.append(nl);
+    sb.append(" Options:").append(nl);
+    sb.append("   -order num      : ngram order (default: 4)").append(nl);
+    sb.append("   -nist           : Apply NIST tokenization (lowercasing + punc splitting").append(nl);
+    sb.append("   -smooth         : Use sentence-level smoothed BLEU").append(nl);
+    return sb.toString();
+  }
+  
+  private static Map<String,Integer> argDefs() {
+    Map<String,Integer> argDefs = new HashMap<String,Integer>();
+    argDefs.put("order", 1);
+    argDefs.put("nist", 0); 
+    argDefs.put("smooth", 0);
+    return argDefs;
+  }
+  
   public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.err
-          .println("Usage:\n\tjava BLEUMetric [-order #] (ref 1) (ref 2) ... (ref n) < candidateTranslations\n");
+    if (args.length < 1) {
+      System.err.print(usage());
       System.exit(-1);
     }
 
-    int BLEUOrder = -1;
-    if (args[0].equals("-order")) {
-      BLEUOrder = Integer.parseInt(args[1]);
-      String[] newArgs = new String[args.length - 2];
-      System.arraycopy(args, 2, newArgs, 0, args.length - 2);
-      args = newArgs;
-    }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
+    Properties options = StringUtils.argsToProperties(args, argDefs());
+    int BLEUOrder = PropertiesUtils.getInt(options, "order", BLEUMetric.DEFAULT_MAX_NGRAM_ORDER);
+    boolean doSmooth = PropertiesUtils.getBool(options, "smooth", false);
+    boolean doNISTTokenization = PropertiesUtils.getBool(options, "nist", false);
+    String[] refs = options.getProperty("").split("\\s+");
+    System.out.printf("Metric: BLEU-%d with %d references%n", BLEUOrder, refs.length);
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs);
 
-    BLEUMetric<IString, String> bleu;
-    if (BLEUOrder != -1) {
-      bleu = new BLEUMetric<IString, String>(referencesList, BLEUOrder,
-          System.getProperty("smoothBLEU") != null);
-    } else {
-      bleu = new BLEUMetric<IString, String>(referencesList,
-          System.getProperty("smoothBLEU") != null);
-    }
+    // For backwards compatibility
+    doSmooth |= System.getProperty("smoothBLEU") != null;
+
+    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(referencesList, BLEUOrder,
+          doSmooth);
     BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
         .getIncrementalMetric();
 
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
-
     for (String line; (line = reader.readLine()) != null; ) {
-      line = NISTTokenizer.tokenize(line).trim();
+      if (doNISTTokenization) {
+        line = NISTTokenizer.tokenize(line).trim();
+      }
       Sequence<IString> translation = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       incMetric.add(tran);
     }
-
     reader.close();
 
     double[] ngramPrecisions = incMetric.ngramPrecisions();
@@ -718,19 +735,18 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
       System.out.printf("%.3f", ngramPrecisions[i] * 100);
     }
-    System.out.printf(" (BP=%.3f, ratio=%.3f %d/%d)\n", incMetric
+    System.out.printf(" (BP=%.3f, ratio=%.3f %d/%d)%n", incMetric
         .brevityPenalty(), ((1.0 * incMetric.candidateLength()) / incMetric
         .effectiveReferenceLength()), incMetric.candidateLength(), incMetric
         .effectiveReferenceLength());
 
-    System.out.printf("\nPrecision Details:\n");
+    System.out.printf("%nPrecision Details:%n");
     int[][] precCounts = incMetric.ngramPrecisionCounts();
     for (int i = 0; i < ngramPrecisions.length; i++) {
-      System.out.printf("\t%d:%d/%d\n", i, precCounts[i][0], precCounts[i][1]);
+      System.out.printf("\t%d:%d/%d%n", i, precCounts[i][0], precCounts[i][1]);
     }
   }
 
-  
   @Override
   public double maxScore() {
     return 1.0;
