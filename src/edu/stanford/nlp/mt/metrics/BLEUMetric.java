@@ -678,7 +678,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     sb.append(nl);
     sb.append(" Options:").append(nl);
     sb.append("   -order num      : ngram order (default: 4)").append(nl);
-    sb.append("   -nist           : Apply NIST tokenization (lowercasing + punc splitting").append(nl);
+    sb.append("   -no-nist        : Disable NIST tokenization (tokenization on by default)").append(nl);
     sb.append("   -smooth         : Use sentence-level smoothed BLEU").append(nl);
     return sb.toString();
   }
@@ -700,7 +700,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     Properties options = StringUtils.argsToProperties(args, argDefs());
     int BLEUOrder = PropertiesUtils.getInt(options, "order", BLEUMetric.DEFAULT_MAX_NGRAM_ORDER);
     boolean doSmooth = PropertiesUtils.getBool(options, "smooth", false);
-    boolean doNISTTokenization = PropertiesUtils.getBool(options, "nist", false);
+    boolean doTokenization = ! PropertiesUtils.getBool(options, "no-nist", false);
     String[] refs = options.getProperty("").split("\\s+");
     System.out.printf("Metric: BLEU-%d with %d references%n", BLEUOrder, refs.length);
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs);
@@ -716,7 +716,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
     for (String line; (line = reader.readLine()) != null; ) {
-      if (doNISTTokenization) {
+      if (doTokenization) {
         line = NISTTokenizer.tokenize(line).trim();
       }
       Sequence<IString> translation = new RawSequence<IString>(
