@@ -12,6 +12,13 @@ fi
 
 infile=$1
 
-cat $infile | de-rules.py | en_detokenizer > $infile.detok
-recase.sh German $infile.detok > $infile.cased
-rm -f $infile.detok
+#TODO: de-compounding
+cat $infile > $infile.decompound
+
+# Truecasing
+recase.sh German $infile.decompound > $infile.cased
+
+# Detokenization
+cat $infile.cased | en_detokenizer > $infile.postproc
+
+rm -f $infile.{cased,decompound}
