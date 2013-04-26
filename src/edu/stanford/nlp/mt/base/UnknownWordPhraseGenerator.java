@@ -5,32 +5,33 @@ import java.util.*;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  * @param <TK>
  */
 public class UnknownWordPhraseGenerator<TK, FV> extends
     AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
-  static public final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
-  static public final String DEFAULT_SCORE_NAMES[] = { "p_i(t|f)" };
-  static public final float SCORE_VALUES[] = { (float) 1.0 };
+
+  public static final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
+  public static final String[] DEFAULT_SCORE_NAMES = { "p_i(t|f)" };
+  public static final float[] SCORE_VALUES = { (float) 1.0 };
   public static final String DEBUG_PROPERTY = "UnknownWordPhraseGeneratorDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
   // do we need to account for "(0) (1)", etc?
-  static public final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
+  public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
       .getPhraseAlignment("I-I");
 
   private final String[] scoreNames;
   private final SequenceFilter<TK> filter;
   final boolean dropUnknownWords;
   private RawSequence<TK> empty = new RawSequence<TK>();
-  
+
   /**
-	 * 
-	 */
+   *
+   */
   public UnknownWordPhraseGenerator(
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       SequenceFilter<TK> filter) {
@@ -41,8 +42,8 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   /**
-	 * 
-	 */
+   *
+   */
   public UnknownWordPhraseGenerator(
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       SequenceFilter<TK> filter, String scoreName) {
@@ -53,8 +54,8 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   /**
-	 * 
-	 */
+   *
+   */
   public UnknownWordPhraseGenerator(
       IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords) {
     super(phraseFeaturizer);
@@ -83,7 +84,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {
       String word = raw.toString();
-     
+
       if (dropUnknownWords && !isNumeric(word) && !isASCII(word)) {
           list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, empty, raw,
           DEFAULT_ALIGNMENT));
@@ -96,14 +97,14 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   // TODO make this more general in the future by matching to unicode pages of the target language
-  private boolean isASCII(String word) { 
-	return word.matches("^\\p{ASCII}*$");  
+  private static boolean isASCII(String word) {
+	return word.matches("\\p{ASCII}*");
   }
-  
-  private boolean isNumeric(String word) {
-	return word.matches("^.*[0-9\\.\\\\/,:-]+[%A-Za-z]*$");  
+
+  private static boolean isNumeric(String word) {
+	return word.matches(".*[0-9\\.\\\\/,:-]+[%A-Za-z]*");
   }
-  
+
   @Override
   public int longestSourcePhrase() {
     return -Integer.MAX_VALUE;
@@ -114,4 +115,5 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
       List<Sequence<TK>> tranList) {
     // no op
   }
+
 }
