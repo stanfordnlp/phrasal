@@ -23,15 +23,17 @@ import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Pair;
 
 /**
- * Action recoverer for building training data for shift-reduce dependency parser
+ * Action recoverer for building training data for shift-reduce dependency parser.
  * Given gold dependencies, it recovers the list of actions.
- * 
+ *
  * @author heeyoung
  */
 public class ActionRecoverer {
 
   private static final IncrementalTagger tagger = new IncrementalTagger();
   private static final Morphology lemmatizer = new Morphology();
+
+  private ActionRecoverer() {} // static class
 
   /** recover the list of actions for constructing s.dependencies
    *  the actions are stored in s.actionTrace */
@@ -95,7 +97,7 @@ public class ActionRecoverer {
 
   public static List<Structure> readTrainingData(String filename, MaxentTagger posTagger) throws IOException{
     List<GrammaticalStructure> gsList =
-      EnglishGrammaticalStructure.readCoNLLXGrammaticStructureCollection(filename);
+      EnglishGrammaticalStructure.readCoNLLXGrammaticalStructureCollection(filename);
     List<Structure> structures = new ArrayList<Structure>();
     for(GrammaticalStructure gs : gsList){
       Structure s = new Structure(gs, tagger, lemmatizer, posTagger);
@@ -106,9 +108,10 @@ public class ActionRecoverer {
   }
 
   public static void main(String[] args) throws IOException{
-    //    String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
-    //String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
-    String filename = "/scr/heeyoung/mt/scr61/parser/debug/phrasal.8.trans.parse.basic.conllx";
-    List<Structure> structures = readTrainingData(filename, null);
+    // String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/tb3-trunk-dev-2011-01-13.conll";
+    // String filename = "/scr/heeyoung/corpus/dependencies/Stanford-11Feb2011/temp.conll";
+    // String filename = "/scr/heeyoung/mt/scr61/parser/debug/phrasal.8.trans.parse.basic.conllx";
+    // List<Structure> structures = readTrainingData(filename, null);
   }
+
 }
