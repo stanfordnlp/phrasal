@@ -6,6 +6,7 @@ import java.io.LineNumberReader;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,7 +57,6 @@ public class LanguageModelTrueCaser implements TrueCaser {
   private Inferer<IString, String> inferer;
 
   public static void main(String args[]) throws Exception {
-    SRILanguageModel.addVocabToIStrings = true;
     if (args.length != 1) {
       System.err
           .println("Usage:\n\tjava ... TrueCaser (language model) < uncased_input > cased_output");
@@ -145,35 +145,28 @@ public class LanguageModelTrueCaser implements TrueCaser {
 class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
 
   static final String NAME = "AllCasePhrGen";
-  Map<String, List<String>> caseMap = new HashMap<String, List<String>>();
 
   public AllCasePhraseGenerator(
       IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer) {
     super(phraseFeaturizer);
-
-    // TODO : caseMap should actually examine the language model(s) directly
-    // rather than using a dump from IStrings.keySet()
-    Set<String> tokens = IString.keySet();
-
-    // construct uncased to cased map
-    for (String token : tokens) {
-      if (!caseMap.containsKey(token.toLowerCase())) {
-        caseMap.put(token.toLowerCase(), new LinkedList<String>());
-      }
-      // add token as is
-      caseMap.get(token.toLowerCase()).add(token);
-
-      // add all lower case version of token
-      caseMap.get(token.toLowerCase()).add(token.toLowerCase());
-
-      // add first letter capitalized version of token
-      String firstLetter = token.substring(0, 1);
-      String rest = token.substring(1, token.length());
-      String capToken = firstLetter.toUpperCase() + rest;
-      caseMap.get(token.toLowerCase()).add(capToken);
-    }
   }
 
+  List<String> caseMapGet(String token) {
+    List<String> casings = new LinkedList<String>();
+    // add token as is
+    casings.add(token);
+
+    // add all lower case version of token
+    casings.add(token.toLowerCase());
+
+    // add first letter capitalized version of token
+    String firstLetter = token.substring(0, 1);
+    String rest = token.substring(1, token.length());
+    String capToken = firstLetter.toUpperCase() + rest;
+    casings.add(capToken);
+    return casings;
+  }
+  
   public String getName() {
     return NAME;
   }
@@ -185,7 +178,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     }
     List<TranslationOption<IString>> list = new LinkedList<TranslationOption<IString>>();
     String token = sequence.get(0).toString().toLowerCase();
-    List<String> casings = caseMap.get(token);
+    List<String> casings = caseMapGet(token);
     if (casings == null) {
       casings = new LinkedList<String>();
       casings.add(sequence.get(0).toString());
