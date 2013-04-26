@@ -686,7 +686,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private static Map<String,Integer> argDefs() {
     Map<String,Integer> argDefs = new HashMap<String,Integer>();
     argDefs.put("order", 1);
-    argDefs.put("nist", 0); 
+    argDefs.put("no-nist", 0); 
     argDefs.put("smooth", 0);
     return argDefs;
   }
