@@ -44,7 +44,7 @@ public class NISTTokenizer {
 
       // language-dependent part (assuming Western languages):
       s = " " + s + " ";
-      s = s.replaceAll("([\\{-\\~\\[-\\` -\"$-\\&\\(-\\+\\:-\\@\\/])", " $1 "); // tokenize
+      s = s.replaceAll("([\\{-\\~\\[-\\` -\\&\\(-\\+\\:-\\@\\/])", " $1 "); // tokenize
                                                                             // punctuation
       s = s.replaceAll("([^0-9])([\\.,])", "$1 $2 "); // tokenize period and
                                                       // comma unless preceded
