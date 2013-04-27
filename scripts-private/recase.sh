@@ -21,9 +21,9 @@ infile=$2
 model_path=/scr/nlp/data/WMT/recasers
 
 if [ $lang == "French" ]; then
-	model=kenlm:${model_path}/french.hmm.recaser.bin
+	model=srilm:${model_path}/french.hmm.recaser.arpa
 else
-	model=kenlm:${model_path}/german.hmm.recaser.bin
+	model=srilm:${model_path}/german.hmm.recaser.arpa
 fi
 
 HOST=`hostname -s`
