@@ -17,6 +17,8 @@ import edu.stanford.nlp.stats.Counter;
  */
 public class ComputeBitextIDF {
 
+  public static final String UNK_TOKEN = "$$UNK$$";
+  
   /**
    * @param args
    */
@@ -52,6 +54,6 @@ public class ComputeBitextIDF {
       double count = documentsPerTerm.getCount(wordType);
       System.out.printf("%s\t%f%n", wordType, Math.log(nDocuments / count));
     }
-    System.out.printf("$$UNK$$\t%f%n", Math.log(nDocuments / 1.0));
+    System.out.printf("%s\t%f%n", UNK_TOKEN, Math.log(nDocuments / 1.0));
   }
 }
