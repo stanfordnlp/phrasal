@@ -16,9 +16,6 @@ public class FeatureValues {
 
   /**
    * Return true of the feature is cacheable and false otherwise.
-   * 
-   * @param feature
-   * @return
    */
   public static <T> boolean isCacheable(FeatureValue<T> feature) {
     return feature instanceof CacheableFeatureValue;

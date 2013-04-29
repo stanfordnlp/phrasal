@@ -1074,9 +1074,6 @@ public class Phrasal {
    * Decode an input list according to the current decoder settings. Returns
    * null for inputs that are shorter than <code>minSentenceSize</code> or
    * longer than <code>maxSentenceSize</code>.
-   *
-   * @param sourceList
-   * @return
    */
   public List<Sequence<IString>> decode(List<Sequence<IString>> sourceList) {
     List<Sequence<IString>> translations =
