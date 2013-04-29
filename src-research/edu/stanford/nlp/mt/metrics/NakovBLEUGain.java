@@ -32,7 +32,15 @@ public class NakovBLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
   @Override
   public double score(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {
-    return BLEUMetric.computeLocalSmoothScore(translation, references, order, true);
+    // Take the min reference length
+    int minLength = Integer.MAX_VALUE;
+    for (Sequence<TK> sentence : references) {
+      if (sentence.size() < minLength) {
+        minLength = sentence.size();
+      }
+    }
+
+    return BLEUMetric.computeLocalSmoothScore(translation, references, order, true) * minLength;
   }
 
   @Override
