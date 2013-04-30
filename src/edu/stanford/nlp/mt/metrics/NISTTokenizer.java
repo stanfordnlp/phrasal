@@ -1,5 +1,9 @@
 package edu.stanford.nlp.mt.metrics;
 
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 /**
  * NIST tokenization according to mtevalv11 specs. Taken from
  * edu.stanford.nlp.mt.reranker.ter.
@@ -68,5 +72,12 @@ public class NISTTokenizer {
     String s = str.replaceAll("[\\.,\\?:;!\"\\(\\)]", "");
     s = s.replaceAll("\\s+", " ");
     return s;
+  } 
+
+  public static void main(String args[]) throws IOException {
+    BufferedReader b = new BufferedReader(new InputStreamReader(System.in));
+    for (String line = b.readLine(); line != null; line = b.readLine()){
+      System.out.println(tokenize(line));
+    } 
   }
 }
