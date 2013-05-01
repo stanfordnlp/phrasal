@@ -39,7 +39,7 @@ for line in suffix_file:
     suffix_dict[line.split()[0]] = line.split()[1]
     
 ## Specific rules
-p_apos = re.compile(r'\s?\\\'', re.U)
+p_apos = re.compile(r'\\\'', re.U)
 
 # General catch-call rule to be applied at the end
 p_all = re.compile(r'(\w) #(\w)', re.U)
