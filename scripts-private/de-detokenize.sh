@@ -12,8 +12,8 @@ fi
 
 infile=$1
 
-#TODO: de-compounding
-cat $infile > $infile.decompound
+# De-compounding
+cat $infile | de-rules.py > $infile.decompound
 
 # Truecasing
 recase.sh German $infile.decompound > $infile.cased
