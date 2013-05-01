@@ -153,8 +153,13 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
 
   List<String> caseMapGet(String token) {
     List<String> casings = new LinkedList<String>();
+    if (token.length() == 0) return casings;
+
     // add token as is
     casings.add(token);
+
+    // add all caps token
+    casings.add(token.toUpperCase());
 
     // add all lower case version of token
     casings.add(token.toLowerCase());
@@ -164,6 +169,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     String rest = token.substring(1, token.length());
     String capToken = firstLetter.toUpperCase() + rest;
     casings.add(capToken);
+    System.err.printf("%s -> %s", token, casing);
     return casings;
   }
   
