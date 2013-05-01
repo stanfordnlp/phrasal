@@ -169,7 +169,6 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     String rest = token.substring(1, token.length());
     String capToken = firstLetter.toUpperCase() + rest;
     casings.add(capToken);
-    System.err.printf("%s -> %s", token, casing);
     return casings;
   }
   
