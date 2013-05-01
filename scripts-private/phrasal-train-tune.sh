@@ -15,7 +15,7 @@ if [ $# -ne 4 ]; then
     echo "  2  Pre-process dev set for OOVs"
     echo "  3  Run tuning"
     echo "  4  Extract phrases from test set"
-    echo "  5  Pre-process dev set for OOVs"
+    echo "  5  Pre-process test set for OOVs"
     echo "  6  Decode test set"
     echo "  7  Output results file"
     echo "  8  Generate a learning curve from an online run"
