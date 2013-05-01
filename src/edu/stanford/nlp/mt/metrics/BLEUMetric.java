@@ -704,7 +704,11 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     boolean doSmooth = PropertiesUtils.getBool(options, "smooth", false);
     boolean doTokenization = ! PropertiesUtils.getBool(options, "no-nist", false);
     boolean doCased = PropertiesUtils.getBool(options, "cased", false);
+    
+    // Setup the metric tokenization scheme. Applies to both the references and
+    // hypotheses
     if (doCased) NISTTokenizer.lowercase(false);
+    NISTTokenizer.normalize(doTokenization);
     
     // Load the references
     String[] refs = options.getProperty("").split("\\s+");
@@ -722,9 +726,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
     for (String line; (line = reader.readLine()) != null; ) {
-      if (doTokenization) {
-        line = NISTTokenizer.tokenize(line).trim();
-      }
+      line = NISTTokenizer.tokenize(line).trim();
       Sequence<IString> translation = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
