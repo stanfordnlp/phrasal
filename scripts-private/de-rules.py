@@ -38,15 +38,17 @@ suffix_dict = {}
 for line in suffix_file:
     suffix_dict[line.split()[0]] = line.split()[1]
     
-## TODO: Specific rules
-# recht #kräftig => rechtskräftig
-
+## Specific rules
+p_apos = re.compile(r'\s?\\\'', re.U)
 
 # General catch-call rule to be applied at the end
 p_all = re.compile(r'(\w) #(\w)', re.U)
 
+
+
 for line in sys.stdin:
     # Apply specific rules
+    line = p_apos.sub('\'',line)
     
     # catch consecutive pieces broken apart by hashes, replace their span with the full word from the compound_dict
     split = line.split()
