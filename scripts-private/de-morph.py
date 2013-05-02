@@ -20,26 +20,27 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 morphy_file = codecs.open('/user/robvoigt/scr/morph/morphydict','r','utf-8')
 morphy_dict = {}
+lemma_dict = {}
 cur = ''
 counted = 0
 
 for l in morphy_file:
-    print l.strip()
     if l.startswith('#'):
         continue
     if l.startswith('<form>'):
-        cur = re.sub(r'<form>(.+?)</form>','\g<1>',l)
+        cur = re.sub(r'<form>(.+?)</form>','\g<1>',l).strip()
         morphy_dict[cur]=set([])
         counted = 0
         continue
     if counted < 6:
         counted += 1
-        if 'wrt' in l and 'kas' in l and 'gen' in l:
-            try:
-                morphy_dict[cur].add(l.split()[2:4]+l.split()[4].split('>')[0])
-            except:
-                print l
-
+        
+        if 'num' in l and 'kas' in l and 'gen' in l:
+            toadd = '_'.join(l.split()[2:5]).split('>')[0]
+            print toadd
+            if toadd != None:
+                morphy_dict[cur].add(toadd)
+            
         
 for key in morphy_dict:
     print key,'\t',morphy_dict[key]
