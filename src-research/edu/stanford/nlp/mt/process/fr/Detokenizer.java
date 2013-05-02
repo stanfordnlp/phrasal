@@ -11,17 +11,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Handles detokenization for french output from
- *  wmt system
- *  
+ * Handles detokenization for French output from WMT system.
+ *
  * Usage:
  *  i) Use the main method to convert an input file to a detokenized output file
  *  -or-
  *  ii) put the following in your java code:
  *       FrenchDetokenizer fd = FrenchDetokenizer.getInstance();
  *       String detokenizedString = fd.detok(inputString)
- *  
- *  
+ *
+ *
  * @author kevinreschke
  *
  */
@@ -29,37 +28,37 @@ public class Detokenizer {
 
   //singleton instance
   private static Detokenizer INSTANCE;
-  
+
   //these patterns compile only once when INSTANCE is first loaded
-  private Pattern quotesPattern = Pattern.compile("\" .*? \"");
-  private Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\)|,|:|;|\\.|\\?|!)(?= )");
-  private Pattern leftPunctuation = Pattern.compile("(^| )\\((?= )");
-  private Pattern leftGrammatical = Pattern.compile("(^| )(l'|n'|d'|j'|s'|t'|c'|qu')(?= )",Pattern.CASE_INSENSITIVE);
-  private Pattern rightGrammatical = Pattern.compile(" -[^ ]+(?= )",Pattern.CASE_INSENSITIVE);
-  
+  private final Pattern quotesPattern = Pattern.compile("\" .*? \"");
+  private final Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\)|,|:|;|\\.|\\?|!)(?= )");
+  private final Pattern leftPunctuation = Pattern.compile("(^| )\\((?= )");
+  private final Pattern leftGrammatical = Pattern.compile("(^| )(l'|n'|d'|j'|s'|t'|c'|qu'|m')(?= )",Pattern.CASE_INSENSITIVE);
+  private final Pattern rightGrammatical = Pattern.compile(" -[^ ]+(?= )",Pattern.CASE_INSENSITIVE);
+
   /** get singleton instance */
-  public static Detokenizer getInstance() {
-    if(INSTANCE == null) {
+  public static synchronized Detokenizer getInstance() {
+    if (INSTANCE == null) {
       INSTANCE = new Detokenizer();
     }
     return INSTANCE;
   }
-  
+
   //private constructor forces callers to use getInstance()
   private Detokenizer() {}
-  
-  /** detokenize input string 
-   *   true-cased and non-true-cased inputs are both acceptable
-   *   output will preserve input casing.
-   * */
+
+  /** Detokenize input string.
+   *  True-cased and non-true-cased inputs are both acceptable.
+   *  Output will preserve input casing.
+   */
   public String detok(String input) {
     return detokImpl(input);
   }
- 
+
   private String detokImpl(String input) {
     //Indexes of spaces that need deleting
-    Set<Integer> toBeDeleted = new HashSet<Integer>(); 
-    
+    Set<Integer> toBeDeleted = new HashSet<Integer>();
+
     toBeDeleted.addAll(handleQuotes(input));
     toBeDeleted.addAll(handlePunctuation(input));
     toBeDeleted.addAll(handleGrammatical(input));
@@ -67,16 +66,16 @@ public class Detokenizer {
     //sort
     List<Integer> sorted = new ArrayList<Integer>(toBeDeleted);
     Collections.sort(sorted);
-    
+
     //delete spaces
     StringBuilder output = new StringBuilder(input);
     for(int i = sorted.size() - 1; i >= 0; i--) {
       output.deleteCharAt(sorted.get(i));
     }
-    
+
     return output.toString().trim();
   }
-  
+
   //double quotes
   // " abc "  ->  "abc"
   // " abc" abc " -> "abc" abc"
@@ -91,16 +90,15 @@ public class Detokenizer {
     Set<Integer> toBeDeleted = new HashSet<Integer>();
 
     Matcher quotesMatcher = quotesPattern.matcher(input);
-    int endIdx = 0; //tracks end of 
     while(quotesMatcher.find()) {
       toBeDeleted.add(quotesMatcher.start() + 1);
-      endIdx = quotesMatcher.end();
+      int endIdx = quotesMatcher.end(); //tracks end of
       toBeDeleted.add(endIdx - 2);
     }
-        
+
     return toBeDeleted;
   }
-    
+
   //punctuation
   //
   //right punctuation:
@@ -121,25 +119,25 @@ public class Detokenizer {
   private Set<Integer> handlePunctuation(String input) {
     //append space for simpler regex
     input = input + " ";
-    
+
     Set<Integer> toBeDeleted = new HashSet<Integer>();
-    
+
     Matcher rightPuncMatcher = rightPunctuation.matcher(input);
     while(rightPuncMatcher.find()) {
       toBeDeleted.add(rightPuncMatcher.start());
     }
-    
+
     Matcher leftPuncMatcher = leftPunctuation.matcher(input);
     while(leftPuncMatcher.find()) {
       toBeDeleted.add(leftPuncMatcher.end());
     }
-    
+
     //remove appended space from remove set
     toBeDeleted.remove(input.length() - 1);
 
     return toBeDeleted;
   }
-  
+
   //a closed class of grammatical detokenizations
   //
   //left grammaticals:
@@ -169,7 +167,7 @@ public class Detokenizer {
   private Set<Integer> handleGrammatical(String input) {
     //append space for simpler regex
     input = input + " ";
-    
+
     Set<Integer> toBeDeleted = new HashSet<Integer>();
 
     Matcher leftGramMatcher = leftGrammatical.matcher(input);
@@ -181,17 +179,17 @@ public class Detokenizer {
     while(rightGramMatcher.find()) {
       toBeDeleted.add(rightGramMatcher.start());
     }
-    
+
     return toBeDeleted;
   }
-  
+
   /**
    * Detokenizes a file of sentences, one sentence per line.
    * Write output to new file, one sentence per line.
-   * 
-   * Usage: java FrenchDetonenizer < infile > outfile
+   *
+   * Usage: java FrenchDetokenizer < infile > outfile
    */
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
     Detokenizer detokenizer = getInstance();
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     for (String line; (line = reader.readLine()) != null;) {
@@ -199,4 +197,5 @@ public class Detokenizer {
       System.out.println(detokenizedLine);
     }
   }
+
 }
