@@ -19,5 +19,5 @@ while (<fh>) {
      $l .= "$word "; 
   }
   $l =~ s/ $//;
- print "$l\n";
+  print "$l\n";
 }
