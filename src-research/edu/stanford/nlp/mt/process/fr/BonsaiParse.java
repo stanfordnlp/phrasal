@@ -8,10 +8,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -141,13 +146,7 @@ public class BonsaiParse {
 		return null;
 	}
 
-	
-	/**
-	 * Note (kevin): We found that participle corrections are not very useful for two reasons:
-	 *  1) In the simple verbal case (past tense or passive), the output is correct already
-	 *  2) In the adjectival case, finding the dependent noun is unreliable, leading to nearly random precision.
-	 * Consequently, we don't use participle corrections.
-	 */
+
 	private List<Correction> getParticipleCorrections() {
 		List<Correction> corrs = new ArrayList<Correction>();
 				
@@ -162,7 +161,9 @@ public class BonsaiParse {
 				//		11  rapport rapport N NC  g=m|n=s|s=c 9 obj _ _
 				//		12  détaillé  détailler V VPP g=m|m=part|n=s|t=past 11  mod _ _
 				//  In this case, participle agrees with noun.
-				noun = getNounModifiedByParticiple(entry);
+				//
+                //Note (kevin) 2012-05-1: this is error prone due to attachment ambiguities, so we leave it out.
+//                noun = getNounModifiedByParticiple(entry);
 								
 				//CASE 2: participle follow etre past tense auxiliary
 				//  In this case, participle agrees with subject
@@ -266,8 +267,19 @@ public class BonsaiParse {
 
 	private static int totalCorrections;
 	private static int totalActualCorrections;
-	private void process(int lineNo, String frenchLine, Writer out) {
+	private void process(int lineNo, String frenchLine, Writer out, String engLine, Alignment alignment, SourceSideCoref ssc) {
 		try {
+			System.err.println("beginning process... lineNo: "+lineNo);
+			//
+			// First correct gendered pronouns
+			//
+			//NOTE (kevin): this is error prone, so we leave it out (2013-05-1)
+			//frenchLine = correctPronounGender(frenchLine, alignment, engLine, ssc);
+			
+			
+			//
+			// Next correct agreement
+			//
 			List<Correction> adjCorrections = getAdjCorrections();
 
 			String [] tokens = frenchLine.split(" ");
@@ -282,24 +294,25 @@ public class BonsaiParse {
 				}
 			}
 
-			//Note (kevin): we found participle corrections to not be useful and with too low precision
-			//		List<Correction> participleCorrections = getParticipleCorrections();
-			//		for(Correction corr : participleCorrections) {
-			//			totalCorrections++;
-			//			if(!corr.alreadyCorrect()) {
-			//				totalActualCorrections++;
-			//
-			//				String correctParticiple = corr.getCorrectedParticipleString();
-			//				tokens[corr.entry.index - 1] = correctParticiple;
-			//			}
-			//		}
+			List<Correction> participleCorrections = getParticipleCorrections();
+			for(Correction corr : participleCorrections) {
+				totalCorrections++;
+				if(!corr.alreadyCorrect()) {
+					totalActualCorrections++;
+
+					String correctParticiple = corr.getCorrectedParticipleString();
+					tokens[corr.entry.index - 1] = correctParticiple;
+				}
+			}
 
 			frenchLine = StringUtils.join(tokens);
 			frenchLine += " "; //add space to maintain original format
 
 		} catch(Exception e) {
 			System.err.println("ERROR: Exception processing.  lineNo="+lineNo+
-					" line="+frenchLine);
+					" line="+frenchLine +
+					" Exception: " + e.getMessage());
+			throw new RuntimeException(e);
 		} finally {
 			try{
 				out.write(frenchLine);
@@ -316,34 +329,196 @@ public class BonsaiParse {
 	
 	
 	/**
+	 * Determine the proper pronoun genders for this parse.
+	 * 
+	 * Handles il/elle and ils/elles
+	 * 
+	 *  This method modifies the parse with the updated pronouns.
+	 *  
+	 *  The matching updated french sentence string is also returned
+	 */
+	private String correctPronounGender(String frenchSent, Alignment alignment, String englishSent, SourceSideCoref ssc) {
+		if(englishSent.isEmpty()) {
+			//skip strange case where there is no source sent
+			return frenchSent;
+		}
+		
+		final Set<String> pronouns = new HashSet<String>();
+		pronouns.add("il");
+		pronouns.add("elle");
+		pronouns.add("ils");
+		pronouns.add("elles");
+		
+		Map<Integer,CorefChain> corefGraph = null;
+		List<String> tokens = Arrays.asList(englishSent.split(" "));
+		
+		//
+		// Get all occurences of il/elle/ils/elles
+		//
+		List<BonsaiEntry> candidates = new ArrayList<BonsaiEntry>();
+		for(BonsaiEntry be : entries) {
+			if(pronouns.contains(be.word)) {
+				candidates.add(be);
+			}
+		}
+
+		if(candidates.isEmpty()) {
+			return frenchSent;
+		}
+		else {
+			//
+			// run english coref once to use later on
+			//
+			corefGraph = ssc.getCorefGraph(englishSent);
+		}
+		
+		
+		for(BonsaiEntry candidate : candidates) {
+			//
+			// find alignment to english
+			//
+			int candidateIdx = candidate.index - 1;  //convert 1-based idx to 0-based
+			Span sourceSpan = alignment.getSourceAlignment(candidateIdx);
+			
+			//
+			// See if coref chain exists with 'it' or 'they' in this span
+			//
+			CorefChain ccMatch = null;
+			int headMatch = -1;
+			ccLoop: for(CorefChain cc : corefGraph.values()) {
+				for(CorefMention cm : cc.getMentionsInTextualOrder()) {
+					int headIndex = cm.headIndex - 1; //convert 1-based to 0based
+					String head = tokens.get(headIndex);
+					if(sourceSpan.inSpan(headIndex) && (head.equals("it") || head.equals("they"))) {
+						ccMatch = cc;
+						headMatch = headIndex;
+						break ccLoop;
+					}
+				}
+			}
+			
+			if(ccMatch == null) continue; //no match, try next candidate
+			
+			//
+			// Now find the heads of each corefering mention
+			//
+			List<Integer> coreferingHeadIdxs = new ArrayList<Integer>(); //0-based index
+			for(CorefMention cm : ccMatch.getMentionsInTextualOrder()) {
+				int headIndex = cm.headIndex - 1; //convert 1-based to 0based
+				if(!sourceSpan.inSpan(headIndex)) { 
+					//don't count coreferents in same span.
+					coreferingHeadIdxs.add(headIndex);
+				}
+			}
+			
+			//
+			// Next, for each of these heads, get the span of the alignment back to the target french
+			//
+			List<Span> coreferingTargetSpans = new ArrayList<Span>();
+			for(int coreferingHeadIdx : coreferingHeadIdxs) {
+				coreferingTargetSpans.add(alignment.getTargetAlignment(coreferingHeadIdx));
+			}
+			
+			//
+			// Now poll the nouns in these spans for gender
+			//
+			LinkedHashSet<Integer> spannedIndices = new LinkedHashSet<Integer>();
+			for(Span span : coreferingTargetSpans) {
+				if(!span.inSpan(candidateIdx) || span.start > candidateIdx) { //don't poll from the original candidate's span or later
+					for(int i = span.start; i < span.end; i++) {
+						spannedIndices.add(i);
+					}
+				}
+			}
+			int fVotes = 0;
+			int mVotes = 0;
+			for(int i : spannedIndices) {
+				BonsaiEntry be = entries.get(i);
+				if(be.isNoun() && be.isFeminine()) {
+					fVotes++;
+				}
+				else if(be.isNoun() && be.isMasculine()) {
+					mVotes++;
+				}
+			}
+			
+			//
+			// now update the pronoun
+			//
+			if(fVotes > mVotes) {
+				//change to feminine
+				if("ils".equals(candidate.word)){ 
+					candidate.word = "elles";
+				}
+				else if("il".equals(candidate.word)) {
+					candidate.word = "elle";
+				}
+			}
+			else if(mVotes > fVotes) {
+				//change to masculing
+				if("elles".equals(candidate.word)){
+					candidate.word = "ils";
+				}
+				if("elle".equals(candidate.word)) {
+					candidate.word = "il";
+				}
+			}
+			
+			//
+			// Make candidate word and french sentence word equivalent
+			//
+			List<String> frenchTokens = Arrays.asList(frenchSent.split(" "));
+			frenchTokens.set(candidateIdx, candidate.word);
+			frenchSent = StringUtils.join(frenchTokens);
+			frenchSent += " ";
+			
+		}
+		
+		return frenchSent;
+	}
+	
+	/**
 	 * This main method handles agreement correction on french output for the
 	 *  WMT2013 fr-en translation task.
+	 * 
+	 * 
 	 * 
 	 * @param args			args[0]	french output path
 	 * 						args[1]	Bonzai parser output path
 	 * 						args[2]	lefff extension lexicon path
-	 * 						args[3] destination path
+	 *                      args[3] english source path
+	 *                      args[4] alignment path
+	 * 						args[5] destination path
 	 * @throws Exception
 	 */
 	public static void main(String args[]) throws Exception {
 		System.err.println("french path:" + args[0]);
-		BufferedReader br = new BufferedReader(new FileReader(args[0]));
+		BufferedReader frenchBR = new BufferedReader(new FileReader(args[0]));
 
-		System.err.println("args[1]: "+args[1]);
+		System.err.println("Bonzai path: "+args[1]);
 		
-		System.err.println("args[3]: "+ args[3]);
-		BufferedWriter bw = new BufferedWriter(new FileWriter(args[3]));
-		
-		System.err.println("args[2]: " + args[2]);
+		System.err.println("lefff path: " + args[2]);
 		LefffLexicon.load(new File(args[2]));
+		
+		System.err.println("english source path: "+ args[3]);
+		BufferedReader engBR = new BufferedReader(new FileReader(args[3]));
+		
+		System.err.println("alignment path: "+args[4]);
+		List<Alignment> alignmentList = Alignment.fromNBestFile(new File(args[4]));
+		
+		System.err.println("destination: "+ args[5]);
+		BufferedWriter bw = new BufferedWriter(new FileWriter(args[5]));
+		
+		SourceSideCoref ssc = new SourceSideCoref();
 		
 		List<String> parseLines = new ArrayList<String>();
 		int parseNo = 0;
 		for(String line : ObjectBank.getLineIterator(args[1])) {
 			if(line.isEmpty() && !parseLines.isEmpty()) {
 				BonsaiParse bp = new BonsaiParse(parseLines);
-				String frenchLine = br.readLine();
-				bp.process(parseNo, frenchLine, bw);
+				String frenchLine = frenchBR.readLine();
+				String engLine = engBR.readLine();
+				bp.process(parseNo, frenchLine, bw, engLine, alignmentList.get(parseNo), ssc);
 				parseLines = new ArrayList<String>();
 				parseNo++;
 			}
@@ -356,7 +531,8 @@ public class BonsaiParse {
 				" / " + totalCorrections);
 		
 		bw.close();
-		br.close();
+		frenchBR.close();
+		engBR.close();
 		System.err.println("[BonsaiParse] Done.");
 	}
 	
@@ -460,5 +636,119 @@ public class BonsaiParse {
 			
 			return correctedWords.iterator().next();
 		}
+	}
+	
+	/**
+	 * The alignment between english source and 
+	 *  french target words.
+	 * 
+	 * @author kevinreschke
+	 *
+	 */
+	private static class Alignment {
+		
+		String alignmentString; //e.g. 0=0 1-2=3 3=4 4=5 5=6
+		
+		private Alignment(String alignmentString) {
+			this.alignmentString = alignmentString.trim();
+		}
+		
+		//Get source alignment span given target index (0-based)
+		private Span getSourceAlignment(int targetIndex) {
+			String[] alignments = alignmentString.split(" ");
+			for(String alignment : alignments) {
+				String[] sourceTargetPair = alignment.split("=");
+				int target = Integer.parseInt(sourceTargetPair[1]);
+				if(target >= targetIndex) {
+					String [] source = sourceTargetPair[0].split("-");
+					int start = Integer.parseInt(source[0]);
+					int end;
+					if(source.length == 1) {
+						end = start+1;
+					}
+					else {
+						end = Integer.parseInt(source[1])+1;
+					}
+					return new Span(start,end);
+				}
+			}
+			return null; //invalid target index
+		}
+		
+		//Get target alignment span given source index (0-based)
+		private Span getTargetAlignment(int sourceIndex) {
+			String[] alignments = alignmentString.split(" ");
+			int targetStart = 0;
+			for(String alignment : alignments) {
+				String[] sourceTargetPair = alignment.split("=");
+				int targetEnd = Integer.parseInt(sourceTargetPair[1]) + 1;
+				String[] source = sourceTargetPair[0].split("-");
+				int sourceStart = Integer.parseInt(source[0]);
+				int sourceEnd;
+				if(source.length == 1) 
+					sourceEnd = sourceStart + 1;
+				else
+					sourceEnd = Integer.parseInt(source[1]) + 1;
+				if((new Span(sourceStart,sourceEnd)).inSpan(sourceIndex)) {
+					Span targetSpan = new Span(targetStart,targetEnd);
+					return targetSpan;
+				}
+				targetStart = targetEnd;
+			}
+			return null; //invalid source index
+		}
+		
+		private static Alignment fromAlignmentFileLine(String line) {
+			String[] fields = line.split("\\|\\|\\|");
+			return new Alignment(fields[fields.length - 1]);
+		}
+		
+		private static List<Alignment> fromNBestFile(File nBest) {
+			List<Alignment> alignments = new ArrayList<Alignment>();
+			
+			int sentNo = 0;
+			
+			for(String line : ObjectBank.getLineIterator(nBest)) {
+				if(line.startsWith(String.valueOf(sentNo))) {  //take first alignment... skip the rest
+					alignments.add(fromAlignmentFileLine(line));
+					sentNo++;
+				}
+			}
+			
+			return alignments;
+		}
+	}
+	
+	//Span
+	// a-b includes a and excludes b
+	private static class Span implements Comparable<Span>{
+		int start;
+		int end;
+		private Span(int start, int end) {this.start=start;this.end=end;}
+		private boolean inSpan(int x) {return x >= start && x < end;}
+		@Override
+		public String toString() {
+			return "Span [start=" + start + ", end=" + end + "]";
+		}
+		
+		//give the sentence subset picket out by this span
+		// Assumes 0-based indexing
+		public String toString(String sent) {
+			String[] s = sent.split(" ");
+			String rtn = "";
+			for(int i = start; i < end; i++) {
+				rtn += s[i];
+			}
+			return rtn.trim();
+		}
+		
+		/** order by start, then by end */
+		@Override
+		public int compareTo(Span that) {
+			int c = this.start - that.start;
+			if(c == 0) c = this.end - that.end;
+			return c;
+		}
+		
 	}
 }
