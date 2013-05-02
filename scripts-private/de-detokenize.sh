@@ -19,6 +19,6 @@ cat $infile | de-rules.py > $infile.decompound
 recase.sh German $infile.decompound > $infile.cased
 
 # Detokenization
-cat $infile.cased | en_detokenizer > $infile.postproc
+cat $infile.cased | en_detokenizer | de-post.py > $infile.postproc
 
 rm -f $infile.{cased,decompound}
