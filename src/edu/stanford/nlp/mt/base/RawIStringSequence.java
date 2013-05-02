@@ -3,12 +3,13 @@ package edu.stanford.nlp.mt.base;
 import edu.stanford.nlp.util.Index;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class RawIStringSequence extends AbstractSequence<IString> {
-  public final int[] elements;
+
+  private final int[] elements;
 
   public RawIStringSequence(int[] elements) {
     this.elements = elements;

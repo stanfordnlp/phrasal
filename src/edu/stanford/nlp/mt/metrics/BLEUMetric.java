@@ -680,6 +680,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     sb.append("   -order num      : ngram order (default: 4)").append(nl);
     sb.append("   -no-nist        : Disable NIST tokenization (tokenization on by default)").append(nl);
     sb.append("   -smooth         : Use sentence-level smoothed BLEU").append(nl);
+    sb.append("   -cased          : Don't lowercase the input").append(nl);
     return sb.toString();
   }
   
@@ -688,6 +689,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     argDefs.put("order", 1);
     argDefs.put("no-nist", 0); 
     argDefs.put("smooth", 0);
+    argDefs.put("cased", 0);
     return argDefs;
   }
   
@@ -701,6 +703,14 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     int BLEUOrder = PropertiesUtils.getInt(options, "order", BLEUMetric.DEFAULT_MAX_NGRAM_ORDER);
     boolean doSmooth = PropertiesUtils.getBool(options, "smooth", false);
     boolean doTokenization = ! PropertiesUtils.getBool(options, "no-nist", false);
+    boolean doCased = PropertiesUtils.getBool(options, "cased", false);
+    
+    // Setup the metric tokenization scheme. Applies to both the references and
+    // hypotheses
+    if (doCased) NISTTokenizer.lowercase(false);
+    NISTTokenizer.normalize(doTokenization);
+    
+    // Load the references
     String[] refs = options.getProperty("").split("\\s+");
     System.out.printf("Metric: BLEU-%d with %d references%n", BLEUOrder, refs.length);
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs);
@@ -716,9 +726,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
     for (String line; (line = reader.readLine()) != null; ) {
-      if (doTokenization) {
-        line = NISTTokenizer.tokenize(line).trim();
-      }
+      line = NISTTokenizer.tokenize(line).trim();
       Sequence<IString> translation = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(

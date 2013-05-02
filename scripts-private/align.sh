@@ -12,9 +12,9 @@ if [ $# -ne 5 ]; then
 fi
 
 # Uncomment the line below to run locally 
-MEM=15g
-#EXEC=echo
-EXEC="nlpsub -m${MEM} -c4"
+MEM=25g
+EXEC=
+#EXEC="nlpsub -m${MEM} -c4"
 
 src_file=$1
 src_lang=$2
@@ -66,7 +66,7 @@ do
     ln -s ../../split."$tgt_name"."$splitnum" split."$tgt_lang"
     cd ../../
     $mkconf $modeldir ${modeldir}/data $src_lang $tgt_lang < $conf_template > ${modeldir}.conf
-    $EXEC $align $MEM ${modeldir}.conf 
+    $EXEC $align $MEM ${modeldir}.conf &
 done
 
 # Don't need to do symmetrization because the Phrasal phrase extractor now does symmetrization on the fly.
