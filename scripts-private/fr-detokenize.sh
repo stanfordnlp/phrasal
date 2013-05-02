@@ -14,5 +14,6 @@ infile=$1
 
 DETOK="java edu.stanford.nlp.mt.process.fr.Detokenizer"
 
-recase.sh French $infile | $DETOK > $infile.postproc
+recase.sh French $infile > $INFILE.cased
+$DETOK < $INFILE.cased > $infile.postproc
 
