@@ -69,6 +69,30 @@ public class BonsaiEntry {
 		return "VPP".equals(longCat);
 	}
 
+	public boolean isFeminine() {
+		return "f".equals(gender);
+	}
+	
+	public boolean isMasculine() {
+		return "m".equals(gender);
+	}
+	
+	public boolean isSingular() {
+		return "s".equals(number);
+	}
+	
+	public boolean isPlural() {
+		return "p".equals(number);
+	}
+	
+	public boolean isSubject() {
+		return "suj".equals(relation);
+	}
+	
+	public boolean isObject() {
+		return "obj".equals(relation);
+	}
+
 	@Override
 	public String toString() {
 		return "BonsaiEntry [index=" + index + ", word=" + word + ", lemma="
