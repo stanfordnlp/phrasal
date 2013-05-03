@@ -224,7 +224,6 @@ public class Detokenizer {
    */
   public static void main(String[] args) throws Exception {
     Detokenizer detokenizer = getInstance();
-    System.exit(0);
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     for (String line; (line = reader.readLine()) != null; ) {
       String detokenizedLine = detokenizer.detok(line.trim());
