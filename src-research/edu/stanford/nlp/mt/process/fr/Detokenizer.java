@@ -39,7 +39,7 @@ public class Detokenizer {
 
   private final Pattern numberWordNumberGlom = Pattern.compile("(?:^| )\\d{1,2}( )[mh]( )\\d{1,2}(?: |$)");
   private final Pattern numberWordGlom = Pattern.compile("(?:^| )\\d{1,3}( )[mh](?: |$)");
-  private final Pattern wordNumberGlom = Pattern.compile("(?:^| )[g]( )\\d{1,3}(?: |$)");
+  private final Pattern wordNumberGlom = Pattern.compile("(?:^| )[gG]( )\\d{1,3}(?: |$)");
 
   /** get singleton instance */
   public static synchronized Detokenizer getInstance() {
@@ -96,9 +96,11 @@ public class Detokenizer {
     Set<Integer> toBeDeleted = new HashSet<Integer>();
 
     Matcher quotesMatcher = quotesPattern.matcher(input);
-    while(quotesMatcher.find()) {
+    int whereFrom = 0;
+    while(quotesMatcher.find(whereFrom)) {
       toBeDeleted.add(quotesMatcher.start(1));
       toBeDeleted.add(quotesMatcher.start(2));
+      whereFrom = quotesMatcher.end(2);
     }
 
     Matcher finalQuotesMatcher = finalQuotePattern.matcher(input);
@@ -215,6 +217,12 @@ public class Detokenizer {
     return toBeDeleted;
   }
 
+  final Pattern apple = Pattern.compile("(?i:ip(od|ad|hone))");
+
+  String fixUp(String input) {
+    return apple.matcher(input).replaceAll("iP$1");
+  }
+
   /**
    * Detokenizes a file of sentences, one sentence per line.
    * Write output to new file, one sentence per line.
@@ -226,6 +234,7 @@ public class Detokenizer {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     for (String line; (line = reader.readLine()) != null; ) {
       String detokenizedLine = detokenizer.detok(line.trim());
+      detokenizedLine = detokenizer.fixUp(detokenizedLine);
       System.out.println(detokenizedLine);
     }
   }

@@ -27,4 +27,10 @@ public class DetokenizerTest extends TestCase {
             detokenizer.detok("Avant d' affronter les Blues mardi soir ( 20 h 45 heures ) ,"));
   }
 
+  public void testApple() {
+    assertEquals("Wrong iPhone",
+            "l'iPhone",
+            detokenizer.fixUp("l'iphone"));
+  }
+
 }
