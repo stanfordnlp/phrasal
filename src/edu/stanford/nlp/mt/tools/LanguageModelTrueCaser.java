@@ -53,6 +53,8 @@ import edu.stanford.nlp.process.TrueCaser;
 public class LanguageModelTrueCaser implements TrueCaser {
 
   private static final int BEAM_SIZE = 50;
+  
+  static final int MAX_ACRONYM_LIMIT = 4;
 
   private Inferer<IString, String> inferer;
 
@@ -159,7 +161,9 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     casings.add(token);
 
     // add all caps token
-    casings.add(token.toUpperCase());
+    if (token.length() <= LanguageModelTrueCaser.MAX_ACRONYM_LIMIT) {
+      casings.add(token.toUpperCase());
+    }
 
     // add all lower case version of token
     casings.add(token.toLowerCase());
