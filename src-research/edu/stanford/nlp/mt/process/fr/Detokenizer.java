@@ -30,11 +30,16 @@ public class Detokenizer {
   private static Detokenizer INSTANCE;
 
   //these patterns compile only once when INSTANCE is first loaded
-  private final Pattern quotesPattern = Pattern.compile("\" .*? \"");
+  private final Pattern quotesPattern = Pattern.compile("(?:^| )\"( ).*? \" ");
+  private final Pattern finalQuotePattern = Pattern.compile(" \" *$");
   private final Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\)|,|:|;|\\.|\\?|!)(?= )");
   private final Pattern leftPunctuation = Pattern.compile("(^| )\\((?= )");
   private final Pattern leftGrammatical = Pattern.compile("(^| )(l'|n'|d'|j'|s'|t'|c'|qu'|m')(?= )",Pattern.CASE_INSENSITIVE);
   private final Pattern rightGrammatical = Pattern.compile(" -[^ ]+(?= )",Pattern.CASE_INSENSITIVE);
+
+  private final Pattern numberWordNumberGlom = Pattern.compile("(?:^| )\\d{1,2}( )[mh]( )\\d{1,2}(?: |$)");
+  private final Pattern numberWordGlom = Pattern.compile("(?:^| )\\d{1,3}( )[mh](?: |$)");
+  private final Pattern wordNumberGlom = Pattern.compile("(?:^| )[g]( )\\d{1,3}(?: |$)");
 
   /** get singleton instance */
   public static synchronized Detokenizer getInstance() {
@@ -62,6 +67,7 @@ public class Detokenizer {
     toBeDeleted.addAll(handleQuotes(input));
     toBeDeleted.addAll(handlePunctuation(input));
     toBeDeleted.addAll(handleGrammatical(input));
+    toBeDeleted.addAll(handleNumberWordGloms(input));
 
     //sort
     List<Integer> sorted = new ArrayList<Integer>(toBeDeleted);
@@ -91,9 +97,14 @@ public class Detokenizer {
 
     Matcher quotesMatcher = quotesPattern.matcher(input);
     while(quotesMatcher.find()) {
-      toBeDeleted.add(quotesMatcher.start() + 1);
+      toBeDeleted.add(quotesMatcher.start(1));
       int endIdx = quotesMatcher.end(); //tracks end of
-      toBeDeleted.add(endIdx - 2);
+      toBeDeleted.add(endIdx - 3);
+    }
+
+    Matcher finalQuotesMatcher = finalQuotePattern.matcher(input);
+    while(finalQuotesMatcher.find()) {
+      toBeDeleted.add(finalQuotesMatcher.start());
     }
 
     return toBeDeleted;
@@ -118,7 +129,7 @@ public class Detokenizer {
   //returns indexes of spaces to be deleted
   private Set<Integer> handlePunctuation(String input) {
     //append space for simpler regex
-    input = input + " ";
+    input = input + ' ';
 
     Set<Integer> toBeDeleted = new HashSet<Integer>();
 
@@ -166,7 +177,7 @@ public class Detokenizer {
   //returns indexes of spaces to be deleted
   private Set<Integer> handleGrammatical(String input) {
     //append space for simpler regex
-    input = input + " ";
+    input = input + ' ';
 
     Set<Integer> toBeDeleted = new HashSet<Integer>();
 
@@ -183,6 +194,28 @@ public class Detokenizer {
     return toBeDeleted;
   }
 
+  private Set<Integer> handleNumberWordGloms(String input) {
+    Set<Integer> toBeDeleted = new HashSet<Integer>();
+
+    Matcher bothMatcher = numberWordNumberGlom.matcher(input);
+    while (bothMatcher.find()) {
+      toBeDeleted.add(bothMatcher.start(1));
+      toBeDeleted.add(bothMatcher.start(2));
+    }
+
+    Matcher leftMatcher = numberWordGlom.matcher(input);
+    while (leftMatcher.find()) {
+      toBeDeleted.add(leftMatcher.start(1));
+    }
+
+    Matcher rightMatcher = wordNumberGlom.matcher(input);
+    while (rightMatcher.find()) {
+      toBeDeleted.add(rightMatcher.start(1));
+    }
+
+    return toBeDeleted;
+  }
+
   /**
    * Detokenizes a file of sentences, one sentence per line.
    * Write output to new file, one sentence per line.
@@ -191,8 +224,9 @@ public class Detokenizer {
    */
   public static void main(String[] args) throws Exception {
     Detokenizer detokenizer = getInstance();
+    System.exit(0);
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    for (String line; (line = reader.readLine()) != null;) {
+    for (String line; (line = reader.readLine()) != null; ) {
       String detokenizedLine = detokenizer.detok(line.trim());
       System.out.println(detokenizedLine);
     }
