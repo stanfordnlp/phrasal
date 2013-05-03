@@ -16,6 +16,9 @@ public class DetokenizerTest extends TestCase {
     assertEquals("Wrong quote detokenization",
             "\"Nous devons vivre avec eux.\" Se débarrasser d'eux n'est pas une option.\"",
             detokenizer.detok("\" Nous devons vivre avec eux . \" Se débarrasser d' eux n' est pas une option . \" "));
+    assertEquals("Wrong quote detokenization",
+            "\"J'aime jouer avec lui.\"",
+            detokenizer.detok("\" J' aime jouer avec lui . \""));
   }
 
   public void testTime() {

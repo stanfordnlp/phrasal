@@ -30,7 +30,7 @@ public class Detokenizer {
   private static Detokenizer INSTANCE;
 
   //these patterns compile only once when INSTANCE is first loaded
-  private final Pattern quotesPattern = Pattern.compile("(?:^| )\"( ).*? \" ");
+  private final Pattern quotesPattern = Pattern.compile("(?:^| )\"( ).*?( )\"(?: |$)");
   private final Pattern finalQuotePattern = Pattern.compile(" \" *$");
   private final Pattern rightPunctuation = Pattern.compile("(^| )(%|\\.\\.\\.|\\)|,|:|;|\\.|\\?|!)(?= )");
   private final Pattern leftPunctuation = Pattern.compile("(^| )\\((?= )");
@@ -98,8 +98,7 @@ public class Detokenizer {
     Matcher quotesMatcher = quotesPattern.matcher(input);
     while(quotesMatcher.find()) {
       toBeDeleted.add(quotesMatcher.start(1));
-      int endIdx = quotesMatcher.end(); //tracks end of
-      toBeDeleted.add(endIdx - 3);
+      toBeDeleted.add(quotesMatcher.start(2));
     }
 
     Matcher finalQuotesMatcher = finalQuotePattern.matcher(input);
