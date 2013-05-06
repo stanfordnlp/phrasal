@@ -22,23 +22,9 @@ public class LefffLexicon {
 	
 	public static void load(File lexFile) {
 		for(String line : ObjectBank.getLineIterator(lexFile,"ISO-8859-1")) {
-			
-		
-		
-			System.err.println("Lefff line (orig): "+line);
-			
 			if(!line.isEmpty() && !line.startsWith("_")) {
-				
-				//lefff lexicon is in ISO convert to UTF-8
 				try {
-//					byte[] latin1 = line.getBytes();
-//					System.err.println("lefff line (ISO-8859-1): "+(new String(latin1,"ISO-8859-1")));
-//					byte[] utf8 = new String(latin1, "ISO-8859-1").getBytes("UTF-8");
-//					line = new String(utf8,"UTF-8");
-//					System.err.println("lefff line (utf8): "+line);
-					
 					line = new String(line.getBytes(),"UTF-8");
-					System.err.println("lefff line (utf8): "+line);
 				} catch (UnsupportedEncodingException e) {
 					throw new RuntimeException(e);
 				}

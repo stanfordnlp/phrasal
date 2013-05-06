@@ -30,6 +30,7 @@ import edu.stanford.nlp.util.StringUtils;
 public class BonsaiParse {
 
 	private List<BonsaiEntry> entries;
+	public boolean isEmpty() { return entries.isEmpty(); }
 	
 	/**
 	 * Generate parse from list of entry strings.  The list come from a block of lines
@@ -273,8 +274,7 @@ public class BonsaiParse {
 			//
 			// First correct gendered pronouns
 			//
-			//NOTE (kevin): this is error prone, so we leave it out (2013-05-1)
-			//frenchLine = correctPronounGender(frenchLine, alignment, engLine, ssc);
+			frenchLine = correctPronounGender(frenchLine, alignment, engLine, ssc);
 			
 			
 			//
@@ -514,11 +514,19 @@ public class BonsaiParse {
 		List<String> parseLines = new ArrayList<String>();
 		int parseNo = 0;
 		for(String line : ObjectBank.getLineIterator(args[1])) {
-			if(line.isEmpty() && !parseLines.isEmpty()) {
+			if(line.isEmpty()) { //there is an empty line marking the end of each parse.  A missing parse is a single empty line.
 				BonsaiParse bp = new BonsaiParse(parseLines);
 				String frenchLine = frenchBR.readLine();
 				String engLine = engBR.readLine();
-				bp.process(parseNo, frenchLine, bw, engLine, alignmentList.get(parseNo), ssc);
+				if(bp.isEmpty()) {
+					//empty parse caused by parsing error
+					// no changes to french sentence
+					bw.write(frenchLine);
+					bw.write("\n");
+				}
+				else {
+					bp.process(parseNo, frenchLine, bw, engLine, alignmentList.get(parseNo), ssc);
+				}
 				parseLines = new ArrayList<String>();
 				parseNo++;
 			}
