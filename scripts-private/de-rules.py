@@ -41,6 +41,7 @@ for line in suffix_file:
 ## Specific rules
 p_apos = re.compile(r'\\\'', re.U)
 
+
 # General catch-call rule to be applied at the end
 p_all = re.compile(r'(\w) #(\w)', re.U)
 
@@ -49,7 +50,8 @@ p_all = re.compile(r'(\w) #(\w)', re.U)
 for line in sys.stdin:
     # Apply specific rules
     line = p_apos.sub('\'',line)
-    
+
+
     # catch consecutive pieces broken apart by hashes, replace their span with the full word from the compound_dict
     split = line.split()
     pieces = []
@@ -63,12 +65,6 @@ for line in sys.stdin:
             span += word
         if len(pieces) != 0 and (i == len(split)-1 or not split[i+1].startswith('#')): # reached the end of a set of pieces
             to_replace = re.compile(span, re.U)
-            
-            '''
-            if False:
-                pass
-            '''
-            
             if ','.join(pieces) in compound_dict: # if its in the full dict just use that word
                 line = to_replace.sub(compound_dict[','.join(pieces)], line)
 

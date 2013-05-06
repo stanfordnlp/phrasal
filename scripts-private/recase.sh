@@ -20,7 +20,9 @@ infile=$2
 
 model_path=/scr/nlp/data/WMT/recasers
 
-if [ $lang == "French" ]; then
+if [ $RECASE_MODEL ]; then
+  model=srilm:$RECASE_MODEL
+elif [ $lang == "French" ]; then
 	model=srilm:${model_path}/french.hmm.recaser.arpa
 else
 	model=srilm:${model_path}/german.hmm.recaser.arpa
