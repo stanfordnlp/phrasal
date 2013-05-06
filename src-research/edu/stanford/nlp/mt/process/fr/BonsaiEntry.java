@@ -15,91 +15,91 @@ package edu.stanford.nlp.mt.process.fr;
  */
 public class BonsaiEntry {
 
-	int index; //1-based token index  
-	String word;
-	String lemma;
-	String shortCat; //E.g. N
-	String longCat; //E.g.  NPP
-	String gender; // f | m 
-	String number; // s | p
-	String person; // 1 | 2 | 3
+  int index; //1-based token index  
+  String word;
+  String lemma;
+  String shortCat; //E.g. N
+  String longCat; //E.g.  NPP
+  String gender; // f | m 
+  String number; // s | p
+  String person; // 1 | 2 | 3
     int govIndex; //1-based token index (0 is special root idx)
     String relation; //E.g., obj
     
-	public static BonsaiEntry fromLine(String line) {
-		BonsaiEntry be = new BonsaiEntry();
-		
-		String[] fields = line.split("\\s");
-		
-		be.index = Integer.parseInt(fields[0]);
-		be.word = fields[1];
-		be.lemma = fields[2];
-		be.shortCat = fields[3];
-		be.longCat = fields[4];
-		
-		String[] features = fields[5].split("\\|");
-		for(String feature : features) {
-			String[] nvp = feature.split("=");
-			if("g".equals(nvp[0])) {
-				be.gender = nvp[1];
-			}
-			if("n".equals(nvp[0])) {
-				be.number = nvp[1];
-			}
-			if("p".equals(nvp[0])) {
-				be.person = nvp[1];
-			}
-		}
-		
-		be.govIndex = Integer.parseInt(fields[6]);
-		be.relation = fields[7];
-		
-		return be;
-	}
-	
-	public boolean isAdj() {
-		return "ADJ".equals(longCat);
-	}
-	
-	public boolean isNoun() {
-		return "N".equals(shortCat);
-	}
-	
-	public boolean isParticiple() {
-		return "VPP".equals(longCat);
-	}
+  public static BonsaiEntry fromLine(String line) {
+    BonsaiEntry be = new BonsaiEntry();
+    
+    String[] fields = line.split("\\s");
+    
+    be.index = Integer.parseInt(fields[0]);
+    be.word = fields[1];
+    be.lemma = fields[2];
+    be.shortCat = fields[3];
+    be.longCat = fields[4];
+    
+    String[] features = fields[5].split("\\|");
+    for(String feature : features) {
+      String[] nvp = feature.split("=");
+      if("g".equals(nvp[0])) {
+        be.gender = nvp[1];
+      }
+      if("n".equals(nvp[0])) {
+        be.number = nvp[1];
+      }
+      if("p".equals(nvp[0])) {
+        be.person = nvp[1];
+      }
+    }
+    
+    be.govIndex = Integer.parseInt(fields[6]);
+    be.relation = fields[7];
+    
+    return be;
+  }
+  
+  public boolean isAdj() {
+    return "ADJ".equals(longCat);
+  }
+  
+  public boolean isNoun() {
+    return "N".equals(shortCat);
+  }
+  
+  public boolean isParticiple() {
+    return "VPP".equals(longCat);
+  }
 
-	public boolean isFeminine() {
-		return "f".equals(gender);
-	}
-	
-	public boolean isMasculine() {
-		return "m".equals(gender);
-	}
-	
-	public boolean isSingular() {
-		return "s".equals(number);
-	}
-	
-	public boolean isPlural() {
-		return "p".equals(number);
-	}
-	
-	public boolean isSubject() {
-		return "suj".equals(relation);
-	}
-	
-	public boolean isObject() {
-		return "obj".equals(relation);
-	}
+  public boolean isFeminine() {
+    return "f".equals(gender);
+  }
+  
+  public boolean isMasculine() {
+    return "m".equals(gender);
+  }
+  
+  public boolean isSingular() {
+    return "s".equals(number);
+  }
+  
+  public boolean isPlural() {
+    return "p".equals(number);
+  }
+  
+  public boolean isSubject() {
+    return "suj".equals(relation);
+  }
+  
+  public boolean isObject() {
+    return "obj".equals(relation);
+  }
 
-	@Override
-	public String toString() {
-		return "BonsaiEntry [index=" + index + ", word=" + word + ", lemma="
-				+ lemma + ", shortCat=" + shortCat + ", longCat=" + longCat
-				+ ", gender=" + gender + ", number=" + number + ", person="
-				+ person + ", govIndex=" + govIndex + ", relation=" + relation
-				+ "]";
-	}
+  @Override
+  public String toString() {
+    return "BonsaiEntry [index=" + index + ", word=" + word + ", lemma="
+        + lemma + ", shortCat=" + shortCat + ", longCat=" + longCat
+        + ", gender=" + gender + ", number=" + number + ", person="
+        + person + ", govIndex=" + govIndex + ", relation=" + relation
+        + "]";
+  }
     
 }
