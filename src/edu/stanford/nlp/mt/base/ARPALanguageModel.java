@@ -59,7 +59,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     return LanguageModels.load(filename, null);
   }
 
-  protected ARPALanguageModel(String filename) throws IOException {
+  public ARPALanguageModel(String filename) throws IOException {
     name = String.format("APRA(%s)", filename);
     init(filename);
   }
