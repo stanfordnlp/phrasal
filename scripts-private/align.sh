@@ -11,10 +11,11 @@ if [ $# -ne 5 ]; then
     exit -1
 fi
 
+MEM=15g
+EXEC="nlpsub -m${MEM} -c4"
+
 # Uncomment the line below to run locally 
-MEM=25g
-EXEC=
-#EXEC="nlpsub -m${MEM} -c4"
+#EXEC=
 
 src_file=$1
 src_lang=$2

@@ -14,7 +14,7 @@ if [ $# -lt 2 ]; then
     echo
     echo "  clean    : Heuristic data cleaning"
     echo "  tolower  : Convert to lowercase" 
-    echo "  language : Arabic, English, English-NIST, German, French"
+    echo "  language : Arabic, English, German, French"
     exit -1
 fi
 
@@ -93,9 +93,3 @@ elif [ $lang == "English" ]; then
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
 
-elif [ $lang == "English-NIST" ]; then
-    if [ "$fixnl" != "tee" ]; then
-	fixnl="$fixnl --latin"
-    fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $tolower | nist_tok | gzip -c > ${outfile}.gz
-fi
