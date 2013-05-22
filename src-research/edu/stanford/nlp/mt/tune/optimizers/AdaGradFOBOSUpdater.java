@@ -14,6 +14,8 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Basic AdaGrad update rule from Duchi et al. (2010).
  * 
+ * Assumes a dense gradient that has had L2 regularization applied.
+ * 
  * @author Sida Wang
  *         Mengqiu Wang
  *

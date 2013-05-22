@@ -37,7 +37,6 @@ import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Triple;
@@ -45,7 +44,8 @@ import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 /**
- * Online model tuning for machine translation.
+ * Online model tuning for machine translation as described in
+ * Green et al. (2013) (Proc. of ACL).
  * 
  * @author Spence Green
  *
@@ -97,13 +97,14 @@ public class OnlineTuner {
   private List<List<Sequence<IString>>> references;
 
   // Various options
-  private boolean writeNbestLists = false;
   private boolean returnBestDev = false;
   private boolean doParameterAveraging = false;
   
   // Weight vector for Phrasal
   private Counter<String> wtsAccumulator;
-  private Index<String> featureIndex;
+  
+  // TODO(spenceg) Currently unused, but we may want to do some pre-allocation in the future
+  // so don't remove the command-line option yet.
   private final int expectedNumFeatures;
 
   // The optimization algorithm
@@ -137,22 +138,12 @@ public class OnlineTuner {
       e.printStackTrace();
       System.exit(-1);
     }
-    featureIndex = decoder.getFeatureIndex();
     logger.info("Loaded Phrasal from: " + phrasalIniFile);
     
     // Load the optimizer last since some optimizers depend on fields initialized
     // by OnlineTuner.
     optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
     logger.info("Loaded optimizer: " + optimizer.toString());
-  }
-
-  /**
-   * Enable n-best list generation for each epoch.
-   * 
-   * @param writeLists
-   */
-  public void writeNbest(boolean writeLists) {
-    this.writeNbestLists = writeLists;
   }
 
   /**
@@ -312,7 +303,6 @@ public class OnlineTuner {
       final ProcessorOutput result = threadpool.poll();
 
       logger.info(String.format("Weight update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
-      logger.info(String.format("Weight update %d decoder feature index size: %d", updateStep, featureIndex.size()));
       
       // Apply update rule. Don't let decoders copy the weight vector while it is being updated
       updater.update(currentWts, result.gradient, updateStep);
@@ -407,11 +397,6 @@ public class OnlineTuner {
         if((t+1) % weightWriteOutInterval == 0) {
         	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
         }
-        // 
-        // TODO(spenceg): Extract rules and update phrase table for this example
-        //                Be sure to update featureIndex appropriately.
-        //                Also need to justify adding features in an online way. Maybe this is
-        //                what happens already with stochastic, sparse learning?
       }
 
       // Wait for threadpool shutdown for this epoch and get final gradients
@@ -500,55 +485,6 @@ public class OnlineTuner {
   }
 
   /**
-   * Calculate BLEU under a weight vector using a set of existing n-best lists.
-   * 
-   * TODO(spenceg): This is the old MERT way of doing things. Doesn't scale to large data sets.
-   * 
-   * @param currentWts
-   * @param nbestLists
-   * @return
-   */
-//  private double evaluate(Counter<String> currentWts,
-//      Map<Integer, List<RichTranslation<IString, String>>> nbestLists, int epoch) {
-//    assert currentWts != null && currentWts.size() > 0;
-//    assert nbestLists.keySet().size() == references.size();
-//
-//    PrintStream nbestListWriter = writeNbestLists ? 
-//        IOTools.getWriterFromFile(String.format("%s.%d.nbest", logPrefix, epoch)) : null;
-//
-//    BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
-//    BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
-//        .getIncrementalMetric();
-//    Scorer<String> scorer = new StaticScorer(currentWts, featureIndex);
-//    Map<Integer, List<RichTranslation<IString, String>>> sortedMap = 
-//        new TreeMap<Integer, List<RichTranslation<IString, String>>>(nbestLists);
-//    for (Map.Entry<Integer, List<RichTranslation<IString, String>>> entry : sortedMap.entrySet()) {
-//      // Write n-best list to file
-//      if (nbestListWriter != null) {
-//        IOTools.writeNbest(entry.getValue(), entry.getKey(), true, nbestListWriter);
-//      }
-//
-//      // Score n-best list under current weight vector
-//      double bestScore = Double.NEGATIVE_INFINITY;
-//      int bestIndex = Integer.MIN_VALUE;
-//      int nbestIndex = 0;
-//      for (RichTranslation<IString, String> translation : entry.getValue()) {
-//        double score = scorer.getIncrementalScore(translation.features);
-//        if (score > bestScore) {
-//          bestScore = score;
-//          bestIndex = nbestIndex;
-//        }
-//        ++nbestIndex;
-//      }
-//      incMetric.add(entry.getValue().get(bestIndex));
-//    }
-//    
-//    if (nbestListWriter != null) nbestListWriter.close();
-//
-//    return incMetric.score() * 100.0;
-//  }
-
-  /**
    * Load multiple references for accurate expected BLEU evaluation during
    * tuning. Computing BLEU with a single reference is really unstable.
    * 
@@ -634,7 +570,7 @@ public class OnlineTuner {
       assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
       Counters.normalize(wtsAccumulator);
-      return new PairwiseRankingOptimizerSGD(featureIndex, tuneSource.size(), expectedNumFeatures, optimizerFlags);
+      return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
@@ -689,7 +625,7 @@ public class OnlineTuner {
     IOTools.writeWeights(filename, finalWeights);
     logger.info("Wrote final weights to " + filename);
     logger.info(String.format("Final weights from epoch %d: BLEU: %.2f", selectedEpoch.second(), selectedEpoch.first()));
-    logger.info(String.format("Non-zero final weights: %d / %d", finalWeights.keySet().size(), featureIndex.size()));
+    logger.info(String.format("Non-zero final weights: %d", finalWeights.keySet().size()));
   }
 
   /**
@@ -719,7 +655,6 @@ public class OnlineTuner {
     optionMap.put("m", 1);
     optionMap.put("mf", 1);
     optionMap.put("n", 1);
-    optionMap.put("nb", 0);
     optionMap.put("r", 1);
     optionMap.put("bw", 0);
     optionMap.put("a", 0);
@@ -750,7 +685,6 @@ public class OnlineTuner {
     sb.append("   -m str     : Evaluation metric (loss function) for the tuning algorithm (default: bleu-smooth)").append(nl);
     sb.append("   -mf str    : Evaluation metric flags (format: CSV list)").append(nl);
     sb.append("   -n str     : Experiment name").append(nl);
-    sb.append("   -nb        : Write n-best lists to file.").append(nl);
     sb.append("   -r str     : Use multiple references (format: CSV list)").append(nl);
     sb.append("   -bw        : Set final weights to the best training epoch.").append(nl);
     sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
@@ -776,7 +710,6 @@ public class OnlineTuner {
     String lossFunctionStr = opts.getProperty("m", "bleu-smooth");
     String[] lossFunctionOpts = opts.containsKey("mf") ? opts.getProperty("mf").split(",") : null;
     String experimentName = opts.getProperty("n", "debug");
-    boolean doNbestOutput = PropertiesUtils.getBool(opts, "nb", false);
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
     String refStr = opts.getProperty("r", null);
     boolean finalWeightsFromBestEpoch = PropertiesUtils.getBool(opts, "bw", false);
@@ -821,7 +754,6 @@ public class OnlineTuner {
     }
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
-    tuner.writeNbest(doNbestOutput);
     tuner.run(numEpochs, batchSize, lossFunction, doExpectedBleu, weightWriteOutInterval);
     tuner.shutdown();
 

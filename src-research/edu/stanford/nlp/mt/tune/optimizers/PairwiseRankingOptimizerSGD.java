@@ -22,7 +22,6 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Triple;
 
 /**
@@ -68,17 +67,16 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   
   private final Logger logger;
   private final Random random;
-  private final Index<String> featureIndex;
   private final int expectedNumFeatures;
  
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures) {
-    this(featureIndex, tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
+  public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures) {
+    this(tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
         DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1, DEFAULT_REGCONFIG);
   }
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures, String... args) {
-    this(featureIndex, tuneSetSize, expectedNumFeatures, 
+  public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures, String... args) {
+    this(tuneSetSize, expectedNumFeatures, 
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
             args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
                 args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
@@ -90,7 +88,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
                             						args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
   }
 
-  public PairwiseRankingOptimizerSGD(Index<String> featureIndex, int tuneSetSize, int expectedNumFeatures,
+  public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures,
       int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType, double L1lambda, String regconfig) {
     if (minFeatureSegmentCount < 1) throw new RuntimeException("Feature segment count must be >= 1: " + minFeatureSegmentCount);
     if (gamma <= 0) throw new RuntimeException("Gamma must be > 0: " + gamma);
@@ -102,7 +100,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     this.xi = xi;
     this.nThreshold = nThreshold;
     this.minFeatureSegmentCount = minFeatureSegmentCount;
-    this.featureIndex = featureIndex;
     this.tuneSetSize = tuneSetSize;
     this.learningRate = rate;
     this.updaterType = updaterType;

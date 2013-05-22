@@ -8,7 +8,10 @@ import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * Fast AdaGrad update rule from Duchi et al. (2010).
- * Only deals with L1
+ * Only deals with L1.
+ * 
+ * Assumes a sparse gradient (i.e., no L2 regularization).
+ * 
  * @author Sida Wang
  *
  */
@@ -20,6 +23,9 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   // magnification factor over the base learning rate
   private final double eps = 1e-3;
   private double L1lambda;
+  
+  // Do a full regularization step every this many time steps.
+  private static final int FULL_REGULARIZATION_INTERVAL = 50;
 
   private Counter<String> sumGradSquare;
   private Counter<String> lastUpdated;
@@ -39,46 +45,55 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   public void update(Counter<String> weights,
       Counter<String> gradient, int timeStep) {
 
-    Set<String> featuresToRemove = new HashSet<String>();
+    // Special case: the weight vector is empty (initial update)
+    // Special case: gradient is non-zero where the weight is 0
+    Set<String> featureSet = gradient.keySet();
+    if (timeStep % FULL_REGULARIZATION_INTERVAL == 0) { 
+      featureSet = new HashSet<String>(weights.keySet());
+      featureSet.addAll(gradient.keySet());
+    }
+        
     // w_{t+1} := w_t - nu*g_t
-    for (String feature : gradient.keySet()) {
+    Set<String> featuresToRemove = new HashSet<String>();
+    for (String feature : featureSet) {
       double gradf = gradient.getCount(feature);
       double prevrate = rate / (Math.sqrt(sumGradSquare.getCount(feature))+eps);     
-      
+
       // Do not start decaying the weight of a feature until it has been seen
       if(sumGradSquare.getCount(feature)==0.0)
-    	  prevrate = 0;
-      
+        prevrate = 0;
+
       double sgsValue = sumGradSquare.incrementCount(feature, gradf*gradf);
       double currentrate = rate / (Math.sqrt(sgsValue)+eps);
       double testupdate = weights.getCount(feature) - (currentrate * gradient.getCount(feature));
       double lastUpdateTimeStep = lastUpdated.getCount(feature);
       double idleinterval = timeStep - lastUpdateTimeStep-1;
       lastUpdated.setCount(feature, (double)timeStep);
-      
+
+      // Lookup the regularization strength for this feature
       double l1 = this.L1lambda;
       if(customL1 != null && customL1.size()>0)
-      for (String prefix : customL1.keySet())
-      {
-    	  if(feature.startsWith(prefix))
-	  {
+        for (String prefix : customL1.keySet())
+        {
+          if(feature.startsWith(prefix))
+          {
+            l1 = customL1.getCount(prefix);
+            // System.out.println("Using custom L1 for "+prefix + " valued " + l1);
+            break;
+          }
+        }
 
-    	      l1 = customL1.getCount(prefix);
-     	      // System.out.println("Using custom L1 for "+prefix + " valued " + l1);
-	      break;
-	  }
-      }
-      
-      double trunc = pospart( Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*l1);
-      double realupdate = Math.signum(testupdate) * trunc;
+      // Update this coordinate in the weight vector
+      double trunc = pospart(Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*l1);
+      double realupdate = Math.signum(testupdate) * trunc;      
       if (realupdate == 0.0) {
         featuresToRemove.add(feature);
       } else {
         weights.setCount(feature, realupdate);
-        
       }
     }
-    // Filter zeros
+    
+    // Filter features that have been nullified
     for (String feature : featuresToRemove) {
       weights.remove(feature);
     }
