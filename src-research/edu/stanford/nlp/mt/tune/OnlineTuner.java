@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.TreeSet;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -21,6 +24,7 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -111,7 +115,10 @@ public class OnlineTuner {
 
   // Phrasal decoder instance.
   private Phrasal decoder;
-
+  
+  // minimum number of times we need to see a feature 
+  // before learning a decoding model weight for it 
+  private int minFeatureCount;
 
   public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
@@ -156,6 +163,17 @@ public class OnlineTuner {
   }
 
   /**
+   * Minimum number of times we need to see a feature
+   * before learning a model weight for it.
+   *
+   * @param minFeatureCount
+   */
+  
+  public void minFeatureCount(int minFeatureCount) {
+    this.minFeatureCount = minFeatureCount;
+  }
+
+  /**
    * Return the weight vector from the epoch that maximizes
    * the training objective.
    * 
@@ -169,6 +187,51 @@ public class OnlineTuner {
    * @param b
    */
   private void doParameterAveraging(boolean b) { this.doParameterAveraging = b; }
+
+
+  Map<String,Set<Integer>> clippedFeatureIndex = 
+    new HashMap<String,Set<Integer>>();
+
+  Counter<String> clippedFeatureCounts = new OpenAddressCounter<String>();
+ 
+
+  /**
+   * Determine whether a feature has been seen enough times
+   * to learn a decoding model weight for it
+   */ 
+  boolean hasMinFeatureCount(String feature) {
+     if (minFeatureCount == 0) return true;
+     Set<Integer> ids = clippedFeatureIndex.get(feature);
+     if (ids == null) return false;
+     return ids.size() >= minFeatureCount; 
+  } 
+
+  /** 
+   * Update counts of the number of times we have seen each feature.
+   * Features are only counted ounce per source sentence
+   */
+   void updateFeatureCounts(int[] translationIds, List<List<RichTranslation<IString,String>>> nbestLists) {
+     for (int i = 0; i < translationIds.length; i++) {
+       Set<String> features = new HashSet<String>();
+       for (RichTranslation<IString,String> trans : nbestLists.get(i)) {
+         for (FeatureValue<String> f : trans.features) {
+           features.add(f.name);
+         }
+       }
+       synchronized(clippedFeatureIndex) {
+         for (String fName : features) {
+           Set<Integer> ids = clippedFeatureIndex.get(fName);
+           if (ids == null) {
+             ids = new TreeSet<Integer>();
+             clippedFeatureIndex.put(fName, ids); 
+           }
+           if (ids.size() < minFeatureCount) {
+             ids.add(translationIds[i]);
+           } 
+         } 
+       }
+     }
+   }
 
   /**
    * Input data to the gradient processor.
@@ -277,6 +340,16 @@ public class OnlineTuner {
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, lossFunction);
       }
+
+      if (minFeatureCount > 0) {
+        updateFeatureCounts(input.translationIds, nbestLists);
+        for (String feature : gradient.keySet()) {
+          if (!hasMinFeatureCount(feature)) {
+             gradient.remove(feature);
+          }
+        } 
+      }
+     
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
     }
@@ -787,7 +860,7 @@ public class OnlineTuner {
     boolean doExpectedBleu = ! PropertiesUtils.getBool(opts, "ne", false);
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
-
+    int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
 
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -822,6 +895,7 @@ public class OnlineTuner {
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.writeNbest(doNbestOutput);
+    tuner.minFeatureCount(minFeatureCount);
     tuner.run(numEpochs, batchSize, lossFunction, doExpectedBleu, weightWriteOutInterval);
     tuner.shutdown();
 
