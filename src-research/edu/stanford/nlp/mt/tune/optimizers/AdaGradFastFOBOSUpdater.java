@@ -2,7 +2,9 @@ package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import edu.stanford.nlp.mt.tune.OnlineTuner;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 
@@ -30,7 +32,8 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private Counter<String> sumGradSquare;
   private Counter<String> lastUpdated;
   private Counter<String> customL1;
-  //private ArrayList<Double> sumL1Lambda;
+
+  private final Logger logger;
 
   public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
     this.rate = initialRate;
@@ -38,6 +41,10 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
     lastUpdated = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
     this.customL1 = customL1;
+    
+    // Setup the logger
+    logger = Logger.getLogger(AdaGradFastFOBOSUpdater.class.getCanonicalName());
+    OnlineTuner.attach(logger);
   }
 
   // the gradient here should NOT include L2 regularization, or else there is no point
@@ -51,6 +58,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     if (timeStep % FULL_REGULARIZATION_INTERVAL == 0) { 
       featureSet = new HashSet<String>(weights.keySet());
       featureSet.addAll(gradient.keySet());
+      logger.info(String.format("Full regularization step for %d features", featureSet.size()));
     }
         
     // w_{t+1} := w_t - nu*g_t
@@ -71,14 +79,12 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
       lastUpdated.setCount(feature, (double)timeStep);
 
       // Lookup the regularization strength for this feature
+      // TODO(spenceg): This is super-slow. Can we do this more quickly?
       double l1 = this.L1lambda;
       if(customL1 != null && customL1.size()>0)
-        for (String prefix : customL1.keySet())
-        {
-          if(feature.startsWith(prefix))
-          {
+        for (String prefix : customL1.keySet()) {
+          if(feature.startsWith(prefix)) {
             l1 = customL1.getCount(prefix);
-            // System.out.println("Using custom L1 for "+prefix + " valued " + l1);
             break;
           }
         }
@@ -94,6 +100,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     }
     
     // Filter features that have been nullified
+    logger.info("Nullified features: " + String.valueOf(featuresToRemove.size()));
     for (String feature : featuresToRemove) {
       weights.remove(feature);
     }

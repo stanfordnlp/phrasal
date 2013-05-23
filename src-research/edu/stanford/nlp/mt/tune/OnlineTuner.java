@@ -102,9 +102,6 @@ public class OnlineTuner {
   
   // Weight vector for Phrasal
   private Counter<String> wtsAccumulator;
-  
-  // TODO(spenceg) Currently unused, but we may want to do some pre-allocation in the future
-  // so don't remove the command-line option yet.
   private final int expectedNumFeatures;
 
   // The optimization algorithm
