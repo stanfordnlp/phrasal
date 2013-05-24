@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.MERT;
@@ -31,7 +31,7 @@ public class PerceptronOptimizer extends AbstractNBestOptimizer {
     Counter<String> wts = initialWts;
 
     while (true) {
-      Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
+      Scorer<String> scorer = new DenseScorer(wts, MERT.featureIndex);
       MultiTranslationMetricMax<IString, String> oneBestSearch = new HillClimbingMultiTranslationMetricMax<IString, String>(
           new ScorerWrapperEvaluationMetric<IString, String>(scorer));
       List<ScoredFeaturizedTranslation<IString, String>> oneBest = oneBestSearch

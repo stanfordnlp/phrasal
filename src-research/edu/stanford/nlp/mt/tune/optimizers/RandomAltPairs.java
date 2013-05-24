@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.MERT;
@@ -41,7 +41,7 @@ public class RandomAltPairs extends AbstractNBestOptimizer {
     for (int noProgress = 0; noProgress < MERT.NO_PROGRESS_LIMIT;) {
       Counter<String> dir;
       List<ScoredFeaturizedTranslation<IString, String>> rTrans;
-      Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
+      Scorer<String> scorer = new DenseScorer(wts, MERT.featureIndex);
 
       dir = MERT.summarizedAllFeaturesVector(rTrans = (forceBetter ? mert
           .randomBetterTranslations(nbest, wts, emetric) : mert

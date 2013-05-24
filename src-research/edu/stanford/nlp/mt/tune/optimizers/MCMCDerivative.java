@@ -9,7 +9,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -67,7 +67,7 @@ public class MCMCDerivative extends AbstractNBestOptimizer {
     }
 
     Counter<String> dE = new ClassicCounter<String>();
-    Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
+    Scorer<String> scorer = new DenseScorer(wts, MERT.featureIndex);
 
     double hardEval = emetric.score(argmax);
     System.err.printf("Hard eval: %.5f\n", hardEval);

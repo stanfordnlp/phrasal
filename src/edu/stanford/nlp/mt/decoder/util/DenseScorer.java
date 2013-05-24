@@ -19,13 +19,13 @@ import edu.stanford.nlp.math.ArrayMath;
  * @author Spence Green
  * 
  */
-public class StaticScorer implements Scorer<String> {
+public class DenseScorer implements Scorer<String> {
 
   private final Index<String> featureIndex;
   private double[] weights;
   private final boolean sharedFeatureIndex;
 
-  public StaticScorer(String filename) {
+  public DenseScorer(String filename) {
     sharedFeatureIndex = false;
     featureIndex = new OAIndex<String>();
     try {
@@ -38,11 +38,11 @@ public class StaticScorer implements Scorer<String> {
     }
   }
 
-  public StaticScorer(Counter<String> featureWts) {
+  public DenseScorer(Counter<String> featureWts) {
     this(featureWts, null);
   }
 
-  public StaticScorer(Counter<String> featureWts, Index<String> featureIndex) {
+  public DenseScorer(Counter<String> featureWts, Index<String> featureIndex) {
     sharedFeatureIndex = (featureIndex != null);
     this.featureIndex = featureIndex == null ? new OAIndex<String>() : featureIndex;
     updateWeights(featureWts);

@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.GDMinimizer;
@@ -97,7 +97,7 @@ public class EntropyAdaptation {
     }
     
     Counter<String> newWeights = OptimizerUtils.getWeightCounterFromArray(weightNames, bestWeights);
-    StaticScorer scorer = new StaticScorer(newWeights);
+    DenseScorer scorer = new DenseScorer(newWeights);
     
     if (newWeightsFn != null) {
       ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(newWeightsFn));
@@ -146,7 +146,7 @@ class EntropyObjective implements DiffFunction {
   }
   
   public double computeEntropy(Counter<String> weights) {
-    StaticScorer scorer = new StaticScorer(weights);
+    DenseScorer scorer = new DenseScorer(weights);
     double sumEntropy = 0;
     for (List<ScoredFeaturizedTranslation<IString,String>> nbestlist :
       nbestlists.nbestLists()) {
@@ -197,7 +197,7 @@ class EntropyObjective implements DiffFunction {
   @Override
   public double[] derivativeAt(double[] x) {
     Counter<String> weights = OptimizerUtils.getWeightCounterFromArray(weightNames, x);
-    StaticScorer scorer = new StaticScorer(weights);
+    DenseScorer scorer = new DenseScorer(weights);
     
     Counter<String> dOdw = new ClassicCounter<String>();
     for (String weightName : weights.keySet()) {

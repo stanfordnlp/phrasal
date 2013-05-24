@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.Counter;
@@ -41,7 +41,7 @@ public class NBestListDecoder {
     
     FlatNBestList nbest = new FlatNBestList(nbestFn);
     Counter<String> weights = IOTools.readWeights(weightsFn);
-    Scorer<String> scorer = new StaticScorer(weights);
+    Scorer<String> scorer = new DenseScorer(weights);
     
     BufferedWriter outputFh = new BufferedWriter(new FileWriter(outputFn));
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
