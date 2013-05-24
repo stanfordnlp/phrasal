@@ -175,7 +175,8 @@ public class OnlineTuner {
       this.translationIds = translationIds;
       this.references = references;
       this.inputId = inputId;
-      // TODO(spenceg) This is bad since the decoder will copy the weights again
+      // Copy here for thread safety. DO NOT change this unless you know
+      // what you're doing....
       this.weights = new OpenAddressCounter<String>(weights);
     }
   }
@@ -226,24 +227,18 @@ public class OnlineTuner {
     @Override
     public ProcessorOutput process(ProcessorInput input) {
       assert input.weights != null;
-      // The decoder will copy the weight vector. Prevent updates in applyGradientUpdates() 
-      // to the weight vector while the decoder is copying it.
-      // TODO(spenceg) This lock causes deadlock??
-//      synchronized(input.weights) {
+      
+      // The decoder does not copy the weight vector; ProcessorInput should have.
       decoder.getScorer(threadId).updateWeights(input.weights);
-//      }
       
       int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = 
           new ArrayList<List<RichTranslation<IString,String>>>(input.translationIds.length);
       Counter<String> gradient;
       if (batchSize == 1) {
-        // Online learning with gradient updates for each instance
+        // Conventional online learning
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
-        // Garbage collect the decoder's weight vector
-        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
-
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestList, input.references.get(0), lossFunction);
         nbestLists.add(nbestList);
@@ -257,8 +252,6 @@ public class OnlineTuner {
               threadId);
           nbestLists.add(nbestList);
         }
-        // Garbage collect the decoder's weight vector
-        decoder.getScorer(threadId).updateWeights(new OpenAddressCounter<String>());
 
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, lossFunction);
@@ -275,16 +268,17 @@ public class OnlineTuner {
 
   /**
    * Asynchronous template from Langford et al. (2009). Get gradients from the threadpool and update the weight vector.
+   * 
    * @param threadpool
    * @param updater 
    * @param nbestLists 
    * @param doExpectedBleu 
-   * @param endOfEpoch TODO
+   * @param endOfEpoch
    * @param timeStep 
    * @param decoderWts 
    * @return
    */
-  private int applyGradientUpdatesTo(Counter<String> currentWts, 
+  private int update(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
       boolean doExpectedBleu, boolean endOfEpoch) {
@@ -310,7 +304,7 @@ public class OnlineTuner {
 
       ++updateStep;
 
-      // Accumulate for parameter averaging
+      // Accumulate intermediate weights for parameter averaging
       if (doParameterAveraging) {
         wtsAccumulator.addAll(currentWts);
       }
@@ -389,7 +383,7 @@ public class OnlineTuner {
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
         logger.info("Threadpool.status: " + wrapper.toString());
-        updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, false);
+        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, false);
         
         if((t+1) % weightWriteOutInterval == 0) {
         	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
@@ -399,7 +393,7 @@ public class OnlineTuner {
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
       updateId = 
-          applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, true);
+          update(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, true);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
