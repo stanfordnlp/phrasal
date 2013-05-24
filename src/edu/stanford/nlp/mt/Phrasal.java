@@ -594,27 +594,27 @@ public class Phrasal {
     }
 
     // Create Scorer
-    Counter<String> weightConfig = new ClassicCounter<String>();
+    Counter<String> weightVector = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s\n", config.get(WEIGHTS_FILE).get(0));
 
-      weightConfig = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
+      weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     } else {
       if (config.containsKey(INLINE_WEIGHTS)) {
         List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);
         for (String inlineWt : inlineWts) {
           String[] fields = inlineWt.split("=");
-          weightConfig.setCount(fields[0], Double.parseDouble(fields[1]));
+          weightVector.setCount(fields[0], Double.parseDouble(fields[1]));
         }
       }
 
       if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
-        weightConfig.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
+        weightVector.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
       }
       if (config.containsKey(DISTORTION_WT_OPT)) {
-        weightConfig.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
+        weightVector.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
 
 
@@ -638,7 +638,7 @@ public class Phrasal {
                           mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
             }
             for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
-              weightConfig.setCount(mosesLexReorderFeaturizer.featureTags[i],
+              weightVector.setCount(mosesLexReorderFeaturizer.featureTags[i],
                   Double.parseDouble(config.get(DISTORTION_WT_OPT).get(i + 1)));
             }
           }
@@ -646,12 +646,12 @@ public class Phrasal {
       }
 
       if (config.containsKey(WORD_PENALTY_WT_OPT)) {
-        weightConfig.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
+        weightVector.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
             Double.parseDouble(config.get(WORD_PENALTY_WT_OPT).get(0)));
       }
 
-      weightConfig.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
-      weightConfig.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
+      weightVector.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
+      weightVector.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
 
       if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
@@ -660,8 +660,8 @@ public class Phrasal {
 
     // Setup the feature index from the initial weight vector
     // HashIndex is threadsafe, while OAIndex is not.
-    featureIndex = new HashIndex<String>(weightConfig.size());
-    for (String feature : weightConfig.keySet()) {
+    featureIndex = new HashIndex<String>(weightVector.size());
+    for (String feature : weightVector.keySet()) {
       featureIndex.indexOf(feature, true);
     }
     featurizer.initialize(featureIndex);
@@ -690,7 +690,7 @@ public class Phrasal {
       }
     }
 
-    System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightConfig, 100), (weightConfig.size() > 100 ? "..." : ""));
+    System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
 
     // Create phrase generator
     String phraseTable;
@@ -832,7 +832,7 @@ public class Phrasal {
         infererBuilder
             .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightConfig, featureIndex);
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, featureIndex);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder

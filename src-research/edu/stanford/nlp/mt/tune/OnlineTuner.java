@@ -89,10 +89,9 @@ public class OnlineTuner {
     logger.setLevel(logLevel);
   }
 
-  // What it says
   private final Logger logger;
 
-  // Intrinsic loss examples
+  // Tuning set
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
 
@@ -100,7 +99,6 @@ public class OnlineTuner {
   private boolean returnBestDev = false;
   private boolean doParameterAveraging = false;
   
-  // Weight vector for Phrasal
   private Counter<String> wtsAccumulator;
   private final int expectedNumFeatures;
 
@@ -281,15 +279,15 @@ public class OnlineTuner {
    * @param updater 
    * @param nbestLists 
    * @param doExpectedBleu 
+   * @param endOfEpoch TODO
    * @param timeStep 
    * @param decoderWts 
-   * 
    * @return
    */
   private int applyGradientUpdatesTo(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
-      boolean doExpectedBleu) {
+      boolean doExpectedBleu, boolean endOfEpoch) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
@@ -298,11 +296,12 @@ public class OnlineTuner {
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
+      boolean isEndOfEpoch = endOfEpoch && ! threadpool.peek();
 
       logger.info(String.format("Weight update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
       
-      // Apply update rule. Don't let decoders copy the weight vector while it is being updated
-      updater.update(currentWts, result.gradient, updateStep);
+      // Update rule. 
+      updater.update(currentWts, result.gradient, updateStep, isEndOfEpoch);
 
       // Debug info
       logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
@@ -322,7 +321,8 @@ public class OnlineTuner {
           int translationId = result.translationIds[i];
           assert ! nbestLists.containsKey(translationId);
           // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
-          nbestLists.put(translationId, result.nbestLists.get(i).get(0).translation);
+          Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
+          nbestLists.put(translationId, bestHypothesis);
         }
       }
     }
@@ -355,8 +355,9 @@ public class OnlineTuner {
     final int[] indices = ArrayMath.range(0, tuneSetSize);
     final int numBatches = (int) Math.ceil((double) indices.length / (double) batchSize);
     final OnlineUpdateRule<String> updater = optimizer.newUpdater();
-    final List<Triple<Double,Integer,Counter<String>>> epochResults = 
+    final List<Triple<Double,Integer,Counter<String>>> epochWeights = 
         new ArrayList<Triple<Double,Integer,Counter<String>>>(numEpochs);
+    final Runtime runtime = Runtime.getRuntime();
 
     logger.info("Start of online tuning");
     logger.info("Number of epochs: " + numEpochs);
@@ -379,17 +380,16 @@ public class OnlineTuner {
               new GradientProcessor(optimizer,lossFunction,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
-      Runtime r = Runtime.getRuntime();
       ArrayMath.shuffle(indices);
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
       for (int t = 0; t < numBatches; ++t) {
-        logger.info(String.format("Epoch %d batch %d memory free: %d  max: %d", epoch, t, r.freeMemory(), r.maxMemory()));
+        logger.info(String.format("Epoch %d batch %d memory free: %d  max: %d", epoch, t, runtime.freeMemory(), runtime.maxMemory()));
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
         logger.info("Threadpool.status: " + wrapper.toString());
-        updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
+        updateId = applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, false);
         
         if((t+1) % weightWriteOutInterval == 0) {
         	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
@@ -399,13 +399,15 @@ public class OnlineTuner {
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
       updateId = 
-          applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu);
+          applyGradientUpdatesTo(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, true);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
         currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
         Counters.divideInPlace(currentWts, (epoch+1)*numBatches);
       }
+      
+      // Write the intermediate weights for this epoch
       IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
 
       // Debug info for this epoch
@@ -417,11 +419,11 @@ public class OnlineTuner {
         logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
       }
       // Purge history if we're not picking the best weight vector
-      if ( ! returnBestDev) epochResults.clear();
-      epochResults.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new OpenAddressCounter<String>(currentWts, 1.0f)));
+      if ( ! returnBestDev) epochWeights.clear();
+      epochWeights.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new OpenAddressCounter<String>(currentWts, 1.0f)));
     }
     
-    saveFinalWeights(epochResults);
+    saveFinalWeights(epochWeights);
   }
 
   /**

@@ -17,7 +17,8 @@ public interface OnlineUpdateRule<FV> {
    * @param weights
    * @param gradient
    * @param timeStep
+   * @param endOfEpoch TODO
    * @return
    */
-  public void update(Counter<FV> weights, Counter<FV> gradient, int timeStep);
+  public void update(Counter<FV> weights, Counter<FV> gradient, int timeStep, boolean endOfEpoch);
 }

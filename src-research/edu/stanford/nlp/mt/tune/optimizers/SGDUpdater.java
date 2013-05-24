@@ -19,7 +19,7 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
 
   @Override
   public void update(Counter<String> weights,
-      Counter<String> gradient, int timeStep) {
+      Counter<String> gradient, int timeStep, boolean endOfEpoch) {
     // TODO(spenceg) This is kind of hacky, but seems to work.
     final double nu = rate * (double) (1.0/((timeStep/10.0)+1.0));
     

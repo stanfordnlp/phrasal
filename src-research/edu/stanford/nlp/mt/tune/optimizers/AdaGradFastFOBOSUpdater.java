@@ -10,10 +10,12 @@ import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * Fast AdaGrad update rule from Duchi et al. (2010).
- * Only deals with L1.
  * 
- * Assumes a sparse gradient (i.e., no L2 regularization).
+ * Lazy updates for L1 regularization.
  * 
+ * Assumes a sparse gradient (i.e., no L2 regularization). REPEAT:
+ * the gradient here should NOT include L2 regularization, or else there is no point.
+ *
  * @author Sida Wang
  *
  */
@@ -27,11 +29,11 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private double L1lambda;
   
   // Do a full regularization step every this many time steps.
-  private static final int FULL_REGULARIZATION_INTERVAL = 50;
+  private static final int FULL_REGULARIZATION_INTERVAL = 30;
 
-  private Counter<String> sumGradSquare;
-  private Counter<String> lastUpdated;
-  private Counter<String> customL1;
+  private final Counter<String> sumGradSquare;
+  private final Counter<String> lastUpdated;
+  private final Counter<String> customL1;
 
   private final Logger logger;
 
@@ -47,23 +49,22 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     OnlineTuner.attach(logger);
   }
 
-  // the gradient here should NOT include L2 regularization, or else there is no point
   @Override
   public void update(Counter<String> weights,
-      Counter<String> gradient, int timeStep) {
+      Counter<String> gradient, int timeStep, boolean endOfEpoch) {
 
     // Special case: the weight vector is empty (initial update)
     // Special case: gradient is non-zero where the weight is 0
-    Set<String> featureSet = gradient.keySet();
-    if (timeStep % FULL_REGULARIZATION_INTERVAL == 0) { 
-      featureSet = new HashSet<String>(weights.keySet());
-      featureSet.addAll(gradient.keySet());
-      logger.info(String.format("Full regularization step for %d features", featureSet.size()));
+    Set<String> featuresToUpdate = gradient.keySet();
+    if ((timeStep % FULL_REGULARIZATION_INTERVAL == 0) || endOfEpoch) { 
+      featuresToUpdate = new HashSet<String>(weights.keySet());
+      featuresToUpdate.addAll(gradient.keySet());
+      logger.info(String.format("Full regularization step for %d features", featuresToUpdate.size()));
     }
         
     // w_{t+1} := w_t - nu*g_t
     Set<String> featuresToRemove = new HashSet<String>();
-    for (String feature : featureSet) {
+    for (String feature : featuresToUpdate) {
       double gradf = gradient.getCount(feature);
       double prevrate = rate / (Math.sqrt(sumGradSquare.getCount(feature))+eps);     
 
@@ -80,6 +81,8 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
 
       // Lookup the regularization strength for this feature
       // TODO(spenceg): This is super-slow. Can we do this more quickly?
+      // TODO(spenceg): DanC suggests standardizing feature names so that we just need to
+      // split on some delimiter and then lookup features in a hash table
       double l1 = this.L1lambda;
       if(customL1 != null && customL1.size()>0)
         for (String prefix : customL1.keySet()) {
@@ -90,7 +93,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
         }
 
       // Update this coordinate in the weight vector
-      double trunc = pospart(Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*l1);
+      double trunc = Math.max(0.0, (Math.abs(testupdate) - (currentrate + prevrate*idleinterval)*l1));
       double realupdate = Math.signum(testupdate) * trunc;      
       if (realupdate == 0.0) {
         featuresToRemove.add(feature);
@@ -104,9 +107,5 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     for (String feature : featuresToRemove) {
       weights.remove(feature);
     }
-  }
-
-  private double pospart(double number) {
-    return number > 0.0 ? number : 0.0;
   }
 }
