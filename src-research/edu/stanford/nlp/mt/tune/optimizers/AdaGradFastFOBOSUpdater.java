@@ -56,7 +56,8 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     // Special case: the weight vector is empty (initial update)
     // Special case: gradient is non-zero where the weight is 0
     Set<String> featuresToUpdate = gradient.keySet();
-    if ((timeStep % FULL_REGULARIZATION_INTERVAL == 0) || endOfEpoch) { 
+//    if ((timeStep % FULL_REGULARIZATION_INTERVAL == 0) || endOfEpoch) { 
+    if (endOfEpoch) {
       featuresToUpdate = new HashSet<String>(weights.keySet());
       featuresToUpdate.addAll(gradient.keySet());
       logger.info(String.format("Full regularization step for %d features", featuresToUpdate.size()));
