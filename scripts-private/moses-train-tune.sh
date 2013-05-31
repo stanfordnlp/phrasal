@@ -52,7 +52,7 @@ $MOSES/scripts/training/mert-moses.pl \
 --mertdir $MOSES/bin/ \
 --no-filter-phrase-table \
 --nbest=200 \
---batch-mira \
+--pairwise-ranked \
 --return-best-dev \
 $TUNE_SET $REF_PREFIX \
 $MOSES/bin/moses $INI_FILE
