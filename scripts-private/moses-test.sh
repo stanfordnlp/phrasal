@@ -12,7 +12,7 @@
 #
 # LD_LIBRARY_PATH=/u/nlp/packages/boost_1_42_0/lib
 
-if [ $# -lt 5 ]; then
+if [ $# -lt 6 ]; then
     echo Usage: `basename $0` name ini-file tune-set-name ref-dir threads newtestset:filepath "[newtestset:filepath]"
     echo e.g. `basename $0` kbmira kbmira.tune/moses.ini mt06 refs 16 mt04:zhdata/mt04.seg.zh
     exit -1
