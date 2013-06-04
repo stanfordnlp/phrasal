@@ -92,4 +92,5 @@ elif [ $lang == "English" ]; then
 	fixnl="$fixnl --latin"
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
+fi
 
