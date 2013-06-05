@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import edu.stanford.nlp.mt.base.LineIndexedCorpus;
 import edu.stanford.nlp.stats.ClassicCounter;
