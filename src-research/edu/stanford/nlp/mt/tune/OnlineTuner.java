@@ -466,7 +466,7 @@ public class OnlineTuner {
     logger.info("Start of online tuning");
     logger.info("Number of epochs: " + numEpochs);
     logger.info("Number of threads: " + numThreads);
-    logger.info("Number of references: " + references.get(0).size());
+    logger.info("Number of references: " + numReferences);
     int updateId = 0;
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
@@ -558,14 +558,15 @@ public class OnlineTuner {
       int numTranslations = maxFeaturizedTranslations.size();
       for (int i = 0; i < numTranslations; ++i) {
         Sequence<IString> translation = maxFeaturizedTranslations.get(i).translation;
-        if(pseudoReferences.get(i).size() > numPseudoReferences) pseudoReferences.get(i).remove(0);
+        if(pseudoReferences.get(i).size() >= numPseudoReferences) pseudoReferences.get(i).remove(0);
         pseudoReferences.get(i).add(translation);
       }
+      logger.info("Number of pseudo references: " + String.valueOf(pseudoReferences.get(0).size()));
       // Cleanup...these n-best files can get huge.
       File file = new File(nbestFilename);
       file.delete();
       
-      // Setup the reference weights
+      // Setup the reference weights. Downweight the pseudo references
       referenceWeights = new double[numReferences+pseudoReferences.get(0).size()];
       Arrays.fill(referenceWeights, 0.5);
       for (int i = 0; i < numReferences; ++i) referenceWeights[i] = 1.0;
@@ -632,9 +633,12 @@ public class OnlineTuner {
     List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(batch.length);
     for (int sourceId : batch) {
       sourceList.add(tuneSource.get(sourceId));
-      referenceList.add(references.get(sourceId));
       if (createPseudoReferences && pseudoReferences != null && pseudoReferences.get(0).size() > 0) {
-        referenceList.get(referenceList.size()-1).addAll(pseudoReferences.get(sourceId));
+        List<Sequence<IString>> combinedRefs = new ArrayList<Sequence<IString>>(references.get(sourceId));
+        combinedRefs.addAll(pseudoReferences.get(sourceId));
+        referenceList.add(combinedRefs);
+      } else {
+        referenceList.add(references.get(sourceId));
       }
     }
     return new ProcessorInput(sourceList, referenceList, weights, batch, inputId);

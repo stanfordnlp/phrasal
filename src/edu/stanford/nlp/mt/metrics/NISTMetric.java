@@ -6,6 +6,9 @@ import java.io.*;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counters;
 
 /**
  * 
@@ -16,22 +19,22 @@ import edu.stanford.nlp.mt.decoder.util.State;
 public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
   static public final int DEFAULT_MAX_NGRAM_ORDER = 10;
 
-  final List<Map<Sequence<TK>, Integer>> maxReferenceCounts;
-  Map<Sequence<TK>, Double> ngramInfo;
+  final List<Counter<Sequence<TK>>> maxReferenceCounts;
+  Counter<Sequence<TK>> ngramInfo;
   final int[][] refLengths;
   final int order;
 
-  public void setNgramInfo(Map<Sequence<TK>, Double> i) {
+  public void setNgramInfo(Counter<Sequence<TK>> i) {
     ngramInfo = i;
   }
 
-  public Map<Sequence<TK>, Double> getNgramInfo() {
+  public Counter<Sequence<TK>> getNgramInfo() {
     return ngramInfo;
   }
 
   public NISTMetric(List<List<Sequence<TK>>> referencesList) {
     this.order = DEFAULT_MAX_NGRAM_ORDER;
-    maxReferenceCounts = new ArrayList<Map<Sequence<TK>, Integer>>(
+    maxReferenceCounts = new ArrayList<Counter<Sequence<TK>>>(
         referencesList.size());
     refLengths = new int[referencesList.size()][];
     initReferences(referencesList);
@@ -50,21 +53,21 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
 
       refLengths[listI] = new int[refsSz];
-      Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(
+      Counter<Sequence<TK>> maxReferenceCount = Metrics.getMaxNGramCounts(
           references, order);
       maxReferenceCounts.add(maxReferenceCount);
       refLengths[listI][0] = references.get(0).size();
 
       for (int refI = 1; refI < refsSz; refI++) {
         refLengths[listI][refI] = references.get(refI).size();
-        Map<Sequence<TK>, Integer> altCounts = Metrics.getNGramCounts(
+        Counter<Sequence<TK>> altCounts = Metrics.getNGramCounts(
             references.get(refI), order);
         for (Sequence<TK> sequence : new HashSet<Sequence<TK>>(
             altCounts.keySet())) {
-          Integer cnt = maxReferenceCount.get(sequence);
-          Integer altCnt = altCounts.get(sequence);
-          if (cnt == null || cnt.compareTo(altCnt) < 0) {
-            maxReferenceCount.put(sequence, altCnt);
+          double cnt = maxReferenceCount.getCount(sequence);
+          double altCnt = altCounts.getCount(sequence);
+          if (cnt < altCnt) {
+            maxReferenceCount.setCount(sequence, altCnt);
           }
         }
       }
@@ -73,11 +76,11 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   private void initNgramWeights(List<List<Sequence<TK>>> referencesList) {
     int len = 0;
-    Map<Sequence<TK>, Integer> allNgrams = new HashMap<Sequence<TK>, Integer>();
+    Counter<Sequence<TK>> allNgrams = new ClassicCounter<Sequence<TK>>();
     for (List<Sequence<TK>> references : referencesList) {
       for (Sequence<TK> reference : references) {
         len += reference.size();
-        Map<Sequence<TK>, Integer> altCounts = Metrics.getNGramCounts(
+        Counter<Sequence<TK>> altCounts = Metrics.getNGramCounts(
             reference, order);
         addToCounts(allNgrams, altCounts);
       }
@@ -85,15 +88,9 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
     ngramInfo = Metrics.getNGramInfo(allNgrams, len);
   }
 
-  static private <TK> void addToCounts(Map<Sequence<TK>, Integer> counter,
-      Map<Sequence<TK>, Integer> otherCounter) {
-    for (Map.Entry<Sequence<TK>, Integer> sequenceIntegerEntry : otherCounter
-        .entrySet()) {
-      Integer icnt = counter.get(sequenceIntegerEntry.getKey());
-      int cnt = (icnt != null) ? icnt : 0;
-      counter.put(sequenceIntegerEntry.getKey(),
-          cnt + sequenceIntegerEntry.getValue());
-    }
+  static private <TK> void addToCounts(Counter<Sequence<TK>> counter,
+      Counter<Sequence<TK>> otherCounter) {
+    Counters.addInPlace(counter, otherCounter);
   }
 
   @Override
@@ -177,7 +174,7 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
               futurePossibleCounts[i][j] = possibleMatchCounts(j, seqSz);
             }
           }
-          Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(
+          Counter<Sequence<TK>> canidateCounts = Metrics.getNGramCounts(
               tran.translation, order);
           Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(i));
           double[] localCounts = localMatchCounts(canidateCounts);
@@ -227,22 +224,22 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
       return d >= 0 ? d : 0;
     }
 
-    private double[] localMatchCounts(Map<Sequence<TK>, Integer> clippedCounts) {
+    private double[] localMatchCounts(Counter<Sequence<TK>> clippedCounts) {
       double[] counts = new double[order];
-      for (Map.Entry<Sequence<TK>, Integer> entry : clippedCounts.entrySet()) {
-        int cnt = entry.getValue();
+      for (Sequence<TK> ngram : clippedCounts.keySet()) {
+        double cnt = clippedCounts.getCount(ngram);
         if (cnt > 0) {
-          int len = entry.getKey().size();
-          if (ngramInfo.containsKey(entry.getKey()))
-            counts[len - 1] += cnt * ngramInfo.get(entry.getKey());
+          int len = ngram.size();
+          if (ngramInfo.containsKey(ngram))
+            counts[len - 1] += cnt * ngramInfo.getCount(ngram);
           else
-            System.err.println("Missing key for " + entry.getKey().toString());
+            System.err.println("Missing key for " + ngram.toString());
         }
       }
       return counts;
     }
 
-    private void incCounts(Map<Sequence<TK>, Integer> clippedCounts,
+    private void incCounts(Counter<Sequence<TK>> clippedCounts,
         Sequence<TK> sequence, int mul) {
       int seqSz = sequence.size();
       for (int i = 0; i < order; i++) {
@@ -256,12 +253,12 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
     }
 
-    private void incCounts(Map<Sequence<TK>, Integer> clippedCounts,
+    private void incCounts(Counter<Sequence<TK>> clippedCounts,
         Sequence<TK> sequence) {
       incCounts(clippedCounts, sequence, 1);
     }
 
-    private void decCounts(Map<Sequence<TK>, Integer> clippedCounts,
+    private void decCounts(Counter<Sequence<TK>> clippedCounts,
         Sequence<TK> sequence) {
       incCounts(clippedCounts, sequence, -1);
     }
@@ -276,7 +273,7 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
             pos + 1, maxReferenceCounts.size()));
       }
       if (tran != null) {
-        Map<Sequence<TK>, Integer> canidateCounts = Metrics.getNGramCounts(
+        Counter<Sequence<TK>> canidateCounts = Metrics.getNGramCounts(
             tran.translation, order);
         Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(pos));
         sequences.add(tran.translation);
@@ -296,11 +293,11 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
         throw new IndexOutOfBoundsException(String.format("Index: %d >= %d",
             index, sequences.size()));
       }
-      Map<Sequence<TK>, Integer> canidateCounts = (trans == null ? new HashMap<Sequence<TK>, Integer>()
+      Counter<Sequence<TK>> canidateCounts = (trans == null ? new ClassicCounter<Sequence<TK>>()
           : Metrics.getNGramCounts(trans.translation, order));
       Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(index));
       if (sequences.get(index) != null) {
-        Map<Sequence<TK>, Integer> oldCanidateCounts = Metrics.getNGramCounts(
+        Counter<Sequence<TK>> oldCanidateCounts = Metrics.getNGramCounts(
             sequences.get(index), order);
         Metrics.clipCounts(oldCanidateCounts, maxReferenceCounts.get(index));
         decCounts(oldCanidateCounts, sequences.get(index));

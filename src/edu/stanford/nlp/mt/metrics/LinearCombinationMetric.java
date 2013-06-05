@@ -285,9 +285,9 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
         bleuIncMetric.effectiveReferenceLength());
 
     System.out.printf("\nPrecision Details:\n");
-    int[][] precCounts = bleuIncMetric.ngramPrecisionCounts();
+    double[][] precCounts = bleuIncMetric.ngramPrecisionCounts();
     for (int i = 0; i < ngramPrecisions.length; i++) {
-      System.out.printf("\t%d:%d/%d\n", i, precCounts[i][0], precCounts[i][1]);
+      System.out.printf("\t%d:%d/%d\n", i, (int) precCounts[i][0], (int) precCounts[i][1]);
     }
   }
 }
