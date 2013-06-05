@@ -69,7 +69,9 @@ public class Metrics {
   static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(
       List<Sequence<TK>> sequences, double[] seqWeights, int maxOrder) {
     Map<Sequence<TK>, Integer> maxCounts = new HashMap<Sequence<TK>, Integer>();
-    assert seqWeights == null || seqWeights.length == sequences.size() : "Improper weight vector for sequences.";
+    if(seqWeights != null && seqWeights.length != sequences.size()) {
+      throw new RuntimeException("Improper weight vector for sequences.");
+    }
     
     int seqId = 0;
     for (Sequence<TK> sequence : sequences) {
