@@ -633,7 +633,7 @@ public class OnlineTuner {
     for (int sourceId : batch) {
       sourceList.add(tuneSource.get(sourceId));
       referenceList.add(references.get(sourceId));
-      if (createPseudoReferences) {
+      if (createPseudoReferences && pseudoReferences != null && pseudoReferences.get(0).size() > 0) {
         referenceList.get(referenceList.size()-1).addAll(pseudoReferences.get(sourceId));
       }
     }
