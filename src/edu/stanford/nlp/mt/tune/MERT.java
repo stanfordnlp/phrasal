@@ -735,12 +735,12 @@ public class MERT extends Thread {
 
     // Load nbest list:
     System.err.printf("Loading nbest list: %s\n", nbestListFile);
-    nbest = new FlatNBestList(nbestListFile, featureIndex, tokenizeNIST);
+    nbest = new FlatNBestList(nbestListFile, featureIndex, tokenizeNIST, defaultMERT.references.size());
     System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
     FlatNBestList localNbest = null;
     if (!"none".equals(localNbestListFile)) {
       localNbest = new FlatNBestList(localNbestListFile,
-        nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
+        nbest.sequenceSelfMap, featureIndex, tokenizeNIST, defaultMERT.references.size());
     }
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null

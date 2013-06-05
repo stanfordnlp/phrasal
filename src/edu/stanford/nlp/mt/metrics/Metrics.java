@@ -55,6 +55,11 @@ public class Metrics {
     return counts;
   }
 
+  static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(
+      List<Sequence<TK>> sequences, int maxOrder) {
+    return getMaxNGramCounts(sequences, null, maxOrder);
+  }
+  
   /**
    * Compute maximum n-gram counts from one or more sequences.
    * 
@@ -62,18 +67,22 @@ public class Metrics {
    * @param maxOrder - The n-gram order.
    */
   static public <TK> Map<Sequence<TK>, Integer> getMaxNGramCounts(
-      List<Sequence<TK>> sequences, int maxOrder) {
+      List<Sequence<TK>> sequences, double[] seqWeights, int maxOrder) {
     Map<Sequence<TK>, Integer> maxCounts = new HashMap<Sequence<TK>, Integer>();
-
+    assert seqWeights == null || seqWeights.length == sequences.size() : "Improper weight vector for sequences.";
+    
+    int seqId = 0;
     for (Sequence<TK> sequence : sequences) {
       Map<Sequence<TK>, Integer> counts = getNGramCounts(sequence, maxOrder);
       for (Map.Entry<Sequence<TK>, Integer> sequenceIntegerEntry : counts
           .entrySet()) {
         Sequence<TK> ngram = sequenceIntegerEntry.getKey();
         int countValue = sequenceIntegerEntry.getValue();
+        countValue *= seqWeights == null ? 1.0 : seqWeights[seqId];
         int currentMax = maxCounts.containsKey(ngram) ? maxCounts.get(ngram) : 0;
         maxCounts.put(ngram, Math.max(countValue, currentMax));
       }
+      ++seqId;
     }
     return maxCounts;
   }

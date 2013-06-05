@@ -84,9 +84,9 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
     maxRefLengths = new HashMap<Integer,Integer>();
   }
 
-  private Map<Sequence<TK>,Integer> getMaxRefCounts(int sourceId, List<Sequence<TK>> references) {
+  private Map<Sequence<TK>,Integer> getMaxRefCounts(int sourceId, double[] referenceWeights, List<Sequence<TK>> references) {
     if ( ! maxRefCounts.containsKey(sourceId)) {
-      Map<Sequence<TK>, Integer> counts = Metrics.getMaxNGramCounts(references, order);
+      Map<Sequence<TK>, Integer> counts = Metrics.getMaxNGramCounts(references, referenceWeights, order);
       maxRefCounts.put(sourceId, counts);
     }
     return maxRefCounts.get(sourceId);
@@ -127,17 +127,17 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
    *
    * Note that this score can be negative. In that case, it will be clamped to 0
    * by the hinge loss.
-   *
    * @param trans
    * @param nbestId
+   *
    * @return
    */
   @Override
   public synchronized double score(int sourceId, List<Sequence<TK>> references,
-      Sequence<TK> translation) {
+      double[] referenceWeights, Sequence<TK> translation) {
     assert sourceId >= 0;
     assert references != null && translation != null;
-    return score(sourceId, references, translation, false);
+    return score(sourceId, references, referenceWeights, translation, false);
   }
 
   @Override
@@ -145,13 +145,13 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
       Sequence<TK> translation) {
     assert sourceId >= 0;
     assert references != null && translation != null;
-    score(sourceId, references, translation, true);
+    score(sourceId, references, null, translation, true);
   }
   
   private double score(int sourceId, List<Sequence<TK>> references,
-        Sequence<TK> translation, boolean updateCounts) {
+        double[] referenceWeights, Sequence<TK> translation, boolean updateCounts) {
     // Extract n-grams
-    final Map<Sequence<TK>, Integer> maxRefCounts = getMaxRefCounts(sourceId, references);
+    final Map<Sequence<TK>, Integer> maxRefCounts = getMaxRefCounts(sourceId, referenceWeights, references);
     final Map<Sequence<TK>, Integer> hypothesisCounts = Metrics.getNGramCounts(translation, order);
     
     // Calculate the BLEU statistics for this example
@@ -271,7 +271,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
         Sequence<IString> translation = new RawSequence<IString>(
             IStrings.toIStringArray(line.split("\\s+")));
         List<Sequence<IString>> references = referencesList.get(lineId);
-        double score = metric.score(lineId, references, translation);
+        double score = metric.score(lineId, references, null, translation);
         System.out.printf("%d\t%.4f%n", lineId, score);
         metric.update(lineId, references, translation);
       }

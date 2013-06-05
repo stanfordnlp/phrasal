@@ -1,10 +1,14 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
-import java.io.*;
-import java.util.regex.*;
-import java.util.zip.GZIPInputStream;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
@@ -14,8 +18,10 @@ import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 
 /**
+ * Naive data structure for storing n-best lists. This data structure is not memory-efficient.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  */
 public class FlatNBestList implements NBestListContainer<IString, String> {
@@ -24,6 +30,8 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
   static public final int MAX_DENSE_SIZE = 50;
 
+  private static final int DEFAULT_INITIAL_CAPACITY = 2000;
+  
   private final List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists;
   public final Index<String> featureIndex;
   public static final String DEBUG_PROPERTY = "FlatNBestListDebug";
@@ -67,26 +75,30 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
   public FlatNBestList(String filename) throws IOException {
     this(filename, null);
   }
+  
+  public FlatNBestList(String filename, int initialCapacity) throws IOException {
+    this(filename, null, false, initialCapacity);
+  }
 
   public FlatNBestList(String filename, Index<String> featureIndex)
       throws IOException {
-    this(filename, featureIndex, false);
+    this(filename, featureIndex, false, DEFAULT_INITIAL_CAPACITY);
   }
 
   public FlatNBestList(String filename, boolean tokenizeNIST)
       throws IOException {
-    this(filename, null, tokenizeNIST);
+    this(filename, null, tokenizeNIST, DEFAULT_INITIAL_CAPACITY);
   }
 
   public FlatNBestList(String filename, Index<String> featureIndex,
-      boolean tokenizeNIST) throws IOException {
+      boolean tokenizeNIST, int initialCapacity) throws IOException {
     this(filename, new HashMap<Sequence<IString>, Sequence<IString>>(),
-        featureIndex, tokenizeNIST);
+        featureIndex, tokenizeNIST, initialCapacity);
   }
 
   public FlatNBestList(String filename,
       Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap,
-      Index<String> featureIndex, boolean tokenizeNIST) throws IOException {
+      Index<String> featureIndex, boolean tokenizeNIST, int initialCapacity) throws IOException {
     if (featureIndex == null)
       featureIndex = new HashIndex<String>();
     this.featureIndex = featureIndex;
@@ -98,43 +110,15 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
     Map<String, String> featureNameSelfMap = new HashMap<String, String>();
 
-    nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>();
+    nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(initialCapacity);
 
-    List<ScoredFeaturizedTranslation<IString, String>> currentNbest = new LinkedList<ScoredFeaturizedTranslation<IString, String>>();
+    List<ScoredFeaturizedTranslation<IString, String>> currentNbest = 
+        new LinkedList<ScoredFeaturizedTranslation<IString, String>>();
 
-    LineNumberReader reader;
-    if (filename.endsWith(".gz")) {
-      reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(
-          new FileInputStream(filename)), "UTF8"));
-    } else {
-      reader = new LineNumberReader(new InputStreamReader(new FileInputStream(
-          filename), "UTF8"));
-    }
-    Pattern space = Pattern.compile(" ");
-    String lastId = null;
-    String[] emptyStringArray = new String[0];
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
+    int lastId = -1;
     for (String inline; (inline = reader.readLine()) != null;) {
-      StringTokenizer toker = new StringTokenizer(inline);
-      List<String> listFields = new LinkedList<String>();
-      do {
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        do {
-          String token = toker.nextToken();
-          if ("|||".equals(token))
-            break;
-          if (!first)
-            sb.append(" ");
-          else
-            first = false;
-          sb.append(token);
-        } while (toker.hasMoreTokens());
-        listFields.add(sb.toString());
-      } while (toker.hasMoreTokens());
-
-      String[] fields = listFields.toArray(emptyStringArray);
-
-      // fields = tripplePipes.split(inline);
+      String[] fields = inline.split(Pattern.quote(NBEST_SEP));
       if (fields.length < 3) {
         System.err.printf("Warning: bad nbest-list format: %s\n", inline);
         System.err.printf(
@@ -142,49 +126,30 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
             fields.length);
         continue;
       }
-      String id = fields[0];
-      String translation = fields[1];
+      int id = Integer.valueOf(fields[0]);
+      String translation = fields[1].trim();
       if (tokenizeNIST)
         translation = NISTTokenizer.tokenize(translation);
-      String featuresStr = fields[2];
-      String scoreStr = (fields.length >= 4 ? fields[3] : "0");
-      String latticeIdStr = (fields.length >= 5 ? fields[4] : null);
-      // System.err.printf("reading id: %s\n", id);
-      if (lastId == null) {
-        lastId = id;
-      } else if (!id.equals(lastId)) {
-        int intId; // = -1;
-        try {
-          intId = Integer.parseInt(id);
-        } catch (NumberFormatException e) {
-          throw new RuntimeException(String.format(
-              "id '%s' can not be parsed as an integer value (line: %d)\n", id,
-              reader.getLineNumber()));
+      String featuresStr = fields[2].trim();
+      String scoreStr = (fields.length >= 4 ? fields[3].trim() : "0");
+      String latticeIdStr = (fields.length >= 5 ? fields[4].trim() : null);
+      
+      if (lastId >= 0 && lastId != id) {
+        // n-best lists may be out of order
+        while (nbestLists.size() <= lastId) {
+          nbestLists.add(null);
         }
-        int intLastId = Integer.parseInt(lastId);
-        if (nbestLists.size() > intId) {
-          throw new RuntimeException("n-best list ids are out of order");
+        if (nbestLists.get(lastId) != null) {
+          throw new RuntimeException("N-best lists are not contiguous for id: " + String.valueOf(lastId));
         }
-
-        while (nbestLists.size() < intLastId) {
-          // System.err.printf("Inserting empty: %d/%d\n", intLastId,
-          // nbestLists.size());
-          nbestLists
-              .add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>());
-        }
-
-        // System.err.printf("Inserting NON-empty: %d/%d\n", intLastId,
-        // nbestLists.size());
-        nbestLists
-            .add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
-                currentNbest));
-        currentNbest.clear();
-        lastId = id;
+        nbestLists.set(lastId, new ArrayList<ScoredFeaturizedTranslation<IString, String>>(currentNbest));
+        currentNbest = new LinkedList<ScoredFeaturizedTranslation<IString, String>>();
         if (DEBUG) {
           System.err.printf("Doing %s Memory: %d MiB\n", id,
               (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024));
         }
       }
+      lastId = id;
 
       double score;
       try {
@@ -214,7 +179,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
         }
       }
 
-      String[] featureFields = space.split(featuresStr);
+      String[] featureFields = featuresStr.split("\\s+");
       String featureName = "unlabeled";
       Map<String, List<Double>> featureMap = new HashMap<String, List<Double>>();
       featureMap.put(featureName, new ArrayList<Double>());
@@ -270,7 +235,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
               featureIndex);
 
       Sequence<IString> sequence = new RawIStringSequence(
-          IStrings.toIStringArray(space.split(translation)));
+          IStrings.toIStringArray(translation.split("\\s+")));
       Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
       if (sequenceStored == null) {
         sequenceSelfMap.put(sequence, sequence);
@@ -287,17 +252,17 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       currentNbest.add(sfTrans);
     }
 
-    int intLastId = (lastId == null ? -1 : Integer.parseInt(lastId));
-
-    while (nbestLists.size() < intLastId) {
-      // System.err.printf("Inserting empty: %d/%d\n", intLastId,
-      // nbestLists.size());
-      nbestLists
-          .add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>());
-    }
-
-    nbestLists.add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
+    if (lastId < 0) {
+      throw new RuntimeException("N-best list is empty or malformed!");
+    } else if (lastId < nbestLists.size()) {
+      nbestLists.set(lastId, new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
         currentNbest));
+    } else if (lastId == nbestLists.size()) {
+      nbestLists.add(new ArrayList<ScoredFeaturizedTranslation<IString, String>>(
+          currentNbest));
+    } else {
+      throw new RuntimeException("N-best list has some empty ids");
+    }
 
     sequenceSelfMap = null;
     featureNameSelfMap = null;
@@ -383,8 +348,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
     }
 
     String nbestListFilename = args[0];
-    FlatNBestList nbestList = new FlatNBestList(nbestListFilename, null,
-        false);
+    FlatNBestList nbestList = new FlatNBestList(nbestListFilename);
     System.out.print(nbestList.printMosesFormat());
   }
 

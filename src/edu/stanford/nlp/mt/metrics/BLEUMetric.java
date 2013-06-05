@@ -89,9 +89,16 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   public static <TK> double computeLocalSmoothScore(Sequence<TK> seq, 
       List<Sequence<TK>> refs, 
       int order, boolean doNakovExtension) {
+    return computeLocalSmoothScore(seq, refs, null, order, doNakovExtension);
+  }
+
+  public static <TK> double computeLocalSmoothScore(Sequence<TK> seq,
+      List<Sequence<TK>> refs, double[] refWeights, int order, boolean doNakovExtension) {
+    
     Map<Sequence<TK>, Integer> candidateCounts = Metrics.getNGramCounts(seq,
         order);
-    Map<Sequence<TK>, Integer> maxReferenceCount = Metrics.getMaxNGramCounts(refs, order);
+    Map<Sequence<TK>, Integer> maxReferenceCount = (refWeights == null) ? 
+        Metrics.getMaxNGramCounts(refs, order) : Metrics.getMaxNGramCounts(refs, refWeights, order);
 
     Metrics.clipCounts(candidateCounts, maxReferenceCount);
     int seqSz = seq.size();

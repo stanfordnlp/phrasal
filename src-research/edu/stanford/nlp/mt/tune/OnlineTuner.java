@@ -1,10 +1,14 @@
 package edu.stanford.nlp.mt.tune;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,16 +25,19 @@ import java.util.logging.SimpleFormatter;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.NBestListContainer;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.BLEUOracleCost;
 import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.NakovBLEUGain;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
@@ -98,6 +105,7 @@ public class OnlineTuner {
   // Tuning set
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
+  private int numReferences;
 
   // Various options
   private boolean returnBestDev = false;
@@ -115,6 +123,18 @@ public class OnlineTuner {
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
   private int minFeatureCount;
+  private final Map<String,Set<Integer>> clippedFeatureIndex = 
+    new HashMap<String,Set<Integer>>();
+  
+  // Pseudo-reference selection
+  private boolean createPseudoReferences = false;
+  private String tempDirectory = "/tmp";
+  private PrintStream nbestListWriter;
+  private String nbestFilename;
+  private int numPseudoReferences = -1;
+  private int pseudoReferenceBurnIn = -1;
+  private List<List<Sequence<IString>>> pseudoReferences;
+  private double[] referenceWeights;
 
   public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
@@ -149,6 +169,26 @@ public class OnlineTuner {
   }
 
   /**
+   * Configure selection of pseudo-references for the gold scoring metrics.
+   * 
+   * @param tmpPath
+   */
+  private void computePseudoReferences(String pseudoRefOptions,
+      String tmpPath) {
+    createPseudoReferences = true;
+    tempDirectory = tmpPath;
+    String[] options = pseudoRefOptions.split(",");
+    assert options.length == 2 : "Invalid pseudoreference option string";
+    numPseudoReferences = Integer.valueOf(options[0]);
+    pseudoReferenceBurnIn = Integer.valueOf(options[1]);
+    int tuneSetSize = tuneSource.size();
+    pseudoReferences = new ArrayList<List<Sequence<IString>>>(tuneSetSize);
+    for (int i = 0; i < tuneSetSize; ++i) {
+      pseudoReferences.add(new LinkedList<Sequence<IString>>());
+    }
+  }
+  
+  /**
    * Minimum number of times we need to see a feature
    * before learning a model weight for it.
    *
@@ -173,13 +213,6 @@ public class OnlineTuner {
    * @param b
    */
   private void doParameterAveraging(boolean b) { this.doParameterAveraging = b; }
-
-
-  Map<String,Set<Integer>> clippedFeatureIndex = 
-    new HashMap<String,Set<Integer>>();
-
-  Counter<String> clippedFeatureCounts = new OpenAddressCounter<String>();
- 
 
   /**
    * Determine whether a feature has been seen enough times
@@ -273,16 +306,16 @@ public class OnlineTuner {
    */
   private class GradientProcessor implements ThreadsafeProcessor<ProcessorInput,ProcessorOutput> {
     private final OnlineOptimizer<IString, String> optimizer; 
-    private final SentenceLevelMetric<IString, String> lossFunction;
+    private final SentenceLevelMetric<IString, String> scoreMetric;
     private final int threadId;
 
     // Counter for the newInstance() method
     private int childThreadId;
 
     public GradientProcessor(OnlineOptimizer<IString, String> optimizer, 
-        SentenceLevelMetric<IString, String> lossFunction, int firstThreadId) {
+        SentenceLevelMetric<IString, String> scoreMetric, int firstThreadId) {
       this.optimizer = optimizer;
-      this.lossFunction = lossFunction;
+      this.scoreMetric = scoreMetric;
       this.threadId = firstThreadId;
       this.childThreadId = firstThreadId+1;
     }
@@ -303,7 +336,7 @@ public class OnlineTuner {
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
             threadId);
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
-            input.translationIds[0], nbestList, input.references.get(0), lossFunction);
+            input.translationIds[0], nbestList, input.references.get(0), referenceWeights, scoreMetric);
         nbestLists.add(nbestList);
         
       } else {
@@ -317,7 +350,7 @@ public class OnlineTuner {
         }
 
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
-                nbestLists, input.references, lossFunction);
+                nbestLists, input.references, referenceWeights, scoreMetric);
       }
 
       if (minFeatureCount > 0) {
@@ -335,7 +368,7 @@ public class OnlineTuner {
 
     @Override
     public ThreadsafeProcessor<ProcessorInput, ProcessorOutput> newInstance() {
-      return new GradientProcessor(optimizer, lossFunction, childThreadId++);
+      return new GradientProcessor(optimizer, scoreMetric, childThreadId++);
     }
   }
 
@@ -354,11 +387,10 @@ public class OnlineTuner {
   private int update(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
-      boolean doExpectedBleu, boolean endOfEpoch) {
+      boolean endOfEpoch) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
-    assert nbestLists != null || !doExpectedBleu;
     
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
@@ -382,14 +414,19 @@ public class OnlineTuner {
         wtsAccumulator.addAll(currentWts);
       }
 
-      // Add n-best lists from this update step
-      if (doExpectedBleu) {
+      // Do something with the n-best lists before dumping them?
+      if (nbestLists != null || createPseudoReferences) {
         for (int i = 0; i < result.translationIds.length; ++i) {
-          int translationId = result.translationIds[i];
-          assert ! nbestLists.containsKey(translationId);
-          // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
-          Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
-          nbestLists.put(translationId, bestHypothesis);
+          int sourceId = result.translationIds[i];
+          if (createPseudoReferences && nbestListWriter != null) {
+            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter);
+          }
+          if (nbestLists != null) {
+            assert ! nbestLists.containsKey(sourceId);
+            // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
+            Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
+            nbestLists.put(sourceId, bestHypothesis);
+          }
         }
       }
     }
@@ -402,14 +439,14 @@ public class OnlineTuner {
    * per Langford et al. (2009).
    * @param batchSize 
    * 
-   * @param lossFunction 
+   * @param scoreMetric 
    * @param doExpectedBleu 
    * @param randomizeStartingWeights 
    * @param optimizerAlg
    * @param optimizerFlags 
    * @param nThreads
    */
-  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> lossFunction, 
+  public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> scoreMetric, 
       boolean doExpectedBleu, int weightWriteOutInterval) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
@@ -438,13 +475,14 @@ public class OnlineTuner {
       // n-best lists. Purge for each epoch
       Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
           new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
+      if (createPseudoReferences) updatePseudoReferences(epoch);
 
       // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
       // to finish at the end of the epoch
       boolean orderResults = false;
       final MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = 
           new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
-              new GradientProcessor(optimizer,lossFunction,0), orderResults);
+              new GradientProcessor(optimizer,scoreMetric,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       ArrayMath.shuffle(indices);
@@ -456,7 +494,7 @@ public class OnlineTuner {
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
         logger.info("Threadpool.status: " + wrapper.toString());
-        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, false);
+        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false);
         
         if((t+1) % weightWriteOutInterval == 0) {
         	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
@@ -465,8 +503,7 @@ public class OnlineTuner {
 
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
-      updateId = 
-          update(currentWts, updateId, wrapper, updater, nbestLists, doExpectedBleu, true);
+      updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
@@ -491,6 +528,56 @@ public class OnlineTuner {
     }
     
     saveFinalWeights(epochWeights);
+  }
+
+  /**
+   * Update the pseudo-references for this training epoch.
+   * 
+   * @param epoch
+   */
+  private void updatePseudoReferences(int epoch) {    
+    // Compute the pseudo reference set
+    if (nbestListWriter != null) {
+      nbestListWriter.close();
+      EvaluationMetric<IString, String> metric = new BLEUMetric<IString, String>(references);
+      MultiTranslationMetricMax<IString, String> searchAlgorithm = new HillClimbingMultiTranslationMetricMax<IString, String>(
+          metric);
+
+      NBestListContainer<IString, String> nbestLists = null;
+      try {
+        nbestLists = new FlatNBestList(nbestFilename, references.size());
+      } catch (IOException e) {
+        e.printStackTrace();
+        logger.severe("Could not load pseudo references from:" + nbestFilename);
+        throw new RuntimeException("Could not load pseudo references from:" + nbestFilename);
+      }
+      List<ScoredFeaturizedTranslation<IString, String>> maxFeaturizedTranslations = searchAlgorithm
+          .maximize(nbestLists);
+
+      assert maxFeaturizedTranslations.size() == tuneSource.size() : "Pseudo reference set does not match tuning set";
+      int numTranslations = maxFeaturizedTranslations.size();
+      for (int i = 0; i < numTranslations; ++i) {
+        Sequence<IString> translation = maxFeaturizedTranslations.get(i).translation;
+        if(pseudoReferences.get(i).size() > numPseudoReferences) pseudoReferences.get(i).remove(0);
+        pseudoReferences.get(i).add(translation);
+      }
+      // Cleanup...these n-best files can get huge.
+      File file = new File(nbestFilename);
+      file.delete();
+      
+      // Setup the reference weights
+      referenceWeights = new double[numReferences+pseudoReferences.get(0).size()];
+      Arrays.fill(referenceWeights, 0.5);
+      for (int i = 0; i < numReferences; ++i) referenceWeights[i] = 1.0;
+    }
+    
+    // Setup the next n-best writer
+    if (epoch >= pseudoReferenceBurnIn) {
+      nbestFilename = String.format("%s/online-nbest.%d.nbest", tempDirectory,
+          epoch);
+      logger.info("Writing nbest lists to: " + nbestFilename);
+      nbestListWriter = IOTools.getWriterFromFile(nbestFilename);
+    }
   }
 
   /**
@@ -546,6 +633,9 @@ public class OnlineTuner {
     for (int sourceId : batch) {
       sourceList.add(tuneSource.get(sourceId));
       referenceList.add(references.get(sourceId));
+      if (createPseudoReferences) {
+        referenceList.get(referenceList.size()-1).addAll(pseudoReferences.get(sourceId));
+      }
     }
     return new ProcessorInput(sourceList, referenceList, weights, batch, inputId);
   }
@@ -566,7 +656,8 @@ public class OnlineTuner {
     final int numSourceSentences = tuneSource.size();
     references = new ArrayList<List<Sequence<IString>>>(numSourceSentences);
     String[] filenames = refStr.split(",");
-    logger.info("Number of references for expected BLEU calculation: " + filenames.length);
+    numReferences = filenames.length;
+    logger.info("Number of references for expected BLEU calculation: " + numReferences);
     for (String filename : filenames) {
       List<Sequence<IString>> refList = IStrings.fileSplitToIStrings(filename);
       assert refList.size() == numSourceSentences;
@@ -646,33 +737,31 @@ public class OnlineTuner {
   /**
    * Load a loss function from a string key.
    * 
-   * @param lossFunctionStr
-   * @param lossFunctionOpts 
+   * @param scoreMetricStr
+   * @param scoreMetricOpts 
    * @return
    */
-  public static SentenceLevelMetric<IString, String> loadLossFunction(
-      String lossFunctionStr, String[] lossFunctionOpts) {
-    assert lossFunctionStr != null;
+  public static SentenceLevelMetric<IString, String> loadGoldScoreMetric(
+      String scoreMetricStr, String[] scoreMetricOpts) {
 
-    int order = lossFunctionOpts == null ? 4 : Integer.parseInt(lossFunctionOpts[0]);
-    if (lossFunctionStr.equals("bleu-smooth")) {
+    if (scoreMetricStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU (BLEU+1)
-      return new BLEUSmoothGain<IString,String>(order);
+      return new BLEUSmoothGain<IString,String>();
 
-    } else if (lossFunctionStr.equals("bleu-nakov")) {
+    } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
-      return new NakovBLEUGain<IString,String>(order);
+      return new NakovBLEUGain<IString,String>();
       
-    } else if (lossFunctionStr.equals("bleu-chiang")) {
+    } else if (scoreMetricStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
-      return new BLEUOracleCost<IString,String>(order, false);
+      return new BLEUOracleCost<IString,String>(BLEUOracleCost.DEFAULT_ORDER, false);
 
-    } else if (lossFunctionStr.equals("bleu-cherry")) {
+    } else if (scoreMetricStr.equals("bleu-cherry")) {
       // Cherry and Foster (2012)
-      return new BLEUOracleCost<IString,String>(order, true);
+      return new BLEUOracleCost<IString,String>(BLEUOracleCost.DEFAULT_ORDER, true);
 
     } else {
-      throw new UnsupportedOperationException("Unsupported loss function: " + lossFunctionStr);
+      throw new UnsupportedOperationException("Unsupported scoring metric: " + scoreMetricStr);
     }
   }
 
@@ -731,6 +820,8 @@ public class OnlineTuner {
     optionMap.put("ef", 1);
     optionMap.put("wi", 1);
     optionMap.put("fmc", 1);
+    optionMap.put("tmp", 1);
+    optionMap.put("p", 1);
     return optionMap;
   }
 
@@ -748,10 +839,10 @@ public class OnlineTuner {
     sb.append("   -uw        : Uniform weight initialization").append(nl);
     sb.append("   -rw        : Randomize starting weights at the start of each epoch").append(nl);
     sb.append("   -e num     : Number of online epochs").append(nl);
-    sb.append("   -o str     : Optimizer: [arow,mira-1best]").append(nl);
+    sb.append("   -o str     : Optimizer: [pro-sgd,mira-1best]").append(nl);
     sb.append("   -of str    : Optimizer flags (format: CSV list)").append(nl);
-    sb.append("   -m str     : Evaluation metric (loss function) for the tuning algorithm (default: bleu-smooth)").append(nl);
-    sb.append("   -mf str    : Evaluation metric flags (format: CSV list)").append(nl);
+    sb.append("   -m str     : Gold scoring metric for the tuning algorithm (default: bleu-smooth)").append(nl);
+    sb.append("   -mf str    : Gold scoring metric flags (format: CSV list)").append(nl);
     sb.append("   -n str     : Experiment name").append(nl);
     sb.append("   -r str     : Use multiple references (format: CSV list)").append(nl);
     sb.append("   -bw        : Set final weights to the best training epoch.").append(nl);
@@ -762,6 +853,8 @@ public class OnlineTuner {
     sb.append("   -ef        : Expected # of features").append(nl);
     sb.append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl);
     sb.append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl);
+    sb.append("   -tmp path  : Temp directory (default: /tmp)").append(nl);
+    sb.append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl);
     return sb.toString().trim();
   }
 
@@ -776,8 +869,8 @@ public class OnlineTuner {
     int numEpochs = PropertiesUtils.getInt(opts, "e", 1);
     String optimizerAlg = opts.getProperty("o", "mira-1best");
     String[] optimizerFlags = opts.containsKey("of") ? opts.getProperty("of").split(",") : null;
-    String lossFunctionStr = opts.getProperty("m", "bleu-smooth");
-    String[] lossFunctionOpts = opts.containsKey("mf") ? opts.getProperty("mf").split(",") : null;
+    String scoreMetricStr = opts.getProperty("m", "bleu-smooth");
+    String[] scoreMetricOpts = opts.containsKey("mf") ? opts.getProperty("mf").split(",") : null;
     String experimentName = opts.getProperty("n", "debug");
     boolean uniformStartWeights = PropertiesUtils.getBool(opts, "uw");
     String refStr = opts.getProperty("r", null);
@@ -790,7 +883,9 @@ public class OnlineTuner {
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
-
+    String tmpPath = opts.getProperty("tmp", "/tmp");
+    String pseudoRefOptions = opts.getProperty("p", null);
+    
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {
@@ -814,12 +909,15 @@ public class OnlineTuner {
     System.out.println();
 
     // Run optimization
-    final SentenceLevelMetric<IString,String> lossFunction = loadLossFunction(lossFunctionStr, lossFunctionOpts);
+    final SentenceLevelMetric<IString,String> lossFunction = loadGoldScoreMetric(scoreMetricStr, scoreMetricOpts);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
         optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
         expectedNumFeatures);
     if (refStr != null) {
       tuner.loadReferences(refStr);
+    }
+    if (pseudoRefOptions != null) {
+      tuner.computePseudoReferences(pseudoRefOptions, tmpPath);
     }
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);

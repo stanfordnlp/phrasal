@@ -18,20 +18,22 @@ public interface OnlineOptimizer<TK,FV> {
    * Compute the gradient for a given training example.
    * 
    * @param weights 
+   * @param weights
    * @param source
    * @param sourceId
    * @param translations
-   * @param lossFunction
-   * @param weights
+   * @param referenceWeights
+   * @param scoreMetric
    * @param featureWhitelist 
-   * 
    * @return Updated weight vector.
    */
   public Counter<FV> getGradient(Counter<FV> weights, 
       Sequence<TK> source, 
       int sourceId,
       List<RichTranslation<TK, FV>> translations,
-      List<Sequence<TK>> references, SentenceLevelMetric<TK,FV> lossFunction);
+      List<Sequence<TK>> references, 
+      double[] referenceWeights, 
+      SentenceLevelMetric<TK,FV> scoreMetric);
   
   /**
    * Compute the gradient for a mini-batch.
@@ -41,14 +43,17 @@ public interface OnlineOptimizer<TK,FV> {
    * @param sourceIds
    * @param translations
    * @param references
-   * @param lossFunction
+   * @param referenceWeights TODO
+   * @param scoreMetric
    * @return
    */
   public Counter<FV> getBatchGradient(Counter<FV> weights, 
       List<Sequence<TK>> sources, 
       int[] sourceIds,
       List<List<RichTranslation<TK, FV>>> translations,
-      List<List<Sequence<TK>>> references, SentenceLevelMetric<TK,FV> lossFunction);
+      List<List<Sequence<TK>>> references, 
+      double[] referenceWeights, 
+      SentenceLevelMetric<TK,FV> scoreMetric);
   
   /**
    * Return a new updater object, which defines the online update rule. The updater

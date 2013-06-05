@@ -19,10 +19,11 @@ public interface SentenceLevelMetric<TK,FV> {
    * 
    * @param sourceId
    * @param references
+   * @param referenceWeights
    * @param translation
    * @return
    */
-  public double score(int sourceId, List<Sequence<TK>> references, Sequence<TK> translation);
+  public double score(int sourceId, List<Sequence<TK>> references, double[] referenceWeights, Sequence<TK> translation);
   
   /**
    * Update internal state with statistics from this set of evaluation objects.
