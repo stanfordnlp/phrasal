@@ -186,6 +186,9 @@ public class OnlineTuner {
     for (int i = 0; i < tuneSetSize; ++i) {
       pseudoReferences.add(new LinkedList<Sequence<IString>>());
     }
+    
+    logger.info(String.format("Creating %d pseudoreferences", numPseudoReferences));
+    logger.info("Pseudoreference temp directory: " + tempDirectory);
   }
   
   /**
