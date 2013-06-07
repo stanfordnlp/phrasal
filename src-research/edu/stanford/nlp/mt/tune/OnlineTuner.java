@@ -571,8 +571,9 @@ public class OnlineTuner {
       
       // Setup the reference weights. Downweight the pseudo references
       referenceWeights = new double[numReferences+pseudoReferences.get(0).size()];
-      Arrays.fill(referenceWeights, 0.5);
-      for (int i = 0; i < numReferences; ++i) referenceWeights[i] = 1.0;
+      Arrays.fill(referenceWeights, 1.0);
+      //      Arrays.fill(referenceWeights, 0.5);
+//      for (int i = 0; i < numReferences; ++i) referenceWeights[i] = 1.0;
     }
     
     // Setup the next n-best writer
