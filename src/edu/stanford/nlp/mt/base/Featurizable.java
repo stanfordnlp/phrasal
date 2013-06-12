@@ -402,8 +402,8 @@ public class Featurizable<TK, FV> {
 
   private static boolean constructAlignment = false;
 
-  public static void enableAlignments() {
-    constructAlignment = true;
-  }
+  public static void enableAlignments() { constructAlignment = true; }
+  
+  public static boolean alignmentsEnabled() { return constructAlignment; }
 
 }

@@ -100,6 +100,7 @@ public class Phrasal {
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
+  public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
 
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -125,7 +126,8 @@ public class Phrasal {
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
         MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
-        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT));
+        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
+        ALIGNMENT_OUTPUT_FILE));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -181,7 +183,13 @@ public class Phrasal {
   private boolean generateMosesNBestList = true;
   private PrintStream nbestListWriter;
   private int nbestListSize;
-
+  private boolean nbestWordInternalAlignments = false;
+  
+  /**
+   * Internal alignment options
+   */
+  private PrintStream alignmentWriter;
+  
   /**
    * References for force decoding
    */
@@ -708,11 +716,6 @@ public class Phrasal {
           + config.get(TRANSLATION_TABLE_OPT));
     }
 
-    if (config.containsKey(MOSES_NBEST_LIST_OPT)) {
-      generateMosesNBestList = Boolean.parseBoolean(config.get(
-          MOSES_NBEST_LIST_OPT).get(0));
-    }
-
     if (withGaps) {
       // Support for gaps:
       if (gapOpts.size() < 1 || gapOpts.size() > 2)
@@ -899,6 +902,25 @@ public class Phrasal {
       nbestListSize = -1;
       nbestListWriter = null;
     }
+    
+    List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
+    if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
+      generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
+      if (mosesNbestOpt.size() > 1) {
+        nbestWordInternalAlignments = Boolean.parseBoolean(mosesNbestOpt.get(1));
+      }
+    }
+        
+    // Determine if we need to generate an alignment file
+    List<String> alignmentOpt = config.get(ALIGNMENT_OUTPUT_FILE);
+    if (alignmentOpt != null && alignmentOpt.size() == 1) {
+      alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
+    }
+    
+    // Should we enable word-internal alignments?
+    if (nbestWordInternalAlignments || alignmentWriter != null) {
+      Featurizable.enableAlignments();
+    }
   }
 
   private static String makePair(String label, String value) {
@@ -1018,7 +1040,15 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, nbestWordInternalAlignments);
+      }
+      
+      // Output the alignments if necessary
+      if (alignmentWriter != null) {
+        for (RichTranslation<IString,String> translation : translations) {
+          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatNBestList.NBEST_SEP, 
+              translation.sourceTargetAlignmentString());
+        }
       }
 
     } else {
@@ -1189,10 +1219,14 @@ public class Phrasal {
       }
     }
 
-    // Close the n-best list writer
     if (nbestListWriter != null) {
-      System.err.printf("Closing n-best writer%n");
+      System.err.println("Closing n-best writer");
       nbestListWriter.close();
+    }
+    
+    if (alignmentWriter != null) {
+      System.err.println("Closing alignment writer");
+      alignmentWriter.close();
     }
   }
 
@@ -1205,17 +1239,13 @@ public class Phrasal {
   public static Map<String, List<String>> readConfig(String filename)
       throws IOException {
     Map<String, List<String>> config = new HashMap<String, List<String>>();
-    LineNumberReader reader;
-    try {
-      reader = new LineNumberReader(new FileReader(filename));
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(String.format("Can't open configuration file %s\n", filename));
-    }
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
     for (String line; (line = reader.readLine()) != null;) {
       line = line.trim().replaceAll("#.*$", "");
       if (line.length() == 0)
         continue;
       if (line.charAt(0) != '[' || line.charAt(line.length() - 1) != ']') {
+        reader.close();
         throw new RuntimeException(
             String
                 .format(

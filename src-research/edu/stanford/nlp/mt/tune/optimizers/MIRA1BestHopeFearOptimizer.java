@@ -223,8 +223,10 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
 
     @Override
     public String toString() {
+      StringBuilder sb = new StringBuilder();
+      hypothesis.nbestToMosesStringBuilder(nbestId, sb, false);
       return String.format("Score: %.4f Model: %.4f id: %s", 
-          gain, modelScore, hypothesis.nbestToMosesString(nbestId));
+          gain, modelScore, sb.toString());
     }
   }
 

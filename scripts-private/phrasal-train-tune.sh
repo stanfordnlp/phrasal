@@ -159,7 +159,7 @@ function make-ini-from-online-run {
 #
 function decode {
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
-	-config-file "$RUNNAME".ini -moses-n-best-list true \
+	"$RUNNAME".ini \
 	< $DECODE_FILE > "$RUNNAME".trans 2> logs/"$RUNNAME".log
 }
 

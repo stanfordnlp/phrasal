@@ -71,14 +71,14 @@ public class PhraseAlignment {
     return (t2s != null) ? (i < t2s.length ? t2s[i] : null) : new int[] { i };
   }
 
-  private static String toStr(int[][] t2s) {
+  private static String toStr(int[][] alignmentGrid) {
     StringBuilder sb = new StringBuilder();
-    for (int ei=0; ei<t2s.length; ++ei) {
+    for (int ei=0; ei<alignmentGrid.length; ++ei) {
       if (ei>0) sb.append(' ');
       sb.append('(');
-      if (t2s[ei] != null) {
+      if (alignmentGrid[ei] != null) {
         int i=0;
-        for (int fi : t2s[ei]) {
+        for (int fi : alignmentGrid[ei]) {
           if (i++ > 0) sb.append(',');
           sb.append(fi);
         }
@@ -91,9 +91,13 @@ public class PhraseAlignment {
   public String t2sStr() {
     return toStr(t2s);
   }
-
+  
   public String s2tStr() {
-    if (t2s == null) return "I-I";
+    return toStr(s2t());
+  }
+
+  public int[][] s2t() {
+    if (t2s == null) return null;
     List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
     for (int ei=0; ei<t2s.length; ++ei) {
       if (t2s[ei] != null) {
@@ -111,7 +115,7 @@ public class PhraseAlignment {
         s2t[fi][ei] = f2eL.get(fi).get(ei);
       }
     }
-    return toStr(s2t);
+    return s2t;
   }
 
   private static final Map<String, PhraseAlignment> map = new Object2ObjectOpenHashMap<String, PhraseAlignment>();

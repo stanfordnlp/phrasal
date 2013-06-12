@@ -51,29 +51,12 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   }
 
   /**
-	 *
-	 */
-  protected FeatureValueCollection<FV> collectFeatureValues(
-      Hypothesis<TK, FV> hyp) {
-    class LinkedFeatureValues<FV2> extends LinkedList<FeatureValue<FV2>>
-        implements FeatureValueCollection<FV2> {
-      private static final long serialVersionUID = 1L;
-
-      @Override
-      public Object clone() {
-        return super.clone();
-      }
-    }
-    LinkedFeatureValues<FV> features = new LinkedFeatureValues<FV>();
-    for (; hyp != null; hyp = hyp.preceedingHyp) {
-      List<FeatureValue<FV>> localFeatures = hyp.localFeatures;
-      if (localFeatures != null) {
-        features.addAll(localFeatures);
-      }
-    }
-    return features;
-  }
-
+   * TODO(spenceg): I'm not really sure what this does. It looks like a phrasal
+   * alignment....
+   * 
+   * @param hyp
+   * @return
+   */
   protected List<String> collectAlignments(Hypothesis<TK, FV> hyp) {
     LinkedList<String> alignments = new LinkedList<String>();
     for (; hyp != null; hyp = hyp.preceedingHyp) {

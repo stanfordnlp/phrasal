@@ -26,7 +26,7 @@ import edu.stanford.nlp.util.Index;
  */
 public class FlatNBestList implements NBestListContainer<IString, String> {
 
-  static public final String NBEST_SEP = " |||";
+  static public final String NBEST_SEP = "|||";
 
   static public final int MAX_DENSE_SIZE = 50;
 
@@ -126,7 +126,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
             fields.length);
         continue;
       }
-      int id = Integer.valueOf(fields[0]);
+      int id = Integer.valueOf(fields[0].trim());
       String translation = fields[1].trim();
       if (tokenizeNIST)
         translation = NISTTokenizer.tokenize(translation);
@@ -319,7 +319,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       for (int j = 0; j < nbestLists.get(i).size(); j++) {
         ScoredFeaturizedTranslation<IString, String> tr = nbestLists.get(i)
             .get(j);
-        sbuf.append(i).append(NBEST_SEP).append(' ').append(tr.translation)
+        sbuf.append(i).append(' ').append(NBEST_SEP).append(' ').append(tr.translation).append(' ')
             .append(NBEST_SEP);
         for (FeatureValue<String> fv : tr.features) {
           sbuf.append(' ')
@@ -330,9 +330,9 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
                       .format(fv.value)));
         }
         if (tr.score != 0.0)
-          sbuf.append(NBEST_SEP).append(' ').append(df.format(tr.score));
+          sbuf.append(' ').append(NBEST_SEP).append(' ').append(df.format(tr.score));
         if (tr.latticeSourceId != -1) {
-          sbuf.append(NBEST_SEP).append(' ');
+          sbuf.append(' ').append(NBEST_SEP).append(' ');
           sbuf.append(tr.latticeSourceId);
         }
         sbuf.append("\n");

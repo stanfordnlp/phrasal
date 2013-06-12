@@ -198,18 +198,19 @@ public final class IOTools {
    * 
    * @param translations
    * @param sourceInputId
+   * @param nbestWordInternalAlignments 
    */
   public static void writeNbest(List<RichTranslation<IString, String>> translations, 
       int sourceInputId,
       boolean generateMosesNBestList,
-      PrintStream nbestListWriter) {
+      PrintStream nbestListWriter, boolean nbestWordInternalAlignments) {
     assert translations != null;
     assert nbestListWriter != null;
     
     StringBuilder sb = new StringBuilder(translations.size() * 500);
     for (RichTranslation<IString, String> tran : translations) {
       if (generateMosesNBestList) {
-        tran.nbestToMosesStringBuilder(sourceInputId, sb);
+        tran.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
       } else {
         tran.nbestToStringBuilder(sourceInputId, sb);
       }
