@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.stanford.nlp.semgraph.SemanticGraph;
-
 /**
  * A full hypothesis with various fields extracted from the featurizable
  * for convenience. Includes the featurizable for traversal through the
@@ -25,8 +23,6 @@ public class RichTranslation<TK, FV> extends
   public final CoverageSet sourceCoverage;
   public final List<String> alignmentIndex;
   public final Featurizable<TK, FV> featurizable;
-  
-  public SemanticGraph dependency;
   
   /**
 	 *
@@ -65,12 +61,6 @@ public class RichTranslation<TK, FV> extends
     this.source = f.sourceSentence;
     this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
         : null;
-  }
-  public RichTranslation(Featurizable<TK, FV> f, double score,
-      FeatureValueCollection<FV> features, List<String> alignmentIndex,
-      long latticeSourceId, SemanticGraph dep) {
-    this(f, score, features, alignmentIndex, latticeSourceId);
-    dependency = dep;
   }
 
   private static CoverageSet constructCoverageSet(int[][] t2fAlignmentIndex) {
