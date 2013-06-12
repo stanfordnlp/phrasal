@@ -1,10 +1,11 @@
 package edu.stanford.nlp.mt.base;
 
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import edu.stanford.nlp.semgraph.SemanticGraph;
 
 /**
  * A full hypothesis with various fields extracted from the featurizable
@@ -12,6 +13,7 @@ import java.util.*;
  * translation lattice.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
@@ -25,8 +27,6 @@ public class RichTranslation<TK, FV> extends
   public final Featurizable<TK, FV> featurizable;
   
   public SemanticGraph dependency;
-
-  private static final String NBEST_SEP = FlatNBestList.NBEST_SEP;
   
   /**
 	 *
@@ -82,37 +82,6 @@ public class RichTranslation<TK, FV> extends
     return coverage;
   }
 
-
-  /**
-   * Prints NIST-tokenized n-best list for a given input segment.
-   * 
-   * @param id
-   *          Segment id
-   * @param sbuf
-   *          Where to append the output to
-   */
-  public void nbestToStringBuilder(int id, StringBuilder sbuf) {
-    sbuf.append(id);
-    sbuf.append(' ').append(NBEST_SEP).append(' ');
-    sbuf.append(NISTTokenizer.tokenize(this.translation.toString()));
-    sbuf.append(' ').append(NBEST_SEP);
-    DecimalFormat df = new DecimalFormat("0.####E0");
-    for (FeatureValue<FV> fv : this.features) {
-      sbuf.append(' ')
-          .append(fv.name)
-          .append(": ")
-          .append(
-              (fv.value == (int) fv.value ? (int) fv.value : df
-                  .format(fv.value)));
-    }
-    sbuf.append(' ').append(NBEST_SEP).append(' ');
-    sbuf.append(df.format(this.score));
-    if (latticeSourceId != -1) {
-      sbuf.append(' ').append(NBEST_SEP).append(' ');
-      sbuf.append(latticeSourceId);
-    }
-  }
-
   /**
    * Prints untokenized Moses n-best list for a given input segment. The n-best
    * list is currently not tokenized since tokenization would break the
@@ -141,13 +110,15 @@ public class RichTranslation<TK, FV> extends
     sbuf.append(this.translation);
     sbuf.append(' ').append(NBEST_SEP);
     DecimalFormat df = new DecimalFormat("0.####E0");
-    for (FeatureValue<FV> fv : this.features) {
-      sbuf.append(' ')
-          .append(fv.name)
-          .append(": ")
-          .append(
-              (fv.value == (int) fv.value ? (int) fv.value : df
-                  .format(fv.value)));
+    if (features != null) {
+      for (FeatureValue<FV> fv : this.features) {
+        sbuf.append(' ')
+        .append(fv.name)
+        .append(": ")
+        .append(
+            (fv.value == (int) fv.value ? (int) fv.value : df
+                .format(fv.value)));
+      }
     }
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(NBEST_SEP);

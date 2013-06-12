@@ -212,7 +212,8 @@ public final class IOTools {
       if (generateMosesNBestList) {
         tran.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
       } else {
-        tran.nbestToStringBuilder(sourceInputId, sb);
+        sb.append(sourceInputId).append(" ").append(FlatNBestList.NBEST_SEP).append(" ");
+        sb.append(tran.toString());
       }
       sb.append('\n');
     }

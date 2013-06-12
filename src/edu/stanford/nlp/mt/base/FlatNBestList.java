@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.base;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -288,54 +287,15 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
   @Override
   public String toString() {
-    return printVerboseFormat();
-  }
-
-  public String printVerboseFormat() {
     StringBuilder sbuf = new StringBuilder();
-    sbuf.append("Flat N-Best List:\n");
-    sbuf.append("----------------------\n");
-    for (int i = 0; i < nbestLists.size(); i++) {
-      sbuf.append("List: ").append(i).append(" (entries: ")
-          .append(nbestLists.get(i).size()).append("):\n");
-      for (int j = 0; j < nbestLists.get(i).size(); j++) {
-        sbuf.append(j).append(": Sequence: ")
-            .append(nbestLists.get(i).get(j).translation).append(" Score: ")
-            .append(nbestLists.get(i).get(j).score);
-        sbuf.append(" Features:");
-        for (FeatureValue<String> fv : nbestLists.get(i).get(j).features) {
-          sbuf.append(" ").append(fv);
-        }
-        sbuf.append("\n");
-      }
-    }
-    return sbuf.toString();
-  }
-
-  public String printMosesFormat() {
-    DecimalFormat df = new DecimalFormat("0.####E0");
-    StringBuilder sbuf = new StringBuilder();
+    String nl = System.getProperty("line.separator");
     for (int i = 0; i < nbestLists.size(); i++) {
       for (int j = 0; j < nbestLists.get(i).size(); j++) {
         ScoredFeaturizedTranslation<IString, String> tr = nbestLists.get(i)
             .get(j);
-        sbuf.append(i).append(' ').append(NBEST_SEP).append(' ').append(tr.translation).append(' ')
-            .append(NBEST_SEP);
-        for (FeatureValue<String> fv : tr.features) {
-          sbuf.append(' ')
-              .append(fv.name)
-              .append(": ")
-              .append(
-                  (fv.value == (int) fv.value ? (int) fv.value : df
-                      .format(fv.value)));
-        }
-        if (tr.score != 0.0)
-          sbuf.append(' ').append(NBEST_SEP).append(' ').append(df.format(tr.score));
-        if (tr.latticeSourceId != -1) {
-          sbuf.append(' ').append(NBEST_SEP).append(' ');
-          sbuf.append(tr.latticeSourceId);
-        }
-        sbuf.append("\n");
+        sbuf.append(i).append(" ").append(NBEST_SEP).append(" ");
+        sbuf.append(tr.toString());
+        sbuf.append(nl);
       }
     }
     return sbuf.toString();
@@ -349,7 +309,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
     String nbestListFilename = args[0];
     FlatNBestList nbestList = new FlatNBestList(nbestListFilename);
-    System.out.print(nbestList.printMosesFormat());
+    System.out.print(nbestList.toString());
   }
 
   public static String escape(String featureName) {

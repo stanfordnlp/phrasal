@@ -59,7 +59,7 @@ public class MSTNbestScorer {
 
       OutputStreamWriter writer = new OutputStreamWriter(new GZIPOutputStream(
           new FileOutputStream(outFile)));
-      writer.append(nbestList.printMosesFormat());
+      writer.append(nbestList.toString());
       writer.close();
     }
   }
