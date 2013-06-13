@@ -27,11 +27,6 @@
 
 package edu.stanford.nlp.mt.decoder.inferer.impl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -70,7 +65,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   public static final String DETAILED_DEBUG_PROPERTY = "MultiBeamDecoderDetailedDebug";
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System
       .getProperty(DETAILED_DEBUG_PROPERTY, "false"));
-  public static final String ALIGNMENT_DUMP = System.getProperty("a");
   public static final int DEFAULT_BEAM_SIZE = 200;
   public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam;
   public static final int DEFAULT_MAX_DISTORTION = -1;
@@ -80,13 +74,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   final int maxDistortion;
 
   public static final boolean DO_PARSE = true;
-
-  static {
-    if (ALIGNMENT_DUMP != null) {
-      if ((new File(ALIGNMENT_DUMP)).delete()) {
-      }
-    }
-  }
 
   static public <TK, FV> MultiBeamDecoderBuilder<TK, FV> builder() {
     return new MultiBeamDecoderBuilder<TK, FV>();
@@ -155,32 +142,18 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
     featurizer.reset();
-    int sourceSz = source.size();
-    BufferedWriter alignmentDump = null;
+    final int sourceSz = source.size();
 
-    if (ALIGNMENT_DUMP != null) {
-      try {
-        alignmentDump = new BufferedWriter(new OutputStreamWriter(
-            new FileOutputStream(ALIGNMENT_DUMP, true)));
-      } catch (Exception e) {
-        alignmentDump = null;
-      }
-    }
-
-    // create beams
-    if (DEBUG)
-      System.err.println("Creating beams");
+    // create beams, where there is a bijection between the beam and the cardinality of
+    // the coverage set
+    if (DEBUG) System.err.println("Creating beams");
     Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(source
         .size() + 1, beamCapacity, filter, recombinationHistory);
 
-    // retrieve translation options
-    if (DEBUG)
-      System.err.println("Generating Translation Options");
-
+    // TM (phrase table) query for applicable rules
+    if (DEBUG) System.err.println("Generating Translation Options");
     List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
         .translationOptions(source, targets, sourceInputId, scorer);
-
-    System.err.printf("Translation options: %d\n", options.size());
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = sourceInputId;
@@ -192,8 +165,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               option.isolationScore, option.sourceCoverage);
         System.err.println(">> End translation options <<");
       }
+    } else {
+      System.err.printf("Translation options: %d\n", options.size());
     }
 
+    // Force decoding---if it is enabled, then filter the rule set according
+    // to the references
     if (constrainedOutputSpace != null) {
       options = constrainedOutputSpace.filterOptions(options);
       System.err
@@ -202,58 +179,36 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               options.size());
     }
 
+    // Create rule lookup chart
     OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source);
 
-    // insert initial hypothesis
+    // Generate null/start hypothesis
     List<List<ConcreteTranslationOption<TK,FV>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK,FV>>>();
     allOptions.add(options);
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
+    int totalHypothesesGenerated = 1;
     if (DEBUG) {
       System.err.printf("Estimated Future Cost: %e\n", nullHyp.h);
+      System.err.println("MultiBeamDecorder translating loop");
     }
 
-    if (DEBUG)
-      System.err.println("MultiBeamDecorder translating loop");
-
-    int totalHypothesesGenerated = 1;
-
+    // Initialize feature extractors
     featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
 
-    // main translation loop
-    long decodeLoopTime = -System.currentTimeMillis();
+    // main translation loop---beam expansion
+    long startTime = System.nanoTime();
     for (int i = 0; i < beams.length; i++) {
-
-      // List<ConcreteTranslationOption<TK,FV>> applicableOptions =
-      // ConcreteTranslationOptions.filterOptions(HypothesisBeams.coverageIntersection(beams[i]),
-      // foreign.size(), options);
-      if (DEBUG) {
-        Runtime rt = Runtime.getRuntime();
-        System.err
-            .printf("--\nDoing Beam %d Entries: %d\n", i, beams[i].size());
-        System.err.printf("Total Memory Usage: %d MiB", (rt.totalMemory() - rt
-            .freeMemory())
-            / (1024 * 1024));
-      }
-      /*
-       * System.err.printf("Hypotheses:\n---------------\n"); for
-       * (Hypothesis<TK, FV> hyp : beams[i]) { System.err.printf("%s\n", hyp); }
-       * System.err.println("done---------------\n");
-       */
-      if (DEBUG)
-        System.err.println();
-
       expandBeam(beams, i, sourceSz, optionGrid, 
           constrainedOutputSpace, sourceInputId);
       
       if (DEBUG) {
         displayBeams(beams);
-        System.err.printf("--------------------------------\n");
+        System.err.println("--------------------------------");
       }
     }
-    decodeLoopTime += System.currentTimeMillis();
-    System.err.printf("Decoding loop time: %f s\n", decodeLoopTime / 1000.0);
+    System.err.printf("Decoding loop time: %.3f s%n", (System.nanoTime() - startTime) / 1e9);
 
     if (DEBUG) {
       int recombined = 0;
@@ -281,23 +236,17 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       dump(bestHyp);
     }
 
+    // Select the beam to return
     for (int i = beams.length - 1; i >= 0; i--) {
       if (beams[i].size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace
               .allowableFinal(beams[i].iterator().next().featurizable))) {
         Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
-        System.err.printf("Annotator output for best hypothesis (%d vs %d)\n", bestHyp.annotators.size(), annotators.size());
+        System.err.printf("Annotator output for best hypothesis (%d vs %d)%n", 
+            bestHyp.annotators.size(), annotators.size());
         System.err.println("===========================================");
         for (Annotator<TK,FV> annotator: bestHyp.annotators) {
         	System.err.println(annotator);
-        }
-        try {
-          writeAlignments(alignmentDump, bestHyp);
-        } catch (Exception e) { /* not an issue */
-        }
-        try {
-          alignmentDump.close();
-        } catch (Exception e) { /* not an issue */
         }
         if (DEBUG)
           System.err.println("Returning beam of size: " + beams[i].size());
@@ -305,13 +254,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       }
     }
 
-    try {
-      alignmentDump.append("<<< decoder failure >>>\n\n");
-      alignmentDump.close();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
+    // Decoder failure
     return null;
   }
 
@@ -366,6 +309,18 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
+  /**
+   * Sloppy beam search from Pharoah / early version of Moses. This algorithm
+   * creates many hypotheses that will eventually be discarded.
+   * 
+   * @param beams
+   * @param beamId
+   * @param sourceSz
+   * @param optionGrid
+   * @param constrainedOutputSpace
+   * @param sourceInputId
+   * @return number of generated hypotheses
+   */
   private int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
       int sourceSz, OptionGrid<TK,FV> optionGrid,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
@@ -374,6 +329,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     int hypPos = -1;
     int totalHypothesesGenerated = 0;
 
+    // Try to expand each hypothesis
     for (Hypothesis<TK, FV> hyp : beams[beamId]) {
       hypPos++;
       if (hyp == null)
@@ -386,14 +342,15 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           : hyp.featurizable.sourcePosition
           + hyp.featurizable.sourcePhrase.size());
 
-      if (DETAILED_DEBUG)
-        System.err.printf("ForeignSz is: %d\n", sourceSz);
+      // Loop over coverage gaps
+      // Left edge
       for (int startPos = firstCoverageGap; startPos < sourceSz; startPos++) {
         int endPosMax = hyp.sourceCoverage.nextSetBit(startPos);
         if (DETAILED_DEBUG)
           System.err.printf("Current startPos: %d, endPosMax: %d\n", startPos, endPosMax);
 
-        // check distortion limit
+        // Re-ordering constraint checks
+        // Moses-style hard distortion limit
         if (endPosMax < 0) {
           if (maxDistortion >= 0 && startPos != firstCoverageGap) {
             endPosMax = Math.min(firstCoverageGap + maxDistortion + 1,
@@ -404,28 +361,21 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           if (DETAILED_DEBUG)
             System.err.printf("after checking distortion limit, endPosMax: %d\n", endPosMax);
         }
+        // ITG constraints
         if (useITGConstraints) {
           boolean ITGOK = true;
           if (startPos > priorStartPos) {
-            // System.err.printf("startPos(%d) > priorStartPos(%d)\n",
-            // startPos, priorStartPos);
             for (int pos = priorEndPos + 1; pos < startPos; pos++) {
               if (hyp.sourceCoverage.get(pos)
                   && !hyp.sourceCoverage.get(pos - 1)) {
-                // System.err.printf("not okay-1 %d & %d - %s\n" ,pos, pos-1,
-                // hyp.foreignCoverage);
                 ITGOK = false;
                 break;
               }
             }
           } else {
-            // System.err.printf("startPos(%d) < priorStartPos(%d)\n",
-            // startPos, priorStartPos);
             for (int pos = startPos; pos < priorStartPos; pos++) {
               if (hyp.sourceCoverage.get(pos)
                   && !hyp.sourceCoverage.get(pos + 1)) {
-                // System.err.printf("not okay-2 %d & %d - %s\n" ,pos, pos+1,
-                // hyp.foreignCoverage);
                 ITGOK = false;
                 break;
               }
@@ -433,10 +383,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           }
           if (DETAILED_DEBUG)
             System.err.printf("after ITG constraints check, ITGOK=%b\n", ITGOK);
+          // Constraint-check failed...don't expand this hypothesis
           if (!ITGOK)
             continue;
-          // System.err.printf("okay\n");
         }
+        
+        // Right edge
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
           List<ConcreteTranslationOption<TK,FV>> applicableOptions = optionGrid
               .get(startPos, endPos);
@@ -447,19 +399,15 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
             // // TODO: put back
 
+            // Force decoding check
             if (constrainedOutputSpace != null
                 && !constrainedOutputSpace.allowableContinuation(
                     hyp.featurizable, option)) {
               continue;
             }
 
-            /*
-             * if (option.abstractOption.phraseScoreNames[0] ==
-             * UnknownWordFeaturizer.UNKNOWN_PHRASE_TAG && hypNextForeignPos
-             * != startPos) { continue; // lets not allow untranslated foreign
-             * phrases to float around randomly }
-             */
-
+            // Create new hypothesis by extending current hypothesis with
+            // the current rule.
             Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(sourceInputId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
 
@@ -516,6 +464,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               continue;
             }
 
+            // Insert new hypothesis into sloppy beam.
             int sourceWordsCovered = newHyp.sourceCoverage.cardinality();
             beams[sourceWordsCovered].put(newHyp);
 
@@ -525,34 +474,14 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
       if (DETAILED_DEBUG) {
-        System.err.printf("local options applied(%d): %d\n", hypPos,
+        System.err.printf("local options applied(%d): %d%n", hypPos,
             localOptionsApplied);
       }
     }
 
     if (DEBUG) {
-      System.err.printf("Options applied: %d\n", optionsApplied);
+      System.err.printf("Options applied: %d%n", optionsApplied);
     }
     return totalHypothesesGenerated;
-  }
-
-  void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp)
-      throws IOException {
-    if (alignmentDump == null)
-      return;
-    alignmentDump.append(bestHyp.featurizable.targetPrefix.toString())
-        .append("\n");
-    alignmentDump.append(bestHyp.featurizable.sourceSentence.toString())
-        .append("\n");
-    for (Hypothesis<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingHyp) {
-      alignmentDump.append(String.format("%d:%d => %d:%d # %s => %s\n",
-          hyp.featurizable.sourcePosition, hyp.featurizable.sourcePosition
-              + hyp.featurizable.sourcePhrase.size() - 1,
-          hyp.featurizable.targetPosition,
-          hyp.featurizable.targetPosition
-              + hyp.featurizable.targetPhrase.size() - 1,
-          hyp.featurizable.sourcePhrase, hyp.featurizable.targetPhrase));
-    }
-    alignmentDump.append("\n");
   }
 }

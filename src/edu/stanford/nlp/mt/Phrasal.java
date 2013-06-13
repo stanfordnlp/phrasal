@@ -1170,6 +1170,7 @@ public class Phrasal {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
+    // Force decoding setup---constrain the decoder output space to these references
     ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
         : new EnumeratedConstrainedOutputSpace<IString, String>(
             constrainedToRefs.get(sourceInputId),
