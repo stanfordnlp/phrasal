@@ -63,7 +63,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       return null;
     List<RichTranslation<TK, FV>> translations = new LinkedList<RichTranslation<TK, FV>>();
 
-    System.err.println(beam.size());
     List<Hypothesis<TK, FV>> goalStates = new ArrayList<Hypothesis<TK, FV>>(
         beam.size());
 
@@ -71,7 +70,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       goalStates.add(hyp);
     }
 
-    long nbestStartTime = System.currentTimeMillis();
+    long nbestStartTime = System.nanoTime();
 
     Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<Sequence<TK>>();
     if (DISTINCT_SURFACE_TRANSLATIONS)
@@ -170,9 +169,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       System.err.println("Warning: 1-best not complete!");
 
     if (DEBUG) {
-      long nBestConstructionTime = System.currentTimeMillis() - nbestStartTime;
+      long nBestConstructionTime = System.nanoTime() - nbestStartTime;
       System.err.printf("N-best generation time: %.3f seconds\n",
-          nBestConstructionTime / 1000.0);
+          nBestConstructionTime / 1e9);
     }
 
     featurizer.rerankingMode(false);

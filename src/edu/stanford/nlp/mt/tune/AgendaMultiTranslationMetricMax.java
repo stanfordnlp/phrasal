@@ -83,8 +83,7 @@ public class AgendaMultiTranslationMetricMax<TK, FV> implements
           .get(mts.depth + 1);
       for (ScoredFeaturizedTranslation<TK, FV> tran : nbestList) {
         MultiTranslationState<TK, FV> newMts = mts.append(tran);
-        RecombinationHash.Status status = recombinationHash.queryStatus(newMts,
-            true);
+        RecombinationHash.Status status = recombinationHash.update(newMts);
         hypothesesGenerated++;
         if (status == RecombinationHash.Status.COMBINABLE) {
           recombinations++;

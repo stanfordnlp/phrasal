@@ -179,7 +179,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               options.size());
     }
 
-    // Create rule lookup chart
+    // Create rule lookup chart. Rules can be fetched by span.
     OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source);
 
     // Generate null/start hypothesis
@@ -236,7 +236,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       dump(bestHyp);
     }
 
-    // Select the beam to return
+    // Select the beam to return. beams[beams.length-1] should have
+    // the goal hypotheses, but if it is empty, then backoff to the first previous
+    // beam that has a (partial) hypothesis.
+    // TODO(spenceg) Should raise a big warning message here if the parse does
+    // actually fail.
     for (int i = beams.length - 1; i >= 0; i--) {
       if (beams[i].size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace

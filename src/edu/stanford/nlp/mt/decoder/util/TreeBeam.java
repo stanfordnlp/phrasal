@@ -68,11 +68,10 @@ public class TreeBeam<S extends State<S>> implements Beam<S> {
   synchronized public S put(S hypothesis) {
     hypothesisInsertions++;
     // recombination check
-    RecombinationHash.Status status = recombinationHash.queryStatus(hypothesis,
-        true);
+    RecombinationHash.Status status = recombinationHash.update(hypothesis);
     if (recombinationHistory != null) {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
-          recombinationHash.getLastRedudent());
+          recombinationHash.getLastRedundant());
     }
 
     if (status == RecombinationHash.Status.COMBINABLE) {
@@ -80,14 +79,14 @@ public class TreeBeam<S extends State<S>> implements Beam<S> {
       return hypothesis;
     }
 
-    if (status == RecombinationHash.Status.UPDATED) {
+    if (status == RecombinationHash.Status.BETTER) {
       recombinations++;
-      hypotheses.remove(recombinationHash.getLastRedudent());
+      hypotheses.remove(recombinationHash.getLastRedundant());
       insertHypothesis(hypothesis);
-      return recombinationHash.getLastRedudent();
+      return recombinationHash.getLastRedundant();
     }
 
-    assert status == RecombinationHash.Status.NOVEL_INSERTED;
+    assert status == RecombinationHash.Status.NOVEL;
 
     // beam capacity check for novel hypothesis
     // if passed, insert the new hypothesis

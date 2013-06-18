@@ -74,17 +74,16 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
     }
 
     // recombination check
-    RecombinationHash.Status status = recombinationHash.queryStatus(hypothesis,
-        true);
+    RecombinationHash.Status status = recombinationHash.update(hypothesis);
     if (recombinationHistory != null) {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
-          recombinationHash.getLastRedudent());
+          recombinationHash.getLastRedundant());
     }
 
     if (status == RecombinationHash.Status.COMBINABLE) {
       recombined++;
       return hypothesis;
-    } else if (status == RecombinationHash.Status.UPDATED) {
+    } else if (status == RecombinationHash.Status.BETTER) {
       recombined++;
     }
 

@@ -57,19 +57,20 @@ public class RecombinationHash<S extends State<S>> {
     this.filter = filter;
   }
 
+  /**
+   * Result of queryStatus()
+   * 
+   * NOVEL -- The hypothesis is novel and was inserted into the table.
+   * COMBINABLE -- The hypothesis could be combined with a better hypothesis
+   * SELF -- Hypothesis is already in the table.
+   * BETTER -- The hypothesis could be combined with a worse hypothesis
+   */
   public enum Status {
-    NOVEL, NOVEL_INSERTED, BETTER, COMBINABLE, SELF, UPDATED
+    NOVEL, COMBINABLE, SELF, BETTER
   };
 
   public int size() {
     return recombinationHash.size();
-  }
-
-  /**
-	 * 
-	 */
-  public Status queryStatus(S hypothesis) {
-    return queryStatus(hypothesis, false);
   }
 
   public boolean isBest(S hypothesis) {
@@ -83,13 +84,12 @@ public class RecombinationHash<S extends State<S>> {
   }
 
   /**
-	 * 
+	 * Query the status of hypothesis and update if necessary. Return
+	 * the re-combined hypothesis, if any.
 	 */
   @SuppressWarnings("rawtypes")
-  public Status queryStatus(S hypothesis, boolean update) {
+  public Status update(S hypothesis) {
     if (filter instanceof NoRecombination) {
-      if (update)
-        return Status.NOVEL_INSERTED;
       return Status.NOVEL;
     }
 
@@ -110,17 +110,14 @@ public class RecombinationHash<S extends State<S>> {
     }
     if (filterEquivWrappedHyp == null) {
       lastBestOnQuery = hypothesis;
-      lastRedudentOnQuery = null;
-      if (update) {
-        recombinationHash.put(wrappedHyp, wrappedHyp);
-        return Status.NOVEL_INSERTED;
-      }
+      lastRedundantOnQuery = null;
+      recombinationHash.put(wrappedHyp, wrappedHyp);
       return Status.NOVEL;
     }
 
     if (hypothesis == filterEquivWrappedHyp.hypothesis) {
       lastBestOnQuery = hypothesis;
-      lastRedudentOnQuery = null;
+      lastRedundantOnQuery = null;
       return Status.SELF;
     }
 
@@ -132,26 +129,23 @@ public class RecombinationHash<S extends State<S>> {
      */
     if (hypothesis.score() > filterEquivWrappedHyp.hypothesis.score()) {
       // System.err.println("Exisiting < Suggested\n");
-      lastRedudentOnQuery = filterEquivWrappedHyp.hypothesis;
+      lastRedundantOnQuery = filterEquivWrappedHyp.hypothesis;
       lastBestOnQuery = hypothesis;
-      if (update) {
-        filterEquivWrappedHyp.hypothesis = hypothesis;
-        return Status.UPDATED;
-      }
+      filterEquivWrappedHyp.hypothesis = hypothesis;
       return Status.BETTER;
     }
 
     // System.err.println("Exisiting > Suggested\n");
-    lastRedudentOnQuery = hypothesis;
+    lastRedundantOnQuery = hypothesis;
     lastBestOnQuery = filterEquivWrappedHyp.hypothesis;
     return Status.COMBINABLE;
   }
 
   private S lastBestOnQuery;
-  private S lastRedudentOnQuery;
+  private S lastRedundantOnQuery;
 
-  public S getLastRedudent() {
-    return lastRedudentOnQuery;
+  public S getLastRedundant() {
+    return lastRedundantOnQuery;
   }
 
   public S getLastBestOnQuery() {
