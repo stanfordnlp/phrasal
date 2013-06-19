@@ -168,8 +168,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       if (beam.size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace
           .allowableFinal(beam.iterator().next().featurizable))) {
+
+        // TODO(spenceg) This should be an error message
         if ( ! isGoalBeam) {
-          throw new RuntimeException();
+          System.err.println("WSGDEBUG: Decoder failure for sourceId: " + Integer.toString(sourceInputId));
         }
 
         return beam;
