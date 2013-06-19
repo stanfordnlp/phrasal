@@ -45,19 +45,19 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected CubePruningDecoder(CubePruningDecoderBuilder<TK, FV> builder) {
     super(builder);
     maxDistortion = builder.maxDistortion;
-    
+
     if (maxDistortion != -1) {
-      System.err.printf("Multi-beam decoder. Distortion limit: %d\n",
+      System.err.printf("Cube pruning decoder. Distortion limit: %d%n",
           maxDistortion);
     } else {
-      System.err.printf("Multi-beam decoder. No hard distortion limit.\n");
+      System.err.println("Cube pruning decoder. No hard distortion limit.n");
     }    
   }
 
   public static class CubePruningDecoderBuilder<TK, FV> extends
-      AbstractBeamInfererBuilder<TK, FV> {
+  AbstractBeamInfererBuilder<TK, FV> {
     int maxDistortion = DEFAULT_MAX_DISTORTION;
- 
+
     @Override
     public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(int maxDistortion) {
       this.maxDistortion = maxDistortion;
@@ -88,11 +88,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     featurizer.reset();
     final int sourceLength = source.size();
     final int maxPhraseLength = phraseGenerator.longestSourcePhrase();
-    
+
     // create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
-    
+
     // TM (phrase table) query for applicable rules
     List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
         .translationOptions(source, targets, sourceInputId, scorer);
@@ -102,13 +102,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     if (constrainedOutputSpace != null) {
       options = constrainedOutputSpace.filterOptions(options);
       System.err
-          .printf(
-              "Translation options after reduction by output space constraint: %d%n",
-              options.size());
+      .printf(
+          "Translation options after reduction by output space constraint: %d%n",
+          options.size());
     }
 
     // Create rule lookup chart. Rules can be fetched by span.
-    final OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source);
+    final OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source, true);
 
     // Fill Beam 0...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, optionGrid, 
@@ -120,7 +120,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     nullBeam.put(nullHypothesis);
     nullBeam.lock();
     beams.add(nullBeam);
-    
+
     // Initialize feature extractors
     featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
 
@@ -131,7 +131,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Prune old beams
       int startBeam = Math.max(0, i-maxPhraseLength);
       if (startBeam > 0) beams.remove(0);
-      
+
       // Initialize the priority queue
       Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(beamCapacity);
       for (BundleBeam<TK,FV> beam : beams) {
@@ -152,7 +152,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
       }
-      
+
       // Lock and insert new beam
       newBeam.lock();
       beams.add(newBeam);
@@ -166,11 +166,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     for (Beam<Hypothesis<TK,FV>> beam : beams) {
       if (beam.size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace
-              .allowableFinal(beam.iterator().next().featurizable))) {
+          .allowableFinal(beam.iterator().next().featurizable))) {
         if ( ! isGoalBeam) {
           throw new RuntimeException();
         }
-        
+
         return beam;
       }
       isGoalBeam = false;
@@ -216,13 +216,18 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       this.hypothesis = hypothesis;
       this.bundle = bundle;
     }
-    
+
     @Override
     public int compareTo(Item<TK,FV> o) {
       return this.hypothesis.compareTo(o.hypothesis);
     }
+    
+    @Override
+    public String toString() {
+      return hypothesis.toString();
+    }
   }
-  
+
   @Override
   public void dump(Hypothesis<TK, FV> hyp) {
     throw new UnsupportedOperationException();

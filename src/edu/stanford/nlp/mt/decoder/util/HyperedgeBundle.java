@@ -18,17 +18,17 @@ import edu.stanford.nlp.util.Generics;
  * @param <FV>
  */
 public class HyperedgeBundle<TK,FV> {
-  
+
   private List<Hypothesis<TK,FV>> itemList;
   private final List<ConcreteTranslationOption<TK,FV>> sortedRuleList;
   private boolean isLocked = false;
   private BitSet expandedItems;
-  
+
   // Defines the location in the cube from which to generate
   // the next successors
   private int lastItem = -1;
   private int lastRule = -1;
-  
+
   /**
    * Assumes that the list of translation rules has already been sorted.
    * 
@@ -38,22 +38,22 @@ public class HyperedgeBundle<TK,FV> {
     this.sortedRuleList = sortedRuleList;
     this.itemList = Generics.newLinkedList();
   }
-  
+
   public void add(Hypothesis<TK,FV> hypothesis) {
     if (isLocked) {
       throw new RuntimeException("Cannot expand a locked bundle");
     }
     itemList.add(hypothesis);
   }
-  
-  
+
+
   public void lock() {
     itemList = Generics.newArrayList(itemList);
     Collections.sort(itemList);
     expandedItems = new BitSet();
     isLocked = true;
   }
-  
+
   /**
    * Returned unsorted, ungenerated successors to this antecedent. This list
    * will have a length in the range [0,2].
@@ -68,7 +68,7 @@ public class HyperedgeBundle<TK,FV> {
     List<Consequent<TK,FV>> consequentList = Generics.newArrayList(2);
     if (expandedItems.cardinality() == 0) {
       // Top-left corner of the grid
-      consequentList.add(new Consequent<TK,FV>(null, sortedRuleList.get(0), this));
+      consequentList.add(new Consequent<TK,FV>(itemList.get(0), sortedRuleList.get(0), this));
       expandedItems.set(0);
       lastItem = 0;
       lastRule = 0;
@@ -91,12 +91,18 @@ public class HyperedgeBundle<TK,FV> {
     }
     return consequentList;
   }
-  
+
   private int getIndex(int itemId, int ruleId) {
     // Row-major order
     return itemId * sortedRuleList.size() + ruleId;
   }
   
+  @Override
+  public String toString() {
+    return String.format("#items: %d  #rules: %d  cube: (%d,%d) coverage: %s", 
+        itemList.size(), sortedRuleList.size(), lastItem, lastRule, expandedItems.toString());
+  }
+
   public static class Consequent<TK,FV> {
     public final Hypothesis<TK,FV> antecedent;
     public final ConcreteTranslationOption<TK,FV> rule;

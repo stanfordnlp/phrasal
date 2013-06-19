@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -26,6 +25,7 @@ public class OptionGrid<TK,FV> {
   private final List<ConcreteTranslationOption<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
+  private final boolean doLazySorting;
   
   /**
    * Create an option grid from the source sentence and list of rules.
@@ -33,11 +33,16 @@ public class OptionGrid<TK,FV> {
    * @param options
    * @param source
    */
-  @SuppressWarnings("unchecked")
   public OptionGrid(List<ConcreteTranslationOption<TK,FV>> options,
       Sequence<TK> source) {
+    this(options, source, false);
+  }
+
+  public OptionGrid(List<ConcreteTranslationOption<TK, FV>> options,
+      Sequence<TK> source, boolean doLazySorting) {
     sourceLength = source.size();
     isSorted = new BitSet();
+    this.doLazySorting = doLazySorting;
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
@@ -66,18 +71,6 @@ public class OptionGrid<TK,FV> {
   }
   
   /**
-   * Sort the translation rules by score for this span.
-   * 
-   * @param startPos
-   * @param endPos
-   */
-  public void sortRules(int startPos, int endPos) {
-    int offset = getIndex(startPos, endPos);
-    Collections.sort(grid[offset]);
-    isSorted.set(offset);
-  }
-  
-  /**
    * One dimension of the option grid. This corresponds to length of the source
    * sentence that corresponds to this option grid.
    * 
@@ -93,7 +86,12 @@ public class OptionGrid<TK,FV> {
    * @return
    */
   public List<ConcreteTranslationOption<TK,FV>> get(int startPos, int endPos) {
-    return grid[getIndex(startPos, endPos)];
+    int offset = getIndex(startPos, endPos);
+    if (offset >= grid.length) throw new IllegalArgumentException("Coordinates are out-of-bounds");
+    if (doLazySorting && ! isSorted.get(offset)) {
+      Collections.sort(grid[offset]);
+    }
+    return grid[offset];
   }
 
   /**

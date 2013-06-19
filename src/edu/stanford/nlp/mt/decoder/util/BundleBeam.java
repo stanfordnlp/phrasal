@@ -18,20 +18,19 @@ import edu.stanford.nlp.util.TwoDimensionalMap;
  * Implements a beam with hypergraph bundles. The generic type still should be hypothesis.
  * Include an iterator over bundles.
  * 
- * TODO: Implement re-combination
  * 
  * @author Spence Green
  *
  * @param <Hypothesis<TK,FV>>
  */
 public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
-  
+
   private final RecombinationHash<Hypothesis<TK,FV>> recombinationHash;
   private final int capacity;
   private int recombined = 0;
   private final int distortionLimit;
   private final int sourceLength;
-  
+
   private final TwoDimensionalMap<Range,CoverageSet,HyperedgeBundle<TK,FV>> bundles;
   private final RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory;
   private final OptionGrid<TK, FV> optionGrid;
@@ -48,7 +47,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       OptionGrid<TK,FV> optionGrid, int distortionLimit, int coverageCardinality, int maxPhraseLength) {
     this(capacity, filter, optionGrid, null, distortionLimit, coverageCardinality);
   }
-  
+
   /**
    * 
    * @param capacity
@@ -72,7 +71,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     this.bundles = new TwoDimensionalMap<Range,CoverageSet,HyperedgeBundle<TK,FV>>();
     this.rangeCache = Generics.newHashMap();
   }
-  
+
   /**
    * This method must be called once all hypotheses have been inserted into the beam.
    */
@@ -81,13 +80,13 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       bundle.lock();
     }
   }
-  
+
   @Override
   public Hypothesis<TK,FV> put(Hypothesis<TK,FV> hypothesis) {
     if (hypothesis.sourceCoverage.cardinality() != coverageCardinality) {
       throw new RuntimeException("Hypothesis cardinality does not match beam cardinality");
     }
-    
+
     // Recombination
     final Status status = recombinationHash.update(hypothesis);
     if (recombinationHistory != null) {
@@ -99,15 +98,15 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     if (status == Status.COMBINABLE) {
       recombined++;
       recombinedHypothesis = hypothesis;
-    
+
     } else if(status == Status.BETTER) {
       recombined++;
       recombinedHypothesis = recombinationHash.getLastRedundant();
-    
+
     } else if(status == Status.NOVEL){
       insert(hypothesis);
     }
-    
+
     return recombinedHypothesis;
   }
 
@@ -125,13 +124,12 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       if (bundles.contains(range, hypothesis.sourceCoverage)) {
         bundles.get(range, hypothesis.sourceCoverage).add(hypothesis);
       } else {
-        if ( ! optionGrid.isSorted(leftEdge, rightEdge)) {
-          optionGrid.sortRules(leftEdge, rightEdge);
-        }
         List<ConcreteTranslationOption<TK,FV>> ruleList = optionGrid.get(leftEdge, rightEdge);
-        HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(ruleList);
-        bundle.add(hypothesis);
-        bundles.put(range, hypothesis.sourceCoverage, bundle);
+        if (ruleList.size() > 0) {
+          HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(ruleList);
+          bundle.add(hypothesis);
+          bundles.put(range, hypothesis.sourceCoverage, bundle);
+        }
       }
     }
   }
@@ -154,14 +152,14 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     }
     return bundlesForRange;
   }
-  
+
   @Override
   public Iterator<Hypothesis<TK, FV>> iterator() {
     List<Hypothesis<TK,FV>> hypotheses = recombinationHash.hypotheses();
     Collections.sort(hypotheses);
     return hypotheses.iterator();
   }
-  
+
   private List<Range> ranges(Hypothesis<TK, FV> hyp) {
     if (rangeCache.containsKey(hyp.sourceCoverage)) {
       return rangeCache.get(hyp.sourceCoverage);
@@ -176,7 +174,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       if (endPosMax < 0) {
         // TODO(spenceg) weird Moses implementation that allows the first option
         // to cover any span in the source. See MultiBeamDecoder.
-//      if (distortionLimit >= 0 && startPos != firstCoverageGap) {
+        //      if (distortionLimit >= 0 && startPos != firstCoverageGap) {
         if (distortionLimit >= 0) {
           endPosMax = Math.min(firstCoverageGap + distortionLimit + 1,
               sourceLength);
@@ -191,12 +189,12 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     rangeCache.put(hyp.sourceCoverage, rangeList);
     return rangeList;
   }
-  
+
   @Override
   public int capacity() {
     return capacity;
   }
-  
+
   @Override
   public int size() {
     return recombinationHash.size();
@@ -206,11 +204,11 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   public int recombined() {
     return recombined;
   }
-  
+
   @Override
   public double bestScore() {
     throw new UnsupportedOperationException();
-   }
+  }
 
   @Override
   public int preinsertionDiscarded() {
@@ -231,7 +229,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   public Hypothesis<TK, FV> removeWorst() {
     throw new UnsupportedOperationException();
   }
-  
+
   private static class Range {
     public int start;
     public int end;
@@ -241,6 +239,11 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       this.end = end;
     }
     public int size() { return end-start+1; }
+
+    @Override
+    public String toString() {
+      return String.format("%d-%d  size: %d", start, end, size());
+    }
     
     @Override
     public boolean equals(Object other) {
@@ -253,19 +256,10 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
         return start == o.start && end == o.end;
       }
     }
-    
+
     @Override
     public int hashCode() {
       return start*27 ^ (end << 16);
     }
   }
-  
-  /**
-   * @param args
-   */
-  public static void main(String[] args) {
-    // TODO Auto-generated method stub
-
-  }
-
 }

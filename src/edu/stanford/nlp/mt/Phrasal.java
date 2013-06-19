@@ -826,7 +826,7 @@ public class Phrasal {
       // Configure InfererBuilder
       AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) InfererBuilderFactory
           .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER
-              : InfererBuilderFactory.MULTIBEAM_DECODER);
+              : InfererBuilderFactory.DEFAULT_INFERER);
       try {
     	infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
@@ -848,6 +848,7 @@ public class Phrasal {
         throw new RuntimeException(e);
       }
 
+      // Silently ignored by the cube pruning decoder
       infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
 
       if (distortionLimit != -1) {
