@@ -148,7 +148,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       while (newBeam.size() <= beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
         newBeam.put(item.hypothesis);
-        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.bundle, sourceInputId);
+        item.consequent.bundle.updateLastBestScoredConsequent(item.consequent);
+        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent.bundle, sourceInputId);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
       }
@@ -195,7 +196,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Hypothesis generation
       Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic);
-      consequents.add(new Item<TK,FV>(newHyp, successor.bundle));
+      consequents.add(new Item<TK,FV>(newHyp, successor));
     }
     return consequents;
   }
@@ -210,11 +211,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
     public final Hypothesis<TK, FV> hypothesis;
-    public final HyperedgeBundle<TK, FV> bundle;
+    public final Consequent<TK, FV> consequent;
 
-    public Item(Hypothesis<TK,FV> hypothesis, HyperedgeBundle<TK,FV> bundle) {
+    public Item(Hypothesis<TK,FV> hypothesis, Consequent<TK,FV> consequent) {
       this.hypothesis = hypothesis;
-      this.bundle = bundle;
+      this.consequent = consequent;
     }
 
     @Override

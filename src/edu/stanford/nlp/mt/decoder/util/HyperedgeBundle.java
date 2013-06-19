@@ -39,6 +39,11 @@ public class HyperedgeBundle<TK,FV> {
     this.itemList = Generics.newLinkedList();
   }
 
+  /**
+   * Add a hypothesis to this bundle.
+   * 
+   * @param hypothesis
+   */
   public void add(Hypothesis<TK,FV> hypothesis) {
     if (isLocked) {
       throw new RuntimeException("Cannot expand a locked bundle");
@@ -46,7 +51,10 @@ public class HyperedgeBundle<TK,FV> {
     itemList.add(hypothesis);
   }
 
-
+  /**
+   * This method must be called after the final call to add() and
+   * before the first call to nextSuccessors().
+   */
   public void lock() {
     itemList = Generics.newArrayList(itemList);
     Collections.sort(itemList);
@@ -54,6 +62,16 @@ public class HyperedgeBundle<TK,FV> {
     isLocked = true;
   }
 
+  /**
+   * Mark the last best consequent according to combination costs.
+   * 
+   * @param antecedent
+   */
+  public void updateLastBestScoredConsequent(Consequent<TK,FV> antecedent) {
+    lastItem = antecedent.itemId;
+    lastRule = antecedent.ruleId;
+  }
+  
   /**
    * Returned unsorted, ungenerated successors to this antecedent. This list
    * will have a length in the range [0,2].
@@ -68,24 +86,24 @@ public class HyperedgeBundle<TK,FV> {
     List<Consequent<TK,FV>> consequentList = Generics.newArrayList(2);
     if (expandedItems.cardinality() == 0) {
       // Top-left corner of the grid
-      consequentList.add(new Consequent<TK,FV>(itemList.get(0), sortedRuleList.get(0), this));
-      expandedItems.set(0);
       lastItem = 0;
       lastRule = 0;
+      consequentList.add(new Consequent<TK,FV>(itemList.get(0), sortedRuleList.get(0), this, lastItem, lastRule));
+      expandedItems.set(0);
 
     } else {
       // Move down in the grid
       int succItem = getIndex(lastItem+1, lastRule);
       if ( ! expandedItems.get(succItem) && lastItem+1 < itemList.size()) {
         consequentList.add(new Consequent<TK,FV>(itemList.get(lastItem+1), sortedRuleList.get(lastRule), 
-            this));
+            this, lastItem+1, lastRule));
         expandedItems.set(succItem);
       }
       // Move right in the grid
       int succRule = getIndex(lastItem, lastRule+1);
       if ( ! expandedItems.get(succRule) && lastRule+1 < sortedRuleList.size()) {
         consequentList.add(new Consequent<TK,FV>(itemList.get(lastItem), sortedRuleList.get(lastRule+1), 
-            this));
+            this, lastItem, lastRule+1));
         expandedItems.set(succRule);
       }
     }
@@ -107,12 +125,23 @@ public class HyperedgeBundle<TK,FV> {
     public final Hypothesis<TK,FV> antecedent;
     public final ConcreteTranslationOption<TK,FV> rule;
     public final HyperedgeBundle<TK, FV> bundle;
+    private final int itemId;
+    private final int ruleId;
     public Consequent(Hypothesis<TK,FV> antecedent, 
         ConcreteTranslationOption<TK,FV> rule,
-        HyperedgeBundle<TK,FV> bundle) {
+        HyperedgeBundle<TK,FV> bundle,
+        int itemId,
+        int ruleId) {
       this.antecedent = antecedent;
       this.rule = rule;
       this.bundle = bundle;
+      this.itemId = itemId;
+      this.ruleId = ruleId;
+    }
+    
+    @Override
+    public String toString() {
+      return String.format("itemId: %d  ruleId: %d", itemId, ruleId);
     }
   }
 }
