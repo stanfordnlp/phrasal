@@ -36,9 +36,21 @@ public class HyperedgeBundle<TK,FV> {
    */
   public HyperedgeBundle(List<ConcreteTranslationOption<TK,FV>> sortedRuleList) {
     this.sortedRuleList = sortedRuleList;
-    this.itemList = Generics.newLinkedList();
+    this.itemList = Generics.newArrayList();
   }
 
+  public boolean updateItem(Hypothesis<TK, FV> oldHypothesis,
+      Hypothesis<TK, FV> newHypothesis) {
+    int numItems = itemList.size();
+    for (int i = 0; i < numItems; ++i) {
+      if (itemList.get(i) == oldHypothesis) {
+        itemList.set(i, newHypothesis);
+        return true;
+      }
+    }
+    return false;
+  }
+  
   /**
    * Add a hypothesis to this bundle.
    * 
@@ -56,7 +68,6 @@ public class HyperedgeBundle<TK,FV> {
    * before the first call to nextSuccessors().
    */
   public void lock() {
-    itemList = Generics.newArrayList(itemList);
     Collections.sort(itemList);
     expandedItems = new BitSet();
     isLocked = true;

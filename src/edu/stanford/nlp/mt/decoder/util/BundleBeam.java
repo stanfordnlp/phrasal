@@ -35,8 +35,8 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   private final RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory;
   private final OptionGrid<TK, FV> optionGrid;
   private final int coverageCardinality;
-  private final Map<CoverageSet,List<Range>> rangeCache;
-
+  private Map<CoverageSet,List<Range>> rangeCache;
+  private Map<Hypothesis<TK,FV>, List<HyperedgeBundle<TK,FV>>> hypothesisMap;
   /**
    * 
    * @param capacity
@@ -70,6 +70,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     this.coverageCardinality = coverageCardinality;
     this.bundles = new TwoDimensionalMap<Range,CoverageSet,HyperedgeBundle<TK,FV>>();
     this.rangeCache = Generics.newHashMap();
+    this.hypothesisMap = Generics.newHashMap(capacity);
   }
 
   /**
@@ -79,6 +80,10 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     for (HyperedgeBundle<TK,FV> bundle : bundles.values()) {
       bundle.lock();
     }
+    
+    // Free intermediate data structures
+    rangeCache = null;
+    hypothesisMap = null;
   }
 
   @Override
@@ -87,13 +92,12 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       throw new RuntimeException("Hypothesis cardinality does not match beam cardinality");
     }
 
-    // Recombination
     final Status status = recombinationHash.update(hypothesis);
     if (recombinationHistory != null) {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
           recombinationHash.getLastRedundant());
     }
-
+    
     Hypothesis<TK,FV> recombinedHypothesis = null;
     if (status == Status.COMBINABLE) {
       recombined++;
@@ -102,12 +106,30 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     } else if(status == Status.BETTER) {
       recombined++;
       recombinedHypothesis = recombinationHash.getLastRedundant();
-
+      update(recombinedHypothesis, hypothesis);
+      
     } else if(status == Status.NOVEL){
       insert(hypothesis);
     }
 
     return recombinedHypothesis;
+  }
+
+  private void update(Hypothesis<TK, FV> oldHypothesis,
+      Hypothesis<TK, FV> newHypothesis) {
+    if ( ! hypothesisMap.containsKey(oldHypothesis)) {
+      throw new RuntimeException("Missing recombined hypothesis");
+    }
+    
+    List<HyperedgeBundle<TK,FV>> bundleList = hypothesisMap.get(oldHypothesis);
+    for (HyperedgeBundle<TK,FV> bundle : bundleList) {
+      boolean wasUpdated = bundle.updateItem(oldHypothesis, newHypothesis);
+      if ( ! wasUpdated) {
+        throw new RuntimeException("Hypothesis not found in bundle");
+      }
+    }
+    hypothesisMap.put(newHypothesis, bundleList);
+    hypothesisMap.remove(oldHypothesis);
   }
 
   /**
@@ -117,21 +139,27 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
    */
   private void insert(Hypothesis<TK, FV> hypothesis) {
     List<Range> rangeList = ranges(hypothesis);
+    List<HyperedgeBundle<TK,FV>> bundleList = Generics.newLinkedList();
     for (Range range : rangeList) {
       int leftEdge = range.start;
       int rightEdge = range.end;
       assert leftEdge <= rightEdge : "Invalid range";
       if (bundles.contains(range, hypothesis.sourceCoverage)) {
-        bundles.get(range, hypothesis.sourceCoverage).add(hypothesis);
+        HyperedgeBundle<TK,FV> bundle = bundles.get(range, hypothesis.sourceCoverage);
+        bundle.add(hypothesis);
+        bundleList.add(bundle);
+        
       } else {
         List<ConcreteTranslationOption<TK,FV>> ruleList = optionGrid.get(leftEdge, rightEdge);
         if (ruleList.size() > 0) {
           HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(ruleList);
           bundle.add(hypothesis);
           bundles.put(range, hypothesis.sourceCoverage, bundle);
+          bundleList.add(bundle);
         }
       }
     }
+    hypothesisMap.put(hypothesis, bundleList);
   }
 
   /**
