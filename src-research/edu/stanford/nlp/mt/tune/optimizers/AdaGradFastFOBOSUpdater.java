@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import edu.stanford.nlp.mt.tune.OnlineTuner;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Fast AdaGrad update rule from Duchi et al. (2010).
@@ -28,9 +29,6 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private final double eps = 1e-3;
   private double L1lambda;
   
-  // Do a full regularization step every this many time steps.
-  private static final int FULL_REGULARIZATION_INTERVAL = 30;
-
   private final Counter<String> sumGradSquare;
   private final Counter<String> lastUpdated;
   private final Counter<String> customL1;
@@ -56,9 +54,8 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     // Special case: the weight vector is empty (initial update)
     // Special case: gradient is non-zero where the weight is 0
     Set<String> featuresToUpdate = gradient.keySet();
-//    if ((timeStep % FULL_REGULARIZATION_INTERVAL == 0) || endOfEpoch) { 
     if (endOfEpoch) {
-      featuresToUpdate = new HashSet<String>(weights.keySet());
+      featuresToUpdate = Generics.newHashSet(weights.keySet());
       featuresToUpdate.addAll(gradient.keySet());
       logger.info(String.format("Full regularization step for %d features", featuresToUpdate.size()));
     }
