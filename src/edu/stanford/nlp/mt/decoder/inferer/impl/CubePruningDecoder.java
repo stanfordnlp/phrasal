@@ -144,7 +144,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Populate beam i by popping items and generating successors
       BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, optionGrid, 
           recombinationHistory, maxDistortion, i);
-      while (newBeam.size() <= beamCapacity && ! pq.isEmpty()) {
+      while (newBeam.size() < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
         newBeam.put(item.hypothesis);
         List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, sourceInputId);

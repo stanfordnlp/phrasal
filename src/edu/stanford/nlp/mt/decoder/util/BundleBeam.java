@@ -100,7 +100,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   private void groupBundles() {
     // Group hypotheses by source source coverage
     List<Hypothesis<TK,FV>> hypothesisList = recombinationHash.hypotheses();
-    assert hypothesisList.size() <= capacity : "Beam contents exceeds capacity";
+    assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
     Map<CoverageSet,List<Hypothesis<TK,FV>>> coverageGroups = Generics.newHashMap(hypothesisList.size());
     for (Hypothesis<TK,FV> hypothesis : hypothesisList) {
       if (coverageGroups.containsKey(hypothesis.sourceCoverage)) {
