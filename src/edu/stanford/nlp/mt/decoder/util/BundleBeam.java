@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.util;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +14,6 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash.Status;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.TwoDimensionalMap;
 
 /**
  * Implements a beam with hypergraph bundles. The generic type still should be hypothesis.
@@ -31,12 +32,10 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   private final int distortionLimit;
   private final int sourceLength;
 
-  private final TwoDimensionalMap<Range,CoverageSet,HyperedgeBundle<TK,FV>> bundles;
+  private Map<Integer,List<HyperedgeBundle<TK,FV>>> bundles;
   private final RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory;
   private final OptionGrid<TK, FV> optionGrid;
   private final int coverageCardinality;
-  private Map<CoverageSet,List<Range>> rangeCache;
-  private Map<Hypothesis<TK,FV>, List<HyperedgeBundle<TK,FV>>> hypothesisMap;
   /**
    * 
    * @param capacity
@@ -68,22 +67,6 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     this.sourceLength = optionGrid.gridDimension();
     this.distortionLimit = distortionLimit;
     this.coverageCardinality = coverageCardinality;
-    this.bundles = new TwoDimensionalMap<Range,CoverageSet,HyperedgeBundle<TK,FV>>();
-    this.rangeCache = Generics.newHashMap();
-    this.hypothesisMap = Generics.newHashMap(capacity);
-  }
-
-  /**
-   * This method must be called once all hypotheses have been inserted into the beam.
-   */
-  public void lock() {
-    for (HyperedgeBundle<TK,FV> bundle : bundles.values()) {
-      bundle.lock();
-    }
-    
-    // Free intermediate data structures
-    rangeCache = null;
-    hypothesisMap = null;
   }
 
   @Override
@@ -97,7 +80,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
           recombinationHash.getLastRedundant());
     }
-    
+
     Hypothesis<TK,FV> recombinedHypothesis = null;
     if (status == Status.COMBINABLE) {
       recombined++;
@@ -106,60 +89,50 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     } else if(status == Status.BETTER) {
       recombined++;
       recombinedHypothesis = recombinationHash.getLastRedundant();
-      update(recombinedHypothesis, hypothesis);
-      
-    } else if(status == Status.NOVEL){
-      insert(hypothesis);
-    }
+    } 
 
     return recombinedHypothesis;
   }
 
-  private void update(Hypothesis<TK, FV> oldHypothesis,
-      Hypothesis<TK, FV> newHypothesis) {
-    if ( ! hypothesisMap.containsKey(oldHypothesis)) {
-      throw new RuntimeException("Missing recombined hypothesis");
-    }
-    
-    List<HyperedgeBundle<TK,FV>> bundleList = hypothesisMap.get(oldHypothesis);
-    for (HyperedgeBundle<TK,FV> bundle : bundleList) {
-      boolean wasUpdated = bundle.updateItem(oldHypothesis, newHypothesis);
-      if ( ! wasUpdated) {
-        throw new RuntimeException("Hypothesis not found in bundle");
+  /**
+   * This method must be called once all hypotheses have been inserted into the beam.
+   */
+  private void groupBundles() {
+    // Group hypotheses by source source coverage
+    List<Hypothesis<TK,FV>> hypothesisList = recombinationHash.hypotheses();
+    assert hypothesisList.size() <= capacity : "Beam contents exceeds capacity";
+    Map<CoverageSet,List<Hypothesis<TK,FV>>> coverageGroups = Generics.newHashMap(hypothesisList.size());
+    for (Hypothesis<TK,FV> hypothesis : hypothesisList) {
+      if (coverageGroups.containsKey(hypothesis.sourceCoverage)) {
+        coverageGroups.get(hypothesis.sourceCoverage).add(hypothesis);
+      } else {
+        List<Hypothesis<TK,FV>> list = Generics.newArrayList();
+        list.add(hypothesis);
+        coverageGroups.put(hypothesis.sourceCoverage, list);
       }
     }
-    hypothesisMap.put(newHypothesis, bundleList);
-    hypothesisMap.remove(oldHypothesis);
-  }
 
-  /**
-   * Insert the hypothesis into the beam and associated lookup structures.
-   * 
-   * @param hypothesis
-   */
-  private void insert(Hypothesis<TK, FV> hypothesis) {
-    List<Range> rangeList = ranges(hypothesis);
-    List<HyperedgeBundle<TK,FV>> bundleList = Generics.newLinkedList();
-    for (Range range : rangeList) {
-      int leftEdge = range.start;
-      int rightEdge = range.end;
-      assert leftEdge <= rightEdge : "Invalid range";
-      if (bundles.contains(range, hypothesis.sourceCoverage)) {
-        HyperedgeBundle<TK,FV> bundle = bundles.get(range, hypothesis.sourceCoverage);
-        bundle.add(hypothesis);
-        bundleList.add(bundle);
-        
-      } else {
-        List<ConcreteTranslationOption<TK,FV>> ruleList = optionGrid.get(leftEdge, rightEdge);
+    // Make hyperedge bundles
+    bundles = new HashMap<Integer,List<HyperedgeBundle<TK,FV>>>();
+    for (CoverageSet coverage : coverageGroups.keySet()) {
+      List<Range> rangeList = ranges(coverage);
+      List<Hypothesis<TK,FV>> itemList = coverageGroups.get(coverage);
+      Collections.sort(itemList);
+      for (Range range : rangeList) {
+        assert range.start <= range.end : "Invalid range";
+        List<ConcreteTranslationOption<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
         if (ruleList.size() > 0) {
-          HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(ruleList);
-          bundle.add(hypothesis);
-          bundles.put(range, hypothesis.sourceCoverage, bundle);
-          bundleList.add(bundle);
+          HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(itemList, ruleList);
+          if (bundles.containsKey(range.size())) {
+            bundles.get(range.size()).add(bundle);
+          } else {
+            List<HyperedgeBundle<TK,FV>> list = Generics.newLinkedList();
+            list.add(bundle);
+            bundles.put(range.size(), list);
+          }
         }
       }
     }
-    hypothesisMap.put(hypothesis, bundleList);
   }
 
   /**
@@ -169,16 +142,12 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
    * @return
    */
   public List<HyperedgeBundle<TK,FV>> getBundlesForConsequentSize(int n) {
-    int rangeSize = n - coverageCardinality;
-    List<HyperedgeBundle<TK,FV>> bundlesForRange = Generics.newLinkedList();
-    for (Range range : bundles.firstKeySet()) {
-      if (rangeSize == range.size()) {
-        for (HyperedgeBundle<TK,FV> bundle : bundles.get(range).values()) {
-          bundlesForRange.add(bundle);
-        }
-      }
+    if (bundles == null) {
+      groupBundles();
     }
-    return bundlesForRange;
+    int rangeSize = n - coverageCardinality;
+    return bundles.containsKey(rangeSize) ? bundles.get(rangeSize) : 
+      new ArrayList<HyperedgeBundle<TK,FV>>(1);
   }
 
   @Override
@@ -188,14 +157,11 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     return hypotheses.iterator();
   }
 
-  private List<Range> ranges(Hypothesis<TK, FV> hyp) {
-    if (rangeCache.containsKey(hyp.sourceCoverage)) {
-      return rangeCache.get(hyp.sourceCoverage);
-    }
+  private List<Range> ranges(CoverageSet sourceCoverage) {
     List<Range> rangeList = Generics.newLinkedList();
-    int firstCoverageGap = hyp.sourceCoverage.nextClearBit(0);
+    int firstCoverageGap = sourceCoverage.nextClearBit(0);
     for (int startPos = firstCoverageGap; startPos < sourceLength; startPos++) {
-      int endPosMax = hyp.sourceCoverage.nextSetBit(startPos);
+      int endPosMax = sourceCoverage.nextSetBit(startPos);
 
       // Re-ordering constraint checks
       // Moses-style hard distortion limit
@@ -214,7 +180,6 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
         rangeList.add(new Range(startPos, endPos));
       }
     }
-    rangeCache.put(hyp.sourceCoverage, rangeList);
     return rangeList;
   }
 
@@ -272,7 +237,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     public String toString() {
       return String.format("%d-%d  size: %d", start, end, size());
     }
-    
+
     @Override
     public boolean equals(Object other) {
       if (this == other) {

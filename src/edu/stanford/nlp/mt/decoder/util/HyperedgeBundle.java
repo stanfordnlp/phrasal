@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
@@ -19,70 +18,22 @@ import edu.stanford.nlp.util.Generics;
  */
 public class HyperedgeBundle<TK,FV> {
 
-  private List<Hypothesis<TK,FV>> itemList;
+  private final List<Hypothesis<TK,FV>> itemList;
   private final List<ConcreteTranslationOption<TK,FV>> sortedRuleList;
-  private boolean isLocked = false;
   private BitSet expandedItems;
-
-  // Defines the location in the cube from which to generate
-  // the next successors
-  private int lastItem = -1;
-  private int lastRule = -1;
 
   /**
    * Assumes that the list of translation rules has already been sorted.
    * 
    * @param sortedRuleList
    */
-  public HyperedgeBundle(List<ConcreteTranslationOption<TK,FV>> sortedRuleList) {
+  public HyperedgeBundle(List<Hypothesis<TK,FV>> sortedHypothesisList, 
+      List<ConcreteTranslationOption<TK,FV>> sortedRuleList) {
     this.sortedRuleList = sortedRuleList;
-    this.itemList = Generics.newArrayList();
+    this.itemList = sortedHypothesisList;
+    this.expandedItems = new BitSet();
   }
 
-  public boolean updateItem(Hypothesis<TK, FV> oldHypothesis,
-      Hypothesis<TK, FV> newHypothesis) {
-    int numItems = itemList.size();
-    for (int i = 0; i < numItems; ++i) {
-      if (itemList.get(i) == oldHypothesis) {
-        itemList.set(i, newHypothesis);
-        return true;
-      }
-    }
-    return false;
-  }
-  
-  /**
-   * Add a hypothesis to this bundle.
-   * 
-   * @param hypothesis
-   */
-  public void add(Hypothesis<TK,FV> hypothesis) {
-    if (isLocked) {
-      throw new RuntimeException("Cannot expand a locked bundle");
-    }
-    itemList.add(hypothesis);
-  }
-
-  /**
-   * This method must be called after the final call to add() and
-   * before the first call to nextSuccessors().
-   */
-  public void lock() {
-    Collections.sort(itemList);
-    expandedItems = new BitSet();
-    isLocked = true;
-  }
-
-  /**
-   * Mark the last best consequent according to combination costs.
-   * 
-   * @param antecedent
-   */
-  public void updateLastBestScoredConsequent(Consequent<TK,FV> antecedent) {
-    lastItem = antecedent.itemId;
-    lastRule = antecedent.ruleId;
-  }
-  
   /**
    * Returned unsorted, ungenerated successors to this antecedent. This list
    * will have a length in the range [0,2].
@@ -90,20 +41,18 @@ public class HyperedgeBundle<TK,FV> {
    * @param antecedent
    * @return
    */
-  public List<Consequent<TK,FV>> nextSuccessors() {
-    if (! isLocked) {
-      throw new RuntimeException("Cannot expand successors before locking bundle");
-    }
+  public List<Consequent<TK,FV>> nextSuccessors(Consequent<TK,FV> antecedent) {
     List<Consequent<TK,FV>> consequentList = Generics.newArrayList(2);
     if (expandedItems.cardinality() == 0) {
       // Top-left corner of the grid
-      lastItem = 0;
-      lastRule = 0;
-      consequentList.add(new Consequent<TK,FV>(itemList.get(0), sortedRuleList.get(0), this, lastItem, lastRule));
+      assert antecedent == null || (antecedent.itemId < 0 && antecedent.ruleId < 0);
+      consequentList.add(new Consequent<TK,FV>(itemList.get(0), sortedRuleList.get(0), this, 0, 0));
       expandedItems.set(0);
 
     } else {
       // Move down in the grid
+      int lastItem = antecedent.itemId;
+      int lastRule = antecedent.ruleId;
       int succItem = getIndex(lastItem+1, lastRule);
       if ( ! expandedItems.get(succItem) && lastItem+1 < itemList.size()) {
         consequentList.add(new Consequent<TK,FV>(itemList.get(lastItem+1), sortedRuleList.get(lastRule), 
@@ -125,11 +74,11 @@ public class HyperedgeBundle<TK,FV> {
     // Row-major order
     return itemId * sortedRuleList.size() + ruleId;
   }
-  
+
   @Override
   public String toString() {
-    return String.format("#items: %d  #rules: %d  cube: (%d,%d) coverage: %s", 
-        itemList.size(), sortedRuleList.size(), lastItem, lastRule, expandedItems.toString());
+    return String.format("#items: %d  #rules: %d  coverage: %s", 
+        itemList.size(), sortedRuleList.size(), expandedItems.toString());
   }
 
   public static class Consequent<TK,FV> {
@@ -149,7 +98,7 @@ public class HyperedgeBundle<TK,FV> {
       this.itemId = itemId;
       this.ruleId = ruleId;
     }
-    
+
     @Override
     public String toString() {
       return String.format("itemId: %d  ruleId: %d", itemId, ruleId);

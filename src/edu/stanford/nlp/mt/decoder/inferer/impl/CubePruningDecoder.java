@@ -118,7 +118,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     Hypothesis<TK, FV> nullHypothesis = new Hypothesis<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     nullBeam.put(nullHypothesis);
-    nullBeam.lock();
     beams.add(nullBeam);
 
     // Initialize feature extractors
@@ -136,7 +135,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(beamCapacity);
       for (BundleBeam<TK,FV> beam : beams) {
         for (HyperedgeBundle<TK,FV> bundle : beam.getBundlesForConsequentSize(i)) {
-          List<Item<TK,FV>> consequents = generateConsequentsFrom(bundle, sourceInputId);
+          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId);
           pq.addAll(consequents);
           totalHypothesesGenerated += consequents.size();
         }
@@ -148,14 +147,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       while (newBeam.size() <= beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
         newBeam.put(item.hypothesis);
-        item.consequent.bundle.updateLastBestScoredConsequent(item.consequent);
-        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent.bundle, sourceInputId);
+        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, sourceInputId);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
       }
-
-      // Lock and insert new beam
-      newBeam.lock();
       beams.add(newBeam);
     }
     System.err.printf("Decoding loop time: %.3f s%n", (System.nanoTime() - startTime) / 1e9);
@@ -185,15 +180,16 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
   /**
    * Expands a hyperedge bundle. Returns [0,2] successors.
+   * @param consequent 
    * 
    * @param bundle
    * @param sourceInputId
    * @return
    */
-  private List<Item<TK, FV>> generateConsequentsFrom(
+  private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId) {
     List<Item<TK,FV>> consequents = Generics.newArrayList(2);
-    List<Consequent<TK,FV>> successors = bundle.nextSuccessors();
+    List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
       // Hypothesis generation
       Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(sourceInputId,
