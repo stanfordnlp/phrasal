@@ -1,13 +1,18 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.util.Generics;
 
 /**
+ * Implements hypothesis recombination according to the specified recombination
+ * filter.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <S>
  */
@@ -114,28 +119,18 @@ public class RecombinationHash<S extends State<S>> {
       recombinationHash.put(wrappedHyp, wrappedHyp);
       return Status.NOVEL;
     }
-
     if (hypothesis == filterEquivWrappedHyp.hypothesis) {
       lastBestOnQuery = hypothesis;
       lastRedundantOnQuery = null;
       return Status.SELF;
     }
-
-    /*
-     * System.err.printf("-----------\n"); System.err.printf("RECOMBINING\n");
-     * System.err.printf("-----------\n"); System.err.printf("Existing: %s\n",
-     * filterEquivWrappedHyp.hypothesis); System.err.printf("Suggested: %s\n",
-     * hypothesis);
-     */
     if (hypothesis.score() > filterEquivWrappedHyp.hypothesis.score()) {
-      // System.err.println("Exisiting < Suggested\n");
       lastRedundantOnQuery = filterEquivWrappedHyp.hypothesis;
       lastBestOnQuery = hypothesis;
       filterEquivWrappedHyp.hypothesis = hypothesis;
       return Status.BETTER;
     }
 
-    // System.err.println("Exisiting > Suggested\n");
     lastRedundantOnQuery = hypothesis;
     lastBestOnQuery = filterEquivWrappedHyp.hypothesis;
     return Status.COMBINABLE;
@@ -201,42 +196,11 @@ public class RecombinationHash<S extends State<S>> {
     public boolean equals(Object o) {
 
       comparisons++;
-      /*
-       * if (comparisons % 1000 == 0) {
-       * System.err.println("=================================");
-       * System.err.printf("HashEntries: %d\n",recombinationHash.size());
-       * displayStats(); }
-       */
-
       if (!(o instanceof RecombinationHash.FilterWrappedHypothesis)) {
         return false;
       }
 
       FilterWrappedHypothesis wrappedHyp = (FilterWrappedHypothesis) o;
-
-      /*
-       * if ((0xFFF & wrappedHyp.longHashCode()) == (0xFFF &
-       * this.longHashCode()) && !filter.combinable(this.hypothesis,
-       * wrappedHyp.hypothesis)) { System.err.println(); if
-       * (wrappedHyp.hypothesis.featurizable != null)
-       * System.err.printf("1: %s\n",
-       * wrappedHyp.hypothesis.featurizable.partialTranslation); if
-       * (hypothesis.featurizable != null) System.err.printf("2: %s\n",
-       * hypothesis.featurizable.partialTranslation); if
-       * (wrappedHyp.hypothesis.featurizable != null && hypothesis.featurizable
-       * != null) { System.err.printf("Noisy equals: %s\n",
-       * ((AbstractSequence)wrappedHyp
-       * .hypothesis.featurizable.partialTranslation
-       * ).noisyEquals(hypothesis.featurizable.partialTranslation)); }
-       * ((TranslationIdentityRecombinationFilter)filter).noisy = true;
-       * System.err.printf("Same hyp: %s\n", wrappedHyp.hypothesis ==
-       * this.hypothesis); System.err.printf("equal: %s\n",
-       * filter.combinable(this.hypothesis, wrappedHyp.hypothesis));
-       * System.err.printf("hashcollison %x <=> %x\n\n",
-       * wrappedHyp.longHashCode(), this.longHashCode());
-       * ((TranslationIdentityRecombinationFilter)filter).noisy = true; }
-       */
-
       if (wrappedHyp.hypothesis == this.hypothesis) {
         return true;
       }
@@ -267,12 +231,16 @@ public class RecombinationHash<S extends State<S>> {
     }
   }
 
+  /**
+   * Get the list of best hypotheses.
+   * 
+   * @return
+   */
   public List<S> hypotheses() {
-    List<S> hypotheses = new ArrayList<S>(recombinationHash.size());
+    List<S> hypotheses = Generics.newArrayList(recombinationHash.size());
     for (FilterWrappedHypothesis fwh : recombinationHash.keySet()) {
       hypotheses.add(fwh.hypothesis);
     }
     return hypotheses;
   }
-
 }

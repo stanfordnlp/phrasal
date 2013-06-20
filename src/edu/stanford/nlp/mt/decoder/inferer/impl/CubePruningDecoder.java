@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
-import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.Generics;
@@ -32,8 +31,9 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
-  public static final int DEFAULT_BEAM_SIZE = 200;
-  public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam;
+  // 800 gives roughly the same baseline performance as the default beam size
+  // of MultiBeamDecoder
+  public static final int DEFAULT_BEAM_SIZE = 800;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
   private final int maxDistortion;
@@ -65,7 +65,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     public CubePruningDecoderBuilder() {
-      super(DEFAULT_BEAM_SIZE, DEFAULT_BEAM_TYPE);
+      super(DEFAULT_BEAM_SIZE, null);
     }
 
     @Override
@@ -87,7 +87,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       List<Sequence<TK>> targets, int nbest) {
     featurizer.reset();
     final int sourceLength = source.size();
-    final int maxPhraseLength = phraseGenerator.longestSourcePhrase();
 
     // create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
@@ -124,6 +123,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
 
     // main translation loop---beam expansion
+    final int maxPhraseLength = phraseGenerator.longestSourcePhrase();
     int totalHypothesesGenerated = 1;
     final long startTime = System.nanoTime();
     for (int i = 1; i <= sourceLength; i++) {
