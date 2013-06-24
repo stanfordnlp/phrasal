@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -28,7 +28,7 @@ public class DynamicPhraseTable<FV> extends
   // IBMModel1 model1S2T, model1T2S;
 
   public DynamicPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String phraseTableName, String model1S2T,
       String model1T2S) {
     super(phraseFeaturizer);
@@ -37,7 +37,7 @@ public class DynamicPhraseTable<FV> extends
   }
 
   public DynamicPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String phraseTableName) {
     super(phraseFeaturizer);
     currentSequence = new HashSet<String>();

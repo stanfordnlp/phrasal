@@ -5,7 +5,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -29,7 +29,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
  * @author Michel Galley
  */
 public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
-    implements RichIncrementalFeaturizer<IString, String> {
+    implements RichCombinationFeaturizer<IString, String> {
 
   private static final int ORDER = 4;
   private static final boolean BP_BEFORE_FINAL = System

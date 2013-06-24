@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Index;
  */
 public class DTULinearDistortionFeaturizer extends
     StatefulFeaturizer<IString, String> implements
-    IsolatedPhraseFeaturizer<IString, String> {
+    RuleFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(

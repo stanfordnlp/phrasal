@@ -308,7 +308,7 @@ public class Phrasal {
       }
     }
 
-    MSDFeaturizer<IString, String> lexReorderFeaturizer = null;
+    ReorderingFeaturizer<IString, String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
@@ -446,7 +446,7 @@ public class Phrasal {
             String name = token.replaceFirst("\\(\\)$", "");
             Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(name);
-            featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+            featurizer = (CombinationFeaturizer<IString, String>) featurizerClass
                 .newInstance();
             additionalFeaturizers.add(featurizer);
           } else if (token.contains("(")) {
@@ -501,7 +501,7 @@ public class Phrasal {
         }
         if (featurizer instanceof AlignmentFeaturizer)
           Featurizable.enableAlignments();
-        if (featurizer instanceof MSDFeaturizer)
+        if (featurizer instanceof ReorderingFeaturizer)
           msdRecombination = true;
       }
       if (featurizerName != null) {
@@ -781,7 +781,7 @@ public class Phrasal {
           PhraseGenerator<IString,String> pgen;
           try {
              pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-                getConstructor(IsolatedPhraseFeaturizer.class).newInstance(featurizer);
+                getConstructor(RuleFeaturizer.class).newInstance(featurizer);
           } catch (ClassNotFoundException e) {
              throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
           }
@@ -803,7 +803,7 @@ public class Phrasal {
             recombinationHeuristic);
 
     // Create Search Heuristic
-    IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
+    RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
     SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
         isolatedPhraseFeaturizer,
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE

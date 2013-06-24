@@ -11,7 +11,7 @@ import edu.stanford.nlp.util.Index;
  * @author danielcer
  */
 public class NGramLanguageModelFeaturizer implements
-    IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString, String> {
+    CombinationFeaturizer<IString, String>, RuleFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LM:";
   public static final String FEATURE_NAME = "LM";
   public static final String DEBUG_PROPERTY = "ngramLMFeaturizerDebug";

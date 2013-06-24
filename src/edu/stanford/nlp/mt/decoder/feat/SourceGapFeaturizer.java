@@ -19,8 +19,8 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class SourceGapFeaturizer implements
-    IncrementalFeaturizer<IString, String>,
-    IsolatedPhraseFeaturizer<IString, String> {
+    CombinationFeaturizer<IString, String>,
+    RuleFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(

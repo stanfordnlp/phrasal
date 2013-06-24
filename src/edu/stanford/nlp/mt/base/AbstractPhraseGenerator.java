@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
     PhraseGenerator<TK,FV>, PhraseTable<TK> {
-  protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+  protected final RuleFeaturizer<TK, FV> phraseFeaturizer;
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -53,7 +53,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   }
 
   public AbstractPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
   }
 

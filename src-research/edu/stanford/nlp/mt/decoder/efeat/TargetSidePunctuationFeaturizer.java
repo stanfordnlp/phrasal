@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * Adds features to the MT system based on the types of punctuation
@@ -20,7 +20,7 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
  *@author John Bauer
  */
 public class TargetSidePunctuationFeaturizer implements AlignmentFeaturizer,
-IsolatedPhraseFeaturizer<IString, String> {
+RuleFeaturizer<IString, String> {
 
   /**
    * All features will start with this prefix

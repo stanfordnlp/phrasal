@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
 
 /**
  * Adds features to the MT system based on the combination of source
@@ -24,7 +24,7 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
  *
  *@author John Bauer
  */
-public class SourceSideTaggerFeaturizer implements IncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
+public class SourceSideTaggerFeaturizer implements CombinationFeaturizer<IString, String>, AlignmentFeaturizer {
   /**
    * Tagger to use on the source side
    */

@@ -28,7 +28,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
 
 import edu.stanford.nlp.util.Generics;
@@ -145,7 +145,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
   static final String NAME = "AllCasePhrGen";
 
   public AllCasePhraseGenerator(
-      IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer) {
+      RuleFeaturizer<IString, String> phraseFeaturizer) {
     super(phraseFeaturizer);
   }
 

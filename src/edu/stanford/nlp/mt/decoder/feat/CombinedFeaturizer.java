@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Index;
  * @param <FV>
  */
 public class CombinedFeaturizer<TK, FV> implements
-    RichIncrementalFeaturizer<TK, FV>, IsolatedPhraseFeaturizer<TK, FV>,
+    RichCombinationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV>,
     Cloneable {
   public List<Featurizer<TK, FV>> featurizers;
 
@@ -52,7 +52,7 @@ public class CombinedFeaturizer<TK, FV> implements
     featurizer.featurizers = Generics.newLinkedList();
     for (Featurizer<TK, FV> f : featurizers) {
       featurizer.featurizers
-          .add(f instanceof ClonedFeaturizer ? (IncrementalFeaturizer<TK, FV>) ((ClonedFeaturizer<TK, FV>) f)
+          .add(f instanceof ClonedFeaturizer ? (CombinationFeaturizer<TK, FV>) ((ClonedFeaturizer<TK, FV>) f)
               .clone() : f);
     }
     return featurizer;
@@ -109,10 +109,10 @@ public class CombinedFeaturizer<TK, FV> implements
 
     List<Object> featureValueLists = Generics.newArrayList(featurizers.size());
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if ( ! (featurizer instanceof IncrementalFeaturizer)) {
+      if ( ! (featurizer instanceof CombinationFeaturizer)) {
         continue;
       }
-      IncrementalFeaturizer<TK,FV> incFeaturizer = (IncrementalFeaturizer<TK,FV>) featurizer;
+      CombinationFeaturizer<TK,FV> incFeaturizer = (CombinationFeaturizer<TK,FV>) featurizer;
       // if a single feature value is available from the method
       // featurizer#featurize, then insert it into the aggregate
       // list
@@ -155,9 +155,9 @@ public class CombinedFeaturizer<TK, FV> implements
   public List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (!(featurizer instanceof IsolatedPhraseFeaturizer))
+      if (!(featurizer instanceof RuleFeaturizer))
         continue;
-      IsolatedPhraseFeaturizer<TK, FV> isoFeaturizer = (IsolatedPhraseFeaturizer<TK, FV>) featurizer;
+      RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
 
       FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
       if (singleFeatureValue != null) {
@@ -186,8 +186,8 @@ public class CombinedFeaturizer<TK, FV> implements
   public void initialize(int sourceInputId,
       List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof IncrementalFeaturizer) {
-        ((IncrementalFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
+      if (featurizer instanceof CombinationFeaturizer) {
+        ((CombinationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
       }
     }
   }
@@ -195,8 +195,8 @@ public class CombinedFeaturizer<TK, FV> implements
   @Override
   public void reset() {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof IncrementalFeaturizer) {
-        ((IncrementalFeaturizer<TK,FV>) featurizer).reset();
+      if (featurizer instanceof CombinationFeaturizer) {
+        ((CombinationFeaturizer<TK,FV>) featurizer).reset();
       }
     }
   }
@@ -204,8 +204,8 @@ public class CombinedFeaturizer<TK, FV> implements
   @Override
   public void dump(Featurizable<TK, FV> f) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof RichIncrementalFeaturizer) {
-        ((RichIncrementalFeaturizer<TK, FV>) featurizer).dump(f);
+      if (featurizer instanceof RichCombinationFeaturizer) {
+        ((RichCombinationFeaturizer<TK, FV>) featurizer).dump(f);
       }
     }
   }
@@ -213,8 +213,8 @@ public class CombinedFeaturizer<TK, FV> implements
   @Override
   public void rerankingMode(boolean r) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof RichIncrementalFeaturizer) {
-        ((RichIncrementalFeaturizer<TK, FV>) featurizer).rerankingMode(r);
+      if (featurizer instanceof RichCombinationFeaturizer) {
+        ((RichCombinationFeaturizer<TK, FV>) featurizer).rerankingMode(r);
       }
     }
   }
@@ -223,8 +223,8 @@ public class CombinedFeaturizer<TK, FV> implements
   public void initialize(Index<String> featureIndex) {
     // Initialize the IsolatedPhraseFeaturizers
     for (Featurizer<TK,FV> featurizer : featurizers) {
-      if (featurizer instanceof IsolatedPhraseFeaturizer) {
-        ((IsolatedPhraseFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
+      if (featurizer instanceof RuleFeaturizer) {
+        ((RuleFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
       }
     }
   }

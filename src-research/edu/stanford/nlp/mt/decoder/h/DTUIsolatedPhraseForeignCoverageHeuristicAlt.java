@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.h;
 
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.IntPair;
@@ -20,7 +20,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK, FV> extends
   }
 
   public DTUIsolatedPhraseForeignCoverageHeuristicAlt(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     super(phraseFeaturizer);
   }
 

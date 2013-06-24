@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.base.DTUOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.ErasureUtils;
@@ -31,7 +31,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   protected static final boolean IGNORE_TGT = Boolean.parseBoolean(System
       .getProperty(IGNORE_TGT_PROPERTY, "true"));
 
-  protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+  protected final RuleFeaturizer<TK, FV> phraseFeaturizer;
   protected SpanScores hSpanScores;
 
   static {
@@ -48,7 +48,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 	 * 
 	 */
   public DTUIsolatedPhraseForeignCoverageHeuristic(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
     System.err.println("Heuristic: " + getClass());
   }

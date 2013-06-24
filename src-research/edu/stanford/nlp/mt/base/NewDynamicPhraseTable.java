@@ -6,7 +6,7 @@ import java.util.*;
 
 import tokyocabinet.*;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -29,7 +29,7 @@ public class NewDynamicPhraseTable extends
   Set<String> currentSequence = null;
 
   public NewDynamicPhraseTable(
-      IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer,
+      RuleFeaturizer<IString, String> phraseFeaturizer,
       BiText bitext, IBMModel1 model1F2E,
       IBMModel1 model1E2F) {
     super(phraseFeaturizer);

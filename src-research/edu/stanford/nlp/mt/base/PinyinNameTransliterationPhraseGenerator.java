@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
@@ -47,7 +47,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   private static final boolean capitalize = false;
 
 
-  public PinyinNameTransliterationPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+  public PinyinNameTransliterationPhraseGenerator(RuleFeaturizer<TK, FV> phraseFeaturizer) {
     super(phraseFeaturizer);
     filter = new ProbableChineseNameFilter<TK>();
     scoreNames = DEFAULT_SCORE_NAMES;

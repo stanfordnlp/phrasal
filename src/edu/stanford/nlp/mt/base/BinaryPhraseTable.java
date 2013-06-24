@@ -18,7 +18,7 @@ import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;
@@ -27,7 +27,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   final Environment dbEnv;
   final Database db;
   
-  public BinaryPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+  public BinaryPhraseTable(RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename) throws IOException {
     super(phraseFeaturizer);
     name = String.format("BinaryPhraseTable(%s)", filename);

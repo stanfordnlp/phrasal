@@ -24,7 +24,7 @@ import edu.stanford.nlp.util.Index;
  */
 public class HierarchicalReorderingFeaturizer extends
     StatefulFeaturizer<IString, String> implements
-    RichIncrementalFeaturizer<IString, String>, MSDFeaturizer<IString, String>,
+    RichCombinationFeaturizer<IString, String>, ReorderingFeaturizer<IString, String>,
     ClonedFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";

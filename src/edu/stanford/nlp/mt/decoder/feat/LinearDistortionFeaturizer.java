@@ -15,7 +15,7 @@ import edu.stanford.nlp.util.Index;
  * @param <TK>
  */
 public class LinearDistortionFeaturizer<TK> implements
-    IncrementalFeaturizer<TK, String> {
+    CombinationFeaturizer<TK, String> {
 
   public static final String DEBUG_PROPERTY = "DebugLinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(

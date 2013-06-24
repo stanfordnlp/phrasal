@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.tools.ComputeBitextIDF;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -25,7 +25,7 @@ import edu.stanford.nlp.util.Index;
  *
  */
 public class DenseIDFFeature implements 
-    IsolatedPhraseFeaturizer<IString, String> {
+    RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_PREFIX = "DenseIDF";
   

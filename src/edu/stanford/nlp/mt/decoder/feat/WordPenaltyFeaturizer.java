@@ -12,7 +12,7 @@ import edu.stanford.nlp.util.Index;
  * 
  */
 public class WordPenaltyFeaturizer<TK> implements
-    IsolatedPhraseFeaturizer<TK, String> {
+    RuleFeaturizer<TK, String> {
 
   public static final String DEBUG_PROPERTY = "WordPenaltyFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(

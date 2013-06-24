@@ -12,7 +12,7 @@ import edu.stanford.nlp.util.Index;
  * @param <T>
  */
 public class PhraseTableScoresFeaturizer<T> implements
-    IsolatedPhraseFeaturizer<T, String> {
+    RuleFeaturizer<T, String> {
   public final static String PREFIX = "TM";
   public static final String DEBUG_PROPERTY = "ptScoresFeaturizerDEBUG";
   final HashMap<String, String[]> featureNamesHash;
@@ -75,7 +75,7 @@ public class PhraseTableScoresFeaturizer<T> implements
   }
 
   /**
-   * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#listFeaturize(Featurizable)
+   * @see edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer#listFeaturize(Featurizable)
    */
   @SuppressWarnings("unchecked")
   @Override

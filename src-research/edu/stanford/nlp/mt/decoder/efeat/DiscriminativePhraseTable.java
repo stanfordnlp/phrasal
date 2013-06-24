@@ -6,7 +6,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  * 
  */
-public class DiscriminativePhraseTable implements IsolatedPhraseFeaturizer<IString, String> {
+public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String> {
   
   private static final String FEATURE_NAME = "DiscPT";
   private static final String SOURCE = "src";

@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.zip.GZIPInputStream;
 import java.io.*;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  *
@@ -133,7 +133,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
 
   public FlatPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename) throws IOException {
     // default is not to do log rithm on the scores
     this(phraseFeaturizer, filename, false);
@@ -152,7 +152,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @throws IOException
    */
   public FlatPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename, boolean reverse) throws IOException {
     super(phraseFeaturizer);
     File f = new File(filename);

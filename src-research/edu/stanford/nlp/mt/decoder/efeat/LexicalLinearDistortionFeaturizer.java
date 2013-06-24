@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Index;
  * 
  */
 public class LexicalLinearDistortionFeaturizer implements
-    IncrementalFeaturizer<IString, String> {
+    CombinationFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LLD";
   public static final String ABSOLUTE = ":a";
   public static final String LEFT_SHIFT = ":l";

@@ -13,7 +13,7 @@ import edu.stanford.nlp.util.Index;
  * @param <TK>
  */
 public class UnknownWordFeaturizer<TK> implements
-    IsolatedPhraseFeaturizer<TK, String> {
+    RuleFeaturizer<TK, String> {
 
   public static final String FEATURE_NAME = "UnknownWord";
   public static final String UNKNOWN_PHRASE_TAG = "unknownphrase";

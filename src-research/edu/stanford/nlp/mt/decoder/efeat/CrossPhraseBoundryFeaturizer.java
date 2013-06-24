@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -19,7 +19,7 @@ import edu.stanford.nlp.util.Index;
  * 
  */
 public class CrossPhraseBoundryFeaturizer implements
-    IncrementalFeaturizer<IString, String> {
+    CombinationFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "CPB";
   public static final String PREFIX_SRC = ":src";
   public static final String PREFIX_TRG = ":trg";

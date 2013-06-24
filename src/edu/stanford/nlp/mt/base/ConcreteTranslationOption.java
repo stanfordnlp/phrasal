@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.util.Generics;
@@ -40,7 +40,7 @@ public class ConcreteTranslationOption<TK,FV> implements
 
   public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet sourceCoverage,
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
     this.abstractOption = abstractOption;
     this.sourceCoverage = sourceCoverage;
@@ -58,7 +58,7 @@ public class ConcreteTranslationOption<TK,FV> implements
 
   public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
       CoverageSet sourceCoverage,
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
       boolean hasTargetGap) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);

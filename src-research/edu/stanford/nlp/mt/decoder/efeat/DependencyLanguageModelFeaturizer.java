@@ -25,7 +25,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.tools.PrefixTagger;
@@ -47,7 +47,7 @@ import gnu.trove.THashMap;
  */
 public class DependencyLanguageModelFeaturizer extends
     StatefulFeaturizer<IString, String> implements
-    RichIncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
+    RichCombinationFeaturizer<IString, String>, AlignmentFeaturizer {
 
   // How many words of left context for POS tagging:
   // public static final String ORDER_PROPERTY = "leftWords";

@@ -15,7 +15,7 @@ import edu.stanford.nlp.util.Index;
  * @param <FV>
  */
 public class CollapsedFeaturizer<TK, FV> implements
-    IncrementalFeaturizer<TK, FV>, IsolatedPhraseFeaturizer<TK, FV> {
+    CombinationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV> {
   final public List<Featurizer<TK, FV>> featurizers;
   final double[] featurizerWts;
   final Map<FV, Double> weightMap;
@@ -72,10 +72,10 @@ public class CollapsedFeaturizer<TK, FV> implements
     int sz = featurizers.size();
     for (int i = 0; i < sz; i++) {
       Featurizer<TK, FV> featurizer = featurizers.get(i);
-      if ( ! (featurizer instanceof IncrementalFeaturizer)) {
+      if ( ! (featurizer instanceof CombinationFeaturizer)) {
         continue;
       }
-      IncrementalFeaturizer<TK,FV> incFeaturizer = (IncrementalFeaturizer<TK,FV>) featurizer;
+      CombinationFeaturizer<TK,FV> incFeaturizer = (CombinationFeaturizer<TK,FV>) featurizer;
       FeatureValue<FV> singleFeatureValue = incFeaturizer.featurize(f);
       if (singleFeatureValue != null) {
         value += getIndividualWeight(singleFeatureValue.name)
@@ -106,9 +106,9 @@ public class CollapsedFeaturizer<TK, FV> implements
     int sz = featurizers.size();
     for (int i = 0; i < sz; i++) {
       Featurizer<TK, FV> featurizer = featurizers.get(i);
-      if (!(featurizer instanceof IsolatedPhraseFeaturizer))
+      if (!(featurizer instanceof RuleFeaturizer))
         continue;
-      IsolatedPhraseFeaturizer<TK, FV> isoFeaturizer = (IsolatedPhraseFeaturizer<TK, FV>) featurizer;
+      RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
 
       FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
 
@@ -140,13 +140,13 @@ public class CollapsedFeaturizer<TK, FV> implements
   public void initialize(int sourceInputId,
       List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      ((IncrementalFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
+      ((CombinationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
     }
   }
 
   public void reset() {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      ((IncrementalFeaturizer<TK, FV>) featurizer).reset();
+      ((CombinationFeaturizer<TK, FV>) featurizer).reset();
     }
   }
   
@@ -154,8 +154,8 @@ public class CollapsedFeaturizer<TK, FV> implements
   public void initialize(Index<String> featureIndex) {
     // Initialize the IsolatedPhraseFeaturizers
     for (Featurizer<TK,FV> featurizer : featurizers) {
-      if (featurizer instanceof IsolatedPhraseFeaturizer) {
-        ((IsolatedPhraseFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
+      if (featurizer instanceof RuleFeaturizer) {
+        ((RuleFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
       }
     }
   }

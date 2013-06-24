@@ -15,7 +15,7 @@ import edu.stanford.nlp.util.Index;
  * @param <TK>
  */
 public class PhrasePenaltyFeaturizer<TK> implements
-    IsolatedPhraseFeaturizer<TK, String> {
+    RuleFeaturizer<TK, String> {
   static public String FEATURE_NAME = "TM:phrasePenalty";
   // mg2008: please don't change to "= 1" since not exactly the same value:
   private double phrasePenalty = Math.log(2.718);

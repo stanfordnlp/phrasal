@@ -12,8 +12,8 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class SentenceBoundaryFeaturizer implements
-    IncrementalFeaturizer<IString, String>,
-    IsolatedPhraseFeaturizer<IString, String> {
+    CombinationFeaturizer<IString, String>,
+    RuleFeaturizer<IString, String> {
   public static final String FEATURE_NAME = "SentenceBoundary";
   public static final double BAD_SENTENCE_BOUNDARY_PENALTY = -100.0;
 

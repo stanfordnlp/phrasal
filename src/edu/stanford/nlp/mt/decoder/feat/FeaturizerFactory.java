@@ -155,9 +155,9 @@ public class FeaturizerFactory {
     Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
 
     // Linear distortion
-    final IncrementalFeaturizer<IString, String> linearDistortionFeaturizer;
+    final CombinationFeaturizer<IString, String> linearDistortionFeaturizer;
     try {
-      linearDistortionFeaturizer = (IncrementalFeaturizer<IString, String>) Class
+      linearDistortionFeaturizer = (CombinationFeaturizer<IString, String>) Class
           .forName(paramPairs.get(LINEAR_DISTORTION_PARAMETER)).newInstance();
       System.err.println("Linear distortion featurizer: "
           + linearDistortionFeaturizer);
@@ -166,7 +166,7 @@ public class FeaturizerFactory {
     }
 
     // Gaps:
-    List<IncrementalFeaturizer<IString, String>> gapFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+    List<CombinationFeaturizer<IString, String>> gapFeaturizers = new LinkedList<CombinationFeaturizer<IString, String>>();
     GapType gapType = GapType.valueOf(paramPairs.get(GAP_PARAMETER));
     if (gapType == GapType.source || gapType == GapType.both)
       gapFeaturizers.add(new SourceGapFeaturizer());
@@ -186,7 +186,7 @@ public class FeaturizerFactory {
       List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
       baselineFeaturizers.addAll(gapFeaturizers);
 
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer;
+      CombinationFeaturizer<IString, String> arpaLmFeaturizer;
       Featurizer<IString,String> phraseTableScoresFeaturizer;
 
       // ARPA LM
@@ -212,7 +212,7 @@ public class FeaturizerFactory {
       if (featurizerName.equals(BASELINE_FEATURIZERS)) {
         return new CombinedFeaturizer<IString, String>(baselineFeaturizers);
       } else {
-        IncrementalFeaturizer<IString, String> collapsedTmFeaturizer = new CollapsedFeaturizer<IString, String>(
+        CombinationFeaturizer<IString, String> collapsedTmFeaturizer = new CollapsedFeaturizer<IString, String>(
             "comboBaselineTM:", DEFAULT_TM_FEATURE_WEIGHTS_MAP,
             phraseTableScoresFeaturizer);
         CollapsedFeaturizer<IString, String> fullModel = new CollapsedFeaturizer<IString, String>(
@@ -224,7 +224,7 @@ public class FeaturizerFactory {
       List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
       pharaohFeaturizers.addAll(gapFeaturizers);
 
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer;
+      CombinationFeaturizer<IString, String> arpaLmFeaturizer;
       Featurizer<IString,String> phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);

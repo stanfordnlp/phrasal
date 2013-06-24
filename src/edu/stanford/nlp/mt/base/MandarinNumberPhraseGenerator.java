@@ -11,13 +11,13 @@ import java.util.Set;
 import java.util.HashSet;
 import java.math.BigDecimal;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IString,String> {
    public static final String NUMBER_PHRASE_GENERATOR_NAME = "NumberPhraseGenerator";
    public static boolean DEBUG = true;
 
-   public MandarinNumberPhraseGenerator(IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer) {
+   public MandarinNumberPhraseGenerator(RuleFeaturizer<IString, String> phraseFeaturizer) {
       super(phraseFeaturizer);
    }
 

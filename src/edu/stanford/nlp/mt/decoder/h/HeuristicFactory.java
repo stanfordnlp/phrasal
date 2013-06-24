@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.h;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * 
@@ -17,7 +17,7 @@ public class HeuristicFactory {
   public static final String DEFAULT_HEURISTIC = ISOLATED_PHRASE_SOURCE_COVERAGE;
 
   public static SearchHeuristic<IString, String> factory(
-      IsolatedPhraseFeaturizer<IString, String> featurizer,
+      RuleFeaturizer<IString, String> featurizer,
       String... hSpecs) {
     String hName;
     if (hSpecs.length == 0) {

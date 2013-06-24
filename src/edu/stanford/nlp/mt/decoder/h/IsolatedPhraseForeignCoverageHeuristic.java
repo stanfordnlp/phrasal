@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
@@ -25,7 +25,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+  final RuleFeaturizer<TK, FV> phraseFeaturizer;
 
   protected SpanScores hSpanScores;
 
@@ -35,7 +35,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   public IsolatedPhraseForeignCoverageHeuristic(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
   }
 
