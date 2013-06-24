@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -93,8 +93,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     throw new UnsupportedOperationException();
   }
 
-  public Map<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Hypothesis<IString, FV>>> hypCache = new
-          HashMap<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Hypothesis<IString, FV>>>();
+  public Map<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Derivation<IString, FV>>> hypCache = new
+          HashMap<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Derivation<IString, FV>>>();
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
@@ -103,8 +103,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
                                                   ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
                                                   List<Sequence<IString>> targets, int size) {
 
-    PriorityQueue<Hypothesis<IString, FV>> agenda = new PriorityQueue<Hypothesis<IString,FV>>();
-    PriorityQueue<Hypothesis<IString, FV>> paused = new PriorityQueue<Hypothesis<IString,FV>>();
+    PriorityQueue<Derivation<IString, FV>> agenda = new PriorityQueue<Derivation<IString,FV>>();
+    PriorityQueue<Derivation<IString, FV>> paused = new PriorityQueue<Derivation<IString,FV>>();
     int windowSize = 100;
     int maxPrefixCompletion = 0;
 
@@ -133,7 +133,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 
 
     // use *UNFILTERED* options for heuristic calculation
-    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(sourceInputId, source, heuristic, scorer, annotators, Arrays.asList(options));
+    Derivation<IString, FV> nullHyp = new Derivation<IString, FV>(sourceInputId, source, heuristic, scorer, annotators, Arrays.asList(options));
     featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
     if (DEBUG) {
       System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
@@ -157,7 +157,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       //for (Sequence<IString> prefix )
       agenda.add(nullHyp);
     } */
-    Hypothesis waHyp = nullHyp;
+    Derivation waHyp = nullHyp;
     int sourceSz = source.size();
 
 
@@ -228,7 +228,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
                         featurizer, scorer,
                         source, "forcedAlignment", 0);
 
-        waHyp = new Hypothesis<IString, FV>(sourceInputId,
+        waHyp = new Derivation<IString, FV>(sourceInputId,
                 fakeConcreteOpt, waHyp.length, waHyp, featurizer, scorer, heuristic);
         if (DEBUG) {
           System.out.printf("new waHyp: %s\n", waHyp.featurizable.targetPrefix);
@@ -248,9 +248,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     }
 
     agenda.add(waHyp);
-    List<Hypothesis<IString, FV>> predictions = new ArrayList<Hypothesis<IString,FV>>(PREDICTIONS);
+    List<Derivation<IString, FV>> predictions = new ArrayList<Derivation<IString,FV>>(PREDICTIONS);
     do {
-      Hypothesis<IString, FV> hyp = agenda.remove();
+      Derivation<IString, FV> hyp = agenda.remove();
       if (DEBUG) {
         System.err.printf("[pred loop] Removing hyp from agenda: %s\n", hyp);
       }
@@ -279,7 +279,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
               }
               continue;
             }
-            Hypothesis<IString, FV> newHyp = new Hypothesis<IString, FV>(sourceInputId,
+            Derivation<IString, FV> newHyp = new Derivation<IString, FV>(sourceInputId,
                     option, hyp.length, hyp, featurizer, scorer, heuristic);
             if (DEBUG) {
               System.out.printf("constructed new hyp: %s\n", newHyp);
@@ -292,7 +292,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     } while (predictions.size() < PREDICTIONS && agenda.size() > 0);
 
     List<RichTranslation<IString, FV>> nbest = new ArrayList<RichTranslation<IString,FV>>(predictions.size());
-    for (Hypothesis<IString,FV> hyp : predictions) {
+    for (Derivation<IString,FV> hyp : predictions) {
       nbest.add(new RichTranslation<IString, FV>(hyp.featurizable, hyp.finalScoreEstimate(), null));
     }
 
@@ -300,7 +300,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     for (int i = 0; i < Math.min(10, predictions.size()); i++) {
       //System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
       List<String> alignments = new LinkedList<String>();
-      for (Hypothesis<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
+      for (Derivation<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingDerivation) {
         alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.sourcePhrase,
                 hyp.featurizable.targetPhrase, Arrays.toString(hyp.rule.abstractOption.scores)));
       }

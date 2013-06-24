@@ -22,8 +22,8 @@ import edu.stanford.nlp.mt.decoder.inferer.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.inferer.impl.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
-import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
@@ -105,12 +105,12 @@ public class LanguageModelTrueCaser implements TrueCaser {
       lgModels.add(lmFeaturizer.lm);
 
       // misc. decoder configuration
-      RecombinationFilter<Hypothesis<IString, String>> recombinationFilter = new TranslationNgramRecombinationFilter<IString, String>(
+      RecombinationFilter<Derivation<IString, String>> recombinationFilter = new TranslationNgramRecombinationFilter<IString, String>(
           lgModels, Integer.MAX_VALUE);
       infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
       infererBuilder.setBeamCapacity(BEAM_SIZE);
-      infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       // builder decoder
       inferer = infererBuilder.build();

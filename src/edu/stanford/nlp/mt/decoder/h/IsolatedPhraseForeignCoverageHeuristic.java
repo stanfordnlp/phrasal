@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
@@ -40,9 +40,9 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
+  public double getHeuristicDelta(Derivation<TK, FV> newHypothesis,
       CoverageSet newCoverage) {
-    double oldH = newHypothesis.preceedingHyp.h;
+    double oldH = newHypothesis.preceedingDerivation.h;
     double newH = 0;
     CoverageSet coverage = newHypothesis.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);

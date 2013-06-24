@@ -60,7 +60,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       .getProperty(DETAILED_DEBUG_PROPERTY, "false"));
   public static final String ALIGNMENT_DUMP = System.getProperty("a");
   public static final int DEFAULT_BEAM_SIZE = 200;
-  public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam;
+  public static final BeamFactory.BeamType DEFAULT_BEAM_TYPE = BeamFactory.BeamType.treebeam;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
   final int maxDistortion;
@@ -119,7 +119,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
   
-  private void displayBeams(Beam<Hypothesis<TK, FV>>[] beams) {
+  private void displayBeams(Beam<Derivation<TK, FV>>[] beams) {
     System.err.print("Stack sizes: ");
     for (int si = 0; si < beams.length; si++) {
       if (si != 0)
@@ -138,9 +138,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   @Override
-  protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
+  protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
     featurizer.reset();
@@ -159,7 +159,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // create beams
     if (DEBUG)
       System.err.println("Creating beams");
-    Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(
+    Beam<Derivation<TK, FV>>[] beams = createBeamsForCoverageCounts(
         source.size() + 2, beamCapacity, filter, recombinationHistory);
 
     // retrieve translation options
@@ -214,7 +214,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     DTUOptionGrid optionGrid = new DTUOptionGrid(options, source);
 
     // insert initial hypothesis
-    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(sourceInputId, source,
+    Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
@@ -262,7 +262,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int recombined = 0;
       int preinsertionDiscarded = 0;
       int pruned = 0;
-      for (Beam<Hypothesis<TK, FV>> beam : beams) {
+      for (Beam<Derivation<TK, FV>> beam : beams) {
         recombined += beam.recombined();
         preinsertionDiscarded += beam.preinsertionDiscarded();
         pruned += beam.pruned();
@@ -280,7 +280,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         if (beams[beamIdx].size() != 0)
           break;
       }
-      Hypothesis<TK, FV> bestHyp = beams[beamIdx].iterator().next();
+      Derivation<TK, FV> bestHyp = beams[beamIdx].iterator().next();
       dump(bestHyp);
     }
 
@@ -288,7 +288,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (beams[i].size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace
               .allowableFinal(beams[i].iterator().next().featurizable))) {
-        Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
+        Derivation<TK, FV> bestHyp = beams[i].iterator().next();
         try {
           writeAlignments(alignmentDump, bestHyp);
         } catch (Exception e) { /* okay */
@@ -315,10 +315,10 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
-  public void dump(Hypothesis<TK, FV> bestHyp) {
+  public void dump(Derivation<TK, FV> bestHyp) {
 
-    List<Hypothesis<TK, FV>> trace = new ArrayList<Hypothesis<TK, FV>>();
-    for (Hypothesis<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingHyp) {
+    List<Derivation<TK, FV>> trace = new ArrayList<Derivation<TK, FV>>();
+    for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingDerivation) {
       trace.add(hyp);
     }
     Collections.reverse(trace);
@@ -330,7 +330,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.printf("Trace:\n");
       System.err.printf("--------------\n");
       List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
-      for (Hypothesis<TK, FV> hyp : trace) {
+      for (Derivation<TK, FV> hyp : trace) {
         System.err.printf("%d:\n", hyp.id);
         Rule<TK> abstractOption = (hyp.rule != null) ? hyp.rule.abstractOption
             : null;
@@ -386,14 +386,14 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   class BeamExpander {
-    Beam<Hypothesis<TK, FV>>[] beams;
+    Beam<Derivation<TK, FV>>[] beams;
     int beamId;
     int sourceSz;
     DTUOptionGrid optionGrid;
     ConstrainedOutputSpace<TK, FV> constrainedOutputSpace;
     int sourceInputId;
 
-    public BeamExpander(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
+    public BeamExpander(Beam<Derivation<TK, FV>>[] beams, int beamId,
         int sourceSz, DTUOptionGrid optionGrid,
         ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
         int sourceInputId) {
@@ -409,7 +409,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       expandBeam(beams, beamId, sourceSz, optionGrid, constrainedOutputSpace, sourceInputId);
     }
 
-    public int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
+    public int expandBeam(Beam<Derivation<TK, FV>>[] beams, int beamId,
         int sourceSz, DTUOptionGrid optionGrid,
         ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, int sourceInputId) {
 
@@ -418,13 +418,13 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int totalHypothesesGenerated = 0;
       //System.err.printf("\nBeam id: %d\n", beamId);
 
-      List<Hypothesis<TK, FV>> hypsL = new LinkedList<Hypothesis<TK, FV>>();
-      for (Hypothesis<TK, FV> hyp : beams[beamId]) {
+      List<Derivation<TK, FV>> hypsL = new LinkedList<Derivation<TK, FV>>();
+      for (Derivation<TK, FV> hyp : beams[beamId]) {
         hypsL.add(hyp);
       }
 
-      Set<Hypothesis<TK, FV>> mergedHyps = new HashSet<Hypothesis<TK, FV>>();
-      for (Hypothesis<TK, FV> hyp : hypsL) {
+      Set<Derivation<TK, FV>> mergedHyps = new HashSet<Derivation<TK, FV>>();
+      for (Derivation<TK, FV> hyp : hypsL) {
         if (hyp instanceof DTUHypothesis) {
           DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) hyp;
           Deque<DTUHypothesis<TK, FV>> currentHyps = new LinkedList<DTUHypothesis<TK, FV>>();
@@ -447,7 +447,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       }
       mergedHyps.addAll(hypsL);
 
-      for (Hypothesis<TK, FV> hyp : mergedHyps) {
+      for (Derivation<TK, FV> hyp : mergedHyps) {
         hypPos++;
         if (hyp == null)
           continue;
@@ -496,9 +496,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 continue;
               }
 
-              Hypothesis<TK, FV> newHyp = (option.abstractOption instanceof DTUOption || hyp instanceof DTUHypothesis) ? new DTUHypothesis<TK, FV>(
+              Derivation<TK, FV> newHyp = (option.abstractOption instanceof DTUOption || hyp instanceof DTUHypothesis) ? new DTUHypothesis<TK, FV>(
                   sourceInputId, option, hyp.length, hyp, featurizer, scorer,
-                  heuristic) : new Hypothesis<TK, FV>(sourceInputId, option,
+                  heuristic) : new Derivation<TK, FV>(sourceInputId, option,
                   hyp.length, hyp, featurizer, scorer, heuristic);
               {
                 // Discard hypothesis if ill-formed:
@@ -584,13 +584,13 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
-  void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp)
+  void writeAlignments(BufferedWriter alignmentDump, Derivation<TK, FV> bestHyp)
       throws IOException {
     alignmentDump.append(bestHyp.featurizable.targetPrefix.toString())
         .append("\n");
     alignmentDump.append(bestHyp.featurizable.sourceSentence.toString())
         .append("\n");
-    for (Hypothesis<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingHyp) {
+    for (Derivation<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingDerivation) {
       alignmentDump.append(String.format("%d:%d => %d:%d # %s => %s\n",
           hyp.featurizable.sourcePosition, hyp.featurizable.sourcePosition
               + hyp.featurizable.sourcePhrase.size() - 1,

@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 
 /**
  * @author Michel Galley
@@ -10,7 +10,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   private final int segmentIdx;
   public final Rule<TK> abstractOption;
 
-  public DTUFeaturizable(Hypothesis<TK, FV> hypothesis,
+  public DTUFeaturizable(Derivation<TK, FV> hypothesis,
       Rule<TK> abstractOption, int sourceInputId,
       int nbStatefulFeaturizers, RawSequence<TK> toks,
       boolean hasPendingPhrases, int segmentIdx) {
@@ -30,10 +30,10 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
     assert (targetPhrase.size() > 0);
   }
 
-  protected static <TK, FV> Object[] retrieveDTUTokens(Hypothesis<TK, FV> h,
+  protected static <TK, FV> Object[] retrieveDTUTokens(Derivation<TK, FV> h,
       RawSequence<TK> newTokens) {
     int pos = 0;
-    Featurizable<TK, FV> preceedingF = h.preceedingHyp.featurizable;
+    Featurizable<TK, FV> preceedingF = h.preceedingDerivation.featurizable;
     int sz = newTokens.size();
     if (preceedingF != null)
       sz += preceedingF.targetPrefixRaw.elements.length;
@@ -61,8 +61,8 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
 
   @Override
   public int getSegmentNumber() {
-    if (hyp.rule.abstractOption instanceof DTUOption) {
-      return ((DTUOption<TK>) hyp.rule.abstractOption).dtus.length;
+    if (derivation.rule.abstractOption instanceof DTUOption) {
+      return ((DTUOption<TK>) derivation.rule.abstractOption).dtus.length;
     }
     return 1;
   }

@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
@@ -23,7 +23,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
   PhraseGenerator<TK,FV> phraseGenerator;
   Scorer<FV> scorer;
   SearchHeuristic<TK, FV> heuristic;
-  RecombinationFilter<Hypothesis<TK, FV>> filter;
+  RecombinationFilter<Derivation<TK, FV>> filter;
 
   @Override
   abstract public Inferer<TK, FV> build();
@@ -64,7 +64,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
 
   @Override
   public InfererBuilder<TK, FV> setRecombinationFilter(
-      RecombinationFilter<Hypothesis<TK, FV>> recombinationFilter) {
+      RecombinationFilter<Derivation<TK, FV>> recombinationFilter) {
     this.filter = recombinationFilter;
     return this;
   }

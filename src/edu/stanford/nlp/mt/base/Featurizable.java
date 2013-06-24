@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.Phrasal;
 
@@ -88,11 +88,11 @@ public class Featurizable<TK, FV> {
   public final boolean done;
 
   /**
-   * Can walk back through the lattice of hypotheses with <code>hyp</code>
+   * Can walk back through the lattice of hypotheses with <code>derivation</code>
    * <br>
    * You can do the same thing with <code>prior</code>
    */
-  public final Hypothesis<TK, FV> hyp;
+  public final Derivation<TK, FV> derivation;
 
   /**
    * While, internally, I want to be able to take advantage of the fact that
@@ -157,32 +157,32 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   @SuppressWarnings("unchecked")
-  public Featurizable(Hypothesis<TK, FV> hypothesis, int sourceInputId,
+  public Featurizable(Derivation<TK, FV> derivation, int sourceInputId,
       int nbStatefulFeaturizers) {
     this.sourceInputId = sourceInputId;
-    done = hypothesis.isDone();
-    rule = hypothesis.rule;
-    Rule<TK> transOpt = hypothesis.rule.abstractOption;
-    ConcreteRule<TK,FV> concreteOpt = hypothesis.rule;
+    done = derivation.isDone();
+    rule = derivation.rule;
+    Rule<TK> transOpt = derivation.rule.abstractOption;
+    ConcreteRule<TK,FV> concreteOpt = derivation.rule;
     sourcePhrase = transOpt.source;
     targetPhrase = transOpt.target;
     phraseTableName = concreteOpt.phraseTableName;
     translationScores = transOpt.scores;
     phraseScoreNames = transOpt.phraseScoreNames;
-    targetPosition = hypothesis.insertionPosition;
+    targetPosition = derivation.insertionPosition;
     sourcePosition = concreteOpt.sourcePosition;
-    linearDistortion = hypothesis.linearDistortion;
+    linearDistortion = derivation.linearDistortion;
 
-    Object[] tokens = retrieveTokens(hypothesis.length, hypothesis);
+    Object[] tokens = retrieveTokens(derivation.length, derivation);
     targetPrefix = targetPrefixRaw = new RawSequence<TK>(
         (TK[]) tokens);
-    sourceSentence = hypothesis.sourceSequence;
-    untranslatedTokens = hypothesis.untranslatedTokens;
-    prior = hypothesis.preceedingHyp.featurizable;
+    sourceSentence = derivation.sourceSequence;
+    untranslatedTokens = derivation.untranslatedTokens;
+    prior = derivation.preceedingDerivation.featurizable;
     if (prior != null) {
       if (constructAlignment) {
         t2sAlignmentIndex = copyOfIndex(prior.t2sAlignmentIndex,
-            hypothesis.length);
+            derivation.length);
         s2tAlignmentIndex = copyOfIndex(prior.s2tAlignmentIndex,
             prior.s2tAlignmentIndex.length);
       } else {
@@ -192,7 +192,7 @@ public class Featurizable<TK, FV> {
           : null;
     } else {
       if (constructAlignment) {
-        t2sAlignmentIndex = new int[hypothesis.length][];
+        t2sAlignmentIndex = new int[derivation.length][];
         s2tAlignmentIndex = new int[sourceSentence.size()][];
       } else {
         t2sAlignmentIndex = s2tAlignmentIndex = null;
@@ -200,20 +200,20 @@ public class Featurizable<TK, FV> {
       states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
           : null;
     }
-    hyp = hypothesis;
+    this.derivation = derivation;
     if (constructAlignment)
       augmentAlignments(concreteOpt);
   }
 
   @SuppressWarnings("unchecked")
-  protected Featurizable(Hypothesis<TK, FV> hypothesis, int sourceInputId,
+  protected Featurizable(Derivation<TK, FV> derivation, int sourceInputId,
       int nbStatefulFeaturizers, Sequence<TK> targetPhrase,
       Object[] tokens, boolean hasPendingPhrases, boolean targetOnly) {
     this.sourceInputId = sourceInputId;
-    done = hypothesis.isDone() && !hasPendingPhrases;
-    rule = hypothesis.rule;
-    Rule<TK> transOpt = hypothesis.rule.abstractOption;
-    ConcreteRule<TK,FV> concreteOpt = hypothesis.rule;
+    done = derivation.isDone() && !hasPendingPhrases;
+    rule = derivation.rule;
+    Rule<TK> transOpt = derivation.rule.abstractOption;
+    ConcreteRule<TK,FV> concreteOpt = derivation.rule;
     sourcePhrase = transOpt.source;
     this.targetPhrase = targetPhrase;
     phraseTableName = concreteOpt.phraseTableName;
@@ -224,19 +224,19 @@ public class Featurizable<TK, FV> {
       translationScores = transOpt.scores;
       phraseScoreNames = transOpt.phraseScoreNames;
     }
-    targetPosition = hypothesis.insertionPosition;
+    targetPosition = derivation.insertionPosition;
     sourcePosition = concreteOpt.sourcePosition;
-    linearDistortion = hypothesis.linearDistortion;
+    linearDistortion = derivation.linearDistortion;
 
     targetPrefix = targetPrefixRaw = new RawSequence<TK>(
         (TK[]) tokens);
-    sourceSentence = hypothesis.sourceSequence;
-    untranslatedTokens = hypothesis.untranslatedTokens;
-    prior = hypothesis.preceedingHyp.featurizable;
+    sourceSentence = derivation.sourceSequence;
+    untranslatedTokens = derivation.untranslatedTokens;
+    prior = derivation.preceedingDerivation.featurizable;
     if (prior != null) {
       if (constructAlignment) {
         t2sAlignmentIndex = copyOfIndex(prior.t2sAlignmentIndex,
-            hypothesis.length);
+            derivation.length);
         s2tAlignmentIndex = copyOfIndex(prior.s2tAlignmentIndex,
             prior.s2tAlignmentIndex.length);
       } else {
@@ -246,7 +246,7 @@ public class Featurizable<TK, FV> {
           : null;
     } else {
       if (constructAlignment) {
-        t2sAlignmentIndex = new int[hypothesis.length][];
+        t2sAlignmentIndex = new int[derivation.length][];
         s2tAlignmentIndex = new int[sourceSentence.size()][];
       } else {
         t2sAlignmentIndex = s2tAlignmentIndex = null;
@@ -254,7 +254,7 @@ public class Featurizable<TK, FV> {
       states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
           : null;
     }
-    hyp = hypothesis;
+    this.derivation = derivation;
     if (constructAlignment)
       augmentAlignments(concreteOpt);
   }
@@ -320,7 +320,7 @@ public class Featurizable<TK, FV> {
     s2tAlignmentIndex = new int[sourceSentence.size()][];
     if (constructAlignment)
       augmentAlignments(concreteOpt);
-    hyp = null;
+    derivation = null;
   }
 
   protected Featurizable(Sequence<TK> sourceSequence,
@@ -351,7 +351,7 @@ public class Featurizable<TK, FV> {
     s2tAlignmentIndex = new int[sourceSentence.size()][];
     if (constructAlignment)
       augmentAlignments(concreteOpt);
-    hyp = null;
+    derivation = null;
   }
 
   /**
@@ -387,10 +387,10 @@ public class Featurizable<TK, FV> {
     }
   }
 
-  protected static <TK, FV> Object[] retrieveTokens(int sz, Hypothesis<TK, FV> h) {
+  protected static <TK, FV> Object[] retrieveTokens(int sz, Derivation<TK, FV> h) {
     Object[] tokens = new Object[sz];
     int pos = 0;
-    Featurizable<TK, FV> preceedingF = h.preceedingHyp.featurizable;
+    Featurizable<TK, FV> preceedingF = h.preceedingDerivation.featurizable;
     if (preceedingF != null) {
       Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
       System.arraycopy(preceedingTokens, 0, tokens, 0,

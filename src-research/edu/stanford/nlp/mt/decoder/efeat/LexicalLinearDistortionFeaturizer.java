@@ -79,8 +79,8 @@ public class LexicalLinearDistortionFeaturizer implements
     String prefix;
     if (lrDistance) {
       int signedLinearDistortion = (f.prior == null ? -f.sourcePosition
-          : f.prior.hyp.rule
-              .signedLinearDistortion(f.hyp.rule));
+          : f.prior.derivation.rule
+              .signedLinearDistortion(f.derivation.rule));
       String type = (signedLinearDistortion < 0 ? LEFT_SHIFT : RIGHT_SHIFT);
       prefix = FEATURE_PREFIX + type;
     } else {

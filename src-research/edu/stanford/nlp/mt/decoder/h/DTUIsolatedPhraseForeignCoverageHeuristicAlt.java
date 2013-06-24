@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.h;
 
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.IntPair;
 
@@ -36,10 +36,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristicAlt<TK, FV> extends
    * getHeuristicDeltaStandard.
    */
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> hyp,
+  public double getHeuristicDelta(Derivation<TK, FV> hyp,
       CoverageSet newCoverage) {
 
-    double oldH = hyp.preceedingHyp.h;
+    double oldH = hyp.preceedingDerivation.h;
 
     CoverageSet coverage = hyp.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);

@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
@@ -25,6 +25,6 @@ public interface SearchHeuristic<TK, FV> extends Cloneable {
   /**
 	 * 
 	 */
-  double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
+  double getHeuristicDelta(Derivation<TK, FV> newHypothesis,
       CoverageSet newCoverage);
 }

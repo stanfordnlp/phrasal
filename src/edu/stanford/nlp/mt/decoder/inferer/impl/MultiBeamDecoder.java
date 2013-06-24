@@ -45,8 +45,8 @@ import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
-import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -72,7 +72,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       .getProperty(DETAILED_DEBUG_PROPERTY, "false"));
   public static final String ALIGNMENT_DUMP = System.getProperty("a");
   public static final int DEFAULT_BEAM_SIZE = 200;
-  public static final HypothesisBeamFactory.BeamType DEFAULT_BEAM_TYPE = HypothesisBeamFactory.BeamType.treebeam;
+  public static final BeamFactory.BeamType DEFAULT_BEAM_TYPE = BeamFactory.BeamType.treebeam;
   public static final int DEFAULT_MAX_DISTORTION = -1;
   public static final boolean DEFAULT_USE_ITG_CONSTRAINTS = false;
 
@@ -138,7 +138,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
   
-  private void displayBeams(Beam<Hypothesis<TK, FV>>[] beams) {
+  private void displayBeams(Beam<Derivation<TK, FV>>[] beams) {
     System.err.print("Stack sizes: ");
     for (int si = 0; si < beams.length; si++) {
       if (si != 0)
@@ -149,9 +149,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   @Override
-  protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
+  protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
     featurizer.reset();
@@ -170,7 +170,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // create beams
     if (DEBUG)
       System.err.println("Creating beams");
-    Beam<Hypothesis<TK, FV>>[] beams = createBeamsForCoverageCounts(source
+    Beam<Derivation<TK, FV>>[] beams = createBeamsForCoverageCounts(source
         .size() + 1, beamCapacity, filter, recombinationHistory);
 
     // retrieve translation options
@@ -207,7 +207,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // insert initial hypothesis
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
     allOptions.add(options);
-    Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(sourceInputId, source,
+    Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {
@@ -259,7 +259,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int recombined = 0;
       int preinsertionDiscarded = 0;
       int pruned = 0;
-      for (Beam<Hypothesis<TK, FV>> beam : beams) {
+      for (Beam<Derivation<TK, FV>> beam : beams) {
         recombined += beam.recombined();
         preinsertionDiscarded += beam.preinsertionDiscarded();
         pruned += beam.pruned();
@@ -277,7 +277,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         if (beams[beamIdx].size() != 0)
           break;
       }
-      Hypothesis<TK, FV> bestHyp = beams[beamIdx].iterator().next();
+      Derivation<TK, FV> bestHyp = beams[beamIdx].iterator().next();
       dump(bestHyp);
     }
 
@@ -285,7 +285,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (beams[i].size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace
               .allowableFinal(beams[i].iterator().next().featurizable))) {
-        Hypothesis<TK, FV> bestHyp = beams[i].iterator().next();
+        Derivation<TK, FV> bestHyp = beams[i].iterator().next();
         System.err.printf("Annotator output for best hypothesis (%d vs %d)\n", bestHyp.annotators.size(), annotators.size());
         System.err.println("===========================================");
         for (Annotator<TK,FV> annotator: bestHyp.annotators) {
@@ -316,10 +316,10 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   @Override
-  public void dump(Hypothesis<TK, FV> bestHyp) {
+  public void dump(Derivation<TK, FV> bestHyp) {
 
-    List<Hypothesis<TK, FV>> trace = new ArrayList<Hypothesis<TK, FV>>();
-    for (Hypothesis<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingHyp) {
+    List<Derivation<TK, FV>> trace = new ArrayList<Derivation<TK, FV>>();
+    for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingDerivation) {
       trace.add(hyp);
     }
     Collections.reverse(trace);
@@ -331,7 +331,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.printf("Trace:\n");
       System.err.printf("--------------\n");
       List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
-      for (Hypothesis<TK, FV> hyp : trace) {
+      for (Derivation<TK, FV> hyp : trace) {
         System.err.printf("%d:\n", hyp.id);
         if (hyp.rule != null) {
           System.err.printf("\tPhrase: %s(%d) => %s(%d)",
@@ -366,7 +366,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
-  private int expandBeam(Beam<Hypothesis<TK, FV>>[] beams, int beamId,
+  private int expandBeam(Beam<Derivation<TK, FV>>[] beams, int beamId,
       int sourceSz, OptionGrid<TK,FV> optionGrid,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       int sourceInputId) {
@@ -374,7 +374,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     int hypPos = -1;
     int totalHypothesesGenerated = 0;
 
-    for (Hypothesis<TK, FV> hyp : beams[beamId]) {
+    for (Derivation<TK, FV> hyp : beams[beamId]) {
       hypPos++;
       if (hyp == null)
         continue;
@@ -460,7 +460,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
              * phrases to float around randomly }
              */
 
-            Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(sourceInputId,
+            Derivation<TK, FV> newHyp = new Derivation<TK, FV>(sourceInputId,
                 option, hyp.length, hyp, featurizer, scorer, heuristic);
 
             if (DETAILED_DEBUG) {
@@ -536,7 +536,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     return totalHypothesesGenerated;
   }
 
-  void writeAlignments(BufferedWriter alignmentDump, Hypothesis<TK, FV> bestHyp)
+  void writeAlignments(BufferedWriter alignmentDump, Derivation<TK, FV> bestHyp)
       throws IOException {
     if (alignmentDump == null)
       return;
@@ -544,7 +544,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         .append("\n");
     alignmentDump.append(bestHyp.featurizable.sourceSentence.toString())
         .append("\n");
-    for (Hypothesis<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingHyp) {
+    for (Derivation<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingDerivation) {
       alignmentDump.append(String.format("%d:%d => %d:%d # %s => %s\n",
           hyp.featurizable.sourcePosition, hyp.featurizable.sourcePosition
               + hyp.featurizable.sourcePhrase.size() - 1,

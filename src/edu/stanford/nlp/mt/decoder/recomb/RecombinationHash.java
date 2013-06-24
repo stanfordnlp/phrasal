@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.State;
 
 /**
@@ -101,8 +101,8 @@ public class RecombinationHash<S extends State<S>> {
     if (DETAILED_DEBUG) {
       if (filterEquivWrappedHyp != null) {
         
-        Hypothesis h1 = (Hypothesis) hypothesis;
-        Hypothesis h2 = (Hypothesis) filterEquivWrappedHyp.hypothesis;
+        Derivation h1 = (Derivation) hypothesis;
+        Derivation h2 = (Derivation) filterEquivWrappedHyp.hypothesis;
         System.err.printf("Recombining: %d with %d scores %.3f %.3f\n",
             Math.min(h1.id, h2.id), Math.max(h1.id, h2.id),
             Math.min(h1.score(), h2.score()), Math.max(h1.score(), h2.score()));

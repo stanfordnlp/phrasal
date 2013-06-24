@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
@@ -24,7 +24,7 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
   }
 
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
+  public double getHeuristicDelta(Derivation<TK, FV> newHypothesis,
       CoverageSet newCoverage) {
 
     int foreignLength = newHypothesis.sourceSequence.size();
@@ -32,7 +32,7 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
         / (foreignLength - newHypothesis.untranslatedTokens);
     double newH = scorePerTranslatedWord * newHypothesis.untranslatedTokens;
 
-    double oldH = newHypothesis.preceedingHyp.h;
+    double oldH = newHypothesis.preceedingDerivation.h;
 
     return newH - oldH;
 

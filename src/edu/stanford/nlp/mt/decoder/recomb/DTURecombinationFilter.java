@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Iterator;
  * @author Michel Galley
  */
 public class DTURecombinationFilter<TK, FV> implements
-    RecombinationFilter<Hypothesis<TK, FV>> {
+    RecombinationFilter<Derivation<TK, FV>> {
 
   public static final boolean DEBUG = false;
 
@@ -42,7 +42,7 @@ public class DTURecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+  public boolean combinable(Derivation<TK, FV> hypA, Derivation<TK, FV> hypB) {
 
     boolean isDTU_A = hypA instanceof DTUHypothesis;
     boolean isDTU_B = hypB instanceof DTUHypothesis;
@@ -97,7 +97,7 @@ public class DTURecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
+  public long recombinationHashCode(Derivation<TK, FV> hyp) {
     boolean isDTU = hyp instanceof DTUHypothesis;
     int isDTUn = isDTU ? 1 : 0;
     if (SIMPLE_RECOMBINATION)

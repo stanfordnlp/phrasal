@@ -37,13 +37,13 @@ public class InfererBuilderFactory {
     Map<String, String> paramPairs = FactoryUtil.getParamPairs(infererSpecs);
 
     int beamSize = -1;
-    HypothesisBeamFactory.BeamType beamType = null;
+    BeamFactory.BeamType beamType = null;
 
     if (BEAM_INFERERS.contains(infererName)) {
       String beamTypeStr = paramPairs.get(BEAM_TYPE_OPT);
 
       if (beamTypeStr != null) {
-        beamType = Enum.valueOf(HypothesisBeamFactory.BeamType.class,
+        beamType = Enum.valueOf(BeamFactory.BeamType.class,
             beamTypeStr);
       }
 

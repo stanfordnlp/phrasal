@@ -798,7 +798,7 @@ public class Phrasal {
         ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Create Recombination Filter
-    RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
+    RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
         .factory(featurizer.getNestedFeaturizers(), msdRecombination,
             recombinationHeuristic);
 
@@ -841,13 +841,13 @@ public class Phrasal {
             .setSearchHeuristic((SearchHeuristic<IString, String>) heuristic
                 .clone());
         infererBuilder
-            .setRecombinationFilter((RecombinationFilter<Hypothesis<IString, String>>) filter
+            .setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter
                 .clone());
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
 
-      infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       if (distortionLimit != -1) {
         infererBuilder.setMaxDistortion(distortionLimit);

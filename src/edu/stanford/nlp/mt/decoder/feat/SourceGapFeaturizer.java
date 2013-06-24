@@ -184,7 +184,7 @@ public class SourceGapFeaturizer implements
 
     // Gap size feature:
     if (DTUTable.MIN_GAP_SIZE > 0 && addGapSizeProb && gapCount >= 1) {
-      CoverageSet cs = f.hyp.rule.sourceCoverage;
+      CoverageSet cs = f.derivation.rule.sourceCoverage;
       List<Integer> binIds = DTUFeatureExtractor.getBins(cs);
       if (gapCount != binIds.size()) {
         System.err
@@ -216,9 +216,9 @@ public class SourceGapFeaturizer implements
     // Crossing feature:
     if (crossingOnValue != 0.0 && gapCount >= 1) {
 
-      CoverageSet phraseCS = f.hyp.rule.sourceCoverage; // e.g.
+      CoverageSet phraseCS = f.derivation.rule.sourceCoverage; // e.g.
                                                                    // .x...x...
-      CoverageSet hypCS = f.hyp.sourceCoverage; // e.g. xxx..xx..
+      CoverageSet hypCS = f.derivation.sourceCoverage; // e.g. xxx..xx..
 
       int phraseStartIdx = phraseCS.nextSetBit(0);
       int phraseEndIdx = phraseCS.length();
@@ -231,7 +231,7 @@ public class SourceGapFeaturizer implements
       int crossings = 0;
       while (middleCS.cardinality() > 0) {
         boolean inside = false, outside = false;
-        CoverageSet curCS = curF.hyp.rule.sourceCoverage;
+        CoverageSet curCS = curF.derivation.rule.sourceCoverage;
         int idx = -1;
         while (true) {
           idx = curCS.nextSetBit(idx + 1);

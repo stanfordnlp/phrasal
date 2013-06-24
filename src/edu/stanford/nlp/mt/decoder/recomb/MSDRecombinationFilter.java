@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer.HierBlock;
@@ -18,7 +18,7 @@ import java.util.List;
  * @author Michel Galley
  */
 public class MSDRecombinationFilter implements
-    RecombinationFilter<Hypothesis<IString, String>> {
+    RecombinationFilter<Derivation<IString, String>> {
 
   // Don't set to true (this dramatically reduces the amount of recombination,
   // and hurts search)
@@ -58,21 +58,21 @@ public class MSDRecombinationFilter implements
     return super.clone();
   }
 
-  private static int lastOptionLeftEdge(Hypothesis<IString, String> hyp) {
+  private static int lastOptionLeftEdge(Derivation<IString, String> hyp) {
     if (hyp.rule == null)
       return -1;
     return hyp.rule.sourcePosition - 1;
   }
 
-  private static int lastOptionRightEdge(Hypothesis<IString, String> hyp) {
+  private static int lastOptionRightEdge(Derivation<IString, String> hyp) {
     if (hyp.rule == null)
       return 0;
     return hyp.rule.sourceCoverage.length();
   }
 
   @Override
-  public boolean combinable(Hypothesis<IString, String> hypA,
-      Hypothesis<IString, String> hypB) {
+  public boolean combinable(Derivation<IString, String> hypA,
+      Derivation<IString, String> hypB) {
 
     if (lastOptionRightEdge(hypA) != lastOptionRightEdge(hypB))
       // same as LinearDistortionRecombinationFilter:
@@ -146,7 +146,7 @@ public class MSDRecombinationFilter implements
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<IString, String> hyp) {
+  public long recombinationHashCode(Derivation<IString, String> hyp) {
     return lastOptionRightEdge(hyp);
   }
 

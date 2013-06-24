@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Pair;
@@ -63,10 +63,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
    * future cost with discontinuous phrases.
    */
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> hyp,
+  public double getHeuristicDelta(Derivation<TK, FV> hyp,
       CoverageSet newCoverage) {
 
-    double oldH = hyp.preceedingHyp.h;
+    double oldH = hyp.preceedingDerivation.h;
     double newH = 0.0;
 
     CoverageSet coverage = hyp.sourceCoverage;

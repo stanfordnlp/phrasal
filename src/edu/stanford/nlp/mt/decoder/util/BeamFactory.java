@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
  * @author danielcer
  * 
  */
-public class HypothesisBeamFactory {
+public class BeamFactory {
 
   static public enum BeamType {
     treebeam, sloppybeam
@@ -17,7 +17,7 @@ public class HypothesisBeamFactory {
   /**
 	 * 
 	 */
-  private HypothesisBeamFactory() {
+  private BeamFactory() {
   }
 
   /**
@@ -25,15 +25,15 @@ public class HypothesisBeamFactory {
    * @param <TK>
    * @param <FV>
    */
-  static public <TK, FV> Beam<Hypothesis<TK, FV>> factory(BeamType beamType,
-      RecombinationFilter<Hypothesis<TK, FV>> filter, int capacity,
-      RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory) {
+  static public <TK, FV> Beam<Derivation<TK, FV>> factory(BeamType beamType,
+      RecombinationFilter<Derivation<TK, FV>> filter, int capacity,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
     switch (beamType) {
     case treebeam:
-      return new TreeBeam<Hypothesis<TK, FV>>(capacity, filter,
+      return new TreeBeam<Derivation<TK, FV>>(capacity, filter,
           recombinationHistory);
     case sloppybeam:
-      return new SloppyBeam<Hypothesis<TK, FV>>(capacity, filter,
+      return new SloppyBeam<Derivation<TK, FV>>(capacity, filter,
           recombinationHistory);
     }
 
@@ -46,8 +46,8 @@ public class HypothesisBeamFactory {
    * @param <TK>
    * @param <FV>
    */
-  static public <TK, FV> Beam<Hypothesis<TK, FV>> factory(BeamType beamType,
-      RecombinationFilter<Hypothesis<TK, FV>> filter, int capacity) {
+  static public <TK, FV> Beam<Derivation<TK, FV>> factory(BeamType beamType,
+      RecombinationFilter<Derivation<TK, FV>> filter, int capacity) {
     return factory(beamType, filter, capacity, null);
   }
 

@@ -415,7 +415,7 @@ public class DependencyLanguageModelFeaturizer extends
     // Phrase alignment:
     PhraseAlignment align = null;
     if (bilingual) {
-      align = f.hyp.rule.abstractOption.alignment;
+      align = f.derivation.rule.abstractOption.alignment;
       if (align != null)
         assert (sz == align.size() || align.size() == 0);
     }

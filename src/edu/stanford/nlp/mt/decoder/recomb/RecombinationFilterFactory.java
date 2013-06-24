@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizers;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 
 /**
  * 
@@ -36,7 +36,7 @@ public class RecombinationFilterFactory {
   /**
 	 * 
 	 */
-  static public RecombinationFilter<Hypothesis<IString, String>> factory(
+  static public RecombinationFilter<Derivation<IString, String>> factory(
       List<Featurizer<IString, String>> featurizers,
       boolean msdRecombination, String... rfSpecs) {
     String rfName;
@@ -81,7 +81,7 @@ public class RecombinationFilterFactory {
     }
 
     if (rfName.equals(NO_RECOMBINATION)) {
-      return new NoRecombination<Hypothesis<IString, String>>();
+      return new NoRecombination<Derivation<IString, String>>();
     } else if (rfName.equals(TRANSLATION_IDENTITY)) {
       // note that this is *surface* identity only
       return new TranslationIdentityRecombinationFilter<IString, String>();
@@ -95,7 +95,7 @@ public class RecombinationFilterFactory {
     } else if (rfName.equals(CLASSICAL_TRANSLATION_MODEL)
         || rfName.endsWith(CLASSICAL_TRANSLATION_MODEL_ALT)
         || rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD)) {
-      List<RecombinationFilter<Hypothesis<IString, String>>> filters = new LinkedList<RecombinationFilter<Hypothesis<IString, String>>>();
+      List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<RecombinationFilter<Derivation<IString, String>>>();
       // maintain uniqueness of hypotheses that will result in different linear
       // distortion scores when extended
       // with future translation options.
@@ -113,22 +113,22 @@ public class RecombinationFilterFactory {
       if (rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD))
         filters.add(new MSDRecombinationFilter(featurizers));
 
-      return new CombinedRecombinationFilter<Hypothesis<IString, String>>(
+      return new CombinedRecombinationFilter<Derivation<IString, String>>(
           filters);
 
     } else if (rfName.equals(CLASSICAL_TRANSLATION_MODEL_FINE)) {
       // Only recombine hypotheses that are identical, if coverage set and
       // linear distortion are the same:
-      List<RecombinationFilter<Hypothesis<IString, String>>> filters = new LinkedList<RecombinationFilter<Hypothesis<IString, String>>>();
+      List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<RecombinationFilter<Derivation<IString, String>>>();
       filters
           .add(new TranslationIdentityRecombinationFilter<IString, String>());
       filters.add(new LinearDistortionRecombinationFilter<IString, String>());
       filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
-      return new CombinedRecombinationFilter<Hypothesis<IString, String>>(
+      return new CombinedRecombinationFilter<Derivation<IString, String>>(
           filters);
     } else if (rfName.equals(DTU_TRANSLATION_MODEL)
         || rfName.equals(DTU_TRANSLATION_MODEL_MSD)) {
-      List<RecombinationFilter<Hypothesis<IString, String>>> filters = new LinkedList<RecombinationFilter<Hypothesis<IString, String>>>();
+      List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<RecombinationFilter<Derivation<IString, String>>>();
       filters.add(new LinearDistortionRecombinationFilter<IString, String>());
       filters.add(new TranslationNgramRecombinationFilter<IString, String>(
           lgModels, ngramHistory));
@@ -136,7 +136,7 @@ public class RecombinationFilterFactory {
       filters.add(new DTURecombinationFilter<IString, String>());
       if (rfName.equals(DTU_TRANSLATION_MODEL_MSD))
         filters.add(new MSDRecombinationFilter(featurizers));
-      return new CombinedRecombinationFilter<Hypothesis<IString, String>>(
+      return new CombinedRecombinationFilter<Derivation<IString, String>>(
           filters);
     }
     throw new RuntimeException(String.format(

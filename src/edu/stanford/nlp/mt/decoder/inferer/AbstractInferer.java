@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
@@ -18,7 +18,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final PhraseGenerator<TK,FV> phraseGenerator;
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
-  protected final RecombinationFilter<Hypothesis<TK, FV>> filter;
+  protected final RecombinationFilter<Derivation<TK, FV>> filter;
   protected final List<Annotator<TK,FV>> annotators;
 
   
@@ -54,7 +54,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
 	 *
 	 */
   protected FeatureValueCollection<FV> collectFeatureValues(
-      Hypothesis<TK, FV> hyp) {
+      Derivation<TK, FV> hyp) {
     class LinkedFeatureValues<FV2> extends LinkedList<FeatureValue<FV2>>
         implements FeatureValueCollection<FV2> {
       private static final long serialVersionUID = 1L;
@@ -65,7 +65,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
       }
     }
     LinkedFeatureValues<FV> features = new LinkedFeatureValues<FV>();
-    for (; hyp != null; hyp = hyp.preceedingHyp) {
+    for (; hyp != null; hyp = hyp.preceedingDerivation) {
       List<FeatureValue<FV>> localFeatures = hyp.localFeatures;
       if (localFeatures != null) {
         features.addAll(localFeatures);
@@ -74,14 +74,14 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     return features;
   }
 
-  protected List<String> collectAlignments(Hypothesis<TK, FV> hyp) {
+  protected List<String> collectAlignments(Derivation<TK, FV> hyp) {
     LinkedList<String> alignments = new LinkedList<String>();
-    for (; hyp != null; hyp = hyp.preceedingHyp) {
+    for (; hyp != null; hyp = hyp.preceedingDerivation) {
       ConcreteRule<TK,FV> opt = hyp.rule;
       if (opt == null)
         continue;
       int teIdx = hyp.length - 1;
-      int tsIdx = hyp.preceedingHyp == null ? 0 : hyp.length - 1;
+      int tsIdx = hyp.preceedingDerivation == null ? 0 : hyp.length - 1;
       CoverageSet cs = opt.sourceCoverage;
       int feIdx = -1;
       while (true) {

@@ -203,10 +203,10 @@ public class RichTranslation<TK, FV> extends
        List<Featurizable<TK,FV>> featurizables = featurizables();
        for (Featurizable<TK,FV> f : featurizables) {
          sbuf.append(' ');
-         double parentScore = (f.prior == null ? 0 : f.prior.hyp.score);
-         sbuf.append("|").append(f.hyp.score - parentScore).append(" ");
-         sbuf.append(f.hyp.rule.sourceCoverage).append(" ");
-         sbuf.append(f.hyp.rule.abstractOption.target.toString());
+         double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
+         sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
+         sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
+         sbuf.append(f.derivation.rule.abstractOption.target.toString());
        }
      }
     
