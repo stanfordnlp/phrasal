@@ -186,7 +186,8 @@ public class FeaturizerFactory {
       List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
       baselineFeaturizers.addAll(gapFeaturizers);
 
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer, phraseTableScoresFeaturizer;
+      IncrementalFeaturizer<IString, String> arpaLmFeaturizer;
+      Featurizer<IString,String> phraseTableScoresFeaturizer;
 
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
@@ -223,8 +224,8 @@ public class FeaturizerFactory {
       List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
       pharaohFeaturizers.addAll(gapFeaturizers);
 
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer, phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
-
+      IncrementalFeaturizer<IString, String> arpaLmFeaturizer;
+      Featurizer<IString,String> phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);

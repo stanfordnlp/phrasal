@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
+public class TargetGapFeaturizer implements IncrementalFeaturizer<IString,String>, ClonedFeaturizer<IString, String>,
     IsolatedPhraseFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugTargetGapFeaturizer";

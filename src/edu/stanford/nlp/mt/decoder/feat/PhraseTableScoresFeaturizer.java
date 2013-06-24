@@ -2,10 +2,9 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -14,7 +13,7 @@ import edu.stanford.nlp.util.Index;
  * @param <T>
  */
 public class PhraseTableScoresFeaturizer<T> implements
-    IncrementalFeaturizer<T, String>, IsolatedPhraseFeaturizer<T, String> {
+    IsolatedPhraseFeaturizer<T, String> {
   public final static String PREFIX = "TM";
   public static final String DEBUG_PROPERTY = "ptScoresFeaturizerDEBUG";
   final HashMap<String, String[]> featureNamesHash;
@@ -77,19 +76,11 @@ public class PhraseTableScoresFeaturizer<T> implements
   }
 
   /**
-   * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#featurize(Featurizable)
-   */
-  @Override
-  public FeatureValue<String> featurize(Featurizable<T, String> featurizable) {
-    return null;
-  }
-
-  /**
    * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#listFeaturize(Featurizable)
    */
   @SuppressWarnings("unchecked")
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> phraseListFeaturize(
       Featurizable<T, String> featurizable) {
     FeatureValue<String>[] featureValues;
     if (featurizable.phraseTableName == UnknownWordFeaturizer.UNKNOWN_PHRASE_TABLE_NAME) {
@@ -100,7 +91,7 @@ public class PhraseTableScoresFeaturizer<T> implements
       featureValues = new FeatureValue[1];
       String featureName = featurizable.sourcePhrase.toString("DTM:", "_",
           featurizable.targetPhrase.toString("=>", "_"));
-      featureValues[0] = new FeatureValue<String>(featureName, 1.0);
+      featureValues[0] = new CacheableFeatureValue<String>(featureName, 1.0);
     } else {
       // lookup/construct the list of feature names
       String phraseTableName = featurizable.phraseTableName;
@@ -114,7 +105,7 @@ public class PhraseTableScoresFeaturizer<T> implements
       // construct array of FeatureValue objects
       featureValues = new FeatureValue[featureNames.length];
       for (int i = 0; i < featureValues.length; i++) {
-        featureValues[i] = (i < featurizable.translationScores.length) ? new FeatureValue<String>(
+        featureValues[i] = (i < featurizable.translationScores.length) ? new CacheableFeatureValue<String>(
             featureNames[i], featurizable.translationScores[i]) : emptyFV;
       }
 
@@ -132,18 +123,7 @@ public class PhraseTableScoresFeaturizer<T> implements
 
   @Override
   public FeatureValue<String> phraseFeaturize(Featurizable<T, String> f) {
-    return featurize(f);
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
-      Featurizable<T, String> f) {
-    return listFeaturize(f);
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<T,String>> options, Sequence<T> foreign, Index<String> featureIndex) {
+    return null;
   }
 
   public void reset() {

@@ -7,14 +7,11 @@ import java.util.regex.Pattern;
 import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.base.CacheableFeatureValue;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 
 /**
@@ -24,7 +21,6 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
  *@author John Bauer
  */
 public class TargetSidePunctuationFeaturizer implements AlignmentFeaturizer,
-IncrementalFeaturizer<IString,String>,
 IsolatedPhraseFeaturizer<IString, String> {
 
   /**
@@ -123,27 +119,6 @@ IsolatedPhraseFeaturizer<IString, String> {
 
   @Override
   public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(
-      int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     return null;
   }
 }
