@@ -2,12 +2,13 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer.HierBlock;
 import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.util.Generics;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -26,16 +27,16 @@ public class MSDRecombinationFilter implements
   private final List<StatefulFeaturizer<IString, String>> hierFeaturizers = new LinkedList<StatefulFeaturizer<IString, String>>();
 
   public MSDRecombinationFilter(
-      List<IncrementalFeaturizer<IString, String>> featurizers) {
+      List<Featurizer<IString, String>> featurizers) {
 
     System.err.println("MSD recombination enabled.");
 
     if (HIERARCHICAL_RECOMBINATION) {
-      Deque<IncrementalFeaturizer<IString, String>> tmpList = new LinkedList<IncrementalFeaturizer<IString, String>>(
+      Deque<Featurizer<IString, String>> tmpList = Generics.newLinkedList(
           featurizers);
 
       while (!tmpList.isEmpty()) {
-        IncrementalFeaturizer<IString, String> el = tmpList.removeLast();
+        Featurizer<IString, String> el = tmpList.removeLast();
         if (el instanceof CombinedFeaturizer) {
           tmpList
               .addAll(((CombinedFeaturizer<IString, String>) el).featurizers);

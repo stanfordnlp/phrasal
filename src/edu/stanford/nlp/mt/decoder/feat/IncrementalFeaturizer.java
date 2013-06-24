@@ -28,7 +28,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public interface IncrementalFeaturizer<TK, FV> {
+public interface IncrementalFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   
   /**
    * This call is made *before* decoding a new input begins.

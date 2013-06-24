@@ -5,8 +5,8 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizers;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 
 /**
@@ -37,7 +37,7 @@ public class RecombinationFilterFactory {
 	 * 
 	 */
   static public RecombinationFilter<Hypothesis<IString, String>> factory(
-      List<IncrementalFeaturizer<IString, String>> featurizers,
+      List<Featurizer<IString, String>> featurizers,
       boolean msdRecombination, String... rfSpecs) {
     String rfName;
     if (rfSpecs.length == 0) {

@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.LanguageModels;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * @author danielcer
@@ -120,14 +121,14 @@ public class FeaturizerFactory {
   }
 
   @SuppressWarnings("unchecked")
-  public static <TK, FV> Class<IncrementalFeaturizer<TK, FV>> loadFeaturizer(
+  public static <TK, FV> Class<Featurizer<TK, FV>> loadFeaturizer(
       String name) {
     String trueName = (featureAliases.containsKey(name) ? featureAliases.get(
         name).get(0) : name);
-    Class<IncrementalFeaturizer<TK, FV>> featurizerClass = null;
+    Class<Featurizer<TK, FV>> featurizerClass = null;
 
     try {
-      featurizerClass = (Class<IncrementalFeaturizer<TK, FV>>) ClassLoader
+      featurizerClass = (Class<Featurizer<TK, FV>>) ClassLoader
           .getSystemClassLoader().loadClass(trueName);
     } catch (ClassNotFoundException c) {
       System.err.printf("Failed to load featurizer %s (class name: %s)\n",
@@ -182,7 +183,7 @@ public class FeaturizerFactory {
                     "Baseline featurizers requires that a language model is specificed using the parameter '%s'",
                     ARPA_LM_PARAMETER));
       }
-      List<IncrementalFeaturizer<IString, String>> baselineFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
       baselineFeaturizers.addAll(gapFeaturizers);
 
       IncrementalFeaturizer<IString, String> arpaLmFeaturizer, phraseTableScoresFeaturizer;
@@ -219,7 +220,7 @@ public class FeaturizerFactory {
         return new CombinedFeaturizer<IString, String>(fullModel);
       }
     } else if (featurizerName.equals(PSEUDO_PHARAOH_GENERATOR)) {
-      List<IncrementalFeaturizer<IString, String>> pharaohFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
       pharaohFeaturizers.addAll(gapFeaturizers);
 
       IncrementalFeaturizer<IString, String> arpaLmFeaturizer, phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;

@@ -20,7 +20,7 @@ import edu.stanford.nlp.util.Index;
  * @param <TK>
  * @param <FV>
  */
-public interface IsolatedPhraseFeaturizer<TK, FV> {
+public interface IsolatedPhraseFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   
   /**
    * This call is made *before* decoding a phrase is featurized. Do any setup here.

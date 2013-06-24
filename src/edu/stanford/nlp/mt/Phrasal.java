@@ -44,6 +44,7 @@ import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
@@ -384,7 +385,8 @@ public class Phrasal {
                 String[] argsList = args.split(",");
                 System.err.printf("Additional annotators: %s.\nArgs: %s\n",
                     annotatorName, Arrays.toString(argsList));
-                Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+                // TODO(spenceg) Seems like this will throw an exception?
+                Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                     .loadFeaturizer(annotatorName);
                 annotator = (Annotator<IString,String>) featurizerClass
                     .getConstructor(argsList.getClass()).newInstance(
@@ -432,17 +434,17 @@ public class Phrasal {
     }
     System.err.printf("Number of additional annotators loaded: %d\n", additionalAnnotators.size());
 
-    List<IncrementalFeaturizer<IString, String>> additionalFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+    List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
       String featurizerName = null;
       String args = null;
       for (String token : tokens) {
-        IncrementalFeaturizer<IString, String> featurizer = null;
+        Featurizer<IString, String> featurizer = null;
         if (featurizerName == null) {
           if (token.endsWith("()")) {
             String name = token.replaceFirst("\\(\\)$", "");
-            Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+            Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(name);
             featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
                 .newInstance();
@@ -458,9 +460,9 @@ public class Phrasal {
               String[] argsList = args.split(",");
               System.err.printf("Additional featurizer: %s.\nArgs: %s\n",
                   featurizerName, Arrays.toString(argsList));
-              Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+              Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                   .loadFeaturizer(featurizerName);
-              featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+              featurizer = (Featurizer<IString, String>) featurizerClass
                   .getConstructor(argsList.getClass()).newInstance(
                       new Object[] { argsList });
               additionalFeaturizers.add(featurizer);
@@ -485,9 +487,9 @@ public class Phrasal {
             args = args.replaceAll("\\s+$", "");
             String[] argsList = args.split(",");
             System.err.printf("args: %s\n", Arrays.toString(argsList));
-            Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+            Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(featurizerName);
-            featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+            featurizer = (Featurizer<IString, String>) featurizerClass
                 .getConstructor(argsList.getClass()).newInstance(
                     (Object) argsList);
             additionalFeaturizers.add(featurizer);
@@ -587,7 +589,7 @@ public class Phrasal {
     }
 
     if (!additionalFeaturizers.isEmpty()) {
-      List<IncrementalFeaturizer<IString, String>> allFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
       allFeaturizers.addAll(featurizer.featurizers);
       allFeaturizers.addAll(additionalFeaturizers);
       featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);

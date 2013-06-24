@@ -20,12 +20,12 @@ public class Featurizers {
    */
   @SuppressWarnings("unchecked")
   static public <TK, FV> List<LanguageModel<TK>> extractNGramLanguageModels(
-      List<IncrementalFeaturizer<TK, FV>> featurizers) {
+      List<Featurizer<TK, FV>> featurizers) {
     int highestOrder = 0;
     List<LanguageModel<TK>> lgModels = new ArrayList<LanguageModel<TK>>(
         featurizers.size());
 
-    for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
+    for (Featurizer<TK, FV> featurizer : featurizers) {
       if (!(featurizer instanceof NGramLanguageModelFeaturizer))
         continue;
       NGramLanguageModelFeaturizer lmFeaturizer = (NGramLanguageModelFeaturizer) featurizer;

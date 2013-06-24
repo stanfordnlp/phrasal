@@ -3,12 +3,8 @@ package edu.stanford.nlp.mt.tools;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
 
 import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
 import edu.stanford.nlp.mt.base.IString;
@@ -17,7 +13,6 @@ import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.SRILanguageModel;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.TranslationOption;
@@ -32,10 +27,11 @@ import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
 
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.process.TrueCaser;
 
@@ -90,7 +86,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
     try {
       NGramLanguageModelFeaturizer lmFeaturizer = NGramLanguageModelFeaturizer
           .fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
-      List<IncrementalFeaturizer<IString, String>> listFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
       listFeaturizers.add(lmFeaturizer);
       CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
           listFeaturizers);
