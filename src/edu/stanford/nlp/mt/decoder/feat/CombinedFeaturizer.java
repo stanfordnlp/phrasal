@@ -1,6 +1,9 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -10,6 +13,8 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
+ * Container class for featurizers.
+ * 
  * @author danielcer
  * 
  * @param <TK>
@@ -58,14 +63,6 @@ public class CombinedFeaturizer<TK, FV> implements
     return featurizer;
   }
 
-  /**
-	 * 
-	 */
-
-  public List<Featurizer<TK, FV>> getFeaturizers() {
-    return Generics.newArrayList(featurizers);
-  }
-
   public List<Featurizer<TK, FV>> getNestedFeaturizers() {
     List<Featurizer<TK, FV>> allFeaturizers = Generics.newLinkedList(
         featurizers);
@@ -82,7 +79,7 @@ public class CombinedFeaturizer<TK, FV> implements
   /**
 	 */
   public CombinedFeaturizer(List<Featurizer<TK, FV>> featurizers) {
-    this.featurizers = new ArrayList<Featurizer<TK, FV>>(featurizers);
+    this.featurizers = Generics.newArrayList(featurizers);
     int id = -1;
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof StatefulFeaturizer) {
@@ -155,8 +152,9 @@ public class CombinedFeaturizer<TK, FV> implements
   public List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (!(featurizer instanceof RuleFeaturizer))
+      if (!(featurizer instanceof RuleFeaturizer)) {
         continue;
+      }
       RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
 
       FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
@@ -184,10 +182,10 @@ public class CombinedFeaturizer<TK, FV> implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> foreign, Index<String> featureIndex) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof CombinationFeaturizer) {
-        ((CombinationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
+        ((CombinationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign, featureIndex);
       }
     }
   }
