@@ -200,7 +200,7 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
     if (posTags == null || isHead == null) return null;    
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
-    PhraseAlignment alignment = f.rule.abstractOption.alignment;
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
     boolean[] srcIsAligned = new boolean[f.sourcePhrase.size()];
     

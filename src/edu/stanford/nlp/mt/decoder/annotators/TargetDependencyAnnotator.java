@@ -70,7 +70,7 @@ public class TargetDependencyAnnotator<TK,FV> implements Annotator<TK,FV> {
     Structure localStruct = struct.clone();
     //System.out.println("Cloned structure: "+localStruct);
     //System.out.println("Extension: " + option.abstractOption.translation);
-    for (TK word : option.abstractOption.target) {
+    for (TK word : option.abstractRule.target) {
       CoreLabel w = new CoreLabel();
       w.set(TextAnnotation.class, word.toString());
       w.set(IndexAnnotation.class, localIndex++);

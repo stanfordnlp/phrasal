@@ -162,7 +162,7 @@ public class Featurizable<TK, FV> {
     this.sourceInputId = sourceInputId;
     done = derivation.isDone();
     rule = derivation.rule;
-    Rule<TK> transOpt = derivation.rule.abstractOption;
+    Rule<TK> transOpt = derivation.rule.abstractRule;
     ConcreteRule<TK,FV> concreteOpt = derivation.rule;
     sourcePhrase = transOpt.source;
     targetPhrase = transOpt.target;
@@ -212,7 +212,7 @@ public class Featurizable<TK, FV> {
     this.sourceInputId = sourceInputId;
     done = derivation.isDone() && !hasPendingPhrases;
     rule = derivation.rule;
-    Rule<TK> transOpt = derivation.rule.abstractOption;
+    Rule<TK> transOpt = derivation.rule.abstractRule;
     ConcreteRule<TK,FV> concreteOpt = derivation.rule;
     sourcePhrase = transOpt.source;
     this.targetPhrase = targetPhrase;
@@ -296,18 +296,18 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   public Featurizable(Sequence<TK> sourceSequence,
-      ConcreteRule<TK,FV> concreteOpt, int sourceInputId) {
+      ConcreteRule<TK,FV> rule, int sourceInputId) {
     this.sourceInputId = sourceInputId;
-    rule = concreteOpt;
+    this.rule = rule;
     done = false;
-    Rule<TK> transOpt = concreteOpt.abstractOption;
+    Rule<TK> transOpt = rule.abstractRule;
     sourcePhrase = transOpt.source;
     targetPhrase = transOpt.target;
-    phraseTableName = concreteOpt.phraseTableName;
+    phraseTableName = rule.phraseTableName;
     translationScores = transOpt.scores;
     phraseScoreNames = transOpt.phraseScoreNames;
     targetPosition = 0;
-    sourcePosition = concreteOpt.sourcePosition;
+    sourcePosition = rule.sourcePosition;
     targetPrefix = targetPhrase;
     targetPrefixRaw = null;
     sourceSentence = sourceSequence;
@@ -319,18 +319,18 @@ public class Featurizable<TK, FV> {
         .size() : 0][];
     s2tAlignmentIndex = new int[sourceSentence.size()][];
     if (constructAlignment)
-      augmentAlignments(concreteOpt);
+      augmentAlignments(rule);
     derivation = null;
   }
 
   protected Featurizable(Sequence<TK> sourceSequence,
       ConcreteRule<TK,FV> concreteOpt, int sourceInputId,
       Sequence<TK> targetPhrase) {
-    assert (concreteOpt.abstractOption.getClass().equals(DTUOption.class));
+    assert (concreteOpt.abstractRule.getClass().equals(DTURule.class));
     this.sourceInputId = sourceInputId;
     rule = concreteOpt;
     done = false;
-    Rule<TK> transOpt = concreteOpt.abstractOption;
+    Rule<TK> transOpt = concreteOpt.abstractRule;
     sourcePhrase = transOpt.source;
     this.targetPhrase = targetPhrase;
     phraseTableName = concreteOpt.phraseTableName;
@@ -358,16 +358,16 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   protected void augmentAlignments(ConcreteRule<TK,FV> concreteOpt) {
-    if (concreteOpt.abstractOption.target == null)
+    if (concreteOpt.abstractRule.target == null)
       return;
-    int targetSz = concreteOpt.abstractOption.target.elements.length;
+    int targetSz = concreteOpt.abstractRule.target.elements.length;
     int sourceSz = Phrasal.withGaps ?
     // MG2009: these two lines should achieve the same result for phrases
     // without gaps,
     // though the first one is slower:
     concreteOpt.sourceCoverage.length()
         - concreteOpt.sourceCoverage.nextSetBit(0)
-        : concreteOpt.abstractOption.source.elements.length;
+        : concreteOpt.abstractRule.source.elements.length;
     int limit;
     int[] range = new int[2];
     range[PHRASE_START] = sourcePosition;
@@ -398,7 +398,7 @@ public class Featurizable<TK, FV> {
     }
 
     ConcreteRule<TK,FV> concreteOpt = h.rule;
-    Object[] newTokens = concreteOpt.abstractOption.target.elements;
+    Object[] newTokens = concreteOpt.abstractRule.target.elements;
     System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
     return tokens;
   }

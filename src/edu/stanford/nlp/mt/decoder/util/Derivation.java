@@ -127,7 +127,7 @@ State<Derivation<TK, FV>> {
     this.sourceCoverage.or(rule.sourceCoverage);
     this.length = (insertionPosition < base.length ? base.length : // internal
       // insertion
-      insertionPosition + rule.abstractOption.target.size()); // edge
+      insertionPosition + rule.abstractRule.target.size()); // edge
     // insertion
     sourceSequence = base.sourceSequence;
     untranslatedTokens = this.sourceSequence.size()
@@ -219,10 +219,10 @@ State<Derivation<TK, FV>> {
       Derivation<TK, FV> derivation) {
     if (derivation.preceedingDerivation != null)
       injectSegmentationBuffer(sbuf, derivation.preceedingDerivation);
-    sbuf.append("\t").append(derivation.rule.abstractOption.target)
+    sbuf.append("\t").append(derivation.rule.abstractRule.target)
     .append(" ");
     sbuf.append(derivation.rule.sourceCoverage).append(" ");
-    sbuf.append(Arrays.toString(derivation.rule.abstractOption.scores));
+    sbuf.append(Arrays.toString(derivation.rule.abstractRule.scores));
     sbuf.append("\n");
   }
 

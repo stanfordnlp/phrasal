@@ -195,7 +195,7 @@ public class SourceGapFeaturizer implements
       }
       if (featureForEachBin) {
         for (int i = 0; i < binIds.size(); ++i) {
-          int phraseId = f.rule.abstractOption.id;
+          int phraseId = f.rule.abstractRule.id;
           int binId = binIds.get(i);
           double gapLogProb = DTUTable.getSourceGapScore(phraseId, i,
               binIds.get(i));
@@ -205,7 +205,7 @@ public class SourceGapFeaturizer implements
       } else {
         double totalGapLogProb = 0.0;
         for (int i = 0; i < binIds.size(); ++i) {
-          int id = f.rule.abstractOption.id;
+          int id = f.rule.abstractRule.id;
           double gapLogProb = DTUTable.getSourceGapScore(id, i, binIds.get(i));
           totalGapLogProb += gapLogProb;
         }

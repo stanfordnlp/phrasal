@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.util.Arrays;
 
 /**
+ * A translation rule.
  *
  * @author danielcer
  *
@@ -61,7 +62,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   @Override
   public String toString() {
     StringBuilder sbuf = new StringBuilder();
-    sbuf.append(String.format("TranslationOption: \"%s\" scores: %s\n",
+    sbuf.append(String.format("Rule: \"%s\" scores: %s\n",
         target, Arrays.toString(scores)));
     return sbuf.toString();
   }

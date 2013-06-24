@@ -82,7 +82,7 @@ public class DTURecombinationFilter<TK, FV> implements
               assert (itB.hasNext());
               DTUHypothesis.PendingPhrase<TK, FV> elA = itA.next();
               DTUHypothesis.PendingPhrase<TK, FV> elB = itB.next();
-              if (elA.concreteOpt.abstractOption != elB.concreteOpt.abstractOption
+              if (elA.concreteOpt.abstractRule != elB.concreteOpt.abstractRule
                   || elA.segmentIdx != elB.segmentIdx) {
                 combinable = false;
                 break;
@@ -116,7 +116,7 @@ public class DTURecombinationFilter<TK, FV> implements
       int i = 0;
       if (dtu != null)
         for (DTUHypothesis.PendingPhrase<TK,FV> pp : dtu.pendingPhrases)
-          hashes[++i] = pp.concreteOpt.abstractOption.hashCode();
+          hashes[++i] = pp.concreteOpt.abstractRule.hashCode();
       return Arrays.hashCode(hashes);
     }
   }

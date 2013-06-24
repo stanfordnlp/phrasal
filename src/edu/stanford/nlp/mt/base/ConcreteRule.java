@@ -8,6 +8,8 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * A translation rule that is associated with a particular source span
+ * in an input sentence.
  * 
  * @author danielcer
  * 
@@ -16,7 +18,7 @@ import edu.stanford.nlp.util.Generics;
 public class ConcreteRule<TK,FV> implements
     Comparable<ConcreteRule<TK,FV>> {
 
-  public final Rule<TK> abstractOption;
+  public final Rule<TK> abstractRule;
   public final CoverageSet sourceCoverage;
   public final String phraseTableName;
   public final int sourcePosition;
@@ -38,11 +40,11 @@ public class ConcreteRule<TK,FV> implements
           .println("warning: standard linear distortion with DTU phrases.");
   }
 
-  public ConcreteRule(Rule<TK> abstractOption,
+  public ConcreteRule(Rule<TK> abstractRule,
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
-    this.abstractOption = abstractOption;
+    this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
@@ -56,14 +58,14 @@ public class ConcreteRule<TK,FV> implements
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
-  public ConcreteRule(Rule<TK> abstractOption,
+  public ConcreteRule(Rule<TK> abstractRule,
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
       boolean hasTargetGap) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);
     assert (hasTargetGap);
-    this.abstractOption = abstractOption;
+    this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
@@ -84,8 +86,8 @@ public class ConcreteRule<TK,FV> implements
       // System.err.printf("feature(global): %s\n", fv);
     }
     // Get all other feature scores (LM, word penalty):
-    if (abstractOption instanceof DTUOption) {
-      DTUOption<TK> dtuOpt = (DTUOption<TK>) abstractOption;
+    if (abstractRule instanceof DTURule) {
+      DTURule<TK> dtuOpt = (DTURule<TK>) abstractRule;
       for (int i = 0; i < dtuOpt.dtus.length; ++i) {
         Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(sourceSequence,
             this, sourceInputId, i);
@@ -107,26 +109,26 @@ public class ConcreteRule<TK,FV> implements
   @Override
   public String toString() {
     StringBuilder sbuf = new StringBuilder();
-    sbuf.append("ConcreteTranslationOption:\n");
-    sbuf.append(String.format("\tAbstractOption: %s\n", abstractOption
+    sbuf.append("ConcreteRule:\n");
+    sbuf.append(String.format("\tAbstractOption: %s\n", abstractRule
         .toString().replaceAll("\n", "\n\t")));
     sbuf.append(String.format("\tSourceCoverage: %s\n", sourceCoverage));
     sbuf.append(String.format("\tPhraseTable: %s\n", phraseTableName));
     return sbuf.toString();
   }
 
-  public int linearDistortion(ConcreteRule<TK,FV> opt) {
-    return linearDistortion(opt, linearDistortionType);
+  public int linearDistortion(ConcreteRule<TK,FV> rule) {
+    return linearDistortion(rule, linearDistortionType);
   }
 
-  public int linearDistortion(ConcreteRule<TK,FV> opt,
+  public int linearDistortion(ConcreteRule<TK,FV> rule,
       LinearDistortionType type) {
     final int nextSourceToken;
     if (type != LinearDistortionType.standard)
       assert (Phrasal.withGaps);
     switch (type) {
     case standard:
-      nextSourceToken = sourcePosition + abstractOption.source.size();
+      nextSourceToken = sourcePosition + abstractRule.source.size();
       break;
     case last_contiguous_segment:
       nextSourceToken = sourceCoverage.length();
@@ -146,16 +148,16 @@ public class ConcreteRule<TK,FV> implements
       int firstIdx = sourceCoverage
           .nextClearBit(sourceCoverage.nextSetBit(0));
       int lastIdx = sourceCoverage.length();
-      int firstDelta = Math.abs(firstIdx - opt.sourcePosition);
-      int lastDelta = Math.abs(lastIdx - opt.sourcePosition);
+      int firstDelta = Math.abs(firstIdx - rule.sourcePosition);
+      int lastDelta = Math.abs(lastIdx - rule.sourcePosition);
       return Math.min(firstDelta, lastDelta);
     }
     case average_distance: {
       int firstIdx = sourceCoverage
           .nextClearBit(sourceCoverage.nextSetBit(0));
       int lastIdx = sourceCoverage.length();
-      int firstDelta = Math.abs(firstIdx - opt.sourcePosition);
-      int lastDelta = Math.abs(lastIdx - opt.sourcePosition);
+      int firstDelta = Math.abs(firstIdx - rule.sourcePosition);
+      int lastDelta = Math.abs(lastIdx - rule.sourcePosition);
       // System.err.printf("coverage: %s first=%d last=%d pos=%d delta=(%d,%d) min=%d\n",
       // foreignCoverage, firstIdx, lastIdx, opt.foreignPos, firstDelta,
       // lastDelta, Math.min(firstDelta, lastDelta));
@@ -164,13 +166,13 @@ public class ConcreteRule<TK,FV> implements
     default:
       throw new UnsupportedOperationException();
     }
-    return Math.abs(nextSourceToken - opt.sourcePosition);
+    return Math.abs(nextSourceToken - rule.sourcePosition);
   }
 
-  public int signedLinearDistortion(ConcreteRule<TK,FV> opt) {
+  public int signedLinearDistortion(ConcreteRule<TK,FV> rule) {
     assert (linearDistortionType == LinearDistortionType.standard);
-    int nextSourceToken = sourcePosition + abstractOption.source.size();
-    return nextSourceToken - opt.sourcePosition;
+    int nextSourceToken = sourcePosition + abstractRule.source.size();
+    return nextSourceToken - rule.sourcePosition;
   }
 
   @Override

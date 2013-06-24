@@ -206,7 +206,7 @@ public class RichTranslation<TK, FV> extends
          double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
          sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
          sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
-         sbuf.append(f.derivation.rule.abstractOption.target.toString());
+         sbuf.append(f.derivation.rule.abstractRule.target.toString());
        }
      }
     

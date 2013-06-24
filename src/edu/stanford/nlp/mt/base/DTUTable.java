@@ -142,7 +142,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
                   dtus[i] = new RawSequence<IString>(multiIntTransOpt.dtus[i],
                       IString.identityIndex());
                 }
-                transOpts.add(new DTUOption<IString>(intTransOpt.id,
+                transOpts.add(new DTURule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
                         s.foreign), intTransOpt.alignment));
               } else {
@@ -156,7 +156,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
             }
 
             for (Rule<IString> abstractOpt : transOpts) {
-              if (abstractOpt instanceof DTUOption)
+              if (abstractOpt instanceof DTURule)
                 opts.add(new ConcreteRule<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
                         .getName(), sourceInputId, true));

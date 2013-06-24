@@ -84,7 +84,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
       ConcreteRule<TK,FV> option) {
 
-    Sequence<TK> nextPhrase = option.abstractOption.target;
+    Sequence<TK> nextPhrase = option.abstractRule.target;
 
     if (featurizable == null) {
       for (Sequence<TK> allowableSequence : allowableSequences) {
@@ -113,7 +113,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
         int tMissing = allowableSequence.size()
             - (partialTranslation.size() + nextPhrase.size());
         int fMissing = featurizable.untranslatedTokens
-            - option.abstractOption.source.size();
+            - option.abstractRule.source.size();
         if ((fMissing == 0 && tMissing != 0)
             || (fMissing != 0 && tMissing == 0))
           continue;
@@ -154,10 +154,10 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
     for (ConcreteRule<TK,FV> option : optionList) {
       if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
         System.err.printf("Examining: %s %s\n",
-            option.abstractOption.target, option.sourceCoverage);
+            option.abstractRule.target, option.sourceCoverage);
       }
       for (Sequence<TK> allowableSequence : allowableSequences) {
-        if (allowableSequence.contains(option.abstractOption.target)) {
+        if (allowableSequence.contains(option.abstractRule.target)) {
           filteredOptions.add(option);
           if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
             System.err.printf("\tAccepted!\n");
@@ -176,7 +176,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       System.err.println("Filtered options");
       System.err.println("----------------");
       for (ConcreteRule<TK,FV> option : filteredOptions) {
-        System.err.printf("\t%s %s\n", option.abstractOption.target,
+        System.err.printf("\t%s %s\n", option.abstractRule.target,
             option.sourceCoverage);
       }
       System.err.println("--\n");

@@ -52,7 +52,7 @@ RuleFeaturizer<IString,String> {
 
   @Override
   public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
-    PhraseAlignment alignment = f.rule.abstractOption.alignment;
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int eLength = f.targetPhrase.size();
     final int fLength = f.sourcePhrase.size();
     List<Set<String>> f2e = new ArrayList<Set<String>>(fLength);

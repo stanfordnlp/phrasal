@@ -4,7 +4,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUOption;
+import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -146,7 +146,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     for (int i = 0; i < options.size(); ++i) {
       for (ConcreteRule<TK,FV> option : options.get(i)) {
-        if (IGNORE_TGT && option.abstractOption instanceof DTUOption)
+        if (IGNORE_TGT && option.abstractRule instanceof DTURule)
           continue;
         Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
             option, translationId);
@@ -156,7 +156,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         final int terminalPos;
         if (i == 0) {
           terminalPos = option.sourcePosition
-              + option.abstractOption.source.size() - 1;
+              + option.abstractRule.source.size() - 1;
           if (score > viterbiSpanScores
               .getScore(option.sourcePosition, terminalPos)) {
             viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
@@ -169,8 +169,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
           if (debug) {
             System.err.printf("\t%d:%d:%d %s->%s score: %.3f %.3f\n",
                 option.sourcePosition, terminalPos, i,
-                option.abstractOption.source,
-                option.abstractOption.target, score, childScore);
+                option.abstractRule.source,
+                option.abstractRule.target, score, childScore);
             System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
           }
         } else {

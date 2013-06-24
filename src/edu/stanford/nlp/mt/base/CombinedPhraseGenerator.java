@@ -140,9 +140,9 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
         System.err.println("Sorted Options");
         for (ConcreteRule<TK,FV> opt : preCutOpts) {
           System.err.println("--");
-          System.err.printf("%s => %s : %f\n", opt.abstractOption.source,
-              opt.abstractOption.target, opt.isolationScore);
-          System.err.printf("%s\n", Arrays.toString(opt.abstractOption.scores));
+          System.err.printf("%s => %s : %f\n", opt.abstractRule.source,
+              opt.abstractRule.target, opt.isolationScore);
+          System.err.printf("%s\n", Arrays.toString(opt.abstractRule.scores));
         }
       }
 
@@ -151,7 +151,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       int forceAddCnt = 0;
       for (int i = 0; (i < phraseLimit)
           || (phraseLimit == 0 && i < preCutOptsArraySz); i++) {
-        if (preCutOptsArray.get(i).abstractOption.forceAdd) {
+        if (preCutOptsArray.get(i).abstractRule.forceAdd) {
           forceAddCnt++;
         }
         cutoffOpts.add(preCutOptsArray.get(i));
@@ -160,7 +160,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       if (phraseLimit != 0)
         for (int i = phraseLimit; i < preCutOptsArraySz
             && forceAddCnt < FORCE_ADD_LIMIT; i++) {
-          if (preCutOptsArray.get(i).abstractOption.forceAdd) {
+          if (preCutOptsArray.get(i).abstractRule.forceAdd) {
             cutoffOpts.add(preCutOptsArray.get(i));
             forceAddCnt++;
           }
@@ -233,8 +233,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       for (ConcreteRule<IString,String> option : options) {
         System.out.printf("\t%s -> %s coverage: %s score: %s\n",
             sequence.subsequence(option.sourceCoverage),
-            option.abstractOption.target, option.sourceCoverage,
-            Arrays.toString(option.abstractOption.scores));
+            option.abstractRule.target, option.sourceCoverage,
+            Arrays.toString(option.abstractRule.scores));
       }
     }
   }

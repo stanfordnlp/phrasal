@@ -53,7 +53,7 @@ RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> phraseListFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
-    PhraseAlignment alignment = f.rule.abstractOption.alignment;
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
     int nTargetSidePunctuationChars = 0;
     int nTgtTokens = f.targetPhrase.size();
     int nInsertedCommas = 0;

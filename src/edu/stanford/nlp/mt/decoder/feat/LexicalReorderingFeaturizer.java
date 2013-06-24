@@ -119,7 +119,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = priorForeignPhrase.toString("_") + "=>"
                 + priorTranslatedPhrase.toString("_");
           } else {
-            IString priorAlignConst = (f.prior != null ? f.prior.rule.abstractOption.alignment
+            IString priorAlignConst = (f.prior != null ? f.prior.rule.abstractRule.alignment
                 .toIString() : INITIAL_PHRASE.get(0));
             condRep = priorAlignConst.toString();
           }
@@ -131,7 +131,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = f.sourcePhrase.toString("_") + "=>"
                 + f.targetPhrase.toString("_");
           } else {
-            condRep = f.rule.abstractOption.alignment.toString();
+            condRep = f.rule.abstractRule.alignment.toString();
           }
           values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + condRep, discriminativeFeatureValue));

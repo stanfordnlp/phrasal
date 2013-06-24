@@ -197,7 +197,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteRule<TK,FV> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
-              option.abstractOption.source, option.abstractOption.target,
+              option.abstractRule.source, option.abstractRule.target,
               option.isolationScore, option.sourceCoverage);
         System.err.println(">> End translation options <<");
       }
@@ -332,7 +332,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
       for (Derivation<TK, FV> hyp : trace) {
         System.err.printf("%d:\n", hyp.id);
-        Rule<TK> abstractOption = (hyp.rule != null) ? hyp.rule.abstractOption
+        Rule<TK> abstractOption = (hyp.rule != null) ? hyp.rule.abstractRule
             : null;
         if (hyp.rule != null) {
           boolean noSource = false;
@@ -346,7 +346,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 hyp.featurizable.targetPosition);
           } else {
             System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-                hyp.rule.abstractOption.source,
+                hyp.rule.abstractRule.source,
                 hyp.featurizable.sourcePosition,
                 hyp.featurizable.targetPhrase,
                 hyp.featurizable.targetPosition);
@@ -496,7 +496,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 continue;
               }
 
-              Derivation<TK, FV> newHyp = (option.abstractOption instanceof DTUOption || hyp instanceof DTUHypothesis) ? new DTUHypothesis<TK, FV>(
+              Derivation<TK, FV> newHyp = (option.abstractRule instanceof DTURule || hyp instanceof DTUHypothesis) ? new DTUHypothesis<TK, FV>(
                   sourceInputId, option, hyp.length, hyp, featurizer, scorer,
                   heuristic) : new Derivation<TK, FV>(sourceInputId, option,
                   hyp.length, hyp, featurizer, scorer, heuristic);
@@ -520,9 +520,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                   System.err.printf("\tcovering: %s\n",
                       newHyp.rule.sourceCoverage);
                   System.err.printf("\tforeign: %s\n",
-                      newHyp.rule.abstractOption.source);
+                      newHyp.rule.abstractRule.source);
                   System.err.printf("\ttranslated as: %s\n",
-                      newHyp.rule.abstractOption.target);
+                      newHyp.rule.abstractRule.target);
                   System.err.printf(
                       "\tscore: %.3f + future cost %.3f = %.3f\n",
                       newHyp.score, newHyp.h, newHyp.score());

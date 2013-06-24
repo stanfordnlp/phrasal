@@ -24,7 +24,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   public DTUFeaturizable(Sequence<TK> foreignSequence,
       ConcreteRule<TK,FV> concreteOpt, int sourceInputId, int dtuId) {
     super(foreignSequence, concreteOpt, sourceInputId,
-        ((DTUOption<TK>) concreteOpt.abstractOption).dtus[dtuId]);
+        ((DTURule<TK>) concreteOpt.abstractRule).dtus[dtuId]);
     this.abstractOption = null;
     this.segmentIdx = 0;
     assert (targetPhrase.size() > 0);
@@ -61,8 +61,8 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
 
   @Override
   public int getSegmentNumber() {
-    if (derivation.rule.abstractOption instanceof DTUOption) {
-      return ((DTUOption<TK>) derivation.rule.abstractOption).dtus.length;
+    if (derivation.rule.abstractRule instanceof DTURule) {
+      return ((DTURule<TK>) derivation.rule.abstractRule).dtus.length;
     }
     return 1;
   }

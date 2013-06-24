@@ -95,7 +95,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           hyp = nextHyp;
           continue;
         }
-        if (nextHyp.rule.abstractOption instanceof DTUOption)
+        if (nextHyp.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {
           hyp = new DTUHypothesis<TK, FV>(sourceInputId,

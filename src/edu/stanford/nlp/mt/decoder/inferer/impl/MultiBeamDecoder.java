@@ -188,7 +188,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.print(">> Translation Options <<\n");
         for (ConcreteRule<TK,FV> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
-              option.abstractOption.source, option.abstractOption.target,
+              option.abstractRule.source, option.abstractRule.target,
               option.isolationScore, option.sourceCoverage);
         System.err.println(">> End translation options <<");
       }
@@ -335,9 +335,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.printf("%d:\n", hyp.id);
         if (hyp.rule != null) {
           System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-              hyp.rule.abstractOption.source,
+              hyp.rule.abstractRule.source,
               hyp.featurizable.sourcePosition,
-              hyp.rule.abstractOption.target,
+              hyp.rule.abstractRule.target,
               hyp.featurizable.targetPosition);
         }
         System.err.printf("\tCoverage: %s\n", hyp.sourceCoverage);
@@ -478,9 +478,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               System.err.printf("\tcovering: %s\n",
                   newHyp.rule.sourceCoverage);
               System.err.printf("\tforeign: %s\n",
-                  newHyp.rule.abstractOption.source);
+                  newHyp.rule.abstractRule.source);
               System.err.printf("\ttranslated as: %s\n",
-                  newHyp.rule.abstractOption.target);
+                  newHyp.rule.abstractRule.target);
               System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n",
                   newHyp.score, newHyp.h, newHyp.score());
 

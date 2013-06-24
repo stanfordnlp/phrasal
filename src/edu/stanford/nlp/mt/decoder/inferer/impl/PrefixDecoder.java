@@ -110,20 +110,20 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 
     List<ConcreteRule<IString,FV>> options = phraseGenerator.translationOptions(source, targets, sourceInputId, scorer);
     List<ConcreteRule<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
-    float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
-    String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
+    float[] autoInsertScores = new float[options.get(0).abstractRule.scores.length];
+    String[] scoreNames = options.get(0).abstractRule.phraseScoreNames;
 
     if (DEBUG) {
       System.err.println("filtered options (for prefix)");
       System.err.println("========================================");
       for (ConcreteRule<IString,FV> cto : filteredOptions) {
-        System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
+        System.err.printf(" - %s -> %s (%s)\n", cto.abstractRule.source, cto.abstractRule.target, cto.sourcePosition);
       }
 
       System.err.println("unfiltered options (for suffix)");
       System.err.println("========================================");
       for (ConcreteRule<IString,FV> cto : options) {
-        System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
+        System.err.printf(" - %s -> %s (%s)\n", cto.abstractRule.source, cto.abstractRule.target, cto.sourcePosition);
       }
     }
 
@@ -272,10 +272,10 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
           List<ConcreteRule<IString,FV>> applicableOptions = optionGrid
                   .get(startPos, endPos);
           for (ConcreteRule<IString,FV> option : applicableOptions) {
-            if (option.abstractOption.source.equals(option.abstractOption.target)) {
+            if (option.abstractRule.source.equals(option.abstractRule.target)) {
               if (DEBUG) {
                 System.err.println("ignoring option since source phrase == target phrase");
-                System.err.printf("'%s'='%s'\n", option.abstractOption.source, option.abstractOption.target);
+                System.err.printf("'%s'='%s'\n", option.abstractRule.source, option.abstractRule.target);
               }
               continue;
             }
@@ -302,7 +302,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       List<String> alignments = new LinkedList<String>();
       for (Derivation<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingDerivation) {
         alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.sourcePhrase,
-                hyp.featurizable.targetPhrase, Arrays.toString(hyp.rule.abstractOption.scores)));
+                hyp.featurizable.targetPhrase, Arrays.toString(hyp.rule.abstractRule.scores)));
       }
       Collections.reverse(alignments);
     /*  for (String alignment : alignments) {

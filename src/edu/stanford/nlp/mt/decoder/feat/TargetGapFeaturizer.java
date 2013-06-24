@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
-import edu.stanford.nlp.mt.base.DTUOption;
+import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
 import edu.stanford.nlp.util.Index;
 
@@ -86,14 +86,14 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
     if (!(f instanceof DTUFeaturizable))
       return null;
     DTUFeaturizable<IString, String> dtuF = (DTUFeaturizable<IString, String>) f;
-    if (!(dtuF.abstractOption instanceof DTUOption))
+    if (!(dtuF.abstractOption instanceof DTURule))
       return null;
 
     List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(3);
 
     // Find out where we currently are within f.abstractOption:
     int segIdx = f.getSegmentIdx();
-    Sequence<IString>[] dtus = ((DTUOption<IString>) dtuF.abstractOption).dtus;
+    Sequence<IString>[] dtus = ((DTURule<IString>) dtuF.abstractOption).dtus;
 
     if (segIdx == 0) { // We just started generating a discontinuous phrase:
 
@@ -150,7 +150,7 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
                       * len));
                 if (addGapSizeProb) {
                   int binId = DTUFeatureExtractor.sizeToBin(distance);
-                  int phraseId = f.rule.abstractOption.id;
+                  int phraseId = f.rule.abstractRule.id;
                   double gapScore = DTUTable.getTargetGapScore(phraseId,
                       curIdx, binId);
                   if (featureForEachBin) {
@@ -252,7 +252,7 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
   }
 
   private static int getGapCount(Featurizable<IString, String> f) {
-    Rule<IString> opt = f.rule.abstractOption;
+    Rule<IString> opt = f.rule.abstractRule;
     int sz = 0;
     for (IString el : f.targetPhrase)
       if (el.equals(DTUTable.GAP_STR))

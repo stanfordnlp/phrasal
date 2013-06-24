@@ -93,14 +93,14 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
           .phraseListFeaturize(f);
       double score = scorer.getIncrementalScore(phraseFeatures);
       int terminalPos = option.sourcePosition
-          + option.abstractOption.source.size() - 1;
+          + option.abstractRule.source.size() - 1;
       if (score > viterbiSpanScores.getScore(option.sourcePosition, terminalPos)) {
         viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
       }
       if (DEBUG) {
         System.err.printf("\t%d:%d %s->%s score: %.3f\n", option.sourcePosition,
-            terminalPos, option.abstractOption.source,
-            option.abstractOption.target, score);
+            terminalPos, option.abstractRule.source,
+            option.abstractRule.target, score);
         System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
       }
     }
