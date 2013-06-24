@@ -136,7 +136,7 @@ public class RichTranslation<TK, FV> extends
       int tgtPosition = featurizable.targetPosition;
       int[][] s2t = featurizable.option.abstractOption.alignment.s2t();
       if (s2t != null) {
-        assert s2t.length == featurizable.sourcePhrase.size();
+        assert s2t.length == featurizable.sourcePhrase.size() : String.format("%d / %d", s2t.length, featurizable.sourcePhrase.size());
         for (int i = 0; i < s2t.length; ++i) {
           StringBuilder sb = new StringBuilder();
           sb.append(srcPosition+i).append("-");
