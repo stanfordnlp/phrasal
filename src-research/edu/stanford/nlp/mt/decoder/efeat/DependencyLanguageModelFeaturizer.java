@@ -20,7 +20,7 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -415,7 +415,7 @@ public class DependencyLanguageModelFeaturizer extends
     // Phrase alignment:
     PhraseAlignment align = null;
     if (bilingual) {
-      align = f.hyp.translationOpt.abstractOption.alignment;
+      align = f.hyp.rule.abstractOption.alignment;
       if (align != null)
         assert (sz == align.size() || align.size() == 0);
     }
@@ -653,7 +653,7 @@ public class DependencyLanguageModelFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

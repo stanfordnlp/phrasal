@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
@@ -108,21 +108,21 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int windowSize = 100;
     int maxPrefixCompletion = 0;
 
-    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(source, targets, sourceInputId, scorer);
-    List<ConcreteTranslationOption<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
+    List<ConcreteRule<IString,FV>> options = phraseGenerator.translationOptions(source, targets, sourceInputId, scorer);
+    List<ConcreteRule<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
     String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
 
     if (DEBUG) {
       System.err.println("filtered options (for prefix)");
       System.err.println("========================================");
-      for (ConcreteTranslationOption<IString,FV> cto : filteredOptions) {
+      for (ConcreteRule<IString,FV> cto : filteredOptions) {
         System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
       }
 
       System.err.println("unfiltered options (for suffix)");
       System.err.println("========================================");
-      for (ConcreteTranslationOption<IString,FV> cto : options) {
+      for (ConcreteRule<IString,FV> cto : options) {
         System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
       }
     }
@@ -205,24 +205,24 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
           System.out.printf("e.%d -> f.%d\n", i, sureAlignment);
         }
         CoverageSet sourceCoverage = new CoverageSet();
-        TranslationOption<IString> fakeOpt;
+        Rule<IString> fakeOpt;
         if (sureAlignment == -1) {
           fakeOpt =
-                  new TranslationOption<IString>(
+                  new Rule<IString>(
                           new float[0], new String[0],
                           new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
                           new RawSequence<IString>(new IString[]{new IString("")}), null);
         } else {
           lastF = sureAlignment;
           fakeOpt =
-                  new TranslationOption<IString>(
+                  new Rule<IString>(
                           new float[0], new String[0],
                           new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
                           new RawSequence<IString>(new IString[]{source.get(sureAlignment)}), null);
           sourceCoverage.set(sureAlignment);
         }
-        ConcreteTranslationOption<IString,FV> fakeConcreteOpt =
-                new ConcreteTranslationOption<IString,FV>(
+        ConcreteRule<IString,FV> fakeConcreteOpt =
+                new ConcreteRule<IString,FV>(
                         fakeOpt,
                         sourceCoverage,
                         featurizer, scorer,
@@ -269,9 +269,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
           // use *UNFILTERED* options for prefix hypothesis expansion predictions
-          List<ConcreteTranslationOption<IString,FV>> applicableOptions = optionGrid
+          List<ConcreteRule<IString,FV>> applicableOptions = optionGrid
                   .get(startPos, endPos);
-          for (ConcreteTranslationOption<IString,FV> option : applicableOptions) {
+          for (ConcreteRule<IString,FV> option : applicableOptions) {
             if (option.abstractOption.source.equals(option.abstractOption.target)) {
               if (DEBUG) {
                 System.err.println("ignoring option since source phrase == target phrase");
@@ -302,7 +302,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       List<String> alignments = new LinkedList<String>();
       for (Hypothesis<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
         alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.sourcePhrase,
-                hyp.featurizable.targetPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
+                hyp.featurizable.targetPhrase, Arrays.toString(hyp.rule.abstractOption.scores)));
       }
       Collections.reverse(alignments);
     /*  for (String alignment : alignments) {

@@ -314,7 +314,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
     }
 
    @Override
-   public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> chinesePhrase) {
+   public List<Rule<IString>> getTranslationOptions(Sequence<IString> chinesePhrase) {
 
       String firstWord = "";
       String rawWord = "";
@@ -324,7 +324,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       }
       rawWord = rawWord.substring(0,rawWord.length()-1);
       int size = firstWord.length();
-      List<TranslationOption<IString>> candidateTranslations = new LinkedList<TranslationOption<IString>>();
+      List<Rule<IString>> candidateTranslations = new LinkedList<Rule<IString>>();
       StringBuffer firstTrans = new StringBuffer();
       StringBuffer secondTrans = new StringBuffer();
       StringBuffer thirdTrans = new StringBuffer();
@@ -579,7 +579,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       if (!firstTrans.toString().equals("")) {
           RawSequence<IString> firstTransAsSequence =
                new RawSequence<IString>(new IString[] { new IString(firstTrans.toString()) });
-          candidateTranslations.add(new TranslationOption<IString>(
+          candidateTranslations.add(new Rule<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
                   firstTransAsSequence,
@@ -588,7 +588,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       if (!secondTrans.toString().equals("")) {
           RawSequence<IString> secondTransAsSequence =
                new RawSequence<IString>(new IString[] { new IString(secondTrans.toString()) });
-          candidateTranslations.add(new TranslationOption<IString>(
+          candidateTranslations.add(new Rule<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
                   secondTransAsSequence,
@@ -597,7 +597,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       if (!thirdTrans.toString().equals("")) {
           RawSequence<IString> thirdTransAsSequence =
                new RawSequence<IString>(new IString[] { new IString(thirdTrans.toString()) });
-          candidateTranslations.add(new TranslationOption<IString>(
+          candidateTranslations.add(new Rule<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
                   new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
                   thirdTransAsSequence,
@@ -673,12 +673,12 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
          Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
 
          try {
-             List<TranslationOption<IString>> opts = mnpg.getTranslationOptions(phrase);
+             List<Rule<IString>> opts = mnpg.getTranslationOptions(phrase);
              if (opts.isEmpty()) {
                 System.out.println("No translation available");
              } else {
                 System.out.println("Options");
-                for (TranslationOption<IString> opt : opts) {
+                for (Rule<IString> opt : opts) {
                    System.out.printf("\t%s\n", opt);
                 }
              }

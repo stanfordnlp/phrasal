@@ -8,10 +8,10 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
 
   private final int segmentIdx;
-  public final TranslationOption<TK> abstractOption;
+  public final Rule<TK> abstractOption;
 
   public DTUFeaturizable(Hypothesis<TK, FV> hypothesis,
-      TranslationOption<TK> abstractOption, int sourceInputId,
+      Rule<TK> abstractOption, int sourceInputId,
       int nbStatefulFeaturizers, RawSequence<TK> toks,
       boolean hasPendingPhrases, int segmentIdx) {
     super(hypothesis, sourceInputId, nbStatefulFeaturizers, toks,
@@ -22,7 +22,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   }
 
   public DTUFeaturizable(Sequence<TK> foreignSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId, int dtuId) {
+      ConcreteRule<TK,FV> concreteOpt, int sourceInputId, int dtuId) {
     super(foreignSequence, concreteOpt, sourceInputId,
         ((DTUOption<TK>) concreteOpt.abstractOption).dtus[dtuId]);
     this.abstractOption = null;
@@ -50,7 +50,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   }
 
   @Override
-  protected void augmentAlignments(ConcreteTranslationOption<TK,FV> concreteOpt) {
+  protected void augmentAlignments(ConcreteRule<TK,FV> concreteOpt) {
     /* effectively disable augmentAlignments */
   }
 
@@ -61,8 +61,8 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
 
   @Override
   public int getSegmentNumber() {
-    if (hyp.translationOpt.abstractOption instanceof DTUOption) {
-      return ((DTUOption<TK>) hyp.translationOpt.abstractOption).dtus.length;
+    if (hyp.rule.abstractOption instanceof DTUOption) {
+      return ((DTUOption<TK>) hyp.rule.abstractOption).dtus.length;
     }
     return 1;
   }

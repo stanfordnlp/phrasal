@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
@@ -82,7 +82,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
 
   @Override
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteTranslationOption<TK,FV> option) {
+      ConcreteRule<TK,FV> option) {
 
     Sequence<TK> nextPhrase = option.abstractOption.target;
 
@@ -146,12 +146,12 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public List<ConcreteTranslationOption<TK,FV>> filterOptions(
-      List<ConcreteTranslationOption<TK,FV>> optionList) {
-    List<ConcreteTranslationOption<TK,FV>> filteredOptions = new ArrayList<ConcreteTranslationOption<TK,FV>>(
+  public List<ConcreteRule<TK,FV>> filterOptions(
+      List<ConcreteRule<TK,FV>> optionList) {
+    List<ConcreteRule<TK,FV>> filteredOptions = new ArrayList<ConcreteRule<TK,FV>>(
         optionList.size());
 
-    for (ConcreteTranslationOption<TK,FV> option : optionList) {
+    for (ConcreteRule<TK,FV> option : optionList) {
       if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
         System.err.printf("Examining: %s %s\n",
             option.abstractOption.target, option.sourceCoverage);
@@ -175,7 +175,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       }
       System.err.println("Filtered options");
       System.err.println("----------------");
-      for (ConcreteTranslationOption<TK,FV> option : filteredOptions) {
+      for (ConcreteRule<TK,FV> option : filteredOptions) {
         System.err.printf("\t%s %s\n", option.abstractOption.target,
             option.sourceCoverage);
       }

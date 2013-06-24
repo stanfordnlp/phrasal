@@ -23,7 +23,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -160,7 +160,7 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
    */
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options, 
+      List<ConcreteRule<IString, String>> options, 
       Sequence<IString> foreign, Index<String> featureIndex) {
     final int length = foreign.size();
     final CoreMap currentSentence = sentences.get(sourceInputId);
@@ -200,7 +200,7 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
   public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
     if (posTags == null || isHead == null) return null;    
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
-    PhraseAlignment alignment = f.option.abstractOption.alignment;
+    PhraseAlignment alignment = f.rule.abstractOption.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
     boolean[] srcIsAligned = new boolean[f.sourcePhrase.size()];
     

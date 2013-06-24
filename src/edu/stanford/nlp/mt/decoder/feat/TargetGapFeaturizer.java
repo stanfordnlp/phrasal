@@ -11,9 +11,9 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.DTUOption;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
@@ -150,7 +150,7 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
                       * len));
                 if (addGapSizeProb) {
                   int binId = DTUFeatureExtractor.sizeToBin(distance);
-                  int phraseId = f.option.abstractOption.id;
+                  int phraseId = f.rule.abstractOption.id;
                   double gapScore = DTUTable.getTargetGapScore(phraseId,
                       curIdx, binId);
                   if (featureForEachBin) {
@@ -191,7 +191,7 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
     return list;
   }
 
-  private Map<TranslationOption<IString>, DTUFeaturizable<IString, String>> seenOptions = new HashMap<TranslationOption<IString>, DTUFeaturizable<IString, String>>();
+  private Map<Rule<IString>, DTUFeaturizable<IString, String>> seenOptions = new HashMap<Rule<IString>, DTUFeaturizable<IString, String>>();
 
   private void addCrossingCountFeatures(List<FeatureValue<String>> feats,
       DTUFeaturizable<IString, String> startF,
@@ -204,11 +204,11 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
     int bonbonCount = 0;
     for (int i = 0; curF != null && curF != startF; ++i, curF = curF.prior) {
       if (curF instanceof DTUFeaturizable) {
-        TranslationOption<IString> curOption = ((DTUFeaturizable<IString, String>) curF).abstractOption;
+        Rule<IString> curOption = ((DTUFeaturizable<IString, String>) curF).abstractOption;
         if (curOption != endF.abstractOption) {
           // Detect bon-bons:
-          if (CoverageSet.cross(curF.option.sourceCoverage,
-              endF.option.sourceCoverage))
+          if (CoverageSet.cross(curF.rule.sourceCoverage,
+              endF.rule.sourceCoverage))
             ++bonbonCount;
           seenOptions.put(curOption, (DTUFeaturizable<IString, String>) curF);
         }
@@ -238,13 +238,13 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
   @Override
   public Object clone() throws CloneNotSupportedException {
     TargetGapFeaturizer f = (TargetGapFeaturizer) super.clone();
-    f.seenOptions = new HashMap<TranslationOption<IString>, DTUFeaturizable<IString, String>>();
+    f.seenOptions = new HashMap<Rule<IString>, DTUFeaturizable<IString, String>>();
     return f;
   }
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
@@ -252,7 +252,7 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
   }
 
   private static int getGapCount(Featurizable<IString, String> f) {
-    TranslationOption<IString> opt = f.option.abstractOption;
+    Rule<IString> opt = f.rule.abstractOption;
     int sz = 0;
     for (IString el : f.targetPhrase)
       if (el.equals(DTUTable.GAP_STR))

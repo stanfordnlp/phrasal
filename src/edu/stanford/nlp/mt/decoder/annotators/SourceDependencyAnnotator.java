@@ -5,7 +5,7 @@ import java.util.List;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.Word;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.parser.ChineseDepParser;
 import edu.stanford.nlp.trees.GrammaticalStructure;
@@ -44,7 +44,7 @@ public class SourceDependencyAnnotator<TK,FV> implements Annotator<TK,FV> {
   }
 
   @Override
-  public Annotator<TK,FV> extend(ConcreteTranslationOption<TK,FV> option) {
+  public Annotator<TK,FV> extend(ConcreteRule<TK,FV> option) {
     SourceDependencyAnnotator<TK,FV> pa = new SourceDependencyAnnotator<TK,FV>(parser, this.gs);
     return pa;
   }

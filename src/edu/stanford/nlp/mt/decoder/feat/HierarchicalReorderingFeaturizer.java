@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -189,14 +189,14 @@ public class HierarchicalReorderingFeaturizer extends
     List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
-    boolean locallySwapping = (f.prior != null && f.hyp.translationOpt.sourceCoverage
+    boolean locallySwapping = (f.prior != null && f.hyp.rule.sourceCoverage
         .length() == f.prior.sourcePosition);
     boolean discont2 = (f.prior != null && fEnd(f) <= fStart(f.prior));
 
     float[] scores = mlrt
-        .getReorderingScores(f.hyp.translationOpt.abstractOption.id);
+        .getReorderingScores(f.hyp.rule.abstractOption.id);
     float[] priorScores = (f.prior == null ? null : mlrt
-        .getReorderingScores(f.prior.hyp.translationOpt.abstractOption.id));
+        .getReorderingScores(f.prior.hyp.rule.abstractOption.id));
 
     ReorderingTypes forwardOrientation = ReorderingTypes.discontinuousWithPrevious, backwardOrientation = ReorderingTypes.discontinuousWithNext;
 
@@ -226,8 +226,8 @@ public class HierarchicalReorderingFeaturizer extends
 
     boolean containmentOrientation = false;
     if (hasContainment && f.prior != null) {
-      CoverageSet prevCS = f.prior.hyp.translationOpt.sourceCoverage;
-      CoverageSet curCS = f.hyp.translationOpt.sourceCoverage;
+      CoverageSet prevCS = f.prior.hyp.rule.sourceCoverage;
+      CoverageSet curCS = f.hyp.rule.sourceCoverage;
       containmentOrientation = CoverageSet.cross(prevCS, curCS);
     }
 
@@ -358,14 +358,14 @@ public class HierarchicalReorderingFeaturizer extends
 
     // Add backward model score on last phrase (missing/inconsistent in Moses):
     if (f.done && finalizeFeature) {
-      int fEndPos = f.hyp.translationOpt.sourceCoverage.length();
+      int fEndPos = f.hyp.rule.sourceCoverage.length();
       int fLen = f.sourceSentence.size();
       assert (fEndPos <= fLen);
       ReorderingTypes finalBackwardOrientation = (fEndPos == fLen) ? ReorderingTypes.monotoneWithNext
           : ReorderingTypes.discontinuousWithNext;
 
       float[] finalScores = mlrt
-          .getReorderingScores(f.hyp.translationOpt.abstractOption.id);
+          .getReorderingScores(f.hyp.rule.abstractOption.id);
       // Create feature functions:
       for (int i = 0; i < mlrt.positionalMapping.length; ++i) {
         ReorderingTypes type = mlrt.positionalMapping[i];
@@ -424,8 +424,8 @@ public class HierarchicalReorderingFeaturizer extends
 
   private void buildHierarchicalBlocks(Featurizable<IString, String> f) {
 
-    CoverageSet curCS = new CoverageSet(f.option.sourceCoverage.size());
-    curCS.or(f.option.sourceCoverage);
+    CoverageSet curCS = new CoverageSet(f.rule.sourceCoverage.size());
+    curCS.or(f.rule.sourceCoverage);
     Featurizable<IString, String> curF = f;
     boolean canMerge = true;
 
@@ -584,7 +584,7 @@ public class HierarchicalReorderingFeaturizer extends
   }
 
   private static int fEnd(Featurizable<IString, String> f) {
-    return f.hyp.translationOpt.sourceCoverage.length() - 1;
+    return f.hyp.rule.sourceCoverage.length() - 1;
   }
 
   private static boolean contiguous(BitSet bs) {
@@ -597,7 +597,7 @@ public class HierarchicalReorderingFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

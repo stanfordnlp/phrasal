@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.FlatPhraseTable.IntArrayTranslationOption;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -47,8 +47,8 @@ public class MergePhraseTableEntries {
       for (IntArrayTranslationOption iOpt : iOpts) {
         RawSequence<IString> tPhrase = new RawSequence<IString>(
             iOpt.translation, IString.identityIndex());
-        List<TranslationOption<IString>> rOpts = pptr.getTranslationOptions(tPhrase);
-        for (TranslationOption<IString> rOpt : rOpts) {
+        List<Rule<IString>> rOpts = pptr.getTranslationOptions(tPhrase);
+        for (Rule<IString> rOpt : rOpts) {
           mergeCandidates.add(rOpt.target);
         }
       }
@@ -58,7 +58,7 @@ public class MergePhraseTableEntries {
           System.err.printf("\t%s\n", mergeCandidate);
         }
       }
-      List<TranslationOption<IString>> opts = ppt.getTranslationOptions(sPhrase);
+      List<Rule<IString>> opts = ppt.getTranslationOptions(sPhrase);
       Counter<String> piVector = toCounter(opts);
       List<Counter<String>> sumListCounter = toListCounters(opts);
       Set<Sequence<IString>> mergeSet = new HashSet<Sequence<IString>>();
@@ -68,7 +68,7 @@ public class MergePhraseTableEntries {
       }
       for (Sequence<IString> mergeCandidate : mergeCandidates) { 
         if (mergeCandidate.equals(sPhrase)) continue;
-        List<TranslationOption<IString>> candidateOpts = ppt.getTranslationOptions(mergeCandidate);
+        List<Rule<IString>> candidateOpts = ppt.getTranslationOptions(mergeCandidate);
         Counter<String> mcVector = toCounter(candidateOpts);
         double cosine = Counters.cosine(piVector, mcVector); 
         
@@ -112,12 +112,12 @@ public class MergePhraseTableEntries {
     }
   }
   
-  static public List<Counter<String>> toListCounters(List<TranslationOption<IString>> opts) {
+  static public List<Counter<String>> toListCounters(List<Rule<IString>> opts) {
     List<Counter<String>> listCounters = new ArrayList<Counter<String>>(opts.get(0).scores.length);
     for (int i = 0; i < opts.get(0).scores.length; i++) {
       listCounters.add(new ClassicCounter<String>());
     }
-    for (TranslationOption<IString> opt : opts) {
+    for (Rule<IString> opt : opts) {
       for (int i = 0; i < opt.scores.length; i++) {
         listCounters.get(i).setCount(opt.target.toString(), 
             (Math.abs(Math.exp(opt.scores[i]) - 2.718) < 0.01 ? -1 : Math.exp(opt.scores[i])));
@@ -125,9 +125,9 @@ public class MergePhraseTableEntries {
     }
     return listCounters;
   }
-  static public Counter<String> toCounter(List<TranslationOption<IString>> opts) {
+  static public Counter<String> toCounter(List<Rule<IString>> opts) {
      ClassicCounter<String> counter = new ClassicCounter<String>();
-     for (TranslationOption<IString> opt : opts) {
+     for (Rule<IString> opt : opts) {
         counter.setCount(opt.target.toString(), Math.exp(opt.scores[0])); 
      }
      return counter;

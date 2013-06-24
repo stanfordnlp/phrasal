@@ -59,15 +59,15 @@ public class MSDRecombinationFilter implements
   }
 
   private static int lastOptionLeftEdge(Hypothesis<IString, String> hyp) {
-    if (hyp.translationOpt == null)
+    if (hyp.rule == null)
       return -1;
-    return hyp.translationOpt.sourcePosition - 1;
+    return hyp.rule.sourcePosition - 1;
   }
 
   private static int lastOptionRightEdge(Hypothesis<IString, String> hyp) {
-    if (hyp.translationOpt == null)
+    if (hyp.rule == null)
       return 0;
-    return hyp.translationOpt.sourceCoverage.length();
+    return hyp.rule.sourceCoverage.length();
   }
 
   @Override

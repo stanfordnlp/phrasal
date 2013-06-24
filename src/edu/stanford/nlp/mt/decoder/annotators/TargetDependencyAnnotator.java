@@ -5,7 +5,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.parser.DepDAGParser;
@@ -64,7 +64,7 @@ public class TargetDependencyAnnotator<TK,FV> implements Annotator<TK,FV> {
 
 
   @Override
-  public Annotator<TK,FV> extend(ConcreteTranslationOption<TK,FV> option) {
+  public Annotator<TK,FV> extend(ConcreteRule<TK,FV> option) {
     //System.out.println("Extend Called!");
     int localIndex = index;
     Structure localStruct = struct.clone();

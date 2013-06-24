@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.h;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.Hypothesis;
@@ -40,7 +40,7 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> sequence,
-      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
     return 0;
   }
 }

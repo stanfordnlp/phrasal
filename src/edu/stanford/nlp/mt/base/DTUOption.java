@@ -8,7 +8,7 @@ import java.util.*;
  * 
  * @param <T>
  */
-public class DTUOption<T> extends TranslationOption<T> {
+public class DTUOption<T> extends Rule<T> {
 
   public final RawSequence<T>[] dtus;
 

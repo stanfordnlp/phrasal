@@ -71,10 +71,10 @@ public class DynamicPhraseTable<FV> extends
       "lex(e|f)", "lex(f|e)" };
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> getTranslationOptions(
       Sequence<IString> sequence) {
     try {
-      List<TranslationOption<IString>> opts = new LinkedList<TranslationOption<IString>>();
+      List<Rule<IString>> opts = new LinkedList<Rule<IString>>();
 
       RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 
@@ -96,7 +96,7 @@ public class DynamicPhraseTable<FV> extends
         RawSequence<IString> transSeq = new RawSequence<IString>(
             IStrings.toIStringArray(trans.split("\\s+")));
         String mappingKey = sequence + "=:=>" + trans;
-        opts.add(new TranslationOption<IString>(new float[] { pcEgF, pcFgE,
+        opts.add(new Rule<IString>(new float[] { pcEgF, pcFgE,
             pLexEgF, pLexFgE }, labs, transSeq, rawSequence, null,
             currentSequence.contains(mappingKey)));
       }

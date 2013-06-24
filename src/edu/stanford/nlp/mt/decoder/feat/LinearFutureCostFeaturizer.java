@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -70,7 +70,7 @@ public class LinearFutureCostFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
@@ -85,7 +85,7 @@ public class LinearFutureCostFeaturizer extends
   }
 
   static int futureCost(Featurizable<IString, String> f) {
-    int nextWordIndex = f.hyp.translationOpt.sourceCoverage.length();
+    int nextWordIndex = f.hyp.rule.sourceCoverage.length();
     int firstGapIndex = f.hyp.sourceCoverage.nextClearBit(0);
     if (firstGapIndex > nextWordIndex)
       firstGapIndex = nextWordIndex;
@@ -113,7 +113,7 @@ public class LinearFutureCostFeaturizer extends
 
   private static int getEOSDistortion(Featurizable<IString, String> f) {
     if (f.done) {
-      int endGap = f.sourceSentence.size() - f.option.sourceCoverage.length();
+      int endGap = f.sourceSentence.size() - f.rule.sourceCoverage.length();
       assert (endGap >= 0);
       return endGap;
     }

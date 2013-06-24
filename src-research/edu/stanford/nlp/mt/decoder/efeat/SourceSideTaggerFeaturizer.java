@@ -8,7 +8,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -56,7 +56,7 @@ public class SourceSideTaggerFeaturizer implements CombinationFeaturizer<IString
    */
   @Override
   public void initialize(int sourceInputId,
-                         List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+                         List<ConcreteRule<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
     List<Word> sentence = Generics.newArrayList();
     for (IString word : foreign) {
       sentence.add(new Word(word.toString()));

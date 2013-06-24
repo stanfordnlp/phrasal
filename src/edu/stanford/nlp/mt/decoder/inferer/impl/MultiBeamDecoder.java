@@ -35,7 +35,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
@@ -177,7 +177,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     if (DEBUG)
       System.err.println("Generating Translation Options");
 
-    List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
+    List<ConcreteRule<TK,FV>> options = phraseGenerator
         .translationOptions(source, targets, sourceInputId, scorer);
 
     System.err.printf("Translation options: %d\n", options.size());
@@ -186,7 +186,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
-        for (ConcreteTranslationOption<TK,FV> option : options)
+        for (ConcreteRule<TK,FV> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
               option.abstractOption.source, option.abstractOption.target,
               option.isolationScore, option.sourceCoverage);
@@ -205,7 +205,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source);
 
     // insert initial hypothesis
-    List<List<ConcreteTranslationOption<TK,FV>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK,FV>>>();
+    List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
     allOptions.add(options);
     Hypothesis<TK, FV> nullHyp = new Hypothesis<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
@@ -333,11 +333,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
       for (Hypothesis<TK, FV> hyp : trace) {
         System.err.printf("%d:\n", hyp.id);
-        if (hyp.translationOpt != null) {
+        if (hyp.rule != null) {
           System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-              hyp.translationOpt.abstractOption.source,
+              hyp.rule.abstractOption.source,
               hyp.featurizable.sourcePosition,
-              hyp.translationOpt.abstractOption.target,
+              hyp.rule.abstractOption.target,
               hyp.featurizable.targetPosition);
         }
         System.err.printf("\tCoverage: %s\n", hyp.sourceCoverage);
@@ -438,12 +438,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           // System.err.printf("okay\n");
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
-          List<ConcreteTranslationOption<TK,FV>> applicableOptions = optionGrid
+          List<ConcreteRule<TK,FV>> applicableOptions = optionGrid
               .get(startPos, endPos);
           if (applicableOptions == null)
             continue;
 
-          for (ConcreteTranslationOption<TK,FV> option : applicableOptions) {
+          for (ConcreteRule<TK,FV> option : applicableOptions) {
             // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
             // // TODO: put back
 
@@ -476,11 +476,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               }
               System.err.printf("\tbase score: %.3f\n", hyp.score);
               System.err.printf("\tcovering: %s\n",
-                  newHyp.translationOpt.sourceCoverage);
+                  newHyp.rule.sourceCoverage);
               System.err.printf("\tforeign: %s\n",
-                  newHyp.translationOpt.abstractOption.source);
+                  newHyp.rule.abstractOption.source);
               System.err.printf("\ttranslated as: %s\n",
-                  newHyp.translationOpt.abstractOption.target);
+                  newHyp.rule.abstractOption.target);
               System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n",
                   newHyp.score, newHyp.h, newHyp.score());
 

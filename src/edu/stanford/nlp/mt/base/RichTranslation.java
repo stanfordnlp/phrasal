@@ -205,8 +205,8 @@ public class RichTranslation<TK, FV> extends
          sbuf.append(' ');
          double parentScore = (f.prior == null ? 0 : f.prior.hyp.score);
          sbuf.append("|").append(f.hyp.score - parentScore).append(" ");
-         sbuf.append(f.hyp.translationOpt.sourceCoverage).append(" ");
-         sbuf.append(f.hyp.translationOpt.abstractOption.target.toString());
+         sbuf.append(f.hyp.rule.sourceCoverage).append(" ");
+         sbuf.append(f.hyp.rule.abstractOption.target.toString());
        }
      }
     

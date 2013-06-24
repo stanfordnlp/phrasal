@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.ARPALanguageModel;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
@@ -56,7 +56,7 @@ public class CrossPhraseBoundryFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   private Sequence<IString> lSequence(Sequence<IString> phrase) {

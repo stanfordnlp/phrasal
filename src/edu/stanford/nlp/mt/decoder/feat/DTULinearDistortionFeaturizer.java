@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.util.Index;
 
@@ -74,8 +74,8 @@ public class DTULinearDistortionFeaturizer extends
     // /////////////////////////////////////////
 
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
-    int span = f.option.sourceCoverage.length()
-        - f.option.sourceCoverage.nextSetBit(0);
+    int span = f.rule.sourceCoverage.length()
+        - f.rule.sourceCoverage.nextSetBit(0);
     int totalSz = 0;
     for (IString fw : f.sourcePhrase)
       if (fw.id != DTUTable.GAP_STR.id)
@@ -122,7 +122,7 @@ public class DTULinearDistortionFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

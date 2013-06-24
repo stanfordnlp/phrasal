@@ -242,11 +242,11 @@ public class Phrasal {
         AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = Boolean.parseBoolean(config.get(
             DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
-      ConcreteTranslationOption.setLinearDistortionType(config.get(
+      ConcreteRule.setLinearDistortionType(config.get(
           LINEAR_DISTORTION_TYPE).get(0));
     else if (withGaps)
-      ConcreteTranslationOption
-          .setLinearDistortionType(ConcreteTranslationOption.LinearDistortionType.last_contiguous_segment
+      ConcreteRule
+          .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
 
     if (withGaps)

@@ -77,7 +77,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected List<String> collectAlignments(Hypothesis<TK, FV> hyp) {
     LinkedList<String> alignments = new LinkedList<String>();
     for (; hyp != null; hyp = hyp.preceedingHyp) {
-      ConcreteTranslationOption<TK,FV> opt = hyp.translationOpt;
+      ConcreteRule<TK,FV> opt = hyp.rule;
       if (opt == null)
         continue;
       int teIdx = hyp.length - 1;

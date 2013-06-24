@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
 import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.inferer.InfererBuilderFactory;
@@ -176,12 +176,12 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     return NAME;
   }
 
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> getTranslationOptions(
       Sequence<IString> sequence) {
     if (sequence.size() != 1) {
       throw new RuntimeException("Subsequence length != 1");
     }
-    List<TranslationOption<IString>> list = new LinkedList<TranslationOption<IString>>();
+    List<Rule<IString>> list = new LinkedList<Rule<IString>>();
     String token = sequence.get(0).toString().toLowerCase();
     List<String> casings = caseMapGet(token);
     if (casings == null) {
@@ -193,7 +193,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     for (String casing : casings) {
       IString[] trgArr = IStrings.toIStringArray(new String[] { casing });
       RawSequence<IString> trg = new RawSequence<IString>(trgArr);
-      list.add(new TranslationOption<IString>(new float[0], new String[0], trg,
+      list.add(new Rule<IString>(new float[0], new String[0], trg,
           rawSource, PhraseAlignment.getPhraseAlignment("I-I")));
     }
     return list;

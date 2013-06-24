@@ -88,21 +88,21 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       boolean withDTUs = false;
       ++hypCount;
       Hypothesis<TK, FV> hyp = null;
-      Set<TranslationOption<TK>> seenOptions = new HashSet<TranslationOption<TK>>();
+      Set<Rule<TK>> seenOptions = new HashSet<Rule<TK>>();
 
       for (Hypothesis<TK, FV> nextHyp : hypList) {
         if (hyp == null) {
           hyp = nextHyp;
           continue;
         }
-        if (nextHyp.translationOpt.abstractOption instanceof DTUOption)
+        if (nextHyp.rule.abstractOption instanceof DTUOption)
           withDTUs = true;
         if (withDTUs) {
           hyp = new DTUHypothesis<TK, FV>(sourceInputId,
-              nextHyp.translationOpt, hyp.length, hyp, nextHyp, featurizer,
+              nextHyp.rule, hyp.length, hyp, nextHyp, featurizer,
               scorer, heuristic, seenOptions);
         } else {
-          hyp = new Hypothesis<TK, FV>(sourceInputId, nextHyp.translationOpt,
+          hyp = new Hypothesis<TK, FV>(sourceInputId, nextHyp.rule,
               hyp.length, hyp, featurizer, scorer, heuristic);
         }
       }

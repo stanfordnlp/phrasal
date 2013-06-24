@@ -61,8 +61,8 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   }
 
   @Override
-  public List<TranslationOption<TK>> getTranslationOptions(Sequence<TK> sequence) {
-    List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
+  public List<Rule<TK>> getTranslationOptions(Sequence<TK> sequence) {
+    List<Rule<TK>> list = new LinkedList<Rule<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter.accepts(raw)) {
       String word = raw.toString();
@@ -71,7 +71,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
       RawSequence<IString> trans = new RawSequence<IString>(IStrings.toIStringArray(transliteration.split("\\s+")));
       RawSequence<TK> trans2 = (RawSequence<TK>) trans;
 
-      list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames,
+      list.add(new Rule<TK>(SCORE_VALUES, scoreNames,
               trans2, raw, DEFAULT_ALIGNMENT));
     }
     return list;
@@ -135,12 +135,12 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
       Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
 
       try {
-        List<TranslationOption<IString>> opts = pnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = pnpg.getTranslationOptions(phrase);
         if (opts.isEmpty()) {
           writer.println("No translation available for " + line);
         } else {
           writer.println("Options");
-          for (TranslationOption<IString> opt : opts) {
+          for (Rule<IString> opt : opts) {
             writer.printf("\t%s%n", opt);
           }
         }

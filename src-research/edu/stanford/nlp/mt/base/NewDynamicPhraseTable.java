@@ -148,7 +148,7 @@ public class NewDynamicPhraseTable extends
       Sequence<IString> phrase = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       System.out.printf("Foreign Phrase: %s\n", phrase);
-      for (TranslationOption<IString> opt : ndpt.getTranslationOptions(phrase)) {
+      for (Rule<IString> opt : ndpt.getTranslationOptions(phrase)) {
         System.out.printf("--->%s Scores: %s\n", opt.target,
             Arrays.toString(opt.scores));
       }
@@ -161,10 +161,10 @@ public class NewDynamicPhraseTable extends
   }
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> getTranslationOptions(
       Sequence<IString> sequence) {
     // System.err.printf("===Looking up: %s\n", sequence);
-    List<TranslationOption<IString>> opts = new LinkedList<TranslationOption<IString>>();
+    List<Rule<IString>> opts = new LinkedList<Rule<IString>>();
 
     int idx = Collections.binarySearch(indexwrapper, sequence);
     if (idx < 0) {
@@ -285,22 +285,22 @@ public class NewDynamicPhraseTable extends
         float pLexF2E = (float) model1F2E.score(rawSequence, transSeq);
         float pLexE2F = (float) model1E2F.score(transSeq, rawSequence);
         if (currentSequence == null) {
-          opts.add(new TranslationOption<IString>(new float[] { (float) 1.0,
+          opts.add(new Rule<IString>(new float[] { (float) 1.0,
               PcEgF, pLexF2E, pLexE2F }, new String[] { "PhrPen", "PcEgF",
               "pLexF2E", "pLexE2F" }, transSeq, rawSequence, null, false));
         } else if (currentSequence.contains(mappingKey)) {
-          opts.add(new TranslationOption<IString>(new float[] { (float) 1.0,
+          opts.add(new Rule<IString>(new float[] { (float) 1.0,
               PcEgF, pLexF2E, pLexE2F }, new String[] { "PhrPen", "PcEgF",
               "pLexF2E", "pLexE2F" }, transSeq, rawSequence, null, true));
         }
         // System.err.printf("%s=>%s\n", rawSequence, transSeq);
       } else {
         if (currentSequence == null) {
-          opts.add(new TranslationOption<IString>(new float[] { (float) 1.0,
+          opts.add(new Rule<IString>(new float[] { (float) 1.0,
               PcEgF }, new String[] { "PhrPen", "PcEgF" }, transSeq,
               rawSequence, null, false));
         } else if (currentSequence.contains(mappingKey)) {
-          opts.add(new TranslationOption<IString>(new float[] { (float) 1.0,
+          opts.add(new Rule<IString>(new float[] { (float) 1.0,
               PcEgF }, new String[] { "PhrPen", "PcEgF" }, transSeq,
               rawSequence, null, true));
         }

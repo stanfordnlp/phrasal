@@ -4,7 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -38,7 +38,7 @@ public interface CombinationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
    * @param featureIndex 
    */
   void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex);
+      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex);
 
   /**
    * This call is made *after* decoding an input ends.

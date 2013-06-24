@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -268,7 +268,7 @@ public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
 
   public void initialize(
       int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> concreteTranslationOptions, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> concreteTranslationOptions, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

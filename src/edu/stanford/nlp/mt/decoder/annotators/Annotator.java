@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.annotators;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
@@ -12,5 +12,5 @@ import edu.stanford.nlp.mt.base.Sequence;
  */
 public interface Annotator<TK,FV> {
   public Annotator<TK,FV> initialize(Sequence<TK> source);
-  public Annotator<TK,FV> extend(ConcreteTranslationOption<TK,FV> option);
+  public Annotator<TK,FV> extend(ConcreteRule<TK,FV> option);
 }

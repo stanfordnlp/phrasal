@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
@@ -17,14 +17,14 @@ public interface ConstrainedOutputSpace<TK, FV> {
   /**
 	 * 
 	 */
-  List<ConcreteTranslationOption<TK,FV>> filterOptions(
-      List<ConcreteTranslationOption<TK,FV>> optionList);
+  List<ConcreteRule<TK,FV>> filterOptions(
+      List<ConcreteRule<TK,FV>> optionList);
 
   /**
 	 * 
 	 */
   boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteTranslationOption<TK,FV> option);
+      ConcreteRule<TK,FV> option);
 
   /**
 	 * 

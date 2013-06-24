@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.h;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -70,7 +70,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
 
     int foreignSequenceSize = foreignSequence.size();
 
@@ -86,7 +86,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     // initialize viterbiSpanScores
     assert (options.size() == 1);
-    for (ConcreteTranslationOption<TK,FV> option : options.get(0)) {
+    for (ConcreteRule<TK,FV> option : options.get(0)) {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
           option, translationId);
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer

@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
@@ -15,7 +15,7 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
   /**
 	 * 
 	 */
-  public List<ConcreteTranslationOption<TK,FV>> translationOptions(
+  public List<ConcreteRule<TK,FV>> translationOptions(
       Sequence<TK> sequence, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer);
 
   public Object clone() throws CloneNotSupportedException;

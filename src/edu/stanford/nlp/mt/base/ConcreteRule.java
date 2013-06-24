@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
+import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -13,10 +13,10 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @param <TK>
  */
-public class ConcreteTranslationOption<TK,FV> implements
-    Comparable<ConcreteTranslationOption<TK,FV>> {
+public class ConcreteRule<TK,FV> implements
+    Comparable<ConcreteRule<TK,FV>> {
 
-  public final TranslationOption<TK> abstractOption;
+  public final Rule<TK> abstractOption;
   public final CoverageSet sourceCoverage;
   public final String phraseTableName;
   public final int sourcePosition;
@@ -38,7 +38,7 @@ public class ConcreteTranslationOption<TK,FV> implements
           .println("warning: standard linear distortion with DTU phrases.");
   }
 
-  public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
+  public ConcreteRule(Rule<TK> abstractOption,
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
@@ -56,7 +56,7 @@ public class ConcreteTranslationOption<TK,FV> implements
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
-  public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
+  public ConcreteRule(Rule<TK> abstractOption,
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
@@ -115,11 +115,11 @@ public class ConcreteTranslationOption<TK,FV> implements
     return sbuf.toString();
   }
 
-  public int linearDistortion(ConcreteTranslationOption<TK,FV> opt) {
+  public int linearDistortion(ConcreteRule<TK,FV> opt) {
     return linearDistortion(opt, linearDistortionType);
   }
 
-  public int linearDistortion(ConcreteTranslationOption<TK,FV> opt,
+  public int linearDistortion(ConcreteRule<TK,FV> opt,
       LinearDistortionType type) {
     final int nextSourceToken;
     if (type != LinearDistortionType.standard)
@@ -167,14 +167,14 @@ public class ConcreteTranslationOption<TK,FV> implements
     return Math.abs(nextSourceToken - opt.sourcePosition);
   }
 
-  public int signedLinearDistortion(ConcreteTranslationOption<TK,FV> opt) {
+  public int signedLinearDistortion(ConcreteRule<TK,FV> opt) {
     assert (linearDistortionType == LinearDistortionType.standard);
     int nextSourceToken = sourcePosition + abstractOption.source.size();
     return nextSourceToken - opt.sourcePosition;
   }
 
   @Override
-  public int compareTo(ConcreteTranslationOption<TK,FV> o) {
+  public int compareTo(ConcreteRule<TK,FV> o) {
     return (int) Math.signum(o.isolationScore - this.isolationScore);
   }
 

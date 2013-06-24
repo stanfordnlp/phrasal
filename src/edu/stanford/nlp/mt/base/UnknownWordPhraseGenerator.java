@@ -79,17 +79,17 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   @Override
-  public List<TranslationOption<TK>> getTranslationOptions(Sequence<TK> sequence) {
-    List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
+  public List<Rule<TK>> getTranslationOptions(Sequence<TK> sequence) {
+    List<Rule<TK>> list = new LinkedList<Rule<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {
       String word = raw.toString();
 
       if (dropUnknownWords && !isNumeric(word) && !isASCII(word)) {
-          list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, empty, raw,
+          list.add(new Rule<TK>(SCORE_VALUES, scoreNames, empty, raw,
           DEFAULT_ALIGNMENT));
       } else {
-    	  list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, raw, raw,
+    	  list.add(new Rule<TK>(SCORE_VALUES, scoreNames, raw, raw,
               DEFAULT_ALIGNMENT));
       }
     }

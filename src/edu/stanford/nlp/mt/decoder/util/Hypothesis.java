@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
@@ -45,7 +45,7 @@ State<Hypothesis<TK, FV>> {
   // non-primitives that already exist at the time of
   // hypothesis creation and just receive an additional
   // reference here
-  public final ConcreteTranslationOption<TK,FV> translationOpt;
+  public final ConcreteRule<TK,FV> rule;
   public final Sequence<TK> sourceSequence;
 
   // right now, translations are built up strictly in sequence.
@@ -91,13 +91,13 @@ State<Hypothesis<TK, FV>> {
       SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
       List<Annotator<TK,FV>> annotators,
-      List<List<ConcreteTranslationOption<TK,FV>>> options) {
+      List<List<ConcreteRule<TK,FV>>> options) {
     this.id = nextId.incrementAndGet();
     score = 0;
     h = heuristic.getInitialHeuristic(sourceSequence, options, scorer, sourceInputId);
     insertionPosition = 0;
     length = 0;
-    translationOpt = null;
+    rule = null;
     this.sourceSequence = sourceSequence;
     preceedingHyp = null;
     featurizable = null;
@@ -116,12 +116,12 @@ State<Hypothesis<TK, FV>> {
    * 
    */
   public Hypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
+      ConcreteRule<TK,FV> translationOpt, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
-    this.translationOpt = translationOpt;
+    this.rule = translationOpt;
     this.preceedingHyp = baseHyp;
     this.sourceCoverage = baseHyp.sourceCoverage.clone();
     this.sourceCoverage.or(translationOpt.sourceCoverage);
@@ -132,8 +132,8 @@ State<Hypothesis<TK, FV>> {
     sourceSequence = baseHyp.sourceSequence;
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
-        : baseHyp.translationOpt.linearDistortion(translationOpt));
+    linearDistortion = (baseHyp.rule == null ? translationOpt.sourcePosition
+        : baseHyp.rule.linearDistortion(translationOpt));
     featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumberStatefulFeaturizers());
 
@@ -167,14 +167,14 @@ State<Hypothesis<TK, FV>> {
 
 
   protected Hypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt,
-      TranslationOption<TK> abstractOption, int insertionPosition,
+      ConcreteRule<TK,FV> translationOpt,
+      Rule<TK> abstractOption, int insertionPosition,
       Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       RawSequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
-    this.translationOpt = translationOpt;
+    this.rule = translationOpt;
     this.preceedingHyp = baseHyp;
     this.sourceCoverage = baseHyp.sourceCoverage.clone();
     this.sourceCoverage.or(translationOpt.sourceCoverage);
@@ -183,8 +183,8 @@ State<Hypothesis<TK, FV>> {
     sourceSequence = baseHyp.sourceSequence;
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
-        : baseHyp.translationOpt.linearDistortion(translationOpt));
+    linearDistortion = (baseHyp.rule == null ? translationOpt.sourcePosition
+        : baseHyp.rule.linearDistortion(translationOpt));
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
         sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
@@ -219,10 +219,10 @@ State<Hypothesis<TK, FV>> {
       Hypothesis<TK, FV> hyp) {
     if (hyp.preceedingHyp != null)
       injectSegmentationBuffer(sbuf, hyp.preceedingHyp);
-    sbuf.append("\t").append(hyp.translationOpt.abstractOption.target)
+    sbuf.append("\t").append(hyp.rule.abstractOption.target)
     .append(" ");
-    sbuf.append(hyp.translationOpt.sourceCoverage).append(" ");
-    sbuf.append(Arrays.toString(hyp.translationOpt.abstractOption.scores));
+    sbuf.append(hyp.rule.sourceCoverage).append(" ");
+    sbuf.append(Arrays.toString(hyp.rule.abstractOption.scores));
     sbuf.append("\n");
   }
 

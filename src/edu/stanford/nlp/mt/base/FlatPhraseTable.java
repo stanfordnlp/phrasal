@@ -328,7 +328,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> getTranslationOptions(
       Sequence<IString> foreignSequence) {
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence,
@@ -337,7 +337,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     if (fIndex == -1)
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
-    List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(
+    List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     // int intTransOptsSize = intTransOpts.size();
     // for (int i = 0; i < intTransOptsSize; i++) {
@@ -346,7 +346,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       // System.out.printf("%d:%f\n", i, intTransOpt.scores[0]);
       RawSequence<IString> translation = new RawSequence<IString>(
           intTransOpt.translation, IString.identityIndex());
-      transOpts.add(new TranslationOption<IString>(intTransOpt.id,
+      transOpts.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, translation, rawForeign,
           intTransOpt.alignment));
     }
@@ -373,7 +373,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",
         foreignIndex.size(), totalSecs, totalMemory, freeMemory);
 
-    List<TranslationOption<IString>> translationOptions = ppt
+    List<Rule<IString>> translationOptions = ppt
         .getTranslationOptions(new SimpleSequence<IString>(IStrings
             .toIStringArray(phrase.split("\\s+"))));
 
@@ -385,7 +385,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
 
     System.out.printf("Options:\n");
-    for (TranslationOption<IString> opt : translationOptions) {
+    for (Rule<IString> opt : translationOptions) {
       System.out.printf("\t%s : %s\n", opt.target,
           Arrays.toString(opt.scores));
     }

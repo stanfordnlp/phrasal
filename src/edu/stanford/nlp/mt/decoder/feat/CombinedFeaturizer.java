@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -184,7 +184,7 @@ public class CombinedFeaturizer<TK, FV> implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof CombinationFeaturizer) {
         ((CombinationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);

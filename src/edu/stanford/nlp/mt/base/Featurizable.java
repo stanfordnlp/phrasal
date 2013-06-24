@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.Phrasal;
 
 /**
  * Packages information about a newly constructed hypothesis for use by the
- * incremental featurizers.
+ * CombinationFeaturizer.
  * 
  * @author danielcer
  * 
@@ -45,8 +45,14 @@ public class Featurizable<TK, FV> {
    */
   public final String[] phraseScoreNames;
 
-  public final ConcreteTranslationOption<TK,FV> option;
+  /**
+   * The translation rule that is being applied.
+   */
+  public final ConcreteRule<TK,FV> rule;
 
+  /**
+   * Insertion point in targetPrefix.
+   */
   public final int targetPosition;
 
   /**
@@ -155,9 +161,9 @@ public class Featurizable<TK, FV> {
       int nbStatefulFeaturizers) {
     this.sourceInputId = sourceInputId;
     done = hypothesis.isDone();
-    option = hypothesis.translationOpt;
-    TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
-    ConcreteTranslationOption<TK,FV> concreteOpt = hypothesis.translationOpt;
+    rule = hypothesis.rule;
+    Rule<TK> transOpt = hypothesis.rule.abstractOption;
+    ConcreteRule<TK,FV> concreteOpt = hypothesis.rule;
     sourcePhrase = transOpt.source;
     targetPhrase = transOpt.target;
     phraseTableName = concreteOpt.phraseTableName;
@@ -205,9 +211,9 @@ public class Featurizable<TK, FV> {
       Object[] tokens, boolean hasPendingPhrases, boolean targetOnly) {
     this.sourceInputId = sourceInputId;
     done = hypothesis.isDone() && !hasPendingPhrases;
-    option = hypothesis.translationOpt;
-    TranslationOption<TK> transOpt = hypothesis.translationOpt.abstractOption;
-    ConcreteTranslationOption<TK,FV> concreteOpt = hypothesis.translationOpt;
+    rule = hypothesis.rule;
+    Rule<TK> transOpt = hypothesis.rule.abstractOption;
+    ConcreteRule<TK,FV> concreteOpt = hypothesis.rule;
     sourcePhrase = transOpt.source;
     this.targetPhrase = targetPhrase;
     phraseTableName = concreteOpt.phraseTableName;
@@ -290,11 +296,11 @@ public class Featurizable<TK, FV> {
 	 * 
 	 */
   public Featurizable(Sequence<TK> sourceSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId) {
+      ConcreteRule<TK,FV> concreteOpt, int sourceInputId) {
     this.sourceInputId = sourceInputId;
-    option = concreteOpt;
+    rule = concreteOpt;
     done = false;
-    TranslationOption<TK> transOpt = concreteOpt.abstractOption;
+    Rule<TK> transOpt = concreteOpt.abstractOption;
     sourcePhrase = transOpt.source;
     targetPhrase = transOpt.target;
     phraseTableName = concreteOpt.phraseTableName;
@@ -318,13 +324,13 @@ public class Featurizable<TK, FV> {
   }
 
   protected Featurizable(Sequence<TK> sourceSequence,
-      ConcreteTranslationOption<TK,FV> concreteOpt, int sourceInputId,
+      ConcreteRule<TK,FV> concreteOpt, int sourceInputId,
       Sequence<TK> targetPhrase) {
     assert (concreteOpt.abstractOption.getClass().equals(DTUOption.class));
     this.sourceInputId = sourceInputId;
-    option = concreteOpt;
+    rule = concreteOpt;
     done = false;
-    TranslationOption<TK> transOpt = concreteOpt.abstractOption;
+    Rule<TK> transOpt = concreteOpt.abstractOption;
     sourcePhrase = transOpt.source;
     this.targetPhrase = targetPhrase;
     phraseTableName = concreteOpt.phraseTableName;
@@ -351,7 +357,7 @@ public class Featurizable<TK, FV> {
   /**
 	 * 
 	 */
-  protected void augmentAlignments(ConcreteTranslationOption<TK,FV> concreteOpt) {
+  protected void augmentAlignments(ConcreteRule<TK,FV> concreteOpt) {
     if (concreteOpt.abstractOption.target == null)
       return;
     int targetSz = concreteOpt.abstractOption.target.elements.length;
@@ -391,7 +397,7 @@ public class Featurizable<TK, FV> {
           pos = preceedingTokens.length);
     }
 
-    ConcreteTranslationOption<TK,FV> concreteOpt = h.translationOpt;
+    ConcreteRule<TK,FV> concreteOpt = h.rule;
     Object[] newTokens = concreteOpt.abstractOption.target.elements;
     System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
     return tokens;

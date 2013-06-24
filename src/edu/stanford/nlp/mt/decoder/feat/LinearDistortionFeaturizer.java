@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -34,7 +34,7 @@ public class LinearDistortionFeaturizer<TK> implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<TK,String>> options, Sequence<TK> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<TK,String>> options, Sequence<TK> foreign, Index<String> featureIndex) {
   }
 
   public void reset() {

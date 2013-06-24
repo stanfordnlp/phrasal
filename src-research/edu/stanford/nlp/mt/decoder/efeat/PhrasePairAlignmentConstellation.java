@@ -16,7 +16,7 @@ public class PhrasePairAlignmentConstellation implements
   @Override
   public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
     return new FeatureValue<String>(FEATURE_PREFIX
-        + f.option.abstractOption.alignment, 1.0);
+        + f.rule.abstractOption.alignment, 1.0);
   }
 
   @Override

@@ -20,10 +20,10 @@ public class LinearDistortionRecombinationFilter<TK, FV> implements
 	 * 
 	 */
   private int lastOptionForeignEdge(Hypothesis<TK, FV> hyp) {
-    if (hyp.translationOpt == null) {
+    if (hyp.rule == null) {
       return 0;
     }
-    return hyp.translationOpt.sourceCoverage.length();
+    return hyp.rule.sourceCoverage.length();
   }
 
   @Override

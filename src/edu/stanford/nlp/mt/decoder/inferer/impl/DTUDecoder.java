@@ -166,14 +166,14 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     if (DEBUG)
       System.err.println("Generating Translation Options");
 
-    List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
+    List<ConcreteRule<TK,FV>> options = phraseGenerator
         .translationOptions(source, targets, sourceInputId, scorer);
 
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:
-    List<ConcreteTranslationOption<TK,FV>> optionsWithoutGaps = new ArrayList<ConcreteTranslationOption<TK,FV>>(), optionsWithGaps = new ArrayList<ConcreteTranslationOption<TK,FV>>();
+    List<ConcreteRule<TK,FV>> optionsWithoutGaps = new ArrayList<ConcreteRule<TK,FV>>(), optionsWithGaps = new ArrayList<ConcreteRule<TK,FV>>();
 
-    for (ConcreteTranslationOption<TK,FV> opt : options) {
+    for (ConcreteRule<TK,FV> opt : options) {
       if (isContiguous(opt.sourceCoverage))
         optionsWithoutGaps.add(opt);
       else if (gapsInFutureCost)
@@ -186,7 +186,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     System.err.printf("Translation options (with gaps): %d\n",
         optionsWithGaps.size());
 
-    List<List<ConcreteTranslationOption<TK,FV>>> allOptions = new ArrayList<List<ConcreteTranslationOption<TK,FV>>>();
+    List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
     allOptions.add(optionsWithoutGaps);
     if (gapsInFutureCost)
       allOptions.add(optionsWithGaps);
@@ -195,7 +195,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
-        for (ConcreteTranslationOption<TK,FV> option : options)
+        for (ConcreteRule<TK,FV> option : options)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
               option.abstractOption.source, option.abstractOption.target,
               option.isolationScore, option.sourceCoverage);
@@ -332,9 +332,9 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       List<FeatureValue<FV>> allfeatures = new ArrayList<FeatureValue<FV>>();
       for (Hypothesis<TK, FV> hyp : trace) {
         System.err.printf("%d:\n", hyp.id);
-        TranslationOption<TK> abstractOption = (hyp.translationOpt != null) ? hyp.translationOpt.abstractOption
+        Rule<TK> abstractOption = (hyp.rule != null) ? hyp.rule.abstractOption
             : null;
-        if (hyp.translationOpt != null) {
+        if (hyp.rule != null) {
           boolean noSource = false;
           if (hyp instanceof DTUHypothesis) {
             abstractOption = ((DTUHypothesis) hyp).getAbstractOption();
@@ -346,18 +346,18 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 hyp.featurizable.targetPosition);
           } else {
             System.err.printf("\tPhrase: %s(%d) => %s(%d)",
-                hyp.translationOpt.abstractOption.source,
+                hyp.rule.abstractOption.source,
                 hyp.featurizable.sourcePosition,
                 hyp.featurizable.targetPhrase,
                 hyp.featurizable.targetPosition);
           }
         }
         System.err.printf("\tCoverage: %s\n", hyp.sourceCoverage);
-        if (hyp.translationOpt != null) {
+        if (hyp.rule != null) {
           System.err.printf("\tConcrete option:coverage: %s\n",
-              hyp.translationOpt.sourceCoverage);
+              hyp.rule.sourceCoverage);
           System.err.printf("\tConcrete option:pos: %s\n",
-              hyp.translationOpt.sourcePosition);
+              hyp.rule.sourcePosition);
         }
         if (abstractOption != null)
           System.err.printf("\tAbstract option: %s", abstractOption);
@@ -480,12 +480,12 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           for (int endPos = startPos; endPos < endPosMax; endPos++) {
 
             // Combine each hypothesis with each applicable option:
-            List<ConcreteTranslationOption<TK,FV>> applicableOptions = optionGrid
+            List<ConcreteRule<TK,FV>> applicableOptions = optionGrid
                 .get(startPos, endPos);
             if (applicableOptions == null)
               continue;
 
-            for (ConcreteTranslationOption<TK,FV> option : applicableOptions) {
+            for (ConcreteRule<TK,FV> option : applicableOptions) {
               if (hyp.sourceCoverage.intersects(option.sourceCoverage)) {
                 continue;
               }
@@ -518,11 +518,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                   }
                   System.err.printf("\tbase score: %.3f\n", hyp.score);
                   System.err.printf("\tcovering: %s\n",
-                      newHyp.translationOpt.sourceCoverage);
+                      newHyp.rule.sourceCoverage);
                   System.err.printf("\tforeign: %s\n",
-                      newHyp.translationOpt.abstractOption.source);
+                      newHyp.rule.abstractOption.source);
                   System.err.printf("\ttranslated as: %s\n",
-                      newHyp.translationOpt.abstractOption.target);
+                      newHyp.rule.abstractOption.target);
                   System.err.printf(
                       "\tscore: %.3f + future cost %.3f = %.3f\n",
                       newHyp.score, newHyp.h, newHyp.score());
@@ -603,23 +603,23 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   public class DTUOptionGrid {
-    private final List<ConcreteTranslationOption<TK,FV>>[] grid;
+    private final List<ConcreteRule<TK,FV>>[] grid;
     private final int sourceSz;
 
     /**
      *
      */
     @SuppressWarnings("unchecked")
-    public DTUOptionGrid(List<ConcreteTranslationOption<TK,FV>> options,
+    public DTUOptionGrid(List<ConcreteRule<TK,FV>> options,
         Sequence<TK> source) {
       sourceSz = source.size();
       grid = new List[sourceSz * sourceSz];
       for (int startIdx = 0; startIdx < sourceSz; startIdx++) {
         for (int endIdx = startIdx; endIdx < sourceSz; endIdx++) {
-          grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteTranslationOption<TK,FV>>();
+          grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteRule<TK,FV>>();
         }
       }
-      for (ConcreteTranslationOption<TK,FV> opt : options) {
+      for (ConcreteRule<TK,FV> opt : options) {
         int startPos = opt.sourcePosition;
         int endPos = opt.sourceCoverage.length() - 1;
         grid[getIndex(startPos, endPos)].add(opt);
@@ -629,7 +629,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     /**
      *
      */
-    public List<ConcreteTranslationOption<TK,FV>> get(int startPos, int endPos) {
+    public List<ConcreteRule<TK,FV>> get(int startPos, int endPos) {
       return grid[getIndex(startPos, endPos)];
     }
 
