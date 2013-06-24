@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -55,17 +54,17 @@ public class DiscriminativePhraseTable implements IsolatedPhraseFeaturizer<IStri
     if (doSource && doTarget) {
       String suffix = srcPhrase + ">"
           + tgtPhrase;
-      fvalues.add(new CacheableFeatureValue<String>(
+      fvalues.add(new FeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE_AND_TARGET, suffix), 
           featureValue));
 
     } else if (doSource) {
-      fvalues.add(new CacheableFeatureValue<String>(
+      fvalues.add(new FeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE, srcPhrase), 
           featureValue));
 
     } else if (doTarget) {
-      fvalues.add(new CacheableFeatureValue<String>(
+      fvalues.add(new FeatureValue<String>(
           makeFeatureString(FEATURE_NAME, TARGET, tgtPhrase), 
           featureValue));
     }

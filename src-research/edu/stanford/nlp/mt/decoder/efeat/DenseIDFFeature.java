@@ -5,7 +5,6 @@ import java.io.LineNumberReader;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -69,12 +68,12 @@ public class DenseIDFFeature implements
       // Source content words aligned to target function words
       featureList = new LinkedList<FeatureValue<String>>();
       difference *= difference;
-      featureList.add(new CacheableFeatureValue<String>(FEATURE_PREFIX + ":tgt", difference));
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ":tgt", difference));
     } else if (difference < 0.0) {
       // Source function words aligned to target content words
       featureList = new LinkedList<FeatureValue<String>>();
       difference *= difference;
-      featureList.add(new CacheableFeatureValue<String>(FEATURE_PREFIX + ":src", difference));
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ":src", difference));
     } 
     return featureList;
   }

@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -87,7 +86,7 @@ IsolatedPhraseFeaturizer<IString,String> {
           sb.append(alignedWords.get(j));
         }
         String feature = makeFeatureString(FEATURE_NAME, sb.toString());
-        features.add(new CacheableFeatureValue<String>(feature, 1.0));
+        features.add(new FeatureValue<String>(feature, 1.0));
       }
     }
     return features;

@@ -6,7 +6,6 @@ import java.util.regex.Pattern;
 
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -65,8 +64,8 @@ IsolatedPhraseFeaturizer<IString, String> {
       String word = f.targetPhrase.get(i).toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
         if (addLexicalFeatures) {
-          features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
-          features.add(new CacheableFeatureValue<String>(FEATURE_NAME, 1.0));
+          features.add(new FeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
+          features.add(new FeatureValue<String>(FEATURE_NAME, 1.0));
         }
         if (addCommaFeatures && word.equals(",")) {
           int[] srcIndices = alignment.t2s(i);
@@ -89,10 +88,10 @@ IsolatedPhraseFeaturizer<IString, String> {
     //   , --> content word
     if (addCommaFeatures) {
       if (nInsertedCommas > 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".comma.ins", nInsertedCommas));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".comma.ins", nInsertedCommas));
       }
       if (nCommaContentAlignments > 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".comma.content", nCommaContentAlignments));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".comma.content", nCommaContentAlignments));
       }
     }
 
@@ -108,9 +107,9 @@ IsolatedPhraseFeaturizer<IString, String> {
 
       int diff = nTargetSidePunctuationChars - nSourceSidePunctuationChars;
       if (diff > 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".ins", diff));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".ins", diff));
       } else if (diff < 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".del", -1 * diff));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".del", -1 * diff));
       }
     }
 

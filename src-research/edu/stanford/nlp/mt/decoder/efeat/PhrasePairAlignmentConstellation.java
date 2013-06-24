@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -16,7 +15,7 @@ public class PhrasePairAlignmentConstellation implements
 
   @Override
   public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return new CacheableFeatureValue<String>(FEATURE_PREFIX
+    return new FeatureValue<String>(FEATURE_PREFIX
         + f.option.abstractOption.alignment, 1.0);
   }
 

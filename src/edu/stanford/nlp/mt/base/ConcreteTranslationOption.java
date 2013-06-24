@@ -5,6 +5,7 @@ import java.util.*;
 import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * 
@@ -48,10 +49,9 @@ public class ConcreteTranslationOption<TK,FV> implements
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
         sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
-    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    cachedFeatureList = Generics.newLinkedList();
     for (FeatureValue<FV> feature : features) {
-      if (FeatureValues.isCacheable(feature))
-        cachedFeatureList.add(feature);
+      cachedFeatureList.add(feature);
     }
     this.isolationScore = scorer.getIncrementalScore(features);
   }
@@ -68,7 +68,7 @@ public class ConcreteTranslationOption<TK,FV> implements
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
 
-    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    cachedFeatureList = Generics.newLinkedList();
     
     // TM scores:
     double totalScore = 0.0;
@@ -77,8 +77,7 @@ public class ConcreteTranslationOption<TK,FV> implements
           sourceInputId);
       List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
       for (FeatureValue<FV> feature : features) {
-        if (FeatureValues.isCacheable(feature))
-          cachedFeatureList.add(feature);
+        cachedFeatureList.add(feature);
       }
       totalScore += scorer.getIncrementalScore(features);
       // for(FeatureValue<FV> fv : features)

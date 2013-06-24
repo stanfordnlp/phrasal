@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.util.Index;
@@ -32,7 +31,7 @@ public class UnknownWordFeaturizer<TK> implements
     // if (f.phraseScoreNames[0] != UNKNOWN_PHRASE_TAG) return new
     // FeatureValue<String>(FEATURE_NAME, 0.0);
     int size = f.targetPhrase.size();
-    return (size == 0) ? null : new CacheableFeatureValue<String>(FEATURE_NAME,
+    return (size == 0) ? null : new FeatureValue<String>(FEATURE_NAME,
         MOSES_UNKNOWN_WORD_MUL * size);
   }
 

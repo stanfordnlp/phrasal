@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -72,7 +71,7 @@ IsolatedPhraseFeaturizer<IString,String> {
         // Unaligned target word
         if (addTargetInsertions) {
           String feature = makeFeatureString(FEATURE_NAME_TGT, eWord);
-          features.add(new CacheableFeatureValue<String>(feature, featureValue));
+          features.add(new FeatureValue<String>(feature, featureValue));
         }
 
       } else {
@@ -100,7 +99,7 @@ IsolatedPhraseFeaturizer<IString,String> {
       if ( ! fIsAligned[i]) {
         if (addSourceDeletions) {
           String feature = makeFeatureString(FEATURE_NAME_SRC, fWord);
-          features.add(new CacheableFeatureValue<String>(feature, featureValue));
+          features.add(new FeatureValue<String>(feature, featureValue));
         }
       } else if (eWords.size() > 0){
         List<String> alignedWords = new ArrayList<String>(eWords.size() + 1);
@@ -114,7 +113,7 @@ IsolatedPhraseFeaturizer<IString,String> {
           sb.append(alignedWords.get(j));
         }
         String feature = makeFeatureString(FEATURE_NAME, sb.toString());
-        features.add(new CacheableFeatureValue<String>(feature, featureValue));
+        features.add(new FeatureValue<String>(feature, featureValue));
       }
     }
     return features;

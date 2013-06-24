@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.util.Index;
@@ -91,7 +90,7 @@ public class PhraseTableScoresFeaturizer<T> implements
       featureValues = new FeatureValue[1];
       String featureName = featurizable.sourcePhrase.toString("DTM:", "_",
           featurizable.targetPhrase.toString("=>", "_"));
-      featureValues[0] = new CacheableFeatureValue<String>(featureName, 1.0);
+      featureValues[0] = new FeatureValue<String>(featureName, 1.0);
     } else {
       // lookup/construct the list of feature names
       String phraseTableName = featurizable.phraseTableName;
@@ -105,7 +104,7 @@ public class PhraseTableScoresFeaturizer<T> implements
       // construct array of FeatureValue objects
       featureValues = new FeatureValue[featureNames.length];
       for (int i = 0; i < featureValues.length; i++) {
-        featureValues[i] = (i < featurizable.translationScores.length) ? new CacheableFeatureValue<String>(
+        featureValues[i] = (i < featurizable.translationScores.length) ? new FeatureValue<String>(
             featureNames[i], featurizable.translationScores[i]) : emptyFV;
       }
 

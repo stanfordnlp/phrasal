@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.util.Index;
@@ -25,8 +24,8 @@ public class WordPenaltyFeaturizer<TK> implements
   public FeatureValue<String> phraseFeaturize(Featurizable<TK, String> f) {
     // if (f.translatedPhrase == null) return null;
     if (f.targetPhrase == null)
-      return new CacheableFeatureValue<String>(FEATURE_NAME, 0.0);
-    return new CacheableFeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
+      return new FeatureValue<String>(FEATURE_NAME, 0.0);
+    return new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
         * f.targetPhrase.size());
   }
 

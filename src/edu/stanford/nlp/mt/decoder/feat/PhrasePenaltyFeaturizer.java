@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.util.Index;
@@ -30,7 +29,7 @@ public class PhrasePenaltyFeaturizer<TK> implements
 
   @Override
   public FeatureValue<String> phraseFeaturize(Featurizable<TK, String> f) {
-    return new CacheableFeatureValue<String>(FEATURE_NAME, phrasePenalty);
+    return new FeatureValue<String>(FEATURE_NAME, phrasePenalty);
   }
 
   @Override
