@@ -148,7 +148,7 @@ public class NewDynamicPhraseTable extends
       Sequence<IString> phrase = new RawSequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       System.out.printf("Foreign Phrase: %s\n", phrase);
-      for (Rule<IString> opt : ndpt.getTranslationOptions(phrase)) {
+      for (Rule<IString> opt : ndpt.query(phrase)) {
         System.out.printf("--->%s Scores: %s\n", opt.target,
             Arrays.toString(opt.scores));
       }
@@ -161,7 +161,7 @@ public class NewDynamicPhraseTable extends
   }
 
   @Override
-  public List<Rule<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> sequence) {
     // System.err.printf("===Looking up: %s\n", sequence);
     List<Rule<IString>> opts = new LinkedList<Rule<IString>>();

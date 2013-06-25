@@ -108,7 +108,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int windowSize = 100;
     int maxPrefixCompletion = 0;
 
-    List<ConcreteRule<IString,FV>> options = phraseGenerator.translationOptions(source, targets, sourceInputId, scorer);
+    List<ConcreteRule<IString,FV>> options = phraseGenerator.getRules(source, targets, sourceInputId, scorer);
     List<ConcreteRule<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
     float[] autoInsertScores = new float[options.get(0).abstractRule.scores.length];
     String[] scoreNames = options.get(0).abstractRule.phraseScoreNames;

@@ -71,7 +71,7 @@ public class DynamicPhraseTable<FV> extends
       "lex(e|f)", "lex(f|e)" };
 
   @Override
-  public List<Rule<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> sequence) {
     try {
       List<Rule<IString>> opts = new LinkedList<Rule<IString>>();

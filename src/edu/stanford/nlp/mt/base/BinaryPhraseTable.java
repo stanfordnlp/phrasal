@@ -113,7 +113,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     
     for (int[] sourceInts : diai) {
       Sequence<IString> source = new RawSequence<IString>(sourceInts, IString.identityIndex());
-      List<Rule<IString>> translationOpts = flatPhraseTable.getTranslationOptions(source);
+      List<Rule<IString>> translationOpts = flatPhraseTable.query(source);
       DatabaseEntry key = new DatabaseEntry(source.toString().getBytes());
       // Todo - add support for alignments
       ByteArrayOutputStream bostrm = new ByteArrayOutputStream();
@@ -141,7 +141,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
 
   
   @Override
-  public List<Rule<IString>> getTranslationOptions(Sequence<IString> foreign) {
+  public List<Rule<IString>> query(Sequence<IString> foreign) {
     DatabaseEntry key = new DatabaseEntry(foreign.toString().getBytes());
     DatabaseEntry value = new DatabaseEntry();
     if (db.get(null, key, value, LockMode.DEFAULT) != OperationStatus.SUCCESS) {

@@ -178,7 +178,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.println("Generating Translation Options");
 
     List<ConcreteRule<TK,FV>> options = phraseGenerator
-        .translationOptions(source, targets, sourceInputId, scorer);
+        .getRules(source, targets, sourceInputId, scorer);
 
     System.err.printf("Translation options: %d\n", options.size());
 

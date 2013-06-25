@@ -79,7 +79,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   @Override
-  public List<Rule<TK>> getTranslationOptions(Sequence<TK> sequence) {
+  public List<Rule<TK>> query(Sequence<TK> sequence) {
     List<Rule<TK>> list = new LinkedList<Rule<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {

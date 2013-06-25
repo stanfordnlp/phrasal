@@ -176,7 +176,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     return NAME;
   }
 
-  public List<Rule<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> sequence) {
     if (sequence.size() != 1) {
       throw new RuntimeException("Subsequence length != 1");

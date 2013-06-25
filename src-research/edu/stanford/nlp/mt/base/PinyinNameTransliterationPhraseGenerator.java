@@ -61,7 +61,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   }
 
   @Override
-  public List<Rule<TK>> getTranslationOptions(Sequence<TK> sequence) {
+  public List<Rule<TK>> query(Sequence<TK> sequence) {
     List<Rule<TK>> list = new LinkedList<Rule<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter.accepts(raw)) {
@@ -135,7 +135,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
       Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
 
       try {
-        List<Rule<IString>> opts = pnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = pnpg.query(phrase);
         if (opts.isEmpty()) {
           writer.println("No translation available for " + line);
         } else {

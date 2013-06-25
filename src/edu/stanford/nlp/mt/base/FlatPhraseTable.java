@@ -328,7 +328,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
 
   @Override
-  public List<Rule<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> foreignSequence) {
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence,
@@ -374,7 +374,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         foreignIndex.size(), totalSecs, totalMemory, freeMemory);
 
     List<Rule<IString>> translationOptions = ppt
-        .getTranslationOptions(new SimpleSequence<IString>(IStrings
+        .query(new SimpleSequence<IString>(IStrings
             .toIStringArray(phrase.split("\\s+"))));
 
     System.out.printf("Phrase: %s\n", phrase);

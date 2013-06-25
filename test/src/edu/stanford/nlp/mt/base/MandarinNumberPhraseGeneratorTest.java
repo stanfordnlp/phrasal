@@ -28,7 +28,7 @@ public class MandarinNumberPhraseGeneratorTest extends TestCase {
       Sequence<IString> phrase = new RawSequence<IString>(
               IStrings.toIStringArray(new String[] { inputs[i] }));
       try {
-        List<Rule<IString>> opts = mnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = mnpg.query(phrase);
         if (opts.isEmpty()) {
           fail("No translation available for " + inputs[i]);
         } else {

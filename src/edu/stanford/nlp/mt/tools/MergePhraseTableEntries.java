@@ -47,7 +47,7 @@ public class MergePhraseTableEntries {
       for (IntArrayTranslationOption iOpt : iOpts) {
         RawSequence<IString> tPhrase = new RawSequence<IString>(
             iOpt.translation, IString.identityIndex());
-        List<Rule<IString>> rOpts = pptr.getTranslationOptions(tPhrase);
+        List<Rule<IString>> rOpts = pptr.query(tPhrase);
         for (Rule<IString> rOpt : rOpts) {
           mergeCandidates.add(rOpt.target);
         }
@@ -58,7 +58,7 @@ public class MergePhraseTableEntries {
           System.err.printf("\t%s\n", mergeCandidate);
         }
       }
-      List<Rule<IString>> opts = ppt.getTranslationOptions(sPhrase);
+      List<Rule<IString>> opts = ppt.query(sPhrase);
       Counter<String> piVector = toCounter(opts);
       List<Counter<String>> sumListCounter = toListCounters(opts);
       Set<Sequence<IString>> mergeSet = new HashSet<Sequence<IString>>();
@@ -68,7 +68,7 @@ public class MergePhraseTableEntries {
       }
       for (Sequence<IString> mergeCandidate : mergeCandidates) { 
         if (mergeCandidate.equals(sPhrase)) continue;
-        List<Rule<IString>> candidateOpts = ppt.getTranslationOptions(mergeCandidate);
+        List<Rule<IString>> candidateOpts = ppt.query(mergeCandidate);
         Counter<String> mcVector = toCounter(candidateOpts);
         double cosine = Counters.cosine(piVector, mcVector); 
         

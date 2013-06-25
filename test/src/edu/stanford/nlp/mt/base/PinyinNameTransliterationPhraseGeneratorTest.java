@@ -21,7 +21,7 @@ public class PinyinNameTransliterationPhraseGeneratorTest extends TestCase {
       Sequence<IString> phrase = new RawSequence<IString>(
               IStrings.toIStringArray(new String[] { str}));
       try {
-        List<Rule<IString>> opts = pnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = pnpg.query(phrase);
         if (opts.isEmpty()) {
           fail("No translation available for " + str);
         } else {
@@ -42,7 +42,7 @@ public class PinyinNameTransliterationPhraseGeneratorTest extends TestCase {
       Sequence<IString> phrase = new RawSequence<IString>(
               IStrings.toIStringArray(new String[] { str }));
       try {
-        List<Rule<IString>> opts = pnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = pnpg.query(phrase);
         if ( ! opts.isEmpty()) {
           fail("Should be no translation available for " + str);
         }

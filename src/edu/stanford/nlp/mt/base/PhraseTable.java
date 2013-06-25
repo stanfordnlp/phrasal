@@ -1,8 +1,9 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
+import java.util.List;
 
 /**
+ * Interface for phrase table data structures.
  * 
  * @author danielcer
  * 
@@ -13,7 +14,7 @@ public interface PhraseTable<T> {
   /**
 	 * 
 	 */
-  List<Rule<T>> getTranslationOptions(Sequence<T> sequence);
+  List<Rule<T>> query(Sequence<T> sequence);
 
   /**
 	 * 

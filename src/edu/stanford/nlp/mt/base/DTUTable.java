@@ -102,7 +102,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<ConcreteRule<IString,FV>> translationOptions(
+  public List<ConcreteRule<IString,FV>> getRules(
       Sequence<IString> sequence, List<Sequence<IString>> targets,
       int sourceInputId, Scorer<FV> scorer) {
 
@@ -361,7 +361,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   }
 
   @Override
-  public List<Rule<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> foreignSequence) {
     throw new UnsupportedOperationException();
   }

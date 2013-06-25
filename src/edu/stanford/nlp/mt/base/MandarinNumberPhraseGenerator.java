@@ -314,7 +314,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
     }
 
    @Override
-   public List<Rule<IString>> getTranslationOptions(Sequence<IString> chinesePhrase) {
+   public List<Rule<IString>> query(Sequence<IString> chinesePhrase) {
 
       String firstWord = "";
       String rawWord = "";
@@ -673,7 +673,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
          Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
 
          try {
-             List<Rule<IString>> opts = mnpg.getTranslationOptions(phrase);
+             List<Rule<IString>> opts = mnpg.query(phrase);
              if (opts.isEmpty()) {
                 System.out.println("No translation available");
              } else {

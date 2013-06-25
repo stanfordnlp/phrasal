@@ -51,7 +51,7 @@ public class DumpPossibleWordCoOccurrences {
         for (int j = i + 1; j <= jMax; j++) {
           Sequence<IString> phrase = tokens.subsequence(i, j);
           List<Rule<IString>> opts = ppt
-              .getTranslationOptions(phrase);
+              .query(phrase);
           if (opts == null)
             continue;
           for (Rule<IString> opt : opts) {

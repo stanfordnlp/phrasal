@@ -51,7 +51,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   }
 
   @Override
-  public List<ConcreteRule<TK,FV>> translationOptions(
+  public List<ConcreteRule<TK,FV>> getRules(
       Sequence<TK> sequence, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
     Map<CoverageSet, List<ConcreteRule<TK,FV>>> optsMap = new HashMap<CoverageSet, List<ConcreteRule<TK,FV>>>();
     
@@ -71,7 +71,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
          }
          try {
            for (ConcreteRule<TK,FV> opt : phraseGenerator
-              .translationOptions(sequence, targets, sourceInputId, scorer)) {
+              .getRules(sequence, targets, sourceInputId, scorer)) {
              if (DEBUG) {
                System.err.println("  opt: " + opt);
              }
@@ -91,7 +91,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
               .getName());
         }
         List<ConcreteRule<TK,FV>> potentialOptions = phraseGenerator
-            .translationOptions(sequence, targets, sourceInputId, scorer);
+            .getRules(sequence, targets, sourceInputId, scorer);
         BitSet novelCoverage = new CoverageSet(sequence.size());
         for (ConcreteRule<TK,FV> option : potentialOptions) {
           if (DEBUG) {
@@ -227,7 +227,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       SimpleSequence<IString> sequence = new SimpleSequence<IString>(
           IStrings.toIStringArray(tokens));
       List<ConcreteRule<IString,String>> options = ptGen
-          .translationOptions(sequence, null, -1, null);
+          .getRules(sequence, null, -1, null);
       System.out.printf("Sequence: '%s'\n", sequence);
       System.out.println("Translation Options:\n");
       for (ConcreteRule<IString,String> option : options) {
