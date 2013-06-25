@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -23,13 +24,10 @@ public class LinearDistortionFeaturizer<TK> implements
   public static final String FEATURE_NAME = "LinearDistortion";
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<TK, String> f) {
-    return new FeatureValue<String>(FEATURE_NAME, -1.0 * f.linearDistortion);
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<TK, String> f) {
-    return null;
+  public List<FeatureValue<String>> featurize(Featurizable<TK, String> f) {
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(FEATURE_NAME, -1.0 * f.linearDistortion));
+    return features;
   }
 
   @Override

@@ -1,12 +1,13 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 /**
- * IncrementalFeaturizer that should be cloned
+ * Indicates that the featurizer is not re-entrant and thus should be cloned.
  * 
  * @author Michel Galley
+ * @author Spence Green
+ * 
  */
-public interface NeedsCloneable<TK, FV> extends
-    Featurizer<TK, FV>, Cloneable {
+public interface NeedsCloneable<TK, FV> extends Cloneable {
 
   public Object clone() throws CloneNotSupportedException;
 

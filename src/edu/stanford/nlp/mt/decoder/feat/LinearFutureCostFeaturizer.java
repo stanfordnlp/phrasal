@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -47,13 +48,8 @@ public class LinearFutureCostFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this))
         : 0.0f;
     float futureCost;
@@ -65,7 +61,9 @@ public class LinearFutureCostFeaturizer extends
       f.setState(this, futureCost);
     }
     float deltaCost = futureCost - oldFutureCost;
-    return new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost));
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost)));
+    return features;
   }
 
   @Override

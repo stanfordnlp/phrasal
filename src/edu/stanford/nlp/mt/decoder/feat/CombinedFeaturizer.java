@@ -102,7 +102,7 @@ public class CombinedFeaturizer<TK, FV> implements
 
   @SuppressWarnings("unchecked")
   @Override
-  public List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f) {
+  public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
 
     List<Object> featureValueLists = Generics.newArrayList(featurizers.size());
     for (Featurizer<TK, FV> featurizer : featurizers) {
@@ -110,18 +110,7 @@ public class CombinedFeaturizer<TK, FV> implements
         continue;
       }
       CombinationFeaturizer<TK,FV> incFeaturizer = (CombinationFeaturizer<TK,FV>) featurizer;
-      // if a single feature value is available from the method
-      // featurizer#featurize, then insert it into the aggregate
-      // list
-      FeatureValue<FV> singleFeatureValue = incFeaturizer.featurize(f);
-      if (singleFeatureValue != null) {
-        featureValueLists.add(singleFeatureValue);
-      }
-
-      // if a list of feature values are available from the method
-      // featurizer#listFeaturizer, then insert it into the aggregate
-      // list
-      List<FeatureValue<FV>> listFeatureValues = incFeaturizer.listFeaturize(f);
+      List<FeatureValue<FV>> listFeatureValues = incFeaturizer.featurize(f);
       if (listFeatureValues != null) {
         featureValueLists.add(listFeatureValues);
       }
@@ -141,11 +130,6 @@ public class CombinedFeaturizer<TK, FV> implements
       }
     }
     return featureValues;
-  }
-
-  @Override
-  public FeatureValue<FV> featurize(Featurizable<TK, FV> f) {
-    return null;
   }
 
   @Override

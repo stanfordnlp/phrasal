@@ -50,12 +50,7 @@ public class DTULinearDistortionFeaturizer extends
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     if (f instanceof DTUFeaturizable)

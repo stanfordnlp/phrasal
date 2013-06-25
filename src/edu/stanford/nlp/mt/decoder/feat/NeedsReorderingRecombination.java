@@ -1,11 +1,12 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 /**
- * Any CombinationFeaturizer implementing ReorderingFeaturizer will trigger the use
- * of the reordering recombination history.
+ * Indicates that the featurizer needs the reordering recombination history.
  * 
  * 
  * @author Michel Galley
+ * @author Spence Green
+ * 
  */
 public interface NeedsReorderingRecombination<TK, FV> extends CombinationFeaturizer<TK, FV> {
 }

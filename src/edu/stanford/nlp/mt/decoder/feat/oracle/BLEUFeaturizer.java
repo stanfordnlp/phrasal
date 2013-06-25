@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.oracle;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
@@ -14,7 +15,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-import edu.stanford.nlp.mt.Phrasal;
 
 import java.util.List;
 import java.util.Map;
@@ -154,7 +154,8 @@ public class BLEUFeaturizer extends NeedsState<IString, String>
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> featurize(
+      Featurizable<IString, String> f) {
 
     if (!rerankingStage && !featurizeDuringDecoding)
       return null;
@@ -226,12 +227,9 @@ public class BLEUFeaturizer extends NeedsState<IString, String>
     scorer.updateScore(sentId, hypLength, f.done || BP_BEFORE_FINAL, false);
 
     // System.err.printf("new=%f old=%f\n", scorer.score, oldBLEU);
-    return new FeatureValue<String>(featureName, scorer.score - oldBLEU);
-  }
-
-  public List<FeatureValue<String>> listFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(featureName, scorer.score - oldBLEU));
+    return features;
   }
 
   @Override

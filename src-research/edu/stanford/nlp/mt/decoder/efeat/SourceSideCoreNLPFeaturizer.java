@@ -197,7 +197,7 @@ NeedsInternalAlignments, NeedsCloneable<IString,String> {
    * Each feature will be of the form TAGGER-sourcetag-targetword
    */  
   @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (posTags == null || isHead == null) return null;    
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
@@ -300,15 +300,6 @@ NeedsInternalAlignments, NeedsCloneable<IString,String> {
       sb.append("-").append(posTags[i]);
     }
     return sb.toString();
-  }
-
-  /**
-   * We care about the features produced by the list of words, so
-   * listFeaturize returns results and featurize does not.
-   */
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 
 }

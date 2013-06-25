@@ -50,11 +50,6 @@ public class CrossPhraseBoundryFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
@@ -69,7 +64,7 @@ public class CrossPhraseBoundryFeaturizer implements
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> fList = new LinkedList<FeatureValue<String>>();
 

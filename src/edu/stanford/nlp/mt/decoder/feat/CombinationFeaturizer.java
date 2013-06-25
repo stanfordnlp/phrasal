@@ -50,10 +50,5 @@ public interface CombinationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
    * <br>
    * If features overlap in the list, their values will be added.
    */
-  List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f);
-
-  /**
-   * Return a single feature or null. 
-   */
-  FeatureValue<FV> featurize(Featurizable<TK, FV> f);
+  List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f);
 }

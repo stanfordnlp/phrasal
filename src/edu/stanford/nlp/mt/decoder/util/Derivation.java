@@ -153,7 +153,7 @@ State<Derivation<TK, FV>> {
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
 
-    localFeatures = featurizer.listFeaturize(featurizable);
+    localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);
     score = base.score + scorer.getIncrementalScore(localFeatures);
     h = (Double.isInfinite(base.h)) ? base.h : base.h
@@ -202,7 +202,7 @@ State<Derivation<TK, FV>> {
     }
 
 
-    localFeatures = featurizer.listFeaturize(featurizable);
+    localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);
     score = base.score + scorer.getIncrementalScore(localFeatures);
     depth = base.depth + 1;

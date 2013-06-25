@@ -215,7 +215,7 @@ public class DependencyLanguageModelFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
     return NODELAY ? getFeatures(f) : getDelayedFeatures(f, reranking);
   }
@@ -654,11 +654,6 @@ public class DependencyLanguageModelFeaturizer extends
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 
   private String[] getLocalFeatureNames() {

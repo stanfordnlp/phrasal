@@ -1,12 +1,12 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 /**
- * An IncrementalFeaturizer implementing AlignmentFeaturizer expects
- * Featurizable's t2fAlignmentIndex and f2tAlignmentIndex to be non-null. Most
- * featurizers (e.g., baseline Moses featurizers) do not need these member
- * variables.
+ * Indicates that the featurizer needs word internal alignments
+ * for each rule.
  * 
  * @author Michel Galley
+ * @author Spence Green
+ * 
  */
 public interface NeedsInternalAlignments {
 }

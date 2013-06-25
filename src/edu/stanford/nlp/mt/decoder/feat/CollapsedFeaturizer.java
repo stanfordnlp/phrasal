@@ -67,7 +67,7 @@ public class CollapsedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public FeatureValue<FV> featurize(Featurizable<TK, FV> f) {
+  public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
     double value = 0;
 
     int sz = featurizers.size();
@@ -77,13 +77,7 @@ public class CollapsedFeaturizer<TK, FV> implements
         continue;
       }
       CombinationFeaturizer<TK,FV> incFeaturizer = (CombinationFeaturizer<TK,FV>) featurizer;
-      FeatureValue<FV> singleFeatureValue = incFeaturizer.featurize(f);
-      if (singleFeatureValue != null) {
-        value += getIndividualWeight(singleFeatureValue.name)
-            * featurizerWts[i] * singleFeatureValue.value;
-      }
-
-      List<FeatureValue<FV>> listFeatureValues = incFeaturizer.listFeaturize(f);
+      List<FeatureValue<FV>> listFeatureValues = incFeaturizer.featurize(f);
       if (listFeatureValues != null) {
         for (FeatureValue<FV> featureValue : listFeatureValues) {
           value += getIndividualWeight(featureValue.name) * featurizerWts[i]
@@ -91,13 +85,10 @@ public class CollapsedFeaturizer<TK, FV> implements
         }
       }
     }
-
-    return new FeatureValue<FV>(combinedFeatureName, value);
-  }
-
-  @Override
-  public List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f) {
-    return null;
+    
+    List<FeatureValue<FV>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<FV>(combinedFeatureName, value));
+    return features;
   }
 
   @Override

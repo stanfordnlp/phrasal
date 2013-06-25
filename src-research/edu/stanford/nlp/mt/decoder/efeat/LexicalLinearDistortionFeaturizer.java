@@ -57,19 +57,14 @@ public class LexicalLinearDistortionFeaturizer implements
     doSourceConjTarget = Boolean.parseBoolean(args[3]);
     doPrior = Boolean.parseBoolean(args[4]);
   }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
+  
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     if (f.linearDistortion == 0)

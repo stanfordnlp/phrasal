@@ -183,7 +183,7 @@ public class HierarchicalReorderingFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
@@ -602,11 +602,6 @@ public class HierarchicalReorderingFeaturizer extends
 
   @Override
   public void reset() {
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 
   @Override

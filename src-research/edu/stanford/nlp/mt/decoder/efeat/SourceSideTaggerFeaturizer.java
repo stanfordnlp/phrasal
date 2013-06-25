@@ -65,20 +65,11 @@ public class SourceSideTaggerFeaturizer implements CombinationFeaturizer<IString
   }
 
   /**
-   * We care about the features produced by the list of words, so
-   * listFeaturize returns results and featurize does not.
-   */
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  /**
    * Return a set of features for the tagged sentence.
    * Each feature will be of the form TAGGER-sourcetag-targetword
    */  
   @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newArrayList();
     
     for (int i = 0; i < tagged.size(); ++i) {

@@ -152,65 +152,6 @@ public class NGramLanguageModelFeaturizer implements
     }
   }
 
-  /**
-   *
-   *
-   */
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> featurizable) {
-    if (ngramReweighting || lm instanceof MultiScoreLanguageModel) {
-      return null;
-    }
-
-    if (DEBUG) {
-      System.out.printf("Sequence: %s\n\tNovel Phrase: %s\n",
-          featurizable.targetPrefix, featurizable.targetPhrase);
-      System.out.printf("Untranslated tokens: %d\n",
-          featurizable.untranslatedTokens);
-      System.out.println("ngram scoring:");
-      System.out.println("===================");
-    }
-
-    IString startToken = lm.getStartToken();
-    IString endToken = lm.getEndToken();
-
-    Sequence<IString> partialTranslation;
-    int startPos = featurizable.targetPosition + 1;
-    if (featurizable.done) {
-      partialTranslation = new InsertedStartEndToken<IString>(
-          featurizable.targetPrefix, startToken, endToken);
-    } else {
-      partialTranslation = new InsertedStartToken<IString>(
-          featurizable.targetPrefix, startToken);
-    }
-    int limit = partialTranslation.size();
-
-    double lmScore = getScore(startPos, limit, partialTranslation);
-
-    if (DEBUG) {
-      System.out.printf("Final score: %f\n", lmScore);
-    }
-    if (SVMNORM) {
-      return new FeatureValue<String>(featureName, lmScore / 2.0);
-    } else if (lengthNorm) {
-      double v;
-      synchronized (rawLMScoreHistory) {
-        double lastLMSent = (featurizable.prior == null ? 0 : rawLMScoreHistory
-            .get(featurizable.prior));
-        double lastFv = (featurizable.prior == null ? 0 : lastLMSent
-            / featurizable.prior.targetPrefix.size());
-        double currentLMSent = lastLMSent + lmScore;
-        double currentFv = currentLMSent
-            / featurizable.targetPrefix.size();
-        v = currentFv - lastFv;
-        rawLMScoreHistory.put(featurizable, currentLMSent);
-      }
-      return new FeatureValue<String>(featureName, v);
-    } else {
-      return new FeatureValue<String>(featureName, lmScore);
-    }
-  }
-
   private double[][] getMultiScore(int startPos, int limit, Sequence<IString> translation) {
     double[][] multiScore;
     int order = lmOrder;
@@ -261,7 +202,7 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (ngramReweighting) {
       IString startToken = lm.getStartToken();
       IString endToken = lm.getEndToken();
@@ -277,6 +218,7 @@ public class NGramLanguageModelFeaturizer implements
       }
       int limit = partialTranslation.size();
       return getFeatureList(startPos, limit, partialTranslation);
+
     } else if (lm instanceof MultiScoreLanguageModel) {
       IString startToken = lm.getStartToken();
       IString endToken = lm.getEndToken();
@@ -300,8 +242,57 @@ public class NGramLanguageModelFeaturizer implements
         feats.add(new FeatureValue<String>(featureNames[1][i], lmScore[1][i]));
       }
       return feats;
+
     } else {
-      return null;
+      if (DEBUG) {
+        System.out.printf("Sequence: %s\n\tNovel Phrase: %s\n",
+            f.targetPrefix, f.targetPhrase);
+        System.out.printf("Untranslated tokens: %d\n",
+            f.untranslatedTokens);
+        System.out.println("ngram scoring:");
+        System.out.println("===================");
+      }
+
+      IString startToken = lm.getStartToken();
+      IString endToken = lm.getEndToken();
+
+      Sequence<IString> partialTranslation;
+      int startPos = f.targetPosition + 1;
+      if (f.done) {
+        partialTranslation = new InsertedStartEndToken<IString>(
+            f.targetPrefix, startToken, endToken);
+      } else {
+        partialTranslation = new InsertedStartToken<IString>(
+            f.targetPrefix, startToken);
+      }
+      int limit = partialTranslation.size();
+
+      double lmScore = getScore(startPos, limit, partialTranslation);
+
+      if (DEBUG) {
+        System.out.printf("Final score: %f\n", lmScore);
+      }
+      List<FeatureValue<String>> features = Generics.newLinkedList();
+      if (SVMNORM) {
+        features.add(new FeatureValue<String>(featureName, lmScore / 2.0));
+      } else if (lengthNorm) {
+        double v;
+        synchronized (rawLMScoreHistory) {
+          double lastLMSent = (f.prior == null ? 0 : rawLMScoreHistory
+              .get(f.prior));
+          double lastFv = (f.prior == null ? 0 : lastLMSent
+              / f.prior.targetPrefix.size());
+          double currentLMSent = lastLMSent + lmScore;
+          double currentFv = currentLMSent
+              / f.targetPrefix.size();
+          v = currentFv - lastFv;
+          rawLMScoreHistory.put(f, currentLMSent);
+        }
+        features.add(new FeatureValue<String>(featureName, v));
+      } else {
+        features.add(new FeatureValue<String>(featureName, lmScore));
+      }
+      return features;
     }
   }
 
