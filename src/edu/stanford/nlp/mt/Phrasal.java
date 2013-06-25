@@ -653,7 +653,6 @@ public class Phrasal {
       }
 
       weightConfig.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
-      weightConfig.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
 
       if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
