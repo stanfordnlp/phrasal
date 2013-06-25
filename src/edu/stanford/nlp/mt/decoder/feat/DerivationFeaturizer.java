@@ -10,13 +10,12 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
- * Extract features from hypotheses. The featurizer is called each
- * time a new rule is applied to a partial hypothesis.  initialize()
- * is called once on a new sentence.  Then, each time the hypothesis
- * is extended with a new rule application, both listFeaturize and
- * featurize are called.  Only one of these should return non-null.
- * Features should have unique prefixes so that the Featurizer does
- * not conflict with any other Featurizer.
+ * Extract features from partial derivations. The featurizer is called each
+ * time a new rule is applied to a derivation.  initialize()
+ * is called once on a new sentence.  Then, each time derivation 
+ * is extended with a new rule application, featurize is called.
+ * Features should have unique prefixes so that the featurizer does
+ * not conflict with any other featurizer.
  * <br>
  * CombinationFeaturizer will not be called in a reentrant manner.
  * Information calculated during <code>initialize</code> can be stored
@@ -28,7 +27,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public interface CombinationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
+public interface DerivationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   
   /**
    * This call is made *before* decoding a new input begins.

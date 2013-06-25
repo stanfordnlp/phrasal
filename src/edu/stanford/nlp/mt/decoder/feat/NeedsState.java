@@ -8,7 +8,7 @@ package edu.stanford.nlp.mt.decoder.feat;
  * @author Michel Galley
  */
 public abstract class NeedsState<TK, FV> implements
-    CombinationFeaturizer<TK, FV> {
+    DerivationFeaturizer<TK, FV> {
 
   private static final int UNDEFINED_ID = -1;
 

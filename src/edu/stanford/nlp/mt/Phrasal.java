@@ -446,7 +446,7 @@ public class Phrasal {
             String name = token.replaceFirst("\\(\\)$", "");
             Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(name);
-            featurizer = (CombinationFeaturizer<IString, String>) featurizerClass
+            featurizer = (DerivationFeaturizer<IString, String>) featurizerClass
                 .newInstance();
             additionalFeaturizers.add(featurizer);
           } else if (token.contains("(")) {

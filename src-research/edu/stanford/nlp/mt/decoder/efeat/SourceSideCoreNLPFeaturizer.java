@@ -31,7 +31,7 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
-import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 
 /**
  * Adds features to the MT system based on various data calculated by
@@ -44,7 +44,7 @@ import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
  * @author Spence Green
  * 
  */
-public class SourceSideCoreNLPFeaturizer implements CombinationFeaturizer<IString, String>, 
+public class SourceSideCoreNLPFeaturizer implements DerivationFeaturizer<IString, String>, 
 NeedsInternalAlignments, NeedsCloneable<IString,String> {
 
   public static final String FEATURE_PREFIX = "CoreNLP:";

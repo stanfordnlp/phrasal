@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
  * @author Michel Galley
  */
 public interface RichCombinationFeaturizer<TK, FV> extends
-    CombinationFeaturizer<TK,FV>,NeedsCloneable<TK, FV> {
+    DerivationFeaturizer<TK,FV>,NeedsCloneable<TK, FV> {
 
   /**
    * Dump internal state of Featurizer, which is constructed using featurizable

@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Index;
  * @param <FV>
  */
 public class CollapsedFeaturizer<TK, FV> implements
-    CombinationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV> {
+    DerivationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV> {
   final public List<Featurizer<TK, FV>> featurizers;
   final double[] featurizerWts;
   final Map<FV, Double> weightMap;
@@ -73,10 +73,10 @@ public class CollapsedFeaturizer<TK, FV> implements
     int sz = featurizers.size();
     for (int i = 0; i < sz; i++) {
       Featurizer<TK, FV> featurizer = featurizers.get(i);
-      if ( ! (featurizer instanceof CombinationFeaturizer)) {
+      if ( ! (featurizer instanceof DerivationFeaturizer)) {
         continue;
       }
-      CombinationFeaturizer<TK,FV> incFeaturizer = (CombinationFeaturizer<TK,FV>) featurizer;
+      DerivationFeaturizer<TK,FV> incFeaturizer = (DerivationFeaturizer<TK,FV>) featurizer;
       List<FeatureValue<FV>> listFeatureValues = incFeaturizer.featurize(f);
       if (listFeatureValues != null) {
         for (FeatureValue<FV> featureValue : listFeatureValues) {
@@ -121,7 +121,7 @@ public class CollapsedFeaturizer<TK, FV> implements
   public void initialize(int sourceInputId,
       List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      ((CombinationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
+      ((DerivationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
     }
   }
   

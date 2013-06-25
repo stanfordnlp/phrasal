@@ -75,7 +75,7 @@ public class PhraseTableScoresFeaturizer<T> implements
   }
 
   /**
-   * @see edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer#featurize(Featurizable)
+   * @see edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer#featurize(Featurizable)
    */
   @SuppressWarnings("unchecked")
   @Override

@@ -57,7 +57,7 @@ public class CombinedFeaturizer<TK, FV> implements
     featurizer.featurizers = Generics.newLinkedList();
     for (Featurizer<TK, FV> f : featurizers) {
       featurizer.featurizers
-          .add(f instanceof NeedsCloneable ? (CombinationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f)
+          .add(f instanceof NeedsCloneable ? (DerivationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f)
               .clone() : f);
     }
     return featurizer;
@@ -106,10 +106,10 @@ public class CombinedFeaturizer<TK, FV> implements
 
     List<Object> featureValueLists = Generics.newArrayList(featurizers.size());
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if ( ! (featurizer instanceof CombinationFeaturizer)) {
+      if ( ! (featurizer instanceof DerivationFeaturizer)) {
         continue;
       }
-      CombinationFeaturizer<TK,FV> incFeaturizer = (CombinationFeaturizer<TK,FV>) featurizer;
+      DerivationFeaturizer<TK,FV> incFeaturizer = (DerivationFeaturizer<TK,FV>) featurizer;
       List<FeatureValue<FV>> listFeatureValues = incFeaturizer.featurize(f);
       if (listFeatureValues != null) {
         featureValueLists.add(listFeatureValues);
@@ -157,8 +157,8 @@ public class CombinedFeaturizer<TK, FV> implements
   public void initialize(int sourceInputId,
       List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> foreign, Index<String> featureIndex) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof CombinationFeaturizer) {
-        ((CombinationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign, featureIndex);
+      if (featurizer instanceof DerivationFeaturizer) {
+        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign, featureIndex);
       }
     }
   }

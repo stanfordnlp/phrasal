@@ -19,7 +19,7 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class SourceGapFeaturizer implements
-    CombinationFeaturizer<IString, String>,
+    DerivationFeaturizer<IString, String>,
     RuleFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";
