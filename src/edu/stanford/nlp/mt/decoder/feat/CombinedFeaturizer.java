@@ -164,15 +164,6 @@ public class CombinedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public void reset() {
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof CombinationFeaturizer) {
-        ((CombinationFeaturizer<TK,FV>) featurizer).reset();
-      }
-    }
-  }
-
-  @Override
   public void dump(Featurizable<TK, FV> f) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof RichCombinationFeaturizer) {

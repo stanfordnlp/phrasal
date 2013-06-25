@@ -48,9 +48,6 @@ public class SourceSideTaggerFeaturizer implements CombinationFeaturizer<IString
     tagger = new MaxentTagger(args[0]);
   }
 
-  @Override
-  public void reset() {}
-
   /**
    * Initialize on a new translation.  Will run the tagger over the source side text.
    */

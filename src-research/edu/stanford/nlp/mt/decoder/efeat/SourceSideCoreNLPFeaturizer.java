@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -147,13 +146,6 @@ NeedsInternalAlignments, NeedsCloneable<IString,String> {
     }
     return wordSet;
   }
-
-  @Override
-  public void reset() {
-    isHead = null;
-    posTags = null;
-  }
-
 
   /**
    * Initialize annotations for a new source input. 

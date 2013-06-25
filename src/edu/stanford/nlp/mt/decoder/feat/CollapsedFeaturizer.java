@@ -124,12 +124,6 @@ public class CollapsedFeaturizer<TK, FV> implements
       ((CombinationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
     }
   }
-
-  public void reset() {
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      ((CombinationFeaturizer<TK, FV>) featurizer).reset();
-    }
-  }
   
   @Override
   public void initialize(Index<String> featureIndex) {

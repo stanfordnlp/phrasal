@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * Features should have unique prefixes so that the Featurizer does
  * not conflict with any other Featurizer.
  * <br>
- * IncrementalFeaturizers will not be called in a reentrant manner.
+ * CombinationFeaturizer will not be called in a reentrant manner.
  * Information calculated during <code>initialize</code> can be stored
  * directly in the Featurizer.
  * 
@@ -32,23 +32,20 @@ public interface CombinationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   
   /**
    * This call is made *before* decoding a new input begins.
-   * @param sourceInputId TODO
-   * @param options
-   * @param foreign
+   * 
+   * @param sourceInputId
+   * @param ruleList
+   * @param source
    * @param featureIndex 
    */
   void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex);
+      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, Index<String> featureIndex);
 
   /**
-   * This call is made *after* decoding an input ends.
-   */
-  void reset();
-
-  /**
-   * Return a list of features or null.  
-   * <br>
-   * If features overlap in the list, their values will be added.
+   * Extract and return a list of features. If features overlap in the list, 
+   * their values will be added.
+   * 
+   * @return a list of features or null.
    */
   List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f);
 }

@@ -247,10 +247,6 @@ public class SourceGapFeaturizer implements
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
-
-  @Override
-  public void reset() {
-  }
   
   @Override
   public void initialize(Index<String> featureIndex) {

@@ -27,7 +27,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsState;
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.tools.PrefixTagger;
 
 import java.io.IOException;
@@ -608,23 +607,6 @@ public class DependencyLanguageModelFeaturizer extends
     dep.add(form, lemma, cpos, pos, pAlign);
   }
 
-  @Override
-  public void reset() {
-    // Michel's code
-//        if (prefixTagger == null)
-//          prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1
-
-    // heeyoung
-    if(prefixTagger == null) 
-      prefixTagger = new PrefixTagger(maxentTagger);
-    prefixTagger.release();
-    pipe.clearCache();
-    System.err.printf("Emptying %d keys of partial parse cache.\n",
-        partialParseCache.size());
-    fullParseCache.clear();
-    partialParseCache.clear();
-  }
-
   private static void printDep(DependencyInstance dep, int i, int j,
       double score, int dist, String prefix, boolean attR) {
     int len = dep.length();
@@ -654,6 +636,18 @@ public class DependencyLanguageModelFeaturizer extends
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+    // Michel's code
+//  if (prefixTagger == null)
+//    prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1
+
+    if(prefixTagger == null) 
+      prefixTagger = new PrefixTagger(maxentTagger);
+    prefixTagger.release();
+    pipe.clearCache();
+    System.err.printf("Emptying %d keys of partial parse cache.\n",
+        partialParseCache.size());
+    fullParseCache.clear();
+    partialParseCache.clear();
   }
 
   private String[] getLocalFeatureNames() {
@@ -677,7 +671,6 @@ public class DependencyLanguageModelFeaturizer extends
           .println("Usage: edu.stanford.nlp.mt.decoder.efeat.DependencyLanguageModelFeaturizer (serialized tagger) (serialized dparser) (text to tag)");
     DependencyLanguageModelFeaturizer feat = new DependencyLanguageModelFeaturizer(
         "mst", "", args[0], args[1]);
-    feat.reset();
     feat.prefixTagger.tagFile(args[2]);
   }
 

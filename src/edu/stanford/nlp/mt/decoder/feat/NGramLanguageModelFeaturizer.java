@@ -369,10 +369,6 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   @Override
-  public void reset() {
-  }
-
-  @Override
   public void initialize(Index<String> featureIndex) {
   }
 

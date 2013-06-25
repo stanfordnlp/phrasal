@@ -601,10 +601,6 @@ public class HierarchicalReorderingFeaturizer extends
   }
 
   @Override
-  public void reset() {
-  }
-
-  @Override
   public NeedsCloneable<IString, String> clone()
       throws CloneNotSupportedException {
     HierarchicalReorderingFeaturizer featurizer = (HierarchicalReorderingFeaturizer) super

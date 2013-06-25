@@ -71,10 +71,6 @@ public class LinearFutureCostFeaturizer extends
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
-  @Override
-  public void reset() {
-  }
-
   static int cost(Featurizable<IString, String> f) {
     int cost = f.linearDistortion;
     if (ADD_EOS)

@@ -237,10 +237,6 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
-  @Override
-  public void reset() {
-  }
-
   private static int getGapCount(Featurizable<IString, String> f) {
     Rule<IString> opt = f.rule.abstractRule;
     int sz = 0;
