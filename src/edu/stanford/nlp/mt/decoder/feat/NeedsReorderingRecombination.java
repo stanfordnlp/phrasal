@@ -7,5 +7,5 @@ package edu.stanford.nlp.mt.decoder.feat;
  * 
  * @author Michel Galley
  */
-public interface ReorderingFeaturizer<TK, FV> extends CombinationFeaturizer<TK, FV> {
+public interface NeedsReorderingRecombination<TK, FV> extends CombinationFeaturizer<TK, FV> {
 }

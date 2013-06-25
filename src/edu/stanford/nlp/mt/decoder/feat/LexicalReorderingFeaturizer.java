@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Index;
  * @author danielcer
  */
 public class LexicalReorderingFeaturizer implements
-    ReorderingFeaturizer<IString, String> {
+    NeedsReorderingRecombination<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";
   static final String FEATURE_PREFIX = "LexR:";

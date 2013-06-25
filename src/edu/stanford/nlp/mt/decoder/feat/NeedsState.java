@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 /**
  * @author Michel Galley
  */
-public abstract class StatefulFeaturizer<TK, FV> implements
+public abstract class NeedsState<TK, FV> implements
     CombinationFeaturizer<TK, FV> {
 
   private static final int UNDEFINED_ID = -1;

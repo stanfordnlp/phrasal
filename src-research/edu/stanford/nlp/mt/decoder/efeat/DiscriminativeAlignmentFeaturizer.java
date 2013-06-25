@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Index;
 
@@ -21,7 +21,7 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  *
  */
-public class DiscriminativeAlignmentFeaturizer implements AlignmentFeaturizer,
+public class DiscriminativeAlignmentFeaturizer implements NeedsInternalAlignments,
 RuleFeaturizer<IString,String> {
 
   private static final String FEATURE_NAME = "Align";

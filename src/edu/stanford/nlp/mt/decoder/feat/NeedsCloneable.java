@@ -5,7 +5,7 @@ package edu.stanford.nlp.mt.decoder.feat;
  * 
  * @author Michel Galley
  */
-public interface ClonedFeaturizer<TK, FV> extends
+public interface NeedsCloneable<TK, FV> extends
     Featurizer<TK, FV>, Cloneable {
 
   public Object clone() throws CloneNotSupportedException;

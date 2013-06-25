@@ -30,8 +30,8 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
+import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
 
 /**
@@ -46,7 +46,7 @@ import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
  * 
  */
 public class SourceSideCoreNLPFeaturizer implements CombinationFeaturizer<IString, String>, 
-AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
+NeedsInternalAlignments, NeedsCloneable<IString,String> {
 
   public static final String FEATURE_PREFIX = "CoreNLP:";
 

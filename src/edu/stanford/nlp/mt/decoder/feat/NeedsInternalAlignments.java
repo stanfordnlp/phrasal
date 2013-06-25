@@ -8,5 +8,5 @@ package edu.stanford.nlp.mt.decoder.feat;
  * 
  * @author Michel Galley
  */
-public interface AlignmentFeaturizer {
+public interface NeedsInternalAlignments {
 }

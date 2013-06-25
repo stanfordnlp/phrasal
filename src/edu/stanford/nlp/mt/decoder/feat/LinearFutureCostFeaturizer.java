@@ -13,7 +13,7 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class LinearFutureCostFeaturizer extends
-    StatefulFeaturizer<IString, String> {
+    NeedsState<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(

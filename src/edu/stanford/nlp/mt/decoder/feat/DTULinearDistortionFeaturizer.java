@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class DTULinearDistortionFeaturizer extends
-    StatefulFeaturizer<IString, String> implements
+    NeedsState<IString, String> implements
     RuleFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";

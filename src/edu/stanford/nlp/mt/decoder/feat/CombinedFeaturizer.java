@@ -57,7 +57,7 @@ public class CombinedFeaturizer<TK, FV> implements
     featurizer.featurizers = Generics.newLinkedList();
     for (Featurizer<TK, FV> f : featurizers) {
       featurizer.featurizers
-          .add(f instanceof ClonedFeaturizer ? (CombinationFeaturizer<TK, FV>) ((ClonedFeaturizer<TK, FV>) f)
+          .add(f instanceof NeedsCloneable ? (CombinationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f)
               .clone() : f);
     }
     return featurizer;
@@ -82,8 +82,8 @@ public class CombinedFeaturizer<TK, FV> implements
     this.featurizers = Generics.newArrayList(featurizers);
     int id = -1;
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof StatefulFeaturizer) {
-        StatefulFeaturizer<TK, FV> sfeaturizer = (StatefulFeaturizer<TK, FV>) featurizer;
+      if (featurizer instanceof NeedsState) {
+        NeedsState<TK, FV> sfeaturizer = (NeedsState<TK, FV>) featurizer;
         sfeaturizer.setId(++id);
       }
     }

@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
  *
  *@author John Bauer
  */
-public class TargetSidePunctuationFeaturizer implements AlignmentFeaturizer,
+public class TargetSidePunctuationFeaturizer implements NeedsInternalAlignments,
 RuleFeaturizer<IString, String> {
 
   /**

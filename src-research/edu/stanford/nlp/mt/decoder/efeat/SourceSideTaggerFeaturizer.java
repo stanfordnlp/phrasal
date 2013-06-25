@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
 
 /**
@@ -24,7 +24,7 @@ import edu.stanford.nlp.mt.decoder.feat.CombinationFeaturizer;
  *
  *@author John Bauer
  */
-public class SourceSideTaggerFeaturizer implements CombinationFeaturizer<IString, String>, AlignmentFeaturizer {
+public class SourceSideTaggerFeaturizer implements CombinationFeaturizer<IString, String>, NeedsInternalAlignments {
   /**
    * Tagger to use on the source side
    */

@@ -6,7 +6,7 @@ import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsState;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.ConcreteRule;
@@ -28,7 +28,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
  * 
  * @author Michel Galley
  */
-public class BLEUFeaturizer extends StatefulFeaturizer<IString, String>
+public class BLEUFeaturizer extends NeedsState<IString, String>
     implements RichCombinationFeaturizer<IString, String> {
 
   private static final int ORDER = 4;

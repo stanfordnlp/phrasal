@@ -23,9 +23,9 @@ import edu.stanford.nlp.util.Index;
  * @see LexicalReorderingFeaturizer
  */
 public class HierarchicalReorderingFeaturizer extends
-    StatefulFeaturizer<IString, String> implements
-    RichCombinationFeaturizer<IString, String>, ReorderingFeaturizer<IString, String>,
-    ClonedFeaturizer<IString, String> {
+    NeedsState<IString, String> implements
+    RichCombinationFeaturizer<IString, String>, NeedsReorderingRecombination<IString, String>,
+    NeedsCloneable<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -610,7 +610,7 @@ public class HierarchicalReorderingFeaturizer extends
   }
 
   @Override
-  public ClonedFeaturizer<IString, String> clone()
+  public NeedsCloneable<IString, String> clone()
       throws CloneNotSupportedException {
     HierarchicalReorderingFeaturizer featurizer = (HierarchicalReorderingFeaturizer) super
         .clone();

@@ -308,7 +308,7 @@ public class Phrasal {
       }
     }
 
-    ReorderingFeaturizer<IString, String> lexReorderFeaturizer = null;
+    NeedsReorderingRecombination<IString, String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
@@ -499,9 +499,9 @@ public class Phrasal {
             args += " " + token;
           }
         }
-        if (featurizer instanceof AlignmentFeaturizer)
+        if (featurizer instanceof NeedsInternalAlignments)
           Featurizable.enableAlignments();
-        if (featurizer instanceof ReorderingFeaturizer)
+        if (featurizer instanceof NeedsReorderingRecombination)
           msdRecombination = true;
       }
       if (featurizerName != null) {
