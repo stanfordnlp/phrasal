@@ -9,10 +9,6 @@ import edu.stanford.nlp.util.Index;
 /**
  * Extract features from a translation rule (phrase pair) before it is used in a derivation.
  * 
- * The decoder can cache these feature values during phrase table lookup for more efficient lattice
- * generation. To enable caching, return CacheableFeatureValue objects. Otherwise, the featurizer
- * needs to implement IncrementalFeaturizer so that the feature values are re-computed during
- * hypothesis generation.
  * 
  * @author danielcer
  * @author Spence Green
@@ -23,14 +19,16 @@ import edu.stanford.nlp.util.Index;
 public interface RuleFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   
   /**
-   * This call is made *before* decoding a phrase is featurized. Do any setup here.
+   * This call is made *before* decoding with a rule. Do any setup here.
    * 
    * @param featureIndex
    */
   void initialize(Index<String> featureIndex);
   
   /**
-	 * Return a list of features or null.
+   * Extract and return features for <code>f.rule</code>.
+   * 
+	 * @return a list of features or null.
 	 */
   List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f);
 }

@@ -17,7 +17,8 @@ import edu.stanford.nlp.mt.base.Sequence;
  * Features should have unique prefixes so that the featurizer does
  * not conflict with any other featurizer.
  * <br>
- * CombinationFeaturizer will not be called in a reentrant manner.
+ * If CombinationFeaturizer needs to be re-entrant, then it should implement
+ * the <code>NeedsCloneable</code> interface.
  * Information calculated during <code>initialize</code> can be stored
  * directly in the Featurizer.
  * 
