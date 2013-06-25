@@ -50,7 +50,7 @@ RuleFeaturizer<IString, String> {
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
@@ -114,10 +114,5 @@ RuleFeaturizer<IString, String> {
     }
 
     return features;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
   }
 }

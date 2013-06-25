@@ -149,21 +149,15 @@ public class CombinedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f) {
+  public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (!(featurizer instanceof RuleFeaturizer)) {
         continue;
       }
       RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
-
-      FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
-      if (singleFeatureValue != null) {
-        featureValues.add(singleFeatureValue);
-      }
-
       List<FeatureValue<FV>> listFeatureValues = isoFeaturizer
-          .phraseListFeaturize(f);
+          .ruleFeaturize(f);
       if (listFeatureValues != null) {
         // profiling reveals that addAll is slow due to a buried call to clone()
         for (FeatureValue<FV> fv : listFeatureValues) {
@@ -173,11 +167,6 @@ public class CombinedFeaturizer<TK, FV> implements
       }
     }
     return featureValues;
-  }
-
-  @Override
-  public FeatureValue<FV> phraseFeaturize(Featurizable<TK, FV> f) {
-    return null;
   }
 
   @Override

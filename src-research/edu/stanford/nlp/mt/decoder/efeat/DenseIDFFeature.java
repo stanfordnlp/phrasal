@@ -58,7 +58,7 @@ public class DenseIDFFeature implements
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     double sourceSum = computeIDFSum(f.sourcePhrase, sourceIDF);
     double targetSum = computeIDFSum(f.targetPhrase, targetIDF);
@@ -91,10 +91,5 @@ public class DenseIDFFeature implements
 
   @Override
   public void initialize(Index<String> featureIndex) {
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
   }
 }

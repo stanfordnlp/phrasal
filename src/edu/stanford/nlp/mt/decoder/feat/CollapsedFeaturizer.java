@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -100,7 +101,7 @@ public class CollapsedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public FeatureValue<FV> phraseFeaturize(Featurizable<TK, FV> f) {
+  public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
     double value = 0;
 
     int sz = featurizers.size();
@@ -110,15 +111,8 @@ public class CollapsedFeaturizer<TK, FV> implements
         continue;
       RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
 
-      FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
-
-      if (singleFeatureValue != null) {
-        value += getIndividualWeight(singleFeatureValue.name)
-            * featurizerWts[i] * singleFeatureValue.value;
-      }
-
       List<FeatureValue<FV>> listFeatureValues = isoFeaturizer
-          .phraseListFeaturize(f);
+          .ruleFeaturize(f);
       if (listFeatureValues != null) {
         for (FeatureValue<FV> featureValue : listFeatureValues) {
           value += getIndividualWeight(featureValue.name) * featurizerWts[i]
@@ -127,13 +121,9 @@ public class CollapsedFeaturizer<TK, FV> implements
       }
     }
 
-    return new FeatureValue<FV>(combinedFeatureName, value);
-  }
-
-  @Override
-  public List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f) {
-    // TODO Auto-generated method stub
-    return null;
+    List<FeatureValue<FV>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<FV>(combinedFeatureName, value));
+    return features;
   }
 
   @Override

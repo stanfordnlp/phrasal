@@ -128,11 +128,6 @@ public class SourceGapFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
   public List<FeatureValue<String>> listFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(
@@ -144,7 +139,7 @@ public class SourceGapFeaturizer implements
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     return null;
     /*

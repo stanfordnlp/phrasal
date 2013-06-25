@@ -55,11 +55,6 @@ public class DTULinearDistortionFeaturizer extends
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
   public List<FeatureValue<String>> listFeaturize(
       Featurizable<IString, String> f) {
 
@@ -108,7 +103,7 @@ public class DTULinearDistortionFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(1);
     int minTotalSz = 0;

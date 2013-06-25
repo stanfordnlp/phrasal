@@ -174,12 +174,7 @@ public class TargetGapFeaturizer implements CombinationFeaturizer<IString,String
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
     int gapCount = getGapCount(f);

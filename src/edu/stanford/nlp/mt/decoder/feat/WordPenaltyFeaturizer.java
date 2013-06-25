@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -21,18 +22,16 @@ public class WordPenaltyFeaturizer<TK> implements
   static public final double MOSES_WORD_PENALTY_MUL = -1.0;
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<TK, String> f) {
-    // if (f.translatedPhrase == null) return null;
-    if (f.targetPhrase == null)
-      return new FeatureValue<String>(FEATURE_NAME, 0.0);
-    return new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
-        * f.targetPhrase.size());
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<TK, String> f) {
-    return null;
+    if (f.targetPhrase == null) {
+      return null;
+    } else {
+      List<FeatureValue<String>> features = Generics.newLinkedList();
+      features.add(new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
+        * f.targetPhrase.size()));
+      return features;
+    }
   }
 
   @Override

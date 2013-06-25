@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 public class PhrasePairAlignmentConstellation implements
@@ -14,15 +15,12 @@ public class PhrasePairAlignmentConstellation implements
   public final String FEATURE_PREFIX = "ACst:";
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return new FeatureValue<String>(FEATURE_PREFIX
-        + f.rule.abstractRule.alignment, 1.0);
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
-    return null;
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(FEATURE_PREFIX
+        + f.rule.abstractRule.alignment, 1.0));
+    return features;
   }
 
   @Override

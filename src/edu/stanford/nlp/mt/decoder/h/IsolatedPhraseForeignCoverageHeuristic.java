@@ -90,7 +90,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
           option, translationId);
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
-          .phraseListFeaturize(f);
+          .ruleFeaturize(f);
       double score = scorer.getIncrementalScore(phraseFeatures);
       int terminalPos = option.sourcePosition
           + option.abstractRule.source.size() - 1;

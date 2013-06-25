@@ -50,7 +50,7 @@ public class ConcreteRule<TK,FV> implements
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
         sourceInputId);
-    List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+    List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
     cachedFeatureList = Generics.newLinkedList();
     for (FeatureValue<FV> feature : features) {
       cachedFeatureList.add(feature);
@@ -77,7 +77,7 @@ public class ConcreteRule<TK,FV> implements
     {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
           sourceInputId);
-      List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+      List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
       for (FeatureValue<FV> feature : features) {
         cachedFeatureList.add(feature);
       }
@@ -94,7 +94,7 @@ public class ConcreteRule<TK,FV> implements
         assert (f.translationScores.length == 0);
         assert (f.phraseScoreNames.length == 0);
         List<FeatureValue<FV>> features = phraseFeaturizer
-            .phraseListFeaturize(f);
+            .ruleFeaturize(f);
         // for(FeatureValue<FV> fv : features)
         // System.err.printf("feature(%s): %s\n", dtuOpt.dtus[i].toString(),
         // fv);

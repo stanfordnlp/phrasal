@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -338,28 +339,11 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    if (ngramReweighting || (lm instanceof MultiScoreLanguageModel)) {
-      return null;
-    }
-
-    assert (f.targetPhrase != null);
-    double lmScore = getScore(0, f.targetPhrase.size(), f.targetPhrase);
-    if (SVMNORM) {
-      return new FeatureValue<String>(featureName, lmScore / 2.0);
-    } else if (lengthNorm) {
-      return new FeatureValue<String>(featureName, lmScore
-          / f.targetPhrase.size());
-    } else {
-      return new FeatureValue<String>(featureName, lmScore);
-    }
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     if (ngramReweighting) {
       return getFeatureList(0, f.targetPhrase.size(), f.targetPhrase);
+    
     } else if (lm instanceof MultiScoreLanguageModel) {
       int limit = f.targetPhrase.size();
       double[][] lmScore = getMultiScore(0, limit, f.targetPhrase);
@@ -370,8 +354,20 @@ public class NGramLanguageModelFeaturizer implements
         feats.add(new FeatureValue<String>(featureNames[1][i], lmScore[1][i]));
       }
       return feats;
+
     } else {
-      return null;
+      List<FeatureValue<String>> features = Generics.newLinkedList();
+      assert (f.targetPhrase != null);
+      double lmScore = getScore(0, f.targetPhrase.size(), f.targetPhrase);
+      if (SVMNORM) {
+        features.add(new FeatureValue<String>(featureName, lmScore / 2.0));
+      } else if (lengthNorm) {
+        features.add(new FeatureValue<String>(featureName, lmScore
+            / f.targetPhrase.size()));
+      } else {
+        features.add(new FeatureValue<String>(featureName, lmScore));
+      }
+      return features;
     }
   }
 

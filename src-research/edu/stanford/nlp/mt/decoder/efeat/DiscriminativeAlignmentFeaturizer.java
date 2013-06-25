@@ -51,7 +51,7 @@ RuleFeaturizer<IString,String> {
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int eLength = f.targetPhrase.size();
     final int fLength = f.sourcePhrase.size();
@@ -121,10 +121,5 @@ RuleFeaturizer<IString,String> {
 
   private String makeFeatureString(String featureName, String featureSuffix) {
     return String.format("%s:%s", featureName, featureSuffix);
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
   }
 }

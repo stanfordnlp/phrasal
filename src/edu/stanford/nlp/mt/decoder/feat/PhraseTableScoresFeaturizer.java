@@ -79,7 +79,7 @@ public class PhraseTableScoresFeaturizer<T> implements
    */
   @SuppressWarnings("unchecked")
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<T, String> featurizable) {
     FeatureValue<String>[] featureValues;
     if (featurizable.phraseTableName == UnknownWordFeaturizer.UNKNOWN_PHRASE_TABLE_NAME) {
@@ -118,11 +118,6 @@ public class PhraseTableScoresFeaturizer<T> implements
 
     // return the results as a list
     return Arrays.asList(featureValues);
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<T, String> f) {
-    return null;
   }
 
   public void reset() {

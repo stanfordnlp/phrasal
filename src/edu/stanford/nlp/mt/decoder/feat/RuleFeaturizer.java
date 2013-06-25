@@ -32,10 +32,5 @@ public interface RuleFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   /**
 	 * Return a list of features or null.
 	 */
-  List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f);
-
-  /**
-	 * Return a single feature or null.
-	 */
-  FeatureValue<FV> phraseFeaturize(Featurizable<TK, FV> f);
+  List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f);
 }

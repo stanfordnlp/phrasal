@@ -47,7 +47,7 @@ public class LRPhraseBoundaryFeaturizer implements
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> blist = new LinkedList<FeatureValue<String>>();
 
@@ -87,11 +87,6 @@ public class LRPhraseBoundaryFeaturizer implements
       }
     }
     return blist;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
   }
 
   public void reset() {

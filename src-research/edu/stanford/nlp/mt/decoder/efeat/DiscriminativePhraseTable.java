@@ -45,7 +45,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   public void initialize(Index<String> featureIndex) {}
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> fvalues = new LinkedList<FeatureValue<String>>();
 
     String srcPhrase = f.sourcePhrase.toString("_");
@@ -73,10 +73,5 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
 
   private String makeFeatureString(String featurePrefix, String featureType, String value) {
     return String.format("%s.%s:%s", featurePrefix, featureType, value);
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
   }
 }
