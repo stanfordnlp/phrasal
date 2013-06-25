@@ -305,7 +305,6 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     }
 
     if (translations.size() <= fIndex) {
-      translations.ensureCapacity(fIndex + 1);
       while (translations.size() <= fIndex)
         translations.add(null);
     }

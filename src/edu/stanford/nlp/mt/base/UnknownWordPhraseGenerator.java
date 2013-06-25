@@ -22,7 +22,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
   // do we need to account for "(0) (1)", etc?
   public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
-      .getPhraseAlignment("I-I");
+      .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
 
   private final String[] scoreNames;
   private final SequenceFilter<TK> filter;

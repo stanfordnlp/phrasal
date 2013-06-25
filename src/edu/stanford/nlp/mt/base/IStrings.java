@@ -37,10 +37,17 @@ public class IStrings {
     return sequences;
   }
   
+  /**
+   * Apply whitespace tokenization then convert to a Sequence
+   * of IString objects.
+   * 
+   * @param str
+   * @return
+   */
   static public Sequence<IString> splitToIStrings(String str) {
     String[] strings = str.trim().split("\\s+");
     IString[] istrs = toIStringArray(strings);
-    return new RawIStringSequence(istrs);
+    return new SimpleSequence<IString>(true, istrs);
   }
   
   static public IString[] toIStringArray(String[] strings) {

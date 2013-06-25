@@ -233,8 +233,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
           : new DenseFeatureValueCollection<String>(featureValuesTmp,
               featureIndex);
 
-      Sequence<IString> sequence = new RawIStringSequence(
-          IStrings.toIStringArray(translation.split("\\s+")));
+      Sequence<IString> sequence = IStrings.splitToIStrings(translation);
       Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
       if (sequenceStored == null) {
         sequenceSelfMap.put(sequence, sequence);

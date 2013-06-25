@@ -1,11 +1,14 @@
 package edu.stanford.nlp.mt.metrics;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.List;
 
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.RawIStringSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -145,8 +148,7 @@ public class Metrics {
       String[] referenceFilenames, boolean NISTTokenize) throws IOException {
     List<List<Sequence<IString>>> referencesList = new ArrayList<List<Sequence<IString>>>();
     for (String referenceFilename : referenceFilenames) {
-      LineNumberReader reader = new LineNumberReader(new FileReader(
-          referenceFilename));
+      LineNumberReader reader = IOTools.getReaderFromFile(referenceFilename);
       for (String line; (line = reader.readLine()) != null;) {
         int lineNumber = reader.getLineNumber();
         if (referencesList.size() < lineNumber) {
@@ -154,18 +156,16 @@ public class Metrics {
               referenceFilenames.length);
           if (NISTTokenize)
             line = NISTTokenizer.tokenize(line).trim();
-          list.add(new RawIStringSequence(IStrings.toIStringArray(line
-              .split("\\s+"))));
+          list.add(IStrings.splitToIStrings(line));
           referencesList.add(list);
         } else {
           if (NISTTokenize) {
             referencesList.get(lineNumber - 1).add(
-                new RawIStringSequence(IStrings.toIStringArray(NISTTokenizer
-                    .tokenize(line).split("\\s+"))));
+                IStrings.splitToIStrings(NISTTokenizer
+                    .tokenize(line)));
           } else {
             referencesList.get(lineNumber - 1).add(
-                new RawIStringSequence(IStrings.toIStringArray(line
-                    .split("\\s+"))));
+                IStrings.splitToIStrings(line));
           }
         }
       }

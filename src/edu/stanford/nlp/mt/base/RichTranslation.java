@@ -112,10 +112,11 @@ public class RichTranslation<TK, FV> extends
     }
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(NBEST_SEP);
-    // Alignments
+
     if (nbestWordInternalAlignments && Featurizable.alignmentsEnabled()) {
+      // Internal alignments
       String alignmentString = sourceTargetAlignmentString();
-      sbuf.append(alignmentString);
+      sbuf.append(" ").append(alignmentString);
     } else {
       // Phrase segmentation
       for (String el : alignmentIndex)
@@ -129,30 +130,39 @@ public class RichTranslation<TK, FV> extends
    * @return
    */
   public String sourceTargetAlignmentString() {
-    String[] sourceAlignments = new String[featurizable.sourceSentence.size()];
+    StringBuilder[] sourceAlignments = new StringBuilder[featurizable.sourceSentence.size()];
     List<Featurizable<TK,FV>> featurizableList = featurizables();
     for (Featurizable<TK,FV> featurizable : featurizableList) {
       int srcPosition = featurizable.sourcePosition;
       int tgtPosition = featurizable.targetPosition;
-      int[][] s2t = featurizable.option.abstractOption.alignment.s2t();
-      if (s2t != null) {
-        assert s2t.length == featurizable.sourcePhrase.size() : String.format("%d / %d", s2t.length, featurizable.sourcePhrase.size());
-        for (int i = 0; i < s2t.length; ++i) {
-          StringBuilder sb = new StringBuilder();
-          sb.append(srcPosition+i).append("-");
-          for (int j = 0; j < s2t[i].length; ++j) {
-            if (j>0) sb.append(",");
-            sb.append(tgtPosition+j);
+      int tgtLength = featurizable.targetPhrase.size();
+      PhraseAlignment al = featurizable.option.abstractOption.alignment;
+      for (int i = 0; i < tgtLength; ++i) {
+        int[] sIndices = al.t2s(i);
+        if (sIndices != null) {
+          String tgtIndexStr = String.valueOf(tgtPosition + i);
+          for (int srcOffset : sIndices) {
+            int srcIndex = srcPosition + srcOffset;
+            if (sourceAlignments[srcIndex] == null) {
+              sourceAlignments[srcIndex] = new StringBuilder();
+              sourceAlignments[srcIndex].append(tgtIndexStr);
+            } else {
+              sourceAlignments[srcIndex].append(",").append(tgtIndexStr);
+            }
           }
-          sourceAlignments[srcPosition+i] = sb.toString();
         }
       }
     }
     StringBuilder sb = new StringBuilder();
-    for (String alignment : sourceAlignments) {
-      if (alignment != null) sb.append(alignment).append(" ");
+    boolean isFirst = true;
+    for (int i = 0; i < sourceAlignments.length; ++i) {
+      if (sourceAlignments[i] != null) {
+        if ( ! isFirst) sb.append(" ");
+        sb.append(String.valueOf(i)).append("-").append(sourceAlignments[i].toString());
+        isFirst = false;
+      }
     }
-    return sb.toString().trim();
+    return sb.toString();
   }
 
   /**

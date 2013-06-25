@@ -198,7 +198,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
       IString[] trgArr = IStrings.toIStringArray(new String[] { casing });
       RawSequence<IString> trg = new RawSequence<IString>(trgArr);
       list.add(new TranslationOption<IString>(new float[0], new String[0], trg,
-          rawSource, PhraseAlignment.getPhraseAlignment("I-I")));
+          rawSource, PhraseAlignment.getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT)));
     }
     return list;
   }

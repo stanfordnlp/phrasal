@@ -10,9 +10,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 /** This class maintains and calculates the word alignments inside a phrase.
  *  The static factory method maintains a set of known alignment patterns and
  *  returns the same object for identical alignment patterns. Alignment
- *  patterns in String form can either be "I-I" to indicate that the whole
- *  phrase is aligned in a not further specified manner, or a sequence of
- *  semicolon (";") separated items, each of which is a possibly empty
+ *  patterns in String form can either be <code>PHRASE_ALIGNMENT</code> to indicate 
+ *  that the whole phrase is aligned in a not further specified manner, or a sequence of
+ *  whitespace-separated items, each of which is a possibly empty
  *  parenthesized list of integers, such as "()" or "(1,5,11)".
  *
  *  @author Dan Cer
@@ -27,16 +27,19 @@ public class PhraseAlignment {
   // Hence, storing these alignments typically has the cost of just storing one
   // pointer in memory.
 
+  public static final String PHRASE_ALIGNMENT = "I-I";
+  
   final IString str;
   public final int[][] t2s;
 
   private PhraseAlignment(String s) {
     // System.err.println("align: "+s);
     String stringRep = s.intern();
-    if (stringRep.equals("I-I")) {
+    if (stringRep.equals(PHRASE_ALIGNMENT)) {
+      // No internal alignment
       t2s = null;
     } else {
-      String[] els = stringRep.split(";");
+      String[] els = stringRep.split("\\s+");
       t2s = new int[els.length][];
       for (int i = 0; i < t2s.length; ++i) {
         // System.err.printf("(%d): %s\n",i,els[i]);
@@ -96,7 +99,7 @@ public class PhraseAlignment {
     return toStr(s2t());
   }
 
-  public int[][] s2t() {
+  private int[][] s2t() {
     if (t2s == null) return null;
     List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
     for (int ei=0; ei<t2s.length; ++ei) {
