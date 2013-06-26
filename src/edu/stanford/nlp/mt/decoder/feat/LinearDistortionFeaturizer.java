@@ -34,7 +34,4 @@ public class LinearDistortionFeaturizer<TK> implements
   public void initialize(int sourceInputId,
       List<ConcreteRule<TK,String>> options, Sequence<TK> foreign, Index<String> featureIndex) {
   }
-
-  public void reset() {
-  }
 }

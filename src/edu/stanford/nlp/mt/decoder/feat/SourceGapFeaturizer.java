@@ -19,8 +19,7 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class SourceGapFeaturizer implements
-    DerivationFeaturizer<IString, String>,
-    RuleFeaturizer<IString, String> {
+    DerivationFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -133,17 +132,6 @@ public class SourceGapFeaturizer implements
     return list;
   }
 
-  @Override
-  public List<FeatureValue<String>> ruleFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-    /*
-     * // Note: appears to hurt performance. List<FeatureValue<String>> list =
-     * new ArrayList<FeatureValue<String>>(nFeatures); int gapCount =
-     * getGapCount(f); addStaticFeatures(f, gapCount, list); return list;
-     */
-  }
-
   private static int getGapCount(Featurizable<IString, String> f) {
     int gapCount = 0;
     for (IString w : f.sourcePhrase) {
@@ -246,9 +234,5 @@ public class SourceGapFeaturizer implements
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-  
-  @Override
-  public void initialize(Index<String> featureIndex) {
   }
 }

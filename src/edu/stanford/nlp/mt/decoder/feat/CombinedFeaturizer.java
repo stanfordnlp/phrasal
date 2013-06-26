@@ -139,14 +139,17 @@ public class CombinedFeaturizer<TK, FV> implements
       if (!(featurizer instanceof RuleFeaturizer)) {
         continue;
       }
-      RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
-      List<FeatureValue<FV>> listFeatureValues = isoFeaturizer
+      RuleFeaturizer<TK, FV> ruleFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
+      List<FeatureValue<FV>> listFeatureValues = ruleFeaturizer
           .ruleFeaturize(f);
       if (listFeatureValues != null) {
+        boolean doNotCache = (ruleFeaturizer instanceof RuleIsolationScoreFeaturizer);
         // profiling reveals that addAll is slow due to a buried call to clone()
         for (FeatureValue<FV> fv : listFeatureValues) {
-          if (fv.name != null)
+          if (fv.name != null) {
+            fv.doNotCache = doNotCache;
             featureValues.add(fv);
+          }
         }
       }
     }

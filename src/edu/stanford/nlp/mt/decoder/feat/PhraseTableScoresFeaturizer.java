@@ -119,9 +119,6 @@ public class PhraseTableScoresFeaturizer<T> implements
     // return the results as a list
     return Arrays.asList(featureValues);
   }
-
-  public void reset() {
-  }
   
   @Override
   public void initialize(Index<String> featureIndex) {

@@ -24,7 +24,7 @@ import edu.stanford.nlp.util.Index;
  */
 @SuppressWarnings("unused")
 public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>, NeedsCloneable<IString, String>,
-    RuleFeaturizer<IString, String> {
+    RuleIsolationScoreFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugTargetGapFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(

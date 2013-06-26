@@ -211,8 +211,4 @@ public class LexicalReorderingFeaturizer implements
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
-
-  public void reset() {
-  }
-
 }

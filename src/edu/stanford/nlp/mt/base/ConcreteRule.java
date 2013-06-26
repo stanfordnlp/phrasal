@@ -53,11 +53,26 @@ public class ConcreteRule<TK,FV> implements
     List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
     cachedFeatureList = Generics.newLinkedList();
     for (FeatureValue<FV> feature : features) {
-      cachedFeatureList.add(feature);
+      if ( ! feature.doNotCache) {
+        cachedFeatureList.add(feature);
+      }
     }
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
+  /**
+   * TODO(spenceg): Merge with the constructor above. This is kludgey, and the DTU part
+   * does not justify a separate constructor.
+   * 
+   * @param abstractRule
+   * @param sourceCoverage
+   * @param phraseFeaturizer
+   * @param scorer
+   * @param sourceSequence
+   * @param phraseTableName
+   * @param sourceInputId
+   * @param hasTargetGap
+   */
   public ConcreteRule(Rule<TK> abstractRule,
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
@@ -79,7 +94,9 @@ public class ConcreteRule<TK,FV> implements
           sourceInputId);
       List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
       for (FeatureValue<FV> feature : features) {
-        cachedFeatureList.add(feature);
+        if ( ! feature.doNotCache) {
+          cachedFeatureList.add(feature);
+        }
       }
       totalScore += scorer.getIncrementalScore(features);
       // for(FeatureValue<FV> fv : features)
