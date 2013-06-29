@@ -35,12 +35,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   final Type type;
   final int phraseLimit;
 
-  private void addToMap(ConcreteTranslationOption<TK,FV> opt,
-      Map<CoverageSet, List<ConcreteTranslationOption<TK,FV>>> optsMap) {
-    List<ConcreteTranslationOption<TK,FV>> optList = optsMap
+  private void addToMap(ConcreteRule<TK,FV> opt,
+      Map<CoverageSet, List<ConcreteRule<TK,FV>>> optsMap) {
+    List<ConcreteRule<TK,FV>> optList = optsMap
         .get(opt.sourceCoverage);
     if (optList == null) {
-      optList = new LinkedList<ConcreteTranslationOption<TK,FV>>();
+      optList = new LinkedList<ConcreteRule<TK,FV>>();
       optsMap.put(opt.sourceCoverage, optList);
     }
     optList.add(opt);
@@ -51,9 +51,9 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   }
 
   @Override
-  public List<ConcreteTranslationOption<TK,FV>> translationOptions(
+  public List<ConcreteRule<TK,FV>> getRules(
       Sequence<TK> sequence, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
-    Map<CoverageSet, List<ConcreteTranslationOption<TK,FV>>> optsMap = new HashMap<CoverageSet, List<ConcreteTranslationOption<TK,FV>>>();
+    Map<CoverageSet, List<ConcreteRule<TK,FV>>> optsMap = new HashMap<CoverageSet, List<ConcreteRule<TK,FV>>>();
     
     if (DEBUG) {
       System.err.printf(
@@ -70,8 +70,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
             System.err.println("PhraseGenerator: "+phraseGenerator.getClass().getCanonicalName());
          }
          try {
-           for (ConcreteTranslationOption<TK,FV> opt : phraseGenerator
-              .translationOptions(sequence, targets, sourceInputId, scorer)) {
+           for (ConcreteRule<TK,FV> opt : phraseGenerator
+              .getRules(sequence, targets, sourceInputId, scorer)) {
              if (DEBUG) {
                System.err.println("  opt: " + opt);
              }
@@ -90,10 +90,10 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
           System.err.printf("Generator: %s\n", phraseGenerator.getClass()
               .getName());
         }
-        List<ConcreteTranslationOption<TK,FV>> potentialOptions = phraseGenerator
-            .translationOptions(sequence, targets, sourceInputId, scorer);
+        List<ConcreteRule<TK,FV>> potentialOptions = phraseGenerator
+            .getRules(sequence, targets, sourceInputId, scorer);
         BitSet novelCoverage = new CoverageSet(sequence.size());
-        for (ConcreteTranslationOption<TK,FV> option : potentialOptions) {
+        for (ConcreteRule<TK,FV> option : potentialOptions) {
           if (DEBUG) {
             System.err.println("  opt: " + option);
           }
@@ -118,31 +118,31 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     if (DEBUG) { 
        System.err.println("All preCutOpts:");
        System.err.println("===============");
-       for (List<ConcreteTranslationOption<TK,FV>> preCutOpts : optsMap.values()) {       
+       for (List<ConcreteRule<TK,FV>> preCutOpts : optsMap.values()) {       
              System.err.println(preCutOpts);
        }   
     }
     
-    List<ConcreteTranslationOption<TK,FV>> cutoffOpts = new LinkedList<ConcreteTranslationOption<TK,FV>>();
-    for (List<ConcreteTranslationOption<TK,FV>> preCutOpts : optsMap.values()) {
+    List<ConcreteRule<TK,FV>> cutoffOpts = new LinkedList<ConcreteRule<TK,FV>>();
+    for (List<ConcreteRule<TK,FV>> preCutOpts : optsMap.values()) {
       int sz = preCutOpts.size();
       if (sz <= phraseLimit) {
         cutoffOpts.addAll(preCutOpts);
         continue;
       }
 
-      List<ConcreteTranslationOption<TK,FV>> preCutOptsArray = new ArrayList<ConcreteTranslationOption<TK,FV>>(
+      List<ConcreteRule<TK,FV>> preCutOptsArray = new ArrayList<ConcreteRule<TK,FV>>(
           preCutOpts);
 
       Collections.sort(preCutOptsArray);
 
       if (DEBUG) {
         System.err.println("Sorted Options");
-        for (ConcreteTranslationOption<TK,FV> opt : preCutOpts) {
+        for (ConcreteRule<TK,FV> opt : preCutOpts) {
           System.err.println("--");
-          System.err.printf("%s => %s : %f\n", opt.abstractOption.source,
-              opt.abstractOption.target, opt.isolationScore);
-          System.err.printf("%s\n", Arrays.toString(opt.abstractOption.scores));
+          System.err.printf("%s => %s : %f\n", opt.abstractRule.source,
+              opt.abstractRule.target, opt.isolationScore);
+          System.err.printf("%s\n", Arrays.toString(opt.abstractRule.scores));
         }
       }
 
@@ -151,7 +151,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       int forceAddCnt = 0;
       for (int i = 0; (i < phraseLimit)
           || (phraseLimit == 0 && i < preCutOptsArraySz); i++) {
-        if (preCutOptsArray.get(i).abstractOption.forceAdd) {
+        if (preCutOptsArray.get(i).abstractRule.forceAdd) {
           forceAddCnt++;
         }
         cutoffOpts.add(preCutOptsArray.get(i));
@@ -160,7 +160,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       if (phraseLimit != 0)
         for (int i = phraseLimit; i < preCutOptsArraySz
             && forceAddCnt < FORCE_ADD_LIMIT; i++) {
-          if (preCutOptsArray.get(i).abstractOption.forceAdd) {
+          if (preCutOptsArray.get(i).abstractRule.forceAdd) {
             cutoffOpts.add(preCutOptsArray.get(i));
             forceAddCnt++;
           }
@@ -226,15 +226,15 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       String[] tokens = line.split("\\s+");
       SimpleSequence<IString> sequence = new SimpleSequence<IString>(
           IStrings.toIStringArray(tokens));
-      List<ConcreteTranslationOption<IString,String>> options = ptGen
-          .translationOptions(sequence, null, -1, null);
+      List<ConcreteRule<IString,String>> options = ptGen
+          .getRules(sequence, null, -1, null);
       System.out.printf("Sequence: '%s'\n", sequence);
       System.out.println("Translation Options:\n");
-      for (ConcreteTranslationOption<IString,String> option : options) {
+      for (ConcreteRule<IString,String> option : options) {
         System.out.printf("\t%s -> %s coverage: %s score: %s\n",
             sequence.subsequence(option.sourceCoverage),
-            option.abstractOption.target, option.sourceCoverage,
-            Arrays.toString(option.abstractOption.scores));
+            option.abstractRule.target, option.sourceCoverage,
+            Arrays.toString(option.abstractRule.scores));
       }
     }
   }

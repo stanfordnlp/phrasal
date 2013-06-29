@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
@@ -27,8 +27,8 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
  * 
  * @param <TK>
  */
-public class Hypothesis<TK, FV> implements Comparable<Hypothesis<TK, FV>>,
-State<Hypothesis<TK, FV>> {
+public class Derivation<TK, FV> implements Comparable<Derivation<TK, FV>>,
+State<Derivation<TK, FV>> {
 
   public static AtomicLong nextId = new AtomicLong();
 
@@ -45,13 +45,13 @@ State<Hypothesis<TK, FV>> {
   // non-primitives that already exist at the time of
   // hypothesis creation and just receive an additional
   // reference here
-  public final ConcreteTranslationOption<TK,FV> translationOpt;
+  public final ConcreteRule<TK,FV> rule;
   public final Sequence<TK> sourceSequence;
 
   // right now, translations are built up strictly in sequence.
   // however, we don't want to encourage people writing feature
   // functions to be dependent upon this fact.
-  public final Hypothesis<TK, FV> preceedingHyp;
+  public final Derivation<TK, FV> preceedingDerivation;
 
   // non-primitives created anew for each hypothesis
   public final CoverageSet sourceCoverage;
@@ -87,19 +87,19 @@ State<Hypothesis<TK, FV>> {
   /**
    * 
    */
-  public Hypothesis(int sourceInputId, Sequence<TK> sourceSequence,
+  public Derivation(int sourceInputId, Sequence<TK> sourceSequence,
       SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
       List<Annotator<TK,FV>> annotators,
-      List<List<ConcreteTranslationOption<TK,FV>>> options) {
+      List<List<ConcreteRule<TK,FV>>> ruleList) {
     this.id = nextId.incrementAndGet();
     score = 0;
-    h = heuristic.getInitialHeuristic(sourceSequence, options, scorer, sourceInputId);
+    h = heuristic.getInitialHeuristic(sourceSequence, ruleList, scorer, sourceInputId);
     insertionPosition = 0;
     length = 0;
-    translationOpt = null;
+    rule = null;
     this.sourceSequence = sourceSequence;
-    preceedingHyp = null;
+    preceedingDerivation = null;
     featurizable = null;
     untranslatedTokens = sourceSequence.size();
     sourceCoverage = new CoverageSet(sourceSequence.size());
@@ -115,37 +115,37 @@ State<Hypothesis<TK, FV>> {
   /**
    * 
    */
-  public Hypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
-      Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
+  public Derivation(int sourceInputId,
+      ConcreteRule<TK,FV> rule, int insertionPosition,
+      Derivation<TK, FV> base, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
-    this.translationOpt = translationOpt;
-    this.preceedingHyp = baseHyp;
-    this.sourceCoverage = baseHyp.sourceCoverage.clone();
-    this.sourceCoverage.or(translationOpt.sourceCoverage);
-    this.length = (insertionPosition < baseHyp.length ? baseHyp.length : // internal
+    this.rule = rule;
+    this.preceedingDerivation = base;
+    this.sourceCoverage = base.sourceCoverage.clone();
+    this.sourceCoverage.or(rule.sourceCoverage);
+    this.length = (insertionPosition < base.length ? base.length : // internal
       // insertion
-      insertionPosition + translationOpt.abstractOption.target.size()); // edge
+      insertionPosition + rule.abstractRule.target.size()); // edge
     // insertion
-    sourceSequence = baseHyp.sourceSequence;
+    sourceSequence = base.sourceSequence;
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
-        : baseHyp.translationOpt.linearDistortion(translationOpt));
+    linearDistortion = (base.rule == null ? rule.sourcePosition
+        : base.rule.linearDistortion(rule));
     featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumberStatefulFeaturizers());
 
-    annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
-    for (Annotator<TK,FV> annotator : baseHyp.annotators) {
+    annotators = new ArrayList<Annotator<TK,FV>>(base.annotators.size());
+    for (Annotator<TK,FV> annotator : base.annotators) {
       /*if (baseHyp.featurizable != null) {
     	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
     	} else {
     		System.out.println("Extend null hypothesis");
     	}
     	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-      Annotator<TK,FV> extendedAnnotator = annotator.extend(translationOpt);
+      Annotator<TK,FV> extendedAnnotator = annotator.extend(rule);
       annotators.add(extendedAnnotator);
       if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
         ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
@@ -153,61 +153,61 @@ State<Hypothesis<TK, FV>> {
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
 
-    localFeatures = featurizer.listFeaturize(featurizable);
-    localFeatures.addAll(translationOpt.cachedFeatureList);
-    score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
-    h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
-        + heuristic.getHeuristicDelta(this, translationOpt.sourceCoverage);
+    localFeatures = featurizer.featurize(featurizable);
+    localFeatures.addAll(rule.cachedFeatureList);
+    score = base.score + scorer.getIncrementalScore(localFeatures);
+    h = (Double.isInfinite(base.h)) ? base.h : base.h
+        + heuristic.getHeuristicDelta(this, rule.sourceCoverage);
     // System.err.printf("h: %f %f %d %s\n", baseHyp.h,
     // heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage),
     // untranslatedTokens, foreignCoverage);
     assert (!Double.isNaN(h));
-    depth = baseHyp.depth + 1;
+    depth = base.depth + 1;
   }
 
 
-  protected Hypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt,
-      TranslationOption<TK> abstractOption, int insertionPosition,
-      Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
+  protected Derivation(int sourceInputId,
+      ConcreteRule<TK,FV> rule,
+      Rule<TK> abstractRule, int insertionPosition,
+      Derivation<TK, FV> base, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       RawSequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
-    this.translationOpt = translationOpt;
-    this.preceedingHyp = baseHyp;
-    this.sourceCoverage = baseHyp.sourceCoverage.clone();
-    this.sourceCoverage.or(translationOpt.sourceCoverage);
-    this.length = (insertionPosition < baseHyp.length) ? baseHyp.length
+    this.rule = rule;
+    this.preceedingDerivation = base;
+    this.sourceCoverage = base.sourceCoverage.clone();
+    this.sourceCoverage.or(rule.sourceCoverage);
+    this.length = (insertionPosition < base.length) ? base.length
         : insertionPosition + targetPhrase.size();
-    sourceSequence = baseHyp.sourceSequence;
+    sourceSequence = base.sourceSequence;
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
-    linearDistortion = (baseHyp.translationOpt == null ? translationOpt.sourcePosition
-        : baseHyp.translationOpt.linearDistortion(translationOpt));
-    featurizable = new DTUFeaturizable<TK, FV>(this, abstractOption,
+    linearDistortion = (base.rule == null ? rule.sourcePosition
+        : base.rule.linearDistortion(rule));
+    featurizable = new DTUFeaturizable<TK, FV>(this, abstractRule,
         sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
-    annotators = new ArrayList<Annotator<TK,FV>>(baseHyp.annotators.size());
-    for (Annotator<TK,FV> annotator : baseHyp.annotators) {
+    annotators = new ArrayList<Annotator<TK,FV>>(base.annotators.size());
+    for (Annotator<TK,FV> annotator : base.annotators) {
       /*if (baseHyp.featurizable != null) {
       	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
       	} else {
       		System.out.println("Extend null hypothesis");
       	}
       	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-      annotators.add(annotator.extend(translationOpt));
+      annotators.add(annotator.extend(rule));
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
 
 
-    localFeatures = featurizer.listFeaturize(featurizable);
-    localFeatures.addAll(translationOpt.cachedFeatureList);
-    score = baseHyp.score + scorer.getIncrementalScore(localFeatures);
-    depth = baseHyp.depth + 1;
-    h = (Double.isInfinite(baseHyp.h)) ? baseHyp.h : baseHyp.h
-        + heuristic.getHeuristicDelta(this, translationOpt.sourceCoverage);
+    localFeatures = featurizer.featurize(featurizable);
+    localFeatures.addAll(rule.cachedFeatureList);
+    score = base.score + scorer.getIncrementalScore(localFeatures);
+    depth = base.depth + 1;
+    h = (Double.isInfinite(base.h)) ? base.h : base.h
+        + heuristic.getHeuristicDelta(this, rule.sourceCoverage);
     assert (!Double.isNaN(h));
   }
 
@@ -216,13 +216,13 @@ State<Hypothesis<TK, FV>> {
    * 
    */
   private void injectSegmentationBuffer(StringBuffer sbuf,
-      Hypothesis<TK, FV> hyp) {
-    if (hyp.preceedingHyp != null)
-      injectSegmentationBuffer(sbuf, hyp.preceedingHyp);
-    sbuf.append("\t").append(hyp.translationOpt.abstractOption.target)
+      Derivation<TK, FV> derivation) {
+    if (derivation.preceedingDerivation != null)
+      injectSegmentationBuffer(sbuf, derivation.preceedingDerivation);
+    sbuf.append("\t").append(derivation.rule.abstractRule.target)
     .append(" ");
-    sbuf.append(hyp.translationOpt.sourceCoverage).append(" ");
-    sbuf.append(Arrays.toString(hyp.translationOpt.abstractOption.scores));
+    sbuf.append(derivation.rule.sourceCoverage).append(" ");
+    sbuf.append(Arrays.toString(derivation.rule.abstractRule.scores));
     sbuf.append("\n");
   }
 
@@ -252,7 +252,7 @@ State<Hypothesis<TK, FV>> {
   }
 
   @Override
-  public int compareTo(Hypothesis<TK, FV> competitor) {
+  public int compareTo(Derivation<TK, FV> competitor) {
     int cmp = (int) Math.signum(competitor.finalScoreEstimate()
         - finalScoreEstimate());
     if (cmp != 0) {
@@ -262,8 +262,8 @@ State<Hypothesis<TK, FV>> {
   }
 
   @Override
-  public State<Hypothesis<TK, FV>> parent() {
-    return preceedingHyp;
+  public State<Derivation<TK, FV>> parent() {
+    return preceedingDerivation;
   }
 
   @Override

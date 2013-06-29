@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.recomb;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 
 /**
  * 
@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  * @param <FV>
  */
 public class TranslationNgramRecombinationFilter<TK extends IString, FV>
-    implements RecombinationFilter<Hypothesis<TK, FV>> {
+    implements RecombinationFilter<Derivation<TK, FV>> {
   final int tokenHistoryExamined;
   final List<LanguageModel<TK>> lgModels;
   static final boolean DETAILED_DEBUG = false;
@@ -47,7 +47,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
     this.lgModels = lgModels;
   }
 
-  private Sequence<TK> getMaxNgram(Hypothesis<TK, FV> hyp,
+  private Sequence<TK> getMaxNgram(Derivation<TK, FV> hyp,
       LanguageModel<TK> lgModel) {
     if (hyp.featurizable == null) {
       return null;
@@ -63,7 +63,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
     return trans.subsequence(transSize - tokenHistoryExamined, transSize);
   }
 
-  public Sequence<TK> getNgram(Hypothesis<TK, FV> hyp) {
+  public Sequence<TK> getNgram(Derivation<TK, FV> hyp) {
     Sequence<TK> longestRelNgram = null;
     for (LanguageModel<TK> lm : lgModels) {
       Sequence<TK> maxNgram = getMaxNgram(hyp, lm);
@@ -106,7 +106,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
   }
 
   @Override
-  public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+  public boolean combinable(Derivation<TK, FV> hypA, Derivation<TK, FV> hypB) {
     if (hypA.featurizable == null && hypB.featurizable == null)
       return true;
     if (hypA.featurizable == null || hypB.featurizable == null)
@@ -132,7 +132,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
+  public long recombinationHashCode(Derivation<TK, FV> hyp) {
     Sequence<TK> ngram = getNgram(hyp);
     if (ngram == null)
       return 0;

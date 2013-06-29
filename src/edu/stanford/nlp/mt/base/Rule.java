@@ -1,14 +1,15 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
+import java.util.Arrays;
 
 /**
+ * A translation rule.
  *
  * @author danielcer
  *
  * @param <T>
  */
-public class TranslationOption<T> implements Comparable<TranslationOption>{
+public class Rule<T> implements Comparable<Rule<T>>{
 
   public final int id;
   public final float[] scores;
@@ -19,13 +20,13 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   public final boolean forceAdd;
   private int hashCode = -1;
 
-  public TranslationOption(float[] scores, String[] phraseScoreNames,
+  public Rule(float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
     this(0, scores, phraseScoreNames, target, source, alignment);
   }
 
-  public TranslationOption(float[] scores, String[] phraseScoreNames,
+  public Rule(float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment, boolean forceAdd) {
     this(0, scores, phraseScoreNames, target, source, alignment, forceAdd);
@@ -34,7 +35,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   /**
 	 *
 	 */
-  public TranslationOption(int id, float[] scores, String[] phraseScoreNames,
+  public Rule(int id, float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
     this.id = id;
@@ -46,7 +47,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
     this.forceAdd = false;
   }
 
-  public TranslationOption(int id, float[] scores, String[] phraseScoreNames,
+  public Rule(int id, float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment, boolean forceAdd) {
     this.id = id;
@@ -61,7 +62,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   @Override
   public String toString() {
     StringBuilder sbuf = new StringBuilder();
-    sbuf.append(String.format("TranslationOption: \"%s\" scores: %s\n",
+    sbuf.append(String.format("Rule: \"%s\" scores: %s\n",
         target, Arrays.toString(scores)));
     return sbuf.toString();
   }
@@ -78,7 +79,7 @@ public class TranslationOption<T> implements Comparable<TranslationOption>{
   }
 
   @Override
-  public int compareTo(TranslationOption o) {
+  public int compareTo(Rule<T> o) {
     for (int i = 0; i < Math.min(o.scores.length, scores.length); i++) {
       if (o.scores[i] != scores[i]) {
         return (int)Math.signum(scores[i] - o.scores[i]);

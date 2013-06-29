@@ -2,13 +2,13 @@ package edu.stanford.nlp.mt.decoder.h;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
@@ -25,7 +25,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+  final RuleFeaturizer<TK, FV> phraseFeaturizer;
 
   protected SpanScores hSpanScores;
 
@@ -35,14 +35,14 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   public IsolatedPhraseForeignCoverageHeuristic(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
   }
 
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> newHypothesis,
+  public double getHeuristicDelta(Derivation<TK, FV> newHypothesis,
       CoverageSet newCoverage) {
-    double oldH = newHypothesis.preceedingHyp.h;
+    double oldH = newHypothesis.preceedingDerivation.h;
     double newH = 0;
     CoverageSet coverage = newHypothesis.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);
@@ -70,7 +70,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
 
     int foreignSequenceSize = foreignSequence.size();
 
@@ -86,21 +86,21 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     // initialize viterbiSpanScores
     assert (options.size() == 1);
-    for (ConcreteTranslationOption<TK,FV> option : options.get(0)) {
+    for (ConcreteRule<TK,FV> option : options.get(0)) {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
           option, translationId);
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
-          .phraseListFeaturize(f);
+          .ruleFeaturize(f);
       double score = scorer.getIncrementalScore(phraseFeatures);
       int terminalPos = option.sourcePosition
-          + option.abstractOption.source.size() - 1;
+          + option.abstractRule.source.size() - 1;
       if (score > viterbiSpanScores.getScore(option.sourcePosition, terminalPos)) {
         viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
       }
       if (DEBUG) {
         System.err.printf("\t%d:%d %s->%s score: %.3f\n", option.sourcePosition,
-            terminalPos, option.abstractOption.source,
-            option.abstractOption.target, score);
+            terminalPos, option.abstractRule.source,
+            option.abstractRule.target, score);
         System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
       }
     }

@@ -44,6 +44,7 @@ import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
@@ -249,11 +250,11 @@ public class Phrasal {
         AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = Boolean.parseBoolean(config.get(
             DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
-      ConcreteTranslationOption.setLinearDistortionType(config.get(
+      ConcreteRule.setLinearDistortionType(config.get(
           LINEAR_DISTORTION_TYPE).get(0));
     else if (withGaps)
-      ConcreteTranslationOption
-          .setLinearDistortionType(ConcreteTranslationOption.LinearDistortionType.last_contiguous_segment
+      ConcreteRule
+          .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
 
     if (withGaps)
@@ -315,7 +316,7 @@ public class Phrasal {
       }
     }
 
-    MSDFeaturizer<IString, String> lexReorderFeaturizer = null;
+    NeedsReorderingRecombination<IString, String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
@@ -392,7 +393,8 @@ public class Phrasal {
                 String[] argsList = args.split(",");
                 System.err.printf("Additional annotators: %s.\nArgs: %s\n",
                     annotatorName, Arrays.toString(argsList));
-                Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+                // TODO(spenceg) Seems like this will throw an exception?
+                Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                     .loadFeaturizer(annotatorName);
                 annotator = (Annotator<IString,String>) featurizerClass
                     .getConstructor(argsList.getClass()).newInstance(
@@ -440,19 +442,19 @@ public class Phrasal {
     }
     System.err.printf("Number of additional annotators loaded: %d\n", additionalAnnotators.size());
 
-    List<IncrementalFeaturizer<IString, String>> additionalFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+    List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
       String featurizerName = null;
       String args = null;
       for (String token : tokens) {
-        IncrementalFeaturizer<IString, String> featurizer = null;
+        Featurizer<IString, String> featurizer = null;
         if (featurizerName == null) {
           if (token.endsWith("()")) {
             String name = token.replaceFirst("\\(\\)$", "");
-            Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+            Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(name);
-            featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+            featurizer = (DerivationFeaturizer<IString, String>) featurizerClass
                 .newInstance();
             additionalFeaturizers.add(featurizer);
           } else if (token.contains("(")) {
@@ -466,9 +468,9 @@ public class Phrasal {
               String[] argsList = args.split(",");
               System.err.printf("Additional featurizer: %s.\nArgs: %s\n",
                   featurizerName, Arrays.toString(argsList));
-              Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+              Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                   .loadFeaturizer(featurizerName);
-              featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+              featurizer = (Featurizer<IString, String>) featurizerClass
                   .getConstructor(argsList.getClass()).newInstance(
                       new Object[] { argsList });
               additionalFeaturizers.add(featurizer);
@@ -493,9 +495,9 @@ public class Phrasal {
             args = args.replaceAll("\\s+$", "");
             String[] argsList = args.split(",");
             System.err.printf("args: %s\n", Arrays.toString(argsList));
-            Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+            Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(featurizerName);
-            featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+            featurizer = (Featurizer<IString, String>) featurizerClass
                 .getConstructor(argsList.getClass()).newInstance(
                     (Object) argsList);
             additionalFeaturizers.add(featurizer);
@@ -505,9 +507,9 @@ public class Phrasal {
             args += " " + token;
           }
         }
-        if (featurizer instanceof AlignmentFeaturizer)
+        if (featurizer instanceof NeedsInternalAlignments)
           Featurizable.enableAlignments();
-        if (featurizer instanceof MSDFeaturizer)
+        if (featurizer instanceof NeedsReorderingRecombination)
           msdRecombination = true;
       }
       if (featurizerName != null) {
@@ -595,7 +597,7 @@ public class Phrasal {
     }
 
     if (!additionalFeaturizers.isEmpty()) {
-      List<IncrementalFeaturizer<IString, String>> allFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
       allFeaturizers.addAll(featurizer.featurizers);
       allFeaturizers.addAll(additionalFeaturizers);
       featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
@@ -659,7 +661,6 @@ public class Phrasal {
       }
 
       weightVector.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
-      weightVector.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
 
       if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
@@ -782,7 +783,7 @@ public class Phrasal {
           PhraseGenerator<IString,String> pgen;
           try {
              pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-                getConstructor(IsolatedPhraseFeaturizer.class).newInstance(featurizer);
+                getConstructor(RuleFeaturizer.class).newInstance(featurizer);
           } catch (ClassNotFoundException e) {
              throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
           }
@@ -799,12 +800,12 @@ public class Phrasal {
         ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Create Recombination Filter
-    RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
+    RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
         .factory(featurizer.getNestedFeaturizers(), msdRecombination,
             recombinationHeuristic);
 
     // Create Search Heuristic
-    IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
+    RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
     SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
         isolatedPhraseFeaturizer,
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
@@ -842,14 +843,14 @@ public class Phrasal {
             .setSearchHeuristic((SearchHeuristic<IString, String>) heuristic
                 .clone());
         infererBuilder
-            .setRecombinationFilter((RecombinationFilter<Hypothesis<IString, String>>) filter
+            .setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter
                 .clone());
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
 
       // Silently ignored by the cube pruning decoder
-      infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       if (distortionLimit != -1) {
         infererBuilder.setMaxDistortion(distortionLimit);

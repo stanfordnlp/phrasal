@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -19,13 +19,6 @@ import edu.stanford.nlp.stats.Counter;
 public class FeatureValues {
 
   private FeatureValues() {}
-
-  /**
-   * Return true of the feature is cacheable and false otherwise.
-   */
-  public static <T> boolean isCacheable(FeatureValue<T> feature) {
-    return feature instanceof CacheableFeatureValue;
-  }
 
   /**
    * Convert a collection of feature values to a counter.
@@ -48,9 +41,9 @@ public class FeatureValues {
    * @return
    */
   public static <TK,FV> FeatureValueCollection<FV> combine(
-      Hypothesis<TK, FV> hyp) {
+      Derivation<TK, FV> hyp) {
     Counter<FV> counter = new ClassicCounter<FV>();
-    for (; hyp != null; hyp = hyp.preceedingHyp) {
+    for (; hyp != null; hyp = hyp.preceedingDerivation) {
       if (hyp.localFeatures != null) {
         for (FeatureValue<FV> feature : hyp.localFeatures) {
           counter.incrementCount(feature.name, feature.value);

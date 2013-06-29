@@ -122,6 +122,20 @@ public class RichTranslation<TK, FV> extends
       for (String el : alignmentIndex)
         sbuf.append(" ").append(el);
     }
+
+    if (System.getProperty("VERY_VERBOSE_NBEST") != null) {
+      sbuf.append(' ').append(NBEST_SEP).append(' ');
+      sbuf.append(this.featurizable.sourceSentence.toString());
+      sbuf.append(' ').append(NBEST_SEP).append(' ');
+      List<Featurizable<TK,FV>> featurizables = featurizables();
+      for (Featurizable<TK,FV> f : featurizables) {
+        sbuf.append(' ');
+        double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
+        sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
+        sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
+        sbuf.append(f.derivation.rule.abstractRule.target.toString());
+      }
+    }
   }
 
   /**
@@ -136,7 +150,7 @@ public class RichTranslation<TK, FV> extends
       int srcPosition = featurizable.sourcePosition;
       int tgtPosition = featurizable.targetPosition;
       int tgtLength = featurizable.targetPhrase.size();
-      PhraseAlignment al = featurizable.option.abstractOption.alignment;
+      PhraseAlignment al = featurizable.rule.abstractRule.alignment;
       for (int i = 0; i < tgtLength; ++i) {
         int[] sIndices = al.t2s(i);
         if (sIndices != null) {

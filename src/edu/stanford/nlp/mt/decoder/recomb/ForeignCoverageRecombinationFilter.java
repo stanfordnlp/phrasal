@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 
 /**
  * 
@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  * @param <FV>
  */
 public class ForeignCoverageRecombinationFilter<TK, FV> implements
-    RecombinationFilter<Hypothesis<TK, FV>> {
+    RecombinationFilter<Derivation<TK, FV>> {
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -18,12 +18,12 @@ public class ForeignCoverageRecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+  public boolean combinable(Derivation<TK, FV> hypA, Derivation<TK, FV> hypB) {
     return hypA.sourceCoverage.equals(hypB.sourceCoverage);
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
+  public long recombinationHashCode(Derivation<TK, FV> hyp) {
     return hyp.sourceCoverage.hashCode();
   }
 

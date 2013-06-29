@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.util.Index;
 
@@ -16,8 +16,8 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class DTULinearDistortionFeaturizer extends
-    StatefulFeaturizer<IString, String> implements
-    IsolatedPhraseFeaturizer<IString, String> {
+    NeedsState<IString, String> implements
+    RuleIsolationScoreFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -50,17 +50,7 @@ public class DTULinearDistortionFeaturizer extends
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     if (f instanceof DTUFeaturizable)
@@ -74,8 +64,8 @@ public class DTULinearDistortionFeaturizer extends
     // /////////////////////////////////////////
 
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
-    int span = f.option.sourceCoverage.length()
-        - f.option.sourceCoverage.nextSetBit(0);
+    int span = f.rule.sourceCoverage.length()
+        - f.rule.sourceCoverage.nextSetBit(0);
     int totalSz = 0;
     for (IString fw : f.sourcePhrase)
       if (fw.id != DTUTable.GAP_STR.id)
@@ -108,7 +98,7 @@ public class DTULinearDistortionFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(1);
     int minTotalSz = 0;
@@ -122,11 +112,7 @@ public class DTULinearDistortionFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override

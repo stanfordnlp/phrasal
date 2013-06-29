@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 
 import java.util.Arrays;
@@ -10,7 +10,7 @@ import java.util.Iterator;
  * @author Michel Galley
  */
 public class DTURecombinationFilter<TK, FV> implements
-    RecombinationFilter<Hypothesis<TK, FV>> {
+    RecombinationFilter<Derivation<TK, FV>> {
 
   public static final boolean DEBUG = false;
 
@@ -42,7 +42,7 @@ public class DTURecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+  public boolean combinable(Derivation<TK, FV> hypA, Derivation<TK, FV> hypB) {
 
     boolean isDTU_A = hypA instanceof DTUHypothesis;
     boolean isDTU_B = hypB instanceof DTUHypothesis;
@@ -82,7 +82,7 @@ public class DTURecombinationFilter<TK, FV> implements
               assert (itB.hasNext());
               DTUHypothesis.PendingPhrase<TK, FV> elA = itA.next();
               DTUHypothesis.PendingPhrase<TK, FV> elB = itB.next();
-              if (elA.concreteOpt.abstractOption != elB.concreteOpt.abstractOption
+              if (elA.concreteOpt.abstractRule != elB.concreteOpt.abstractRule
                   || elA.segmentIdx != elB.segmentIdx) {
                 combinable = false;
                 break;
@@ -97,7 +97,7 @@ public class DTURecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
+  public long recombinationHashCode(Derivation<TK, FV> hyp) {
     boolean isDTU = hyp instanceof DTUHypothesis;
     int isDTUn = isDTU ? 1 : 0;
     if (SIMPLE_RECOMBINATION)
@@ -116,7 +116,7 @@ public class DTURecombinationFilter<TK, FV> implements
       int i = 0;
       if (dtu != null)
         for (DTUHypothesis.PendingPhrase<TK,FV> pp : dtu.pendingPhrases)
-          hashes[++i] = pp.concreteOpt.abstractOption.hashCode();
+          hashes[++i] = pp.concreteOpt.abstractRule.hashCode();
       return Arrays.hashCode(hashes);
     }
   }

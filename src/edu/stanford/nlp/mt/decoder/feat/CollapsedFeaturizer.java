@@ -2,10 +2,11 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -15,8 +16,8 @@ import edu.stanford.nlp.util.Index;
  * @param <FV>
  */
 public class CollapsedFeaturizer<TK, FV> implements
-    IncrementalFeaturizer<TK, FV>, IsolatedPhraseFeaturizer<TK, FV> {
-  final public List<IncrementalFeaturizer<TK, FV>> featurizers;
+    DerivationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV> {
+  final public List<Featurizer<TK, FV>> featurizers;
   final double[] featurizerWts;
   final Map<FV, Double> weightMap;
   final FV combinedFeatureName;
@@ -24,7 +25,7 @@ public class CollapsedFeaturizer<TK, FV> implements
   /**
 	 */
   public CollapsedFeaturizer(FV combinedFeatureName, Map<FV, Double> weightMap,
-      IncrementalFeaturizer<TK, FV>... featurizers) {
+      Featurizer<TK, FV>... featurizers) {
     this.combinedFeatureName = combinedFeatureName;
     this.featurizers = Arrays.asList(featurizers);
     featurizerWts = new double[featurizers.length];
@@ -35,7 +36,7 @@ public class CollapsedFeaturizer<TK, FV> implements
   /**
 	 */
   public CollapsedFeaturizer(FV combinedFeatureName, double[] featurizerWts,
-      IncrementalFeaturizer<TK, FV>... featurizers) {
+      Featurizer<TK, FV>... featurizers) {
     this.combinedFeatureName = combinedFeatureName;
     this.featurizers = Arrays.asList(featurizers);
     this.featurizerWts = Arrays.copyOf(featurizerWts, featurizerWts.length);
@@ -46,7 +47,7 @@ public class CollapsedFeaturizer<TK, FV> implements
 	 */
 
   public CollapsedFeaturizer(FV combinedFeatureName,
-      IncrementalFeaturizer<TK, FV>... featurizers) {
+      Featurizer<TK, FV>... featurizers) {
     this.combinedFeatureName = combinedFeatureName;
     this.featurizers = Arrays.asList(featurizers);
     featurizerWts = new double[featurizers.length];
@@ -66,19 +67,17 @@ public class CollapsedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public FeatureValue<FV> featurize(Featurizable<TK, FV> f) {
+  public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
     double value = 0;
 
     int sz = featurizers.size();
     for (int i = 0; i < sz; i++) {
-      IncrementalFeaturizer<TK, FV> featurizer = featurizers.get(i);
-      FeatureValue<FV> singleFeatureValue = featurizer.featurize(f);
-      if (singleFeatureValue != null) {
-        value += getIndividualWeight(singleFeatureValue.name)
-            * featurizerWts[i] * singleFeatureValue.value;
+      Featurizer<TK, FV> featurizer = featurizers.get(i);
+      if ( ! (featurizer instanceof DerivationFeaturizer)) {
+        continue;
       }
-
-      List<FeatureValue<FV>> listFeatureValues = featurizer.listFeaturize(f);
+      DerivationFeaturizer<TK,FV> incFeaturizer = (DerivationFeaturizer<TK,FV>) featurizer;
+      List<FeatureValue<FV>> listFeatureValues = incFeaturizer.featurize(f);
       if (listFeatureValues != null) {
         for (FeatureValue<FV> featureValue : listFeatureValues) {
           value += getIndividualWeight(featureValue.name) * featurizerWts[i]
@@ -86,36 +85,25 @@ public class CollapsedFeaturizer<TK, FV> implements
         }
       }
     }
-
-    return new FeatureValue<FV>(combinedFeatureName, value);
+    
+    List<FeatureValue<FV>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<FV>(combinedFeatureName, value));
+    return features;
   }
 
   @Override
-  public List<FeatureValue<FV>> listFeaturize(Featurizable<TK, FV> f) {
-    return null;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public FeatureValue<FV> phraseFeaturize(Featurizable<TK, FV> f) {
+  public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
     double value = 0;
 
     int sz = featurizers.size();
     for (int i = 0; i < sz; i++) {
-      IncrementalFeaturizer<TK, FV> featurizer = featurizers.get(i);
-      if (!(featurizer instanceof IsolatedPhraseFeaturizer))
+      Featurizer<TK, FV> featurizer = featurizers.get(i);
+      if (!(featurizer instanceof RuleFeaturizer))
         continue;
-      IsolatedPhraseFeaturizer<TK, FV> isoFeaturizer = (IsolatedPhraseFeaturizer<TK, FV>) featurizer;
-
-      FeatureValue<FV> singleFeatureValue = isoFeaturizer.phraseFeaturize(f);
-
-      if (singleFeatureValue != null) {
-        value += getIndividualWeight(singleFeatureValue.name)
-            * featurizerWts[i] * singleFeatureValue.value;
-      }
+      RuleFeaturizer<TK, FV> isoFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
 
       List<FeatureValue<FV>> listFeatureValues = isoFeaturizer
-          .phraseListFeaturize(f);
+          .ruleFeaturize(f);
       if (listFeatureValues != null) {
         for (FeatureValue<FV> featureValue : listFeatureValues) {
           value += getIndividualWeight(featureValue.name) * featurizerWts[i]
@@ -124,36 +112,25 @@ public class CollapsedFeaturizer<TK, FV> implements
       }
     }
 
-    return new FeatureValue<FV>(combinedFeatureName, value);
-  }
-
-  @Override
-  public List<FeatureValue<FV>> phraseListFeaturize(Featurizable<TK, FV> f) {
-    // TODO Auto-generated method stub
-    return null;
+    List<FeatureValue<FV>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<FV>(combinedFeatureName, value));
+    return features;
   }
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
-    for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
-      featurizer.initialize(sourceInputId, options, foreign, featureIndex);
-    }
-  }
-
-  public void reset() {
-    for (IncrementalFeaturizer<TK, FV> featurizer : featurizers) {
-      featurizer.reset();
+      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
+    for (Featurizer<TK, FV> featurizer : featurizers) {
+      ((DerivationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
     }
   }
   
-  @SuppressWarnings("unchecked")
   @Override
   public void initialize(Index<String> featureIndex) {
     // Initialize the IsolatedPhraseFeaturizers
-    for (IncrementalFeaturizer<TK,FV> featurizer : featurizers) {
-      if (featurizer instanceof IsolatedPhraseFeaturizer) {
-        ((IsolatedPhraseFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
+    for (Featurizer<TK,FV> featurizer : featurizers) {
+      if (featurizer instanceof RuleFeaturizer) {
+        ((RuleFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
       }
     }
   }

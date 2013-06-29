@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.inferer.impl.CubePruningDecoder;
 import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.inferer.impl.MultiBeamDecoder;
-import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 
 /**
  * Creates an approximate search procedure.
@@ -30,10 +30,10 @@ public class InfererBuilderFactory {
     String infererName = infererSpecs.length == 0 ? DEFAULT_INFERER : infererSpecs[0].toLowerCase();
     Map<String, String> paramPairs = FactoryUtil.getParamPairs(infererSpecs);
 
-    HypothesisBeamFactory.BeamType beamType = null;
+    BeamFactory.BeamType beamType = null;
     String beamTypeStr = paramPairs.get(BEAM_TYPE_OPT);
     if (beamTypeStr != null) {
-      beamType = Enum.valueOf(HypothesisBeamFactory.BeamType.class,
+      beamType = Enum.valueOf(BeamFactory.BeamType.class,
           beamTypeStr);
     }
 

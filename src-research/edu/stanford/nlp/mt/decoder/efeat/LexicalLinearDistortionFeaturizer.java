@@ -2,13 +2,13 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Index;
  * 
  */
 public class LexicalLinearDistortionFeaturizer implements
-    IncrementalFeaturizer<IString, String> {
+    DerivationFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LLD";
   public static final String ABSOLUTE = ":a";
   public static final String LEFT_SHIFT = ":l";
@@ -57,19 +57,14 @@ public class LexicalLinearDistortionFeaturizer implements
     doSourceConjTarget = Boolean.parseBoolean(args[3]);
     doPrior = Boolean.parseBoolean(args[4]);
   }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
+  
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     if (f.linearDistortion == 0)
@@ -79,8 +74,8 @@ public class LexicalLinearDistortionFeaturizer implements
     String prefix;
     if (lrDistance) {
       int signedLinearDistortion = (f.prior == null ? -f.sourcePosition
-          : f.prior.hyp.translationOpt
-              .signedLinearDistortion(f.hyp.translationOpt));
+          : f.prior.derivation.rule
+              .signedLinearDistortion(f.derivation.rule));
       String type = (signedLinearDistortion < 0 ? LEFT_SHIFT : RIGHT_SHIFT);
       prefix = FEATURE_PREFIX + type;
     } else {

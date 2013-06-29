@@ -2,10 +2,8 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -14,7 +12,7 @@ import edu.stanford.nlp.util.Index;
  * @param <T>
  */
 public class PhraseTableScoresFeaturizer<T> implements
-    IncrementalFeaturizer<T, String>, IsolatedPhraseFeaturizer<T, String> {
+    RuleFeaturizer<T, String> {
   public final static String PREFIX = "TM";
   public static final String DEBUG_PROPERTY = "ptScoresFeaturizerDEBUG";
   final HashMap<String, String[]> featureNamesHash;
@@ -77,19 +75,11 @@ public class PhraseTableScoresFeaturizer<T> implements
   }
 
   /**
-   * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#featurize(Featurizable)
-   */
-  @Override
-  public FeatureValue<String> featurize(Featurizable<T, String> featurizable) {
-    return null;
-  }
-
-  /**
-   * @see edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer#listFeaturize(Featurizable)
+   * @see edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer#featurize(Featurizable)
    */
   @SuppressWarnings("unchecked")
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<T, String> featurizable) {
     FeatureValue<String>[] featureValues;
     if (featurizable.phraseTableName == UnknownWordFeaturizer.UNKNOWN_PHRASE_TABLE_NAME) {
@@ -128,25 +118,6 @@ public class PhraseTableScoresFeaturizer<T> implements
 
     // return the results as a list
     return Arrays.asList(featureValues);
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<T, String> f) {
-    return featurize(f);
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
-      Featurizable<T, String> f) {
-    return listFeaturize(f);
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<T,String>> options, Sequence<T> foreign, Index<String> featureIndex) {
-  }
-
-  public void reset() {
   }
   
   @Override

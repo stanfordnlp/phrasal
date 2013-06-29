@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInfererBuilder;
@@ -14,9 +14,9 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.Generics;
@@ -80,12 +80,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   @Override
-  protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
+  protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest) {
-    featurizer.reset();
     final int sourceLength = source.size();
 
     // create beams. We don't need to store all of them, since the translation
@@ -93,8 +92,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
 
     // TM (phrase table) query for applicable rules
-    List<ConcreteTranslationOption<TK,FV>> options = phraseGenerator
-        .translationOptions(source, targets, sourceInputId, scorer);
+    List<ConcreteRule<TK,FV>> options = phraseGenerator
+        .getRules(source, targets, sourceInputId, scorer);
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
@@ -112,9 +111,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Fill Beam 0...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, optionGrid, 
         recombinationHistory, maxDistortion, 0);
-    List<List<ConcreteTranslationOption<TK,FV>>> allOptions = Generics.newArrayList(1);
+    List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
     allOptions.add(options);
-    Hypothesis<TK, FV> nullHypothesis = new Hypothesis<TK, FV>(sourceInputId, source,
+    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
@@ -159,7 +158,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Return the best beam, which should be the goal beam
     boolean isGoalBeam = true;
     Collections.reverse(beams);
-    for (Beam<Hypothesis<TK,FV>> beam : beams) {
+    for (Beam<Derivation<TK,FV>> beam : beams) {
       if (beam.size() != 0
           && (constrainedOutputSpace == null || constrainedOutputSpace
           .allowableFinal(beam.iterator().next().featurizable))) {
@@ -192,7 +191,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
       // Hypothesis generation
-      Hypothesis<TK, FV> newHyp = new Hypothesis<TK, FV>(sourceInputId,
+      Derivation<TK, FV> newHyp = new Derivation<TK, FV>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic);
       consequents.add(new Item<TK,FV>(newHyp, successor));
     }
@@ -208,10 +207,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <FV>
    */
   private static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
-    public final Hypothesis<TK, FV> hypothesis;
+    public final Derivation<TK, FV> hypothesis;
     public final Consequent<TK, FV> consequent;
 
-    public Item(Hypothesis<TK,FV> hypothesis, Consequent<TK,FV> consequent) {
+    public Item(Derivation<TK,FV> hypothesis, Consequent<TK,FV> consequent) {
       this.hypothesis = hypothesis;
       this.consequent = consequent;
     }
@@ -228,7 +227,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   @Override
-  public void dump(Hypothesis<TK, FV> hyp) {
+  public void dump(Derivation<TK, FV> hyp) {
     throw new UnsupportedOperationException();
   }
 }

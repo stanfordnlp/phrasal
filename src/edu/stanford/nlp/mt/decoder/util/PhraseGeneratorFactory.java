@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.DTUTable;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * 
@@ -26,7 +26,7 @@ public class PhraseGeneratorFactory {
   public static final String NEW_DYNAMIC_GENERATOR = "newdg";
 
   static public <FV> PhraseGenerator<IString,FV> factory(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       Boolean dropUnknownWords, String... pgSpecs) throws IOException {
 
     if (pgSpecs.length == 0) {

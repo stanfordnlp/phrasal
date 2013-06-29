@@ -1,10 +1,14 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 /**
+ * Indicates that the featurizer needs to store state in addition
+ * to the default, which consists of: (1) the coverage set; (2)
+ * the LM history.
+ * 
  * @author Michel Galley
  */
-public abstract class StatefulFeaturizer<TK, FV> implements
-    IncrementalFeaturizer<TK, FV> {
+public abstract class NeedsState<TK, FV> implements
+    DerivationFeaturizer<TK, FV> {
 
   private static final int UNDEFINED_ID = -1;
 

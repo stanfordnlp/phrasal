@@ -1,21 +1,24 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
+import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.util.Generics;
 
 /**
+ * A translation rule that is associated with a particular source span
+ * in an input sentence.
  * 
  * @author danielcer
  * 
  * @param <TK>
  */
-public class ConcreteTranslationOption<TK,FV> implements
-    Comparable<ConcreteTranslationOption<TK,FV>> {
+public class ConcreteRule<TK,FV> implements
+    Comparable<ConcreteRule<TK,FV>> {
 
-  public final TranslationOption<TK> abstractOption;
+  public final Rule<TK> abstractRule;
   public final CoverageSet sourceCoverage;
   public final String phraseTableName;
   public final int sourcePosition;
@@ -37,63 +40,78 @@ public class ConcreteTranslationOption<TK,FV> implements
           .println("warning: standard linear distortion with DTU phrases.");
   }
 
-  public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
+  public ConcreteRule(Rule<TK> abstractRule,
       CoverageSet sourceCoverage,
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
-    this.abstractOption = abstractOption;
+    this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
         sourceInputId);
-    List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
-    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
+    cachedFeatureList = Generics.newLinkedList();
     for (FeatureValue<FV> feature : features) {
-      if (FeatureValues.isCacheable(feature))
+      if ( ! feature.doNotCache) {
         cachedFeatureList.add(feature);
+      }
     }
     this.isolationScore = scorer.getIncrementalScore(features);
   }
 
-  public ConcreteTranslationOption(TranslationOption<TK> abstractOption,
+  /**
+   * TODO(spenceg): Merge with the constructor above. This is kludgey, and the DTU part
+   * does not justify a separate constructor.
+   * 
+   * @param abstractRule
+   * @param sourceCoverage
+   * @param phraseFeaturizer
+   * @param scorer
+   * @param sourceSequence
+   * @param phraseTableName
+   * @param sourceInputId
+   * @param hasTargetGap
+   */
+  public ConcreteRule(Rule<TK> abstractRule,
       CoverageSet sourceCoverage,
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
       boolean hasTargetGap) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);
     assert (hasTargetGap);
-    this.abstractOption = abstractOption;
+    this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
 
-    cachedFeatureList = new LinkedList<FeatureValue<FV>>();
+    cachedFeatureList = Generics.newLinkedList();
     
     // TM scores:
     double totalScore = 0.0;
     {
       Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
           sourceInputId);
-      List<FeatureValue<FV>> features = phraseFeaturizer.phraseListFeaturize(f);
+      List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
       for (FeatureValue<FV> feature : features) {
-        if (FeatureValues.isCacheable(feature))
+        if ( ! feature.doNotCache) {
           cachedFeatureList.add(feature);
+        }
       }
       totalScore += scorer.getIncrementalScore(features);
       // for(FeatureValue<FV> fv : features)
       // System.err.printf("feature(global): %s\n", fv);
     }
     // Get all other feature scores (LM, word penalty):
-    if (abstractOption instanceof DTUOption) {
-      DTUOption<TK> dtuOpt = (DTUOption<TK>) abstractOption;
+    if (abstractRule instanceof DTURule) {
+      DTURule<TK> dtuOpt = (DTURule<TK>) abstractRule;
       for (int i = 0; i < dtuOpt.dtus.length; ++i) {
         Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(sourceSequence,
             this, sourceInputId, i);
         assert (f.translationScores.length == 0);
         assert (f.phraseScoreNames.length == 0);
         List<FeatureValue<FV>> features = phraseFeaturizer
-            .phraseListFeaturize(f);
+            .ruleFeaturize(f);
         // for(FeatureValue<FV> fv : features)
         // System.err.printf("feature(%s): %s\n", dtuOpt.dtus[i].toString(),
         // fv);
@@ -108,26 +126,26 @@ public class ConcreteTranslationOption<TK,FV> implements
   @Override
   public String toString() {
     StringBuilder sbuf = new StringBuilder();
-    sbuf.append("ConcreteTranslationOption:\n");
-    sbuf.append(String.format("\tAbstractOption: %s\n", abstractOption
+    sbuf.append("ConcreteRule:\n");
+    sbuf.append(String.format("\tAbstractOption: %s\n", abstractRule
         .toString().replaceAll("\n", "\n\t")));
     sbuf.append(String.format("\tSourceCoverage: %s\n", sourceCoverage));
     sbuf.append(String.format("\tPhraseTable: %s\n", phraseTableName));
     return sbuf.toString();
   }
 
-  public int linearDistortion(ConcreteTranslationOption<TK,FV> opt) {
-    return linearDistortion(opt, linearDistortionType);
+  public int linearDistortion(ConcreteRule<TK,FV> rule) {
+    return linearDistortion(rule, linearDistortionType);
   }
 
-  public int linearDistortion(ConcreteTranslationOption<TK,FV> opt,
+  public int linearDistortion(ConcreteRule<TK,FV> rule,
       LinearDistortionType type) {
     final int nextSourceToken;
     if (type != LinearDistortionType.standard)
       assert (Phrasal.withGaps);
     switch (type) {
     case standard:
-      nextSourceToken = sourcePosition + abstractOption.source.size();
+      nextSourceToken = sourcePosition + abstractRule.source.size();
       break;
     case last_contiguous_segment:
       nextSourceToken = sourceCoverage.length();
@@ -147,16 +165,16 @@ public class ConcreteTranslationOption<TK,FV> implements
       int firstIdx = sourceCoverage
           .nextClearBit(sourceCoverage.nextSetBit(0));
       int lastIdx = sourceCoverage.length();
-      int firstDelta = Math.abs(firstIdx - opt.sourcePosition);
-      int lastDelta = Math.abs(lastIdx - opt.sourcePosition);
+      int firstDelta = Math.abs(firstIdx - rule.sourcePosition);
+      int lastDelta = Math.abs(lastIdx - rule.sourcePosition);
       return Math.min(firstDelta, lastDelta);
     }
     case average_distance: {
       int firstIdx = sourceCoverage
           .nextClearBit(sourceCoverage.nextSetBit(0));
       int lastIdx = sourceCoverage.length();
-      int firstDelta = Math.abs(firstIdx - opt.sourcePosition);
-      int lastDelta = Math.abs(lastIdx - opt.sourcePosition);
+      int firstDelta = Math.abs(firstIdx - rule.sourcePosition);
+      int lastDelta = Math.abs(lastIdx - rule.sourcePosition);
       // System.err.printf("coverage: %s first=%d last=%d pos=%d delta=(%d,%d) min=%d\n",
       // foreignCoverage, firstIdx, lastIdx, opt.foreignPos, firstDelta,
       // lastDelta, Math.min(firstDelta, lastDelta));
@@ -165,17 +183,17 @@ public class ConcreteTranslationOption<TK,FV> implements
     default:
       throw new UnsupportedOperationException();
     }
-    return Math.abs(nextSourceToken - opt.sourcePosition);
+    return Math.abs(nextSourceToken - rule.sourcePosition);
   }
 
-  public int signedLinearDistortion(ConcreteTranslationOption<TK,FV> opt) {
+  public int signedLinearDistortion(ConcreteRule<TK,FV> rule) {
     assert (linearDistortionType == LinearDistortionType.standard);
-    int nextSourceToken = sourcePosition + abstractOption.source.size();
-    return nextSourceToken - opt.sourcePosition;
+    int nextSourceToken = sourcePosition + abstractRule.source.size();
+    return nextSourceToken - rule.sourcePosition;
   }
 
   @Override
-  public int compareTo(ConcreteTranslationOption<TK,FV> o) {
+  public int compareTo(ConcreteRule<TK,FV> o) {
     return (int) Math.signum(o.isolationScore - this.isolationScore);
   }
 

@@ -3,14 +3,10 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -20,8 +16,7 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  * 
  */
-public class DiscriminativePhraseTable implements IncrementalFeaturizer<IString,String>, 
-IsolatedPhraseFeaturizer<IString, String> {
+public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String> {
   
   private static final String FEATURE_NAME = "DiscPT";
   private static final String SOURCE = "src";
@@ -50,7 +45,7 @@ IsolatedPhraseFeaturizer<IString, String> {
   public void initialize(Index<String> featureIndex) {}
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> fvalues = new LinkedList<FeatureValue<String>>();
 
     String srcPhrase = f.sourcePhrase.toString("_");
@@ -59,17 +54,17 @@ IsolatedPhraseFeaturizer<IString, String> {
     if (doSource && doTarget) {
       String suffix = srcPhrase + ">"
           + tgtPhrase;
-      fvalues.add(new CacheableFeatureValue<String>(
+      fvalues.add(new FeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE_AND_TARGET, suffix), 
           featureValue));
 
     } else if (doSource) {
-      fvalues.add(new CacheableFeatureValue<String>(
+      fvalues.add(new FeatureValue<String>(
           makeFeatureString(FEATURE_NAME, SOURCE, srcPhrase), 
           featureValue));
 
     } else if (doTarget) {
-      fvalues.add(new CacheableFeatureValue<String>(
+      fvalues.add(new FeatureValue<String>(
           makeFeatureString(FEATURE_NAME, TARGET, tgtPhrase), 
           featureValue));
     }
@@ -79,31 +74,4 @@ IsolatedPhraseFeaturizer<IString, String> {
   private String makeFeatureString(String featurePrefix, String featureType, String value) {
     return String.format("%s.%s:%s", featurePrefix, featureType, value);
   }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(
-      int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
 }

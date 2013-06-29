@@ -11,6 +11,10 @@ import java.util.*;
 public class FeatureValue<T> {
   public final double value;
   public final T name;
+  
+  // Some featurizers attempt to cache feature values for later lookup. This flag
+  // instructs those featurizers not to cache this feature value.
+  public boolean doNotCache = false;
 
   static WeakHashMap<Object, WeakReference<Object>> nameCache = new WeakHashMap<Object, WeakReference<Object>>();
 

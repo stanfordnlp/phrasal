@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.LanguageModels;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * @author danielcer
@@ -120,14 +121,14 @@ public class FeaturizerFactory {
   }
 
   @SuppressWarnings("unchecked")
-  public static <TK, FV> Class<IncrementalFeaturizer<TK, FV>> loadFeaturizer(
+  public static <TK, FV> Class<Featurizer<TK, FV>> loadFeaturizer(
       String name) {
     String trueName = (featureAliases.containsKey(name) ? featureAliases.get(
         name).get(0) : name);
-    Class<IncrementalFeaturizer<TK, FV>> featurizerClass = null;
+    Class<Featurizer<TK, FV>> featurizerClass = null;
 
     try {
-      featurizerClass = (Class<IncrementalFeaturizer<TK, FV>>) ClassLoader
+      featurizerClass = (Class<Featurizer<TK, FV>>) ClassLoader
           .getSystemClassLoader().loadClass(trueName);
     } catch (ClassNotFoundException c) {
       System.err.printf("Failed to load featurizer %s (class name: %s)\n",
@@ -154,9 +155,9 @@ public class FeaturizerFactory {
     Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
 
     // Linear distortion
-    final IncrementalFeaturizer<IString, String> linearDistortionFeaturizer;
+    final DerivationFeaturizer<IString, String> linearDistortionFeaturizer;
     try {
-      linearDistortionFeaturizer = (IncrementalFeaturizer<IString, String>) Class
+      linearDistortionFeaturizer = (DerivationFeaturizer<IString, String>) Class
           .forName(paramPairs.get(LINEAR_DISTORTION_PARAMETER)).newInstance();
       System.err.println("Linear distortion featurizer: "
           + linearDistortionFeaturizer);
@@ -165,7 +166,7 @@ public class FeaturizerFactory {
     }
 
     // Gaps:
-    List<IncrementalFeaturizer<IString, String>> gapFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+    List<DerivationFeaturizer<IString, String>> gapFeaturizers = new LinkedList<DerivationFeaturizer<IString, String>>();
     GapType gapType = GapType.valueOf(paramPairs.get(GAP_PARAMETER));
     if (gapType == GapType.source || gapType == GapType.both)
       gapFeaturizers.add(new SourceGapFeaturizer());
@@ -182,10 +183,11 @@ public class FeaturizerFactory {
                     "Baseline featurizers requires that a language model is specificed using the parameter '%s'",
                     ARPA_LM_PARAMETER));
       }
-      List<IncrementalFeaturizer<IString, String>> baselineFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
       baselineFeaturizers.addAll(gapFeaturizers);
 
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer, phraseTableScoresFeaturizer;
+      DerivationFeaturizer<IString, String> arpaLmFeaturizer;
+      Featurizer<IString,String> phraseTableScoresFeaturizer;
 
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
@@ -210,7 +212,7 @@ public class FeaturizerFactory {
       if (featurizerName.equals(BASELINE_FEATURIZERS)) {
         return new CombinedFeaturizer<IString, String>(baselineFeaturizers);
       } else {
-        IncrementalFeaturizer<IString, String> collapsedTmFeaturizer = new CollapsedFeaturizer<IString, String>(
+        DerivationFeaturizer<IString, String> collapsedTmFeaturizer = new CollapsedFeaturizer<IString, String>(
             "comboBaselineTM:", DEFAULT_TM_FEATURE_WEIGHTS_MAP,
             phraseTableScoresFeaturizer);
         CollapsedFeaturizer<IString, String> fullModel = new CollapsedFeaturizer<IString, String>(
@@ -219,11 +221,11 @@ public class FeaturizerFactory {
         return new CombinedFeaturizer<IString, String>(fullModel);
       }
     } else if (featurizerName.equals(PSEUDO_PHARAOH_GENERATOR)) {
-      List<IncrementalFeaturizer<IString, String>> pharaohFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
       pharaohFeaturizers.addAll(gapFeaturizers);
 
-      IncrementalFeaturizer<IString, String> arpaLmFeaturizer, phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
-
+      DerivationFeaturizer<IString, String> arpaLmFeaturizer;
+      Featurizer<IString,String> phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);

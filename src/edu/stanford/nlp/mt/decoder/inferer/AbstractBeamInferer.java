@@ -21,7 +21,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       DEBUG_OPT, "false"));
   static public boolean DISTINCT_SURFACE_TRANSLATIONS = false;
   public final int beamCapacity;
-  public final HypothesisBeamFactory.BeamType beamType;
+  public final BeamFactory.BeamType beamType;
 
   public static final int MAX_DUPLICATE_FACTOR = 10;
   public static final int SAFE_LIST = 500;
@@ -55,18 +55,18 @@ abstract public class AbstractBeamInferer<TK, FV> extends
      * "Warning: Requested nbest list size, %d, exceeds beam capacity of %d\n",
      * size, beamCapacity); }
      */
-    RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory = new RecombinationHistory<Hypothesis<TK, FV>>();
+    RecombinationHistory<Derivation<TK, FV>> recombinationHistory = new RecombinationHistory<Derivation<TK, FV>>();
 
-    Beam<Hypothesis<TK, FV>> beam = decode(scorer, source, sourceInputId,
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         recombinationHistory, constrainedOutputSpace, targets, size);
     if (beam == null)
       return null;
     List<RichTranslation<TK, FV>> translations = new LinkedList<RichTranslation<TK, FV>>();
 
-    List<Hypothesis<TK, FV>> goalStates = new ArrayList<Hypothesis<TK, FV>>(
+    List<Derivation<TK, FV>> goalStates = new ArrayList<Derivation<TK, FV>>(
         beam.size());
 
-    for (Hypothesis<TK, FV> hyp : beam) {
+    for (Derivation<TK, FV> hyp : beam) {
       goalStates.add(hyp);
     }
 
@@ -78,30 +78,30 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
     featurizer.rerankingMode(true);
 
-    StateLatticeDecoder<Hypothesis<TK, FV>> latticeDecoder = new StateLatticeDecoder<Hypothesis<TK, FV>>(
+    StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<Derivation<TK, FV>>(
         goalStates, recombinationHistory);
 
     int hypCount = 0, maxDuplicateCount = size * MAX_DUPLICATE_FACTOR;
-    for (List<Hypothesis<TK, FV>> hypList : latticeDecoder) {
+    for (List<Derivation<TK, FV>> hypList : latticeDecoder) {
 
       boolean withDTUs = false;
       ++hypCount;
-      Hypothesis<TK, FV> hyp = null;
-      Set<TranslationOption<TK>> seenOptions = new HashSet<TranslationOption<TK>>();
+      Derivation<TK, FV> hyp = null;
+      Set<Rule<TK>> seenOptions = new HashSet<Rule<TK>>();
 
-      for (Hypothesis<TK, FV> nextHyp : hypList) {
+      for (Derivation<TK, FV> nextHyp : hypList) {
         if (hyp == null) {
           hyp = nextHyp;
           continue;
         }
-        if (nextHyp.translationOpt.abstractOption instanceof DTUOption)
+        if (nextHyp.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {
           hyp = new DTUHypothesis<TK, FV>(sourceInputId,
-              nextHyp.translationOpt, hyp.length, hyp, nextHyp, featurizer,
+              nextHyp.rule, hyp.length, hyp, nextHyp, featurizer,
               scorer, heuristic, seenOptions);
         } else {
-          hyp = new Hypothesis<TK, FV>(sourceInputId, nextHyp.translationOpt,
+          hyp = new Derivation<TK, FV>(sourceInputId, nextHyp.rule,
               hyp.length, hyp, featurizer, scorer, heuristic);
         }
       }
@@ -125,7 +125,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
 
         // Add current hypothesis to nbest list and set of uniq strings:
-        Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
+        Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
             hyp.score, FeatureValues.combine(hyp), collectAlignments(hyp),
             beamGoalHyp.id));
@@ -136,7 +136,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
       } else {
 
-        Hypothesis<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
+        Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         assert (hyp != null);
         
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
@@ -205,11 +205,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets) {
-    Beam<Hypothesis<TK, FV>> beam = decode(scorer, source, sourceInputId,
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         null, constrainedOutputSpace, targets, 1);
     if (beam == null)
       return null;
-    Hypothesis<TK, FV> hyp = beam.iterator().next();
+    Derivation<TK, FV> hyp = beam.iterator().next();
     return new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
         FeatureValues.combine(hyp));
   }
@@ -217,9 +217,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   /**
 	 * 
 	 */
-  abstract protected Beam<Hypothesis<TK, FV>> decode(Scorer<FV> scorer,
+  abstract protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int nbest);
 
@@ -227,13 +227,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    *
    */
   @SuppressWarnings("unchecked")
-  protected Beam<Hypothesis<TK, FV>>[] createBeamsForCoverageCounts(
+  protected Beam<Derivation<TK, FV>>[] createBeamsForCoverageCounts(
       int beamCnt, int capacity,
-      RecombinationFilter<Hypothesis<TK, FV>> filter,
-      RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory) {
-    Beam<Hypothesis<TK, FV>>[] beams = new Beam[beamCnt];
+      RecombinationFilter<Derivation<TK, FV>> filter,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
+    Beam<Derivation<TK, FV>>[] beams = new Beam[beamCnt];
     for (int i = 0; i < beams.length; i++) {
-      beams[i] = HypothesisBeamFactory.factory(beamType, filter, capacity,
+      beams[i] = BeamFactory.factory(beamType, filter, capacity,
           recombinationHistory);
     }
     return beams;
@@ -242,12 +242,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   /**
    *
    */
-  protected Beam<Hypothesis<TK, FV>>[] createBeamsForCoverageCounts(
-      int beamCnt, int capacity, RecombinationFilter<Hypothesis<TK, FV>> filter) {
+  protected Beam<Derivation<TK, FV>>[] createBeamsForCoverageCounts(
+      int beamCnt, int capacity, RecombinationFilter<Derivation<TK, FV>> filter) {
     @SuppressWarnings("unchecked")
-    Beam<Hypothesis<TK, FV>>[] beams = new Beam[beamCnt];
+    Beam<Derivation<TK, FV>>[] beams = new Beam[beamCnt];
     for (int i = 0; i < beams.length; i++) {
-      beams[i] = HypothesisBeamFactory.factory(beamType, filter, capacity);
+      beams[i] = BeamFactory.factory(beamType, filter, capacity);
     }
     return beams;
   }
@@ -257,13 +257,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @author danielcer
    */
   public class CoverageBeams {
-    final private Map<CoverageSet, Beam<Hypothesis<TK, FV>>> beams = new HashMap<CoverageSet, Beam<Hypothesis<TK, FV>>>();
+    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = new HashMap<CoverageSet, Beam<Derivation<TK, FV>>>();
     final private Set<CoverageSet>[] coverageCountToCoverageSets;
-    final private RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory;
+    final private RecombinationHistory<Derivation<TK, FV>> recombinationHistory;
 
     @SuppressWarnings("unchecked")
     public CoverageBeams(int sourceSize,
-        RecombinationHistory<Hypothesis<TK, FV>> recombinationHistory) {
+        RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
       coverageCountToCoverageSets = new Set[sourceSize + 1];
       for (int i = 0; i < sourceSize + 1; i++) {
         coverageCountToCoverageSets[i] = new HashSet<CoverageSet>();
@@ -271,14 +271,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       this.recombinationHistory = recombinationHistory;
     }
 
-    public void put(Hypothesis<TK, FV> hypothesis) {
+    public void put(Derivation<TK, FV> hypothesis) {
       get(hypothesis.sourceCoverage).put(hypothesis);
     }
 
-    private Beam<Hypothesis<TK, FV>> get(CoverageSet coverage) {
-      Beam<Hypothesis<TK, FV>> beam = beams.get(coverage);
+    private Beam<Derivation<TK, FV>> get(CoverageSet coverage) {
+      Beam<Derivation<TK, FV>> beam = beams.get(coverage);
       if (beam == null) {
-        beam = HypothesisBeamFactory.factory(beamType, filter, beamCapacity,
+        beam = BeamFactory.factory(beamType, filter, beamCapacity,
             recombinationHistory);
         beams.put(coverage, beam);
         int coverageCount = coverage.cardinality();
@@ -287,12 +287,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       return beam;
     }
 
-    public List<Hypothesis<TK, FV>> getHypotheses(int coverageCount) {
-      List<Hypothesis<TK, FV>> hypothesisList = new LinkedList<Hypothesis<TK, FV>>();
+    public List<Derivation<TK, FV>> getHypotheses(int coverageCount) {
+      List<Derivation<TK, FV>> hypothesisList = new LinkedList<Derivation<TK, FV>>();
 
       for (CoverageSet coverage : coverageCountToCoverageSets[coverageCount]) {
-        Beam<Hypothesis<TK, FV>> hypothesisBeam = get(coverage);
-        for (Hypothesis<TK, FV> hypothesis : hypothesisBeam) {
+        Beam<Derivation<TK, FV>> hypothesisBeam = get(coverage);
+        for (Derivation<TK, FV> hypothesis : hypothesisBeam) {
           hypothesisList.add(hypothesis);
         }
       }
@@ -301,5 +301,5 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
   }
 
-  abstract public void dump(Hypothesis<TK, FV> hyp);
+  abstract public void dump(Derivation<TK, FV> hyp);
 }

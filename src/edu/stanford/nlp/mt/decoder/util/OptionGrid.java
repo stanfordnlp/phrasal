@@ -5,11 +5,11 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
- * Grid of ConcreteTranslationOptions (translation rules) for a given
+ * Grid of ConcreteRules (translation rules) for a given
  * source sentence.
  * 
  * Optionally implements lazy sorting of translation rules according
@@ -21,8 +21,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  */
 public class OptionGrid<TK,FV> {
-  
-  private final List<ConcreteTranslationOption<TK,FV>>[] grid;
+  private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
   private final boolean doLazySorting;
@@ -33,12 +32,13 @@ public class OptionGrid<TK,FV> {
    * @param options
    * @param source
    */
-  public OptionGrid(List<ConcreteTranslationOption<TK,FV>> options,
+  public OptionGrid(List<ConcreteRule<TK,FV>> options,
       Sequence<TK> source) {
     this(options, source, false);
   }
 
-  public OptionGrid(List<ConcreteTranslationOption<TK, FV>> options,
+  @SuppressWarnings("unchecked")
+  public OptionGrid(List<ConcreteRule<TK, FV>> ruleList,
       Sequence<TK> source, boolean doLazySorting) {
     sourceLength = source.size();
     isSorted = new BitSet();
@@ -48,13 +48,13 @@ public class OptionGrid<TK,FV> {
     grid = new List[sourceLength * sourceLength];
     for (int startIdx = 0; startIdx < sourceLength; startIdx++) {
       for (int endIdx = startIdx; endIdx < sourceLength; endIdx++) {
-        grid[getIndex(startIdx, endIdx)] = new ArrayList<ConcreteTranslationOption<TK,FV>>();
+        grid[getIndex(startIdx, endIdx)] = new ArrayList<ConcreteRule<TK,FV>>();
       }
     }
-    for (ConcreteTranslationOption<TK,FV> opt : options) {
-      int startPos = opt.sourcePosition;
-      int endPos = opt.sourceCoverage.nextClearBit(opt.sourcePosition) - 1;
-      grid[getIndex(startPos, endPos)].add(opt);
+    for (ConcreteRule<TK,FV> rule : ruleList) {
+      int startPos = rule.sourcePosition;
+      int endPos = rule.sourceCoverage.nextClearBit(rule.sourcePosition) - 1;
+      grid[getIndex(startPos, endPos)].add(rule);
     }
   }
 
@@ -85,7 +85,7 @@ public class OptionGrid<TK,FV> {
    * @param endPos Absolute right edge of the span.
    * @return
    */
-  public List<ConcreteTranslationOption<TK,FV>> get(int startPos, int endPos) {
+  public List<ConcreteRule<TK,FV>> get(int startPos, int endPos) {
     int offset = getIndex(startPos, endPos);
     if (offset >= grid.length) throw new IllegalArgumentException("Coordinates are out-of-bounds");
     if (doLazySorting && ! isSorted.get(offset)) {

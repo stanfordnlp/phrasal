@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 
 /**
  * 
@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.decoder.util.Hypothesis;
  * @param <FV>
  */
 public class TranslationIdentityRecombinationFilter<TK, FV> implements
-    RecombinationFilter<Hypothesis<TK, FV>> {
+    RecombinationFilter<Derivation<TK, FV>> {
   boolean noisy = false;
 
   @Override
@@ -19,7 +19,7 @@ public class TranslationIdentityRecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public boolean combinable(Hypothesis<TK, FV> hypA, Hypothesis<TK, FV> hypB) {
+  public boolean combinable(Derivation<TK, FV> hypA, Derivation<TK, FV> hypB) {
     if (hypA.featurizable == null && hypB.featurizable == null)
       return true;
     if (hypA.featurizable == null)
@@ -39,7 +39,7 @@ public class TranslationIdentityRecombinationFilter<TK, FV> implements
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<TK, FV> hyp) {
+  public long recombinationHashCode(Derivation<TK, FV> hyp) {
     if (hyp.featurizable == null) {
       return 0;
     }

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash;
@@ -22,18 +22,18 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @author Spence Green
  *
- * @param <Hypothesis<TK,FV>>
+ * @param <Derivation<TK,FV>>
  */
-public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
+public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
 
-  private final RecombinationHash<Hypothesis<TK,FV>> recombinationHash;
+  private final RecombinationHash<Derivation<TK,FV>> recombinationHash;
   private final int capacity;
   private int recombined = 0;
   private final int distortionLimit;
   private final int sourceLength;
 
   private Map<Integer,List<HyperedgeBundle<TK,FV>>> bundles;
-  private final RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory;
+  private final RecombinationHistory<Derivation<TK,FV>> recombinationHistory;
   private final OptionGrid<TK, FV> optionGrid;
   private final int coverageCardinality;
   /**
@@ -42,7 +42,7 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
    * @param filter
    * @param optionGrid
    */
-  public BundleBeam(int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter, 
+  public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter, 
       OptionGrid<TK,FV> optionGrid, int distortionLimit, int coverageCardinality, int maxPhraseLength) {
     this(capacity, filter, optionGrid, null, distortionLimit, coverageCardinality);
   }
@@ -57,10 +57,10 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
    * @param coverageCardinality 
    * @param maxPhraseLength 
    */
-  public BundleBeam(int capacity, RecombinationFilter<Hypothesis<TK,FV>> filter,
-      OptionGrid<TK, FV> optionGrid, RecombinationHistory<Hypothesis<TK,FV>> recombinationHistory, int distortionLimit, 
+  public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter,
+      OptionGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, int distortionLimit, 
       int coverageCardinality) {
-    recombinationHash = new RecombinationHash<Hypothesis<TK,FV>>(filter);
+    recombinationHash = new RecombinationHash<Derivation<TK,FV>>(filter);
     this.capacity = capacity;
     this.recombinationHistory = recombinationHistory;
     this.optionGrid = optionGrid;
@@ -70,9 +70,9 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   }
 
   @Override
-  public Hypothesis<TK,FV> put(Hypothesis<TK,FV> hypothesis) {
+  public Derivation<TK,FV> put(Derivation<TK,FV> hypothesis) {
     if (hypothesis.sourceCoverage.cardinality() != coverageCardinality) {
-      throw new RuntimeException("Hypothesis cardinality does not match beam cardinality");
+      throw new RuntimeException("Derivation cardinality does not match beam cardinality");
     }
 
     final Status status = recombinationHash.update(hypothesis);
@@ -81,17 +81,17 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
           recombinationHash.getLastRedundant());
     }
 
-    Hypothesis<TK,FV> recombinedHypothesis = null;
+    Derivation<TK,FV> recombinedDerivation = null;
     if (status == Status.COMBINABLE) {
       recombined++;
-      recombinedHypothesis = hypothesis;
+      recombinedDerivation = hypothesis;
 
     } else if(status == Status.BETTER) {
       recombined++;
-      recombinedHypothesis = recombinationHash.getLastRedundant();
+      recombinedDerivation = recombinationHash.getLastRedundant();
     } 
 
-    return recombinedHypothesis;
+    return recombinedDerivation;
   }
 
   /**
@@ -99,14 +99,14 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
    */
   private void groupBundles() {
     // Group hypotheses by source source coverage
-    List<Hypothesis<TK,FV>> hypothesisList = recombinationHash.hypotheses();
+    List<Derivation<TK,FV>> hypothesisList = recombinationHash.hypotheses();
     assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
-    Map<CoverageSet,List<Hypothesis<TK,FV>>> coverageGroups = Generics.newHashMap(hypothesisList.size());
-    for (Hypothesis<TK,FV> hypothesis : hypothesisList) {
+    Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = Generics.newHashMap(hypothesisList.size());
+    for (Derivation<TK,FV> hypothesis : hypothesisList) {
       if (coverageGroups.containsKey(hypothesis.sourceCoverage)) {
         coverageGroups.get(hypothesis.sourceCoverage).add(hypothesis);
       } else {
-        List<Hypothesis<TK,FV>> list = Generics.newArrayList();
+        List<Derivation<TK,FV>> list = Generics.newArrayList();
         list.add(hypothesis);
         coverageGroups.put(hypothesis.sourceCoverage, list);
       }
@@ -116,11 +116,11 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
     bundles = new HashMap<Integer,List<HyperedgeBundle<TK,FV>>>();
     for (CoverageSet coverage : coverageGroups.keySet()) {
       List<Range> rangeList = ranges(coverage);
-      List<Hypothesis<TK,FV>> itemList = coverageGroups.get(coverage);
+      List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
       Collections.sort(itemList);
       for (Range range : rangeList) {
         assert range.start <= range.end : "Invalid range";
-        List<ConcreteTranslationOption<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
+        List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
         if (ruleList.size() > 0) {
           HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(itemList, ruleList);
           if (bundles.containsKey(range.size())) {
@@ -151,8 +151,8 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   }
 
   @Override
-  public Iterator<Hypothesis<TK, FV>> iterator() {
-    List<Hypothesis<TK,FV>> hypotheses = recombinationHash.hypotheses();
+  public Iterator<Derivation<TK, FV>> iterator() {
+    List<Derivation<TK,FV>> hypotheses = recombinationHash.hypotheses();
     Collections.sort(hypotheses);
     return hypotheses.iterator();
   }
@@ -214,12 +214,12 @@ public class BundleBeam<TK,FV> implements Beam<Hypothesis<TK,FV>> {
   }
 
   @Override
-  public Hypothesis<TK, FV> remove() {
+  public Derivation<TK, FV> remove() {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Hypothesis<TK, FV> removeWorst() {
+  public Derivation<TK, FV> removeWorst() {
     throw new UnsupportedOperationException();
   }
 

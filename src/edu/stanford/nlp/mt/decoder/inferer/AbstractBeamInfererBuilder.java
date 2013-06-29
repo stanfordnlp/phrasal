@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.inferer;
 
 import edu.stanford.nlp.mt.decoder.inferer.Inferer;
-import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 
 /**
  * 
@@ -14,13 +14,13 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
     AbstractInfererBuilder<TK, FV> {
 
   int beamCapacity;
-  HypothesisBeamFactory.BeamType beamType;
+  BeamFactory.BeamType beamType;
 
   /**
 	 *
 	 */
   public AbstractBeamInfererBuilder(int defaultBeamCapacity,
-      HypothesisBeamFactory.BeamType defaultBeamType) {
+      BeamFactory.BeamType defaultBeamType) {
     beamCapacity = defaultBeamCapacity;
     beamType = defaultBeamType;
   }
@@ -28,7 +28,7 @@ abstract public class AbstractBeamInfererBuilder<TK, FV> extends
   /**
 	 *
 	 */
-  public void setBeamType(HypothesisBeamFactory.BeamType beamType) {
+  public void setBeamType(BeamFactory.BeamType beamType) {
     this.beamType = beamType;
   }
 

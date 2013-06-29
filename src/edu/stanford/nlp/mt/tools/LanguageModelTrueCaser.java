@@ -3,12 +3,8 @@ package edu.stanford.nlp.mt.tools;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
 
 import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
 import edu.stanford.nlp.mt.base.IString;
@@ -17,25 +13,25 @@ import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.SRILanguageModel;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
 import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.inferer.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.inferer.impl.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
-import edu.stanford.nlp.mt.decoder.util.HypothesisBeamFactory;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
 
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.process.TrueCaser;
 
@@ -90,7 +86,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
     try {
       NGramLanguageModelFeaturizer lmFeaturizer = NGramLanguageModelFeaturizer
           .fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
-      List<IncrementalFeaturizer<IString, String>> listFeaturizers = new LinkedList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
       listFeaturizers.add(lmFeaturizer);
       CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
           listFeaturizers);
@@ -109,12 +105,12 @@ public class LanguageModelTrueCaser implements TrueCaser {
       lgModels.add(lmFeaturizer.lm);
 
       // misc. decoder configuration
-      RecombinationFilter<Hypothesis<IString, String>> recombinationFilter = new TranslationNgramRecombinationFilter<IString, String>(
+      RecombinationFilter<Derivation<IString, String>> recombinationFilter = new TranslationNgramRecombinationFilter<IString, String>(
           lgModels, Integer.MAX_VALUE);
       infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
       infererBuilder.setBeamCapacity(BEAM_SIZE);
-      infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       // builder decoder
       inferer = infererBuilder.build();
@@ -149,7 +145,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
   static final String NAME = "AllCasePhrGen";
 
   public AllCasePhraseGenerator(
-      IsolatedPhraseFeaturizer<IString, String> phraseFeaturizer) {
+      RuleFeaturizer<IString, String> phraseFeaturizer) {
     super(phraseFeaturizer);
   }
 
@@ -180,12 +176,12 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     return NAME;
   }
 
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> sequence) {
     if (sequence.size() != 1) {
       throw new RuntimeException("Subsequence length != 1");
     }
-    List<TranslationOption<IString>> list = new LinkedList<TranslationOption<IString>>();
+    List<Rule<IString>> list = new LinkedList<Rule<IString>>();
     String token = sequence.get(0).toString().toLowerCase();
     List<String> casings = caseMapGet(token);
     if (casings == null) {
@@ -197,7 +193,7 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     for (String casing : casings) {
       IString[] trgArr = IStrings.toIStringArray(new String[] { casing });
       RawSequence<IString> trg = new RawSequence<IString>(trgArr);
-      list.add(new TranslationOption<IString>(new float[0], new String[0], trg,
+      list.add(new Rule<IString>(new float[0], new String[0], trg,
           rawSource, PhraseAlignment.getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT)));
     }
     return list;

@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -128,7 +128,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
 
   public FlatPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename) throws IOException {
     // default is not to do log rithm on the scores
     this(phraseFeaturizer, filename, false);
@@ -147,7 +147,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @throws IOException
    */
   public FlatPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename, boolean reverse) throws IOException {
     super(phraseFeaturizer);
     File f = new File(filename);
@@ -193,7 +193,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       assert fields.length == 5 : String.format("n-best list line %d has %d fields", reader.getLineNumber(), fields.length);
       Sequence<IString> source = IStrings.splitToIStrings(fields[0]);
       Sequence<IString> target = IStrings.splitToIStrings(fields[1]);
-      String sourceConstellation = fields[2];
+//      String sourceConstellation = fields[2];
       String targetConstellation = fields[3].trim();
       List<String> scoreList = Arrays.asList(fields[4].trim().split("\\s+"));
       
@@ -255,7 +255,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> foreignSequence) {
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence,
@@ -264,7 +264,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     if (fIndex == -1)
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
-    List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(
+    List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     // int intTransOptsSize = intTransOpts.size();
     // for (int i = 0; i < intTransOptsSize; i++) {
@@ -273,7 +273,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       // System.out.printf("%d:%f\n", i, intTransOpt.scores[0]);
       RawSequence<IString> translation = new RawSequence<IString>(
           intTransOpt.translation, IString.identityIndex());
-      transOpts.add(new TranslationOption<IString>(intTransOpt.id,
+      transOpts.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, translation, rawForeign,
           intTransOpt.alignment));
     }
@@ -300,8 +300,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",
         foreignIndex.size(), totalSecs, totalMemory, freeMemory);
 
-    List<TranslationOption<IString>> translationOptions = ppt
-        .getTranslationOptions(new SimpleSequence<IString>(IStrings
+    List<Rule<IString>> translationOptions = ppt
+        .query(new SimpleSequence<IString>(IStrings
             .toIStringArray(phrase.split("\\s+"))));
 
     System.out.printf("Phrase: %s\n", phrase);
@@ -312,7 +312,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
 
     System.out.printf("Options:\n");
-    for (TranslationOption<IString> opt : translationOptions) {
+    for (Rule<IString> opt : translationOptions) {
       System.out.printf("\t%s : %s\n", opt.target,
           Arrays.toString(opt.scores));
     }

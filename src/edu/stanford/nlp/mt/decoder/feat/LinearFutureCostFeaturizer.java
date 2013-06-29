@@ -2,18 +2,19 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
  * @author Michel Galley
  */
 public class LinearFutureCostFeaturizer extends
-    StatefulFeaturizer<IString, String> {
+    NeedsState<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -47,13 +48,8 @@ public class LinearFutureCostFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
     float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this))
         : 0.0f;
     float futureCost;
@@ -65,16 +61,14 @@ public class LinearFutureCostFeaturizer extends
       f.setState(this, futureCost);
     }
     float deltaCost = futureCost - oldFutureCost;
-    return new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost));
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost)));
+    return features;
   }
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   static int cost(Featurizable<IString, String> f) {
@@ -85,8 +79,8 @@ public class LinearFutureCostFeaturizer extends
   }
 
   static int futureCost(Featurizable<IString, String> f) {
-    int nextWordIndex = f.hyp.translationOpt.sourceCoverage.length();
-    int firstGapIndex = f.hyp.sourceCoverage.nextClearBit(0);
+    int nextWordIndex = f.derivation.rule.sourceCoverage.length();
+    int firstGapIndex = f.derivation.sourceCoverage.nextClearBit(0);
     if (firstGapIndex > nextWordIndex)
       firstGapIndex = nextWordIndex;
     int futureCost = nextWordIndex - firstGapIndex;
@@ -103,7 +97,7 @@ public class LinearFutureCostFeaturizer extends
     // j i
     int p = firstGapIndex - 1;
     while (true) {
-      p = f.hyp.sourceCoverage.nextSetBit(p + 1);
+      p = f.derivation.sourceCoverage.nextSetBit(p + 1);
       if (p < 0)
         break;
       ++futureCost;
@@ -113,7 +107,7 @@ public class LinearFutureCostFeaturizer extends
 
   private static int getEOSDistortion(Featurizable<IString, String> f) {
     if (f.done) {
-      int endGap = f.sourceSentence.size() - f.option.sourceCoverage.length();
+      int endGap = f.sourceSentence.size() - f.rule.sourceCoverage.length();
       assert (endGap >= 0);
       return endGap;
     }

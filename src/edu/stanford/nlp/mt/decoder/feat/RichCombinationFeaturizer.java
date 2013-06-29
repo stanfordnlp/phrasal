@@ -6,8 +6,8 @@ import edu.stanford.nlp.mt.base.Featurizable;
  * 
  * @author Michel Galley
  */
-public interface RichIncrementalFeaturizer<TK, FV> extends
-    ClonedFeaturizer<TK, FV> {
+public interface RichCombinationFeaturizer<TK, FV> extends
+    DerivationFeaturizer<TK,FV>,NeedsCloneable<TK, FV> {
 
   /**
    * Dump internal state of Featurizer, which is constructed using featurizable

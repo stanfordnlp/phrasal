@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.ARPALanguageModel;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.LexicalReorderingTable;
@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Index;
  * @author danielcer
  */
 public class LexicalReorderingFeaturizer implements
-    MSDFeaturizer<IString, String> {
+    NeedsReorderingRecombination<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";
   static final String FEATURE_PREFIX = "LexR:";
@@ -91,12 +91,7 @@ public class LexicalReorderingFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
@@ -119,7 +114,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = priorForeignPhrase.toString("_") + "=>"
                 + priorTranslatedPhrase.toString("_");
           } else {
-            IString priorAlignConst = (f.prior != null ? f.prior.option.abstractOption.alignment
+            IString priorAlignConst = (f.prior != null ? f.prior.rule.abstractRule.alignment
                 .toIString() : INITIAL_PHRASE.get(0));
             condRep = priorAlignConst.toString();
           }
@@ -131,7 +126,7 @@ public class LexicalReorderingFeaturizer implements
             condRep = f.sourcePhrase.toString("_") + "=>"
                 + f.targetPhrase.toString("_");
           } else {
-            condRep = f.option.abstractOption.alignment.toString();
+            condRep = f.rule.abstractRule.alignment.toString();
           }
           values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + condRep, discriminativeFeatureValue));
@@ -214,10 +209,6 @@ public class LexicalReorderingFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
-
-  public void reset() {
-  }
-
 }

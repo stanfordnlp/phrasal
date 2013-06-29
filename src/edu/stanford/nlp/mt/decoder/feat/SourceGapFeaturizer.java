@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
 import edu.stanford.nlp.util.Index;
 
@@ -19,8 +19,7 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 public class SourceGapFeaturizer implements
-    IncrementalFeaturizer<IString, String>,
-    IsolatedPhraseFeaturizer<IString, String> {
+    DerivationFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -123,17 +122,7 @@ public class SourceGapFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(
         nFeatures);
@@ -141,17 +130,6 @@ public class SourceGapFeaturizer implements
     addStaticFeatures(f, gapCount, list);
     addDynamicFeatures(f, gapCount, list);
     return list;
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-    /*
-     * // Note: appears to hurt performance. List<FeatureValue<String>> list =
-     * new ArrayList<FeatureValue<String>>(nFeatures); int gapCount =
-     * getGapCount(f); addStaticFeatures(f, gapCount, list); return list;
-     */
   }
 
   private static int getGapCount(Featurizable<IString, String> f) {
@@ -184,7 +162,7 @@ public class SourceGapFeaturizer implements
 
     // Gap size feature:
     if (DTUTable.MIN_GAP_SIZE > 0 && addGapSizeProb && gapCount >= 1) {
-      CoverageSet cs = f.hyp.translationOpt.sourceCoverage;
+      CoverageSet cs = f.derivation.rule.sourceCoverage;
       List<Integer> binIds = DTUFeatureExtractor.getBins(cs);
       if (gapCount != binIds.size()) {
         System.err
@@ -195,7 +173,7 @@ public class SourceGapFeaturizer implements
       }
       if (featureForEachBin) {
         for (int i = 0; i < binIds.size(); ++i) {
-          int phraseId = f.option.abstractOption.id;
+          int phraseId = f.rule.abstractRule.id;
           int binId = binIds.get(i);
           double gapLogProb = DTUTable.getSourceGapScore(phraseId, i,
               binIds.get(i));
@@ -205,7 +183,7 @@ public class SourceGapFeaturizer implements
       } else {
         double totalGapLogProb = 0.0;
         for (int i = 0; i < binIds.size(); ++i) {
-          int id = f.option.abstractOption.id;
+          int id = f.rule.abstractRule.id;
           double gapLogProb = DTUTable.getSourceGapScore(id, i, binIds.get(i));
           totalGapLogProb += gapLogProb;
         }
@@ -216,9 +194,9 @@ public class SourceGapFeaturizer implements
     // Crossing feature:
     if (crossingOnValue != 0.0 && gapCount >= 1) {
 
-      CoverageSet phraseCS = f.hyp.translationOpt.sourceCoverage; // e.g.
+      CoverageSet phraseCS = f.derivation.rule.sourceCoverage; // e.g.
                                                                    // .x...x...
-      CoverageSet hypCS = f.hyp.sourceCoverage; // e.g. xxx..xx..
+      CoverageSet hypCS = f.derivation.sourceCoverage; // e.g. xxx..xx..
 
       int phraseStartIdx = phraseCS.nextSetBit(0);
       int phraseEndIdx = phraseCS.length();
@@ -231,7 +209,7 @@ public class SourceGapFeaturizer implements
       int crossings = 0;
       while (middleCS.cardinality() > 0) {
         boolean inside = false, outside = false;
-        CoverageSet curCS = curF.hyp.translationOpt.sourceCoverage;
+        CoverageSet curCS = curF.derivation.rule.sourceCoverage;
         int idx = -1;
         while (true) {
           idx = curCS.nextSetBit(idx + 1);
@@ -255,14 +233,6 @@ public class SourceGapFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
-  }
-  
-  @Override
-  public void initialize(Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 }

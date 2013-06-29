@@ -2,13 +2,11 @@ package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -16,9 +14,8 @@ import edu.stanford.nlp.util.Index;
  * @author danielcer
  * 
  */
-public class LRPhraseBoundryFeaturizer implements
-    IncrementalFeaturizer<IString, String>,
-    IsolatedPhraseFeaturizer<IString, String> {
+public class LRPhraseBoundaryFeaturizer implements
+    RuleFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LRPB";
   public static final String PREFIX_L = ":l";
   public static final String PREFIX_R = ":r";
@@ -32,13 +29,13 @@ public class LRPhraseBoundryFeaturizer implements
   public final boolean doTarget;
   public final int size;
 
-  public LRPhraseBoundryFeaturizer() {
+  public LRPhraseBoundaryFeaturizer() {
     size = DEFAULT_SIZE;
     doSource = DEFAULT_DO_SOURCE;
     doTarget = DEFAULT_DO_TARGET;
   }
 
-  public LRPhraseBoundryFeaturizer(String... args) {
+  public LRPhraseBoundaryFeaturizer(String... args) {
     size = Integer.parseInt(args[0]);
     if (args.length == 1) {
       doSource = DEFAULT_DO_SOURCE;
@@ -50,17 +47,7 @@ public class LRPhraseBoundryFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> blist = new LinkedList<FeatureValue<String>>();
 
@@ -100,17 +87,6 @@ public class LRPhraseBoundryFeaturizer implements
       }
     }
     return blist;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return featurize(f);
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
-      Featurizable<IString, String> f) {
-    return listFeaturize(f);
   }
 
   public void reset() {

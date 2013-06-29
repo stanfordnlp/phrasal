@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.BitSet;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -18,8 +18,8 @@ import edu.stanford.nlp.util.Generics;
  */
 public class HyperedgeBundle<TK,FV> {
 
-  private final List<Hypothesis<TK,FV>> itemList;
-  private final List<ConcreteTranslationOption<TK,FV>> sortedRuleList;
+  private final List<Derivation<TK,FV>> itemList;
+  private final List<ConcreteRule<TK,FV>> sortedRuleList;
   private BitSet expandedItems;
 
   /**
@@ -27,10 +27,10 @@ public class HyperedgeBundle<TK,FV> {
    * 
    * @param sortedRuleList
    */
-  public HyperedgeBundle(List<Hypothesis<TK,FV>> sortedHypothesisList, 
-      List<ConcreteTranslationOption<TK,FV>> sortedRuleList) {
+  public HyperedgeBundle(List<Derivation<TK,FV>> sortedDerivationList, 
+      List<ConcreteRule<TK,FV>> sortedRuleList) {
     this.sortedRuleList = sortedRuleList;
-    this.itemList = sortedHypothesisList;
+    this.itemList = sortedDerivationList;
     this.expandedItems = new BitSet();
   }
 
@@ -82,13 +82,13 @@ public class HyperedgeBundle<TK,FV> {
   }
 
   public static class Consequent<TK,FV> {
-    public final Hypothesis<TK,FV> antecedent;
-    public final ConcreteTranslationOption<TK,FV> rule;
+    public final Derivation<TK,FV> antecedent;
+    public final ConcreteRule<TK,FV> rule;
     public final HyperedgeBundle<TK, FV> bundle;
     private final int itemId;
     private final int ruleId;
-    public Consequent(Hypothesis<TK,FV> antecedent, 
-        ConcreteTranslationOption<TK,FV> rule,
+    public Consequent(Derivation<TK,FV> antecedent, 
+        ConcreteRule<TK,FV> rule,
         HyperedgeBundle<TK,FV> bundle,
         int itemId,
         int ruleId) {

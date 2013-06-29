@@ -6,16 +6,12 @@ import java.util.regex.Pattern;
 
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * Adds features to the MT system based on the types of punctuation
@@ -23,9 +19,8 @@ import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
  *
  *@author John Bauer
  */
-public class TargetSidePunctuationFeaturizer implements AlignmentFeaturizer,
-IncrementalFeaturizer<IString,String>,
-IsolatedPhraseFeaturizer<IString, String> {
+public class TargetSidePunctuationFeaturizer implements NeedsInternalAlignments,
+RuleFeaturizer<IString, String> {
 
   /**
    * All features will start with this prefix
@@ -55,10 +50,10 @@ IsolatedPhraseFeaturizer<IString, String> {
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new LinkedList<FeatureValue<String>>();
-    PhraseAlignment alignment = f.option.abstractOption.alignment;
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
     int nTargetSidePunctuationChars = 0;
     int nTgtTokens = f.targetPhrase.size();
     int nInsertedCommas = 0;
@@ -69,8 +64,8 @@ IsolatedPhraseFeaturizer<IString, String> {
       String word = f.targetPhrase.get(i).toString();
       if (PUNCT_PATTERN.matcher(word).matches()) {
         if (addLexicalFeatures) {
-          features.add(new CacheableFeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
-          features.add(new CacheableFeatureValue<String>(FEATURE_NAME, 1.0));
+          features.add(new FeatureValue<String>(FEATURE_NAME + "." + word.charAt(0), 1.0));
+          features.add(new FeatureValue<String>(FEATURE_NAME, 1.0));
         }
         if (addCommaFeatures && word.equals(",")) {
           int[] srcIndices = alignment.t2s(i);
@@ -93,10 +88,10 @@ IsolatedPhraseFeaturizer<IString, String> {
     //   , --> content word
     if (addCommaFeatures) {
       if (nInsertedCommas > 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".comma.ins", nInsertedCommas));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".comma.ins", nInsertedCommas));
       }
       if (nCommaContentAlignments > 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".comma.content", nCommaContentAlignments));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".comma.content", nCommaContentAlignments));
       }
     }
 
@@ -112,38 +107,12 @@ IsolatedPhraseFeaturizer<IString, String> {
 
       int diff = nTargetSidePunctuationChars - nSourceSidePunctuationChars;
       if (diff > 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".ins", diff));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".ins", diff));
       } else if (diff < 0) {
-        features.add(new CacheableFeatureValue<String>(FEATURE_NAME + ".del", -1 * diff));
+        features.add(new FeatureValue<String>(FEATURE_NAME + ".del", -1 * diff));
       }
     }
 
     return features;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(
-      int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 }

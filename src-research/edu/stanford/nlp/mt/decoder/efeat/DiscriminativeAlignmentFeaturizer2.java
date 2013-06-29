@@ -7,16 +7,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -25,8 +21,8 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  *
  */
-public class DiscriminativeAlignmentFeaturizer2 implements AlignmentFeaturizer,
-IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String> {
+public class DiscriminativeAlignmentFeaturizer2 implements NeedsInternalAlignments,
+RuleFeaturizer<IString,String> {
 
   private static final String FEATURE_NAME = "Align";
   
@@ -38,8 +34,8 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(Featurizable<IString, String> f) {
-    PhraseAlignment alignment = f.option.abstractOption.alignment;
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int tgtLength = f.targetPhrase.size();
     final int srcLength = f.sourcePhrase.size();
     List<Set<String>> s2t = new ArrayList<Set<String>>(srcLength);
@@ -90,7 +86,7 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
           sb.append(alignedWords.get(j));
         }
         String feature = makeFeatureString(FEATURE_NAME, sb.toString());
-        features.add(new CacheableFeatureValue<String>(feature, 1.0));
+        features.add(new FeatureValue<String>(feature, 1.0));
       }
     }
     return features;
@@ -98,31 +94,5 @@ IncrementalFeaturizer<IString, String>, IsolatedPhraseFeaturizer<IString,String>
 
   private String makeFeatureString(String featureName, String featureSuffix) {
     return String.format("%s:%s", featureName, featureSuffix);
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(
-      int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 }

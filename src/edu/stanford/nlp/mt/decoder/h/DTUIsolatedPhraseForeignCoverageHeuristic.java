@@ -2,14 +2,14 @@ package edu.stanford.nlp.mt.decoder.h;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUOption;
+import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Pair;
@@ -31,7 +31,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   protected static final boolean IGNORE_TGT = Boolean.parseBoolean(System
       .getProperty(IGNORE_TGT_PROPERTY, "true"));
 
-  protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+  protected final RuleFeaturizer<TK, FV> phraseFeaturizer;
   protected SpanScores hSpanScores;
 
   static {
@@ -48,7 +48,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 	 * 
 	 */
   public DTUIsolatedPhraseForeignCoverageHeuristic(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
     System.err.println("Heuristic: " + getClass());
   }
@@ -63,10 +63,10 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
    * future cost with discontinuous phrases.
    */
   @Override
-  public double getHeuristicDelta(Hypothesis<TK, FV> hyp,
+  public double getHeuristicDelta(Derivation<TK, FV> hyp,
       CoverageSet newCoverage) {
 
-    double oldH = hyp.preceedingHyp.h;
+    double oldH = hyp.preceedingDerivation.h;
     double newH = 0.0;
 
     CoverageSet coverage = hyp.sourceCoverage;
@@ -114,13 +114,13 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
     return getInitialHeuristic(foreignSequence, options, scorer, translationId, DEBUG);
   }
 
   @SuppressWarnings("unchecked")
   public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteTranslationOption<TK,FV>>> options, Scorer<FV> scorer, int translationId, boolean debug) {
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId, boolean debug) {
 
     int foreignSequenceSize = foreignSequence.size();
 
@@ -142,21 +142,21 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
                                                          // with gaps
     System.err.println("size: " + options.size());
 
-    List<Pair<ConcreteTranslationOption<TK,FV>, Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
+    List<Pair<ConcreteRule<TK,FV>, Double>>[][] dtuLists = new LinkedList[foreignSequenceSize][foreignSequenceSize];
 
     for (int i = 0; i < options.size(); ++i) {
-      for (ConcreteTranslationOption<TK,FV> option : options.get(i)) {
-        if (IGNORE_TGT && option.abstractOption instanceof DTUOption)
+      for (ConcreteRule<TK,FV> option : options.get(i)) {
+        if (IGNORE_TGT && option.abstractRule instanceof DTURule)
           continue;
         Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
             option, translationId);
         List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
-            .phraseListFeaturize(f);
+            .ruleFeaturize(f);
         double score = scorer.getIncrementalScore(phraseFeatures), childScore = 0.0;
         final int terminalPos;
         if (i == 0) {
           terminalPos = option.sourcePosition
-              + option.abstractOption.source.size() - 1;
+              + option.abstractRule.source.size() - 1;
           if (score > viterbiSpanScores
               .getScore(option.sourcePosition, terminalPos)) {
             viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
@@ -169,8 +169,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
           if (debug) {
             System.err.printf("\t%d:%d:%d %s->%s score: %.3f %.3f\n",
                 option.sourcePosition, terminalPos, i,
-                option.abstractOption.source,
-                option.abstractOption.target, score, childScore);
+                option.abstractRule.source,
+                option.abstractRule.target, score, childScore);
             System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
           }
         } else {
@@ -178,9 +178,9 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
           int startPos = option.sourceCoverage.nextSetBit(0);
           terminalPos = option.sourceCoverage.length() - 1;
           if (dtuLists[startPos][terminalPos] == null)
-            dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteTranslationOption<TK,FV>, Double>>();
+            dtuLists[startPos][terminalPos] = new LinkedList<Pair<ConcreteRule<TK,FV>, Double>>();
           dtuLists[startPos][terminalPos]
-              .add(new Pair<ConcreteTranslationOption<TK,FV>, Double>(option,
+              .add(new Pair<ConcreteRule<TK,FV>, Double>(option,
                   score));
         }
       }
@@ -219,8 +219,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
         // Merge discontinuous phrase with other phrases:
         if (dtuLists[startPos][terminalPos] != null) {
-          for (Pair<ConcreteTranslationOption<TK,FV>, Double> dtu : dtuLists[startPos][terminalPos]) {
-            ConcreteTranslationOption<TK,FV> option = dtu.first;
+          for (Pair<ConcreteRule<TK,FV>, Double> dtu : dtuLists[startPos][terminalPos]) {
+            ConcreteRule<TK,FV> option = dtu.first;
             assert (option.sourcePosition == startPos);
             double dtuScore = dtu.second;
             CoverageSet cs = option.sourceCoverage;

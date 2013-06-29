@@ -28,12 +28,12 @@ public class MandarinNumberPhraseGeneratorTest extends TestCase {
       Sequence<IString> phrase = new RawSequence<IString>(
               IStrings.toIStringArray(new String[] { inputs[i] }));
       try {
-        List<TranslationOption<IString>> opts = mnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = mnpg.query(phrase);
         if (opts.isEmpty()) {
           fail("No translation available for " + inputs[i]);
         } else {
           boolean good = false;
-          for (TranslationOption<IString> opt : opts) {
+          for (Rule<IString> opt : opts) {
             // if (("$num_(" + inputs[i] + "||" + outputs[i] + ")").equals(opt.translation.toString())) {
             if ((outputs[i]).equals(opt.target.toString())) {
               good = true;

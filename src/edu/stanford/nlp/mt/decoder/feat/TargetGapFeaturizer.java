@@ -11,11 +11,11 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
-import edu.stanford.nlp.mt.base.DTUOption;
+import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
 import edu.stanford.nlp.util.Index;
 
@@ -23,8 +23,8 @@ import edu.stanford.nlp.util.Index;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
-    IsolatedPhraseFeaturizer<IString, String> {
+public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>, NeedsCloneable<IString, String>,
+    RuleIsolationScoreFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugTargetGapFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -75,25 +75,20 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
     if (!(f instanceof DTUFeaturizable))
       return null;
     DTUFeaturizable<IString, String> dtuF = (DTUFeaturizable<IString, String>) f;
-    if (!(dtuF.abstractOption instanceof DTUOption))
+    if (!(dtuF.abstractOption instanceof DTURule))
       return null;
 
     List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(3);
 
     // Find out where we currently are within f.abstractOption:
     int segIdx = f.getSegmentIdx();
-    Sequence<IString>[] dtus = ((DTUOption<IString>) dtuF.abstractOption).dtus;
+    Sequence<IString>[] dtus = ((DTURule<IString>) dtuF.abstractOption).dtus;
 
     if (segIdx == 0) { // We just started generating a discontinuous phrase:
 
@@ -150,7 +145,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
                       * len));
                 if (addGapSizeProb) {
                   int binId = DTUFeatureExtractor.sizeToBin(distance);
-                  int phraseId = f.option.abstractOption.id;
+                  int phraseId = f.rule.abstractRule.id;
                   double gapScore = DTUTable.getTargetGapScore(phraseId,
                       curIdx, binId);
                   if (featureForEachBin) {
@@ -174,12 +169,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
   }
 
   @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> list = new ArrayList<FeatureValue<String>>(2);
     int gapCount = getGapCount(f);
@@ -191,7 +181,7 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
     return list;
   }
 
-  private Map<TranslationOption<IString>, DTUFeaturizable<IString, String>> seenOptions = new HashMap<TranslationOption<IString>, DTUFeaturizable<IString, String>>();
+  private Map<Rule<IString>, DTUFeaturizable<IString, String>> seenOptions = new HashMap<Rule<IString>, DTUFeaturizable<IString, String>>();
 
   private void addCrossingCountFeatures(List<FeatureValue<String>> feats,
       DTUFeaturizable<IString, String> startF,
@@ -204,11 +194,11 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
     int bonbonCount = 0;
     for (int i = 0; curF != null && curF != startF; ++i, curF = curF.prior) {
       if (curF instanceof DTUFeaturizable) {
-        TranslationOption<IString> curOption = ((DTUFeaturizable<IString, String>) curF).abstractOption;
+        Rule<IString> curOption = ((DTUFeaturizable<IString, String>) curF).abstractOption;
         if (curOption != endF.abstractOption) {
           // Detect bon-bons:
-          if (CoverageSet.cross(curF.option.sourceCoverage,
-              endF.option.sourceCoverage))
+          if (CoverageSet.cross(curF.rule.sourceCoverage,
+              endF.rule.sourceCoverage))
             ++bonbonCount;
           seenOptions.put(curOption, (DTUFeaturizable<IString, String>) curF);
         }
@@ -238,21 +228,17 @@ public class TargetGapFeaturizer implements ClonedFeaturizer<IString, String>,
   @Override
   public Object clone() throws CloneNotSupportedException {
     TargetGapFeaturizer f = (TargetGapFeaturizer) super.clone();
-    f.seenOptions = new HashMap<TranslationOption<IString>, DTUFeaturizable<IString, String>>();
+    f.seenOptions = new HashMap<Rule<IString>, DTUFeaturizable<IString, String>>();
     return f;
   }
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   private static int getGapCount(Featurizable<IString, String> f) {
-    TranslationOption<IString> opt = f.option.abstractOption;
+    Rule<IString> opt = f.rule.abstractRule;
     int sz = 0;
     for (IString el : f.targetPhrase)
       if (el.equals(DTUTable.GAP_STR))

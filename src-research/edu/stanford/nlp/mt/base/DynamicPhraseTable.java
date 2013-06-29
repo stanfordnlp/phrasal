@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -28,7 +28,7 @@ public class DynamicPhraseTable<FV> extends
   // IBMModel1 model1S2T, model1T2S;
 
   public DynamicPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String phraseTableName, String model1S2T,
       String model1T2S) {
     super(phraseFeaturizer);
@@ -37,7 +37,7 @@ public class DynamicPhraseTable<FV> extends
   }
 
   public DynamicPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String phraseTableName) {
     super(phraseFeaturizer);
     currentSequence = new HashSet<String>();
@@ -71,10 +71,10 @@ public class DynamicPhraseTable<FV> extends
       "lex(e|f)", "lex(f|e)" };
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> sequence) {
     try {
-      List<TranslationOption<IString>> opts = new LinkedList<TranslationOption<IString>>();
+      List<Rule<IString>> opts = new LinkedList<Rule<IString>>();
 
       RawSequence<IString> rawSequence = new RawSequence<IString>(sequence);
 
@@ -96,7 +96,7 @@ public class DynamicPhraseTable<FV> extends
         RawSequence<IString> transSeq = new RawSequence<IString>(
             IStrings.toIStringArray(trans.split("\\s+")));
         String mappingKey = sequence + "=:=>" + trans;
-        opts.add(new TranslationOption<IString>(new float[] { pcEgF, pcFgE,
+        opts.add(new Rule<IString>(new float[] { pcEgF, pcFgE,
             pLexEgF, pLexFgE }, labs, transSeq, rawSequence, null,
             currentSequence.contains(mappingKey)));
       }
