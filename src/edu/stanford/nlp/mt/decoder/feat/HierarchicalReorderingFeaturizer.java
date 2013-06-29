@@ -555,28 +555,31 @@ public class HierarchicalReorderingFeaturizer extends
 
   @Override
   public void dump(Featurizable<IString, String> f) {
-    assert (f.done);
-    if (forwardOrientationComputation != ForwardOrientationComputation.hierarchical)
-      return;
-    System.err.printf(
-        "Stack for hierarchical reordering (length of input sentence: %d)\n",
-        f.sourceSentence.size());
-    if (DEBUG && f.sourceSentence.size() < 20) {
-      AlignmentGrid.printDecoderGrid(f, System.err);
-      System.err.println();
+    if (DEBUG) {
+      assert (f.done);
+      if (forwardOrientationComputation != ForwardOrientationComputation.hierarchical)
+        return;
+      System.err.printf(
+          "Stack for hierarchical reordering (length of input sentence: %d)\n",
+          f.sourceSentence.size());
+      if (DEBUG && f.sourceSentence.size() < 20) {
+        AlignmentGrid.printDecoderGrid(f, System.err);
+        System.err.println();
+      }
+      Deque<String> lines = new LinkedList<String>();
+      while (f != null) {
+        HierBlock hb = (HierBlock) f.getState(this);
+        lines.addFirst(String.format("cs=%s sz=%d (M,S)=(%d,%d) (M,S)=(%d,%d)",
+            hb.cs, hb.stackSz, monotoneWithPrevious(f) ? 1 : 0,
+                swapWithPrevious(f) ? 1 : 0, possiblyMonotoneWithNext(f) ? 1 : 0,
+                    possiblySwappingWithNext(f) ? 1 : 0));
+        f = f.prior;
+      }
+      int i = 0;
+      for (String line : lines) {
+        System.err.printf(" block[%d] %s\n", ++i, line);
+      }
     }
-    Deque<String> lines = new LinkedList<String>();
-    while (f != null) {
-      HierBlock hb = (HierBlock) f.getState(this);
-      lines.addFirst(String.format("cs=%s sz=%d (M,S)=(%d,%d) (M,S)=(%d,%d)",
-          hb.cs, hb.stackSz, monotoneWithPrevious(f) ? 1 : 0,
-          swapWithPrevious(f) ? 1 : 0, possiblyMonotoneWithNext(f) ? 1 : 0,
-          possiblySwappingWithNext(f) ? 1 : 0));
-      f = f.prior;
-    }
-    int i = 0;
-    for (String line : lines)
-      System.err.printf(" block[%d] %s\n", ++i, line);
   }
 
   private static int fStart(Featurizable<IString, String> f) {
