@@ -38,7 +38,7 @@ public class NBestArgmax {
     String evalArg = args.length == 3 ? args[2] : null;
 
     Scorer<String> wts = new DenseScorer(wtsFilename);
-    FlatNBestList nbestlists = new FlatNBestList(nbestFilename, true);
+    FlatNBestList nbestlists = new FlatNBestList(nbestFilename);
 
     EvaluationMetric<IString, String> eval = null;
 

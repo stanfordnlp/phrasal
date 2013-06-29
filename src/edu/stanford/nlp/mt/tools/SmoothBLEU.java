@@ -7,11 +7,9 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 
 /**
  * Compute smooth BLEU according to Lin and Och (2004).
@@ -42,9 +40,7 @@ public class SmoothBLEU {
 
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ) {
-      line = NISTTokenizer.tokenize(line).trim();
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      Sequence<IString> translation = IStrings.tokenize(line);
       double score = 
           BLEUMetric.computeLocalSmoothScore(translation, referencesList.get(sourceInputId), BLEUOrder, false);
       System.out.printf("%d\t%.4f%n", sourceInputId, score);

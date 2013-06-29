@@ -28,7 +28,7 @@ public class IStrings {
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
       for (String line; (line = reader.readLine()) != null;) {
-        sequences.add(IStrings.splitToIStrings(line));
+        sequences.add(IStrings.tokenize(line));
       }
       reader.close();
     } catch (IOException e) {
@@ -44,7 +44,7 @@ public class IStrings {
    * @param str
    * @return
    */
-  static public Sequence<IString> splitToIStrings(String str) {
+  static public Sequence<IString> tokenize(String str) {
     String[] strings = str.trim().split("\\s+");
     IString[] istrs = toIStringArray(strings);
     return new SimpleSequence<IString>(true, istrs);

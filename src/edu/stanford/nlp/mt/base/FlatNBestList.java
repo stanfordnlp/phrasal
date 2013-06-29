@@ -9,9 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
@@ -37,71 +34,40 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  public final boolean tokenizeNIST;
-
-  public FlatNBestList(NBestListContainer<IString, String> list1,
-      NBestListContainer<IString, String> list2, Scorer<String> scorer,
-      boolean tokenizeNIST) {
-    this.featureIndex = null;
-    this.tokenizeNIST = tokenizeNIST;
-    sequenceSelfMap = null;
-    nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(
-        list1.nbestLists());
-
-    List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists2 = list2
-        .nbestLists();
-    for (int i = 0; i < nbestLists2.size(); i++) {
-      (nbestLists.get(i)).addAll(nbestLists2.get(i));
-      // rescore
-      for (ScoredFeaturizedTranslation<IString, String> sft : nbestLists.get(i)) {
-        sft.score = scorer.getIncrementalScore(sft.features);
-      }
-    }
-  }
+  public final Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap;
 
   public FlatNBestList(
-      List<List<ScoredFeaturizedTranslation<IString, String>>> rawList,
-      boolean tokenizeNIST) {
+      List<List<ScoredFeaturizedTranslation<IString, String>>> rawList) {
     this.featureIndex = null;
-    this.tokenizeNIST = tokenizeNIST;
     sequenceSelfMap = null;
     nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(
         rawList);
   }
-
-  public final Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap;
 
   public FlatNBestList(String filename) throws IOException {
     this(filename, null);
   }
   
   public FlatNBestList(String filename, int initialCapacity) throws IOException {
-    this(filename, null, false, initialCapacity);
+    this(filename, null, initialCapacity);
   }
 
   public FlatNBestList(String filename, Index<String> featureIndex)
       throws IOException {
-    this(filename, featureIndex, false, DEFAULT_INITIAL_CAPACITY);
+    this(filename, featureIndex, DEFAULT_INITIAL_CAPACITY);
   }
 
-  public FlatNBestList(String filename, boolean tokenizeNIST)
-      throws IOException {
-    this(filename, null, tokenizeNIST, DEFAULT_INITIAL_CAPACITY);
-  }
-
-  public FlatNBestList(String filename, Index<String> featureIndex,
-      boolean tokenizeNIST, int initialCapacity) throws IOException {
+  public FlatNBestList(String filename, Index<String> featureIndex, int initialCapacity) throws IOException {
     this(filename, new HashMap<Sequence<IString>, Sequence<IString>>(),
-        featureIndex, tokenizeNIST, initialCapacity);
+        featureIndex, initialCapacity);
   }
 
   public FlatNBestList(String filename,
       Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap,
-      Index<String> featureIndex, boolean tokenizeNIST, int initialCapacity) throws IOException {
+      Index<String> featureIndex, int initialCapacity) throws IOException {
     if (featureIndex == null)
       featureIndex = new HashIndex<String>();
     this.featureIndex = featureIndex;
-    this.tokenizeNIST = tokenizeNIST;
     this.sequenceSelfMap = sequenceSelfMap;
     Runtime rt = Runtime.getRuntime();
     long preNBestListLoadMemUsed = rt.totalMemory() - rt.freeMemory();
@@ -127,8 +93,6 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       }
       int id = Integer.valueOf(fields[0].trim());
       String translation = fields[1].trim();
-      if (tokenizeNIST)
-        translation = NISTTokenizer.tokenize(translation);
       String featuresStr = fields[2].trim();
       String scoreStr = (fields.length >= 4 ? fields[3].trim() : "0");
       String latticeIdStr = (fields.length >= 5 ? fields[4].trim() : null);
@@ -233,7 +197,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
           : new DenseFeatureValueCollection<String>(featureValuesTmp,
               featureIndex);
 
-      Sequence<IString> sequence = IStrings.splitToIStrings(translation);
+      Sequence<IString> sequence = IStrings.tokenize(translation);
       Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
       if (sequenceStored == null) {
         sequenceSelfMap.put(sequence, sequence);

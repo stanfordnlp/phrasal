@@ -45,7 +45,7 @@ public class PointwisePerceptron extends AbstractNBestOptimizer {
         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestSlice = Arrays
             .asList(nbest.nbestLists().get(i));
         List<ScoredFeaturizedTranslation<IString, String>> current = argmaxByScore
-            .maximize(new FlatNBestList(nbestSlice, false));
+            .maximize(new FlatNBestList(nbestSlice));
         Counter<String> dir = MERT.summarizedAllFeaturesVector(Arrays
             .asList(targets.get(i)));
         Counters

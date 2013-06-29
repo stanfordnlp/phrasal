@@ -229,8 +229,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
           .println("Usage:\n\tjava LinearCombinationMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args,
-        true);
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
     TERMetric<IString, String> ter = new TERMetric<IString, String>(
         referencesList);
@@ -251,11 +250,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null;) {
-      line = NISTTokenizer.tokenize(line);
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       terIncMetric.add(tran);

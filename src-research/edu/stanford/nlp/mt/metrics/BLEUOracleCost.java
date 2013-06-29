@@ -268,9 +268,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       int lineId = 0;
       for (String line; (line = reader.readLine()) != null; ++lineId) {
-        line = NISTTokenizer.tokenize(line).trim();
-        Sequence<IString> translation = new RawSequence<IString>(
-            IStrings.toIStringArray(line.split("\\s+")));
+        Sequence<IString> translation = IStrings.tokenize(line);
         List<Sequence<IString>> references = referencesList.get(lineId);
         double score = metric.score(lineId, references, null, translation);
         System.out.printf("%d\t%.4f%n", lineId, score);

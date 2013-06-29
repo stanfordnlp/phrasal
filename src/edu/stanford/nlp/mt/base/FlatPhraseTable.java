@@ -191,8 +191,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       
       // The standard format has five fields
       assert fields.length == 5 : String.format("n-best list line %d has %d fields", reader.getLineNumber(), fields.length);
-      Sequence<IString> source = IStrings.splitToIStrings(fields[0]);
-      Sequence<IString> target = IStrings.splitToIStrings(fields[1]);
+      Sequence<IString> source = IStrings.tokenize(fields[0]);
+      Sequence<IString> target = IStrings.tokenize(fields[1]);
 //      String sourceConstellation = fields[2];
       String targetConstellation = fields[3].trim();
       List<String> scoreList = Arrays.asList(fields[4].trim().split("\\s+"));

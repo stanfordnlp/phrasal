@@ -285,8 +285,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
           .println("Usage:\n\tjava TERpMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args,
-        false);
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
     TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
         referencesList, false, System.getProperty("terpa") != null);

@@ -735,9 +735,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         System.in));
     for (String line; (line = reader.readLine()) != null; ) {
-      line = NISTTokenizer.tokenize(line).trim();
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      line = NISTTokenizer.tokenize(line);
+      Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       incMetric.add(tran);

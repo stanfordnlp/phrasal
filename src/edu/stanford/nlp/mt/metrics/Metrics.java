@@ -124,11 +124,6 @@ public class Metrics {
    * counts.get(ngram), altCnt); } }
    */
 
-  static public List<List<Sequence<IString>>> readReferences(
-      String[] referenceFilenames) throws IOException {
-    return readReferences(referenceFilenames, true);
-  }
-
   static public List<List<Sequence<IString>>> readReferencesFromRoot(String root)
       throws IOException {
     int i = 0;
@@ -141,11 +136,11 @@ public class Metrics {
       System.err.println("Found reference: " + name);
       ++i;
     }
-    return readReferences(files.toArray(new String[files.size()]), true);
+    return readReferences(files.toArray(new String[files.size()]));
   }
 
   static public List<List<Sequence<IString>>> readReferences(
-      String[] referenceFilenames, boolean NISTTokenize) throws IOException {
+      String[] referenceFilenames) throws IOException {
     List<List<Sequence<IString>>> referencesList = new ArrayList<List<Sequence<IString>>>();
     for (String referenceFilename : referenceFilenames) {
       LineNumberReader reader = IOTools.getReaderFromFile(referenceFilename);
@@ -154,19 +149,11 @@ public class Metrics {
         if (referencesList.size() < lineNumber) {
           List<Sequence<IString>> list = new ArrayList<Sequence<IString>>(
               referenceFilenames.length);
-          if (NISTTokenize)
-            line = NISTTokenizer.tokenize(line).trim();
-          list.add(IStrings.splitToIStrings(line));
+          list.add(IStrings.tokenize(line));
           referencesList.add(list);
         } else {
-          if (NISTTokenize) {
-            referencesList.get(lineNumber - 1).add(
-                IStrings.splitToIStrings(NISTTokenizer
-                    .tokenize(line)));
-          } else {
-            referencesList.get(lineNumber - 1).add(
-                IStrings.splitToIStrings(line));
-          }
+          referencesList.get(lineNumber - 1).add(
+              IStrings.tokenize(line));
         }
       }
       reader.close();

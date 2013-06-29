@@ -10,7 +10,6 @@ import java.util.HashMap;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.NBestListContainer;
-import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -202,8 +201,7 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
           .println("Usage:\n\tjava METEORMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args,
-        false);
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
     METEORMetric<IString, String> meteor; // = null;
     if (System.getProperty("abg") != null) {
@@ -225,10 +223,7 @@ public class METEORMetric<TK, FV> extends AbstractMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null;) {
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       incMetric.add(tran);

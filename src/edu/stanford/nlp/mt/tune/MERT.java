@@ -57,8 +57,6 @@ import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
  */
 public class MERT extends Thread {
 
-  private static boolean tokenizeNIST = false;
-
   static boolean breakTiesWithLastBest = false;
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
@@ -161,7 +159,7 @@ public class MERT extends Thread {
     this.seedStr = seedStr;
 
     references = Metrics.readReferences(
-        referenceList.split(","), tokenizeNIST);
+        referenceList.split(","));
     this.evalMetric = evalMetric;
     this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
   }
@@ -735,12 +733,12 @@ public class MERT extends Thread {
 
     // Load nbest list:
     System.err.printf("Loading nbest list: %s\n", nbestListFile);
-    nbest = new FlatNBestList(nbestListFile, featureIndex, tokenizeNIST, defaultMERT.references.size());
+    nbest = new FlatNBestList(nbestListFile, featureIndex, defaultMERT.references.size());
     System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
     FlatNBestList localNbest = null;
     if (!"none".equals(localNbestListFile)) {
       localNbest = new FlatNBestList(localNbestListFile,
-        nbest.sequenceSelfMap, featureIndex, tokenizeNIST, defaultMERT.references.size());
+        nbest.sequenceSelfMap, featureIndex, defaultMERT.references.size());
     }
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null
@@ -1066,8 +1064,6 @@ public class MERT extends Thread {
         optStr = args[++argi];
       } else if (arg.equals("-a")) {
         optTransFile = args[++argi];
-      } else if (arg.equals("-N")) {
-        tokenizeNIST = true;
       } else if (arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {

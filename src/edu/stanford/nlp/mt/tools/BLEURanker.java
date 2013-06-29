@@ -12,10 +12,8 @@ import java.util.Arrays;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import edu.stanford.nlp.util.Pair;
 
 public class BLEURanker {
@@ -26,11 +24,7 @@ public class BLEURanker {
 		List<Sequence<IString>> hyps = new ArrayList<Sequence<IString>>();
 		
 		for (String line; (line = reader.readLine()) != null;) {
-			line = NISTTokenizer.tokenize(line);
-			line = line.replaceAll("\\s+$", "");
-			line = line.replaceAll("^\\s+", "");
-			Sequence<IString> translation = new RawSequence<IString>(
-					IStrings.toIStringArray(line.split("\\s+")));
+			Sequence<IString> translation = IStrings.tokenize(line);
 			hyps.add(translation);
 		}
 		reader.close();
