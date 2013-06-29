@@ -111,8 +111,6 @@ public class Phrasal {
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
 
-  static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
-
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,WEIGHTS_FILE));
     OPTIONAL_FIELDS.addAll(Arrays.asList(INLINE_WEIGHTS, ITER_LIMIT,
@@ -202,7 +200,10 @@ public class Phrasal {
   private int maxSentenceSize = Integer.MAX_VALUE;
   private int minSentenceSize = 0;
 
-  static String recombinationHeuristic = DEFAULT_RECOMBINATION_HEURISTIC;
+  /**
+   * Recombination configuration.
+   */
+  private static String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 
   /**
    * Access the decoder's scorer, which contains the model weights. THere is one scorer
