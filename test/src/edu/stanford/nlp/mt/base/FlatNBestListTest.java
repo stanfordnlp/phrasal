@@ -16,7 +16,7 @@ public class FlatNBestListTest extends TestCase {
   static {
     try {
       nbestList = new FlatNBestList(
-          "test/inputs/properSample.test");
+          "projects/mt/test/inputs/properSample.test");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -53,8 +53,8 @@ public class FlatNBestListTest extends TestCase {
 
   public void testRuntimeException() throws IOException {
     String[] fileNames = new String[] {
-        "test/inputs/improperIDs.test",
-        "test/inputs/improperFeatures.test" };
+        "projects/mt/test/inputs/improperIDs.test",
+        "projects/mt/test/inputs/improperFeatures.test" };
     for (String fileName : fileNames) {
       boolean goodFile = false;
       try {
