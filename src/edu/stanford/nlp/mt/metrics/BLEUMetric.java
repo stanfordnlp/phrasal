@@ -687,7 +687,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     sb.append(nl);
     sb.append(" Options:").append(nl);
     sb.append("   -order num      : ngram order (default: 4)").append(nl);
-    sb.append("   -no-nist        : Disable NIST tokenization (tokenization on by default)").append(nl);
+    sb.append("   -nist           : Enable NIST tokenization (tokenization off by default)").append(nl);
     sb.append("   -smooth         : Use sentence-level smoothed BLEU").append(nl);
     sb.append("   -cased          : Don't lowercase the input").append(nl);
     return sb.toString();
@@ -696,7 +696,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private static Map<String,Integer> argDefs() {
     Map<String,Integer> argDefs = new HashMap<String,Integer>();
     argDefs.put("order", 1);
-    argDefs.put("no-nist", 0); 
+    argDefs.put("nist", 0); 
     argDefs.put("smooth", 0);
     argDefs.put("cased", 0);
     return argDefs;
@@ -711,7 +711,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     Properties options = StringUtils.argsToProperties(args, argDefs());
     int BLEUOrder = PropertiesUtils.getInt(options, "order", BLEUMetric.DEFAULT_MAX_NGRAM_ORDER);
     boolean doSmooth = PropertiesUtils.getBool(options, "smooth", false);
-    boolean doTokenization = ! PropertiesUtils.getBool(options, "no-nist", false);
+    boolean doTokenization = PropertiesUtils.getBool(options, "nist", false);
     boolean doCased = PropertiesUtils.getBool(options, "cased", false);
     
     // Setup the metric tokenization scheme. Applies to both the references and

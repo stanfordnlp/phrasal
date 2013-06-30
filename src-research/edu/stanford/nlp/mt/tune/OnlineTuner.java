@@ -38,6 +38,7 @@ import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.BLEUOracleCost;
 import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.NakovBLEUGain;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
@@ -148,7 +149,7 @@ public class OnlineTuner {
     logger.info("Initial weights: " + wtsAccumulator.toString());
 
     // Load the tuning set
-    tuneSource = IStrings.fileSplitToIStrings(srcFile);
+    tuneSource = IStrings.tokenizeFile(srcFile);
     assert tuneSource.size() > 0;
     loadReferences(tgtFile);
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
@@ -654,27 +655,23 @@ public class OnlineTuner {
    * 
    * NOTE: This method re-initializes OnlineTuner.references
    * 
-   * @param refStr
+   * @param refStr a comma-separated list of reference filenames
    */
   public void loadReferences(String refStr) {
     if (refStr == null || refStr.length() == 0) {
       throw new IllegalArgumentException("Invalid reference list");
     }
     
-    final int numSourceSentences = tuneSource.size();
-    references = new ArrayList<List<Sequence<IString>>>(numSourceSentences);
-    String[] filenames = refStr.split(",");
-    numReferences = filenames.length;
-    logger.info("Number of references for expected BLEU calculation: " + numReferences);
-    for (String filename : filenames) {
-      List<Sequence<IString>> refList = IStrings.fileSplitToIStrings(filename);
-      assert refList.size() == numSourceSentences;
-      for (int i = 0; i < numSourceSentences; ++i) {
-        if (references.size() <= i) references.add(new ArrayList<Sequence<IString>>(filenames.length));
-        references.get(i).add(refList.get(i));
-      }
+    try {
+      String[] filenames = refStr.split(",");
+      references = Metrics.readReferences(filenames);
+      assert references.get(0).size() == filenames.length;
+      numReferences = filenames.length;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
-    assert references.size() == numSourceSentences;
+    assert references.size() == tuneSource.size();
+    logger.info("Number of references for expected BLEU calculation: " + numReferences);
   }
 
   /**

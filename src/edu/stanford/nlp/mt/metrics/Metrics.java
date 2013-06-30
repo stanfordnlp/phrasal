@@ -139,6 +139,13 @@ public class Metrics {
     return readReferences(files.toArray(new String[files.size()]));
   }
 
+  /**
+   * Read a set of references from a list of newline-delimited files.
+   * 
+   * @param referenceFilenames
+   * @return
+   * @throws IOException
+   */
   static public List<List<Sequence<IString>>> readReferences(
       String[] referenceFilenames) throws IOException {
     List<List<Sequence<IString>>> referencesList = new ArrayList<List<Sequence<IString>>>();
@@ -147,14 +154,10 @@ public class Metrics {
       for (String line; (line = reader.readLine()) != null;) {
         int lineNumber = reader.getLineNumber();
         if (referencesList.size() < lineNumber) {
-          List<Sequence<IString>> list = new ArrayList<Sequence<IString>>(
-              referenceFilenames.length);
-          list.add(IStrings.tokenize(line));
-          referencesList.add(list);
-        } else {
-          referencesList.get(lineNumber - 1).add(
-              IStrings.tokenize(line));
+          referencesList.add(new ArrayList<Sequence<IString>>(
+              referenceFilenames.length));
         }
+        referencesList.get(lineNumber - 1).add(IStrings.tokenize(line));
       }
       reader.close();
     }

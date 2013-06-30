@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
+import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.stats.Counter;
 
 /**
@@ -22,24 +23,11 @@ import edu.stanford.nlp.stats.Counter;
  */
 public class OnlineLearningCurve {
 
-  private static List<List<Sequence<IString>>> loadReferences(String[] filenames, int sourceLength) {
-    List<List<Sequence<IString>>> references = new ArrayList<List<Sequence<IString>>>(sourceLength);
-    for (String filename : filenames) {
-      List<Sequence<IString>> refList = IStrings.fileSplitToIStrings(filename);
-      assert refList.size() == sourceLength;
-      for (int i = 0; i < sourceLength; ++i) {
-        if (references.size() <= i) references.add(new ArrayList<Sequence<IString>>(filenames.length));
-        references.get(i).add(refList.get(i));
-      }
-    }
-    assert references.size() == sourceLength;
-    return references;
-  }
-
   /**
    * @param args
+   * @throws IOException 
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     if (args.length < 4) {
       System.err.printf("Usage: java %s ini_file input_file ref_csv_list wts [wts]%n", 
           OnlineLearningCurve.class.getName());
@@ -47,10 +35,10 @@ public class OnlineLearningCurve {
     }
     String iniFile = args[0];
     String inputFile = args[1];
-    final List<Sequence<IString>> sourceList = IStrings.fileSplitToIStrings(inputFile);
+    final List<Sequence<IString>> sourceList = IStrings.tokenizeFile(inputFile);
     String[] refFiles = args[2].split(",");
-    final List<List<Sequence<IString>>> references = loadReferences(refFiles, sourceList.size());
-
+    final List<List<Sequence<IString>>> references = Metrics.readReferences(refFiles);
+    
     // Read the list of weights
     List<String> wts = new ArrayList<String>();
     for (int i = 3; i < args.length; ++i) {

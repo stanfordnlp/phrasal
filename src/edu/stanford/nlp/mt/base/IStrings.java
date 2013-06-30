@@ -18,12 +18,12 @@ public class IStrings {
   }
 
   /**
-   * Convert a file to a list of Sequences.
+   * Convert a newline-delimited file to a list of Sequences.
    * 
    * @param filename
    * @return the list of Sequences represented by the file
    */
-  static public List<Sequence<IString>> fileSplitToIStrings(String filename) {
+  static public List<Sequence<IString>> tokenizeFile(String filename) {
     List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
