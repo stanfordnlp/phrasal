@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.aPTM;
+package edu.stanford.nlp.mt.tools.service;
 
 // TODO(spenceg): Merge this with ScoredCompletion into the same type hierarchy
 public class Prediction {

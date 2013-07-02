@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.aPTM;
+package edu.stanford.nlp.mt.tools.service;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -32,15 +32,15 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.inferer.impl.PrefixDecoder;
 import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.MessageType;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMBaseRequest;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMDoneRequest;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMInitRequest;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMOOVRequest;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMOOVResponse;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMPredictionRequest;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMPredictionResponse;
-import edu.stanford.nlp.mt.tools.aPTM.Messages.PTMStatusOk;
+import edu.stanford.nlp.mt.tools.service.Messages.MessageType;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMBaseRequest;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMDoneRequest;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMInitRequest;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMOOVRequest;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMOOVResponse;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMPredictionRequest;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMPredictionResponse;
+import edu.stanford.nlp.mt.tools.service.Messages.PTMStatusOk;
 import edu.stanford.nlp.util.Pair;
 
 /**

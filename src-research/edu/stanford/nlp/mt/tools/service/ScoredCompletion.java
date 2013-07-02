@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.aPTM;
+package edu.stanford.nlp.mt.tools.service;
 
 //TODO(spenceg): Add getters/setters for all fields
 public class ScoredCompletion {
