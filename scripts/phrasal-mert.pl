@@ -568,7 +568,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
        }
        my $optOut = "$work_dir/jmert.$iter.opt";
        print "Random Seed: $RANDOM_SEED\n";
-       my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats -N $opt_flags -s $RANDOM_SEED '$opt_type' $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
+       my $mertCMD = "java $mert_java_flags edu.stanford.nlp.mt.tune.MERT -a $optOut.feats $opt_flags -s $RANDOM_SEED '$opt_type' $iter_pcumulative_nbest $iter_nbest_list.gz $all_iter_weights $commaRefList $next_iter_weights > $jmert_log 2>&1";
        print stderr "MERT command: $mertCMD\n";
        `$mertCMD`;
        `cat $optOut.feats | sed 's/ |||.*//' > $optOut.trans`;
