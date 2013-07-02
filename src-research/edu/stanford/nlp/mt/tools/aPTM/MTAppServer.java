@@ -4,7 +4,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jetty.server.DispatcherType;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -93,9 +92,9 @@ public class MTAppServer {
     filterHolder.setInitParameter("allowedOrigins", ALLOWED_URIS);
     filterHolder.setInitParameter("allowedMethods", ALLOWED_METHODS);
     filterHolder.setInitParameter("allowCredentials", ALLOWED_CREDENTIALS);
-    EnumSet<DispatcherType> all = EnumSet.of(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD,
-        DispatcherType.INCLUDE, DispatcherType.REQUEST);
-    context.addFilter(filterHolder, "/*" , all );
+//    EnumSet<DispatcherType> all = EnumSet.of(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD,
+//        DispatcherType.INCLUDE, DispatcherType.REQUEST);
+//    context.addFilter(filterHolder, "/*" , all );
     return context;
   }
 

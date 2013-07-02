@@ -17,28 +17,6 @@
 	<classpathentry kind="lib" path="lib/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
 	<classpathentry kind="lib" path="lib/start.jetty-7.4.2.jar"/>
-	<classpathentry kind="lib" path="lib/gson-1.7.1.jar" sourcepath="libsrc/gson-1.7.1-sources.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-ajp-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-annotations-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-client-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-continuation-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-deploy-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-http-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-io-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jmx-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jndi-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-overlay-deployer-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-plus-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-policy-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-rewrite-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-security-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-server-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-servlet-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-servlets-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-util-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-webapp-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-websocket-7.4.2.v20110526.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-xml-7.4.2.v20110526.jar"/>
 	<classpathentry kind="lib" path="lib-research/servlet-api-2.5.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
 	<classpathentry kind="lib" path="lib/berkeleyaligner.jar"/>
@@ -46,5 +24,25 @@
 	<classpathentry kind="lib" path="lib/guava-11.0.2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
+	<classpathentry kind="lib" path="lib-research/gson-2.2.4.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-annotations-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-client-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-continuation-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-deploy-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-http-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-io-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jaas-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jmx-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jndi-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-plus-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-proxy-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-rewrite-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-security-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-server-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-servlet-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-servlets-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-util-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-webapp-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-xml-9.0.4.v20130625.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
