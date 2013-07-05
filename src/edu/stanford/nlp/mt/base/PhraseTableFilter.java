@@ -20,10 +20,10 @@ public class PhraseTableFilter {
 
   static class ScoredOpt implements Comparable<ScoredOpt> {
 
-    final TranslationOption<IString> opt;
+    final Rule<IString> opt;
     final float score;
 
-    ScoredOpt(TranslationOption<IString> opt, float score) {
+    ScoredOpt(Rule<IString> opt, float score) {
       this.opt = opt;
       this.score = score;
     }
@@ -62,7 +62,7 @@ public class PhraseTableFilter {
     }
 
     // Set of phrase pairs to keep:
-    Set<TranslationOption<IString>> keptOptions = new HashSet<TranslationOption<IString>>();
+    Set<Rule<IString>> keptOptions = new HashSet<Rule<IString>>();
 
     // Open output file:
     PrintStream oStream = IOTools.getWriterFromFile(outTable);
@@ -77,23 +77,23 @@ public class PhraseTableFilter {
       RawSequence<IString> rawForeign = new RawSequence<IString>(IStrings.toIStringArray(foreignInts));
 
       // Generate translation options:
-      List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(opts.size());
+      List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(opts.size());
       for (IntArrayTranslationOption intTransOpt : opts) {
         RawSequence<IString> translation = new RawSequence<IString>(
             intTransOpt.translation, IString.identityIndex());
-        transOpts.add(new TranslationOption<IString>(intTransOpt.id, intTransOpt.scores,
+        transOpts.add(new Rule<IString>(intTransOpt.id, intTransOpt.scores,
             ppt.scoreNames, translation, rawForeign, intTransOpt.alignment));
       }
 
       // Score translation options:
       if (transOpts.size() <= nOpts) {
-        for (TranslationOption<IString> transOpt : transOpts)
+        for (Rule<IString> transOpt : transOpts)
           keptOptions.add(transOpt);
       } else {
         for (float[] w : ws) {
           // Score and sort:
           List<ScoredOpt> scoredTransOpts = new ArrayList<ScoredOpt>(transOpts.size());
-          for (TranslationOption<IString> transOpt : transOpts)
+          for (Rule<IString> transOpt : transOpts)
             scoredTransOpts.add(new ScoredOpt(transOpt, (float) ArrayMath.innerProduct(w, transOpt.scores)));
           Collections.sort(scoredTransOpts);
           // Keep n-best:
@@ -107,7 +107,7 @@ public class PhraseTableFilter {
 
       // Print phrases to keep:
       System.err.printf("Translations for {%s}: %d -> %d\n", rawForeign, opts.size(), keptOptions.size());
-      for (TranslationOption<IString> opt : keptOptions) {
+      for (Rule<IString> opt : keptOptions) {
         oStream.print(opt.source);
         oStream.print(" ||| ");
         oStream.print(opt.target);

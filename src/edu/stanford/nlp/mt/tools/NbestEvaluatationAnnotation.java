@@ -24,8 +24,6 @@ import edu.stanford.nlp.mt.metrics.Metrics;
  *
  */
 public class NbestEvaluatationAnnotation {
-
-  static final boolean TOKENIZE_NIST = false;
   
   static public void usage() {
     err.printf("Usage:\n\t%s \\\n"+
@@ -49,7 +47,7 @@ public class NbestEvaluatationAnnotation {
     FlatNBestList nbest = new FlatNBestList(nbestFn);
     
     List<List<Sequence<IString>>> refs= Metrics.readReferences(
-        refFns, TOKENIZE_NIST);
+        refFns);
     
     List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();
     

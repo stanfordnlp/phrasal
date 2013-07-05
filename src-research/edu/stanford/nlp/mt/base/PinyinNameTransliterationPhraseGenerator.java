@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
@@ -39,7 +39,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
 
   // do we need to account for "(0) (1)", etc?
   public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
-          .getPhraseAlignment("I-I");
+          .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
 
   private final String[] scoreNames;
   private final SequenceFilter<TK> filter;
@@ -47,7 +47,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   private static final boolean capitalize = false;
 
 
-  public PinyinNameTransliterationPhraseGenerator(IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+  public PinyinNameTransliterationPhraseGenerator(RuleFeaturizer<TK, FV> phraseFeaturizer) {
     super(phraseFeaturizer);
     filter = new ProbableChineseNameFilter<TK>();
     scoreNames = DEFAULT_SCORE_NAMES;
@@ -61,8 +61,8 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   }
 
   @Override
-  public List<TranslationOption<TK>> getTranslationOptions(Sequence<TK> sequence) {
-    List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
+  public List<Rule<TK>> query(Sequence<TK> sequence) {
+    List<Rule<TK>> list = new LinkedList<Rule<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter.accepts(raw)) {
       String word = raw.toString();
@@ -71,7 +71,7 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
       RawSequence<IString> trans = new RawSequence<IString>(IStrings.toIStringArray(transliteration.split("\\s+")));
       RawSequence<TK> trans2 = (RawSequence<TK>) trans;
 
-      list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames,
+      list.add(new Rule<TK>(SCORE_VALUES, scoreNames,
               trans2, raw, DEFAULT_ALIGNMENT));
     }
     return list;
@@ -135,12 +135,12 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
       Sequence<IString> phrase = new RawSequence<IString>(IStrings.toIStringArray(tokens));
 
       try {
-        List<TranslationOption<IString>> opts = pnpg.getTranslationOptions(phrase);
+        List<Rule<IString>> opts = pnpg.query(phrase);
         if (opts.isEmpty()) {
           writer.println("No translation available for " + line);
         } else {
           writer.println("Options");
-          for (TranslationOption<IString> opt : opts) {
+          for (Rule<IString> opt : opts) {
             writer.printf("\t%s%n", opt);
           }
         }

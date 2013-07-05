@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  *
@@ -22,7 +22,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
   // do we need to account for "(0) (1)", etc?
   public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
-      .getPhraseAlignment("I-I");
+      .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
 
   private final String[] scoreNames;
   private final SequenceFilter<TK> filter;
@@ -33,7 +33,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
    *
    */
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       SequenceFilter<TK> filter) {
     super(phraseFeaturizer);
     this.filter = filter;
@@ -45,7 +45,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
    *
    */
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       SequenceFilter<TK> filter, String scoreName) {
     super(phraseFeaturizer);
     this.filter = filter;
@@ -57,7 +57,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
    *
    */
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords) {
     super(phraseFeaturizer);
     this.filter = null;
     scoreNames = DEFAULT_SCORE_NAMES;
@@ -65,7 +65,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   public UnknownWordPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
+      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
       String scoreName) {
     super(phraseFeaturizer);
     this.filter = null;
@@ -79,17 +79,17 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   @Override
-  public List<TranslationOption<TK>> getTranslationOptions(Sequence<TK> sequence) {
-    List<TranslationOption<TK>> list = new LinkedList<TranslationOption<TK>>();
+  public List<Rule<TK>> query(Sequence<TK> sequence) {
+    List<Rule<TK>> list = new LinkedList<Rule<TK>>();
     RawSequence<TK> raw = new RawSequence<TK>(sequence);
     if (filter == null || filter.accepts(raw)) {
       String word = raw.toString();
 
       if (dropUnknownWords && !isNumeric(word) && !isASCII(word)) {
-          list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, empty, raw,
+          list.add(new Rule<TK>(SCORE_VALUES, scoreNames, empty, raw,
           DEFAULT_ALIGNMENT));
       } else {
-    	  list.add(new TranslationOption<TK>(SCORE_VALUES, scoreNames, raw, raw,
+    	  list.add(new Rule<TK>(SCORE_VALUES, scoreNames, raw, raw,
               DEFAULT_ALIGNMENT));
       }
     }

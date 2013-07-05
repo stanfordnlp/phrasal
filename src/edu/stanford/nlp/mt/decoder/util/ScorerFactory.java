@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.Index;
  */
 public class ScorerFactory {
 
-  public static final String STATIC_SCORER = "staticscorer";
+  public static final String DENSE_SCORER = "staticscorer";
   public static final String UNIFORM_SCORER = "uniformscorer";
   public static final String SPARSE_SCORER = "sparsescorer";
   public static final String DEFAULT_SCORER = UNIFORM_SCORER;
@@ -34,8 +34,8 @@ public class ScorerFactory {
 
     if (scorerName.equals(UNIFORM_SCORER)) {
       return new UniformScorer<String>(featureIndex);
-    } else if (scorerName.equals(STATIC_SCORER)) {
-      return new StaticScorer(config, featureIndex);
+    } else if (scorerName.equals(DENSE_SCORER)) {
+      return new DenseScorer(config, featureIndex);
     } else if (scorerName.equals(SPARSE_SCORER)) {
       return new SparseScorer(config, featureIndex);
     }

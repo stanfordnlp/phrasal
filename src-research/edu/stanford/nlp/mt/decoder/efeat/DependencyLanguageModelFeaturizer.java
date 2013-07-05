@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
@@ -20,14 +20,13 @@ import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyWriter;
 import edu.stanford.nlp.mt.syntax.mst.rmcd.io.DependencyReader;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.decoder.feat.RichIncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
-import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsState;
 import edu.stanford.nlp.mt.tools.PrefixTagger;
 
 import java.io.IOException;
@@ -46,8 +45,8 @@ import gnu.trove.THashMap;
  * @author Michel Galley
  */
 public class DependencyLanguageModelFeaturizer extends
-    StatefulFeaturizer<IString, String> implements
-    RichIncrementalFeaturizer<IString, String>, AlignmentFeaturizer {
+    NeedsState<IString, String> implements
+    RichCombinationFeaturizer<IString, String>, NeedsInternalAlignments {
 
   // How many words of left context for POS tagging:
   // public static final String ORDER_PROPERTY = "leftWords";
@@ -215,7 +214,7 @@ public class DependencyLanguageModelFeaturizer extends
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
     return NODELAY ? getFeatures(f) : getDelayedFeatures(f, reranking);
   }
@@ -415,7 +414,7 @@ public class DependencyLanguageModelFeaturizer extends
     // Phrase alignment:
     PhraseAlignment align = null;
     if (bilingual) {
-      align = f.hyp.translationOpt.abstractOption.alignment;
+      align = f.derivation.rule.abstractRule.alignment;
       if (align != null)
         assert (sz == align.size() || align.size() == 0);
     }
@@ -608,23 +607,6 @@ public class DependencyLanguageModelFeaturizer extends
     dep.add(form, lemma, cpos, pos, pAlign);
   }
 
-  @Override
-  public void reset() {
-    // Michel's code
-//        if (prefixTagger == null)
-//          prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1
-
-    // heeyoung
-    if(prefixTagger == null) 
-      prefixTagger = new PrefixTagger(maxentTagger);
-    prefixTagger.release();
-    pipe.clearCache();
-    System.err.printf("Emptying %d keys of partial parse cache.\n",
-        partialParseCache.size());
-    fullParseCache.clear();
-    partialParseCache.clear();
-  }
-
   private static void printDep(DependencyInstance dep, int i, int j,
       double score, int dist, String prefix, boolean attR) {
     int len = dep.length();
@@ -653,12 +635,19 @@ public class DependencyLanguageModelFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
-  }
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+    // Michel's code
+//  if (prefixTagger == null)
+//    prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1
 
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
+    if(prefixTagger == null) 
+      prefixTagger = new PrefixTagger(maxentTagger);
+    prefixTagger.release();
+    pipe.clearCache();
+    System.err.printf("Emptying %d keys of partial parse cache.\n",
+        partialParseCache.size());
+    fullParseCache.clear();
+    partialParseCache.clear();
   }
 
   private String[] getLocalFeatureNames() {
@@ -682,7 +671,6 @@ public class DependencyLanguageModelFeaturizer extends
           .println("Usage: edu.stanford.nlp.mt.decoder.efeat.DependencyLanguageModelFeaturizer (serialized tagger) (serialized dparser) (text to tag)");
     DependencyLanguageModelFeaturizer feat = new DependencyLanguageModelFeaturizer(
         "mst", "", args[0], args[1]);
-    feat.reset();
     feat.prefixTagger.tagFile(args[2]);
   }
 

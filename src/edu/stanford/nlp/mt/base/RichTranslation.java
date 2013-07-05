@@ -1,14 +1,17 @@
 package edu.stanford.nlp.mt.base;
 
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
+ * A full hypothesis with various fields extracted from the featurizable
+ * for convenience. Includes the featurizable for traversal through the
+ * translation lattice.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
@@ -18,25 +21,9 @@ public class RichTranslation<TK, FV> extends
 
   public final Sequence<TK> source;
   public final CoverageSet sourceCoverage;
-  // public final int[][] t2fAlignmentIndex;
-  // public final int[][] f2tAlignmentIndex;
   public final List<String> alignmentIndex;
   public final Featurizable<TK, FV> featurizable;
   
-  public SemanticGraph dependency;
-
-  /*
-   * // no longer used: public RichTranslation(Sequence<TK> foreign,
-   * Sequence<TK> translation, CoverageSet foreignCoverage, double score,
-   * int[][] t2fAlignmentIndex, int[][] f2tAlignmentIndex,
-   * List<FeatureValue<FV>> features) { super(translation, features, score);
-   * this.featurizable = null; this.foreign = foreign; this.foreignCoverage =
-   * foreignCoverage; //this.t2fAlignmentIndex =
-   * Arrays.copyOf(t2fAlignmentIndex, t2fAlignmentIndex.length);
-   * //this.f2tAlignmentIndex = Arrays.copyOf(f2tAlignmentIndex,
-   * f2tAlignmentIndex.length); this.alignmentIndex = null; }
-   */
-
   /**
 	 *
 	 */
@@ -49,15 +36,11 @@ public class RichTranslation<TK, FV> extends
     if (f == null) {
       this.source = new EmptySequence<TK>();
       this.sourceCoverage = null;
-      // this.t2fAlignmentIndex = null;
-      // this.f2tAlignmentIndex = null;
       return;
     }
     this.source = f.sourceSentence;
     this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
         : null;
-    // this.t2fAlignmentIndex = f.t2fAlignmentIndex;
-    // this.f2tAlignmentIndex = f.f2tAlignmentIndex;
   }
 
   /**
@@ -73,21 +56,11 @@ public class RichTranslation<TK, FV> extends
     if (f == null) {
       this.source = new EmptySequence<TK>();
       this.sourceCoverage = null;
-      // this.t2fAlignmentIndex = null;
-      // this.f2tAlignmentIndex = null;
       return;
     }
     this.source = f.sourceSentence;
     this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
         : null;
-    // this.t2fAlignmentIndex = f.t2fAlignmentIndex;
-    // this.f2tAlignmentIndex = f.f2tAlignmentIndex;
-  }
-  public RichTranslation(Featurizable<TK, FV> f, double score,
-      FeatureValueCollection<FV> features, List<String> alignmentIndex,
-      long latticeSourceId, SemanticGraph dep) {
-    this(f, score, features, alignmentIndex, latticeSourceId);
-    dependency = dep;
   }
 
   private static CoverageSet constructCoverageSet(int[][] t2fAlignmentIndex) {
@@ -99,51 +72,6 @@ public class RichTranslation<TK, FV> extends
     return coverage;
   }
 
-  static public final String NBEST_SEP = "|||";
-
-  /**
-   * Prints NIST-tokenized n-best list for a given input segment.
-   * 
-   * @param id
-   *          Segment id
-   * @param sbuf
-   *          Where to append the output to
-   */
-  public void nbestToStringBuilder(int id, StringBuilder sbuf) {
-    sbuf.append(id);
-    sbuf.append(' ').append(NBEST_SEP).append(' ');
-    sbuf.append(NISTTokenizer.tokenize(this.translation.toString()));
-    sbuf.append(' ').append(NBEST_SEP);
-    DecimalFormat df = new DecimalFormat("0.####E0");
-    for (FeatureValue<FV> fv : FeatureValues.combine(this.features)) {
-      sbuf.append(' ')
-          .append(fv.name)
-          .append(": ")
-          .append(
-              (fv.value == (int) fv.value ? (int) fv.value : df
-                  .format(fv.value)));
-    }
-    sbuf.append(' ').append(NBEST_SEP).append(' ');
-    sbuf.append(df.format(this.score));
-    if (latticeSourceId != -1) {
-      sbuf.append(' ').append(NBEST_SEP).append(' ');
-      sbuf.append(latticeSourceId);
-    }
-  }
-
-  /**
-   * Prints NIST-tokenized n-best list for a given input segment.
-   * 
-   * @param id
-   *          Segment id
-   * @return The NIST-tokenized String representation of nbest item
-   */
-  public String nbestToString(int id) {
-    StringBuilder sbuf = new StringBuilder();
-    nbestToStringBuilder(id, sbuf);
-    return sbuf.toString();
-  }
-
   /**
    * Prints untokenized Moses n-best list for a given input segment. The n-best
    * list is currently not tokenized since tokenization would break the
@@ -164,93 +92,110 @@ public class RichTranslation<TK, FV> extends
    *          Segment id
    * @param sbuf
    *          Where to append the output to
+   * @param nbestWordInternalAlignments 
    */
-  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf) {
+  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean nbestWordInternalAlignments) {
     sbuf.append(id);
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(this.translation);
     sbuf.append(' ').append(NBEST_SEP);
     DecimalFormat df = new DecimalFormat("0.####E0");
-    for (FeatureValue<FV> fv : FeatureValues.combine(this.features)) {
-      sbuf.append(' ')
-          .append(fv.name)
-          .append(": ")
-          .append(
-              (fv.value == (int) fv.value ? (int) fv.value : df
-                  .format(fv.value)));
+    if (features != null) {
+      for (FeatureValue<FV> fv : this.features) {
+        sbuf.append(' ')
+        .append(fv.name)
+        .append(": ")
+        .append(
+            (fv.value == (int) fv.value ? (int) fv.value : df
+                .format(fv.value)));
+      }
     }
     sbuf.append(' ').append(NBEST_SEP).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(NBEST_SEP);
-    // Alignment:
-    for (String el : alignmentIndex)
-      sbuf.append(" ").append(el);
-    /*
-     * // Old way of generating alignment. To save memory,
-     * {f2t,t2f}AlignmentIndex are no longer // stored in RichTranslation.
-     * if(t2fAlignmentIndex != null) { for(int lastRangeEnd=-1, i=0;
-     * i<t2fAlignmentIndex.length; ++i) { int[] range = t2fAlignmentIndex[i];
-     * if(i+1<t2fAlignmentIndex.length && t2fAlignmentIndex[i][0] ==
-     * t2fAlignmentIndex[i+1][0]) continue; // Foreign positions:
-     * sbuf.append(' ').append(range[0]); if(range[0]+1 != range[1])
-     * sbuf.append('-').append(range[1]-1); // Translation positions:
-     * sbuf.append('=').append(lastRangeEnd+1); if(i != lastRangeEnd+1)
-     * sbuf.append('-').append(i); lastRangeEnd=i; } }
-     */
-     if (System.getProperty("VERY_VERBOSE_NBEST") != null) {
-       sbuf.append(' ').append(NBEST_SEP).append(' ');
-       sbuf.append(this.featurizable.sourceSentence.toString());
-       sbuf.append(' ').append(NBEST_SEP).append(' ');
-       List<Featurizable<TK,FV>> featurizables = featurizables();
-       for (Featurizable<TK,FV> f : featurizables) {
-         sbuf.append(' ');
-         double parentScore = (f.prior == null ? 0 : f.prior.hyp.score);
-         sbuf.append("|").append(f.hyp.score - parentScore).append(" ");
-         sbuf.append(f.hyp.translationOpt.sourceCoverage).append(" ");
-         sbuf.append(f.hyp.translationOpt.abstractOption.target.toString());
-       }
-     }
-    
+
+    if (nbestWordInternalAlignments && Featurizable.alignmentsEnabled()) {
+      // Internal alignments
+      String alignmentString = sourceTargetAlignmentString();
+      sbuf.append(" ").append(alignmentString);
+    } else {
+      // Phrase segmentation
+      for (String el : alignmentIndex)
+        sbuf.append(" ").append(el);
+    }
+
+    if (System.getProperty("VERY_VERBOSE_NBEST") != null) {
+      sbuf.append(' ').append(NBEST_SEP).append(' ');
+      sbuf.append(this.featurizable.sourceSentence.toString());
+      sbuf.append(' ').append(NBEST_SEP).append(' ');
+      List<Featurizable<TK,FV>> featurizables = featurizables();
+      for (Featurizable<TK,FV> f : featurizables) {
+        sbuf.append(' ');
+        double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
+        sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
+        sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
+        sbuf.append(f.derivation.rule.abstractRule.target.toString());
+      }
+    }
   }
 
-  List<Featurizable<TK,FV>> featurizables() {
+  /**
+   * Pull out word-to-word source->target alignments.
+   * 
+   * @return
+   */
+  public String sourceTargetAlignmentString() {
+    StringBuilder[] sourceAlignments = new StringBuilder[featurizable.sourceSentence.size()];
+    List<Featurizable<TK,FV>> featurizableList = featurizables();
+    for (Featurizable<TK,FV> featurizable : featurizableList) {
+      int srcPosition = featurizable.sourcePosition;
+      int tgtPosition = featurizable.targetPosition;
+      int tgtLength = featurizable.targetPhrase.size();
+      PhraseAlignment al = featurizable.rule.abstractRule.alignment;
+      for (int i = 0; i < tgtLength; ++i) {
+        int[] sIndices = al.t2s(i);
+        if (sIndices != null) {
+          String tgtIndexStr = String.valueOf(tgtPosition + i);
+          for (int srcOffset : sIndices) {
+            int srcIndex = srcPosition + srcOffset;
+            if (sourceAlignments[srcIndex] == null) {
+              sourceAlignments[srcIndex] = new StringBuilder();
+              sourceAlignments[srcIndex].append(tgtIndexStr);
+            } else {
+              sourceAlignments[srcIndex].append(",").append(tgtIndexStr);
+            }
+          }
+        }
+      }
+    }
+    StringBuilder sb = new StringBuilder();
+    boolean isFirst = true;
+    for (int i = 0; i < sourceAlignments.length; ++i) {
+      if (sourceAlignments[i] != null) {
+        if ( ! isFirst) sb.append(" ");
+        sb.append(String.valueOf(i)).append("-").append(sourceAlignments[i].toString());
+        isFirst = false;
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Extract all featurizables in order from the null hypothesis to the goal
+   * hypothesis.
+   * 
+   * @return
+   */
+  private List<Featurizable<TK,FV>> featurizables() {
     List<Featurizable<TK,FV>> listFeaturizables = new ArrayList<Featurizable<TK,FV>>();
-    featurizables(this.featurizable, listFeaturizables);
+    featurizableHelper(this.featurizable, listFeaturizables);
     Collections.reverse(listFeaturizables);
     return listFeaturizables;
   }
   
-  private void featurizables(Featurizable<TK,FV> f, List<Featurizable<TK,FV>> l) {    
-    if (f == null) {
-      return;      
-    }
+  private void featurizableHelper(Featurizable<TK,FV> f, List<Featurizable<TK,FV>> l) {    
+    if (f == null) return;      
     l.add(f);
-    featurizables(f.prior, l);
-  }
-  
-  /**
-   * Prints untokenized Moses n-best list for a given input segment. The n-best
-   * list is currently not tokenized since tokenization would break the
-   * alignment.
-   * <p>
-   * Sample output: <br>
-   * 0 ||| lebanese president emile lahoud to a violent campaign in the chamber
-   * of deputies , which was held yesterday in the regular legislative session
-   * turned into a " trial " of the president of the republic for its position
-   * on the international court and " observations " made here on this subject .
-   * ||| d: -12 -2.00517 -1.14958 -5.62344 -1.51436 -0.408961 -3.67606 lm:
-   * -206.805 tm: -44.5496 -81.3977 -35.8545 -77.5407 19.9979 w: -52 |||
-   * -10.2091 ||| 2=0 0-1=1 3=2 4-5=3-4 6-7=5-7 8-10=8-13 11-14=14-19 17=20
-   * 15-16=21-22 18-19=23-25 20-21=26-27 22-23=28-30 24-25=31-34 26-29=35-39
-   * 30-33=40-43 34-35=44-45 36-38=46 39=47 40-42=48-50 43=51
-   * 
-   * @param id
-   *          Segment id
-   * @return n-best list
-   */
-  public String nbestToMosesString(int id) {
-    StringBuilder sbuf = new StringBuilder();
-    nbestToMosesStringBuilder(id, sbuf);
-    return sbuf.toString();
+    featurizableHelper(f.prior, l);
   }
 
 }

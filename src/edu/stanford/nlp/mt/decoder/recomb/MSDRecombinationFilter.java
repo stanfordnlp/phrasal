@@ -1,13 +1,14 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.HierarchicalReorderingFeaturizer.HierBlock;
 import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.StatefulFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.util.Generics;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -17,25 +18,25 @@ import java.util.List;
  * @author Michel Galley
  */
 public class MSDRecombinationFilter implements
-    RecombinationFilter<Hypothesis<IString, String>> {
+    RecombinationFilter<Derivation<IString, String>> {
 
   // Don't set to true (this dramatically reduces the amount of recombination,
   // and hurts search)
   private static final boolean HIERARCHICAL_RECOMBINATION = false;
 
-  private final List<StatefulFeaturizer<IString, String>> hierFeaturizers = new LinkedList<StatefulFeaturizer<IString, String>>();
+  private final List<NeedsState<IString, String>> hierFeaturizers = new LinkedList<NeedsState<IString, String>>();
 
   public MSDRecombinationFilter(
-      List<IncrementalFeaturizer<IString, String>> featurizers) {
+      List<Featurizer<IString, String>> featurizers) {
 
     System.err.println("MSD recombination enabled.");
 
     if (HIERARCHICAL_RECOMBINATION) {
-      Deque<IncrementalFeaturizer<IString, String>> tmpList = new LinkedList<IncrementalFeaturizer<IString, String>>(
+      Deque<Featurizer<IString, String>> tmpList = Generics.newLinkedList(
           featurizers);
 
       while (!tmpList.isEmpty()) {
-        IncrementalFeaturizer<IString, String> el = tmpList.removeLast();
+        Featurizer<IString, String> el = tmpList.removeLast();
         if (el instanceof CombinedFeaturizer) {
           tmpList
               .addAll(((CombinedFeaturizer<IString, String>) el).featurizers);
@@ -44,7 +45,7 @@ public class MSDRecombinationFilter implements
               .addAll(((CollapsedFeaturizer<IString, String>) el).featurizers);
         } else {
           if (el instanceof HierarchicalReorderingFeaturizer) {
-            hierFeaturizers.add((StatefulFeaturizer<IString, String>) el);
+            hierFeaturizers.add((NeedsState<IString, String>) el);
             // System.err.println("ADD: "+el);
           }
         }
@@ -57,21 +58,21 @@ public class MSDRecombinationFilter implements
     return super.clone();
   }
 
-  private static int lastOptionLeftEdge(Hypothesis<IString, String> hyp) {
-    if (hyp.translationOpt == null)
+  private static int lastOptionLeftEdge(Derivation<IString, String> hyp) {
+    if (hyp.rule == null)
       return -1;
-    return hyp.translationOpt.sourcePosition - 1;
+    return hyp.rule.sourcePosition - 1;
   }
 
-  private static int lastOptionRightEdge(Hypothesis<IString, String> hyp) {
-    if (hyp.translationOpt == null)
+  private static int lastOptionRightEdge(Derivation<IString, String> hyp) {
+    if (hyp.rule == null)
       return 0;
-    return hyp.translationOpt.sourceCoverage.length();
+    return hyp.rule.sourceCoverage.length();
   }
 
   @Override
-  public boolean combinable(Hypothesis<IString, String> hypA,
-      Hypothesis<IString, String> hypB) {
+  public boolean combinable(Derivation<IString, String> hypA,
+      Derivation<IString, String> hypB) {
 
     if (lastOptionRightEdge(hypA) != lastOptionRightEdge(hypB))
       // same as LinearDistortionRecombinationFilter:
@@ -129,7 +130,7 @@ public class MSDRecombinationFilter implements
     }
 
     if (HIERARCHICAL_RECOMBINATION) {
-      for (StatefulFeaturizer<IString, String> featurizer : hierFeaturizers) {
+      for (NeedsState<IString, String> featurizer : hierFeaturizers) {
         HierBlock hbA = (HierBlock) hypA.featurizable.getState(featurizer);
         HierBlock hbB = (HierBlock) hypB.featurizable.getState(featurizer);
         // System.err.printf("CMP: %d<->%d %d<->%d\n", hbA.fStart(), hbA.fEnd(),
@@ -145,7 +146,7 @@ public class MSDRecombinationFilter implements
   }
 
   @Override
-  public long recombinationHashCode(Hypothesis<IString, String> hyp) {
+  public long recombinationHashCode(Derivation<IString, String> hyp) {
     return lastOptionRightEdge(hyp);
   }
 

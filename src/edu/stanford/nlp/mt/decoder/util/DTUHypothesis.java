@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.Pair;
  * 
  * @author Michel Galley
  */
-public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
+public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
 
   private static final String MIN_GAP_SIZE_PROPERTY = "minTargetGapSize";
   private static final int MIN_GAP_SIZE = Integer.parseInt(System.getProperty(
@@ -41,7 +41,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   public static class PendingPhrase<TK, FV> implements
       Comparable<PendingPhrase<TK, FV>> {
 
-    public final ConcreteTranslationOption<TK,FV> concreteOpt;
+    public final ConcreteRule<TK,FV> concreteOpt;
 
     public int segmentIdx; // Current segment of the translation option.
                            // For instance, segmentIdx=0 selects "ne" and
@@ -64,8 +64,8 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       this.futureCosts = old.futureCosts;
     }
 
-    public PendingPhrase(ConcreteTranslationOption<TK,FV> concreteOpt,
-        int sourceInputId, Hypothesis<TK, FV> hyp,
+    public PendingPhrase(ConcreteRule<TK,FV> concreteOpt,
+        int sourceInputId, Derivation<TK, FV> hyp,
         CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
         int segmentIdx, int firstPosition, int lastPosition) {
       this.segmentIdx = segmentIdx;
@@ -83,10 +83,10 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     };
 
-    private static class SegId<TK> extends Pair<DTUOption<TK>, Integer> {
+    private static class SegId<TK> extends Pair<DTURule<TK>, Integer> {
       private static final long serialVersionUID = 1L;
 
-      SegId(DTUOption<TK> o, Integer i) {
+      SegId(DTURule<TK> o, Integer i) {
         super(o, i);
       }
     }
@@ -99,7 +99,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       }
     };
 
-    private double[] setFutureCosts(int sourceInputId, Hypothesis<TK, FV> hyp,
+    private double[] setFutureCosts(int sourceInputId, Derivation<TK, FV> hyp,
         CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer) {
 
       // Do we clear the cache of future cost?
@@ -111,7 +111,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         lastId.set(sourceInputId);
       }
 
-      DTUOption<TK> opt = (DTUOption<TK>) concreteOpt.abstractOption;
+      DTURule<TK> opt = (DTURule<TK>) concreteOpt.abstractRule;
       double[] fc = new double[opt.dtus.length];
 
       assert (segmentIdx == 0);
@@ -122,7 +122,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
           Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(
               hyp.sourceSequence, concreteOpt, sourceInputId, i);
           List<FeatureValue<FV>> phraseFeatures = featurizer
-              .phraseListFeaturize(f);
+              .ruleFeaturize(f);
           score = scorer.getIncrementalScore(phraseFeatures);
           fcCache.put(id, score);
         }
@@ -177,7 +177,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
   public int pendingWords() {
     int sz = 0;
     for (DTUHypothesis.PendingPhrase<TK, FV> elA : pendingPhrases) {
-      DTUOption<TK> dtuOpt = (DTUOption<TK>) elA.concreteOpt.abstractOption;
+      DTURule<TK> dtuOpt = (DTURule<TK>) elA.concreteOpt.abstractRule;
       for (int segId = elA.segmentIdx + 1; segId < dtuOpt.dtus.length; ++segId) {
         sz += dtuOpt.dtus[segId].size();
       }
@@ -224,9 +224,9 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     return hasExpired;
   }
 
-  public TranslationOption<TK> getAbstractOption() {
-    assert (translationOpt.abstractOption != null);
-    return translationOpt.abstractOption;
+  public Rule<TK> getAbstractOption() {
+    assert (rule.abstractRule != null);
+    return rule.abstractRule;
   }
 
   public boolean targetOnly() {
@@ -240,7 +240,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
                                                             // toString()
     sb.append(" segIx=").append(segmentIdx);
     sb.append(" id=").append(System.identityHashCode(this));
-    sb.append(" tOpt=").append(System.identityHashCode(translationOpt));
+    sb.append(" tOpt=").append(System.identityHashCode(rule));
     sb.append(String.format(" c=[%.3f,%.3f,%.3f]", partialScore(),
         pendingPhrasesCost, h));
 
@@ -249,7 +249,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       sb.append(" | pending:");
 
       for (final PendingPhrase<TK, FV> discTargetPhrase : pendingPhrases) {
-        DTUOption<TK> opt = (DTUOption<TK>) discTargetPhrase.concreteOpt.abstractOption;
+        DTURule<TK> opt = (DTURule<TK>) discTargetPhrase.concreteOpt.abstractRule;
         sb.append(" {");
         int si = discTargetPhrase.segmentIdx + 1;
         for (int i = si; i < opt.dtus.length; ++i) {
@@ -274,9 +274,9 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     double score = 0.0;
 
     for (PendingPhrase<TK, FV> pendingPhrase : pendingPhrases) {
-      ConcreteTranslationOption<TK,FV> opt = pendingPhrase.concreteOpt;
-      assert (opt.abstractOption instanceof DTUOption);
-      DTUOption<TK> dtuOpt = (DTUOption<TK>) opt.abstractOption;
+      ConcreteRule<TK,FV> opt = pendingPhrase.concreteOpt;
+      assert (opt.abstractRule instanceof DTURule);
+      DTURule<TK> dtuOpt = (DTURule<TK>) opt.abstractRule;
       for (int i = pendingPhrase.segmentIdx + 1; i < dtuOpt.dtus.length; ++i) {
         score += pendingPhrase.futureCosts[i];
         // System.err.printf("cost pending phrases: %s %f\n",
@@ -307,7 +307,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
     for (PendingPhrase<TK, FV> currentPhrase : pendingPhrases) {
 
-      DTUOption<TK> dtuOpt = (DTUOption<TK>) currentPhrase.concreteOpt.abstractOption;
+      DTURule<TK> dtuOpt = (DTURule<TK>) currentPhrase.concreteOpt.abstractRule;
 
       if (currentPhrase.segmentIdx + 1 < dtuOpt.dtus.length) {
 
@@ -317,7 +317,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
           nextHyps.add(new DTUHypothesis<TK, FV>(sourceInputId,
               currentPhrase.concreteOpt, length, this, featurizer, scorer,
               heuristic, currentPhrase, currentSegmentIdx,
-              currentPhrase.concreteOpt.abstractOption));
+              currentPhrase.concreteOpt.abstractRule));
         }
       }
     }
@@ -329,15 +329,15 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
    * Constructor used for 1st segment of a discontinuous phrase.
    */
   public DTUHypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
-      Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
+      ConcreteRule<TK,FV> translationOpt, int insertionPosition,
+      Derivation<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
 
-    super(sourceInputId, translationOpt, translationOpt.abstractOption,
+    super(sourceInputId, translationOpt, translationOpt.abstractRule,
         insertionPosition, baseHyp, featurizer, scorer, heuristic, /*
                                                                     * targetPhrase=
                                                                     */
-        getSegment(translationOpt.abstractOption, 0),
+        getSegment(translationOpt.abstractRule, 0),
         /* hasPendingPhrases= */hasPendingPhrases(translationOpt, baseHyp,
             true, false), /* segmentIdx= */0);
 
@@ -362,7 +362,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
     // Add new pending phrases:
     // assert (MAX_TARGET_PHRASE_SPAN >= 0);
-    if (translationOpt.abstractOption instanceof DTUOption) {
+    if (translationOpt.abstractRule instanceof DTURule) {
       PendingPhrase<TK, FV> newPhrase = new PendingPhrase<TK, FV>(
           translationOpt, sourceInputId, this, featurizer, scorer, 0,
           this.length + MIN_GAP_SIZE, this.length + MAX_TARGET_PHRASE_SPAN);
@@ -380,11 +380,11 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
   // Constructor used with successors:
   public DTUHypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
-      Hypothesis<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
+      ConcreteRule<TK,FV> translationOpt, int insertionPosition,
+      Derivation<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       PendingPhrase<TK, FV> currentPhrase, int currentSegmentIdx,
-      TranslationOption<TK> actualTranslationOption) {
+      Rule<TK> actualTranslationOption) {
 
     super(
         sourceInputId,
@@ -395,14 +395,14 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         featurizer,
         scorer,
         heuristic,
-        getSegment(translationOpt.abstractOption, currentSegmentIdx),
+        getSegment(translationOpt.abstractRule, currentSegmentIdx),
         hasPendingPhrases(
             translationOpt,
             baseHyp,
             false,
-            currentSegmentIdx + 1 == getNumberSegments(translationOpt.abstractOption)),
+            currentSegmentIdx + 1 == getNumberSegments(translationOpt.abstractRule)),
         currentSegmentIdx);
-    assert (actualTranslationOption == translationOpt.abstractOption);
+    assert (actualTranslationOption == translationOpt.abstractRule);
 
     // Copy pending phrases from parent hypothesis, and move current pending
     // phrase from pendingPhrases to current partial hypothesis:
@@ -414,7 +414,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         // This is NOT the phrase selected as successor:
         pendingPhrases.add(new PendingPhrase<TK, FV>(oldPhrase));
       } else {
-        DTUOption<TK> dtuOpt = (DTUOption<TK>) currentPhrase.concreteOpt.abstractOption;
+        DTURule<TK> dtuOpt = (DTURule<TK>) currentPhrase.concreteOpt.abstractRule;
         // This IS the phrase selected as successor:
         if (currentPhrase.segmentIdx + 2 >= dtuOpt.dtus.length)
           continue; // just appended the last pending phrase
@@ -441,10 +441,10 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
 
   // Constructor used during nbest list generation:
   public DTUHypothesis(int sourceInputId,
-      ConcreteTranslationOption<TK,FV> translationOpt, int insertionPosition,
-      Hypothesis<TK, FV> baseHyp, Hypothesis<TK, FV> nextHyp,
+      ConcreteRule<TK,FV> translationOpt, int insertionPosition,
+      Derivation<TK, FV> baseHyp, Derivation<TK, FV> nextHyp,
       CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
-      SearchHeuristic<TK, FV> heuristic, Set<TranslationOption<TK>> seenOptions) {
+      SearchHeuristic<TK, FV> heuristic, Set<Rule<TK>> seenOptions) {
 
     super(sourceInputId, translationOpt,
         getAbstractOption(nextHyp.featurizable), insertionPosition, baseHyp,
@@ -468,7 +468,7 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         this.hasExpired = true;
     }
 
-    seenOptions.add(translationOpt.abstractOption);
+    seenOptions.add(translationOpt.abstractRule);
     pendingPhrasesCost = costPendingPhrases();
     checkExpiration();
   }
@@ -496,38 +496,38 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
     hasExpired = true; // Answer: no
   }
 
-  private static <TK, FV> RawSequence<TK> getTranslation(Hypothesis<TK, FV> hyp) {
+  private static <TK, FV> RawSequence<TK> getTranslation(Derivation<TK, FV> hyp) {
 
     if (hyp instanceof DTUHypothesis) {
 
       DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) hyp;
-      TranslationOption<TK> opt = hyp.translationOpt.abstractOption;
+      Rule<TK> opt = hyp.rule.abstractRule;
 
-      if (opt instanceof DTUOption) {
-        DTUOption<TK> dtuOpt = (DTUOption<TK>) opt;
+      if (opt instanceof DTURule) {
+        DTURule<TK> dtuOpt = (DTURule<TK>) opt;
         return dtuOpt.dtus[dtuHyp.segmentIdx];
       }
     }
 
-    return hyp.translationOpt.abstractOption.target;
+    return hyp.rule.abstractRule.target;
   }
 
-  private static <TK, FV> TranslationOption<TK> getAbstractOption(
+  private static <TK, FV> Rule<TK> getAbstractOption(
       Featurizable<TK, FV> f) {
     return (f instanceof DTUFeaturizable) ? ((DTUFeaturizable<TK, FV>) f).abstractOption
         : null;
   }
 
-  private static <TK> RawSequence<TK> getSegment(TranslationOption<TK> option,
+  private static <TK> RawSequence<TK> getSegment(Rule<TK> option,
       int idx) {
-    if (option instanceof DTUOption)
-      return ((DTUOption<TK>) option).dtus[idx];
+    if (option instanceof DTURule)
+      return ((DTURule<TK>) option).dtus[idx];
     return option.target;
   }
 
-  private static <TK> int getNumberSegments(TranslationOption<TK> option) {
-    if (option instanceof DTUOption)
-      return ((DTUOption<TK>) option).dtus.length;
+  private static <TK> int getNumberSegments(Rule<TK> option) {
+    if (option instanceof DTURule)
+      return ((DTURule<TK>) option).dtus.length;
     return 1;
   }
 
@@ -536,14 +536,14 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
    * some pending phrases still need to be appended to translation.
    */
   private static <TK, FV> boolean hasPendingPhrases(
-      ConcreteTranslationOption<TK,FV> translationOpt, Hypothesis<TK, FV> baseHyp,
+      ConcreteRule<TK,FV> translationOpt, Derivation<TK, FV> baseHyp,
       boolean firstSegmentInOpt, boolean lastSegmentInOpt) {
     boolean pendingPhrases = false;
 
     // Two cases:
     // (1) translationOpt contains a gap in the target, in which case we must
     // return no.
-    if (translationOpt.abstractOption instanceof DTUOption && firstSegmentInOpt)
+    if (translationOpt.abstractRule instanceof DTURule && firstSegmentInOpt)
       pendingPhrases = true;
 
     // (2) baseHyp contains some pending phrase (that is not about to be
@@ -568,9 +568,9 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
         this);
     System.err.printf(
         "parent hypothesis [class=%s,id=%d,pos=%d,expired=%s]: %s\n",
-        preceedingHyp.getClass(), System.identityHashCode(preceedingHyp),
-        preceedingHyp.featurizable.targetPosition,
-        preceedingHyp.hasExpired(), preceedingHyp);
+        preceedingDerivation.getClass(), System.identityHashCode(preceedingDerivation),
+        preceedingDerivation.featurizable.targetPosition,
+        preceedingDerivation.hasExpired(), preceedingDerivation);
     System.err.println("pendingPhrasesCost: " + pendingPhrasesCost);
 
     DTUHypothesis<TK, FV> hyp = this;
@@ -579,10 +579,10 @@ public class DTUHypothesis<TK, FV> extends Hypothesis<TK, FV> {
       System.err.println("isDone(): " + hyp.isDone());
       System.err.println("pending phrases: " + hyp.pendingPhrases.size());
       System.err.println("f.done: " + hyp.featurizable.done);
-      Hypothesis<TK, FV> curHyp = hyp;
+      Derivation<TK, FV> curHyp = hyp;
       while (curHyp != null) {
         System.err.println("  " + curHyp.toString());
-        curHyp = curHyp.preceedingHyp;
+        curHyp = curHyp.preceedingDerivation;
       }
       throw new RuntimeException();
     }

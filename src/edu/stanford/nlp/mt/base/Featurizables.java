@@ -13,7 +13,7 @@ public class Featurizables {
    * @param <FV>
    */
   public static <TK, FV> int locationOfSwappedPhrase(Featurizable<TK, FV> f) {
-    return f.hyp.sourceCoverage.nextSetBit(f.sourcePosition
+    return f.derivation.sourceCoverage.nextSetBit(f.sourcePosition
         + f.sourcePhrase.size());
   }
 
@@ -22,6 +22,6 @@ public class Featurizables {
     if (startloc == -1)
       return -1;
 
-    return f.hyp.sourceCoverage.nextClearBit(startloc) - 1;
+    return f.derivation.sourceCoverage.nextClearBit(startloc) - 1;
   }
 }

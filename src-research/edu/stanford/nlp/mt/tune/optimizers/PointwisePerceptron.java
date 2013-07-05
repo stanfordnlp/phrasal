@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.tune.GreedyMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
@@ -39,13 +39,13 @@ public class PointwisePerceptron extends AbstractNBestOptimizer {
     do {
       for (int i = 0; i < targets.size(); i++) {
         // get current classifier argmax
-        Scorer<String> scorer = new StaticScorer(wts, MERT.featureIndex);
+        Scorer<String> scorer = new DenseScorer(wts, MERT.featureIndex);
         GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
             new ScorerWrapperEvaluationMetric<IString, String>(scorer));
         List<List<ScoredFeaturizedTranslation<IString, String>>> nbestSlice = Arrays
             .asList(nbest.nbestLists().get(i));
         List<ScoredFeaturizedTranslation<IString, String>> current = argmaxByScore
-            .maximize(new FlatNBestList(nbestSlice, false));
+            .maximize(new FlatNBestList(nbestSlice));
         Counter<String> dir = MERT.summarizedAllFeaturesVector(Arrays
             .asList(targets.get(i)));
         Counters

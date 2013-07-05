@@ -28,7 +28,7 @@ public class MTScorer implements ExternalMTScorer {
   boolean withNIST = true, withMETEOR = true;
 
   List<double[]> terCosts;
-  Map<Sequence<IString>, Double> ngramInfo;
+  Counter<Sequence<IString>> ngramInfo;
   Map<String, Double> scoresMETEOR;
 
   public static void main(String[] args) throws Exception {

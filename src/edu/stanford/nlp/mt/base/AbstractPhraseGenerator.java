@@ -3,11 +3,13 @@ package edu.stanford.nlp.mt.base;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
+ * Implements an abstract method for querying rules from a phrase
+ * table given a source sequence.
  * 
  * @author danielcer
  * 
@@ -15,7 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
     PhraseGenerator<TK,FV>, PhraseTable<TK> {
-  protected final IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer;
+  protected final RuleFeaturizer<TK, FV> phraseFeaturizer;
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -23,10 +25,10 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   }
 
   @Override
-  public List<ConcreteTranslationOption<TK,FV>> translationOptions(
-      Sequence<TK> sequence, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
-    List<ConcreteTranslationOption<TK,FV>> opts = new LinkedList<ConcreteTranslationOption<TK,FV>>();
-    int sequenceSz = sequence.size();
+  public List<ConcreteRule<TK,FV>> getRules(
+      Sequence<TK> source, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
+    List<ConcreteRule<TK,FV>> opts = new LinkedList<ConcreteRule<TK,FV>>();
+    int sequenceSz = source.size();
     int longestForeignPhrase = this.longestSourcePhrase();
     if (longestForeignPhrase < 0)
       longestForeignPhrase = -longestForeignPhrase;
@@ -37,14 +39,14 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
           break;
         CoverageSet foreignCoverage = new CoverageSet(sequenceSz);
         foreignCoverage.set(startIdx, endIdx);
-        Sequence<TK> foreignPhrase = sequence.subsequence(startIdx, endIdx);
-        List<TranslationOption<TK>> abstractOpts = this
-            .getTranslationOptions(foreignPhrase);
+        Sequence<TK> foreignPhrase = source.subsequence(startIdx, endIdx);
+        List<Rule<TK>> abstractOpts = this
+            .query(foreignPhrase);
         if (abstractOpts == null)
           continue;
-        for (TranslationOption<TK> abstractOpt : abstractOpts) {
-          opts.add(new ConcreteTranslationOption<TK,FV>(abstractOpt,
-              foreignCoverage, phraseFeaturizer, scorer, sequence, this
+        for (Rule<TK> abstractOpt : abstractOpts) {
+          opts.add(new ConcreteRule<TK,FV>(abstractOpt,
+              foreignCoverage, phraseFeaturizer, scorer, source, this
                   .getName(), sourceInputId));
         }
       }
@@ -53,7 +55,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   }
 
   public AbstractPhraseGenerator(
-      IsolatedPhraseFeaturizer<TK, FV> phraseFeaturizer) {
+      RuleFeaturizer<TK, FV> phraseFeaturizer) {
     this.phraseFeaturizer = phraseFeaturizer;
   }
 
@@ -61,7 +63,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   abstract public String getName();
 
   @Override
-  abstract public List<TranslationOption<TK>> getTranslationOptions(
+  abstract public List<Rule<TK>> query(
       Sequence<TK> sequence);
 
   @Override

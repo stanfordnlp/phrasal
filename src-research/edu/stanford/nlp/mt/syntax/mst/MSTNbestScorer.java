@@ -41,7 +41,7 @@ public class MSTNbestScorer {
     for (int i = 3; i < args.length; ++i) {
       String nbestListFile = args[i];
       System.err.println("Loading nbest list: " + nbestListFile);
-      final FlatNBestList nbestList = new FlatNBestList(nbestListFile, true);
+      final FlatNBestList nbestList = new FlatNBestList(nbestListFile);
 
       doneThreads.set(0);
       curSent.set(0);
@@ -59,7 +59,7 @@ public class MSTNbestScorer {
 
       OutputStreamWriter writer = new OutputStreamWriter(new GZIPOutputStream(
           new FileOutputStream(outFile)));
-      writer.append(nbestList.printMosesFormat());
+      writer.append(nbestList.toString());
       writer.close();
     }
   }

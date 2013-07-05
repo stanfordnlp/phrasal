@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,16 +22,16 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Index;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.AlignmentFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.ClonedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
+import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 
 /**
  * Adds features to the MT system based on various data calculated by
@@ -45,8 +44,8 @@ import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
  * @author Spence Green
  * 
  */
-public class SourceSideCoreNLPFeaturizer implements IncrementalFeaturizer<IString, String>, 
-AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
+public class SourceSideCoreNLPFeaturizer implements DerivationFeaturizer<IString, String>, 
+NeedsInternalAlignments, NeedsCloneable<IString,String> {
 
   public static final String FEATURE_PREFIX = "CoreNLP:";
 
@@ -148,19 +147,12 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
     return wordSet;
   }
 
-  @Override
-  public void reset() {
-    isHead = null;
-    posTags = null;
-  }
-
-
   /**
    * Initialize annotations for a new source input. 
    */
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options, 
+      List<ConcreteRule<IString, String>> options, 
       Sequence<IString> foreign, Index<String> featureIndex) {
     final int length = foreign.size();
     final CoreMap currentSentence = sentences.get(sourceInputId);
@@ -197,10 +189,10 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
    * Each feature will be of the form TAGGER-sourcetag-targetword
    */  
   @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (posTags == null || isHead == null) return null;    
     List<FeatureValue<String>> featureList = new LinkedList<FeatureValue<String>>();
-    PhraseAlignment alignment = f.option.abstractOption.alignment;
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int targetPhraseLength = f.targetPhrase.size();
     boolean[] srcIsAligned = new boolean[f.sourcePhrase.size()];
     
@@ -300,15 +292,6 @@ AlignmentFeaturizer, ClonedFeaturizer<IString,String> {
       sb.append("-").append(posTags[i]);
     }
     return sb.toString();
-  }
-
-  /**
-   * We care about the features produced by the list of words, so
-   * listFeaturize returns results and featurize does not.
-   */
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 
 }

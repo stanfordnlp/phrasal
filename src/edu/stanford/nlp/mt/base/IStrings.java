@@ -18,17 +18,17 @@ public class IStrings {
   }
 
   /**
-   * Convert a file to a list of Sequences.
+   * Convert a newline-delimited file to a list of Sequences.
    * 
    * @param filename
    * @return the list of Sequences represented by the file
    */
-  static public List<Sequence<IString>> fileSplitToIStrings(String filename) {
+  static public List<Sequence<IString>> tokenizeFile(String filename) {
     List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
       for (String line; (line = reader.readLine()) != null;) {
-        sequences.add(IStrings.splitToIStrings(line));
+        sequences.add(IStrings.tokenize(line));
       }
       reader.close();
     } catch (IOException e) {
@@ -37,10 +37,17 @@ public class IStrings {
     return sequences;
   }
   
-  static public Sequence<IString> splitToIStrings(String str) {
+  /**
+   * Apply whitespace tokenization then convert to a Sequence
+   * of IString objects.
+   * 
+   * @param str
+   * @return
+   */
+  static public Sequence<IString> tokenize(String str) {
     String[] strings = str.trim().split("\\s+");
     IString[] istrs = toIStringArray(strings);
-    return new RawIStringSequence(istrs);
+    return new SimpleSequence<IString>(true, istrs);
   }
   
   static public IString[] toIStringArray(String[] strings) {

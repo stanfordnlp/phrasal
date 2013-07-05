@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
@@ -82,9 +82,9 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
 
   @Override
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteTranslationOption<TK,FV> option) {
+      ConcreteRule<TK,FV> option) {
 
-    Sequence<TK> nextPhrase = option.abstractOption.target;
+    Sequence<TK> nextPhrase = option.abstractRule.target;
 
     if (featurizable == null) {
       for (Sequence<TK> allowableSequence : allowableSequences) {
@@ -113,7 +113,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
         int tMissing = allowableSequence.size()
             - (partialTranslation.size() + nextPhrase.size());
         int fMissing = featurizable.untranslatedTokens
-            - option.abstractOption.source.size();
+            - option.abstractRule.source.size();
         if ((fMissing == 0 && tMissing != 0)
             || (fMissing != 0 && tMissing == 0))
           continue;
@@ -146,18 +146,18 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public List<ConcreteTranslationOption<TK,FV>> filterOptions(
-      List<ConcreteTranslationOption<TK,FV>> optionList) {
-    List<ConcreteTranslationOption<TK,FV>> filteredOptions = new ArrayList<ConcreteTranslationOption<TK,FV>>(
+  public List<ConcreteRule<TK,FV>> filterOptions(
+      List<ConcreteRule<TK,FV>> optionList) {
+    List<ConcreteRule<TK,FV>> filteredOptions = new ArrayList<ConcreteRule<TK,FV>>(
         optionList.size());
 
-    for (ConcreteTranslationOption<TK,FV> option : optionList) {
+    for (ConcreteRule<TK,FV> option : optionList) {
       if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
         System.err.printf("Examining: %s %s\n",
-            option.abstractOption.target, option.sourceCoverage);
+            option.abstractRule.target, option.sourceCoverage);
       }
       for (Sequence<TK> allowableSequence : allowableSequences) {
-        if (allowableSequence.contains(option.abstractOption.target)) {
+        if (allowableSequence.contains(option.abstractRule.target)) {
           filteredOptions.add(option);
           if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
             System.err.printf("\tAccepted!\n");
@@ -175,8 +175,8 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       }
       System.err.println("Filtered options");
       System.err.println("----------------");
-      for (ConcreteTranslationOption<TK,FV> option : filteredOptions) {
-        System.err.printf("\t%s %s\n", option.abstractOption.target,
+      for (ConcreteRule<TK,FV> option : filteredOptions) {
+        System.err.printf("\t%s %s\n", option.abstractRule.target,
             option.sourceCoverage);
       }
       System.err.println("--\n");

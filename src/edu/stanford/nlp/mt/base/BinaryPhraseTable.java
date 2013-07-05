@@ -18,7 +18,7 @@ import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;
@@ -27,7 +27,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   final Environment dbEnv;
   final Database db;
   
-  public BinaryPhraseTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+  public BinaryPhraseTable(RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename) throws IOException {
     super(phraseFeaturizer);
     name = String.format("BinaryPhraseTable(%s)", filename);
@@ -113,13 +113,13 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     
     for (int[] sourceInts : diai) {
       Sequence<IString> source = new RawSequence<IString>(sourceInts, IString.identityIndex());
-      List<TranslationOption<IString>> translationOpts = flatPhraseTable.getTranslationOptions(source);
+      List<Rule<IString>> translationOpts = flatPhraseTable.query(source);
       DatabaseEntry key = new DatabaseEntry(source.toString().getBytes());
       // Todo - add support for alignments
       ByteArrayOutputStream bostrm = new ByteArrayOutputStream();
       DataOutputStream dostrm = new DataOutputStream(bostrm);
       dostrm.writeInt(translationOpts.size());
-      for (TranslationOption<IString> opt : translationOpts) {       
+      for (Rule<IString> opt : translationOpts) {       
         dostrm.writeUTF(opt.target.toString());
         dostrm.write(opt.scores.length);
         for (int i = 0; i < opt.scores.length; i++) {
@@ -141,7 +141,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
 
   
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(Sequence<IString> foreign) {
+  public List<Rule<IString>> query(Sequence<IString> foreign) {
     DatabaseEntry key = new DatabaseEntry(foreign.toString().getBytes());
     DatabaseEntry value = new DatabaseEntry();
     if (db.get(null, key, value, LockMode.DEFAULT) != OperationStatus.SUCCESS) {
@@ -149,7 +149,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     }
     ByteArrayInputStream bistrm = new ByteArrayInputStream(value.getData());
     DataInputStream distrm = new DataInputStream(bistrm);
-    List<TranslationOption<IString>> translationOpts = null;
+    List<Rule<IString>> translationOpts = null;
     RawSequence<IString> foreignRaw;
     if (foreign instanceof RawSequence) {
       foreignRaw = (RawSequence<IString>) foreign;
@@ -158,7 +158,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     }
     try {
       int cnt = distrm.readInt();
-      translationOpts = new ArrayList<TranslationOption<IString>>(cnt);
+      translationOpts = new ArrayList<Rule<IString>>(cnt);
       float[] scores = null;
       for (int i = 0; i < cnt; i++) {
         String targetStr = distrm.readUTF();
@@ -168,7 +168,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
           scores[j] = distrm.readFloat();          
         }
         RawSequence<IString> target = new RawSequence<IString>(IStrings.toIStringArray(targetStr.split("\\s")));
-        translationOpts.add(new TranslationOption<IString>(scores, scoreNames, target, foreignRaw, null));
+        translationOpts.add(new Rule<IString>(scores, scoreNames, target, foreignRaw, null));
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

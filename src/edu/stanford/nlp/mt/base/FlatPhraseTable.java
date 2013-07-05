@@ -1,10 +1,15 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
-import java.util.zip.GZIPInputStream;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.util.Generics;
 
 /**
  *
@@ -51,7 +56,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   // java 6 64-bit 254 MiB
   // ///////////////////////////////////////////////////////////////
 
-  int longestForeignPhrase;
+  private int longestForeignPhrase = -1;
 
   public static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
@@ -74,7 +79,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
   }
 
-  public final ArrayList<List<IntArrayTranslationOption>> translations;
+  public final List<List<IntArrayTranslationOption>> translations;
 
   /**
    * Convert rule scores from string to a numeric array.
@@ -82,24 +87,15 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @param sList
    * @return
    */
-  private static float[] stringProbListToFloatProbArray(List<String> sList) {
+  private static float[] stringProbListToFloatProbArray(List<String> sList) throws NumberFormatException {
     float[] fArray = new float[sList.size()];
     int i = 0;
     for (String s : sList) {
       float f = Float.parseFloat(s);
-
       if (Float.isNaN(f)) {
-        throw new RuntimeException(String.format(
-            "Bad phrase table. %s parses as (float) %f", s, f));
+        throw new NumberFormatException("Unparseable number: " + s);
       }
-      float newF = f;
-//      float newF =  (f <= 0 ? f : (float) Math.log(f));
-
-      if (Float.isNaN(newF)) {
-        throw new RuntimeException(String.format(
-            "Bad phrase table. %s parses as (float) %f", s, newF));
-      }
-      fArray[i++] = newF;
+      fArray[i++] = f;
     }
     return fArray;
   }
@@ -118,13 +114,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
      * System.err.printf("fIndex: %d\n", fIndex);
      */
     if (translations.size() <= fIndex) {
-      translations.ensureCapacity(fIndex + 1);
       while (translations.size() <= fIndex)
         translations.add(null);
     }
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
     if (intTransOpts == null) {
-      intTransOpts = new LinkedList<IntArrayTranslationOption>();
+      intTransOpts = Generics.newLinkedList();
       translations.set(fIndex, intTransOpts);
     }
     intTransOpts.add(new IntArrayTranslationOption(id, translationIndex
@@ -133,7 +128,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
 
   public FlatPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename) throws IOException {
     // default is not to do log rithm on the scores
     this(phraseFeaturizer, filename, false);
@@ -152,7 +147,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @throws IOException
    */
   public FlatPhraseTable(
-      IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename, boolean reverse) throws IOException {
     super(phraseFeaturizer);
     File f = new File(filename);
@@ -175,151 +170,83 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return scoreNames;
   }
 
+  /**
+   * Load the phrase table from file. 
+   * 
+   * @param f
+   * @param reverse
+   * @return
+   * @throws IOException
+   */
   private int init(File f, boolean reverse) throws IOException {
-    System.gc();
-
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long startTimeMillis = System.currentTimeMillis();
+    long startTimeMillis = System.nanoTime();
 
-    LineNumberReader reader;
-    if (f.getAbsolutePath().endsWith(".gz")) {
-      reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(
-          new FileInputStream(f)), "UTF-8"));
-    } else {
-      reader = new LineNumberReader(new InputStreamReader(
-          new FileInputStream(f), "UTF-8"));
-    }
-    int countScores = -1;
+    LineNumberReader reader = IOTools.getReaderFromFile(f);
+    int numScores = -1;
+    final String delimiterRegex = Pattern.quote(FlatNBestList.NBEST_SEP);
     for (String line; (line = reader.readLine()) != null;) {
-      if (line.startsWith("Java HotSpot(TM) 64-Bit"))
-        // Skip JVM debug messages sent to stdout instead of stderr
-        continue;
-      // System.err.println("line: "+line);
-      StringTokenizer toker = new StringTokenizer(line);
-      Collection<String> foreignTokenList = new LinkedList<String>();
-      do {
-        String token = toker.nextToken();
-        if ("|||".equals(token)) {
-          break;
-        }
-        foreignTokenList.add(token);
-      } while (toker.hasMoreTokens());
-
-      if (!toker.hasMoreTokens()) {
-        throw new RuntimeException(String.format(
-            "Additional fields expected (line %d)", reader.getLineNumber()));
-      }
-
-      Collection<String> translationTokenList = new LinkedList<String>();
-
-      do {
-        String token = toker.nextToken();
-        if ("|||".equals(token)) {
-          break;
-        }
-        translationTokenList.add(token);
-      } while (toker.hasMoreTokens());
-
+      String[] fields = line.split(delimiterRegex);
+      
+      // The standard format has five fields
+      assert fields.length == 5 : String.format("n-best list line %d has %d fields", reader.getLineNumber(), fields.length);
+      Sequence<IString> source = IStrings.tokenize(fields[0]);
+      Sequence<IString> target = IStrings.tokenize(fields[1]);
+//      String sourceConstellation = fields[2];
+      String targetConstellation = fields[3].trim();
+      List<String> scoreList = Arrays.asList(fields[4].trim().split("\\s+"));
+      
       if (reverse) {
-         Collection<String> tmp = translationTokenList;
-         translationTokenList = foreignTokenList;
-         foreignTokenList = tmp;
+        Sequence<IString> tmp = source;
+        source = target;
+        target = tmp;
       }
 
-      if (!toker.hasMoreTokens()) {
-        throw new RuntimeException(String.format(
-            "Additional fields expected (line %d)", reader.getLineNumber()));
-      }
-      Collection<String> constilationList = new LinkedList<String>();
-      List<String> scoreList = new LinkedList<String>();
-      boolean first = true;
-      do {
-        String token = toker.nextToken();
-        if (token.startsWith("|||")) {
-          constilationList.addAll(scoreList);
-          scoreList = new LinkedList<String>();
-          first = false;
-          continue;
-        }
-        if (!first)
-          scoreList.add(token);
-      } while (toker.hasMoreTokens());
-
-      IString[] foreignTokens = IStrings.toIStringArray(foreignTokenList);
-      IString[] translationTokens = IStrings
-          .toIStringArray(translationTokenList);
-
-      if (countScores == -1) {
-        countScores = scoreList.size();
-      } else if (countScores != scoreList.size()) {
+      // Ensure that all rules in the phrase table have the same number of scores
+      if (numScores < 0) {
+        numScores = scoreList.size();
+      } else if (numScores != scoreList.size()) {
         throw new RuntimeException(
             String
                 .format(
                     "Error (line %d): Each entry must have exactly the same number of translation\n"
                         + "scores per line. Prior entries had %d, while the current entry has %d:",
-                    reader.getLineNumber(), countScores, scoreList.size()));
+                    reader.getLineNumber(), numScores, scoreList.size()));
       }
-      Sequence<IString> foreign = new SimpleSequence<IString>(true,
-          foreignTokens);
-      Sequence<IString> translation = new SimpleSequence<IString>(true,
-          translationTokens);
       float[] scores;
       try {
         scores = stringProbListToFloatProbArray(scoreList);
       } catch (NumberFormatException e) {
-        throw new RuntimeException(String.format(
-            "Error on line %d: '%s' not a list of numbers",
-            reader.getLineNumber(), scoreList));
+        e.printStackTrace();
+        throw new RuntimeException(String.format("Number format error on line %d",
+            reader.getLineNumber()));
       }
 
-      StringBuilder constilationB = new StringBuilder();
-      {
-        int idx = -1;
-        for (String t : constilationList) {
-          idx++;
-          if (idx > 0)
-            constilationB.append(";");
-          constilationB.append(t);
-        }
-      }
-
-      String constilationBStr = constilationB.toString();
-      if (constilationBStr.equals("")) {
-        addEntry(foreign, translation, null, scores);
+      if (targetConstellation.equals("")) {
+        addEntry(source, target, null, scores);
       } else {
-        addEntry(foreign, translation,
-            PhraseAlignment.getPhraseAlignment(constilationBStr), scores);
+        addEntry(source, target,
+            PhraseAlignment.getPhraseAlignment(targetConstellation), scores);
       }
 
-      if (foreign.size() > longestForeignPhrase) {
-        longestForeignPhrase = foreign.size();
+      if (source.size() > longestForeignPhrase) {
+        longestForeignPhrase = source.size();
       }
-      /*
-       * if (reader.getLineNumber() % 10000 == 0) {
-       * System.out.printf("linenumber: %d\n", reader.getLineNumber()); long
-       * memUsed = rt.totalMemory() - rt.freeMemory();
-       * System.out.printf("mem used: %d\n", memUsed/(1024*1024)); }
-       */
-      // System.out.printf("foreign: '%s' english: '%s' scores: %s\n",
-      // foreign, translation, Arrays.toString(scores));
     }
-
     reader.close();
-
-    System.gc();
 
     // print some status information
     long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
+    long loadTimeMillis = System.nanoTime() - startTimeMillis;
     System.err
         .printf(
-            "Done loading pharoah phrase table: %s (mem used: %d MiB time: %.3f s)\n",
+            "Done loading phrase table: %s (mem used: %d MiB time: %.3f s)%n",
             f.getAbsolutePath(),
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
                 / (1024 * 1024), loadTimeMillis / 1000.0);
     System.err.println("Longest foreign phrase: " + longestForeignPhrase);
-    return countScores;
+    return numScores;
   }
 
   @Override
@@ -328,7 +255,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> foreignSequence) {
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence,
@@ -337,7 +264,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     if (fIndex == -1)
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
-    List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(
+    List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     // int intTransOptsSize = intTransOpts.size();
     // for (int i = 0; i < intTransOptsSize; i++) {
@@ -346,7 +273,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       // System.out.printf("%d:%f\n", i, intTransOpt.scores[0]);
       RawSequence<IString> translation = new RawSequence<IString>(
           intTransOpt.translation, IString.identityIndex());
-      transOpts.add(new TranslationOption<IString>(intTransOpt.id,
+      transOpts.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, translation, rawForeign,
           intTransOpt.alignment));
     }
@@ -373,8 +300,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
         "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",
         foreignIndex.size(), totalSecs, totalMemory, freeMemory);
 
-    List<TranslationOption<IString>> translationOptions = ppt
-        .getTranslationOptions(new SimpleSequence<IString>(IStrings
+    List<Rule<IString>> translationOptions = ppt
+        .query(new SimpleSequence<IString>(IStrings
             .toIStringArray(phrase.split("\\s+"))));
 
     System.out.printf("Phrase: %s\n", phrase);
@@ -385,7 +312,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
 
     System.out.printf("Options:\n");
-    for (TranslationOption<IString> opt : translationOptions) {
+    for (Rule<IString> opt : translationOptions) {
       System.out.printf("\t%s : %s\n", opt.target,
           Arrays.toString(opt.scores));
     }

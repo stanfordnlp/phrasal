@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.PhraseTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 
 import java.io.*;
 import java.util.*;
@@ -50,11 +50,11 @@ public class DumpPossibleWordCoOccurrences {
         int jMax = Math.min(tokensSz, i + longestForeign);
         for (int j = i + 1; j <= jMax; j++) {
           Sequence<IString> phrase = tokens.subsequence(i, j);
-          List<TranslationOption<IString>> opts = ppt
-              .getTranslationOptions(phrase);
+          List<Rule<IString>> opts = ppt
+              .query(phrase);
           if (opts == null)
             continue;
-          for (TranslationOption<IString> opt : opts) {
+          for (Rule<IString> opt : opts) {
             for (IString word : opt.target) {
               possibleTranslationWords.add(word);
             }

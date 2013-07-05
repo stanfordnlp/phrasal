@@ -7,7 +7,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.tune.EValueLearningScorer;
 import edu.stanford.nlp.mt.tune.MERT;
@@ -59,7 +59,7 @@ public class OldCerStyleOptimizer extends AbstractNBestOptimizer {
           featureVectors.add(sfTran.features);
         }
 
-        dEl.addAll(EValueLearningScorer.dEl(new StaticScorer(scaledWts,
+        dEl.addAll(EValueLearningScorer.dEl(new DenseScorer(scaledWts,
             MERT.featureIndex), featureVectors, us));
       }
 

@@ -1,9 +1,12 @@
 package edu.stanford.nlp.mt.base;
 
+import java.text.DecimalFormat;
+
 /**
  * A hypothesis with associated feature values and score under the current model.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
@@ -11,6 +14,8 @@ package edu.stanford.nlp.mt.base;
 public class ScoredFeaturizedTranslation<TK, FV> extends
     FeaturizedTranslation<TK, FV> implements
     Comparable<ScoredFeaturizedTranslation<TK, FV>> {
+  
+  protected static final String NBEST_SEP = FlatNBestList.NBEST_SEP;
   
   public final long latticeSourceId;
   
@@ -50,22 +55,25 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append(translation).append(" |||");
-    if (features == null) {
-    	sb.append(" NoFeatures: 0");
-    } else {
-	    for (FeatureValue<FV> fv : features) {
-	      if (fv == null) {
-	    	  sb.append(" ").append("NullFeature: 0");
-	      } else {
-	    	  sb.append(" ").append(fv.name).append(": ").append(fv.value);
-	      }
-	    }
+    sb.append(this.translation.toString());
+    sb.append(' ').append(NBEST_SEP);
+    DecimalFormat df = new DecimalFormat("0.####E0");
+    if (features != null) {
+      for (FeatureValue<FV> fv : this.features) {
+        sb.append(' ')
+        .append(fv.name)
+        .append(": ")
+        .append(
+            (fv.value == (int) fv.value ? (int) fv.value : df
+                .format(fv.value)));
+      }
     }
-    sb.append(" ||| ").append(score);
-    if (latticeSourceId >= 0)
-      sb.append(" ||| ").append(latticeSourceId);
-
+    sb.append(' ').append(NBEST_SEP).append(' ');
+    sb.append(df.format(this.score));
+    if (latticeSourceId != -1) {
+      sb.append(' ').append(NBEST_SEP).append(' ');
+      sb.append(latticeSourceId);
+    }
     return sb.toString();
   }
 }

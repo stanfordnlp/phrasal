@@ -28,7 +28,7 @@ public class AdaGradUpdater implements OnlineUpdateRule<String> {
 
   @Override
   public void update(Counter<String> weights,
-      Counter<String> gradient, int timeStep) {
+      Counter<String> gradient, int timeStep, boolean endOfEpoch) {
 
     // w_{t+1} := w_t - nu*g_t
     Set<String> zeroFeatures = new HashSet<String>();

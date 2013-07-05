@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.stats.Counter;
 
 /**
  * Implements the oracle smooth BLEU metric of Watanabe et al. (2007) with
@@ -52,7 +53,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
   private final double[] NULL_COUNTS;
 
   // Caches for faster computation of the scores
-  Map<Integer,Map<Sequence<TK>, Integer>> maxRefCounts;
+  Map<Integer,Counter<Sequence<TK>>> maxRefCounts;
   Map<Integer,Integer> maxRefLengths;
 
   // Cherry and Foster (2012) oracle document
@@ -80,13 +81,13 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
     NULL_COUNTS = new double[order];
 
     // Initialize the caches
-    maxRefCounts = new HashMap<Integer,Map<Sequence<TK>,Integer>>();
+    maxRefCounts = new HashMap<Integer,Counter<Sequence<TK>>>();
     maxRefLengths = new HashMap<Integer,Integer>();
   }
 
-  private Map<Sequence<TK>,Integer> getMaxRefCounts(int sourceId, List<Sequence<TK>> references) {
+  private Counter<Sequence<TK>> getMaxRefCounts(int sourceId, double[] referenceWeights, List<Sequence<TK>> references) {
     if ( ! maxRefCounts.containsKey(sourceId)) {
-      Map<Sequence<TK>, Integer> counts = Metrics.getMaxNGramCounts(references, order);
+      Counter<Sequence<TK>> counts = Metrics.getMaxNGramCounts(references, referenceWeights, order);
       maxRefCounts.put(sourceId, counts);
     }
     return maxRefCounts.get(sourceId);
@@ -127,17 +128,17 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
    *
    * Note that this score can be negative. In that case, it will be clamped to 0
    * by the hinge loss.
-   *
    * @param trans
    * @param nbestId
+   *
    * @return
    */
   @Override
   public synchronized double score(int sourceId, List<Sequence<TK>> references,
-      Sequence<TK> translation) {
+      double[] referenceWeights, Sequence<TK> translation) {
     assert sourceId >= 0;
     assert references != null && translation != null;
-    return score(sourceId, references, translation, false);
+    return score(sourceId, references, referenceWeights, translation, false);
   }
 
   @Override
@@ -145,14 +146,14 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
       Sequence<TK> translation) {
     assert sourceId >= 0;
     assert references != null && translation != null;
-    score(sourceId, references, translation, true);
+    score(sourceId, references, null, translation, true);
   }
   
   private double score(int sourceId, List<Sequence<TK>> references,
-        Sequence<TK> translation, boolean updateCounts) {
+        double[] referenceWeights, Sequence<TK> translation, boolean updateCounts) {
     // Extract n-grams
-    final Map<Sequence<TK>, Integer> maxRefCounts = getMaxRefCounts(sourceId, references);
-    final Map<Sequence<TK>, Integer> hypothesisCounts = Metrics.getNGramCounts(translation, order);
+    final Counter<Sequence<TK>> maxRefCounts = getMaxRefCounts(sourceId, referenceWeights, references);
+    final Counter<Sequence<TK>> hypothesisCounts = Metrics.getNGramCounts(translation, order);
     
     // Calculate the BLEU statistics for this example
     final double[] m = new double[order];
@@ -160,8 +161,8 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
     final double rho = getMinRefLength(sourceId, references);
 
     for (Sequence<TK> ngram : hypothesisCounts.keySet()) {
-      double numProposed = hypothesisCounts.get(ngram);
-      double refCount = maxRefCounts.containsKey(ngram) ? maxRefCounts.get(ngram) : 0.0;
+      double numProposed = hypothesisCounts.getCount(ngram);
+      double refCount = maxRefCounts.containsKey(ngram) ? maxRefCounts.getCount(ngram) : 0.0;
       double numMatches = Math.min(numProposed, refCount);
       final int ngramIdx = ngram.size() - 1;
       m[ngramIdx] += numMatches;
@@ -267,11 +268,9 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       int lineId = 0;
       for (String line; (line = reader.readLine()) != null; ++lineId) {
-        line = NISTTokenizer.tokenize(line).trim();
-        Sequence<IString> translation = new RawSequence<IString>(
-            IStrings.toIStringArray(line.split("\\s+")));
+        Sequence<IString> translation = IStrings.tokenize(line);
         List<Sequence<IString>> references = referencesList.get(lineId);
-        double score = metric.score(lineId, references, translation);
+        double score = metric.score(lineId, references, null, translation);
         System.out.printf("%d\t%.4f%n", lineId, score);
         metric.update(lineId, references, translation);
       }

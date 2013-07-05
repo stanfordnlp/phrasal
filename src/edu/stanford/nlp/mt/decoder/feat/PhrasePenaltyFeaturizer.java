@@ -2,10 +2,9 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -17,7 +16,7 @@ import edu.stanford.nlp.util.Index;
  * @param <TK>
  */
 public class PhrasePenaltyFeaturizer<TK> implements
-    IncrementalFeaturizer<TK, String>, IsolatedPhraseFeaturizer<TK, String> {
+    RuleFeaturizer<TK, String> {
   static public String FEATURE_NAME = "TM:phrasePenalty";
   // mg2008: please don't change to "= 1" since not exactly the same value:
   private double phrasePenalty = Math.log(2.718);
@@ -30,33 +29,11 @@ public class PhrasePenaltyFeaturizer<TK> implements
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<TK, String> f) {
-    return new FeatureValue<String>(FEATURE_NAME, phrasePenalty);
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(Featurizable<TK, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<TK, String> f) {
-    return featurize(f);
-  }
-
-  @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<TK, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<TK,String>> options, Sequence<TK> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(FEATURE_NAME, phrasePenalty));
+    return features;
   }
 
   @Override

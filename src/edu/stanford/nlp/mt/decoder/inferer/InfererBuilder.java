@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
@@ -43,7 +43,7 @@ public interface InfererBuilder<TK, FV> {
 	 * 
 	 */
   InfererBuilder<TK, FV> setRecombinationFilter(
-      RecombinationFilter<Hypothesis<TK, FV>> recombinationFilter);
+      RecombinationFilter<Derivation<TK, FV>> recombinationFilter);
 
   /**
    * 

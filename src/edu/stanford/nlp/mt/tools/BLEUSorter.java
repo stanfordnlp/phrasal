@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -111,11 +110,7 @@ public class BLEUSorter {
     LineNumberReader reader = new LineNumberReader(new FileReader(fileName));
     List<Sequence<IString>> hyps = new ArrayList<Sequence<IString>>();
     for (String line; (line = reader.readLine()) != null;) {
-      line = NISTTokenizer.tokenize(line);
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      Sequence<IString> translation = IStrings.tokenize(line);
       hyps.add(translation);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);

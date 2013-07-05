@@ -3,14 +3,14 @@ package edu.stanford.nlp.mt.decoder.efeat;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.ARPALanguageModel;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -19,7 +19,7 @@ import edu.stanford.nlp.util.Index;
  * 
  */
 public class CrossPhraseBoundryFeaturizer implements
-    IncrementalFeaturizer<IString, String> {
+    DerivationFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "CPB";
   public static final String PREFIX_SRC = ":src";
   public static final String PREFIX_TRG = ":trg";
@@ -50,13 +50,8 @@ public class CrossPhraseBoundryFeaturizer implements
   }
 
   @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
   public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
   }
 
   private Sequence<IString> lSequence(Sequence<IString> phrase) {
@@ -69,7 +64,7 @@ public class CrossPhraseBoundryFeaturizer implements
   }
 
   @Override
-  public List<FeatureValue<String>> listFeaturize(
+  public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> fList = new LinkedList<FeatureValue<String>>();
 

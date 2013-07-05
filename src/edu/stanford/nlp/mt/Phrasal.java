@@ -44,6 +44,7 @@ import edu.stanford.nlp.mt.decoder.feat.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
@@ -100,6 +101,7 @@ public class Phrasal {
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
+  public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
 
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -108,8 +110,6 @@ public class Phrasal {
   static final Set<String> OPTIONAL_FIELDS = new HashSet<String>();
   static final Set<String> IGNORED_FIELDS = new HashSet<String>();
   static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
-
-  static final String DEFAULT_RECOMBINATION_HEURISTIC = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,WEIGHTS_FILE));
@@ -125,7 +125,8 @@ public class Phrasal {
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
         MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
-        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT));
+        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
+        ALIGNMENT_OUTPUT_FILE));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -181,7 +182,13 @@ public class Phrasal {
   private boolean generateMosesNBestList = true;
   private PrintStream nbestListWriter;
   private int nbestListSize;
-
+  private boolean nbestWordInternalAlignments = false;
+  
+  /**
+   * Internal alignment options
+   */
+  private PrintStream alignmentWriter;
+  
   /**
    * References for force decoding
    */
@@ -193,7 +200,10 @@ public class Phrasal {
   private int maxSentenceSize = Integer.MAX_VALUE;
   private int minSentenceSize = 0;
 
-  static String recombinationHeuristic = DEFAULT_RECOMBINATION_HEURISTIC;
+  /**
+   * Recombination configuration.
+   */
+  private static String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 
   /**
    * Access the decoder's scorer, which contains the model weights. THere is one scorer
@@ -241,11 +251,11 @@ public class Phrasal {
         AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = Boolean.parseBoolean(config.get(
             DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
-      ConcreteTranslationOption.setLinearDistortionType(config.get(
+      ConcreteRule.setLinearDistortionType(config.get(
           LINEAR_DISTORTION_TYPE).get(0));
     else if (withGaps)
-      ConcreteTranslationOption
-          .setLinearDistortionType(ConcreteTranslationOption.LinearDistortionType.last_contiguous_segment
+      ConcreteRule
+          .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
 
     if (withGaps)
@@ -307,7 +317,7 @@ public class Phrasal {
       }
     }
 
-    MSDFeaturizer<IString, String> lexReorderFeaturizer = null;
+    NeedsReorderingRecombination<IString, String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
@@ -384,7 +394,8 @@ public class Phrasal {
                 String[] argsList = args.split(",");
                 System.err.printf("Additional annotators: %s.\nArgs: %s\n",
                     annotatorName, Arrays.toString(argsList));
-                Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+                // TODO(spenceg) Seems like this will throw an exception?
+                Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                     .loadFeaturizer(annotatorName);
                 annotator = (Annotator<IString,String>) featurizerClass
                     .getConstructor(argsList.getClass()).newInstance(
@@ -432,19 +443,19 @@ public class Phrasal {
     }
     System.err.printf("Number of additional annotators loaded: %d\n", additionalAnnotators.size());
 
-    List<IncrementalFeaturizer<IString, String>> additionalFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+    List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
       String featurizerName = null;
       String args = null;
       for (String token : tokens) {
-        IncrementalFeaturizer<IString, String> featurizer = null;
+        Featurizer<IString, String> featurizer = null;
         if (featurizerName == null) {
           if (token.endsWith("()")) {
             String name = token.replaceFirst("\\(\\)$", "");
-            Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+            Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(name);
-            featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+            featurizer = (DerivationFeaturizer<IString, String>) featurizerClass
                 .newInstance();
             additionalFeaturizers.add(featurizer);
           } else if (token.contains("(")) {
@@ -458,9 +469,9 @@ public class Phrasal {
               String[] argsList = args.split(",");
               System.err.printf("Additional featurizer: %s.\nArgs: %s\n",
                   featurizerName, Arrays.toString(argsList));
-              Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+              Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                   .loadFeaturizer(featurizerName);
-              featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+              featurizer = (Featurizer<IString, String>) featurizerClass
                   .getConstructor(argsList.getClass()).newInstance(
                       new Object[] { argsList });
               additionalFeaturizers.add(featurizer);
@@ -485,9 +496,9 @@ public class Phrasal {
             args = args.replaceAll("\\s+$", "");
             String[] argsList = args.split(",");
             System.err.printf("args: %s\n", Arrays.toString(argsList));
-            Class<IncrementalFeaturizer<IString, String>> featurizerClass = FeaturizerFactory
+            Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(featurizerName);
-            featurizer = (IncrementalFeaturizer<IString, String>) featurizerClass
+            featurizer = (Featurizer<IString, String>) featurizerClass
                 .getConstructor(argsList.getClass()).newInstance(
                     (Object) argsList);
             additionalFeaturizers.add(featurizer);
@@ -497,9 +508,9 @@ public class Phrasal {
             args += " " + token;
           }
         }
-        if (featurizer instanceof AlignmentFeaturizer)
+        if (featurizer instanceof NeedsInternalAlignments)
           Featurizable.enableAlignments();
-        if (featurizer instanceof MSDFeaturizer)
+        if (featurizer instanceof NeedsReorderingRecombination)
           msdRecombination = true;
       }
       if (featurizerName != null) {
@@ -587,34 +598,34 @@ public class Phrasal {
     }
 
     if (!additionalFeaturizers.isEmpty()) {
-      List<IncrementalFeaturizer<IString, String>> allFeaturizers = new ArrayList<IncrementalFeaturizer<IString, String>>();
+      List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
       allFeaturizers.addAll(featurizer.featurizers);
       allFeaturizers.addAll(additionalFeaturizers);
       featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
     }
 
     // Create Scorer
-    Counter<String> weightConfig = new ClassicCounter<String>();
+    Counter<String> weightVector = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s\n", config.get(WEIGHTS_FILE).get(0));
 
-      weightConfig = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
+      weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     } else {
       if (config.containsKey(INLINE_WEIGHTS)) {
         List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);
         for (String inlineWt : inlineWts) {
           String[] fields = inlineWt.split("=");
-          weightConfig.setCount(fields[0], Double.parseDouble(fields[1]));
+          weightVector.setCount(fields[0], Double.parseDouble(fields[1]));
         }
       }
 
       if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
-        weightConfig.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
+        weightVector.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
       }
       if (config.containsKey(DISTORTION_WT_OPT)) {
-        weightConfig.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
+        weightVector.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
 
 
@@ -638,7 +649,7 @@ public class Phrasal {
                           mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
             }
             for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
-              weightConfig.setCount(mosesLexReorderFeaturizer.featureTags[i],
+              weightVector.setCount(mosesLexReorderFeaturizer.featureTags[i],
                   Double.parseDouble(config.get(DISTORTION_WT_OPT).get(i + 1)));
             }
           }
@@ -646,12 +657,11 @@ public class Phrasal {
       }
 
       if (config.containsKey(WORD_PENALTY_WT_OPT)) {
-        weightConfig.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
+        weightVector.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
             Double.parseDouble(config.get(WORD_PENALTY_WT_OPT).get(0)));
       }
 
-      weightConfig.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
-      weightConfig.setCount(SentenceBoundaryFeaturizer.FEATURE_NAME, 1.0);
+      weightVector.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
 
       if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
         System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
@@ -660,8 +670,8 @@ public class Phrasal {
 
     // Setup the feature index from the initial weight vector
     // HashIndex is threadsafe, while OAIndex is not.
-    featureIndex = new HashIndex<String>(weightConfig.size());
-    for (String feature : weightConfig.keySet()) {
+    featureIndex = new HashIndex<String>(weightVector.size());
+    for (String feature : weightVector.keySet()) {
       featureIndex.indexOf(feature, true);
     }
     featurizer.initialize(featureIndex);
@@ -690,7 +700,7 @@ public class Phrasal {
       }
     }
 
-    System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightConfig, 100), (weightConfig.size() > 100 ? "..." : ""));
+    System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
 
     // Create phrase generator
     String phraseTable;
@@ -706,11 +716,6 @@ public class Phrasal {
     } else {
       throw new RuntimeException("Unsupported configuration "
           + config.get(TRANSLATION_TABLE_OPT));
-    }
-
-    if (config.containsKey(MOSES_NBEST_LIST_OPT)) {
-      generateMosesNBestList = Boolean.parseBoolean(config.get(
-          MOSES_NBEST_LIST_OPT).get(0));
     }
 
     if (withGaps) {
@@ -779,7 +784,7 @@ public class Phrasal {
           PhraseGenerator<IString,String> pgen;
           try {
              pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-                getConstructor(IsolatedPhraseFeaturizer.class).newInstance(featurizer);
+                getConstructor(RuleFeaturizer.class).newInstance(featurizer);
           } catch (ClassNotFoundException e) {
              throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
           }
@@ -796,12 +801,12 @@ public class Phrasal {
         ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Create Recombination Filter
-    RecombinationFilter<Hypothesis<IString, String>> filter = RecombinationFilterFactory
+    RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
         .factory(featurizer.getNestedFeaturizers(), msdRecombination,
             recombinationHeuristic);
 
     // Create Search Heuristic
-    IsolatedPhraseFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
+    RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
     SearchHeuristic<IString, String> heuristic = HeuristicFactory.factory(
         isolatedPhraseFeaturizer,
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
@@ -823,7 +828,7 @@ public class Phrasal {
       // Configure InfererBuilder
       AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) InfererBuilderFactory
           .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER
-              : InfererBuilderFactory.MULTIBEAM_DECODER);
+              : InfererBuilderFactory.DEFAULT_INFERER);
       try {
     	infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
@@ -832,20 +837,21 @@ public class Phrasal {
         infererBuilder
             .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightConfig, featureIndex);
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, featureIndex);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder
             .setSearchHeuristic((SearchHeuristic<IString, String>) heuristic
                 .clone());
         infererBuilder
-            .setRecombinationFilter((RecombinationFilter<Hypothesis<IString, String>>) filter
+            .setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter
                 .clone());
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
 
-      infererBuilder.setBeamType(HypothesisBeamFactory.BeamType.sloppybeam);
+      // Silently ignored by the cube pruning decoder
+      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       if (distortionLimit != -1) {
         infererBuilder.setMaxDistortion(distortionLimit);
@@ -898,6 +904,25 @@ public class Phrasal {
     } else {
       nbestListSize = -1;
       nbestListWriter = null;
+    }
+    
+    List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
+    if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
+      generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
+      if (mosesNbestOpt.size() > 1) {
+        nbestWordInternalAlignments = Boolean.parseBoolean(mosesNbestOpt.get(1));
+      }
+    }
+        
+    // Determine if we need to generate an alignment file
+    List<String> alignmentOpt = config.get(ALIGNMENT_OUTPUT_FILE);
+    if (alignmentOpt != null && alignmentOpt.size() == 1) {
+      alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
+    }
+    
+    // Should we enable word-internal alignments?
+    if (nbestWordInternalAlignments || alignmentWriter != null) {
+      Featurizable.enableAlignments();
     }
   }
 
@@ -1018,7 +1043,15 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, nbestWordInternalAlignments);
+      }
+      
+      // Output the alignments if necessary
+      if (alignmentWriter != null) {
+        for (RichTranslation<IString,String> translation : translations) {
+          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatNBestList.NBEST_SEP, 
+              translation.sourceTargetAlignmentString());
+        }
       }
 
     } else {
@@ -1140,6 +1173,7 @@ public class Phrasal {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
+    // Force decoding setup---constrain the decoder output space to these references
     ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
         : new EnumeratedConstrainedOutputSpace<IString, String>(
             constrainedToRefs.get(sourceInputId),
@@ -1189,10 +1223,14 @@ public class Phrasal {
       }
     }
 
-    // Close the n-best list writer
     if (nbestListWriter != null) {
-      System.err.printf("Closing n-best writer%n");
+      System.err.println("Closing n-best writer");
       nbestListWriter.close();
+    }
+    
+    if (alignmentWriter != null) {
+      System.err.println("Closing alignment writer");
+      alignmentWriter.close();
     }
   }
 
@@ -1205,17 +1243,13 @@ public class Phrasal {
   public static Map<String, List<String>> readConfig(String filename)
       throws IOException {
     Map<String, List<String>> config = new HashMap<String, List<String>>();
-    LineNumberReader reader;
-    try {
-      reader = new LineNumberReader(new FileReader(filename));
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(String.format("Can't open configuration file %s\n", filename));
-    }
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
     for (String line; (line = reader.readLine()) != null;) {
       line = line.trim().replaceAll("#.*$", "");
       if (line.length() == 0)
         continue;
       if (line.charAt(0) != '[' || line.charAt(line.length() - 1) != ']') {
+        reader.close();
         throw new RuntimeException(
             String
                 .format(

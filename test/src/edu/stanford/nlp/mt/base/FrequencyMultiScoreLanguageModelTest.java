@@ -26,7 +26,7 @@ public class FrequencyMultiScoreLanguageModelTest {
         ngrams.size()*100, 10, 4, ngrams);
     // todo: 2nd argument above should be ngrams.size()*100L
     double[] expectedLog10 = {3,2,1,0};
-    double[] actual = fmslm.multiScore(IStrings.splitToIStrings("This is the test"));
+    double[] actual = fmslm.multiScore(IStrings.tokenize("This is the test"));
     System.err.println(Arrays.toString(expectedLog10));
     System.err.println(Arrays.toString(actual));
     for (int i = 0; i < actual.length; i++) {
@@ -47,7 +47,7 @@ public class FrequencyMultiScoreLanguageModelTest {
     // todo: 2nd argument above should be 1L << 36
 
     double[] expectedLog10 = {3,2,1,0};
-    double[] actual = fmslm.multiScore(IStrings.splitToIStrings("This is the test"));
+    double[] actual = fmslm.multiScore(IStrings.tokenize("This is the test"));
     System.err.println(Arrays.toString(expectedLog10));
     System.err.println(Arrays.toString(actual));
     for (int i = 0; i < actual.length; i++) {

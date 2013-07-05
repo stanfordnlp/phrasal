@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 public class DTUTable<FV> extends FlatPhraseTable<FV> {
@@ -47,7 +47,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     return gapSizeScoresE.get(fIndex)[gapId][binId];
   }
 
-  public DTUTable(IsolatedPhraseFeaturizer<IString, FV> phraseFeaturizer,
+  public DTUTable(RuleFeaturizer<IString, FV> phraseFeaturizer,
       String filename) throws IOException {
     super(phraseFeaturizer, filename);
     System.err.println("DTU phrase table: " + filename);
@@ -102,12 +102,12 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public List<ConcreteTranslationOption<IString,FV>> translationOptions(
+  public List<ConcreteRule<IString,FV>> getRules(
       Sequence<IString> sequence, List<Sequence<IString>> targets,
       int sourceInputId, Scorer<FV> scorer) {
 
     assert (targets == null);
-    List<ConcreteTranslationOption<IString,FV>> opts = new LinkedList<ConcreteTranslationOption<IString,FV>>();
+    List<ConcreteRule<IString,FV>> opts = new LinkedList<ConcreteRule<IString,FV>>();
     int sequenceSz = sequence.size();
     // System.err.println("Seq to match: "+sequence);
 
@@ -131,7 +131,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
               .get(s.state);
           if (intTransOpts != null) {
             // System.err.printf("Full match: %s\n",s);
-            List<TranslationOption<IString>> transOpts = new ArrayList<TranslationOption<IString>>(
+            List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
                 intTransOpts.size());
             for (IntArrayTranslationOption intTransOpt : intTransOpts) {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
@@ -142,26 +142,26 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
                   dtus[i] = new RawSequence<IString>(multiIntTransOpt.dtus[i],
                       IString.identityIndex());
                 }
-                transOpts.add(new DTUOption<IString>(intTransOpt.id,
+                transOpts.add(new DTURule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
                         s.foreign), intTransOpt.alignment));
               } else {
                 // No gaps in target:
                 RawSequence<IString> translation = new RawSequence<IString>(
                     intTransOpt.translation, IString.identityIndex());
-                transOpts.add(new TranslationOption<IString>(intTransOpt.id,
+                transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
                     new RawSequence<IString>(s.foreign), intTransOpt.alignment));
               }
             }
 
-            for (TranslationOption<IString> abstractOpt : transOpts) {
-              if (abstractOpt instanceof DTUOption)
-                opts.add(new ConcreteTranslationOption<IString,FV>(abstractOpt,
+            for (Rule<IString> abstractOpt : transOpts) {
+              if (abstractOpt instanceof DTURule)
+                opts.add(new ConcreteRule<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
                         .getName(), sourceInputId, true));
               else
-                opts.add(new ConcreteTranslationOption<IString,FV>(abstractOpt,
+                opts.add(new ConcreteRule<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
                         .getName(), sourceInputId));
             }
@@ -305,7 +305,6 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     }
 
     if (translations.size() <= fIndex) {
-      translations.ensureCapacity(fIndex + 1);
       while (translations.size() <= fIndex)
         translations.add(null);
     }
@@ -361,7 +360,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   }
 
   @Override
-  public List<TranslationOption<IString>> getTranslationOptions(
+  public List<Rule<IString>> query(
       Sequence<IString> foreignSequence) {
     throw new UnsupportedOperationException();
   }

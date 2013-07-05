@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
+import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TranslationOption;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
-import edu.stanford.nlp.mt.decoder.util.Hypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OptionGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -93,8 +93,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     throw new UnsupportedOperationException();
   }
 
-  public Map<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Hypothesis<IString, FV>>> hypCache = new
-          HashMap<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Hypothesis<IString, FV>>>();
+  public Map<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Derivation<IString, FV>>> hypCache = new
+          HashMap<Pair<Sequence<IString>,Sequence<IString>>,PriorityQueue<Derivation<IString, FV>>>();
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
@@ -103,27 +103,27 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
                                                   ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
                                                   List<Sequence<IString>> targets, int size) {
 
-    PriorityQueue<Hypothesis<IString, FV>> agenda = new PriorityQueue<Hypothesis<IString,FV>>();
-    PriorityQueue<Hypothesis<IString, FV>> paused = new PriorityQueue<Hypothesis<IString,FV>>();
+    PriorityQueue<Derivation<IString, FV>> agenda = new PriorityQueue<Derivation<IString,FV>>();
+    PriorityQueue<Derivation<IString, FV>> paused = new PriorityQueue<Derivation<IString,FV>>();
     int windowSize = 100;
     int maxPrefixCompletion = 0;
 
-    List<ConcreteTranslationOption<IString,FV>> options = phraseGenerator.translationOptions(source, targets, sourceInputId, scorer);
-    List<ConcreteTranslationOption<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
-    float[] autoInsertScores = new float[options.get(0).abstractOption.scores.length];
-    String[] scoreNames = options.get(0).abstractOption.phraseScoreNames;
+    List<ConcreteRule<IString,FV>> options = phraseGenerator.getRules(source, targets, sourceInputId, scorer);
+    List<ConcreteRule<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
+    float[] autoInsertScores = new float[options.get(0).abstractRule.scores.length];
+    String[] scoreNames = options.get(0).abstractRule.phraseScoreNames;
 
     if (DEBUG) {
       System.err.println("filtered options (for prefix)");
       System.err.println("========================================");
-      for (ConcreteTranslationOption<IString,FV> cto : filteredOptions) {
-        System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
+      for (ConcreteRule<IString,FV> cto : filteredOptions) {
+        System.err.printf(" - %s -> %s (%s)\n", cto.abstractRule.source, cto.abstractRule.target, cto.sourcePosition);
       }
 
       System.err.println("unfiltered options (for suffix)");
       System.err.println("========================================");
-      for (ConcreteTranslationOption<IString,FV> cto : options) {
-        System.err.printf(" - %s -> %s (%s)\n", cto.abstractOption.source, cto.abstractOption.target, cto.sourcePosition);
+      for (ConcreteRule<IString,FV> cto : options) {
+        System.err.printf(" - %s -> %s (%s)\n", cto.abstractRule.source, cto.abstractRule.target, cto.sourcePosition);
       }
     }
 
@@ -133,7 +133,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 
 
     // use *UNFILTERED* options for heuristic calculation
-    Hypothesis<IString, FV> nullHyp = new Hypothesis<IString, FV>(sourceInputId, source, heuristic, scorer, annotators, Arrays.asList(options));
+    Derivation<IString, FV> nullHyp = new Derivation<IString, FV>(sourceInputId, source, heuristic, scorer, annotators, Arrays.asList(options));
     featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
     if (DEBUG) {
       System.err.printf("Adding initial hypothesis: %s\n", nullHyp);
@@ -157,7 +157,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       //for (Sequence<IString> prefix )
       agenda.add(nullHyp);
     } */
-    Hypothesis waHyp = nullHyp;
+    Derivation waHyp = nullHyp;
     int sourceSz = source.size();
 
 
@@ -205,30 +205,30 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
           System.out.printf("e.%d -> f.%d\n", i, sureAlignment);
         }
         CoverageSet sourceCoverage = new CoverageSet();
-        TranslationOption<IString> fakeOpt;
+        Rule<IString> fakeOpt;
         if (sureAlignment == -1) {
           fakeOpt =
-                  new TranslationOption<IString>(
+                  new Rule<IString>(
                           new float[0], new String[0],
                           new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
                           new RawSequence<IString>(new IString[]{new IString("")}), null);
         } else {
           lastF = sureAlignment;
           fakeOpt =
-                  new TranslationOption<IString>(
+                  new Rule<IString>(
                           new float[0], new String[0],
                           new RawSequence<IString>(new IString[]{targets.get(0).get(i)}),
                           new RawSequence<IString>(new IString[]{source.get(sureAlignment)}), null);
           sourceCoverage.set(sureAlignment);
         }
-        ConcreteTranslationOption<IString,FV> fakeConcreteOpt =
-                new ConcreteTranslationOption<IString,FV>(
+        ConcreteRule<IString,FV> fakeConcreteOpt =
+                new ConcreteRule<IString,FV>(
                         fakeOpt,
                         sourceCoverage,
                         featurizer, scorer,
                         source, "forcedAlignment", 0);
 
-        waHyp = new Hypothesis<IString, FV>(sourceInputId,
+        waHyp = new Derivation<IString, FV>(sourceInputId,
                 fakeConcreteOpt, waHyp.length, waHyp, featurizer, scorer, heuristic);
         if (DEBUG) {
           System.out.printf("new waHyp: %s\n", waHyp.featurizable.targetPrefix);
@@ -248,9 +248,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     }
 
     agenda.add(waHyp);
-    List<Hypothesis<IString, FV>> predictions = new ArrayList<Hypothesis<IString,FV>>(PREDICTIONS);
+    List<Derivation<IString, FV>> predictions = new ArrayList<Derivation<IString,FV>>(PREDICTIONS);
     do {
-      Hypothesis<IString, FV> hyp = agenda.remove();
+      Derivation<IString, FV> hyp = agenda.remove();
       if (DEBUG) {
         System.err.printf("[pred loop] Removing hyp from agenda: %s\n", hyp);
       }
@@ -269,17 +269,17 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
         }
         for (int endPos = startPos; endPos < endPosMax; endPos++) {
           // use *UNFILTERED* options for prefix hypothesis expansion predictions
-          List<ConcreteTranslationOption<IString,FV>> applicableOptions = optionGrid
+          List<ConcreteRule<IString,FV>> applicableOptions = optionGrid
                   .get(startPos, endPos);
-          for (ConcreteTranslationOption<IString,FV> option : applicableOptions) {
-            if (option.abstractOption.source.equals(option.abstractOption.target)) {
+          for (ConcreteRule<IString,FV> option : applicableOptions) {
+            if (option.abstractRule.source.equals(option.abstractRule.target)) {
               if (DEBUG) {
                 System.err.println("ignoring option since source phrase == target phrase");
-                System.err.printf("'%s'='%s'\n", option.abstractOption.source, option.abstractOption.target);
+                System.err.printf("'%s'='%s'\n", option.abstractRule.source, option.abstractRule.target);
               }
               continue;
             }
-            Hypothesis<IString, FV> newHyp = new Hypothesis<IString, FV>(sourceInputId,
+            Derivation<IString, FV> newHyp = new Derivation<IString, FV>(sourceInputId,
                     option, hyp.length, hyp, featurizer, scorer, heuristic);
             if (DEBUG) {
               System.out.printf("constructed new hyp: %s\n", newHyp);
@@ -292,7 +292,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     } while (predictions.size() < PREDICTIONS && agenda.size() > 0);
 
     List<RichTranslation<IString, FV>> nbest = new ArrayList<RichTranslation<IString,FV>>(predictions.size());
-    for (Hypothesis<IString,FV> hyp : predictions) {
+    for (Derivation<IString,FV> hyp : predictions) {
       nbest.add(new RichTranslation<IString, FV>(hyp.featurizable, hyp.finalScoreEstimate(), null));
     }
 
@@ -300,9 +300,9 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     for (int i = 0; i < Math.min(10, predictions.size()); i++) {
       //System.err.printf("Hypothesis: %d (score: %f)\n", i, predictions.get(i).score);
       List<String> alignments = new LinkedList<String>();
-      for (Hypothesis<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingHyp) {
+      for (Derivation<IString, FV> hyp = predictions.get(i); hyp.featurizable != null; hyp = hyp.preceedingDerivation) {
         alignments.add(String.format("f:'%s' => e: '%s' [%s]", hyp.featurizable.sourcePhrase,
-                hyp.featurizable.targetPhrase, Arrays.toString(hyp.translationOpt.abstractOption.scores)));
+                hyp.featurizable.targetPhrase, Arrays.toString(hyp.rule.abstractRule.scores)));
       }
       Collections.reverse(alignments);
     /*  for (String alignment : alignments) {

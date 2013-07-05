@@ -244,7 +244,7 @@ public class PhrasalUnifiedServlet extends HttpServlet {
    * @param opt The rich hypothesis object
    */
   private static String getCompletionSourceCoverage(RichTranslation<IString, String> opt) {
-    CoverageSet coverage = opt.featurizable.option.sourceCoverage;
+    CoverageSet coverage = opt.featurizable.rule.sourceCoverage;
     StringBuilder sb = new StringBuilder();
     for (int coveredBit : coverage) {
       if (sb.length() > 0) sb.append("-");

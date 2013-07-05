@@ -57,8 +57,6 @@ import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
  */
 public class MERT extends Thread {
 
-  private static boolean tokenizeNIST = false;
-
   static boolean breakTiesWithLastBest = false;
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
@@ -161,7 +159,7 @@ public class MERT extends Thread {
     this.seedStr = seedStr;
 
     references = Metrics.readReferences(
-        referenceList.split(","), tokenizeNIST);
+        referenceList.split(","));
     this.evalMetric = evalMetric;
     this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
   }
@@ -193,7 +191,7 @@ public class MERT extends Thread {
       }
     }
 
-    Scorer<String> scorer = new StaticScorer(wts, featureIndex);
+    Scorer<String> scorer = new DenseScorer(wts, featureIndex);
 
     int cnt = 0;
     double dEEval = Double.POSITIVE_INFINITY;
@@ -342,8 +340,8 @@ public class MERT extends Thread {
       initialWts.addAll(fixedWts);
     }
 
-    Scorer<String> currentScorer = new StaticScorer(initialWts, featureIndex);
-    Scorer<String> slopScorer = new StaticScorer(direction, featureIndex);
+    Scorer<String> currentScorer = new DenseScorer(initialWts, featureIndex);
+    Scorer<String> slopScorer = new DenseScorer(direction, featureIndex);
     ArrayList<Double> intercepts = new ArrayList<Double>();
     Map<Double, Set<InterceptIDs>> interceptToIDs = new HashMap<Double, Set<InterceptIDs>>();
 
@@ -533,7 +531,7 @@ public class MERT extends Thread {
 
   static public List<ScoredFeaturizedTranslation<IString, String>> transArgmax(
       FlatNBestList nbest, Counter<String> wts) {
-    Scorer<String> scorer = new StaticScorer(wts, featureIndex);
+    Scorer<String> scorer = new DenseScorer(wts, featureIndex);
     MultiTranslationMetricMax<IString, String> oneBestSearch = new GreedyMultiTranslationMetricMax<IString, String>(
         new ScorerWrapperEvaluationMetric<IString, String>(scorer));
     return oneBestSearch.maximize(nbest);
@@ -619,7 +617,7 @@ public class MERT extends Thread {
       removeWts(wts, fixedWts);
       wts.addAll(fixedWts);
     }
-    Scorer<String> scorer = new StaticScorer(wts, featureIndex);
+    Scorer<String> scorer = new DenseScorer(wts, featureIndex);
     if (DEBUG)
       System.err.printf("eval at point (%d,%d): %s\n", optWts.size(),
           wts.size(), wts.toString());
@@ -731,16 +729,16 @@ public class MERT extends Thread {
     initialWts = previousWts.get(0);
 
 
-    StaticScorer scorer = new StaticScorer(initialWts, featureIndex);
+    DenseScorer scorer = new DenseScorer(initialWts, featureIndex);
 
     // Load nbest list:
     System.err.printf("Loading nbest list: %s\n", nbestListFile);
-    nbest = new FlatNBestList(nbestListFile, featureIndex, tokenizeNIST);
+    nbest = new FlatNBestList(nbestListFile, featureIndex, defaultMERT.references.size());
     System.err.printf("Loading local nbest list: %s\n", localNbestListFile);
     FlatNBestList localNbest = null;
     if (!"none".equals(localNbestListFile)) {
       localNbest = new FlatNBestList(localNbestListFile,
-        nbest.sequenceSelfMap, featureIndex, tokenizeNIST);
+        nbest.sequenceSelfMap, featureIndex, defaultMERT.references.size());
     }
 
     mcmcObj = (System.getProperty("mcmcELossDirExact") != null
@@ -1066,8 +1064,6 @@ public class MERT extends Thread {
         optStr = args[++argi];
       } else if (arg.equals("-a")) {
         optTransFile = args[++argi];
-      } else if (arg.equals("-N")) {
-        tokenizeNIST = true;
       } else if (arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
         try {
@@ -1142,7 +1138,7 @@ public class MERT extends Thread {
     mert.save(finalWtsFile);
 
     if (optTransFile != null) {
-      StaticScorer scorer = new StaticScorer(bestWts, featureIndex);
+      DenseScorer scorer = new DenseScorer(bestWts, featureIndex);
       GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
           new ScorerWrapperEvaluationMetric<IString, String>(scorer));
       List<ScoredFeaturizedTranslation<IString, String>> argmaxTrans = argmaxByScore

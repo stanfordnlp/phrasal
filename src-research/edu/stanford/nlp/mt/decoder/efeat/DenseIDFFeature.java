@@ -5,15 +5,12 @@ import java.io.LineNumberReader;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CacheableFeatureValue;
-import edu.stanford.nlp.mt.base.ConcreteTranslationOption;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.IncrementalFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.IsolatedPhraseFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.tools.ComputeBitextIDF;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -27,8 +24,8 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  *
  */
-public class DenseIDFFeature implements IncrementalFeaturizer<IString, String>,
-    IsolatedPhraseFeaturizer<IString, String> {
+public class DenseIDFFeature implements 
+    RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_PREFIX = "DenseIDF";
   
@@ -61,7 +58,7 @@ public class DenseIDFFeature implements IncrementalFeaturizer<IString, String>,
   }
 
   @Override
-  public List<FeatureValue<String>> phraseListFeaturize(
+  public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     double sourceSum = computeIDFSum(f.sourcePhrase, sourceIDF);
     double targetSum = computeIDFSum(f.targetPhrase, targetIDF);
@@ -71,12 +68,12 @@ public class DenseIDFFeature implements IncrementalFeaturizer<IString, String>,
       // Source content words aligned to target function words
       featureList = new LinkedList<FeatureValue<String>>();
       difference *= difference;
-      featureList.add(new CacheableFeatureValue<String>(FEATURE_PREFIX + ":tgt", difference));
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ":tgt", difference));
     } else if (difference < 0.0) {
       // Source function words aligned to target content words
       featureList = new LinkedList<FeatureValue<String>>();
       difference *= difference;
-      featureList.add(new CacheableFeatureValue<String>(FEATURE_PREFIX + ":src", difference));
+      featureList.add(new FeatureValue<String>(FEATURE_PREFIX + ":src", difference));
     } 
     return featureList;
   }
@@ -94,31 +91,5 @@ public class DenseIDFFeature implements IncrementalFeaturizer<IString, String>,
 
   @Override
   public void initialize(Index<String> featureIndex) {
-  }
-
-  @Override
-  public FeatureValue<String> phraseFeaturize(Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteTranslationOption<IString, String>> options,
-      Sequence<IString> foreign, Index<String> featureIndex) {
-  }
-
-  @Override
-  public void reset() {
-  }
-
-  @Override
-  public List<FeatureValue<String>> listFeaturize(
-      Featurizable<IString, String> f) {
-    return null;
-  }
-
-  @Override
-  public FeatureValue<String> featurize(Featurizable<IString, String> f) {
-    return null;
   }
 }

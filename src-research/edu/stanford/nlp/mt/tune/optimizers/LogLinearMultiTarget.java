@@ -6,7 +6,7 @@ import java.util.TreeSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.decoder.util.StaticScorer;
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.LinearCombinationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
@@ -64,7 +64,7 @@ public class LogLinearMultiTarget extends AbstractNBestOptimizer {
 
     EvaluationMetric<IString, String> modelMetric = new LinearCombinationMetric<IString, String>(
         new double[] { 1.0 },
-        new ScorerWrapperEvaluationMetric<IString, String>(new StaticScorer(
+        new ScorerWrapperEvaluationMetric<IString, String>(new DenseScorer(
             initialWts)));
 
     List<ScoredFeaturizedTranslation<IString, String>> current = (new HillClimbingMultiTranslationMetricMax<IString, String>(

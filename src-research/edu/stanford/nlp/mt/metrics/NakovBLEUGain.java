@@ -31,7 +31,7 @@ public class NakovBLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   @Override
   public double score(int sourceId, List<Sequence<TK>> references,
-      Sequence<TK> translation) {
+      double[] referenceWeights, Sequence<TK> translation) {
     // Take the min reference length
     int minLength = Integer.MAX_VALUE;
     for (Sequence<TK> sentence : references) {

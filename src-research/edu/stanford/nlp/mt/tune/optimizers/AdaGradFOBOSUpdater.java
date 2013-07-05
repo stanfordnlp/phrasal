@@ -14,6 +14,8 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Basic AdaGrad update rule from Duchi et al. (2010).
  * 
+ * Assumes a dense gradient that has had L2 regularization applied.
+ * 
  * @author Sida Wang
  *         Mengqiu Wang
  *
@@ -55,7 +57,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   // use the fast version if the L2 regularization is to be handled here.
   @Override
   public void update(Counter<String> weights,
-		    Counter<String> gradient, int timeStep) {
+		    Counter<String> gradient, int timeStep, boolean endOfEpoch) {
     if (norm == Norm.LASSO)
       updateL1(weights, gradient, timeStep);
     else if (norm == Norm.aeLASSO) {

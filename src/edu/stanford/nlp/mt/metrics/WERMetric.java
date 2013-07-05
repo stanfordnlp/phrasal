@@ -209,11 +209,7 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null;) {
-      line = NISTTokenizer.tokenize(line);
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       incMetric.add(tran);

@@ -247,6 +247,6 @@ public class SVDReducedObj extends AbstractNBestOptimizer {
       }
     }
 
-    return new FlatNBestList(newNbestLists, false);
+    return new FlatNBestList(newNbestLists);
   }
 }
