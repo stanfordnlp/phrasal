@@ -43,5 +43,6 @@
 	<classpathentry kind="lib" path="lib-research/jetty-util-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-webapp-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-xml-9.0.4.v20130625.jar"/>
+	<classpathentry kind="lib" path="lib-research/servlet-api-3.0.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

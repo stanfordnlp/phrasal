@@ -12,7 +12,7 @@ $(document).ready(function(){
     var source = $('#src-input').val();
     console.log(source);
     
-    // Make the message
+    // Translation message
     var msg = {
       src : "EN",
       tgt : "AR",

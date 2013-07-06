@@ -1,39 +1,19 @@
 package edu.stanford.nlp.mt.tools.service;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.logging.Logger;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.FlatPhraseTable;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.RawSequence;
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
-import edu.stanford.nlp.mt.decoder.inferer.impl.PrefixDecoder;
-import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 import edu.stanford.nlp.mt.tools.service.Messages.MessageType;
 import edu.stanford.nlp.mt.tools.service.Messages.Request;
+import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.tools.service.handlers.RequestHandler;
+import edu.stanford.nlp.mt.tools.service.handlers.ServiceResponse;
+import edu.stanford.nlp.mt.tools.service.handlers.TranslationRequestHandler;
+import edu.stanford.nlp.mt.tools.service.handlers.TranslationRequestHandlerMock;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -54,226 +34,67 @@ import edu.stanford.nlp.util.Pair;
 public class PhrasalServlet extends HttpServlet {
 
   private static final long serialVersionUID = -2229782317949182871L;
+  
+  public static final String ASYNC_KEY = "as_result";
+  
+  private final RequestHandler[] requestHandlers;
 
-  public static final String DEBUG_PROPERTY = PhrasalServlet.class.getSimpleName();
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "false"));
-  
-  private final PrefixDecoder<String> decoder;
-  
-  private final Gson gson = new Gson();
-  
-  public PhrasalServlet(String iniFileName, String wordAlignmentModel) {
-    decoder = initializePhrasal(iniFileName, wordAlignmentModel);
-  }
+  private final Logger logger;
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  private static PrefixDecoder<String> initializePhrasal(String iniFileName, String wordAlignmentModel) {
-    Map<String, List<String>> config = null;
-    try {
-      config = Phrasal.readConfig(iniFileName);
-      Phrasal.initStaticMembers(config);
-      Phrasal p = new Phrasal(config);
-      FlatPhraseTable.lockIndex();      
-      AbstractInferer infererModel = (AbstractInferer) p.inferers.get(0);      
-      PrefixDecoder<String> prefixDecoder = new PrefixDecoder<String>(infererModel, wordAlignmentModel);
-      return prefixDecoder;
-      
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (IllegalArgumentException e) {
-      e.printStackTrace();
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (InstantiationException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-    throw new RuntimeException("Could not start " + PhrasalServlet.class.getName());
+  public PhrasalServlet() {
+    this(null);
   }
   
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
-  {
-    String responseString = null;
-    Pair<MessageType,Request> message = Messages.requestToMessage(request);
-    MessageType messageType = message.first();
-    Request baseRequest = message.second();
+  public PhrasalServlet(String phrasalIniName){
+    logger = Logger.getLogger(PhrasalServlet.class.getName());
+    PhrasalLogger.attach(logger, LogName.Service);
 
-    if(DEBUG) {
-      System.err.println("Received request: " + messageType.toString());
-    }
+    boolean debugMode = phrasalIniName == null;
     
-//    if (messageType == MessageType.INIT) {
-//      PTMInitRequest ptmRequest = (PTMInitRequest) baseRequest;
-//
-//      List<String> oovStringsList = getOOVs(ptmRequest.source);
-//
-//      PTMOOVResponse ptmResponse = new PTMOOVResponse(oovStringsList);
-//      Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
-//      responseString = gson.toJson(ptmResponse, t);
-//    } else if (messageType == MessageType.SEND_OOV) {
-//      PTMOOVRequest ptmRequest = (PTMOOVRequest) baseRequest;
-//      if (DEBUG) {
-//        System.err.println("PTMOOVRequest: " + gson.toJson(ptmRequest));
-//      }
-//      responseString = gson.toJson(new PTMStatusOk());  
-//    
-//    } else if (messageType == MessageType.PREDICTION) {       
-//      PTMPredictionRequest ptmRequest = (PTMPredictionRequest) baseRequest;
-//      if (DEBUG) {
-//        System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
-//      }
-//
-//      List<ScoredCompletion> completions = getCompletions(ptmRequest.source, ptmRequest.prefix);
-//      List<Prediction> predictions = filterCompletions(completions, ptmRequest.maxPredictions);
-//      PTMPredictionResponse ptmResponse = new PTMPredictionResponse(ptmRequest.prefix, predictions);
-//      Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
-//      responseString = gson.toJson(ptmResponse, t);
-//    
-//    } 
-//    else if (messageType == MessageType.DONE) {
-//      PTMDoneRequest ptmRequest = (PTMDoneRequest) baseRequest;
-//      if (DEBUG) {
-//        System.err.println("PTMDoneRequest: " + gson.toJson(ptmRequest));
-//      }
-//      System.out.printf("LOG: %s\n", ptmRequest);
-//      //responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
-//      responseString = gson.toJson(new PTMStatusOk());       
-//    } 
-
-    RequestUtils.writeJavascriptResponse(response, responseString);
-  }
-  
-  @SuppressWarnings("unchecked")
-  List<ScoredCompletion> getCompletions(String sourceStr, String prefixStr) {
-    if (DEBUG) {
-      System.err.printf("Source str: %s\n", sourceStr);
-      System.err.printf("Prefix str: %s\n", prefixStr);
-    } 
-    RawSequence<IString> source = new RawSequence<IString>(IStrings.toIStringArray(sourceStr.split("\\s+")));
-    RawSequence<IString> prefix = new RawSequence<IString>(IStrings.toIStringArray(prefixStr.split("\\s+")));
-    if (DEBUG) {
-      System.err.printf("Source seq: %s\n", source);
-      System.err.printf("Prefix seq: %s\n", prefix);
-    }
-    
-    // TODO(spenceg): This should just return the list of translations, which will be turned into
-    // Prediction objects for transmission over the wire.
-    List<ScoredCompletion> scoredOpts = null;
-
-    // Agenda-based prefix decoder, which considers the coverage set.
-    if (decoder != null) {
-      if (DEBUG) {
-        System.err.println("Prefix decoder");
-      }
-      EnumeratedConstrainedOutputSpace<IString, String> prefixConstraints = 
-        new EnumeratedConstrainedOutputSpace<IString, String>(Arrays.asList(prefix), decoder.getPhraseGenerator().longestSourcePhrase());
-      List<RichTranslation<IString, String>> translations = decoder.nbest(source, 0, prefixConstraints, null, -1);
-      if(DEBUG) {
-        System.err.printf("n-best list: %s\n", translations);
-      }
-      
-      scoredOpts = new ArrayList<ScoredCompletion>(translations.size());
-      String prefixCoverage = null;
-      for (RichTranslation<IString,String> translation : translations) {
-        if (prefixCoverage == null) {
-          prefixCoverage = getPrefixSourceCoverage(translation);
-        }
-        String srcPhrase = translation.featurizable.sourcePhrase.toString();
-        String tgtPhrase = translation.translation.subsequence(prefix.size(), translation.translation.size()).toString();
-        String completionCoverage = getCompletionSourceCoverage(translation);
-        scoredOpts.add(new ScoredCompletion(prefixCoverage, srcPhrase, tgtPhrase, completionCoverage, translation.score));
-      }
-    } // End of completion generation
-
-    // Sort the completions according to their scores
-    Collections.sort(scoredOpts, completionComparator);
-    
-    if(DEBUG) {
-      System.err.println(scoredOpts);
-      if (scoredOpts.size() >= 1) {
-        System.err.println("Best guess: " + scoredOpts.get(0));
-      }
-    }
-    return scoredOpts;    
-  }
-  
-  private static class ScoredCompletionComparator implements Comparator<ScoredCompletion> {
-    public int compare(ScoredCompletion o1, ScoredCompletion o2) {
-      return (int)Math.signum(o2.score-o1.score); 
-    }
-    public boolean equals(Object obj) {
-      return obj == this;
-    }
-  }
-  private static final ScoredCompletionComparator completionComparator = new ScoredCompletionComparator();
-  
-  
-  List<String> getOOVs(String sourceStr) {
-    List<String> OOVs = new ArrayList<String>();
-    OOVs.add("tets1");
-    OOVs.add("test2");
-    // TODO(spenceg): This should be a lookup into the phrase table...or something.
-    return OOVs;
+    requestHandlers = loadHandlers(debugMode, phrasalIniName);
   }
   
   /**
-   * Returns a string representing the source positions covered by the most
-   * recent translation option in this hypothesis. For example, if the most
-   * recent option covered 2,3,4,10 then this method would return "2-3-4-10".
+   * Setup request handlers.
    * 
-   * @param opt The rich hypothesis object
+   * @param loadMock
+   * @param phrasalIniName
+   * @return
    */
-  private static String getCompletionSourceCoverage(RichTranslation<IString, String> opt) {
-    CoverageSet coverage = opt.featurizable.rule.sourceCoverage;
-    StringBuilder sb = new StringBuilder();
-    for (int coveredBit : coverage) {
-      if (sb.length() > 0) sb.append("-");
-      sb.append(coveredBit);
+  private RequestHandler[] loadHandlers(boolean loadMock, String phrasalIniName) {
+    RequestHandler[] handlers = new RequestHandler[MessageType.values().length];
+    for (MessageType type : MessageType.values()) {
+      if (type == MessageType.TRANSLATION_REQUEST) {
+        handlers[type.ordinal()] = loadMock ? new TranslationRequestHandlerMock() :
+           new TranslationRequestHandler(phrasalIniName);
+      }
+      // TODO(spenceg): Add more handlers
     }
-    return sb.toString();
+    return handlers;
   }
+  
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    // Parse the message
+    Pair<MessageType,Request> message = Messages.requestToMessage(request);
+    MessageType messageType = message.first();
+    Request baseRequest = message.second();
+    logger.info(String.format("Recv: %s %s", messageType.toString(), baseRequest.toString()));
 
-  private static String getPrefixSourceCoverage(RichTranslation<IString, String> opt) {
-    StringBuilder sb = new StringBuilder();
-    for (Featurizable<IString, String> featurizer = opt.featurizable.prior; 
-          featurizer != null; 
-          featurizer = featurizer.prior) {
-      int offset = featurizer.sourcePosition;
-      for (int i = 0; i < featurizer.sourcePhrase.size(); ++i) {
-        if (sb.length() > 0) sb.append("-");
-        sb.append(String.valueOf(i + offset));
-      }
-    }
-    return sb.toString();
-  }
+    Object result = request.getAttribute(ASYNC_KEY);
+    if (result == null && baseRequest.isAsynchronous()) {
+      // Asynchronous request that will be suspended by the handler
+      requestHandlers[messageType.ordinal()].handleAsynchronous(baseRequest, request, response);
 
-  private static final Pattern discardCompletion = Pattern.compile("[\\p{Punct}|\\s]$");
-  private static List<Prediction> filterCompletions(List<ScoredCompletion> completions, int maxPredictions) {
-    List<Prediction> predictionList = new ArrayList<Prediction>(completions.size());
-    Set<String> uniqueTargetCompletions = new HashSet<String>(completions.size());
-    
-    for (ScoredCompletion completion : completions) {
-      if (predictionList.size() == maxPredictions) {
-        break;
-      }
-      if (uniqueTargetCompletions.contains(completion.tgtPhrase) ||
-          discardCompletion.matcher(completion.tgtPhrase).matches() ||
-          discardCompletion.matcher(completion.srcPhrase).matches()) {
-        continue;
-      }
-      uniqueTargetCompletions.add(completion.tgtPhrase);
-      Prediction prediction = new Prediction(completion.srcPrefCoverage,
-          completion.tgtPhrase, completion.srcCoverage);
-      predictionList.add(prediction);
+    } else {
+      // Synchronous message
+      ServiceResponse r = result == null ? requestHandlers[messageType.ordinal()].handle(baseRequest) :
+        (ServiceResponse) result;
+      try {
+        r.writeInto(response);
+        logger.info(String.format("Send: %s", r.getReply().toString()));
+      } catch (IOException e) {
+        logger.warning("Unable to serialize response for: " + response.toString());
+      }      
     }
-    return predictionList;
   }
 }

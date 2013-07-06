@@ -27,8 +27,4 @@ public interface RequestHandler {
   public ServiceResponse handle(Request request);
   
   public void handleAsynchronous(Request baseRequest, HttpServletRequest request, HttpServletResponse response);
-  
-  public ServiceResponse mockHandle(Request request);
-  
-  public void mockHandleAsynchronous(Request baseRequest, HttpServletRequest request, HttpServletResponse response);
 }

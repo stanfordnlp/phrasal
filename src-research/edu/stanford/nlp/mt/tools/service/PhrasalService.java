@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
@@ -77,14 +76,14 @@ public final class PhrasalService {
     if (debug) {      
       PhrasalLogger.disableConsole = false;
       PhrasalLogger.attach(logger, LogName.Service);
-      logger.info("Debug mode. Loading " + PhrasalServletMock.class.getName());
+      logger.info("Debug mode. Loading " + PhrasalServlet.class.getName());
       
       connector.setHost(DEFAULT_URL);
 
       System.err.printf("URL: http://%s:%d/debug.html%n", DEFAULT_URL, port);
       
       // Add the mock servlet
-      context.addServlet(new ServletHolder(new PhrasalServletMock()), "/t");
+      context.addServlet(new ServletHolder(new PhrasalServlet()), "/t");
       
       // Add debugging web-page
       ResourceHandler resourceHandler = new ResourceHandler();
@@ -99,7 +98,7 @@ public final class PhrasalService {
       PhrasalLogger.attach(logger, LogName.Service);
       logger.info("Loading servlet " + PhrasalServlet.class.getName());      
       server.setHandler(context);
-      context.addServlet(new ServletHolder(new PhrasalServlet(phrasalIniFile, null)),"/t");
+      context.addServlet(new ServletHolder(new PhrasalServlet(phrasalIniFile)),"/t");
     }
     
     // Start the service
