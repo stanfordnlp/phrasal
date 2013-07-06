@@ -4,6 +4,12 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * TODO(spenceg): Add exception handling.
+ * 
+ * @author Spence Green
+ *
+ */
 public class RequestUtils {
 
   public static boolean writeJavascriptResponse(HttpServletResponse response, String responseString) {

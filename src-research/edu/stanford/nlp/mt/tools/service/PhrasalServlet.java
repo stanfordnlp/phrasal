@@ -33,32 +33,29 @@ import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.inferer.impl.PrefixDecoder;
 import edu.stanford.nlp.mt.decoder.util.EnumeratedConstrainedOutputSpace;
 import edu.stanford.nlp.mt.tools.service.Messages.MessageType;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMBaseRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMDoneRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMInitRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMOOVRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMOOVResponse;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMPredictionRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMPredictionResponse;
-import edu.stanford.nlp.mt.tools.service.Messages.PTMStatusOk;
+import edu.stanford.nlp.mt.tools.service.Messages.Request;
 import edu.stanford.nlp.util.Pair;
 
 /**
  * Servlet that loads Phrasal as a private member.
- * <p>
- * TODO(spenceg): Add logger instead of printing to stderr/stdout. Should be a very fast logger. Unified logging.
- * <p>
- * TODO(spenceg): I'm sure that this is not the right thing to do for even moderate loads.
- * But for now, just load phrasal in the servelt since we're using jetty embedded.
+ *
+ * TODO:
+ *  Pre-processing of input
+ *  Post-processing of output
+ *  Do we need to do forced word alignment?
+ *  Add statistics about decoding time.
+ *  Phrasal concurrency...jetty executes a thread per connection. The servlet should
+ *    maintain a queue of phrasal inferers and pull them as needed.
+ *  Graceful exception handling. This servlet can't ever crash....
  * 
  * @author Spence Green
  *
  */
-public class PhrasalUnifiedServlet extends HttpServlet {
+public class PhrasalServlet extends HttpServlet {
 
   private static final long serialVersionUID = -2229782317949182871L;
 
-  public static final String DEBUG_PROPERTY = PhrasalUnifiedServlet.class.getSimpleName();
+  public static final String DEBUG_PROPERTY = PhrasalServlet.class.getSimpleName();
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
   
@@ -66,7 +63,7 @@ public class PhrasalUnifiedServlet extends HttpServlet {
   
   private final Gson gson = new Gson();
   
-  public PhrasalUnifiedServlet(String iniFileName, String wordAlignmentModel) {
+  public PhrasalServlet(String iniFileName, String wordAlignmentModel) {
     decoder = initializePhrasal(iniFileName, wordAlignmentModel);
   }
 
@@ -99,66 +96,57 @@ public class PhrasalUnifiedServlet extends HttpServlet {
     } catch (ClassNotFoundException e) {
       e.printStackTrace();
     }
-    throw new RuntimeException("Could not start " + PhrasalUnifiedServlet.class.getName());
+    throw new RuntimeException("Could not start " + PhrasalServlet.class.getName());
   }
   
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
   {
     String responseString = null;
-    Pair<MessageType,PTMBaseRequest> message = Messages.requestToMessage(request);
+    Pair<MessageType,Request> message = Messages.requestToMessage(request);
     MessageType messageType = message.first();
-    PTMBaseRequest baseRequest = message.second();
+    Request baseRequest = message.second();
 
     if(DEBUG) {
       System.err.println("Received request: " + messageType.toString());
     }
     
-    if (messageType == MessageType.INIT) {
-      PTMInitRequest ptmRequest = (PTMInitRequest) baseRequest;
-
-      List<String> oovStringsList = getOOVs(ptmRequest.source);
-
-      PTMOOVResponse ptmResponse = new PTMOOVResponse(oovStringsList);
-      Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
-      responseString = gson.toJson(ptmResponse, t);
-    } else if (messageType == MessageType.SEND_OOV) {
-      PTMOOVRequest ptmRequest = (PTMOOVRequest) baseRequest;
-      if (DEBUG) {
-        System.err.println("PTMOOVRequest: " + gson.toJson(ptmRequest));
-      }
-      responseString = gson.toJson(new PTMStatusOk());  
-    
-    } else if (messageType == MessageType.PREDICTION) {       
-      PTMPredictionRequest ptmRequest = (PTMPredictionRequest) baseRequest;
-      if (DEBUG) {
-        System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
-      }
-
-      List<ScoredCompletion> completions = getCompletions(ptmRequest.source, ptmRequest.prefix);
-      List<Prediction> predictions = filterCompletions(completions, ptmRequest.maxPredictions);
-      PTMPredictionResponse ptmResponse = new PTMPredictionResponse(ptmRequest.prefix, predictions);
-      Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
-      responseString = gson.toJson(ptmResponse, t);
-    
-    } 
-//    else if (hasParameter(request, "ptmUserSelection")) {
-//      PTMCompletionSelectionRequest ptmRequest = gson.fromJson(request.getParameter("ptmUserSelection"), PTMCompletionSelectionRequest.class);
+//    if (messageType == MessageType.INIT) {
+//      PTMInitRequest ptmRequest = (PTMInitRequest) baseRequest;
+//
+//      List<String> oovStringsList = getOOVs(ptmRequest.source);
+//
+//      PTMOOVResponse ptmResponse = new PTMOOVResponse(oovStringsList);
+//      Type t = new TypeToken<PTMOOVResponse>() {}.getType();           
+//      responseString = gson.toJson(ptmResponse, t);
+//    } else if (messageType == MessageType.SEND_OOV) {
+//      PTMOOVRequest ptmRequest = (PTMOOVRequest) baseRequest;
 //      if (DEBUG) {
-//        System.err.println("PTMCompletionSelectonRequest: " + gson.toJson(ptmRequest));
+//        System.err.println("PTMOOVRequest: " + gson.toJson(ptmRequest));
 //      }
-//      //responseString = wrapResponse("ptmUserSelectionResponse", gson.toJson(new PTMStatusOk()));
-//      responseString = gson.toJson(new PTMStatusOk());      
+//      responseString = gson.toJson(new PTMStatusOk());  
+//    
+//    } else if (messageType == MessageType.PREDICTION) {       
+//      PTMPredictionRequest ptmRequest = (PTMPredictionRequest) baseRequest;
+//      if (DEBUG) {
+//        System.err.println("PTMPredictionRequest: " + gson.toJson(ptmRequest)); 
+//      }
+//
+//      List<ScoredCompletion> completions = getCompletions(ptmRequest.source, ptmRequest.prefix);
+//      List<Prediction> predictions = filterCompletions(completions, ptmRequest.maxPredictions);
+//      PTMPredictionResponse ptmResponse = new PTMPredictionResponse(ptmRequest.prefix, predictions);
+//      Type t = new TypeToken<PTMPredictionResponse>() {}.getType();           
+//      responseString = gson.toJson(ptmResponse, t);
 //    
 //    } 
-    else if (messageType == MessageType.DONE) {
-      PTMDoneRequest ptmRequest = (PTMDoneRequest) baseRequest;
-      if (DEBUG) {
-        System.err.println("PTMDoneRequest: " + gson.toJson(ptmRequest));
-      }
-      System.out.printf("LOG: %s\n", ptmRequest);
-      //responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
-      responseString = gson.toJson(new PTMStatusOk());       
-    } 
+//    else if (messageType == MessageType.DONE) {
+//      PTMDoneRequest ptmRequest = (PTMDoneRequest) baseRequest;
+//      if (DEBUG) {
+//        System.err.println("PTMDoneRequest: " + gson.toJson(ptmRequest));
+//      }
+//      System.out.printf("LOG: %s\n", ptmRequest);
+//      //responseString = wrapResponse("ptmDoneResponse", gson.toJson(new PTMStatusOk()));
+//      responseString = gson.toJson(new PTMStatusOk());       
+//    } 
 
     RequestUtils.writeJavascriptResponse(response, responseString);
   }
