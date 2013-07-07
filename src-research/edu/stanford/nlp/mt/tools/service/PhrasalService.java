@@ -32,8 +32,8 @@ public final class PhrasalService {
 
   private static Map<String, Integer> optionArgDefs() {
     Map<String,Integer> optionArgDefs = new HashMap<String,Integer>();
-    optionArgDefs.put("-p", 1);
-    optionArgDefs.put("-d", 0);
+    optionArgDefs.put("p", 1);
+    optionArgDefs.put("d", 0);
     return optionArgDefs;
   }
 
@@ -53,8 +53,9 @@ public final class PhrasalService {
     boolean debug = PropertiesUtils.getBool(options, "d", false);
 
     // Parse arguments
-    String[] parsedArgs = options.getProperty("","").split("\\s+");
-    if (parsedArgs.length != 1) {
+    String argList = options.getProperty("",null);
+    String[] parsedArgs = argList == null ? null : argList.split("\\s+");
+    if (parsedArgs == null || parsedArgs.length != 1) {
       System.out.println(usage());
       System.exit(-1);
     }
@@ -68,6 +69,9 @@ public final class PhrasalService {
     connector.setPort(port);
     server.addConnector(connector);
 
+    // TODO(spenceg) This should be removed for deployment
+    connector.setHost(DEFAULT_URL);
+    
     // Setup the servlet context
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setContextPath("/");
@@ -75,31 +79,24 @@ public final class PhrasalService {
     // Add Servlets
     if (debug) {      
       PhrasalLogger.disableConsole = false;
-      PhrasalLogger.attach(logger, LogName.Service);
-      logger.info("Debug mode. Loading " + PhrasalServlet.class.getName());
-      
-      connector.setHost(DEFAULT_URL);
-
-      System.err.printf("URL: http://%s:%d/debug.html%n", DEFAULT_URL, port);
-      
-      // Add the mock servlet
-      context.addServlet(new ServletHolder(new PhrasalServlet()), "/t");
-      
-      // Add debugging web-page
-      ResourceHandler resourceHandler = new ResourceHandler();
-      resourceHandler.setWelcomeFiles(new String[]{ "debug.html" });
-      resourceHandler.setResourceBase(".");
-
-      HandlerList handlers = new HandlerList();
-      handlers.setHandlers(new Handler[] { resourceHandler, context });
-      server.setHandler(handlers);
-    
-    } else {
-      PhrasalLogger.attach(logger, LogName.Service);
-      logger.info("Loading servlet " + PhrasalServlet.class.getName());      
-      server.setHandler(context);
-      context.addServlet(new ServletHolder(new PhrasalServlet(phrasalIniFile)),"/t");
     }
+    PhrasalLogger.attach(logger, LogName.Service);
+    logger.info("Debug mode. Loading " + PhrasalServlet.class.getName());
+
+    System.err.printf("URL: http://%s:%d/debug.html%n", DEFAULT_URL, port);
+
+    // Add the mock servlet
+    PhrasalServlet servlet = debug ? new PhrasalServlet() : new PhrasalServlet(phrasalIniFile);
+    context.addServlet(new ServletHolder(servlet), "/t");
+
+    // Add debugging web-page
+    ResourceHandler resourceHandler = new ResourceHandler();
+    resourceHandler.setWelcomeFiles(new String[]{ "debug.html" });
+    resourceHandler.setResourceBase(".");
+
+    HandlerList handlers = new HandlerList();
+    handlers.setHandlers(new Handler[] { resourceHandler, context });
+    server.setHandler(handlers);
     
     // Start the service
     try {
