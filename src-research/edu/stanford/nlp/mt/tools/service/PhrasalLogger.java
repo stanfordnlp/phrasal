@@ -22,22 +22,22 @@ import edu.stanford.nlp.util.Generics;
  */
 public final class PhrasalLogger {
 
-  // TODO(spenceg): Add more logs
+  // TODO(spenceg): Add more logs, at least "Online" and "General"
   public static enum LogName {Service};
   
   private PhrasalLogger() {}
   
   // Static methods for setting up a global logger
-  // Other classes should attach() to this log handler
   private static Map<LogName,Handler> handlers = Generics.newHashMap(LogName.values().length);
   
-  public static boolean disableConsole = true;
   private static boolean isConsoleDisabled = false;
+  private static boolean shutdownHookAdded = false;
   
   // Should be set by a main() method
-  public static Level logLevel = Level.INFO;
+  public static Level logLevel = Level.WARNING;
   
-  // Default prefix of the logger filename
+  // Default prefix of the logger filename. Changing this has no
+  // effect after a call to attach().
   public static String prefix = PhrasalLogger.now();
   
   public static String now() {
@@ -46,7 +46,9 @@ public final class PhrasalLogger {
     return df.format(today);
   }
   
-  private static void disableConsoleLogger() {
+  public static void disableConsoleLogger() {
+    if (isConsoleDisabled) return;
+    
     // Disable default console logger
     Logger globalLogger = Logger.getLogger("global");
     Handler[] handlers = globalLogger.getHandlers();
@@ -57,29 +59,44 @@ public final class PhrasalLogger {
   }
   
   private static void initLogger(LogName logName) {
-    if (disableConsole &&  ! isConsoleDisabled) disableConsoleLogger();
-    
-    // Setup the file logger
     String logFileName = String.format("%s.%s.log", prefix, logName.toString().toLowerCase());
     try {
       Handler logHandler = new FileHandler(logFileName);
       logHandler.setFormatter(new SimpleFormatter()); //Plain text
       handlers.put(logName, logHandler);
+      
     } catch (SecurityException e) {
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
     }
+    
+    // Add shutdown hook for closing down the loggers
+    if ( ! shutdownHookAdded) {
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          for (Handler handler : handlers.values()) {
+            handler.close();
+          }
+        }
+      });
+    }
+    shutdownHookAdded = true;
   }
 
+  /**
+   * Attach a logger to a handler.
+   * 
+   * @param logger
+   * @param logName
+   */
   public static void attach(Logger logger, LogName logName) {
-    // Disable the console logger, then attach to the file logger.
-    logger.setUseParentHandlers(false);
+    if (isConsoleDisabled) logger.setUseParentHandlers(false);
     if ( ! handlers.containsKey(logName)) {
       initLogger(logName);
     }
     logger.addHandler(handlers.get(logName));    
     logger.setLevel(logLevel);
   }
-
 }

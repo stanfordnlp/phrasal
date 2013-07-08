@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.tools.service.handlers;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,7 +19,7 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.tools.service.Messages.TranslationRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.BaseReply;
+import edu.stanford.nlp.mt.tools.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.tools.service.Messages.Request;
 import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.tools.service.PhrasalLogger;
@@ -37,25 +36,10 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class TranslationRequestHandler implements RequestHandler {
 
-  private final Logger logger;
-
-  private final Phrasal decoder;
 
   private final MulticoreWrapper<DecoderInput,Boolean> wrapper;
 
-  public TranslationRequestHandler(String phrasalIniName) {
-    logger = Logger.getLogger(TranslationRequestHandler.class.getName());
-    PhrasalLogger.attach(logger, LogName.Service);
-
-    try {
-      decoder = Phrasal.loadDecoder(phrasalIniName);
-    } catch (IOException e) {
-      e.printStackTrace();
-      logger.severe("Unable to load phrasal from: " + phrasalIniName);
-      throw new RuntimeException();
-    }
-    logger.info("Loaded phrasal from: " + phrasalIniName);
-
+  public TranslationRequestHandler(Phrasal decoder) {
     // Setup a threadpool for phrasal that wraps the servlet internals
     // needed to restart the request after processing.
     wrapper = 
@@ -68,12 +52,14 @@ public class TranslationRequestHandler implements RequestHandler {
     private final Continuation continuation;
     private final Sequence<IString> text;
     private final int n;
+    private final long submitTime;
     public DecoderInput(String text, int n, HttpServletRequest request,
         Continuation continuation) {
       this.text = IStrings.tokenize(text);
       this.n = n;
       this.request = request;
       this.continuation = continuation;
+      this.submitTime = System.nanoTime();
     }
   }
 
@@ -82,17 +68,23 @@ public class TranslationRequestHandler implements RequestHandler {
     private int childThreadId;
     private Phrasal phrasal;
 
+    private static Logger logger;
+
     private static AtomicInteger inputId = new AtomicInteger();
 
     public DecoderService(int threadId, Phrasal phrasal) {
       this.threadId = threadId;
       this.childThreadId = threadId+1;
       this.phrasal = phrasal;
+      if (threadId == 0) {
+        logger = Logger.getLogger(TranslationRequestHandler.class.getName());
+        PhrasalLogger.attach(logger, LogName.Service);
+      }
     }
 
     @Override
-    public Boolean process(DecoderInput input) { 
-      // Do decoding
+    public Boolean process(DecoderInput input) {
+      // Decode n-best list
       List<RichTranslation<IString,String>> translations = 
           phrasal.decode(input.text, inputId.incrementAndGet(), threadId, input.n); 
 
@@ -102,10 +94,15 @@ public class TranslationRequestHandler implements RequestHandler {
         translationList.add(translation.translation.toString());
         alignments.add(translation.sourceTargetAlignmentString());
       }
-      Type t = new TypeToken<BaseReply>() {}.getType();
-      BaseReply baseResponse = new BaseReply(translationList, alignments);
+      
+      // Create the reply
+      Type t = new TypeToken<TranslationReply>() {}.getType();
+      TranslationReply baseResponse = new TranslationReply(translationList, alignments);
       ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
 
+      double querySeconds = ((double) System.nanoTime() - input.submitTime) / 1e9;
+      logger.info(String.format("Elapsed time: %.3fs", querySeconds));
+      
       input.request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
       input.continuation.resume(); // Re-dispatch/ resume to generate response
 
@@ -134,6 +131,6 @@ public class TranslationRequestHandler implements RequestHandler {
 
   @Override
   public ServiceResponse handle(Request request) {
-    throw new UnsupportedOperationException("This is an asynchronous handler");
+    throw new UnsupportedOperationException("Synchronous call to asynchronous handler");
   }  
 }

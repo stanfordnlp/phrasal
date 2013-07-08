@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.tools.service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jetty.server.Server;
@@ -25,7 +26,7 @@ import edu.stanford.nlp.util.StringUtils;
  */
 public final class PhrasalService {
 
-  private static String DEFAULT_URL = "127.0.0.1";
+  private static String DEBUG_URL = "127.0.0.1";
   private static int DEFAULT_HTTP_PORT = 8017;
 
   private PhrasalService() {}
@@ -60,8 +61,6 @@ public final class PhrasalService {
       System.exit(-1);
     }
     String phrasalIniFile = parsedArgs[0];
-
-    Logger logger = Logger.getLogger(PhrasalService.class.getName());
     
     // Setup the jetty server
     Server server = new Server();
@@ -69,23 +68,20 @@ public final class PhrasalService {
     connector.setPort(port);
     server.addConnector(connector);
 
-    // TODO(spenceg) This should be removed for deployment
-    connector.setHost(DEFAULT_URL);
+    if (debug) {    
+      connector.setHost(DEBUG_URL);
+      PhrasalLogger.logLevel = Level.INFO;
+    } else {
+      PhrasalLogger.disableConsoleLogger();
+    }
+    Logger logger = Logger.getLogger(PhrasalService.class.getName());
+    PhrasalLogger.attach(logger, LogName.Service);
     
     // Setup the servlet context
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setContextPath("/");
  
     // Add Servlets
-    if (debug) {      
-      PhrasalLogger.disableConsole = false;
-    }
-    PhrasalLogger.attach(logger, LogName.Service);
-    logger.info("Debug mode. Loading " + PhrasalServlet.class.getName());
-
-    System.err.printf("URL: http://%s:%d/debug.html%n", DEFAULT_URL, port);
-
-    // Add the mock servlet
     PhrasalServlet servlet = debug ? new PhrasalServlet() : new PhrasalServlet(phrasalIniFile);
     context.addServlet(new ServletHolder(servlet), "/t");
 
@@ -100,7 +96,6 @@ public final class PhrasalService {
     
     // Start the service
     try {
-      System.err.printf("Starting PhrasalService on port %d...%n", port);
       logger.info("Starting PhrasalService on port " + String.valueOf(port));
       server.start();
       server.join();

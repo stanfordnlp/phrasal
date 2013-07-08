@@ -7,6 +7,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Grid of ConcreteRules (translation rules) for a given
@@ -20,7 +21,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * 
  * @param <TK>
  */
-public class OptionGrid<TK,FV> {
+public class RuleGrid<TK,FV> {
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
@@ -32,13 +33,13 @@ public class OptionGrid<TK,FV> {
    * @param options
    * @param source
    */
-  public OptionGrid(List<ConcreteRule<TK,FV>> options,
+  public RuleGrid(List<ConcreteRule<TK,FV>> options,
       Sequence<TK> source) {
     this(options, source, false);
   }
 
   @SuppressWarnings("unchecked")
-  public OptionGrid(List<ConcreteRule<TK, FV>> ruleList,
+  public RuleGrid(List<ConcreteRule<TK, FV>> ruleList,
       Sequence<TK> source, boolean doLazySorting) {
     sourceLength = source.size();
     isSorted = new BitSet();
@@ -46,15 +47,12 @@ public class OptionGrid<TK,FV> {
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
-    for (int startIdx = 0; startIdx < sourceLength; startIdx++) {
-      for (int endIdx = startIdx; endIdx < sourceLength; endIdx++) {
-        grid[getIndex(startIdx, endIdx)] = new ArrayList<ConcreteRule<TK,FV>>();
-      }
-    }
     for (ConcreteRule<TK,FV> rule : ruleList) {
       int startPos = rule.sourcePosition;
       int endPos = rule.sourceCoverage.nextClearBit(rule.sourcePosition) - 1;
-      grid[getIndex(startPos, endPos)].add(rule);
+      int offset = getIndex(startPos, endPos);
+      if (grid[offset] == null) grid[offset] = Generics.newArrayList();
+      grid[offset].add(rule);
     }
   }
 
@@ -86,12 +84,14 @@ public class OptionGrid<TK,FV> {
    * @return
    */
   public List<ConcreteRule<TK,FV>> get(int startPos, int endPos) {
-    int offset = getIndex(startPos, endPos);
-    if (offset >= grid.length) throw new IllegalArgumentException("Coordinates are out-of-bounds");
-    if (doLazySorting && ! isSorted.get(offset)) {
+    final int offset = getIndex(startPos, endPos);
+    if (offset < 0 || offset >= grid.length) {
+      throw new IllegalArgumentException("Span is out-of-bounds");
+    }
+    if (grid[offset] != null && doLazySorting && ! isSorted.get(offset)) {
       Collections.sort(grid[offset]);
     }
-    return grid[offset];
+    return grid[offset] == null ? new ArrayList<ConcreteRule<TK,FV>>(1) : grid[offset];
   }
 
   /**

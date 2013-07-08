@@ -34,7 +34,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
 
   private Map<Integer,List<HyperedgeBundle<TK,FV>>> bundles;
   private final RecombinationHistory<Derivation<TK,FV>> recombinationHistory;
-  private final OptionGrid<TK, FV> optionGrid;
+  private final RuleGrid<TK, FV> optionGrid;
   private final int coverageCardinality;
   /**
    * 
@@ -43,7 +43,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * @param optionGrid
    */
   public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter, 
-      OptionGrid<TK,FV> optionGrid, int distortionLimit, int coverageCardinality, int maxPhraseLength) {
+      RuleGrid<TK,FV> optionGrid, int distortionLimit, int coverageCardinality, int maxPhraseLength) {
     this(capacity, filter, optionGrid, null, distortionLimit, coverageCardinality);
   }
 
@@ -58,7 +58,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * @param maxPhraseLength 
    */
   public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter,
-      OptionGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, int distortionLimit, 
+      RuleGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, int distortionLimit, 
       int coverageCardinality) {
     recombinationHash = new RecombinationHash<Derivation<TK,FV>>(filter);
     this.capacity = capacity;

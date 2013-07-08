@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
-import edu.stanford.nlp.mt.decoder.util.OptionGrid;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.Generics;
 
@@ -92,34 +92,34 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
 
     // TM (phrase table) query for applicable rules
-    List<ConcreteRule<TK,FV>> options = phraseGenerator
+    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
         .getRules(source, targets, sourceInputId, scorer);
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     if (constrainedOutputSpace != null) {
-      options = constrainedOutputSpace.filterOptions(options);
+      ruleList = constrainedOutputSpace.filterOptions(ruleList);
       System.err
       .printf(
           "Translation options after reduction by output space constraint: %d%n",
-          options.size());
+          ruleList.size());
     }
 
     // Create rule lookup chart. Rules can be fetched by span.
-    final OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source, true);
+    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
 
     // Fill Beam 0...only has one cube
-    BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, optionGrid, 
+    BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
         recombinationHistory, maxDistortion, 0);
     List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
-    allOptions.add(options);
+    allOptions.add(ruleList);
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
 
     // Initialize feature extractors
-    featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
+    featurizer.initialize(sourceInputId, ruleList, source, scorer.getFeatureIndex());
 
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.longestSourcePhrase();
@@ -141,7 +141,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       }
 
       // Populate beam i by popping items and generating successors
-      BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, optionGrid, 
+      BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, i);
       while (newBeam.size() < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();

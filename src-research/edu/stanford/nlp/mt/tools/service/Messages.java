@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.google.gson.Gson;
 
+import edu.stanford.nlp.mt.tools.service.handlers.RuleQuery;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -17,7 +18,8 @@ import edu.stanford.nlp.util.Pair;
 public final class Messages {
   
   // Supported languages in iso-639-1 format
-  // TODO(spenceg) Make this more robust.
+  // TODO(spenceg) Make this more robust, and perhaps reconcile
+  // with the JavaNLP core Languages package.
   public static enum Language {UNK,EN,AR,ZH,DE,FR};
   
   private static final Gson gson = new Gson();
@@ -27,9 +29,11 @@ public final class Messages {
   public static enum MessageType {
     // Requests
     TRANSLATION_REQUEST("translationRequest", TranslationRequest.class),
+    RULE_QUERY_REQUEST("ruleQueryRequest", RuleQueryRequest.class),
     
     // Responses
-    BASE_REPLY("baseReply", BaseReply.class),
+    TRANSLATION_REPLY("translationReply", TranslationReply.class),
+    RULE_QUERY_REPLY("ruleQueryReply", RuleQueryReply.class),
     
     // Error
     UNKNOWN("unkXXX", null);
@@ -117,6 +121,20 @@ public final class Messages {
     }
   }
   
+  public static class RuleQueryRequest extends Request {
+    public final int spanLimit;
+    public RuleQueryRequest(Language sourceLang, Language targetLang,
+        String source, int spanLimit) {
+      super(sourceLang, targetLang, source);
+      this.spanLimit = spanLimit <= 0 ? 10 : spanLimit;
+      this.id = MessageType.RULE_QUERY_REQUEST.ordinal();
+    }
+    @Override
+    public boolean isAsynchronous() {
+      return false;
+    }    
+  }
+  
   /**********************************************
    * Response classes
    * 
@@ -129,17 +147,13 @@ public final class Messages {
    * @author Spence Green
    *
    */
-  public static abstract class Reply {
-    public final List<String> tgtList;
-    public Reply(List<String> targets) {
-      this.tgtList = targets;
-    }
-  }
+  public static interface Reply {}
   
-  public static class BaseReply extends Reply {
+  public static class TranslationReply implements Reply {
+    public final List<String> tgtList;
     public final List<String> alignList;
-    public BaseReply(List<String> targets, List<String> alignments) {
-      super(targets);
+    public TranslationReply(List<String> targets, List<String> alignments) {
+      this.tgtList = targets;
       this.alignList = alignments;
     }
     @Override
@@ -152,5 +166,11 @@ public final class Messages {
       return sb.toString();
     }
   }
-
+  
+  public static class RuleQueryReply implements Reply {
+    public final List<RuleQuery> rules;
+    public RuleQueryReply(List<RuleQuery> ruleList) {
+      this.rules = ruleList;
+    }
+  }
 }

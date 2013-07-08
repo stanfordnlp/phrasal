@@ -12,7 +12,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.stanford.nlp.mt.tools.service.Messages.BaseReply;
+import edu.stanford.nlp.mt.tools.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.tools.service.Messages.Request;
 import edu.stanford.nlp.mt.tools.service.Messages.TranslationRequest;
 import edu.stanford.nlp.mt.tools.service.PhrasalServlet;
@@ -45,8 +45,8 @@ public class TranslationRequestHandlerMock implements RequestHandler {
     translations.add(translation);
     List<String> alignments = Generics.newLinkedList();
     alignments.add("1-1 2-2 3-3 4-4");
-    Type t = new TypeToken<BaseReply>() {}.getType();
-    BaseReply baseResponse = new BaseReply(translations, alignments);
+    Type t = new TypeToken<TranslationReply>() {}.getType();
+    TranslationReply baseResponse = new TranslationReply(translations, alignments);
 
     // Simulate a long call to the MT system
     Random random = new Random();

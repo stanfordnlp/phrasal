@@ -7,10 +7,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.tools.service.Messages.MessageType;
 import edu.stanford.nlp.mt.tools.service.Messages.Request;
 import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.tools.service.handlers.RequestHandler;
+import edu.stanford.nlp.mt.tools.service.handlers.RuleQueryRequestHandler;
+import edu.stanford.nlp.mt.tools.service.handlers.RuleQueryRequestHandlerMock;
 import edu.stanford.nlp.mt.tools.service.handlers.ServiceResponse;
 import edu.stanford.nlp.mt.tools.service.handlers.TranslationRequestHandler;
 import edu.stanford.nlp.mt.tools.service.handlers.TranslationRequestHandlerMock;
@@ -41,6 +44,8 @@ public class PhrasalServlet extends HttpServlet {
 
   private final Logger logger;
 
+  private Phrasal decoder;
+
   public PhrasalServlet() {
     this(null);
   }
@@ -50,8 +55,20 @@ public class PhrasalServlet extends HttpServlet {
     PhrasalLogger.attach(logger, LogName.Service);
 
     boolean debugMode = phrasalIniName == null;
+
+    if (!debugMode) {
+      try {
+        decoder = Phrasal.loadDecoder(phrasalIniName);
+      } catch (IOException e) {
+        logger.severe("Unable to load phrasal from: " + phrasalIniName);
+        RuntimeException re = new RuntimeException();
+        re.initCause(e);
+        throw re;
+      }
+      logger.info("Loaded phrasal from: " + phrasalIniName);
+    }
     
-    requestHandlers = loadHandlers(debugMode, phrasalIniName);
+    requestHandlers = loadHandlers(debugMode);
   }
   
   /**
@@ -61,12 +78,15 @@ public class PhrasalServlet extends HttpServlet {
    * @param phrasalIniName
    * @return
    */
-  private RequestHandler[] loadHandlers(boolean loadMock, String phrasalIniName) {
+  private RequestHandler[] loadHandlers(boolean loadMock) {
     RequestHandler[] handlers = new RequestHandler[MessageType.values().length];
     for (MessageType type : MessageType.values()) {
       if (type == MessageType.TRANSLATION_REQUEST) {
         handlers[type.ordinal()] = loadMock ? new TranslationRequestHandlerMock() :
-           new TranslationRequestHandler(phrasalIniName);
+           new TranslationRequestHandler(decoder);
+      } else if (type == MessageType.RULE_QUERY_REQUEST) {
+        handlers[type.ordinal()] = loadMock ? new RuleQueryRequestHandlerMock() :
+          new RuleQueryRequestHandler(decoder.getPhraseTable(), decoder.getScorer(0));
       }
       // TODO(spenceg): Add more handlers
     }

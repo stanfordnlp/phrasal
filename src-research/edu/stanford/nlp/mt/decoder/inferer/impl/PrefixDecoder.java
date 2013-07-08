@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.decoder.util.OptionGrid;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.Pair;
@@ -128,8 +128,8 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     }
 
     Arrays.fill(autoInsertScores, -10000);
-    OptionGrid<IString,FV> optionGrid = new OptionGrid<IString,FV>(options, source);
-    OptionGrid<IString,FV> filteredOptionGrid = new OptionGrid<IString,FV>(filteredOptions, source);
+    RuleGrid<IString,FV> optionGrid = new RuleGrid<IString,FV>(options, source);
+    RuleGrid<IString,FV> filteredOptionGrid = new RuleGrid<IString,FV>(filteredOptions, source);
 
 
     // use *UNFILTERED* options for heuristic calculation
