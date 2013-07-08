@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service;
+package edu.stanford.nlp.mt.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 

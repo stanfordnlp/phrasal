@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service.handlers;
+package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -17,11 +17,11 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.tools.service.PhrasalLogger;
-import edu.stanford.nlp.mt.tools.service.Messages.Request;
-import edu.stanford.nlp.mt.tools.service.Messages.RuleQueryReply;
-import edu.stanford.nlp.mt.tools.service.Messages.RuleQueryRequest;
-import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.service.PhrasalLogger;
+import edu.stanford.nlp.mt.service.Messages.Request;
+import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
+import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
+import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.util.Generics;
 
 /**

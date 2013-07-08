@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service.handlers;
+package edu.stanford.nlp.mt.service.handlers;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 
-import edu.stanford.nlp.mt.tools.service.Messages.Reply;
+import edu.stanford.nlp.mt.service.Messages.Reply;
 
 
 public class ServiceResponse {

@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service.handlers;
+package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -18,12 +18,12 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.tools.service.Messages.TranslationRequest;
-import edu.stanford.nlp.mt.tools.service.Messages.TranslationReply;
-import edu.stanford.nlp.mt.tools.service.Messages.Request;
-import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
-import edu.stanford.nlp.mt.tools.service.PhrasalLogger;
-import edu.stanford.nlp.mt.tools.service.PhrasalServlet;
+import edu.stanford.nlp.mt.service.PhrasalLogger;
+import edu.stanford.nlp.mt.service.PhrasalServlet;
+import edu.stanford.nlp.mt.service.Messages.Request;
+import edu.stanford.nlp.mt.service.Messages.TranslationReply;
+import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
+import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;

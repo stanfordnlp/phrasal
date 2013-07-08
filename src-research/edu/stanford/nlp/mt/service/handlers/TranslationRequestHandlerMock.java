@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service.handlers;
+package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -12,10 +12,10 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.stanford.nlp.mt.tools.service.Messages.TranslationReply;
-import edu.stanford.nlp.mt.tools.service.Messages.Request;
-import edu.stanford.nlp.mt.tools.service.Messages.TranslationRequest;
-import edu.stanford.nlp.mt.tools.service.PhrasalServlet;
+import edu.stanford.nlp.mt.service.PhrasalServlet;
+import edu.stanford.nlp.mt.service.Messages.Request;
+import edu.stanford.nlp.mt.service.Messages.TranslationReply;
+import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
 import edu.stanford.nlp.util.Generics;
 
 public class TranslationRequestHandlerMock implements RequestHandler {

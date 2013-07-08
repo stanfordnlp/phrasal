@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service;
+package edu.stanford.nlp.mt.service;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.google.gson.Gson;
 
-import edu.stanford.nlp.mt.tools.service.handlers.RuleQuery;
+import edu.stanford.nlp.mt.service.handlers.RuleQuery;
 import edu.stanford.nlp.util.Pair;
 
 /**

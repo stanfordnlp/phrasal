@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service.handlers;
+package edu.stanford.nlp.mt.service.handlers;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.IString;

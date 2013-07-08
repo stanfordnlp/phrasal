@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service;
+package edu.stanford.nlp.mt.service;
 
 import java.io.IOException;
 import java.text.DateFormat;

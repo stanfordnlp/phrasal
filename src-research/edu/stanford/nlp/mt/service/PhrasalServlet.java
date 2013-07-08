@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools.service;
+package edu.stanford.nlp.mt.service;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -8,15 +8,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.tools.service.Messages.MessageType;
-import edu.stanford.nlp.mt.tools.service.Messages.Request;
-import edu.stanford.nlp.mt.tools.service.PhrasalLogger.LogName;
-import edu.stanford.nlp.mt.tools.service.handlers.RequestHandler;
-import edu.stanford.nlp.mt.tools.service.handlers.RuleQueryRequestHandler;
-import edu.stanford.nlp.mt.tools.service.handlers.RuleQueryRequestHandlerMock;
-import edu.stanford.nlp.mt.tools.service.handlers.ServiceResponse;
-import edu.stanford.nlp.mt.tools.service.handlers.TranslationRequestHandler;
-import edu.stanford.nlp.mt.tools.service.handlers.TranslationRequestHandlerMock;
+import edu.stanford.nlp.mt.service.Messages.MessageType;
+import edu.stanford.nlp.mt.service.Messages.Request;
+import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.service.handlers.RequestHandler;
+import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandler;
+import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandlerMock;
+import edu.stanford.nlp.mt.service.handlers.ServiceResponse;
+import edu.stanford.nlp.mt.service.handlers.TranslationRequestHandler;
+import edu.stanford.nlp.mt.service.handlers.TranslationRequestHandlerMock;
 import edu.stanford.nlp.util.Pair;
 
 /**

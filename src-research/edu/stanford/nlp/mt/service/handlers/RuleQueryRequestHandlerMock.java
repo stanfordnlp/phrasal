@@ -1,10 +1,10 @@
-package edu.stanford.nlp.mt.tools.service.handlers;
+package edu.stanford.nlp.mt.service.handlers;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import edu.stanford.nlp.mt.tools.service.Messages.Request;
-import edu.stanford.nlp.mt.tools.service.Messages.RuleQueryRequest;
+import edu.stanford.nlp.mt.service.Messages.Request;
+import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
 
 /**
  * Mock handler for rule query requests.
