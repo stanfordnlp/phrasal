@@ -32,25 +32,21 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 /**
  * Message handler for the TranslationRequest message.
  * 
- * TODO(spenceg): Shutdown procedure for threadpool and consumer?
- * 
  * @author Spence Green
  *
  */
 public class TranslationRequestHandler implements RequestHandler {
 
   private final Logger logger;
-  
+
   private final Phrasal decoder;
-  
+
   private final MulticoreWrapper<DecoderInput,Boolean> wrapper;
-  
-//  private final Thread resultConsumer;
-  
+
   public TranslationRequestHandler(String phrasalIniName) {
     logger = Logger.getLogger(TranslationRequestHandler.class.getName());
     PhrasalLogger.attach(logger, LogName.Service);
-    
+
     try {
       decoder = Phrasal.loadDecoder(phrasalIniName);
     } catch (IOException e) {
@@ -59,16 +55,12 @@ public class TranslationRequestHandler implements RequestHandler {
       throw new RuntimeException();
     }
     logger.info("Loaded phrasal from: " + phrasalIniName);
-    
+
     // Setup a threadpool for phrasal that wraps the servlet internals
     // needed to restart the request after processing.
     wrapper = 
         new MulticoreWrapper<DecoderInput,Boolean>(decoder.getNumThreads(), 
             new DecoderService(0, decoder), false);
-    
-    // Start a consumer thread for the results
-//    this.resultConsumer = new ResultConsumer(wrapper);
-//    resultConsumer.start();
   }
 
   private static class DecoderInput {
@@ -84,38 +76,26 @@ public class TranslationRequestHandler implements RequestHandler {
       this.continuation = continuation;
     }
   }
-  
-//  private static class DecoderOutput {
-//    public final ServiceResponse serviceResponse;
-//    public final HttpServletRequest request;
-//    public final Continuation continuation;
-//    public DecoderOutput(ServiceResponse serviceResponse,
-//        HttpServletRequest request, Continuation continuation) {
-//      this.serviceResponse = serviceResponse;
-//      this.request = request;
-//      this.continuation = continuation;
-//    }
-//  }
-  
+
   private static class DecoderService implements ThreadsafeProcessor<DecoderInput,Boolean> {
     private final int threadId;
     private int childThreadId;
     private Phrasal phrasal;
-    
+
     private static AtomicInteger inputId = new AtomicInteger();
-    
+
     public DecoderService(int threadId, Phrasal phrasal) {
       this.threadId = threadId;
       this.childThreadId = threadId+1;
       this.phrasal = phrasal;
     }
-    
+
     @Override
     public Boolean process(DecoderInput input) { 
       // Do decoding
       List<RichTranslation<IString,String>> translations = 
           phrasal.decode(input.text, inputId.incrementAndGet(), threadId, input.n); 
-      
+
       List<String> translationList = Generics.newLinkedList();
       List<String> alignments = Generics.newLinkedList();
       for (RichTranslation<IString,String> translation : translations) {
@@ -125,11 +105,10 @@ public class TranslationRequestHandler implements RequestHandler {
       Type t = new TypeToken<BaseReply>() {}.getType();
       BaseReply baseResponse = new BaseReply(translationList, alignments);
       ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
-      
+
       input.request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
       input.continuation.resume(); // Re-dispatch/ resume to generate response
-      
-//      return new DecoderOutput(serviceResponse, input.request, input.continuation);
+
       return true;
     }
 
@@ -138,8 +117,7 @@ public class TranslationRequestHandler implements RequestHandler {
       return new DecoderService(childThreadId++, phrasal);
     }
   }
-  
-  
+
   @Override
   public void handleAsynchronous(Request baseRequest,
       HttpServletRequest request, HttpServletResponse response) {
@@ -157,25 +135,5 @@ public class TranslationRequestHandler implements RequestHandler {
   @Override
   public ServiceResponse handle(Request request) {
     throw new UnsupportedOperationException("This is an asynchronous handler");
-  }
-//
-//  private static class ResultConsumer extends Thread {
-//    
-//    private final MulticoreWrapper<DecoderInput, DecoderOutput> threadpool;
-//    
-//    public ResultConsumer(MulticoreWrapper<DecoderInput, DecoderOutput> threadpool) {
-//      this.threadpool = threadpool;
-//    }
-//
-//    @Override
-//    public void run() {
-//      System.err.println("Thread start");
-//      while(threadpool.peek()) {
-//        DecoderOutput result = threadpool.poll();
-//        result.request.setAttribute(PhrasalServlet.ASYNC_KEY, result.serviceResponse);   
-//        result.continuation.resume(); // Re-dispatch/ resume to generate response
-//      }
-//    }
-//  }
-  
+  }  
 }

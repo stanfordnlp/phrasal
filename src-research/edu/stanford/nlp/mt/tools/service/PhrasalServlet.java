@@ -20,12 +20,12 @@ import edu.stanford.nlp.util.Pair;
  * Servlet that loads Phrasal as a private member.
  *
  * TODO:
+ *  PT query message
+ *  Unknown message handler
  *  Pre-processing of input
  *  Post-processing of output
  *  Do we need to do forced word alignment?
  *  Add statistics about decoding time.
- *  Phrasal concurrency...jetty executes a thread per connection. The servlet should
- *    maintain a queue of phrasal inferers and pull them as needed.
  *  Graceful exception handling. This servlet can't ever crash....
  * 
  * @author Spence Green
@@ -75,7 +75,7 @@ public class PhrasalServlet extends HttpServlet {
   
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     // Parse the message
-    Pair<MessageType,Request> message = Messages.requestToMessage(request);
+    Pair<MessageType,Request> message = Messages.parseRequest(request);
     MessageType messageType = message.first();
     Request baseRequest = message.second();
     logger.info(String.format("Recv: %s %s", messageType.toString(), baseRequest.toString()));

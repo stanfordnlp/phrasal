@@ -232,6 +232,13 @@ public class Phrasal {
    */
   public int getNumThreads() { return numThreads; }
   
+  /**
+   * Access the decoder's phrase table.
+   * 
+   * @return
+   */
+  public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
+  
   public static void initStaticMembers(Map<String, List<String>> config) {
 
     if (config.containsKey(ISTRING_VOC_OPT))

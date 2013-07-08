@@ -48,7 +48,7 @@ public final class Messages {
     public String keyName() { return keyName; }
   };
   
-  public static MessageType getMessageType(HttpServletRequest request) {
+  private static MessageType getMessageType(HttpServletRequest request) {
     for (MessageType messageType : MessageType.values()) {
       String param = request.getParameter(messageType.keyName());
       if (param != null && param.length() > 0) {
@@ -59,7 +59,7 @@ public final class Messages {
   }
   
   @SuppressWarnings("unchecked")
-  public static Pair<MessageType,Request>requestToMessage(HttpServletRequest request) {
+  public static Pair<MessageType,Request>parseRequest(HttpServletRequest request) {
     MessageType type = getMessageType(request);
     Request message = null;
     if (type != MessageType.UNKNOWN) {
