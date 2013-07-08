@@ -16,7 +16,6 @@
 	<classpathentry kind="lib" path="lib/terp.jar"/>
 	<classpathentry kind="lib" path="lib/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
-	<classpathentry kind="lib" path="lib-research/servlet-api-2.5.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
 	<classpathentry kind="lib" path="lib/berkeleyaligner.jar"/>
 	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
@@ -43,6 +42,5 @@
 	<classpathentry kind="lib" path="lib-research/jetty-util-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-webapp-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-xml-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/servlet-api-3.0.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
