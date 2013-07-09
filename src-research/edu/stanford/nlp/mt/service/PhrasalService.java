@@ -6,11 +6,13 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+//import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -67,9 +69,16 @@ public final class PhrasalService {
     
     // Setup the jetty server
     Server server = new Server();
-    ServerConnector connector = new ServerConnector(server);
+
+    // Jetty 8 way of configuring the server
+    Connector connector = new SelectChannelConnector();
     connector.setPort(port);
     server.addConnector(connector);
+
+// Jetty9 way of configuring the server
+//    ServerConnector connector = new ServerConnector(server);
+//    connector.setPort(port);
+//    server.addConnector(connector);
 
     if (debug) {    
       connector.setHost(DEBUG_URL);
