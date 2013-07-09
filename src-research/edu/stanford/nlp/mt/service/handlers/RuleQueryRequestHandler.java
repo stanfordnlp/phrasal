@@ -27,6 +27,8 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Synchronous handler for phrase table query messages.
  * 
+ * TODO: Tokenization and detokenization.
+ * 
  * @author Spence Green
  *
  */
@@ -62,7 +64,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
     final int maxPhraseLength = phraseTable.longestSourcePhrase();
     final int sourceLength = sourceSegment.size();
     for (int i = 0; i < sourceLength; ++i) {
-      final int rightEdge = i+maxPhraseLength-1;
+      int rightEdge = i+maxPhraseLength > sourceLength ? sourceLength : i+maxPhraseLength; 
       for (int j = i; j < rightEdge; ++j) {
         List<ConcreteRule<IString,String>> rulesForSpan = ruleGrid.get(i, j);
         final int numRules = rulesForSpan.size() < spanLimit ? rulesForSpan.size() : spanLimit;

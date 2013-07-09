@@ -31,6 +31,8 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 /**
  * Message handler for the TranslationRequest message.
  * 
+ * TODO: Tokenization and detokenization
+ * 
  * @author Spence Green
  *
  */

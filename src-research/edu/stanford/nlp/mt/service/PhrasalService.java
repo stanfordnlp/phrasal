@@ -35,6 +35,7 @@ public final class PhrasalService {
     Map<String,Integer> optionArgDefs = new HashMap<String,Integer>();
     optionArgDefs.put("p", 1);
     optionArgDefs.put("d", 0);
+    optionArgDefs.put("m", 0);
     return optionArgDefs;
   }
 
@@ -44,7 +45,8 @@ public final class PhrasalService {
     sb.append(String.format("Usage: java %s [OPTS] phrasal_ini%n%n", PhrasalService.class.getName()));
     sb.append("Options:").append(nl);
     sb.append(" -p       : Port (default: ").append(DEFAULT_HTTP_PORT).append(")").append(nl);
-    sb.append(" -d       : Debug mode mock server").append(nl);
+    sb.append(" -d       : Debug mode").append(nl);
+    sb.append(" -m       : Load mock servlet").append(nl);
     return sb.toString();
   }
 
@@ -52,6 +54,7 @@ public final class PhrasalService {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     int port = PropertiesUtils.getInt(options, "p", DEFAULT_HTTP_PORT);
     boolean debug = PropertiesUtils.getBool(options, "d", false);
+    boolean loadMockServlet = PropertiesUtils.getBool(options, "m", false);
 
     // Parse arguments
     String argList = options.getProperty("",null);
@@ -81,8 +84,8 @@ public final class PhrasalService {
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setContextPath("/");
  
-    // Add Servlets
-    PhrasalServlet servlet = debug ? new PhrasalServlet() : new PhrasalServlet(phrasalIniFile);
+    // Add Phrasal servlet
+    PhrasalServlet servlet = loadMockServlet ? new PhrasalServlet() : new PhrasalServlet(phrasalIniFile);
     context.addServlet(new ServletHolder(servlet), "/t");
 
     // Add debugging web-page
