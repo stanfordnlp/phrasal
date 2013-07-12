@@ -34,80 +34,6 @@
 	<lib name="tercom.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
 	</lib>
-	<lib name="start.jetty-7.4.2.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/start.jetty-7.4.2.jar!/"/>
-	</lib>
-	<lib name="gson-1.7.1.jar" scope="COMPILE">
-		<srcroot url="jar://$MODULE_DIR$/libsrc/gson-1.7.1-sources.jar!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/gson-1.7.1-sources.jar!/"/>
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/gson-1.7.1.jar!/"/>
-	</lib>
-	<lib name="jetty-ajp-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-ajp-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-annotations-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-annotations-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-client-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-client-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-continuation-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-continuation-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-deploy-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-deploy-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-http-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-http-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-io-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-io-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-jmx-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jmx-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-jndi-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jndi-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-overlay-deployer-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-overlay-deployer-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-plus-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-plus-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-policy-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-policy-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-rewrite-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-rewrite-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-security-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-security-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-server-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-server-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-servlet-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-servlet-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-servlets-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-servlets-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-util-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-util-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-webapp-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-webapp-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-websocket-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-websocket-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="jetty-xml-7.4.2.v20110526.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-xml-7.4.2.v20110526.jar!/"/>
-	</lib>
-	<lib name="servlet-api-2.5.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/servlet-api-2.5.jar!/"/>
-	</lib>
 	<lib name="berkeleyaligner.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/berkeleyaligner.jar!/"/>
 	</lib>
@@ -121,5 +47,71 @@
 		<srcroot url="jar://$MODULE_DIR$/libsrc/pinyin4j-2.5.0.zip!/"/>
 		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/pinyin4j-2.5.0.zip!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/pinyin4j-2.5.0.jar!/"/>
+	</lib>
+	<lib name="gson-2.2.4.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/gson-2.2.4.jar!/"/>
+	</lib>
+	<lib name="jetty-ajp-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-ajp-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-annotations-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-annotations-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-client-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-client-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-continuation-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-continuation-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-deploy-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-deploy-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-http-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-http-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-io-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-io-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-jmx-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jmx-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-jndi-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jndi-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-overlay-deployer-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-overlay-deployer-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-plus-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-plus-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-policy-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-policy-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-rewrite-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-rewrite-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-security-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-security-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-server-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-server-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-servlet-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-servlet-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-servlets-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-servlets-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-util-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-util-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-webapp-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-webapp-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-websocket-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-websocket-8.1.11.v20130520.jar!/"/>
+	</lib>
+	<lib name="jetty-xml-8.1.11.v20130520.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-xml-8.1.11.v20130520.jar!/"/>
 	</lib>
 </component>
