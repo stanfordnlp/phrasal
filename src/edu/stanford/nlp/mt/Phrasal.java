@@ -1056,7 +1056,7 @@ public class Phrasal {
       // Output the alignments if necessary
       if (alignmentWriter != null) {
         for (RichTranslation<IString,String> translation : translations) {
-          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatNBestList.NBEST_SEP, 
+          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatNBestList.FIELD_DELIM, 
               translation.sourceTargetAlignmentString());
         }
       }

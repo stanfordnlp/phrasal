@@ -5,7 +5,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.tools.BshInterpreter;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
@@ -20,8 +19,6 @@ import edu.stanford.nlp.util.HashIndex;
 import java.util.*;
 import java.io.*;
 import java.lang.reflect.Constructor;
-
-import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
 
 /**
  * modifined from PhraseExtract.java
@@ -85,8 +82,6 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     ALL_RECOGNIZED_OPTS.addAll(OPTIONAL_OPTS);
     ALL_RECOGNIZED_OPTS.addAll(IGNORED_OPTS);
   }
-
-  static BshInterpreter interpreter = new BshInterpreter();
 
   public static final String DEBUG_PROPERTY = "DebugCombinedFeatureExtractor";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -160,19 +155,9 @@ public class ChineseSyntaxCombinedFeatureExtractor {
         } else if (extractorAndInfofile.length != 1) {
           throw new RuntimeException("extractor argument format error");
         }
-        // if exStr contains parentheses, assume it is a call to a constructor
-        // (without the "new"):
-        int pos = exStr.indexOf('(');
-        if (pos >= 0) {
-          StringBuffer constructor = new StringBuffer("new ").append(exStr);
-          System.err.println("Running constructor: " + constructor);
-          fe = (AbstractChineseSyntaxFeatureExtractor<String>) interpreter
-              .eval(constructor.toString());
-        } else {
-          Class<?> cls = Class.forName(exStr);
-          Constructor<?> ct = cls.getConstructor(new Class[] {});
-          fe = (AbstractChineseSyntaxFeatureExtractor<String>) ct.newInstance();
-        }
+        Class<?> cls = Class.forName(exStr);
+        Constructor<?> ct = cls.getConstructor(new Class[] {});
+        fe = (AbstractChineseSyntaxFeatureExtractor<String>) ct.newInstance();
         fe.init(prop, featureIndex, alTemps);
         extractors.add(fe);
         infoFileForExtractors.add(infoFilename);
@@ -487,7 +472,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
     for (int i = 0; i < extractors.size(); i++) {
       AbstractChineseSyntaxFeatureExtractor<String> e = extractors.get(i);
       String infoLine = infoLinesForExtractors.get(i);
-      e.featurizeSentence(sent, infoLine, alGrid);
+      e.featurizeSentence(sent, alGrid);
     }
   }
 

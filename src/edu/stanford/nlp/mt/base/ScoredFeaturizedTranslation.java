@@ -15,8 +15,6 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
     FeaturizedTranslation<TK, FV> implements
     Comparable<ScoredFeaturizedTranslation<TK, FV>> {
   
-  protected static final String NBEST_SEP = FlatNBestList.NBEST_SEP;
-  
   public final long latticeSourceId;
   
   /**
@@ -54,9 +52,10 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 
   @Override
   public String toString() {
+    final String delim = FlatNBestList.FIELD_DELIM;
     StringBuilder sb = new StringBuilder();
     sb.append(this.translation.toString());
-    sb.append(' ').append(NBEST_SEP);
+    sb.append(' ').append(delim);
     DecimalFormat df = new DecimalFormat("0.####E0");
     if (features != null) {
       for (FeatureValue<FV> fv : this.features) {
@@ -68,10 +67,10 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
                 .format(fv.value)));
       }
     }
-    sb.append(' ').append(NBEST_SEP).append(' ');
+    sb.append(' ').append(delim).append(' ');
     sb.append(df.format(this.score));
     if (latticeSourceId != -1) {
-      sb.append(' ').append(NBEST_SEP).append(' ');
+      sb.append(' ').append(delim).append(' ');
       sb.append(latticeSourceId);
     }
     return sb.toString();

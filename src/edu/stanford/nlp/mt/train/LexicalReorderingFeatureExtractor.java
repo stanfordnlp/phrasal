@@ -8,6 +8,7 @@ import java.util.Arrays;
 import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
  * Extractor for lexicalized re-ordering probabilities of Moses.
@@ -28,6 +29,9 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   private static final float LAPLACE_SMOOTHING = Float.parseFloat(System
       .getProperty(LAPLACE_PROPERTY, "0.5f"));
 
+  // Default specification of the re-ordering model.
+  public static final String DEFAULT_MODEL_TYPE = "msd2-bidirectional-fe";
+  
   List<int[]> forwardCounts = null, backwardCounts = null, jointCounts = null;
   int[] totalForwardCounts = null, totalBackwardCounts = null,
       totalJointCounts = null;
@@ -72,26 +76,27 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
     // Type of reordering model:
     String type = prop.getProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT,
-        "msd2-bidirectional-fe");
+        DEFAULT_MODEL_TYPE);
     System.err.println("Orientation type: " + type);
     String[] tokens = type.split("-");
     assert (2 <= tokens.length && tokens.length <= 3);
 
     // Type of extraction: word-phrase (Moses), phrase-phrase (Tillmann, etc),
     // or hierarchical:
-    phrasalReordering = Boolean.parseBoolean(prop.getProperty(
-        PhraseExtract.LEX_REORDERING_PHRASAL_OPT, "false"));
-    boolean hierReordering = Boolean.parseBoolean(prop.getProperty(
-        PhraseExtract.LEX_REORDERING_HIER_OPT, "false"));
+    phrasalReordering = PropertiesUtils.getBool(prop,
+        PhraseExtract.LEX_REORDERING_PHRASAL_OPT, false);
+    boolean hierReordering = PropertiesUtils.getBool(prop,
+        PhraseExtract.LEX_REORDERING_HIER_OPT, false);
+    
     System.err.println("Phrasal orientation model: " + phrasalReordering);
     System.err.println("Hierarchical orientation model: " + hierReordering);
+    
     if (hierReordering) {
       phrasalReordering = true;
     }
     if (phrasalReordering) {
-      enabledTypes[ReorderingTypes.discont2.ordinal()] = Boolean
-          .parseBoolean(prop.getProperty(
-              PhraseExtract.LEX_REORDERING_2DISC_CLASS_OPT, "false"));
+      enabledTypes[ReorderingTypes.discont2.ordinal()] = PropertiesUtils.getBool(prop,
+              PhraseExtract.LEX_REORDERING_2DISC_CLASS_OPT, false);
     }
 
     // Get categories:
@@ -190,8 +195,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   }
 
   @Override
-  public void featurizeSentence(SymmetricalWordAlignment sent, String info,
-      AlignmentGrid alGrid) {
+  public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid) {
   }
 
   private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp,

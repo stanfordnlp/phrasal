@@ -1,10 +1,18 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
-import java.util.zip.GZIPInputStream;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import edu.stanford.nlp.mt.train.AlignmentTemplate;
+import edu.stanford.nlp.util.Generics;
 
 /**
+ * A standard lexicalized reordering table.
  *
  * @author danielcer
  *
@@ -76,7 +84,7 @@ public class LexicalReorderingTable {
       ReorderingTypes.nonMonotoneWithPrevious,
       ReorderingTypes.monotoneWithNext, ReorderingTypes.nonMonotoneWithNext };
 
-  static final Map<String, Object> fileTypeToReorderingType = new HashMap<String, Object>();
+  static final Map<String, Object> fileTypeToReorderingType = Generics.newHashMap();
 
   static {
     fileTypeToReorderingType.put("msd-fe", msdPositionMapping);
@@ -97,8 +105,8 @@ public class LexicalReorderingTable {
 
   private static final IString internalDelim = new IString("|||");
 
-  static final Map<String, ConditionTypes> fileTypeToConditionType = new HashMap<String, ConditionTypes>();
-
+  static final Map<String, ConditionTypes> fileTypeToConditionType = Generics.newHashMap();
+  
   static {
     fileTypeToConditionType.put("msd-fe", ConditionTypes.fe);
     fileTypeToConditionType.put("msd-bidirectional-fe", ConditionTypes.fe);
@@ -113,7 +121,7 @@ public class LexicalReorderingTable {
   }
 
   final String filetype;
-  final ArrayList<Object> reorderingScores = new ArrayList<Object>();
+  final List<Object> reorderingScores = Generics.newArrayList();
 
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
@@ -183,8 +191,8 @@ public class LexicalReorderingTable {
   private String init(String filename, String type) throws IOException {
     Runtime rt = Runtime.getRuntime();
     long preTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long startTimeMillis = System.currentTimeMillis();
-    System.err.printf("Loading Lexical Reordering Table: %s\n", filename);
+    final long startTime = System.nanoTime();
+    System.err.printf("Loading Lexical Reordering Table: %s%n", filename);
     ReorderingTypes[] positionalMapping = null;
     ConditionTypes conditionType = null;
     String selectedFiletype = null;
@@ -211,89 +219,58 @@ public class LexicalReorderingTable {
           filename));
     }
 
-    LineNumberReader reader;
-    if (filename.endsWith(".gz")) {
-      System.err.printf("(unzipping %s)", filename);
-      reader = new LineNumberReader(new InputStreamReader(new GZIPInputStream(
-          new FileInputStream(filename)), "UTF-8"));
-    } else {
-      reader = new LineNumberReader(new InputStreamReader(new FileInputStream(
-          filename), "UTF-8"));
-    }
-
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
+    final String fieldDelim = Pattern.quote(AlignmentTemplate.DELIM);
     for (String line; (line = reader.readLine()) != null; ) {
-      StringTokenizer toker = new StringTokenizer(line);
-      List<String> phrase1TokenList = new LinkedList<String>();
-      do {
-        String token = toker.nextToken();
-        if ("|||".equals(token)) {
-          break;
-        }
-        phrase1TokenList.add(token);
-      } while (toker.hasMoreTokens());
-
-      if (!toker.hasMoreTokens()) {
-        throw new RuntimeException(String.format(
-            "Additional fields expected (line %d)", reader.getLineNumber()));
+      final String[] fields = line.trim().split(fieldDelim);
+      
+      String[] srcTokens;
+      String[] tgtTokens = null;
+      String[] scoreList;
+      if (fields.length == 2) {
+        srcTokens = fields[0].trim().split("\\s+");
+        scoreList = fields[1].trim().split("\\s+");
+        
+      } else if (fields.length == 3 && conditionType == ConditionTypes.fe) {
+        // Standard phrase table format without alignments
+        srcTokens = fields[0].trim().split("\\s+");
+        tgtTokens = fields[1].trim().split("\\s+");
+        scoreList = fields[2].trim().split("\\s+");
+        
+      } else if (fields.length == 5 && conditionType == ConditionTypes.fe) {
+        // Standard phrase table format with alignments
+        srcTokens = fields[0].trim().split("\\s+");
+        tgtTokens = fields[1].trim().split("\\s+");
+        scoreList = fields[4].trim().split("\\s+");
+        
+      } else {
+        throw new RuntimeException("Invalid re-ordering table line: " + String.valueOf(reader.getLineNumber()));
       }
-
-      List<String> phrase2TokenList = new LinkedList<String>();
-
-      if (conditionType == ConditionTypes.fe) {
-        do {
-          String token = toker.nextToken();
-          if ("|||".equals(token)) {
-            break;
-          }
-          phrase2TokenList.add(token);
-        } while (toker.hasMoreTokens());
-
-        if (!toker.hasMoreTokens()) {
-          throw new RuntimeException(String.format(
-              "Additional fields expected (line %d)", reader.getLineNumber()));
-        }
-      }
-
-      List<String> scoreList = new LinkedList<String>();
-      do {
-        String token = toker.nextToken();
-        if (token.startsWith("|||")) {
-          scoreList.clear();
-          continue;
-        }
-        scoreList.add(token);
-      } while (toker.hasMoreTokens());
-
-      if (scoreList.size() != positionalMapping.length) {
-        throw new RuntimeException(
-            String
-                .format(
-                    "File type '%s' requires that %d scores be provided for each entry, however only %d were found (line %d)",
-                    filetype, positionalMapping.length, scoreList.size(),
-                    reader.getLineNumber()));
-      }
-
+      
       int[] indexInts; // = null;
       if (conditionType == ConditionTypes.e
           || conditionType == ConditionTypes.f) {
-        IString[] tokens = IStrings.toIStringArray(phrase1TokenList);
+        IString[] tokens = IStrings.toIStringArray(srcTokens);
         indexInts = IStrings.toIntArray(tokens);
       } else {
-        IString[] fTokens = IStrings.toIStringArray(phrase1TokenList);
+        IString[] fTokens = IStrings.toIStringArray(srcTokens);
         int[] fIndexInts = IStrings.toIntArray(fTokens);
-        IString[] eTokens = IStrings.toIStringArray(phrase2TokenList);
+        IString[] eTokens = IStrings.toIStringArray(tgtTokens);
         int[] eIndexInts = IStrings.toIntArray(eTokens);
         indexInts = mergeInts(fIndexInts, eIndexInts);
       }
 
-      double[] scores = new double[scoreList.size()];
+      double[] scores = new double[scoreList.length];
       int scoreId = 0;
       for (String score : scoreList) {
         try {
-          scores[scoreId++] = Math.log(Double.parseDouble(score));
+          float featureScore = (float) Double.parseDouble(score);
+          assert featureScore <= 0 : "Feature scores are not in log format";
+          scores[scoreId++] = featureScore;
+
         } catch (NumberFormatException e) {
           throw new RuntimeException(String.format(
-              "Can't parse %s as a number (line %d)\n", score,
+              "Can't parse %s as a number (line %d)", score,
               reader.getLineNumber()));
         }
       }
@@ -303,20 +280,21 @@ public class LexicalReorderingTable {
         throw new RuntimeException(
             String
                 .format(
-                    "Somehow indices have outpaced/underpaced the size of the reorderingScore list (%d != %d).\n",
+                    "Somehow indices have outpaced/underpaced the size of the reorderingScore list (%d != %d).",
                     idx, reorderingScores.size()));
       }
 
       reorderingScores.add(scores);
     }
     reader.close();
+    
     long postTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
+    double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
     System.err.printf(
-        "Done loading reordering table: %s (mem used: %d MiB time: %.3f s)\n",
+        "Done loading reordering table: %s (mem used: %d MiB time: %.3fs)%n",
         filename, (postTableLoadMemUsed - preTableLoadMemUsed) / (1024 * 1024),
-        loadTimeMillis / 1000.0);
-    System.err.printf("Done loading %s\n", filename);
+        elapsedTime);
+    System.err.printf("Done loading %s%n", filename);
 
     return selectedFiletype;
   }

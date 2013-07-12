@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.util.ErasureUtils;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 
@@ -22,7 +22,7 @@ import edu.stanford.nlp.util.Index;
  */
 public class FlatNBestList implements NBestListContainer<IString, String> {
 
-  static public final String NBEST_SEP = "|||";
+  static public final String FIELD_DELIM = "|||";
 
   static public final int MAX_DENSE_SIZE = 50;
 
@@ -71,24 +71,24 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
     this.sequenceSelfMap = sequenceSelfMap;
     Runtime rt = Runtime.getRuntime();
     long preNBestListLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long startTimeMillis = System.currentTimeMillis();
+    final long startTime = System.nanoTime();
 
-    Map<String, String> featureNameSelfMap = new HashMap<String, String>();
+    Map<String, String> featureNameSelfMap = Generics.newHashMap();
 
-    nbestLists = new ArrayList<List<ScoredFeaturizedTranslation<IString, String>>>(initialCapacity);
+    nbestLists = Generics.newArrayList(initialCapacity);
 
     List<ScoredFeaturizedTranslation<IString, String>> currentNbest = 
-        new LinkedList<ScoredFeaturizedTranslation<IString, String>>();
+        Generics.newLinkedList();
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     int lastId = -1;
+    final String fieldDelim = Pattern.quote(FIELD_DELIM);
     for (String inline; (inline = reader.readLine()) != null;) {
-      String[] fields = inline.split(Pattern.quote(NBEST_SEP));
+      String[] fields = inline.trim().split(fieldDelim);
       if (fields.length < 3) {
-        System.err.printf("Warning: bad nbest-list format: %s\n", inline);
         System.err.printf(
-            "Warning: expected at least 3 fields, but found only %d\n",
-            fields.length);
+            "Warning: expected at least 3 fields, but found only %d (line %d)%n",
+            fields.length, reader.getLineNumber());
         continue;
       }
       int id = Integer.valueOf(fields[0].trim());
@@ -108,7 +108,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
         nbestLists.set(lastId, new ArrayList<ScoredFeaturizedTranslation<IString, String>>(currentNbest));
         currentNbest = new LinkedList<ScoredFeaturizedTranslation<IString, String>>();
         if (DEBUG) {
-          System.err.printf("Doing %s Memory: %d MiB\n", id,
+          System.err.printf("Doing %s Memory: %d MiB%n", id,
               (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024));
         }
       }
@@ -213,6 +213,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       }
       currentNbest.add(sfTrans);
     }
+    reader.close();
 
     if (lastId < 0) {
       throw new RuntimeException("N-best list is empty or malformed!");
@@ -227,20 +228,14 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
     }
 
     sequenceSelfMap = null;
-    featureNameSelfMap = null;
-    ErasureUtils.noop(sequenceSelfMap);
-    ErasureUtils.noop(featureNameSelfMap);
-    System.gc();
 
     long postNBestListLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
+    double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
     System.err
         .printf(
-            "Done loading Flat n-best lists: %s (mem used: %d MiB time: %.3f s)\n",
+            "Done loading Flat n-best lists: %s (mem used: %d MiB time: %.3fs)%n",
             filename, (postNBestListLoadMemUsed - preNBestListLoadMemUsed)
-                / (1024 * 1024), loadTimeMillis / 1000.0);
-
-    reader.close();
+                / (1024 * 1024), elapsedTime);
   }
 
   @Override
@@ -256,7 +251,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       for (int j = 0; j < nbestLists.get(i).size(); j++) {
         ScoredFeaturizedTranslation<IString, String> tr = nbestLists.get(i)
             .get(j);
-        sbuf.append(i).append(" ").append(NBEST_SEP).append(" ");
+        sbuf.append(i).append(" ").append(FIELD_DELIM).append(" ");
         sbuf.append(tr.toString());
         sbuf.append(nl);
       }

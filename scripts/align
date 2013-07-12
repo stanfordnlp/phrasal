@@ -18,10 +18,10 @@ fi
 if [ $# -ne 2 ]; then
 	echo Usage: `basename $0` memory conf_file
 	echo
-	echo Berkeley aligner: "$VERSION"
+	echo Berkeley aligner path: "$BERKELEY_ALIGNER"
 	echo
-	echo Edit the VERSION variable in the script to switch
-	echo between Berkeley 2.0 and 2.1.
+	echo Set the BERKELEY_ALIGNER environment variable
+	echo to set a different path.
  	exit -1
 fi
 

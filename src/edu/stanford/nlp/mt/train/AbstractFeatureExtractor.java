@@ -86,8 +86,7 @@ public abstract class AbstractFeatureExtractor implements FeatureExtractor {
    * Empty sentence-level feature extractor.
    */
   @Override
-  public void featurizeSentence(SymmetricalWordAlignment sent, String info,
-      AlignmentGrid alGrid) {
+  public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid) {
   }
 
   /**

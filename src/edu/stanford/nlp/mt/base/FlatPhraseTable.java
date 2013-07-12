@@ -185,7 +185,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
-    final String delimiterRegex = Pattern.quote(FlatNBestList.NBEST_SEP);
+    final String delimiterRegex = Pattern.quote(FlatNBestList.FIELD_DELIM);
     for (String line; (line = reader.readLine()) != null;) {
       String[] fields = line.split(delimiterRegex);
       

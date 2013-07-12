@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.train;
 import java.util.*;
 import java.io.IOException;
 
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -20,7 +21,9 @@ public class AlignmentTemplate {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  public static final String DELIM = " ||| ";
+  // TODO(spenceg): Would be good to remove the spaces, but we'll need to be
+  // careful....
+  public static final String DELIM = " " + FlatNBestList.FIELD_DELIM + " ";
 
   // phrases:
   Sequence<IString> f;

@@ -104,8 +104,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   }
 
   @Override
-  public void featurizeSentence(SymmetricalWordAlignment sent, String info,
-      AlignmentGrid alGrid) {
+  public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid) {
     // Increment word counts:
     Sequence<IString> f = sent.f();
     Sequence<IString> e = sent.e();

@@ -73,7 +73,7 @@ public class ParaphraseExtractor extends PhraseExtract {
   }
 
   @Override
-  public boolean write(PrintStream oStream, boolean noAlign) {
+  public boolean write(boolean noAlign) {
 
     assert (extractors.size() == 1);
     MosesPharoahFeatureExtractor e = (MosesPharoahFeatureExtractor) extractors.get(0);
@@ -81,8 +81,7 @@ public class ParaphraseExtractor extends PhraseExtract {
     Map<Integer, Beam<PhraseHyp>> kbest_ef = getKBest(BEAM_SZ, false);
     Map<Integer, Beam<PhraseHyp>> kbest_fe = getKBest(BEAM_SZ, true);
 
-    if (oStream == null)
-      oStream = System.out;
+    PrintStream oStream = System.out;
 
     for (Map.Entry<Integer, Beam<PhraseHyp>> integerBeamEntry : kbest_ef
         .entrySet()) {
@@ -190,7 +189,7 @@ public class ParaphraseExtractor extends PhraseExtract {
   public static void main(String[] args) throws IOException {
 
     Properties prop = StringUtils.argsToProperties(args);
-    prop.put(EXTRACTORS_OPT, "mt.train.MosesFeatureExtractor");
+    prop.put(FEATURE_EXTRACTORS_OPT, "mt.train.MosesFeatureExtractor");
     prop.put(ONLY_ML_OPT, "true");
     prop.put(SPLIT_SIZE_OPT, "1");
 
