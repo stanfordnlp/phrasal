@@ -181,7 +181,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   private int init(File f, boolean reverse) throws IOException {
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long startTimeMillis = System.nanoTime();
+    final long startTime = System.nanoTime();
 
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
@@ -238,13 +238,13 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
     // print some status information
     long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long loadTimeMillis = System.nanoTime() - startTimeMillis;
+    double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
     System.err
         .printf(
             "Done loading phrase table: %s (mem used: %d MiB time: %.3f s)%n",
             f.getAbsolutePath(),
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
-                / (1024 * 1024), loadTimeMillis / 1000.0);
+                / (1024 * 1024), elapsedTime);
     System.err.println("Longest foreign phrase: " + longestForeignPhrase);
     return numScores;
   }
