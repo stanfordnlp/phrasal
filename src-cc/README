@@ -1,0 +1,9 @@
+To update kenlm, download:
+
+  https://github.com/kpu/kenlm/archive/master.zip
+
+When updating the kenlm distribution, you must add -fPIC to the CXXFLAGS line in compile_query_only.sh.
+
+Spence
+17 July 2013
+
