@@ -251,16 +251,17 @@ public class ExtendedLexicalReorderingTable {
       String[] tgtTokens = null;
       String[] scoreList;
       if (fields.length == 2) {
+        // TODO(spenceg): This format is not used anymore. Deprecate this condition.
         srcTokens = fields[0].trim().split("\\s+");
         scoreList = fields[1].trim().split("\\s+");
         
-      } else if (fields.length == 3 && conditionType == ConditionTypes.fe) {
+      } else if (fields.length == 3) {
         // Standard phrase table format without alignments
         srcTokens = fields[0].trim().split("\\s+");
         tgtTokens = fields[1].trim().split("\\s+");
         scoreList = fields[2].trim().split("\\s+");
         
-      } else if (fields.length == 5 && conditionType == ConditionTypes.fe) {
+      } else if (fields.length == 5) {
         // Standard phrase table format with alignments
         srcTokens = fields[0].trim().split("\\s+");
         tgtTokens = fields[1].trim().split("\\s+");
@@ -271,11 +272,21 @@ public class ExtendedLexicalReorderingTable {
             String.valueOf(reader.getLineNumber()));
       }
 
+      if (scoreList.length != positionalMapping.length) {
+        throw new RuntimeException(
+            String
+                .format(
+                    "File type '%s' requires that %d scores be provided for each entry, however only %d were found (line %d)",
+                    filetype, positionalMapping.length, scoreList.length,
+                    reader.getLineNumber()));
+      }
+      
       final int[] indexInts;
       if (conditionType == ConditionTypes.e
           || conditionType == ConditionTypes.f) {
         IString[] tokens = IStrings.toIStringArray(srcTokens);
         indexInts = withGaps ? DTUTable.toWordIndexArray(tokens) : IStrings.toIntArray(tokens);
+      
       } else {
         IString[] fTokens = IStrings.toIStringArray(srcTokens);
         int[] fIndexInts = withGaps ? DTUTable.toWordIndexArray(fTokens) : IStrings.toIntArray(fTokens);

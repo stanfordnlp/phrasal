@@ -21,8 +21,8 @@ public class AlignmentTemplate {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  // TODO(spenceg): Would be good to remove the spaces, but we'll need to be
-  // careful....
+  // TODO(spenceg): Would be good to remove the spaces. Several dependencies in
+  // the code should be carefully re-factored.
   public static final String DELIM = " " + FlatNBestList.FIELD_DELIM + " ";
 
   // phrases:

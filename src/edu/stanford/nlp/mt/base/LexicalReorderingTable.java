@@ -220,7 +220,7 @@ public class LexicalReorderingTable {
     }
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
-    final String fieldDelim = Pattern.quote(AlignmentTemplate.DELIM);
+    final String fieldDelim = Pattern.quote(AlignmentTemplate.DELIM.trim());
     for (String line; (line = reader.readLine()) != null; ) {
       final String[] fields = line.trim().split(fieldDelim);
       
@@ -228,16 +228,17 @@ public class LexicalReorderingTable {
       String[] tgtTokens = null;
       String[] scoreList;
       if (fields.length == 2) {
+        // TODO(spenceg): This format is not used anymore. Deprecate this condition.
         srcTokens = fields[0].trim().split("\\s+");
         scoreList = fields[1].trim().split("\\s+");
         
-      } else if (fields.length == 3 && conditionType == ConditionTypes.fe) {
+      } else if (fields.length == 3) {
         // Standard phrase table format without alignments
         srcTokens = fields[0].trim().split("\\s+");
         tgtTokens = fields[1].trim().split("\\s+");
         scoreList = fields[2].trim().split("\\s+");
         
-      } else if (fields.length == 5 && conditionType == ConditionTypes.fe) {
+      } else if (fields.length == 5) {
         // Standard phrase table format with alignments
         srcTokens = fields[0].trim().split("\\s+");
         tgtTokens = fields[1].trim().split("\\s+");
@@ -247,11 +248,21 @@ public class LexicalReorderingTable {
         throw new RuntimeException("Invalid re-ordering table line: " + String.valueOf(reader.getLineNumber()));
       }
       
+      if (scoreList.length != positionalMapping.length) {
+        throw new RuntimeException(
+            String
+                .format(
+                    "File type '%s' requires that %d scores be provided for each entry, however only %d were found (line %d)",
+                    filetype, positionalMapping.length, scoreList.length,
+                    reader.getLineNumber()));
+      }
+      
       int[] indexInts; // = null;
       if (conditionType == ConditionTypes.e
           || conditionType == ConditionTypes.f) {
         IString[] tokens = IStrings.toIStringArray(srcTokens);
         indexInts = IStrings.toIntArray(tokens);
+      
       } else {
         IString[] fTokens = IStrings.toIStringArray(srcTokens);
         int[] fIndexInts = IStrings.toIntArray(fTokens);
