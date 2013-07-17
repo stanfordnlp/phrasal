@@ -21,7 +21,7 @@ CORES=$5
 
 # Paths to stuff
 HOME=`pwd`
-MOSES=/scr/spenceg/moses1_0
+MOSES=/u/nlp/packages/mosesdecoder
 GIZA=/u/nlp/packages/GIZA++
 
 # TODO: Change these for your language
