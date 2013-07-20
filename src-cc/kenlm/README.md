@@ -7,15 +7,7 @@ I do development in master on https://github.com/kpu/kenlm/.  Normally, it works
 The website http://kheafield.com/code/kenlm/ has more documentation.  If you're a decoder developer, please download the latest version from there instead of copying from another decoder.  
 
 ## Compiling
-
-For estimating and filtering, you need Boost >= 1.36.0 (and preferably newer).  Compile with
-```bash
-./bjam
-```
-If you don't have boost and only need the query code, compile with
-```bash
-./compile_query_only.sh
-```
+See BUILDING. 
 
 ## Estimation
 lmplz estimates unpruned language models with modified Kneser-Ney smoothing.  After compiling with bjam, run
@@ -32,7 +24,7 @@ filter takes an ARPA or count file and removes entries that will never be querie
 ```bash
 bin/filter
 ```
-and see http://kheafield.com/code/kenlm/filter.html for more documentation.
+and see http://kheafield.com/code/kenlm/filter/ for more documentation.
 
 ## Querying
 
@@ -55,7 +47,6 @@ Hideo Okuma and Tomoyuki Yoshimura from NICT contributed ports to ARM and MinGW.
 There are a number of macros you can set on the g++ command line or in util/have.hh .  
 
 * `KENLM_MAX_ORDER` is the maximum order that can be loaded.  This is done to make state an efficient POD rather than a vector.  
-* `HAVE_BOOST` enables Boost-style hashing of StringPiece.  This is only needed if you intend to hash StringPiece in your code.  
 * `HAVE_ICU` If your code links against ICU, define this to disable the internal StringPiece and replace it with ICU's copy of StringPiece, avoiding naming conflicts.  
 
 ARPA files can be read in compressed format with these options:
@@ -89,7 +80,7 @@ Contributed by Victor Chahuneau.
 ### Installation
 
 ```bash
-pip install -e git+https://github.com/kpu/kenlm.git#egg=kenlm
+pip install https://github.com/kpu/kenlm/archive/master.zip
 ```
 
 ### Basic Usage

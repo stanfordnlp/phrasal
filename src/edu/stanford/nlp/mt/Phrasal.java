@@ -74,6 +74,7 @@ public class Phrasal {
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String CONSTRAIN_TO_REFS = "constrain-to-refs";
   public static final String BEAM_SIZE = "stack";
+  public static final String SEARCH_ALGORITHM = "search-algorithm";
   public static final String DISTORTION_FILE = "distortion-file";
   public static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
   public static final String WEIGHTS_FILE = "weights-file";
@@ -118,7 +119,7 @@ public class Phrasal {
         DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS,
-        RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE,
+        RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
@@ -462,7 +463,7 @@ public class Phrasal {
             String name = token.replaceFirst("\\(\\)$", "");
             Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(name);
-            featurizer = (DerivationFeaturizer<IString, String>) featurizerClass
+            featurizer = (Featurizer<IString, String>) featurizerClass
                 .newInstance();
             additionalFeaturizers.add(featurizer);
           } else if (token.contains("(")) {
@@ -829,15 +830,20 @@ public class Phrasal {
     scorers = new ArrayList<Scorer<String>>(numThreads);
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
-    // boolean dtuDecoder = (gapT == FeaturizerFactory.GapType.none || gapT ==
-    // FeaturizerFactory.GapType.both);
+
+    String searchAlgorithm = config.containsKey(SEARCH_ALGORITHM) ?
+      config.get(SEARCH_ALGORITHM).get(0).trim() : InfererBuilderFactory.DEFAULT_INFERER;
+    if (dtuDecoder) {
+      searchAlgorithm = InfererBuilderFactory.DTU_DECODER;
+    }
+    System.err.printf("Search algorithm: %s%n", searchAlgorithm);
+    
     for (int i = 0; i < numThreads; i++) {
       // Configure InfererBuilder
-      AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) InfererBuilderFactory
-          .factory(dtuDecoder ? InfererBuilderFactory.DTU_DECODER
-              : InfererBuilderFactory.DEFAULT_INFERER);
+      AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
+          InfererBuilderFactory.factory(searchAlgorithm);
       try {
-    	infererBuilder.setAnnotators(additionalAnnotators);
+        infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
             .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
                 .clone());
@@ -883,7 +889,7 @@ public class Phrasal {
       }
       inferers.add(infererBuilder.build());
     }
-    System.err.printf("Inferer Count: %d\n", inferers.size());
+    System.err.printf("Inferer Count: %d%n", inferers.size());
 
     // determine if we need to generate n-best lists
     List<String> nbestOpt = config.get(NBEST_LIST_OPT);
