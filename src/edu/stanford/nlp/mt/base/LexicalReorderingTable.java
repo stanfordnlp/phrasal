@@ -6,10 +6,10 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * A standard lexicalized reordering table.
@@ -220,40 +220,39 @@ public class LexicalReorderingTable {
     }
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
-    final String fieldDelim = Pattern.quote(AlignmentTemplate.DELIM.trim());
     for (String line; (line = reader.readLine()) != null; ) {
-      final String[] fields = line.trim().split(fieldDelim);
+      final List<List<String>> fields = StringUtils.splitFieldsFast(line.trim(), AlignmentTemplate.DELIM);
       
-      String[] srcTokens;
-      String[] tgtTokens = null;
-      String[] scoreList;
-      if (fields.length == 2) {
+      List<String> srcTokens;
+      List<String> tgtTokens = null;
+      List<String> scoreList;
+      if (fields.size() == 2) {
         // TODO(spenceg): This format is not used anymore. Deprecate this condition.
-        srcTokens = fields[0].trim().split("\\s+");
-        scoreList = fields[1].trim().split("\\s+");
+        srcTokens = fields.get(0);
+        scoreList = fields.get(1);
         
-      } else if (fields.length == 3) {
+      } else if (fields.size() == 3) {
         // Standard phrase table format without alignments
-        srcTokens = fields[0].trim().split("\\s+");
-        tgtTokens = fields[1].trim().split("\\s+");
-        scoreList = fields[2].trim().split("\\s+");
+        srcTokens = fields.get(0);
+        tgtTokens = fields.get(1);
+        scoreList = fields.get(2);
         
-      } else if (fields.length == 5) {
+      } else if (fields.size() == 5) {
         // Standard phrase table format with alignments
-        srcTokens = fields[0].trim().split("\\s+");
-        tgtTokens = fields[1].trim().split("\\s+");
-        scoreList = fields[4].trim().split("\\s+");
+        srcTokens = fields.get(0);
+        tgtTokens = fields.get(1);
+        scoreList = fields.get(4);
         
       } else {
         throw new RuntimeException("Invalid re-ordering table line: " + String.valueOf(reader.getLineNumber()));
       }
       
-      if (scoreList.length != positionalMapping.length) {
+      if (scoreList.size() != positionalMapping.length) {
         throw new RuntimeException(
             String
                 .format(
                     "File type '%s' requires that %d scores be provided for each entry, however only %d were found (line %d)",
-                    filetype, positionalMapping.length, scoreList.length,
+                    filetype, positionalMapping.length, scoreList.size(),
                     reader.getLineNumber()));
       }
       
@@ -271,7 +270,7 @@ public class LexicalReorderingTable {
         indexInts = mergeInts(fIndexInts, eIndexInts);
       }
 
-      double[] scores = new double[scoreList.length];
+      double[] scores = new double[scoreList.size()];
       int scoreId = 0;
       for (String score : scoreList) {
         try {

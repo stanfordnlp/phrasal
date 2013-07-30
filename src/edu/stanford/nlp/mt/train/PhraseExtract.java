@@ -589,7 +589,7 @@ public class PhraseExtract {
 
           String eLine = eReader.readLine();
           if (tripleFile) {
-            eLine = eLine.split(tripleDelim)[1];
+            eLine = eLine.split(tripleDelim)[1].trim();
           }
           if (eLine == null)
             throw new IOException("Target-language corpus is too short!");
@@ -618,7 +618,7 @@ public class PhraseExtract {
             if (tripleFile) {
               String[] toks = aLine.split(tripleDelim);
               if (toks.length >= 3) {
-                aLine = aLine.split(tripleDelim)[2];
+                aLine = aLine.split(tripleDelim)[2].trim();
               } else {
                 aLine = "";
               }
@@ -720,7 +720,7 @@ public class PhraseExtract {
       
       StringBuilder ruleStr = new StringBuilder();
       ruleStr.append(phrasePrinter.toString(alTemp, withAlign));
-      ruleStr.append(AlignmentTemplate.DELIM);
+      ruleStr.append(" ").append(AlignmentTemplate.DELIM).append(" ");
 
       Map<String,StringBuilder> fileToScores = Generics.newHashMap();
       for (String file : fileStringToWriter.keySet()) {

@@ -561,7 +561,7 @@ public class ChineseSyntaxCombinedFeatureExtractor {
       }
       alTemps.reconstructAlignmentTemplate(alTemp, idx);
       str.append(alTemp.toString(withAlign));
-      str.append(AlignmentTemplate.DELIM);
+      str.append(" ").append(AlignmentTemplate.DELIM).append(" ");
       for (AbstractChineseSyntaxFeatureExtractor<String> e : extractors) {
         Object scores = e.score(alTemp);
         if (scores == null)

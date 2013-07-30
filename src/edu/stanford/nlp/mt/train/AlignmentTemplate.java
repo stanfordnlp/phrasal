@@ -21,9 +21,7 @@ public class AlignmentTemplate {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  // TODO(spenceg): Would be good to remove the spaces. Several dependencies in
-  // the code should be carefully re-factored.
-  public static final String DELIM = " " + FlatNBestList.FIELD_DELIM + " ";
+  public static final String DELIM = FlatNBestList.FIELD_DELIM;
 
   // phrases:
   Sequence<IString> f;
@@ -139,14 +137,16 @@ public class AlignmentTemplate {
 
   public String toString(boolean withAlign) {
     StringBuilder buf = new StringBuilder();
-    buf.append(f.toString()).append(DELIM).append(e.toString());
+    String delim = ' ' + DELIM + ' ';
+    buf.append(f.toString()).append(delim).append(e.toString());
     if (withAlign)
       addAlignmentString(buf);
     return buf.toString();
   }
 
   public void addAlignmentString(StringBuilder buf) {
-    buf.append(DELIM);
+    String delim = ' ' + DELIM + ' ';
+    buf.append(delim);
     if (f2e != null) {
       for (int i = 0; i < f2e.length; ++i) {
         if (i > 0)
@@ -154,7 +154,7 @@ public class AlignmentTemplate {
         buf.append("(").append(alignmentToString(f2e[i])).append(")");
       }
     }
-    buf.append(DELIM);
+    buf.append(delim);
     if (e2f != null) {
       for (int i = 0; i < e2f.length; ++i) {
         if (i > 0)

@@ -57,6 +57,11 @@ public class IStrings {
     }
     return istrs;
   }
+  
+  public static Sequence<IString> toIStringSequence(List<String> seq) {
+    IString[] istrs = toIStringArray(seq);
+    return new SimpleSequence<IString>(true, istrs);
+  }
 
   static public IString[] toSyncIStringArray(String[] strings) {
     IString[] istrs = new IString[strings.length];

@@ -128,9 +128,10 @@ public class DTUFeatureExtractor extends MosesPharoahFeatureExtractor {
   @Override
   public String toString(AlignmentTemplateInstance p, boolean withAlignment) {
     StringBuilder buf = new StringBuilder();
+    String delim = ' ' + AlignmentTemplate.DELIM + ' ';
     addToken(buf, SHARE_SIZE_COUNTS ? p.fKey : p.key, p.f, gapSizeCountsF,
         totalCountsF);
-    buf.append(AlignmentTemplate.DELIM);
+    buf.append(delim);
     addToken(buf, SHARE_SIZE_COUNTS ? p.eKey : p.key, p.e, gapSizeCountsE,
         totalCountsE);
     if (withAlignment)

@@ -7,11 +7,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Naive data structure for storing n-best lists. This data structure is not memory-efficient.
@@ -82,20 +82,20 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     int lastId = -1;
-    final String fieldDelim = Pattern.quote(FIELD_DELIM);
     for (String inline; (inline = reader.readLine()) != null;) {
-      String[] fields = inline.trim().split(fieldDelim);
-      if (fields.length < 3) {
+      List<List<String>> fields = StringUtils.splitFieldsFast(inline.trim(), FIELD_DELIM);
+
+      if (fields.size() < 3) {
         System.err.printf(
             "Warning: expected at least 3 fields, but found only %d (line %d)%n",
-            fields.length, reader.getLineNumber());
+            fields.size(), reader.getLineNumber());
         continue;
       }
-      int id = Integer.valueOf(fields[0].trim());
-      String translation = fields[1].trim();
-      String featuresStr = fields[2].trim();
-      String scoreStr = (fields.length >= 4 ? fields[3].trim() : "0");
-      String latticeIdStr = (fields.length >= 5 ? fields[4].trim() : null);
+      int id = Integer.valueOf(fields.get(0).get(0));
+      List<String> translation = fields.get(1);
+      List<String> featuresStr = fields.get(2);
+      String scoreStr = (fields.size() >= 4) ? fields.get(3).get(0) : "0";
+      String latticeIdStr = (fields.size()) >= 5 ? fields.get(4).get(0) : null;
       
       if (lastId >= 0 && lastId != id) {
         // n-best lists may be out of order
@@ -142,11 +142,10 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
         }
       }
 
-      String[] featureFields = featuresStr.split("\\s+");
       String featureName = "unlabeled";
       Map<String, List<Double>> featureMap = new HashMap<String, List<Double>>();
       featureMap.put(featureName, new ArrayList<Double>());
-      for (String field : featureFields) {
+      for (String field : featuresStr) {
         if (field.endsWith(":")) {
           featureName = field.substring(0, field.length() - 1);
           featureMap.put(featureName, new ArrayList<Double>());
@@ -197,7 +196,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
           : new DenseFeatureValueCollection<String>(featureValuesTmp,
               featureIndex);
 
-      Sequence<IString> sequence = IStrings.tokenize(translation);
+      Sequence<IString> sequence = IStrings.toIStringSequence(translation);
       Sequence<IString> sequenceStored = sequenceSelfMap.get(sequence);
       if (sequenceStored == null) {
         sequenceSelfMap.put(sequence, sequence);
