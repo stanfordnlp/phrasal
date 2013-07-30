@@ -6,13 +6,11 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-//import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -36,8 +34,9 @@ public final class PhrasalService {
   private static Map<String, Integer> optionArgDefs() {
     Map<String,Integer> optionArgDefs = new HashMap<String,Integer>();
     optionArgDefs.put("p", 1);
-    optionArgDefs.put("d", 0);
+    optionArgDefs.put("dl", 0);
     optionArgDefs.put("m", 0);
+    optionArgDefs.put("l", 0);
     return optionArgDefs;
   }
 
@@ -47,7 +46,8 @@ public final class PhrasalService {
     sb.append(String.format("Usage: java %s [OPTS] phrasal_ini%n%n", PhrasalService.class.getName()));
     sb.append("Options:").append(nl);
     sb.append(" -p       : Port (default: ").append(DEFAULT_HTTP_PORT).append(")").append(nl);
-    sb.append(" -d       : Debug mode").append(nl);
+    sb.append(" -dl      : Debug logging level").append(nl);
+    sb.append(" -l       : Run on localhost").append(nl);
     sb.append(" -m       : Load mock servlet").append(nl);
     return sb.toString();
   }
@@ -55,8 +55,9 @@ public final class PhrasalService {
   public static void main(String[] args) {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     int port = PropertiesUtils.getInt(options, "p", DEFAULT_HTTP_PORT);
-    boolean debug = PropertiesUtils.getBool(options, "d", false);
+    boolean debugLogLevel = PropertiesUtils.getBool(options, "dl", false);
     boolean loadMockServlet = PropertiesUtils.getBool(options, "m", false);
+    boolean localHost = PropertiesUtils.getBool(options, "l", false);
 
     // Parse arguments
     String argList = options.getProperty("",null);
@@ -71,17 +72,19 @@ public final class PhrasalService {
     Server server = new Server();
 
     // Jetty 8 way of configuring the server
-    Connector connector = new SelectChannelConnector();
-    connector.setPort(port);
-    server.addConnector(connector);
-
-// Jetty9 way of configuring the server
-//    ServerConnector connector = new ServerConnector(server);
+//    Connector connector = new SelectChannelConnector();
 //    connector.setPort(port);
 //    server.addConnector(connector);
 
-    if (debug) {    
+//  Jetty9 way of configuring the server
+    ServerConnector connector = new ServerConnector(server);
+    connector.setPort(port);
+    server.addConnector(connector);
+
+    if (localHost) {
       connector.setHost(DEBUG_URL);
+    }
+    if (debugLogLevel) {    
       PhrasalLogger.logLevel = Level.INFO;
     } else {
       PhrasalLogger.disableConsoleLogger();

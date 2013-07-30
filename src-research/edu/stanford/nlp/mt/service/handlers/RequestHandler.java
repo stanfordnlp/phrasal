@@ -27,4 +27,6 @@ public interface RequestHandler {
   public ServiceResponse handle(Request request);
   
   public void handleAsynchronous(Request baseRequest, HttpServletRequest request, HttpServletResponse response);
+  
+  public boolean validate(Request request);
 }

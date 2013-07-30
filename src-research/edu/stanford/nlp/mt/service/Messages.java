@@ -96,7 +96,7 @@ public final class Messages {
     public Request(Language sourceLang, Language targetLang, String source) {
       this.src = sourceLang == null ? Language.UNK : sourceLang;
       this.tgt = targetLang == null ? Language.UNK : targetLang;
-      this.text = source == null ? "" : source;
+      this.text = source == null ? "" : source.trim();
     }
     
     // Should this request be handled asynchronously?
@@ -108,7 +108,7 @@ public final class Messages {
     public final int n;
     public TranslationRequest(Language sourceLang, Language targetLang, String source, int n) {
       super(sourceLang, targetLang, source);
-      this.n = n;
+      this.n = (n <= 0 || n > 500) ? 10 : n;
       this.id = MessageType.TRANSLATION_REQUEST.ordinal();
     }
     @Override
@@ -126,7 +126,7 @@ public final class Messages {
     public RuleQueryRequest(Language sourceLang, Language targetLang,
         String source, int spanLimit) {
       super(sourceLang, targetLang, source);
-      this.spanLimit = spanLimit <= 0 ? 10 : spanLimit;
+      this.spanLimit = (spanLimit <= 0 || spanLimit > 500) ? 10 : spanLimit;
       this.id = MessageType.RULE_QUERY_REQUEST.ordinal();
     }
     @Override

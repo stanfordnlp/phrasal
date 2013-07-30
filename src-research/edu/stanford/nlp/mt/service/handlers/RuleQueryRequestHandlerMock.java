@@ -14,6 +14,7 @@ import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
@@ -58,4 +59,12 @@ public class RuleQueryRequestHandlerMock implements RequestHandler {
     throw new UnsupportedOperationException("Asynchronous call to synchronous handler");
   }
 
+  @Override
+  public boolean validate(Request request) {
+    if (request.src == Language.UNK || request.tgt == Language.UNK)
+      return false;
+    if (request.text == null || request.text.length() == 0)
+      return false;
+    return true;
+  }
 }
