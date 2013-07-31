@@ -48,6 +48,7 @@ echo Phrasal training and tuning
 echo ===========================
 echo System name: $SYS_NAME
 echo Start step: $START_STEP
+echo JavaNLP: $JAVANLP_HOME
 echo Loading local parameters from $VAR_FILE
 source $VAR_FILE
 
