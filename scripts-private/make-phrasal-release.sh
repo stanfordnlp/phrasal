@@ -46,11 +46,11 @@ else
     exit -1
 fi
 
-gitUnpushed=`git status 2>&1 | grep "Changes to be committed"`
-if [ "$gitUnpushed" == "" ]; then
-    echo "PASS: committed but unpushed changes"
+gitUncommitted=`git status 2>&1 | grep "Changes to be committed"`
+if [ "$gitUncommitted" == "" ]; then
+    echo "PASS: no changes ready to be committed"
 else
-    echo "FAIL: detected unpushed changes"
+    echo "FAIL: detected changes ready to be committed"
     echo $gitUncommitted
     exit -1
 fi
