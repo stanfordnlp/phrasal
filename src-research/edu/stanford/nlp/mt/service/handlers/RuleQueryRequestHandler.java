@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.PhrasalLogger;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
@@ -87,6 +88,16 @@ public class RuleQueryRequestHandler implements RequestHandler {
   public void handleAsynchronous(Request baseRequest,
       HttpServletRequest request, HttpServletResponse response) {
     throw new UnsupportedOperationException("Asynchronous call to synchronous handler.");
+  }
+
+  @Override
+  public boolean validate(Request baseRequest) {
+    RuleQueryRequest request = (RuleQueryRequest) baseRequest;
+    if (request.src == Language.UNK || request.tgt == Language.UNK)
+      return false;
+    if (request.text == null || request.text.length() == 0)
+      return false;
+    return true;
   }
 
 }

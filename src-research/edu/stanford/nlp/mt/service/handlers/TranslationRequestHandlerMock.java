@@ -13,6 +13,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 import com.google.gson.reflect.TypeToken;
 
 import edu.stanford.nlp.mt.service.PhrasalServlet;
+import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
@@ -60,5 +61,15 @@ public class TranslationRequestHandlerMock implements RequestHandler {
     ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
     request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
     continuation.resume(); // Re-dispatch/ resume to generate response
+  }
+
+  @Override
+  public boolean validate(Request baseRequest) {
+    TranslationRequest request = (TranslationRequest) baseRequest;
+    if (request.src == Language.UNK || request.tgt == Language.UNK)
+      return false;
+    if (request.text == null || request.text.length() == 0)
+      return false;
+    return true;
   }
 }
