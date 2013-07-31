@@ -1,36 +1,70 @@
 #!/bin/sh
 
 echo "Making Phrasal release tar ball"
+echo "JAVANLP_HOME set to $JAVANLP_HOME"
 
 cd $JAVANLP_HOME
-revHead=`svn info -r HEAD | grep -i "Last Changed Rev"`
-revCheckout=`svn info | grep -i "Last Changed Rev"`
-#svnStatus=`svn status | grep -v "scripts-private/make-phrasal-release.sh"`
-svnStatus=`svn status | grep -v "^\?" | grep -v "scripts-private/make-phrasal-release.sh"`
-cd -
 
-echo "SVN status: " $svnStatus
-
-if [ "$revHead" = "$revCheckout" ]; then
-   echo "PASS: Repository checkout is current"
-   echo "$revCheckout"
-   echo "Current time: " `date`
+gitBranch=`git branch | grep "*" | cut -d " " -f 2`
+echo "GIT branch: " $gitBranch
+if [ "$gitBranch" = "master" ]; then
+    echo "PASS: GIT branch " $gitBranch
 else
-   echo "FAIL: Repository checkout is NOT current"
-   echo "$revCheckout != $revHead"
-   echo "Please svn update before making a distribution"
-   exit -1
+    echo "FAIL: GIT should be on branch master, is on " $gitBranch
+    exit -1
 fi
 
-if [ "$svnStatus" = "" ]; then
-   echo "PASS: no uncommitted changes detected"
+gitFetch=`git fetch -v --dry-run 2>&1 | grep master`
+gitExpectedFetch=" = [up to date]      master     -> origin/master"
+echo "Result of 'git fetch -v --dry-run':"
+echo "  " $gitFetch
+if [ "$gitFetch" = "$gitExpectedFetch" ]; then
+    echo "PASS: Repository checkout is current"
 else
-   echo "FAIL: uncommitted changes detected"
-   echo $svnStatus
-   exit -1
+    echo "FAIL: Repository checkout is NOT current"
+    echo "Please git pull before making a distribution"
+    exit -1
 fi
 
-cd $JAVANLP_HOME
+gitPush=`git push --dry-run 2>&1`
+gitExpectedPush="Everything up-to-date"
+echo "Result of 'git push --dry-run':"
+echo "  " $gitPush
+if [ "$gitPush" = "$gitExpectedPush" ]; then
+    echo "PASS: no unpushed changes"
+else
+    echo "FAIL: there are committed but unpushed changes"
+    exit -1
+fi
+
+gitUntracked=`git status 2>&1 | grep Untracked`
+if [ "$gitUntracked" = "" ]; then
+    echo "PASS: no untracked changes"
+else
+    echo "FAIL: untracked changes detected"
+    echo $gitUntracked
+    exit -1
+fi
+
+gitUnpushed=`git status 2>&1 | grep "Changes to be committed"`
+if [ "$gitUnpushed" == "" ]; then
+    echo "PASS: committed but unpushed changes"
+else
+    echo "FAIL: detected unpushed changes"
+    echo $gitUncommitted
+    exit -1
+fi
+
+gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted | grep -v make-phrasal-release`
+if [ "$gitCommitDryrun" == "" ]; then
+    echo "PASS: no uncommitted changes detected"
+else
+    echo "FAIL: uncommitted changes detected"
+    echo $gitCommitDryrun
+fi
+
+echo "Current time: " `date`
+
 ant all
 if [ $? = 0 ]; then
   echo "PASS: repository builds succuessfully"
@@ -39,6 +73,8 @@ else
   exit -1
 fi 
 cd -
+
+# TODO: updated up to here
 
 rm -rf phrasal.$1
 mkdir phrasal.$1
