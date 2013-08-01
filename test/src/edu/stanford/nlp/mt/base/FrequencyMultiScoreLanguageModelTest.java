@@ -4,16 +4,16 @@ import static org.junit.Assert.*;
 
 import java.util.TreeSet;
 import java.util.Set;
+import java.util.Arrays;
 
 import org.junit.Test;
 
-import cern.colt.Arrays;
 
 import edu.stanford.nlp.util.Pair;
 
 public class FrequencyMultiScoreLanguageModelTest {
 
-  // todo: This test only passes becasue it is buggy. If you fix the two todo's below it fails. FrequencyMultiScoreLanguageModel needs to be fixed to remove an int cast.
+  // todo: This test only passes because it is buggy. If you fix the two todo's below it fails. FrequencyMultiScoreLanguageModel needs to be fixed to remove an int cast.
   @Test
   public void testCreateQuery() {
     Set<Pair<String, Long>> ngrams = new TreeSet<Pair<String,Long>>();
