@@ -74,18 +74,17 @@ else
 fi 
 cd -
 
-# TODO: updated up to here
-
 rm -rf phrasal.$1
-mkdir phrasal.$1
+mkdir phrasal.$1 || exit
 
-cp -r src scripts README.txt LICENSE.txt phrasal.$1
-cp userbuild.xml  phrasal.$1/build.xml
+cp -r src scripts README.txt LICENSE.txt phrasal.$1 || exit
+cp userbuild.xml  phrasal.$1/build.xml || exit
+
+# TODO: updated up to here
 
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
     edu.stanford.nlp.classify.LogisticClassifierFactory \
-    edu.stanford.nlp.stats.OpenAddressCounter \
     edu.stanford.nlp.trees.DependencyScoring \
     
 mkdir -p phrasal.$1/src
@@ -97,20 +96,32 @@ cd -
 # automatic way to solve them (would need to make gen-dependencies
 # work across multiple directories)
 mkdir -p phrasal.$1/src/edu/stanford/nlp/lm
-cp ../more/src/edu/stanford/nlp/lm/* phrasal.$1/src/edu/stanford/nlp/lm
+cp ../more/src/edu/stanford/nlp/lm/* phrasal.$1/src/edu/stanford/nlp/lm || exit
 
-mkdir -p phrasal.$1/lib
-cp lib/berkeleyaligner.jar phrasal.$1/lib
-cp ../core/lib/fastutil.jar phrasal.$1/lib
-cp ../core/lib/junit.jar phrasal.$1/lib
-cp lib/je-4.1.10.jar phrasal.$1/lib
-cp lib/guava-11.0.2.jar phrasal.$1/lib
+mkdir -p phrasal.$1/src/edu/stanford/nlp/stats
+cp ../more/src/edu/stanford/nlp/stats/OpenAddressCounter.java phrasal.$1/src/edu/stanford/nlp/stats/OpenAddressCounter.java || exit
+
+mkdir -p phrasal.$1/src/edu/stanford/nlp/classify
+cp ../more/src/edu/stanford/nlp/classify/LinearRegressionFactory.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/LinearRegressionObjectiveFunction.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/LinearRegressor.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/Regressor.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/RegressionFactory.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/CorrelationLinearRegressionObjectiveFunction.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+
+mkdir -p phrasal.$1/lib || exit
+cp lib/berkeleyaligner.jar phrasal.$1/lib || exit
+cp ../core/lib/junit.jar phrasal.$1/lib || exit
+cp ../core/lib/commons-lang3-3.1.jar phrasal.$1/lib || exit
+cp ../more/lib/fastutil.jar phrasal.$1/lib || exit
+cp lib/je-4.1.10.jar phrasal.$1/lib || exit
+cp lib/guava-11.0.2.jar phrasal.$1/lib || exit
 
 mkdir `pwd`/phrasal.$1/classes
 mkdir `pwd`/phrasal.$1/lib-nodistrib
 
 export CLASSPATH=.
-export CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-201*-0*[0-9] | head -1`
+export CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-full-201*-0*[0-9] | head -1`
 
 (cd  phrasal.$1/; ./scripts/first-build.sh all)
 if [ $? = 0 ]; then
@@ -119,6 +130,9 @@ else
    echo "FAIL: User distribution has build errors"
    exit -1
 fi
+
+echo "TODO: this is as far as the rewriting has gotten"
+exit 0
 
 jar -cf phrasal.$1/phrasal.$1.jar -C phrasal.$1/classes edu
 
