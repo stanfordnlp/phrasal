@@ -168,26 +168,19 @@ else
     git stash
 fi
 
-git checkout phrasal-releases
-ls $JAVANLP_HOME/$1
-if [ $? == 0 ]; then
-    echo "Removing old $1 distribution branch from phrasal-releases"
-    echo "If the script does not output PASS on the next line, you may need to clean up the phrasal-releases branch"
-    # TODO: this part may need some testing 
-    git rm $JAVANLP_HOME/$1 || exit
-    git checkin -m "Remove old $1 distribution branch from phrasal-releases" || exit
-    git push || exit
-    echo "PASS cleaning up $1 distribution"
+gitBranch=phrasal-release-$1
+echo "Pushing new git branch $gitBranch"
+
+existingBranch=`git branch -r 2>&1 | grep $gitBranch`
+if [ "existingBranch" == "" ]; then
+    echo "PASS: no existing $gitBranch found"
+else
+    echo "Apparently found existing $gitBranch, attempting to delete"
+    git push origin :$gitBranch
 fi
 
-echo "Archiving distribution phrasal-releases/$1"
-
-mkdir -p $JAVANLP_HOME/$1 || exit
-cp -r phrasal.$1/src $JAVANLP_HOME/$1 || exit
-cp -r phrasal.$1/lib $JAVANLP_HOME/$1 || exit
-git add $JAVANLP_HOME/$1 || exit
-git commit -m "Archiving distribution for phrasal release $1" || exit
-git push || exit
+git branch $gitBranch
+git push origin $gitBranch
 
 git checkout master || exit
 if [ "$stash" == "true" ]; then
