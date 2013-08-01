@@ -171,16 +171,27 @@ git checkout phrasal-releases
 ls $JAVANLP_HOME/$1
 if [ $? == 0 ]; then
     echo "Removing old $1 distribution branch from phrasal-releases"
-    git rm $JAVANLP_HOME/$1
-    git checkin -m "Remove old $1 distribution branch from phrasal-releases"
-    git push
+    echo "If the script does not output PASS on the next line, you may need to clean up the phrasal-releases branch"
+    # TODO: this part may need some testing 
+    git rm $JAVANLP_HOME/$1 || exit
+    git checkin -m "Remove old $1 distribution branch from phrasal-releases" || exit
+    git push || exit
+    echo "PASS cleaning up $1 distribution"
 fi
 
-echo "TODO: this is as far as the rewriting has gotten"
-exit 0
+echo "Archiving distribution phrasal-releases/$1"
 
-echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
-svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
+mkdir -p $JAVANLP_HOME/$1 || exit
+cp -r phrasal.$1/src $JAVANLP_HOME/$1 || exit
+cp -r phrasal.$1/lib $JAVANLP_HOME/$1 || exit
+git add $JAVANLP_HOME/$1 || exit
+git commit -m "Archiving distribution for phrasal release $1" || exit
+git push || exit
+
+git checkout master || exit
+if [ "$stash" == "true" ]; then
+    git stash pop
+fi
 
 tar -czf phrasal.$1.tar.gz phrasal.$1
 
