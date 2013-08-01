@@ -64,6 +64,7 @@ else
 fi
 
 echo "Current time: " `date`
+echo "Building in $PWD"
 
 ant all
 if [ $? = 0 ]; then
