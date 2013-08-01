@@ -57,7 +57,15 @@ public class ChineseSourcePreordering {
     ruleMap.put(TregexPattern.compile("LCP << (__=left $+ LC=lc)"), Tsurgeon.parseOperation("move lc $+ left")); // LCP(XP:LC)
     rules = Collections.unmodifiableMap(ruleMap);
   }
-      
+  
+  public static Tree preorderTree(Tree t) {
+	for (TregexPattern pat : rules.keySet()) {
+	  TsurgeonPattern surgery = rules.get(pat);
+	  Tsurgeon.processPattern(pat, surgery, t);
+	}
+	return t;
+  }
+  
   public static String preorder(String parsedSentence) {
     Tree t = Tree.valueOf(parsedSentence);
     for (TregexPattern pat : rules.keySet()) {
@@ -81,10 +89,11 @@ public class ChineseSourcePreordering {
       List<String> words = Arrays.asList(line.split(" "));
       ScoredObject<Tree> parse = parser.getParses(words, null).get(0);
       Tree tree = parse.object();
+      System.out.println("\n--------------\n");
       System.out.println("Original Tree:");
       tree.pennPrint();
-      tree = Tree.valueOf(preorder(tree.toString()));
-      System.out.println("Modified Tree:");
+      tree = preorderTree(tree);
+      System.out.println("\nModified Tree:");
       tree.pennPrint();
     }
   }
