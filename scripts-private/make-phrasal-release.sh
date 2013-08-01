@@ -156,14 +156,28 @@ fi
 #rm -rf phrasal.$1/classes/*
 rm -rf phrasal.$1/lib-nodistrib/*
 
+# This time, look without excluding make-phrasal-release so that we can stash it if needed
+gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted`
+if [ "$gitCommitDryrun" == "" ]; then
+    stash = "false"
+else
+    stash = "true"
+    echo "Stashing your changes to make-phrasal-release.sh.  If something goes wrong, you will need to run"
+    echo "  git stash pop"
+    git stash
+fi
+
+git checkout phrasal-releases
+ls $JAVANLP_HOME/$1
+if [ $? == 0 ]; then
+    echo "Removing old $1 distribution branch from phrasal-releases"
+    git rm $JAVANLP_HOME/$1
+    git checkin -m "Remove old $1 distribution branch from phrasal-releases"
+    git push
+fi
+
 echo "TODO: this is as far as the rewriting has gotten"
 exit 0
-
-svn info  file:///u/nlp/svnroot/branches/phrasal-releases/$1 >/dev/null 2>&1
-if [ $? = 0 ]; then
-echo "Removing old $1 distribution branch from svn/branches/phrasal-releases"
-svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "remaking Stanford Phrasal distribution $1 (this happens when something went wrong the first time around)"
-fi
 
 echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
 svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
