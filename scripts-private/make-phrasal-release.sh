@@ -80,8 +80,6 @@ mkdir phrasal.$1 || exit
 cp -r src scripts README.txt LICENSE.txt phrasal.$1 || exit
 cp userbuild.xml  phrasal.$1/build.xml || exit
 
-# TODO: updated up to here
-
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
     edu.stanford.nlp.classify.LogisticClassifierFactory \
@@ -131,9 +129,6 @@ else
    exit -1
 fi
 
-echo "TODO: this is as far as the rewriting has gotten"
-exit 0
-
 jar -cf phrasal.$1/phrasal.$1.jar -C phrasal.$1/classes edu
 
 echo "Running phrasal integration test" 
@@ -161,6 +156,9 @@ fi
 #rm -rf phrasal.$1/classes/*
 rm -rf phrasal.$1/lib-nodistrib/*
 
+echo "TODO: this is as far as the rewriting has gotten"
+exit 0
+
 svn info  file:///u/nlp/svnroot/branches/phrasal-releases/$1 >/dev/null 2>&1
 if [ $? = 0 ]; then
 echo "Removing old $1 distribution branch from svn/branches/phrasal-releases"
@@ -170,7 +168,7 @@ fi
 echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
 svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
 
-tar --exclude .svn -czf phrasal.$1.tar.gz phrasal.$1
+tar -czf phrasal.$1.tar.gz phrasal.$1
 
 if [ $? = 0 ]; then
   echo "SUCCESS: Stanford Phrasal distribution phrasal.$1.tar.gz successfully built"
