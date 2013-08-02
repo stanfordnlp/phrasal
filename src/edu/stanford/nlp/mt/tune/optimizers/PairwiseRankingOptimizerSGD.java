@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -10,8 +11,6 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import cern.colt.Arrays;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
@@ -26,7 +25,7 @@ import edu.stanford.nlp.util.Triple;
 
 /**
  * Pairwise Ranking Optimization + SGD
- * 
+ *
  * @author Spence Green
  *
  */
@@ -45,10 +44,10 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
   public static final String DEFAULT_REGCONFIG="";
-  
+
   // Logistic classifier labels
-  private static enum Label {POSITIVE, NEGATIVE};
-  
+  private static enum Label {POSITIVE, NEGATIVE}
+
   // PRO sampling and feature filtering
   private final int gamma;
   private final int xi;
@@ -64,19 +63,19 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private boolean l2Regularization;
   private final double sigmaSq;
   private final String regconfig;
-  
+
   private final Logger logger;
   private final Random random;
   private final int expectedNumFeatures;
- 
+
 
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures) {
-    this(tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
+    this(tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
         DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1, DEFAULT_REGCONFIG);
   }
 
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures, String... args) {
-    this(tuneSetSize, expectedNumFeatures, 
+    this(tuneSetSize, expectedNumFeatures,
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
             args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
                 args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
@@ -94,7 +93,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (gamma <= 0) throw new RuntimeException("Gamma must be > 0: " + gamma);
     if (xi <= 0) throw new RuntimeException("Xi must be > 0: " + xi);
     if (nThreshold < 0.0) throw new RuntimeException("Threshold must >= 0:" + nThreshold);
-    
+
     this.expectedNumFeatures = expectedNumFeatures;
     this.gamma = gamma;
     this.xi = xi;
@@ -104,11 +103,11 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     this.learningRate = rate;
     this.updaterType = updaterType;
     random = new Random();
-    
+
     // L1 regularization
     this.L1lambda = L1lambda;
     this.regconfig = regconfig;
-    
+
     // L2 regularization
     this.l2Regularization = ! Double.isInfinite(sigma);
     this.sigmaSq = l2Regularization ? sigma*sigma : 0.0;
@@ -120,13 +119,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Select PRO samples from a single instance.
-   * 
+   *
    * @param sourceId
    * @param scoreMetric
    * @param translations
    * @param references
    * @param referenceWeights TODO
-   * @param featureWhitelist 
    * @return
    */
   private List<Datum> sampleNbestList(int sourceId,
@@ -141,19 +139,18 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     referenceList.add(references);
     return sampleNbestLists(sourceIds, scoreMetric, translationList, referenceList, referenceWeights);
   }
-  
+
   /**
    * Select PRO samples from a batch.
-   * 
+   *
    * @param sourceIds
    * @param scoreMetric
    * @param translationList
    * @param referenceList
    * @param referenceWeights
-   * @param featureWhitelist 
    * @return
    */
-  private List<Datum> sampleNbestLists(int[] sourceIds, SentenceLevelMetric<IString, String> scoreMetric, 
+  private List<Datum> sampleNbestLists(int[] sourceIds, SentenceLevelMetric<IString, String> scoreMetric,
       List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList, double[] referenceWeights) {
     assert sourceIds != null;
     assert scoreMetric != null;
@@ -173,7 +170,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       if (scoreMetric.isThreadsafe()) {
         v = sample(translations, references, referenceWeights, sourceId, scoreMetric);
         scoreMetric.update(sourceId, references, translations.get(0).translation);
-       
+
       } else {
         synchronized(scoreMetric) {
           v = sample(translations, references, referenceWeights, sourceId, scoreMetric);
@@ -194,7 +191,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
             translations.get(selectedPair.third()).features);
         Counter<String> gtVector = new OpenAddressCounter<String>(plusFeatures);
         Counters.subtractInPlace(gtVector, minusFeatures);
-        
+
         dataset.add(new Datum(Label.POSITIVE, gtVector));
 
         Counter<String> ltVector = new OpenAddressCounter<String>(minusFeatures);
@@ -206,8 +203,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 //        double margin = selectedPair.first();
 //        int j = selectedPair.second();
 //        int jPrime = selectedPair.third();
-//        logger.fine(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,  
-//            translationList.get(i).get(j).translation.toString(), 
+//        logger.fine(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,
+//            translationList.get(i).get(j).translation.toString(),
 //            translationList.get(i).get(jPrime).translation.toString()));
       }
     }
@@ -216,7 +213,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Sampling algorithm of Hopkins and May (2011).
-   * 
+   *
    * @param translations
    * @param references
    * @param referenceWeights TODO
@@ -226,11 +223,11 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    */
   private List<Triple<Double, Integer, Integer>> sample(List<RichTranslation<IString, String>> translations,
       List<Sequence<IString>> references, double[] referenceWeights, int sourceId, SentenceLevelMetric<IString, String> scoreMetric) {
-    List<Triple<Double, Integer, Integer>> v = 
+    List<Triple<Double, Integer, Integer>> v =
         new ArrayList<Triple<Double, Integer, Integer>>(gamma);
-    int jMax   = translations.size();  
+    int jMax   = translations.size();
     for (int g = 0; g < gamma; g++) {
-      int j      = random.nextInt(jMax); 
+      int j      = random.nextInt(jMax);
       int jPrime = random.nextInt(jMax);
       double gJ = scoreMetric.score(sourceId, references, referenceWeights, translations.get(j).translation);
       double gJPrime = scoreMetric.score(sourceId,  references, referenceWeights, translations.get(jPrime).translation);
@@ -251,7 +248,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    */
   @Override
   public Counter<String> getGradient(Counter<String> weights, Sequence<IString> source, int sourceId,
-      List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references, 
+      List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references,
       double[] referenceWeights, SentenceLevelMetric<IString, String> scoreMetric) {
     // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
     assert weights != null;
@@ -287,7 +284,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
     List<Datum> dataset = sampleNbestLists(sourceIds, scoreMetric, translations, references, referenceWeights);
     Counter<String> gradient = computeGradient(dataset, weights, sourceIds.length);
-    if (dataset.size() == 0) {
+    if (dataset.isEmpty()) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
     }
     return gradient;
@@ -295,13 +292,13 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Compute the gradient for the specified set of PRO samples.
-   * 
+   *
    * @param dataset
    * @param weights
    * @param batchSize
    * @return
    */
-  private Counter<String> computeGradient(List<Datum> dataset, Counter<String> weights, 
+  private Counter<String> computeGradient(List<Datum> dataset, Counter<String> weights,
       int batchSize) {
 
     Counter<String> gradient = new OpenAddressCounter<String>(weights.keySet().size(), 1.0f);
@@ -343,7 +340,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     return gradient;
   }
 
-  
+
   private static class Datum {
     public Label label;
     public Counter<String> vX;
@@ -352,7 +349,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       this.vX = vX;
     }
   }
-  
+
   @Override
   public OnlineUpdateRule<String> newUpdater() {
 	if(this.updaterType.equalsIgnoreCase("adagrad"))
@@ -383,7 +380,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   @Override
   public String toString() {
-    return String.format("%s gamma: %d xi: %d threshold: %.2f feature-filter: %d updater: %s", this.getClass().getSimpleName(), 
+    return String.format("%s gamma: %d xi: %d threshold: %.2f feature-filter: %d updater: %s", this.getClass().getSimpleName(),
         this.gamma, this.xi, this.nThreshold, this.minFeatureSegmentCount, this.updaterType);
   }
 }

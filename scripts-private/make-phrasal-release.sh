@@ -64,6 +64,7 @@ else
 fi
 
 echo "Current time: " `date`
+echo "Building in $PWD"
 
 ant all
 if [ $? = 0 ]; then
@@ -79,8 +80,6 @@ mkdir phrasal.$1 || exit
 
 cp -r src scripts README.txt LICENSE.txt phrasal.$1 || exit
 cp userbuild.xml  phrasal.$1/build.xml || exit
-
-# TODO: updated up to here
 
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
@@ -131,9 +130,6 @@ else
    exit -1
 fi
 
-echo "TODO: this is as far as the rewriting has gotten"
-exit 0
-
 jar -cf phrasal.$1/phrasal.$1.jar -C phrasal.$1/classes edu
 
 echo "Running phrasal integration test" 
@@ -161,16 +157,37 @@ fi
 #rm -rf phrasal.$1/classes/*
 rm -rf phrasal.$1/lib-nodistrib/*
 
-svn info  file:///u/nlp/svnroot/branches/phrasal-releases/$1 >/dev/null 2>&1
-if [ $? = 0 ]; then
-echo "Removing old $1 distribution branch from svn/branches/phrasal-releases"
-svn delete file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "remaking Stanford Phrasal distribution $1 (this happens when something went wrong the first time around)"
+# This time, look without excluding make-phrasal-release so that we can stash it if needed
+gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted`
+if [ "$gitCommitDryrun" == "" ]; then
+    stash = "false"
+else
+    stash = "true"
+    echo "Stashing your changes to make-phrasal-release.sh.  If something goes wrong, you will need to run"
+    echo "  git stash pop"
+    git stash
 fi
 
-echo "Archiving distribution under svnroot/branches/phrasal-releases/$1"
-svn copy file:///u/nlp/svnroot/trunk/javanlp file:///u/nlp/svnroot/branches/phrasal-releases/$1 -m "release branch for Stanford Phrasal distribution $1"
+gitBranch=phrasal-release-$1
+echo "Pushing new git branch $gitBranch"
 
-tar --exclude .svn -czf phrasal.$1.tar.gz phrasal.$1
+existingBranch=`git branch -r 2>&1 | grep $gitBranch`
+if [ "existingBranch" == "" ]; then
+    echo "PASS: no existing $gitBranch found"
+else
+    echo "Apparently found existing $gitBranch, attempting to delete"
+    git push origin :$gitBranch
+fi
+
+git branch $gitBranch
+git push origin $gitBranch
+
+git checkout master || exit
+if [ "$stash" == "true" ]; then
+    git stash pop
+fi
+
+tar -czf phrasal.$1.tar.gz phrasal.$1
 
 if [ $? = 0 ]; then
   echo "SUCCESS: Stanford Phrasal distribution phrasal.$1.tar.gz successfully built"

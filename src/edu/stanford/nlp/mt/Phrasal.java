@@ -232,7 +232,14 @@ public class Phrasal {
    * @return the number of threads specified in the ini file.
    */
   public int getNumThreads() { return numThreads; }
-
+  
+  /**
+   * Access the decoder's phrase table.
+   * 
+   * @return
+   */
+  public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
+  
   public static void initStaticMembers(Map<String, List<String>> config) {
 
     if (config.containsKey(ISTRING_VOC_OPT))
@@ -1165,6 +1172,11 @@ public class Phrasal {
     return decode(source, sourceInputId, threadId);
   }
 
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
+      int sourceInputId, int threadId) {
+    return decode(source, sourceInputId, threadId, nbestListSize);
+  }
+  
   /**
    * Decode a tokenized input string. Returns an n-best list of translations.
    *
@@ -1173,9 +1185,11 @@ public class Phrasal {
    * @param source
    * @param sourceInputId
    * @param threadId -- Inferer object to use (one per thread)
+   * @param nbestSize n-best hypotheses to generate
+   * 
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
-      int sourceInputId, int threadId) {
+      int sourceInputId, int threadId, int nbestSize) {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
@@ -1188,14 +1202,14 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);
 
-    if (nbestListSize > 1) {
+    if (nbestSize > 1) {
       translations = inferers
           .get(threadId).nbest(
               source,
               sourceInputId,
               constrainedOutputSpace,
               (constrainedOutputSpace == null ? null : constrainedOutputSpace
-                  .getAllowableSequences()), nbestListSize);
+                  .getAllowableSequences()), nbestSize);
 
       // Return an empty n-best list
       if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
