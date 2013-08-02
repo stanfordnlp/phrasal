@@ -160,9 +160,9 @@ rm -rf phrasal.$1/lib-nodistrib/*
 # This time, look without excluding make-phrasal-release so that we can stash it if needed
 gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted`
 if [ "$gitCommitDryrun" == "" ]; then
-    stash = "false"
+    stash="false"
 else
-    stash = "true"
+    stash="true"
     echo "Stashing your changes to make-phrasal-release.sh.  If something goes wrong, you will need to run"
     echo "  git stash pop"
     git stash
@@ -186,6 +186,9 @@ git checkout master || exit
 if [ "$stash" == "true" ]; then
     git stash pop
 fi
+
+rm -rf phrasal.$1/tercom*
+rm -rf phrasal.$1/terp*
 
 tar -czf phrasal.$1.tar.gz phrasal.$1
 
