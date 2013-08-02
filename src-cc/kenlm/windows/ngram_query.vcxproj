@@ -148,7 +148,7 @@
     <None Include="..\lm\ngram_query.hh" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\lm\ngram_query.cc" />
+    <ClCompile Include="..\lm\query_main.cc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -22,6 +22,7 @@
 #include <io.h>
 #include <algorithm>
 #include <limits.h>
+#include <limits>
 #else
 #include <unistd.h>
 #endif
@@ -99,26 +100,37 @@ uint64_t SizeOrThrow(int fd) {
 }
 
 void ResizeOrThrow(int fd, uint64_t to) {
-  UTIL_THROW_IF_ARG(
 #if defined(_WIN32) || defined(_WIN64)
-    _chsize_s
+    errno_t ret = _chsize_s
 #elif defined(OS_ANDROID)
-    ftruncate64
+    int ret = ftruncate64
 #else
-    ftruncate
+    int ret = ftruncate
 #endif
-    (fd, to), FDException, (fd), "while resizing to " << to << " bytes");
+    (fd, to);
+  UTIL_THROW_IF_ARG(ret, FDException, (fd), "while resizing to " << to << " bytes");
+}
+
+namespace {
+std::size_t GuardLarge(std::size_t size) {
+  // The following operating systems have broken read/write/pread/pwrite that
+  // only supports up to 2^31.
+#if defined(_WIN32) || defined(_WIN64) || defined(__APPLE__) || defined(OS_ANDROID)
+  return std::min(static_cast<std::size_t>(static_cast<unsigned>(-1)), size);
+#else
+  return size;
+#endif
+}
 }
 
 std::size_t PartialRead(int fd, void *to, std::size_t amount) {
 #if defined(_WIN32) || defined(_WIN64)
-  amount = min(static_cast<std::size_t>(INT_MAX), amount);
-  int ret = _read(fd, to, amount); 
+  int ret = _read(fd, to, GuardLarge(amount));
 #else
   errno = 0;
   ssize_t ret;
   do {
-    ret = read(fd, to, amount);
+    ret = read(fd, to, GuardLarge(amount));
   } while (ret == -1 && errno == EINTR);
 #endif
   UTIL_THROW_IF_ARG(ret < 0, FDException, (fd), "while reading " << amount << " bytes");
@@ -150,41 +162,61 @@ std::size_t ReadOrEOF(int fd, void *to_void, std::size_t amount) {
 void PReadOrThrow(int fd, void *to_void, std::size_t size, uint64_t off) {
   uint8_t *to = static_cast<uint8_t*>(to_void);
 #if defined(_WIN32) || defined(_WIN64)
-  UTIL_THROW(Exception, "TODO: PReadOrThrow for windows using ReadFile http://stackoverflow.com/questions/766477/are-there-equivalents-to-pread-on-different-platforms");
-#else
+  UTIL_THROW(Exception, "This pread implementation for windows is broken.  Please send me a patch that does not change the file pointer.  Atomically.  Or send me an implementation of pwrite that is allowed to change the file pointer but can be called concurrently with pread.");
+  const std::size_t kMaxDWORD = static_cast<std::size_t>(4294967295UL);
+#endif
   for (;size ;) {
+#if defined(_WIN32) || defined(_WIN64)
+    /* BROKEN: changes file pointer.  Even if you save it and change it back, it won't be safe to use concurrently with write() or read() which lmplz does. */
+    // size_t might be 64-bit.  DWORD is always 32.
+    DWORD reading = static_cast<DWORD>(std::min<std::size_t>(kMaxDWORD, size));
+    DWORD ret;
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(OVERLAPPED));
+    overlapped.Offset = static_cast<DWORD>(off);
+    overlapped.OffsetHigh = static_cast<DWORD>(off >> 32);
+    UTIL_THROW_IF(!ReadFile((HANDLE)_get_osfhandle(fd), to, reading, &ret, &overlapped), Exception, "ReadFile failed for offset " << off);
+#else
     ssize_t ret;
     errno = 0;
     do {
+      ret =
 #ifdef OS_ANDROID
-      ret = pread64(fd, to, size, off);
+        pread64
 #else
-      ret = pread(fd, to, size, off);
+        pread
 #endif
+        (fd, to, GuardLarge(size), off);
     } while (ret == -1 && errno == EINTR);
     if (ret <= 0) {
       UTIL_THROW_IF(ret == 0, EndOfFileException, " for reading " << size << " bytes at " << off << " from " << NameFromFD(fd));
       UTIL_THROW_ARG(FDException, (fd), "while reading " << size << " bytes at offset " << off);
     }
+#endif
     size -= ret;
     off += ret;
     to += ret;
   }
-#endif
 }
 
 void WriteOrThrow(int fd, const void *data_void, std::size_t size) {
   const uint8_t *data = static_cast<const uint8_t*>(data_void);
   while (size) {
 #if defined(_WIN32) || defined(_WIN64)
-    int ret = write(fd, data, min(static_cast<std::size_t>(INT_MAX), size));
+    int ret;
 #else
-    errno = 0;
     ssize_t ret;
-    do {
-      ret = write(fd, data, size);
-    } while (ret == -1 && errno == EINTR);
 #endif
+    errno = 0;
+    do {
+      ret =
+#if defined(_WIN32) || defined(_WIN64)
+        _write
+#else
+        write
+#endif
+        (fd, data, GuardLarge(size));
+    } while (ret == -1 && errno == EINTR);
     UTIL_THROW_IF_ARG(ret < 1, FDException, (fd), "while writing " << size << " bytes");
     data += ret;
     size -= ret;
@@ -197,7 +229,7 @@ void WriteOrThrow(FILE *to, const void *data, std::size_t size) {
 }
 
 void FSyncOrThrow(int fd) {
-// Apparently windows doesn't have fsync?  
+// Apparently windows doesn't have fsync?
 #if !defined(_WIN32) && !defined(_WIN64)
   UTIL_THROW_IF_ARG(-1 == fsync(fd), FDException, (fd), "while syncing");
 #endif
@@ -216,17 +248,17 @@ template <> struct CheckOffT<8> {
 typedef CheckOffT<sizeof(off_t)>::True IgnoredType;
 #endif
 
-// Can't we all just get along?  
+// Can't we all just get along?
 void InternalSeek(int fd, int64_t off, int whence) {
-  UTIL_THROW_IF_ARG(
+  if (
 #if defined(_WIN32) || defined(_WIN64)
-    (__int64)-1 == _lseeki64(fd, off, whence),
+    (__int64)-1 == _lseeki64(fd, off, whence)
 #elif defined(OS_ANDROID)
-    (off64_t)-1 == lseek64(fd, off, whence),
+    (off64_t)-1 == lseek64(fd, off, whence)
 #else
-    (off_t)-1 == lseek(fd, off, whence),
+    (off_t)-1 == lseek(fd, off, whence)
 #endif
-    FDException, (fd), "while seeking to " << off << " whence " << whence);
+  ) UTIL_THROW_ARG(FDException, (fd), "while seeking to " << off << " whence " << whence);
 }
 } // namespace
 
@@ -386,7 +418,13 @@ void NormalizeTempPrefix(std::string &base) {
   struct stat sb;
   // It's fine for it to not exist.
   if (-1 == stat(base.c_str(), &sb)) return;
-  if (S_ISDIR(sb.st_mode)) base += '/';
+  if (
+#if defined(_WIN32) || defined(_WIN64)
+    sb.st_mode & _S_IFDIR
+#else
+    S_ISDIR(sb.st_mode)
+#endif
+    ) base += '/';
 }
 
 int MakeTemp(const std::string &base) {
@@ -419,9 +457,9 @@ bool TryName(int fd, std::string &out) {
   std::ostringstream convert;
   convert << fd;
   name += convert.str();
-  
+
   struct stat sb;
-  if (-1 == lstat(name.c_str(), &sb)) 
+  if (-1 == lstat(name.c_str(), &sb))
     return false;
   out.resize(sb.st_size + 1);
   ssize_t ret = readlink(name.c_str(), &out[0], sb.st_size + 1);
@@ -433,7 +471,7 @@ bool TryName(int fd, std::string &out) {
   }
   out.resize(ret);
   // Don't use the non-file names.
-  if (!out.empty() && out[0] != '/') 
+  if (!out.empty() && out[0] != '/')
     return false;
   return true;
 #endif

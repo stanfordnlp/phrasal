@@ -25,7 +25,7 @@ ref_dir=$4
 n_threads=$5
 shift 5
 
-MOSES=/scr/spenceg/moses1_0
+MOSES=/u/nlp/packages/mosesdecoder
 DECODE=$MOSES/bin/moses
 
 # Iterate over test sets

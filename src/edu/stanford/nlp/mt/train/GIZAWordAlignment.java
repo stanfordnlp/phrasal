@@ -185,6 +185,10 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     return toString(inverse ? e2f : f2e);
   }
 
+  public static void main(String[] args) {
+    readUnidirecionalAlignment(args[0]);
+  }
+
   public static void readUnidirecionalAlignment(String feAlign) {
     LineNumberReader feReader;
     GIZAWordAlignment sent = new GIZAWordAlignment();
@@ -198,6 +202,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
         System.err.println(sent.f());
         System.err.println(sent.e());
         System.err.println(sent.toString(false));
+        System.err.println();
       }
       feReader.close();
     } catch (IOException e) {
