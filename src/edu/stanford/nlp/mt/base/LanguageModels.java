@@ -1,12 +1,15 @@
 package edu.stanford.nlp.mt.base;
 
 import java.io.IOException;
-
-import edu.stanford.nlp.objectbank.ObjectBank;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 
 /**
+ * Factory for loading n-gram language models. Also includes a main method for scoring
+ * sequences with a language model.
  *
  * @author danielcer
+ * @author Spence Green
  *
  */
 public class LanguageModels {
@@ -45,85 +48,72 @@ public class LanguageModels {
 
   public static LanguageModel<IString> load(String filename,
       String vocabFilename) throws IOException {
+    
     if (ARPALanguageModel.lmStore.containsKey(filename))
       return ARPALanguageModel.lmStore.get(filename);
 
-    LanguageModel<IString> alm;
+    LanguageModel<IString> languageModel;
 
     if (filename.endsWith("bloomlm")) {
-      return FrequencyMultiScoreLanguageModel.load(filename);
+      languageModel = FrequencyMultiScoreLanguageModel.load(filename);
+    
     } else if (filename.endsWith(".disklm")) {
-      return new DiskLM(filename);
+      languageModel = new DiskLM(filename);
+    
     } else if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
-      alm = new KenLanguageModel(realFilename);
+      languageModel = new KenLanguageModel(realFilename);
+    
     } else if (filename.startsWith(SRI_LM_TAG)) {
       String realFilename = filename.substring(SRI_LM_TAG.length());
-      boolean useSRILM = true;
       try {
-        alm = new SRILanguageModel(realFilename, vocabFilename);
-      } catch (UnsatisfiedLinkError e) {
-        // e.printStackTrace();
-        System.err
-            .println("Unable to load SRILM library. Default to Java ARPA implementation.");
-        alm = new ARPALanguageModel(realFilename);
-        useSRILM = false;
-      } catch (NoClassDefFoundError e) {
-        // e.printStackTrace();
-        System.err
-            .println("Unable to load SRILM library. Default to Java ARPA implementation.");
-        alm = new ARPALanguageModel(realFilename);
-        useSRILM = false;
+        languageModel = new SRILanguageModel(realFilename, vocabFilename);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
 
-      if (vocabFilename != null && !useSRILM)
-        System.err.printf("Warning: vocabulary file %s is ignored.\n",
-            vocabFilename);
-
-      if (alm instanceof ARPALanguageModel)
-        ARPALanguageModel.lmStore.put(filename, (ARPALanguageModel) alm);
     } else {
-       return new ARPALanguageModel(filename);
+      // Default Java LM data structure
+      languageModel = new ARPALanguageModel(filename);
     }
-    return alm;
+    return languageModel;
   }
 
-  public static void main(String[] args) throws Exception {
-    if (args.length != 2) {
+  /**
+   * 
+   * @param args
+   */
+  public static void main(String[] args) throws IOException {
+    if (args.length == 0) {
       System.err
-          .printf("Usage:\n\tjava ...LanguageModels [berkeleylm:](arpa format model) \"sentence or file to score\"\n");
+          .printf("Usage: java %s type:path [input_file] < input_file%n", LanguageModels.class.getName());
       System.exit(-1);
     }
 
-    // verbose = true;
     String model = args[0];
-    String fileOrSentence = args[1];
-    System.out.printf("Loading lm: %s...\n", model);
+    System.out.printf("Loading lm: %s...%n", model);
     LanguageModel<IString> lm = load(model);
 
-    long startTimeMillis = System.currentTimeMillis();
-    try {
-      double logSum = 0;
-      for (String sent : ObjectBank.getLineIterator(fileOrSentence)) {
-        sent = sent.toLowerCase();
-        System.out.printf("Sentence: %s\n", sent);
-        Sequence<IString> seq = new SimpleSequence<IString>(
-            IStrings.toIStringArray(sent.split("\\s")));
-        double score = scoreSequence(lm, seq);
-        System.out.printf("Sequence score: %f score_log10: %f\n", score, score
-            / Math.log(10));
-        logSum += Math.log(score);
-      }
-      System.out.printf("Log sum score: %e\n", logSum);
-    } catch (RuntimeException e) {
-      if (!e.getMessage().contains("FileNotFoundException")) throw e;
-      Sequence<IString> seq = new SimpleSequence<IString>(
-          IStrings.toIStringArray(fileOrSentence.split("\\s")));
+    LineNumberReader reader = (args.length == 1) ? 
+        new LineNumberReader(new InputStreamReader(System.in)) :
+          IOTools.getReaderFromFile(args[1]);
+    
+    double logSum = 0;
+    final long startTimeMillis = System.nanoTime();
+    for (String sent; (sent = reader.readLine()) != null;) {
+      sent = sent.toLowerCase();
+      Sequence<IString> seq = IStrings.tokenize(sent);
       double score = scoreSequence(lm, seq);
-      System.out.printf("Sequence score: %f score_log10: %f\n", score, score
+      logSum += Math.log(score);
+      
+      System.out.println("Sentence: " + sent);
+      System.out.printf("Sequence score: %f score_log10: %f%n", score, score
           / Math.log(10));
     }
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-    System.err.printf("secs = %.3f\n", totalSecs);
+    reader.close();
+    System.out.printf("Log sum score: %e%n", logSum);
+        
+    double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
+    System.err.printf("Elapsed time: %.3fs%n", elapsed);
   }
 }
