@@ -244,7 +244,7 @@ public class ExtendedLexicalReorderingTable {
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     for (String line; (line = reader.readLine()) != null; ) {
-      final List<List<String>> fields = StringUtils.splitFieldsFast(line.trim(), AlignmentTemplate.DELIM);
+      final List<List<String>> fields = StringUtils.splitFieldsFast(line, AlignmentTemplate.DELIM);
       
       List<String> srcTokens;
       List<String> tgtTokens = null;
