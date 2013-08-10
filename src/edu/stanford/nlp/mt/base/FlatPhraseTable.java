@@ -186,7 +186,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
     for (String line; (line = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(line.trim(), FlatNBestList.FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatNBestList.FIELD_DELIM);
       
       // The standard format has five fields
       assert fields.size() == 5 : String.format("n-best list line %d has %d fields", 
