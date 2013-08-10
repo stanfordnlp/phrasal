@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -60,7 +59,7 @@ public class LexicalLinearDistortionFeaturizer implements
   
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
   }
 
   @Override

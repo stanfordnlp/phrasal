@@ -45,8 +45,6 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.HashIndex;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -164,7 +162,6 @@ public class Phrasal {
    * Holds the model weights, one per inferer. The model weights have a shared feature index.
    */
   private List<Scorer<String>> scorers;
-  private Index<String> featureIndex;
 
   /**
    * Phrase table type
@@ -216,17 +213,6 @@ public class Phrasal {
     assert threadId >= 0 && threadId < numThreads;
     return scorers.get(threadId);
   }
-
-  /**
-   * Get the decoder's feature index.
-   */
-  public Index<String> getFeatureIndex() { return featureIndex; }
-
-  /**
-   * Lock the decoder's feature index (for example, at test time). This prevents
-   * unseen features from being extracted an inserted into the model.
-   */
-  public void lockFeatureIndex() { featureIndex.lock(); }
 
   /**
    * @return the number of threads specified in the ini file.
@@ -676,14 +662,6 @@ public class Phrasal {
       }
     }
 
-    // Setup the feature index from the initial weight vector
-    // HashIndex is threadsafe, while OAIndex is not.
-    featureIndex = new HashIndex<String>(weightVector.size());
-    for (String feature : weightVector.keySet()) {
-      featureIndex.indexOf(feature, true);
-    }
-    featurizer.initialize(featureIndex);
-
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
       try {
         maxSentenceSize = Integer.parseInt(config.get(MAX_SENTENCE_LENGTH).get(
@@ -850,7 +828,7 @@ public class Phrasal {
         infererBuilder
             .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
                 .clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, featureIndex);
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder
@@ -1396,7 +1374,6 @@ public class Phrasal {
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
         : readArgs(args);
     Phrasal p = Phrasal.loadDecoder(config);
-    p.lockFeatureIndex();
     p.decodeFromConsole();
     p.shutdown();
   }

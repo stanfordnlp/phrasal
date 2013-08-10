@@ -364,7 +364,7 @@ public class NGramLanguageModelFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
     rawLMScoreHistory.clear();
   }
 

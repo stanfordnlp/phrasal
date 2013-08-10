@@ -6,7 +6,6 @@ import edu.stanford.nlp.ling.TaggedWord;
 import edu.stanford.nlp.ling.Word;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -53,7 +52,7 @@ public class SourceSideTaggerFeaturizer implements DerivationFeaturizer<IString,
    */
   @Override
   public void initialize(int sourceInputId,
-                         List<ConcreteRule<IString, String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+                         List<ConcreteRule<IString, String>> options, Sequence<IString> foreign) {
     List<Word> sentence = Generics.newArrayList();
     for (IString word : foreign) {
       sentence.add(new Word(word.toString()));

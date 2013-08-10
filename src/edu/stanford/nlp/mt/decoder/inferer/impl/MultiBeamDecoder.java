@@ -194,7 +194,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     // Initialize feature extractors
-    featurizer.initialize(sourceInputId, ruleList, source, scorer.getFeatureIndex());
+    featurizer.initialize(sourceInputId, ruleList, source);
 
     // main translation loop---beam expansion
     long startTime = System.nanoTime();

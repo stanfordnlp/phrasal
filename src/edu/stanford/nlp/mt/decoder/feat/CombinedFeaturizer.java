@@ -158,10 +158,10 @@ public class CombinedFeaturizer<TK, FV> implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> foreign) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
-        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign, featureIndex);
+        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign);
       }
     }
   }

@@ -119,7 +119,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     beams.add(nullBeam);
 
     // Initialize feature extractors
-    featurizer.initialize(sourceInputId, ruleList, source, scorer.getFeatureIndex());
+    featurizer.initialize(sourceInputId, ruleList, source);
 
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.longestSourcePhrase();

@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
 import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
-import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.math.ArrayMath;
@@ -635,7 +634,7 @@ public class DependencyLanguageModelFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
     // Michel's code
 //  if (prefixTagger == null)
 //    prefixTagger = new PrefixTagger(maxentTagger, 3, 0); // TODO: 3,1

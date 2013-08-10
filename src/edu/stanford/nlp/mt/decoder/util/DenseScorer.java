@@ -100,9 +100,4 @@ public class DenseScorer implements Scorer<String> {
   public void saveWeights(String filename) throws IOException {
     throw new UnsupportedOperationException();
   }
-
-  @Override
-  public Index<String> getFeatureIndex() {
-    return featureIndex;
-  }
 }

@@ -6,7 +6,6 @@ import java.util.Collection;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.OAIndex;
 
 /**
  * A sparse scorer for high dimensional models.
@@ -19,7 +18,6 @@ import edu.stanford.nlp.util.OAIndex;
  */
 public class SparseScorer implements Scorer<String> {
 
-  private final Index<String> featureIndex;
   private Counter<String> weights;
   
   public SparseScorer(Counter<String> featureWts) {
@@ -33,7 +31,6 @@ public class SparseScorer implements Scorer<String> {
    * @param featureIndex
    */
   public SparseScorer(Counter<String> featureWts, Index<String> featureIndex) {
-    this.featureIndex = featureIndex == null ? new OAIndex<String>() : featureIndex;
     updateWeights(featureWts);
   }
   
@@ -50,14 +47,6 @@ public class SparseScorer implements Scorer<String> {
   public void updateWeights(Counter<String> weights) {
     // Do not copy the weights vector.
     this.weights = weights;
-    
-    if (featureIndex.isLocked()) {
-      throw new RuntimeException("Cannot update weight vector after the feature index has been locked!");
-    } else {
-      for (String feature : weights.keySet()) {
-        featureIndex.indexOf(feature, true);
-      }
-    }
   }
 
   @Override
@@ -67,11 +56,7 @@ public class SparseScorer implements Scorer<String> {
 
   @Override
   public boolean hasNonZeroWeight(String featureName) {
-    return featureIndex.contains(featureName) && weights.getCount(featureName) != 0.0;
-  }
-
-  @Override
-  public Index<String> getFeatureIndex() {
-    return featureIndex;
+    // Axiomatic for sparse weight vectors
+    return true;
   }
 }

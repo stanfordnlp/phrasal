@@ -234,7 +234,7 @@ public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
   }
 
   private static int getGapCount(Featurizable<IString, String> f) {

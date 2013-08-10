@@ -347,10 +347,4 @@ public class EValueLearningScorer implements Scorer<String> {
   public boolean hasNonZeroWeight(String featureName) {
     return true;
   }
-
-  @Override
-  public Index<String> getFeatureIndex() {
-    return featureIndex;
-  }
-
 }

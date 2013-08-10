@@ -119,9 +119,9 @@ public class CollapsedFeaturizer<TK, FV> implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<TK,FV>> options, Sequence<TK> foreign) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      ((DerivationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign, featureIndex);
+      ((DerivationFeaturizer<TK, FV>) featurizer).initialize(sourceInputId, options, foreign);
     }
   }
   

@@ -8,7 +8,6 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 /**
  * @author Michel Galley
@@ -68,7 +67,7 @@ public class LinearFutureCostFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
   }
 
   static int cost(Featurizable<IString, String> f) {
