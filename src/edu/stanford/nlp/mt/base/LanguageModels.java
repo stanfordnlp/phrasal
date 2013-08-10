@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
 
@@ -11,6 +10,12 @@ import edu.stanford.nlp.objectbank.ObjectBank;
  *
  */
 public class LanguageModels {
+
+  // Supported language models
+  public static final String KEN_LM_TAG = "kenlm:";
+  public static final String SRI_LM_TAG = "srilm:";
+
+  public static final int MAX_NGRAM_ORDER = 10;
 
   private LanguageModels() {}
 
@@ -34,12 +39,6 @@ public class LanguageModels {
     return logP;
   }
 
-  public static final String KEN_LM_TAG = "kenlm:";
-  public static final String BERKELEY_LM_TAG = "berkeleylm:";
-  public static final String SRI_LM_TAG = "srilm:";
-
-  public static final int MAX_NGRAM_ORDER = 10;
-
   public static LanguageModel<IString> load(String filename) throws IOException {
     return load(filename, null);
   }
@@ -58,16 +57,6 @@ public class LanguageModels {
     } else if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
       alm = new KenLanguageModel(realFilename);
-    } else if (filename.startsWith(BERKELEY_LM_TAG)) {   
-     String realFilename = filename.substring(BERKELEY_LM_TAG.length());
-     try {
-       @SuppressWarnings("unchecked")
-      Class<LanguageModel<IString>> blmClass = (Class<LanguageModel<IString>>)Class.forName("edu.stanford.nlp.mt.base.BerkeleyLM");
-       Constructor<LanguageModel<IString>> c = blmClass.getConstructor(String.class, int.class);
-       alm = c.newInstance(realFilename, MAX_NGRAM_ORDER);
-     } catch (Exception e) {
-       throw new RuntimeException(e);
-     }
     } else if (filename.startsWith(SRI_LM_TAG)) {
       String realFilename = filename.substring(SRI_LM_TAG.length());
       boolean useSRILM = true;

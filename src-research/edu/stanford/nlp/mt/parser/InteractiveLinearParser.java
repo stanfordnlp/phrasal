@@ -23,7 +23,6 @@ import edu.stanford.nlp.tagger.common.TaggerConstants;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation;
 import edu.stanford.nlp.util.CoreMap;
 
 /**
