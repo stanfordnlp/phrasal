@@ -8,7 +8,6 @@ import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.DTUTable;
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * 
@@ -26,8 +25,8 @@ public class PhraseGeneratorFactory {
   public static final String NEW_DYNAMIC_GENERATOR = "newdg";
 
   static public <FV> PhraseGenerator<IString,FV> factory(
-      RuleFeaturizer<IString, FV> phraseFeaturizer,
-      Boolean dropUnknownWords, String... pgSpecs) throws IOException {
+      Boolean dropUnknownWords,
+      String... pgSpecs) throws IOException {
 
     if (pgSpecs.length == 0) {
       throw new RuntimeException(
@@ -52,11 +51,9 @@ public class PhraseGeneratorFactory {
         String filename = fields[1];
         if (type.equals(PHAROAH_PHRASE_TABLE)
             || type.equals(PHAROAH_PHRASE_TABLE_ALT)) {
-          phraseTables.add((new FlatPhraseTable<FV>(phraseFeaturizer,
-              filename)));
+          phraseTables.add((new FlatPhraseTable<FV>(filename)));
         } else if (type.equals(DTU_GENERATOR)) {
-          phraseTables
-              .add((new DTUTable<FV>(phraseFeaturizer, filename)));
+          phraseTables.add(new DTUTable<FV>(filename));
         } else {
           throw new RuntimeException(String.format(
               "Unknown phrase table type: '%s'\n", type));
@@ -113,14 +110,12 @@ public class PhraseGeneratorFactory {
       for (String filename : filenames) {
         // System.err.printf("loading pt: %s\n", filename);
         if (withGaps)
-          pharoahList.add(new DTUTable<FV>(phraseFeaturizer, filename));
+          pharoahList.add(new DTUTable<FV>(filename));
         else
           if (new File(filename).isDirectory()) {
-             pharoahList.add(new BinaryPhraseTable<FV>(phraseFeaturizer,
-                   filename)); 
+             pharoahList.add(new BinaryPhraseTable<FV>(filename)); 
           } else {
-            pharoahList.add(new FlatPhraseTable<FV>(phraseFeaturizer, 
-              filename));
+            pharoahList.add(new FlatPhraseTable<FV>(filename));
           }
       }
 

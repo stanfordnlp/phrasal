@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.util.*;
 import java.io.*;
 
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -214,8 +215,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     conf[0] = PhraseGeneratorFactory.CONCATENATIVE_LIST_GENERATOR;
     System.arraycopy(args, 0, conf, 1, args.length);
 
-    PhraseGenerator<IString,String> ptGen = PhraseGeneratorFactory.factory(null, true,
-        conf);
+    PhraseGenerator<IString,String> ptGen = PhraseGeneratorFactory.factory(true, conf);
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     System.out.println("Interactive SimpleLookupPhraseGenerator");
@@ -256,5 +256,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
         longest = phraseGenerator.longestSourcePhrase();
     }
     return longest;
+  }
+
+  @Override
+  public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
+    for (PhraseGenerator<TK,FV> phraseTable : phraseGenerators) {
+      phraseTable.setFeaturizer(featurizer);
+    }
   }
 }

@@ -152,7 +152,7 @@ public class ExtendedLexicalReorderingTable {
   }
 
   final String filetype;
-  final List<float[]> reorderingScores = new ArrayList<float[]>();
+  private final List<float[]> reorderingScores;
 
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
@@ -187,26 +187,35 @@ public class ExtendedLexicalReorderingTable {
    * @throws IOException
    */
   public ExtendedLexicalReorderingTable(String filename) throws IOException {
+    int phraseTableSize = FlatPhraseTable.translationIndex.size();
+    this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
+    for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
+
     String filetype = init(filename, null);
+    
     this.filetype = filetype;
     this.positionalMapping = (ReorderingTypes[]) fileTypeToReorderingType
         .get(filetype);
     this.conditionType = fileTypeToConditionType.get(filetype);
-
   }
 
   public ExtendedLexicalReorderingTable(String filename, String desiredFileType)
       throws IOException {
+    int phraseTableSize = FlatPhraseTable.translationIndex.size();
+    this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
+    for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
+
     String filetype = init(filename, desiredFileType);
     if (!desiredFileType.equals(filetype)) {
       throw new RuntimeException(String.format(
           "Reordering file '%s' of type %s not %s", filename, filetype,
           desiredFileType));
     }
+    
     this.filetype = filetype;
     this.positionalMapping = (ReorderingTypes[]) fileTypeToReorderingType
         .get(filetype);
-    this.conditionType = fileTypeToConditionType.get(filetype);
+    this.conditionType = fileTypeToConditionType.get(filetype);    
   }
 
   private String init(String filename, String type) throws IOException {
@@ -308,10 +317,14 @@ public class ExtendedLexicalReorderingTable {
         }
       }
 
-      int idx = FlatPhraseTable.translationIndex.indexOf(indexInts, true);
-      while (idx >= reorderingScores.size())
-        reorderingScores.add(null);
-      assert (reorderingScores.get(idx) == null);
+      // Lookup this rule in the phrase table
+      int idx = FlatPhraseTable.translationIndex.indexOf(indexInts);
+      if (idx < 0) {
+        throw new RuntimeException(String.format("Phrase %d not in phrase table", reader.getLineNumber()));
+      }
+      if (reorderingScores.get(idx) != null) {
+        throw new RuntimeException(String.format("Duplicate phrase %d in phrase table", reader.getLineNumber()));
+      }
       reorderingScores.set(idx, scores);
     }
     reader.close();

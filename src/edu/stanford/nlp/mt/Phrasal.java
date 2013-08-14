@@ -310,7 +310,112 @@ public class Phrasal {
                     strDistortionLimit.get(0), DISTORTION_LIMIT));
       }
     }
+    
+    // DTU decoding
+    FeaturizerFactory.GapType gapT = !withGaps ? FeaturizerFactory.GapType.none
+        : ((gapOpts.size() > 1) ? FeaturizerFactory.GapType.both
+            : FeaturizerFactory.GapType.source);
+    String gapType = gapT.name();
+    System.err.println("Gap type: " + gapType);
 
+    // Phrase table(s)
+    String phraseTable;
+    if (config.get(TRANSLATION_TABLE_OPT).size() == 1) {
+      phraseTable = config.get(TRANSLATION_TABLE_OPT).get(0);
+    } else if (config.get(TRANSLATION_TABLE_OPT).size() == 4) {
+      List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
+      System.err
+          .printf(
+              "Ignoring Moses factor & phrase feature count information: %s, %s, %s\n",
+              ptOpts.get(0), ptOpts.get(1), ptOpts.get(2));
+      phraseTable = ptOpts.get(3);
+    } else {
+      throw new RuntimeException("Unsupported configuration "
+          + config.get(TRANSLATION_TABLE_OPT));
+    }
+
+    if (withGaps) {
+      // Support for gaps:
+      if (gapOpts.size() < 1 || gapOpts.size() > 2)
+        throw new UnsupportedOperationException();
+      int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
+      DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
+
+      int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts
+          .get(1)) : -1;
+      if (maxTargetPhraseSpan == -1) {
+        System.err.println("Phrases with target gaps not loaded into memory.");
+        DTUTable.maxNumberTargetSegments = 1;
+      }
+      if (gapT == FeaturizerFactory.GapType.target
+          || gapT == FeaturizerFactory.GapType.both) {
+        DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
+        //AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = true; // TODO: restore?
+      }
+
+      // Support for floating phrases:
+      if (config.containsKey(MAX_PENDING_PHRASES_OPT)) {
+        List<String> floatOpts = config.get(MAX_PENDING_PHRASES_OPT);
+        if (floatOpts.size() != 1)
+          throw new UnsupportedOperationException();
+        int maxPendingPhrases = Integer.parseInt(floatOpts.get(0));
+        DTUHypothesis.setMaxPendingPhrases(maxPendingPhrases);
+      }
+    }
+
+
+    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
+      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
+    }
+
+    String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
+    System.err.printf("Phrase table: %s Unknown words policy: %s\n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
+
+    if (phraseTable.startsWith("bitext:")) {
+      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
+          false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
+          phraseTable.replaceFirst("^bitext:", ""),
+          optionLimit));
+    } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
+
+      System.err.println("Dyanamic pt\n========================");
+      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
+          false, PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
+          phraseTable, optionLimit));
+    } else {
+      String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
+          : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
+      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
+          false, generatorName, phraseTable)
+          : PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable,
+              optionLimit));
+    }
+
+    // TODO(spenceg): Disable for now. Why do we need to invoke RuleFeaturizer?
+//    if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
+//       List<PhraseGenerator<IString,String>> pgens = new LinkedList<PhraseGenerator<IString,String>>();
+//       pgens.add(phraseGenerator);
+//       for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
+//          PhraseGenerator<IString,String> pgen;
+//          try {
+//             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
+//                getConstructor(RuleFeaturizer.class).newInstance(featurizer);
+//          } catch (ClassNotFoundException e) {
+//             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
+//          }
+//          pgens.add(pgen);
+//       }
+//       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
+//    }
+
+    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
+             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
+
+    System.err.printf("Phrase Limit: %d\n",
+        ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
+
+    // Lexicalized reordering model
     NeedsReorderingRecombination<IString, String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
@@ -558,12 +663,6 @@ public class Phrasal {
         .getName() : (mosesMode ? LinearDistortionFeaturizer.class.getName()
         : LinearFutureCostFeaturizer.class.getName());
 
-    FeaturizerFactory.GapType gapT = !withGaps ? FeaturizerFactory.GapType.none
-        : ((gapOpts.size() > 1) ? FeaturizerFactory.GapType.both
-            : FeaturizerFactory.GapType.source);
-    String gapType = gapT.name();
-    System.err.println("Gap type: " + gapType);
-
     if (lgModel != null) {
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
@@ -597,6 +696,9 @@ public class Phrasal {
       allFeaturizers.addAll(additionalFeaturizers);
       featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
     }
+    
+    // Link the final featurizer and the phrase table
+    phraseGenerator.setFeaturizer(featurizer);
 
     // Create Scorer
     Counter<String> weightVector = new ClassicCounter<String>();
@@ -688,103 +790,6 @@ public class Phrasal {
 
     System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
 
-    // Create phrase generator
-    String phraseTable;
-    if (config.get(TRANSLATION_TABLE_OPT).size() == 1) {
-      phraseTable = config.get(TRANSLATION_TABLE_OPT).get(0);
-    } else if (config.get(TRANSLATION_TABLE_OPT).size() == 4) {
-      List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
-      System.err
-          .printf(
-              "Ignoring Moses factor & phrase feature count information: %s, %s, %s\n",
-              ptOpts.get(0), ptOpts.get(1), ptOpts.get(2));
-      phraseTable = ptOpts.get(3);
-    } else {
-      throw new RuntimeException("Unsupported configuration "
-          + config.get(TRANSLATION_TABLE_OPT));
-    }
-
-    if (withGaps) {
-      // Support for gaps:
-      if (gapOpts.size() < 1 || gapOpts.size() > 2)
-        throw new UnsupportedOperationException();
-      int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
-      DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
-
-      int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts
-          .get(1)) : -1;
-      if (maxTargetPhraseSpan == -1) {
-        System.err.println("Phrases with target gaps not loaded into memory.");
-        DTUTable.maxNumberTargetSegments = 1;
-      }
-      if (gapT == FeaturizerFactory.GapType.target
-          || gapT == FeaturizerFactory.GapType.both) {
-        DTUHypothesis.setMaxTargetPhraseSpan(maxTargetPhraseSpan);
-        //AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = true; // TODO: restore?
-      }
-
-      // Support for floating phrases:
-      if (config.containsKey(MAX_PENDING_PHRASES_OPT)) {
-        List<String> floatOpts = config.get(MAX_PENDING_PHRASES_OPT);
-        if (floatOpts.size() != 1)
-          throw new UnsupportedOperationException();
-        int maxPendingPhrases = Integer.parseInt(floatOpts.get(0));
-        DTUHypothesis.setMaxPendingPhrases(maxPendingPhrases);
-      }
-    }
-
-
-    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
-    	dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
-    }
-
-    String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
-    System.err.printf("Phrase table: %s Unknown words policy: %s\n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
-
-    if (phraseTable.startsWith("bitext:")) {
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, false,
-          PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable.replaceFirst("^bitext:", ""), optionLimit));
-    } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
-
-      System.err.println("Dyanamic pt\n========================");
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
-          phraseTable) : PhraseGeneratorFactory.factory(featurizer, false,
-          PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable, optionLimit));
-    } else {
-      String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
-          : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.factory(
-          featurizer, false, generatorName, phraseTable)
-          : PhraseGeneratorFactory.factory(featurizer, false, generatorName,
-              phraseTable, optionLimit));
-    }
-
-    if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
-       List<PhraseGenerator<IString,String>> pgens = new LinkedList<PhraseGenerator<IString,String>>();
-       pgens.add(phraseGenerator);
-       for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-          PhraseGenerator<IString,String> pgen;
-          try {
-             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-                getConstructor(RuleFeaturizer.class).newInstance(featurizer);
-          } catch (ClassNotFoundException e) {
-             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
-          }
-          pgens.add(pgen);
-       }
-       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
-    }
-
-    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(featurizer, dropUnknownWords)),
-             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
-
-    System.err.printf("Phrase Limit: %d\n",
-        ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory

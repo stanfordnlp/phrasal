@@ -56,9 +56,8 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   /**
    *
    */
-  public UnknownWordPhraseGenerator(
-      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords) {
-    super(phraseFeaturizer);
+  public UnknownWordPhraseGenerator(boolean dropUnknownWords) {
+    super(null);
     this.filter = null;
     scoreNames = DEFAULT_SCORE_NAMES;
     this.dropUnknownWords = dropUnknownWords;

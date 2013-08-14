@@ -27,7 +27,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       .getProperty(DISABLED_SCORES_PROPERTY);
 
   public static IntegerArrayIndex foreignIndex;
-  static IntegerArrayIndex translationIndex;
+  public static IntegerArrayIndex translationIndex;
 
   static String[] customScores;
 
@@ -246,6 +246,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
                 / (1024 * 1024), elapsedTime);
     System.err.println("Longest foreign phrase: " + longestForeignPhrase);
+    System.err.printf("Phrase table signature: %d%n", getSignature());
     return numScores;
   }
 
@@ -339,6 +340,21 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     // no op
   }
 
+  /**
+   * Sort of like hashCode(), but for debugging purposes
+   * only.
+   * 
+   * @return
+   */
+  public long getSignature() {
+    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) translationIndex;
+    long signature = 0;
+    for (int[] rule : index) {
+      signature += Arrays.hashCode(rule);
+    }
+    return signature;
+  }
+  
   public static void createIndex(boolean withGaps) {
     foreignIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
         : new DynamicIntegerArrayIndex();

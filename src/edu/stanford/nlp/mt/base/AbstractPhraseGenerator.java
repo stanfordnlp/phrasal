@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
     PhraseGenerator<TK,FV>, PhraseTable<TK> {
-  protected final RuleFeaturizer<TK, FV> phraseFeaturizer;
+  protected RuleFeaturizer<TK, FV> phraseFeaturizer;
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -69,4 +69,8 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   @Override
   abstract public int longestSourcePhrase();
 
+  @Override
+  public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
+    phraseFeaturizer = featurizer;
+  }
 }

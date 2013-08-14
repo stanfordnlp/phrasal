@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * Interface for data structures that query and score rules
@@ -27,4 +28,6 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
       List<Sequence<TK>> tranList);
 
   public int longestSourcePhrase();
+  
+  public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer);
 }
