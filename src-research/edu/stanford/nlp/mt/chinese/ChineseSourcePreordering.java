@@ -92,6 +92,7 @@ public class ChineseSourcePreordering {
       //System.out.println("\n--------------\n");
       //System.out.println("Original Tree:");
       //tree.pennPrint();
+      //System.out.println(tree.toString());
       tree = preorderTree(tree);
       //System.out.println("\nModified Tree:");
       //tree.pennPrint();
@@ -100,6 +101,7 @@ public class ChineseSourcePreordering {
     	  flatTree += word.toString() + " ";
       }
       System.out.println(flatTree.trim());
+      //System.out.println(tree.toString());
     }
   }
 }

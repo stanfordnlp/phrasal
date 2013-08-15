@@ -14,24 +14,24 @@ public class PreorderingTest extends TestCase {
 
   public void testPatterns() {
     assertEquals("Wrong preordering for VP(PP:VP)",
-            "(TOP (IP (VP (VP (VV ÃûÁĞ) (QP (OD µÚÊ®))) (PP (P ÔÚ) (NP (NN ¶«²¿) (NN ÁªÃË))))))",
-            ChineseSourcePreordering.preorder("(TOP (IP (VP (PP (P ÔÚ) (NP (NN ¶«²¿) (NN ÁªÃË))) (VP (VV ÃûÁĞ) (QP (OD µÚÊ®))))))"));
+            "(TOP (IP (VP (VP (VV ååˆ—) (QP (OD ç¬¬å))) (PP (P åœ¨) (NP (NN ä¸œéƒ¨) (NN è”ç›Ÿ))))))",
+            ChineseSourcePreordering.preorder("(TOP (IP (VP (PP (P åœ¨) (NP (NN ä¸œéƒ¨) (NN è”ç›Ÿ))) (VP (VV ååˆ—) (QP (OD ç¬¬å))))))"));
     
     assertEquals("Wrong preordering for VP(LCP:VP)",
-            "(TOP (IP (VP (VP (VV ·¢±í) (NP (NN ÉùÃ÷))) (NP (NT µ±Ìì) (NT ÉÏÎç)))))",
-            ChineseSourcePreordering.preorder("(TOP (IP (VP (NP (NT µ±Ìì) (NT ÉÏÎç)) (VP (VV ·¢±í) (NP (NN ÉùÃ÷))))))"));
+            "(TOP (IP (VP (VP (VV å‘è¡¨) (NP (NN å£°æ˜))) (NP (NT å½“å¤©) (NT ä¸Šåˆ)))))",
+            ChineseSourcePreordering.preorder("(TOP (IP (VP (NP (NT å½“å¤©) (NT ä¸Šåˆ)) (VP (VV å‘è¡¨) (NP (NN å£°æ˜))))))"));
     
     assertEquals("Wrong preordering for VP(NT:VP)",
-            "(TOP (IP (VP (VP (VV ÊÜÉË)) (QP (CD ¶à) (CLP (M ´Î))))))",
-            ChineseSourcePreordering.preorder("(TOP (IP (VP (QP (CD ¶à) (CLP (M ´Î))) (VP (VV ÊÜÉË)))))"));
+            "(TOP (IP (VP (VP (VV å—ä¼¤)) (QP (CD å¤š) (CLP (M æ¬¡))))))",
+            ChineseSourcePreordering.preorder("(TOP (IP (VP (QP (CD å¤š) (CLP (M æ¬¡))) (VP (VV å—ä¼¤)))))"));
     
     assertEquals("Wrong preordering for VP(QP:VP)",
-            "(TOP (NP (NP (NN ¾­¼Ã) (NN Ô®Öú)) (DNP (PP (P ¶Ô) (NP (NR ½ò°Í²¼Î¤))) (DEG µÄ))))",
-            ChineseSourcePreordering.preorder("(TOP (NP (DNP (PP (P ¶Ô) (NP (NR ½ò°Í²¼Î¤))) (DEG µÄ)) (NP (NN ¾­¼Ã) (NN Ô®Öú))))"));
+            "(TOP (NP (NP (NN ç»æµ) (NN æ´åŠ©)) (DNP (PP (P å¯¹) (NP (NR æ´¥å·´å¸ƒéŸ¦))) (DEG çš„))))",
+            ChineseSourcePreordering.preorder("(TOP (NP (DNP (PP (P å¯¹) (NP (NR æ´¥å·´å¸ƒéŸ¦))) (DEG çš„)) (NP (NN ç»æµ) (NN æ´åŠ©))))"));
     
     assertEquals("Wrong preordering for NP(CP:NP)",
-            "(TOP (NP (NP (NN ÕÆÎÕ)) (DNP (NP (DP (DT ¸Ã) (CLP (M Ïî))) (NP (NN ¼¼Êõ))) (DEG µÄ))))",
-            ChineseSourcePreordering.preorder("(TOP (NP (DNP (NP (DP (DT ¸Ã) (CLP (M Ïî))) (NP (NN ¼¼Êõ))) (DEG µÄ)) (NP (NN ÕÆÎÕ))))"));
+    		"(TOP (NP (NP (NN æŒæ¡)) (DNP (NP (DP (DT è¯¥) (CLP (M é¡¹))) (NP (NN æŠ€æœ¯))) (DEG çš„))))",
+            ChineseSourcePreordering.preorder("(TOP (NP (DNP (NP (DP (DT è¯¥) (CLP (M é¡¹))) (NP (NN æŠ€æœ¯))) (DEG çš„)) (NP (NN æŒæ¡))))"));
     
   }
 }
