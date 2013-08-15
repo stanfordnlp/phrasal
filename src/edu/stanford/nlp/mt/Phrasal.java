@@ -390,29 +390,29 @@ public class Phrasal {
           : PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable,
               optionLimit));
     }
-
-    // TODO(spenceg): Disable for now. Why do we need to invoke RuleFeaturizer?
-//    if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
-//       List<PhraseGenerator<IString,String>> pgens = new LinkedList<PhraseGenerator<IString,String>>();
-//       pgens.add(phraseGenerator);
-//       for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-//          PhraseGenerator<IString,String> pgen;
-//          try {
-//             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-//                getConstructor(RuleFeaturizer.class).newInstance(featurizer);
-//          } catch (ClassNotFoundException e) {
-//             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
-//          }
-//          pgens.add(pgen);
-//       }
-//       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
-//    }
+    if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
+       List<PhraseGenerator<IString,String>> pgens = new LinkedList<PhraseGenerator<IString,String>>();
+       pgens.add(phraseGenerator);
+       for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
+          PhraseGenerator<IString,String> pgen;
+          try {
+             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
+                getConstructor().newInstance();
+          } catch (ClassNotFoundException e) {
+             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
+          }
+          pgens.add(pgen);
+       }
+       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
+    }
 
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
              Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
+    
+    FlatPhraseTable.lockIndex();
 
-    System.err.printf("Phrase Limit: %d\n",
+    System.err.printf("Phrase table limit (ttable-limit): %d%n",
         ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Lexicalized reordering model
@@ -1329,7 +1329,6 @@ public class Phrasal {
     try {
       Phrasal.initStaticMembers(config);
       Phrasal phrasal = new Phrasal(config);
-      FlatPhraseTable.lockIndex();
       return phrasal;
 
     } catch (IllegalArgumentException e) {

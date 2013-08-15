@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -121,7 +122,7 @@ public class LexicalReorderingTable {
   }
 
   final String filetype;
-  final List<Object> reorderingScores = Generics.newArrayList();
+  private List<double[]> reorderingScores;
 
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
@@ -165,6 +166,10 @@ public class LexicalReorderingTable {
    * @throws IOException
    */
   public LexicalReorderingTable(String filename) throws IOException {
+    int phraseTableSize = FlatPhraseTable.translationIndex.size();
+    this.reorderingScores = new ArrayList<double[]>(phraseTableSize);
+    for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
+    
     String filetype = init(filename, null);
     this.filetype = filetype;
     this.positionalMapping = (ReorderingTypes[]) fileTypeToReorderingType
@@ -175,6 +180,10 @@ public class LexicalReorderingTable {
 
   public LexicalReorderingTable(String filename, String desiredFileType)
       throws IOException {
+    int phraseTableSize = FlatPhraseTable.translationIndex.size();
+    this.reorderingScores = new ArrayList<double[]>(phraseTableSize);
+    for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
+    
     String filetype = init(filename, desiredFileType);
     if (!desiredFileType.equals(filetype)) {
       throw new RuntimeException(String.format(
@@ -285,16 +294,15 @@ public class LexicalReorderingTable {
         }
       }
 
-      int idx = index.indexOf(indexInts, true);
-      if (idx != reorderingScores.size()) {
-        throw new RuntimeException(
-            String
-                .format(
-                    "Somehow indices have outpaced/underpaced the size of the reorderingScore list (%d != %d).",
-                    idx, reorderingScores.size()));
+      // Lookup this rule in the phrase table
+      int idx = FlatPhraseTable.translationIndex.indexOf(indexInts);
+      if (idx < 0) {
+        throw new RuntimeException(String.format("Phrase %d not in phrase table", reader.getLineNumber()));
       }
-
-      reorderingScores.add(scores);
+      if (reorderingScores.get(idx) != null) {
+        throw new RuntimeException(String.format("Duplicate phrase %d in phrase table", reader.getLineNumber()));
+      }
+      reorderingScores.set(idx, scores);
     }
     reader.close();
     
