@@ -794,7 +794,6 @@ public class OnlineTuner {
    */
   public void shutdown() {
     logHandler.close();
-    decoder.shutdown();
   }
 
   /********************************************

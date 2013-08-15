@@ -933,19 +933,12 @@ public class Phrasal {
    *
    */
   private static class DecoderInput {
-    public final String[] tokens;
-    public final Sequence<IString> sequence;
+    public final Sequence<IString> source;
     public final int sourceInputId;
 
-    public DecoderInput(String[] tokens, int sourceInputId) {
-      this.tokens = tokens;
-      this.sourceInputId = sourceInputId;
-      this.sequence = null;
-    }
     public DecoderInput(Sequence<IString> seq, int sourceInputId) {
-      this.sequence = seq;
+      this.source = seq;
       this.sourceInputId = sourceInputId;
-      this.tokens = null;
     }
   }
 
@@ -990,11 +983,9 @@ public class Phrasal {
 
     @Override
     public DecoderOutput process(DecoderInput input) {
-      int inputLength = input.sequence == null ? input.tokens.length : input.sequence.size();
-      List<RichTranslation<IString, String>> translations = input.sequence == null ?
-          decode(input.tokens, input.sourceInputId, infererId) :
-            decode(input.sequence, input.sourceInputId, infererId);
-      return new DecoderOutput(inputLength, translations, input.sourceInputId);
+      List<RichTranslation<IString, String>> translations = 
+          decode(input.source, input.sourceInputId, infererId);
+      return new DecoderOutput(input.source.size(), translations, input.sourceInputId);
     }
 
     @Override
@@ -1017,10 +1008,8 @@ public class Phrasal {
       int sourceInputId) {
 
     if (translations.size() > 0) {
-      // notice we reproduce the lameness of moses in that an extra space is
-      // inserted after each translation
       RichTranslation<IString, String> bestTranslation = translations.get(0);
-      System.out.printf("%s \n", bestTranslation.translation);
+      System.out.println(bestTranslation.translation);
 
       // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation.translation);
@@ -1071,10 +1060,10 @@ public class Phrasal {
     final long startTime = System.nanoTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
-      String[] tokens = line.trim().split("\\s+");
-      if (tokens.length > maxSentenceSize || tokens.length < minSentenceSize) {
+      Sequence<IString> tokens = IStrings.tokenize(line);
+      if (tokens.size() > maxSentenceSize || tokens.size() < minSentenceSize) {
         System.err.printf("Skipping: %s%n", line);
-        System.err.printf("Tokens: %d (min: %d max: %d)%n", tokens.length, minSentenceSize,
+        System.err.printf("Tokens: %d (min: %d max: %d)%n", tokens.size(), minSentenceSize,
             maxSentenceSize);
         continue;
       }
@@ -1095,7 +1084,7 @@ public class Phrasal {
     }
 
     long totalTime = System.nanoTime() - startTime;
-    System.err.printf("Total Decoding time: %.3f seconds%n", totalTime / 1000000000.0);
+    System.err.printf("Total Decoding time: %.3f seconds%n", totalTime / 1e9);
   }
 
 
@@ -1144,17 +1133,10 @@ public class Phrasal {
    *
    * NOTE: This call is threadsafe.
    *
-   * @param tokens
+   * @param source
    * @param sourceInputId
    * @param threadId -- Inferer object to use (one per thread)
    */
-  public List<RichTranslation<IString, String>> decode(String[] tokens,
-      int sourceInputId, int threadId) {
-    Sequence<IString> source = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(tokens));
-    return decode(source, sourceInputId, threadId);
-  }
-
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId) {
     return decode(source, sourceInputId, threadId, nbestListSize);
@@ -1168,11 +1150,11 @@ public class Phrasal {
    * @param source
    * @param sourceInputId
    * @param threadId -- Inferer object to use (one per thread)
-   * @param nbestSize n-best hypotheses to generate
+   * @param numTranslations number of hypotheses to generate
    * 
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
-      int sourceInputId, int threadId, int nbestSize) {
+      int sourceInputId, int threadId, int numTranslations) {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
@@ -1185,14 +1167,14 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);
 
-    if (nbestSize > 1) {
+    if (numTranslations > 1) {
       translations = inferers
           .get(threadId).nbest(
               source,
               sourceInputId,
               constrainedOutputSpace,
               (constrainedOutputSpace == null ? null : constrainedOutputSpace
-                  .getAllowableSequences()), nbestSize);
+                  .getAllowableSequences()), numTranslations);
 
       // Return an empty n-best list
       if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
@@ -1217,7 +1199,7 @@ public class Phrasal {
   /**
    * Free resources and cleanup.
    */
-  public void shutdown() {
+  private void shutdown() {
     // Cleanup each inferer
     for(Inferer<IString, String> inferer : inferers) {
       boolean failed = (! inferer.shutdown());
@@ -1328,7 +1310,15 @@ public class Phrasal {
   public static Phrasal loadDecoder(Map<String, List<String>> config) {
     try {
       Phrasal.initStaticMembers(config);
-      Phrasal phrasal = new Phrasal(config);
+      final Phrasal phrasal = new Phrasal(config);
+      
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          phrasal.shutdown();
+        }
+      });
+      
       return phrasal;
 
     } catch (IllegalArgumentException e) {
@@ -1379,6 +1369,5 @@ public class Phrasal {
         : readArgs(args);
     Phrasal p = Phrasal.loadDecoder(config);
     p.decodeFromConsole();
-    p.shutdown();
   }
 }
