@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.util.Index;
 
 /**
  * Indicator features for aligned and unaligned tokens in phrase pairs.
@@ -47,7 +46,7 @@ RuleFeaturizer<IString,String> {
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 
   @Override

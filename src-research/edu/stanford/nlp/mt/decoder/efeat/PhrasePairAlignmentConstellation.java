@@ -7,7 +7,6 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 public class PhrasePairAlignmentConstellation implements
     RuleFeaturizer<IString, String> {
@@ -24,6 +23,6 @@ public class PhrasePairAlignmentConstellation implements
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 }

@@ -7,7 +7,6 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 /**
  * @author danielcer
@@ -126,11 +125,11 @@ public class CollapsedFeaturizer<TK, FV> implements
   }
   
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
     // Initialize the IsolatedPhraseFeaturizers
     for (Featurizer<TK,FV> featurizer : featurizers) {
       if (featurizer instanceof RuleFeaturizer) {
-        ((RuleFeaturizer<TK,FV>) featurizer).initialize(featureIndex);
+        ((RuleFeaturizer<TK,FV>) featurizer).initialize();
       }
     }
   }

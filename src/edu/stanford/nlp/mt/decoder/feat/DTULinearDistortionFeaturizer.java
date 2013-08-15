@@ -10,7 +10,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
-import edu.stanford.nlp.util.Index;
 
 /**
  * @author Michel Galley
@@ -116,6 +115,6 @@ public class DTULinearDistortionFeaturizer extends
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 }

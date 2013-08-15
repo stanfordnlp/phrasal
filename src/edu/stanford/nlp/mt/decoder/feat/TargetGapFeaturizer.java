@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
-import edu.stanford.nlp.util.Index;
 
 /**
  * @author Michel Galley
@@ -247,6 +246,6 @@ public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 }
