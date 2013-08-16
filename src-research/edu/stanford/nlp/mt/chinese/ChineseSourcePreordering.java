@@ -89,12 +89,19 @@ public class ChineseSourcePreordering {
       List<String> words = Arrays.asList(line.split(" "));
       ScoredObject<Tree> parse = parser.getParses(words, null).get(0);
       Tree tree = parse.object();
-      System.out.println("\n--------------\n");
-      System.out.println("Original Tree:");
-      tree.pennPrint();
+      //System.out.println("\n--------------\n");
+      //System.out.println("Original Tree:");
+      //tree.pennPrint();
+      //System.out.println(tree.toString());
       tree = preorderTree(tree);
-      System.out.println("\nModified Tree:");
-      tree.pennPrint();
+      //System.out.println("\nModified Tree:");
+      //tree.pennPrint();
+      String flatTree = "";
+      for (Tree word : tree.getLeaves()) {
+    	  flatTree += word.toString() + " ";
+      }
+      System.out.println(flatTree.trim());
+      //System.out.println(tree.toString());
     }
   }
 }
