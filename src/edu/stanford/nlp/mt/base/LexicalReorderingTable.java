@@ -19,7 +19,6 @@ import edu.stanford.nlp.util.StringUtils;
  *
  */
 public class LexicalReorderingTable {
-  final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
 
   /**
    * Reordering types
@@ -104,8 +103,6 @@ public class LexicalReorderingTable {
         monotonicityBidirectionalMapping);
   }
 
-  private static final IString internalDelim = new IString("|||");
-
   static final Map<String, ConditionTypes> fileTypeToConditionType = Generics.newHashMap();
   
   static {
@@ -122,43 +119,32 @@ public class LexicalReorderingTable {
   }
 
   final String filetype;
-  private List<double[]> reorderingScores;
+  private List<float[]> reorderingScores;
 
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
 
-  private int[] mergeInts(int[] array1, int[] array2) {
-    int[] combinedInts = new int[array1.length + 1 + array2.length];
-    System.arraycopy(array1, 0, combinedInts, 0, array1.length);
-    combinedInts[array1.length] = internalDelim.id;
-    for (int i = 0, offset = array1.length + 1; i < array2.length; i++)
-      combinedInts[offset + i] = array2[i];
-    return combinedInts;
+  private static int[] mergeInts(int[] array1, int[] array2) {
+    return new int[] { FlatPhraseTable.foreignIndex.indexOf(array1),
+        FlatPhraseTable.translationIndex.indexOf(array2) };
   }
 
-  /**
-	 *
-	 */
-  public double[] getReorderingScores(Sequence<IString> foreign,
-      Sequence<IString> translation) {
-    int[] indexInts = null;
+  public float[] getReorderingScores(int phraseId) {
+
+    int reorderingId = -1;
 
     if (conditionType == ConditionTypes.f) {
-      indexInts = Sequences.toIntArray(foreign);
+      reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[0];
     } else if (conditionType == ConditionTypes.e) {
-      indexInts = Sequences.toIntArray(translation);
+      reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[1];
     } else if (conditionType == ConditionTypes.fe) {
-      int[] fInts = Sequences.toIntArray(foreign);
-      int[] tInts = Sequences.toIntArray(translation);
-      indexInts = mergeInts(fInts, tInts);
+      reorderingId = phraseId;
     }
 
-    int idx = index.indexOf(indexInts);
-
-    if (idx < 0)
+    if (reorderingId < 0)
       return null;
 
-    return (double[]) reorderingScores.get(idx);
+    return reorderingScores.get(reorderingId);
   }
 
   /**
@@ -167,7 +153,7 @@ public class LexicalReorderingTable {
    */
   public LexicalReorderingTable(String filename) throws IOException {
     int phraseTableSize = FlatPhraseTable.translationIndex.size();
-    this.reorderingScores = new ArrayList<double[]>(phraseTableSize);
+    this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
     for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
     
     String filetype = init(filename, null);
@@ -181,7 +167,7 @@ public class LexicalReorderingTable {
   public LexicalReorderingTable(String filename, String desiredFileType)
       throws IOException {
     int phraseTableSize = FlatPhraseTable.translationIndex.size();
-    this.reorderingScores = new ArrayList<double[]>(phraseTableSize);
+    this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
     for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
     
     String filetype = init(filename, desiredFileType);
@@ -279,7 +265,7 @@ public class LexicalReorderingTable {
         indexInts = mergeInts(fIndexInts, eIndexInts);
       }
 
-      double[] scores = new double[scoreList.size()];
+      float[] scores = new float[scoreList.size()];
       int scoreId = 0;
       for (String score : scoreList) {
         try {
@@ -330,11 +316,13 @@ public class LexicalReorderingTable {
     System.out.print("\n>");
     for (String query; (query = reader.readLine()) != null; ) {
       String[] fields = query.split("\\s*\\|\\|\\|\\s*");
-      Sequence<IString> foreign = new RawSequence<IString>(
-          IStrings.toIStringArray(fields[0].split("\\s+")));
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(fields[1].split("\\s+")));
-      double[] scores = mlrt.getReorderingScores(foreign, translation);
+      int[] foreign = IStrings.toIntArray(IStrings.toIStringArray(fields[0]
+          .split("\\s+")));
+      int[] translation = IStrings.toIntArray(IStrings.toIStringArray(fields[1]
+          .split("\\s+")));
+      int[] merged = mergeInts(foreign, translation);
+      int id = FlatPhraseTable.translationIndex.indexOf(merged);
+      float[] scores = mlrt.getReorderingScores(id);
       for (int i = 0; i < scores.length; i++) {
         System.out.printf("%s: %e\n", mlrt.positionalMapping[i], scores[i]);
       }
