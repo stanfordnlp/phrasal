@@ -4,7 +4,6 @@ import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsState;
@@ -266,7 +265,7 @@ public class BLEUFeaturizer extends NeedsState<IString, String>
 
   public void initialize(
       int sourceInputId,
-      List<ConcreteRule<IString,String>> concreteTranslationOptions, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> concreteTranslationOptions, Sequence<IString> foreign) {
   }
 
   public void reset() {

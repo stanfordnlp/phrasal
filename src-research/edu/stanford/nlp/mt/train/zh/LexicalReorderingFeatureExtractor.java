@@ -47,8 +47,7 @@ public class LexicalReorderingFeatureExtractor extends
   }
 
   @Override
-  public void featurizeSentence(SymmetricalWordAlignment sent, String info,
-      AlignmentGrid alGrid) {
+  public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid) {
   }
 
   @Override

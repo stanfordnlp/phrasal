@@ -95,10 +95,11 @@ public class RichTranslation<TK, FV> extends
    * @param nbestWordInternalAlignments 
    */
   public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean nbestWordInternalAlignments) {
+    final String delim = FlatNBestList.FIELD_DELIM;
     sbuf.append(id);
-    sbuf.append(' ').append(NBEST_SEP).append(' ');
+    sbuf.append(' ').append(delim).append(' ');
     sbuf.append(this.translation);
-    sbuf.append(' ').append(NBEST_SEP);
+    sbuf.append(' ').append(delim);
     DecimalFormat df = new DecimalFormat("0.####E0");
     if (features != null) {
       for (FeatureValue<FV> fv : this.features) {
@@ -110,8 +111,8 @@ public class RichTranslation<TK, FV> extends
                 .format(fv.value)));
       }
     }
-    sbuf.append(' ').append(NBEST_SEP).append(' ');
-    sbuf.append(df.format(this.score)).append(' ').append(NBEST_SEP);
+    sbuf.append(' ').append(delim).append(' ');
+    sbuf.append(df.format(this.score)).append(' ').append(delim);
 
     if (nbestWordInternalAlignments && Featurizable.alignmentsEnabled()) {
       // Internal alignments
@@ -124,9 +125,9 @@ public class RichTranslation<TK, FV> extends
     }
 
     if (System.getProperty("VERY_VERBOSE_NBEST") != null) {
-      sbuf.append(' ').append(NBEST_SEP).append(' ');
+      sbuf.append(' ').append(delim).append(' ');
       sbuf.append(this.featurizable.sourceSentence.toString());
-      sbuf.append(' ').append(NBEST_SEP).append(' ');
+      sbuf.append(' ').append(delim).append(' ');
       List<Featurizable<TK,FV>> featurizables = featurizables();
       for (Featurizable<TK,FV> f : featurizables) {
         sbuf.append(' ');

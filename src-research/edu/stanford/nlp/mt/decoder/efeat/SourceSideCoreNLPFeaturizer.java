@@ -20,7 +20,6 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -153,7 +152,7 @@ NeedsInternalAlignments, NeedsCloneable<IString,String> {
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString, String>> options, 
-      Sequence<IString> foreign, Index<String> featureIndex) {
+      Sequence<IString> foreign) {
     final int length = foreign.size();
     final CoreMap currentSentence = sentences.get(sourceInputId);
     if (currentSentence == null) return;

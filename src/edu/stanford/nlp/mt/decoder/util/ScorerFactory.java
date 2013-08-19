@@ -33,7 +33,7 @@ public class ScorerFactory {
       throws IOException {
 
     if (scorerName.equals(UNIFORM_SCORER)) {
-      return new UniformScorer<String>(featureIndex);
+      return new UniformScorer<String>();
     } else if (scorerName.equals(DENSE_SCORER)) {
       return new DenseScorer(config, featureIndex);
     } else if (scorerName.equals(SPARSE_SCORER)) {

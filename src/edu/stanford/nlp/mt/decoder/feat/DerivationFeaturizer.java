@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -36,10 +35,9 @@ public interface DerivationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
    * @param sourceInputId
    * @param ruleList
    * @param source
-   * @param featureIndex 
    */
   void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, Index<String> featureIndex);
+      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source);
 
   /**
    * Extract and return a list of features. If features overlap in the list, 

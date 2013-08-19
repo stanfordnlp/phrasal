@@ -20,5 +20,5 @@ public interface PhraseExtractor extends Cloneable {
    */
   public void extractPhrases(WordAlignment sent);
 
-  public void setSentenceInfo(WordAlignment sent, String infoStr);
+//  public void setSentenceInfo(WordAlignment sent, String infoStr);
 }

@@ -10,7 +10,6 @@ import edu.stanford.nlp.mt.base.LexicalReorderingTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -135,10 +134,10 @@ public class LexicalReorderingFeaturizer implements
     }
 
     if (mlrt != null) {
-      double[] scores = mlrt.getReorderingScores(f.sourcePhrase,
-          f.targetPhrase);
-      double[] priorScores = (f.prior == null ? null : mlrt
-          .getReorderingScores(f.prior.sourcePhrase, f.prior.targetPhrase));
+      float[] scores = mlrt
+          .getReorderingScores(f.derivation.rule.abstractRule.id);
+      float[] priorScores = (f.prior == null ? null : mlrt
+          .getReorderingScores(f.prior.derivation.rule.abstractRule.id));
 
       if (DETAILED_DEBUG) {
         System.err.printf("%s(%d) => %s(%d)\n", f.sourcePhrase,
@@ -209,6 +208,6 @@ public class LexicalReorderingFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
   }
 }

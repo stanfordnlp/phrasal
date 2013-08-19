@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
-import edu.stanford.nlp.util.Index;
 
 /**
  * 
@@ -233,6 +232,6 @@ public class SourceGapFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
   }
 }

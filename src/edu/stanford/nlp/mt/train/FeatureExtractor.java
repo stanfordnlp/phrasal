@@ -27,8 +27,7 @@ public interface FeatureExtractor {
    * called once for each instance of alignment template, this function is
    * called once for each sentence pair.
    */
-  public void featurizeSentence(SymmetricalWordAlignment sent, String info,
-      AlignmentGrid alGrid);
+  public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid);
 
   /**
    * Extract features from phrase pair f-e and sentence word alignment. Note

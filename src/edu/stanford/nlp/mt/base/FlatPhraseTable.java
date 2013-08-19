@@ -6,10 +6,10 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  *
@@ -27,7 +27,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       .getProperty(DISABLED_SCORES_PROPERTY);
 
   public static IntegerArrayIndex foreignIndex;
-  static IntegerArrayIndex translationIndex;
+  public static IntegerArrayIndex translationIndex;
 
   static String[] customScores;
 
@@ -181,21 +181,21 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   private int init(File f, boolean reverse) throws IOException {
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long startTimeMillis = System.nanoTime();
+    final long startTime = System.nanoTime();
 
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
-    final String delimiterRegex = Pattern.quote(FlatNBestList.NBEST_SEP);
     for (String line; (line = reader.readLine()) != null;) {
-      String[] fields = line.split(delimiterRegex);
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatNBestList.FIELD_DELIM);
       
       // The standard format has five fields
-      assert fields.length == 5 : String.format("n-best list line %d has %d fields", reader.getLineNumber(), fields.length);
-      Sequence<IString> source = IStrings.tokenize(fields[0]);
-      Sequence<IString> target = IStrings.tokenize(fields[1]);
+      assert fields.size() == 5 : String.format("n-best list line %d has %d fields", 
+          reader.getLineNumber(), fields.size());
+      Sequence<IString> source = IStrings.toIStringSequence(fields.get(0));
+      Sequence<IString> target = IStrings.toIStringSequence(fields.get(1));
 //      String sourceConstellation = fields[2];
-      String targetConstellation = fields[3].trim();
-      List<String> scoreList = Arrays.asList(fields[4].trim().split("\\s+"));
+      String targetConstellation = StringUtils.join(fields.get(3));
+      List<String> scoreList = fields.get(4);
       
       if (reverse) {
         Sequence<IString> tmp = source;
@@ -238,14 +238,15 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
     // print some status information
     long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
-    long loadTimeMillis = System.nanoTime() - startTimeMillis;
+    double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
     System.err
         .printf(
             "Done loading phrase table: %s (mem used: %d MiB time: %.3f s)%n",
             f.getAbsolutePath(),
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
-                / (1024 * 1024), loadTimeMillis / 1000.0);
+                / (1024 * 1024), elapsedTime);
     System.err.println("Longest foreign phrase: " + longestForeignPhrase);
+    System.err.printf("Phrase table signature: %d%n", getSignature());
     return numScores;
   }
 
@@ -339,6 +340,21 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     // no op
   }
 
+  /**
+   * Sort of like hashCode(), but for debugging purposes
+   * only.
+   * 
+   * @return
+   */
+  public long getSignature() {
+    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) translationIndex;
+    long signature = 0;
+    for (int[] rule : index) {
+      signature += Arrays.hashCode(rule);
+    }
+    return signature;
+  }
+  
   public static void createIndex(boolean withGaps) {
     foreignIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
         : new DynamicIntegerArrayIndex();

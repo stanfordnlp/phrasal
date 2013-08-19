@@ -358,9 +358,4 @@ public class SSVMScorer implements Scorer<String> {
   public void updateWeights(Counter<String> weights) {
     throw new UnsupportedOperationException();
   }
-
-  @Override
-  public Index<String> getFeatureIndex() {
-    return featureIndex;
-  }
 }

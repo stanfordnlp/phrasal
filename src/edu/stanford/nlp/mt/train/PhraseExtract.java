@@ -27,32 +27,70 @@
 
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.tools.Interpreter;
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.regex.Pattern;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.text.SimpleDateFormat;
+
 import edu.stanford.nlp.objectbank.ObjectBank;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Pair;
+
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
-
-import java.io.*;
-import java.net.InetAddress;
-import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.lang.reflect.Constructor;
-import java.text.SimpleDateFormat;
-
 import edu.stanford.nlp.mt.base.IOTools;
 
 /**
- * Combines multiple phrase-level feature extractors into one, and prints their
- * outputs to STDOUT.
+ * Loads multiple feature extractors and writes the output to user-specified
+ * files.
+ * 
+ * Extractors are specified by the -extractors argument. Multiple feature
+ * extractors may be specified according to this format:
+ * 
+ *   extractor1=outfile.gz:extractor2=outfile2.gz ...
+ * 
+ * If two extractors write to the same output file, then the rule scores
+ * will be concatenated in the order that the feature extractors appear in
+ * the specification.
+ * 
+ * The default extractor specification is the baseline Moses phrase table
+ * features plus a generative lexicalized reordering model.
  * 
  * @author Michel Galley
+ * @author Spence Green
  */
 public class PhraseExtract {
 
+  public static final String FEATURE_EXTRACTOR_DELIM = ":"; 
+  
+  public static final String FILE_DELIM = "=";
+  
+  public static final String DEFAULT_PTABLE_NAME = "phrase-table.gz";
+  
+  public static final String DEFAULT_LO_NAME = 
+      "lo." + LexicalReorderingFeatureExtractor.DEFAULT_MODEL_TYPE + ".gz";
+  
+  // The Moses default feature set: a phrase table and a lexicalized
+  // reordering model.
+  private static final String DEFAULT_FEATURE_SET = 
+      String.format("%s%s%s%s%s%s", MosesPharoahFeatureExtractor.class.getName(),
+          FILE_DELIM, DEFAULT_PTABLE_NAME, FEATURE_EXTRACTOR_DELIM, 
+          LexicalReorderingFeatureExtractor.class.getName(),
+          FILE_DELIM, DEFAULT_LO_NAME);
+  
   static public final String CONFIG_OPT = "config";
   static public final String INPUT_DIR_OPT = "inputDir";
   static public final String F_CORPUS_OPT = "fCorpus";
@@ -61,7 +99,7 @@ public class PhraseExtract {
   static public final String A_FE_CORPUS_OPT = "efAlign";
   static public final String A_EF_CORPUS_OPT = "feAlign";
   static public final String SYMMETRIZE_OPT = "symmetrization";
-  static public final String EXTRACTORS_OPT = "extractors";
+  static public final String FEATURE_EXTRACTORS_OPT = "extractors";
   static public final String VERBOSE_OPT = "verbose";
   static public final String HELP_OPT = "help";
 
@@ -76,7 +114,6 @@ public class PhraseExtract {
   static public final String OUTPUT_FILE_OPT = "outputFile";
   static public final String NO_ALIGN_OPT = "noAlign";
   static public final String NUM_LINES_OPT = "numLines";
-  static public final String PRINT_FEATURE_NAMES_OPT = "printFeatureNames";
   static public final String MIN_COUNT_OPT = "minCount";
   static public final String START_AT_LINE_OPT = "startAtLine";
   static public final String END_AT_LINE_OPT = "endAtLine";
@@ -88,6 +125,7 @@ public class PhraseExtract {
   static public final String WITH_GAPS_OPT = "withGaps";
   static public final String TRIPLE_FILE = "tripleFile";
   static public final String MIN_PHRASE_COUNT = "minCount";
+  static public final String OUTPUT_DIR = "outputDir";
   
   // phrase translation probs:  
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -107,21 +145,21 @@ public class PhraseExtract {
   static public final String LEX_REORDERING_START_CLASS_OPT = "orientationModelHasStart";
   static public final String LEX_REORDERING_2DISC_CLASS_OPT = "orientationModelHas2Disc";
 
-  static final Set<String> REQUIRED_OPTS = new HashSet<String>();
-  static final Set<String> OPTIONAL_OPTS = new HashSet<String>();
-  static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<String>();
+  static final Set<String> REQUIRED_OPTS = Generics.newHashSet();
+  static final Set<String> OPTIONAL_OPTS = Generics.newHashSet();
+  static final Set<String> ALL_RECOGNIZED_OPTS = Generics.newHashSet();
 
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT));
     OPTIONAL_OPTS.addAll(Arrays.asList(A_CORPUS_OPT, A_EF_CORPUS_OPT,
         A_FE_CORPUS_OPT, SYMMETRIZE_OPT, INPUT_DIR_OPT, FILTER_CORPUS_OPT,
         EMPTY_FILTER_LIST_OPT, FILTER_LIST_OPT, REF_PTABLE_OPT, SPLIT_SIZE_OPT,
-        OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, EXTRACTORS_OPT,
-        NUM_LINES_OPT, PRINT_FEATURE_NAMES_OPT, MIN_COUNT_OPT, WITH_GAPS_OPT,
+        OUTPUT_FILE_OPT, NO_ALIGN_OPT, THREADS_OPT, FEATURE_EXTRACTORS_OPT,
+        NUM_LINES_OPT, MIN_COUNT_OPT, WITH_GAPS_OPT,
         START_AT_LINE_OPT, END_AT_LINE_OPT, MAX_FERTILITY_OPT, EXACT_PHI_OPT,
         IBM_LEX_MODEL_OPT, ONLY_ML_OPT, HELP_OPT, PTABLE_PHI_FILTER_OPT,
         PTABLE_LEX_FILTER_OPT, VERBOSE_OPT, LEX_REORDERING_TYPE_OPT,
-        LEX_REORDERING_PHRASAL_OPT, LEX_REORDERING_HIER_OPT,
+        LEX_REORDERING_PHRASAL_OPT, LEX_REORDERING_HIER_OPT, OUTPUT_DIR,
         LEX_REORDERING_START_CLASS_OPT, LEX_REORDERING_2DISC_CLASS_OPT,
         MAX_INCONSISTENCIES_OPT, MEM_USAGE_FREQ_OPT, PHRASE_EXTRACTOR_OPT,
         SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT,
@@ -163,17 +201,13 @@ public class PhraseExtract {
 
   protected PhrasePrinter phrasePrinter;
   protected List<AbstractFeatureExtractor> extractors;
-  // each extract is allowed to have one file that contains extra information
-  // (one line per sentence)
-  private List<String> infoFileForExtractors;
-  private List<String> infoLinesForExtractors;
   private AbstractPhraseExtractor phraseExtractor = null;
 
   protected AlignmentTemplates alTemps;
   protected AlignmentTemplateInstance alTemp;
   protected Index<String> featureIndex = new HashIndex<String>();
 
-  private final List<Thread> threads = new LinkedList<Thread>();
+  private final List<Thread> threads = Generics.newLinkedList();
   private final LinkedBlockingQueue<Pair<Integer, String[]>> dataQueue = new LinkedBlockingQueue<Pair<Integer, String[]>>(
       1000);
   boolean doneReadingData;
@@ -183,17 +217,28 @@ public class PhraseExtract {
   private SourceFilter sourceFilter;
   private int startAtLine = -1, endAtLine = -1, numSplits = 0, memUsageFreq,
       nThreads = 0;
-  private String fCorpus, eCorpus, phraseExtractorInfoFile, outputFile;
+  private String fCorpus, eCorpus;
   private String alignCorpus, alignInvCorpus;
-  private boolean filterFromDev = false, printFeatureNames = true, withAlign,
-      lowercase;
-  boolean tripleFile = false;  // Single source ||| target ||| alignment triple file
+  private boolean filterFromDev = false;
+  private boolean withAlign;
+  private boolean lowercase;
+  private String outputDir;
+  
+  // Triple file format:
+  // Single source ||| target ||| alignment triple file
+  private final static String tripleDelim = Pattern.quote(AlignmentTemplate.DELIM);
+  boolean tripleFile = false;
+  
   private SymmetrizationType symmetrizationType = null;
 
   private int totalPassNumber = 1;
   
   private int minPhraseCount = 0;
 
+  // Data structures to support multiple file output.
+  private final Map<AbstractFeatureExtractor,String> extractorToFileString = Generics.newHashMap();
+  private final Map<String,PrintStream> fileStringToWriter = Generics.newHashMap();
+  
   public PhraseExtract(Properties prop) throws IOException {
     processProperties(prop);
   }
@@ -250,7 +295,7 @@ public class PhraseExtract {
 
     // Check required, optional properties:
     if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
-      Set<String> missingFields = new HashSet<String>(REQUIRED_OPTS);
+      Set<String> missingFields = Generics.newHashSet(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
       usage();
       throw new RuntimeException(String.format(
@@ -258,7 +303,7 @@ public class PhraseExtract {
     }
 
     if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set<Object> extraFields = new HashSet<Object>(prop.keySet());
+      Set<Object> extraFields = Generics.newHashSet(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       usage();
       throw new RuntimeException(String.format(
@@ -332,100 +377,88 @@ public class PhraseExtract {
     endAtLine = Integer.parseInt(prop.getProperty(END_AT_LINE_OPT, "-2")) + 1;
     memUsageFreq = Integer.parseInt(prop
         .getProperty(MEM_USAGE_FREQ_OPT, "1000"));
-    printFeatureNames = Boolean.parseBoolean(prop.getProperty(
-        PRINT_FEATURE_NAMES_OPT, "true"));
     int numLines = Integer.parseInt(prop.getProperty(NUM_LINES_OPT, "-1"));
     if (numLines > 0) {
       startAtLine = 0;
       endAtLine = numLines;
     }
-    withAlign = !Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT, "false"));
+    withAlign = ! Boolean.parseBoolean(prop.getProperty(NO_ALIGN_OPT, "false"));
     lowercase = Boolean.parseBoolean(prop.getProperty(LOWERCASE_OPT, "false"));
     verbose = Boolean.parseBoolean(prop.getProperty(VERBOSE_OPT, "false"));
-    outputFile = prop.getProperty(OUTPUT_FILE_OPT);
     minPhraseCount = PropertiesUtils.getInt(prop, MIN_PHRASE_COUNT, 0);
+    outputDir = prop.getProperty(OUTPUT_DIR, null);
   }
 
+  /**
+   * Configures the phrase extractor by loading the individual feature
+   * extractors.
+   */
+  @SuppressWarnings("unchecked")
   public void init() {
-
-    String exsString = prop.getProperty(EXTRACTORS_OPT);
-    if (exsString == null || exsString.equals("") || exsString.equals("moses"))
-      exsString = MosesPharoahFeatureExtractor.class.getName() + ":"
-          + LexicalReorderingFeatureExtractor.class.getName();
+    
+    String[] featureExtractorList = prop.getProperty(FEATURE_EXTRACTORS_OPT, DEFAULT_FEATURE_SET)
+        .split(PhraseExtract.FEATURE_EXTRACTOR_DELIM);
 
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
-    extractors = new ArrayList<AbstractFeatureExtractor>();
-    infoFileForExtractors = new ArrayList<String>();
+    extractors = Generics.newArrayList();
+    phrasePrinter = null;
 
-    boolean withGaps = Boolean.parseBoolean(prop.getProperty(WITH_GAPS_OPT,
-        "false"));
-
-    for (String exStr : exsString.split(":")) {
+    // Load the feature extractors
+    for (String featureExtractorSpec : featureExtractorList) {
+      AbstractFeatureExtractor featureExtractor;
+      String[] extractorAndFileName = featureExtractorSpec.trim().split(FILE_DELIM);
+      if (extractorAndFileName.length != 2) {
+        throw new RuntimeException("Invalid extractor specification: " + featureExtractorSpec);
+      }
+      String className = extractorAndFileName[0].trim();
+      String outFile = extractorAndFileName[1].trim();
+      if (outputDir != null) {
+        outFile = outputDir + "/" + outFile;
+      }
+      
+      // Load the feature extractor by reflection
       try {
-        AbstractFeatureExtractor fe;
-        String[] extractorAndInfoFile = exStr.split("=");
-        String infoFilename = null;
+        Class<AbstractFeatureExtractor> extractorClass = (Class<AbstractFeatureExtractor>) ClassLoader
+            .getSystemClassLoader().loadClass(className);
+        featureExtractor = (AbstractFeatureExtractor) extractorClass.newInstance();
+        featureExtractor.init(prop, featureIndex, alTemps);
+        extractors.add(featureExtractor);
 
-        // if the extractor string contains "=", then assume
-        // that A in A=B is the extractor class name, and
-        // B is an "info" file with same number of lines as sentence pairs.
-        if (extractorAndInfoFile.length == 2) {
-          infoFilename = extractorAndInfoFile[1];
-          exStr = extractorAndInfoFile[0];
-          System.err.printf("File read by extractor %s: %s.\n", exStr,
-              infoFilename);
-        } else if (extractorAndInfoFile.length != 1) {
-          throw new RuntimeException("extractor argument format error");
+        System.err.printf("Feature extractor: %s => %s%n"
+            ,featureExtractor.getClass().getName(), outFile);
+        
+        extractorToFileString.put(featureExtractor, outFile);
+        if ( ! fileStringToWriter.containsKey(outFile)) {
+          fileStringToWriter.put(outFile, IOTools.getWriterFromFile(outFile));
         }
-
-        // if exStr contains parentheses, assume it is a call to a constructor
-        // (without the "new"):
-        int pos = exStr.indexOf('(');
-        if (pos >= 0) {
-          StringBuffer constructor = new StringBuffer("new ").append(exStr);
-          System.err.println("Running constructor: " + constructor);
-          Interpreter interpreter = (Interpreter) Class.forName(
-              "edu.stanford.nlp.mt.BshInterpreter").newInstance();
-          fe = (AbstractFeatureExtractor) interpreter.evalString(constructor
-              .toString());
-        } else {
-          @SuppressWarnings("unchecked")
-          Class<AbstractFeatureExtractor> cls = (Class<AbstractFeatureExtractor>) Class
-              .forName(exStr);
-          Constructor<AbstractFeatureExtractor> ct = cls
-              .getConstructor(new Class[] {});
-          fe = ct.newInstance();
-        }
-
-        fe.init(prop, featureIndex, alTemps);
-        if (extractors.isEmpty()) {
-          if (fe instanceof PhrasePrinter)
-            phrasePrinter = (PhrasePrinter) fe;
-          else
-            phrasePrinter = new PlainPhrasePrinter();
-        }
-        extractors.add(fe);
-        infoFileForExtractors.add(infoFilename);
-        System.err.println("Instantiating feature extractor: "
-            + fe.getClass().getName());
-
+        
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
-
-    String phraseExtractorName = prop.getProperty(PHRASE_EXTRACTOR_OPT);
+    
+    // Configure the phrase printer
+    for (AbstractFeatureExtractor extractor : extractors) {
+      if (extractor instanceof PhrasePrinter) {
+        if (phrasePrinter == null) {
+          phrasePrinter = (PhrasePrinter) extractor;
+        } else {
+          throw new RuntimeException("Only one feature extractor may implement the PhrasePrinter interface");
+        }
+      }
+    }
+    if (phrasePrinter == null) {
+      // Default
+      phrasePrinter = new PlainPhrasePrinter();
+    }
+    
+    // Configure the phrase extractor
+    final boolean withGaps = PropertiesUtils.getBool(prop, WITH_GAPS_OPT, false);
+    String phraseExtractorName = prop.getProperty(PHRASE_EXTRACTOR_OPT, null);
     if (phraseExtractorName != null) {
-      String[] fields = phraseExtractorName.split("=");
-      if (fields.length == 2)
-        phraseExtractorInfoFile = fields[1];
-      else if (fields.length != 1)
-        throw new RuntimeException("Can't parse: " + phraseExtractorName);
-      phraseExtractorName = fields[0];
-      System.err.println("Phrase extractor: " + Arrays.toString(fields));
+      System.err.println("Phrase extractor: " + phraseExtractorName);
       try {
-        @SuppressWarnings("unchecked")
         Class<AbstractPhraseExtractor> cls = (Class<AbstractPhraseExtractor>) Class
             .forName(phraseExtractorName);
         Constructor<AbstractPhraseExtractor> ct = cls
@@ -435,6 +468,7 @@ public class PhraseExtract {
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
+    
     } else {
       phraseExtractor = withGaps ? new DTUPhraseExtractor(prop, alTemps,
           extractors) : new FlatPhraseExtractor(prop, alTemps, extractors);
@@ -468,14 +502,13 @@ public class PhraseExtract {
           if (p != null) {
             String[] lines = p.second();
             ex.processLine(phraseEx, p.first(), sent, lines[0], lines[1],
-                lines[2], lines[3]);
+                lines[2]);
           }
         }
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
-
   }
 
   // Make as many passes over training data as needed to extract features.
@@ -487,7 +520,7 @@ public class PhraseExtract {
     long startTimeMillis = System.currentTimeMillis();
 
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
-
+    
     try {
       for (int passNumber = 0; passNumber < totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
@@ -517,24 +550,12 @@ public class PhraseExtract {
             "Pass %d on training data (max phrase len: %d,%d)...\nLine",
             passNumber + 1, AbstractPhraseExtractor.maxPhraseLenF,
             AbstractPhraseExtractor.maxPhraseLenE);
-        LineNumberReader pReader = null, aInvReader = null, fReader = IOTools
+        LineNumberReader aInvReader = null, fReader = IOTools
             .getReaderFromFile(fCorpus), eReader = IOTools
             .getReaderFromFile(eCorpus), aReader = IOTools
             .getReaderFromFile(alignCorpus);
         if (useGIZA)
           aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
-        if (phraseExtractorInfoFile != null)
-          pReader = IOTools.getReaderFromFile(phraseExtractorInfoFile);
-
-        // make Readers from the info files for each extractors
-        List<LineNumberReader> infoReaders = new ArrayList<LineNumberReader>();
-        for (String infoFile : infoFileForExtractors) {
-          LineNumberReader r = null;
-          if (infoFile != null) {
-            r = IOTools.getReaderFromFile(infoFile);
-          }
-          infoReaders.add(r);
-        }
 
         int lineNb = 0;
         for (String fLine;; ++lineNb) {
@@ -568,11 +589,10 @@ public class PhraseExtract {
 
           String eLine = eReader.readLine();
           if (tripleFile) {
-            eLine = eLine.split(" \\|\\|\\| ")[1];
+            eLine = eLine.split(tripleDelim)[1].trim();
           }
           if (eLine == null)
             throw new IOException("Target-language corpus is too short!");
-          String pLine = pReader == null ? null : pReader.readLine();
 
           boolean skipLine = (fLine.isEmpty() || eLine.isEmpty());
 
@@ -596,9 +616,9 @@ public class PhraseExtract {
           } else {
             aLine = aReader.readLine();
             if (tripleFile) {
-              String[] toks = aLine.split(" \\|\\|\\| ");
+              String[] toks = aLine.split(tripleDelim);
               if (toks.length >= 3) {
-                aLine = aLine.split(" \\|\\|\\| ")[2];
+                aLine = aLine.split(tripleDelim)[2].trim();
               } else {
                 aLine = "";
               }
@@ -608,21 +628,6 @@ public class PhraseExtract {
           }
           if (skipLine || aLine.isEmpty())
             continue;
-
-          // Read line with extra/custom information:
-          if (nThreads == 0) {
-            infoLinesForExtractors = new ArrayList<String>();
-            for (LineNumberReader infoReader : infoReaders) {
-              String infoLine = null;
-              if (infoReader != null) {
-                infoLine = infoReader.readLine();
-                if (infoLine == null)
-                  throw new IOException(
-                      "Info file for one extractor is too short!");
-              }
-              infoLinesForExtractors.add(infoLine);
-            }
-          }
 
           if (lineNb < startAtLine)
             continue;
@@ -636,11 +641,10 @@ public class PhraseExtract {
             eLine = eLine.toLowerCase();
           }
           if (threads.isEmpty()) {
-            processLine(phraseExtractor, lineNb, sent, fLine, eLine, aLine,
-                pLine);
+            processLine(phraseExtractor, lineNb, sent, fLine, eLine, aLine);
           } else {
             dataQueue.put(new Pair<Integer, String[]>(lineNb, new String[] {
-                fLine, eLine, aLine, pLine }));
+                fLine, eLine, aLine }));
           }
         }
 
@@ -678,90 +682,83 @@ public class PhraseExtract {
   }
 
   private void processLine(AbstractPhraseExtractor ex, int lineNb,
-      SymmetricalWordAlignment sent, String fLine, String eLine, String aLine,
-      String pLine) throws IOException {
+      SymmetricalWordAlignment sent, String fLine, String eLine, String aLine) 
+          throws IOException {
     sent.init(lineNb, fLine, eLine, aLine, false, false);
-    featurizePhrases(ex, sent, pLine);
-    featurizeSentence(ex, sent);
-  }
-
-  private static void featurizePhrases(PhraseExtractor ex,
-      SymmetricalWordAlignment sent, String pLine) {
-    if (pLine != null)
-      ex.setSentenceInfo(sent, pLine);
     ex.extractPhrases(sent);
+    featurizeSentence(ex, sent);
   }
 
   private void featurizeSentence(AbstractPhraseExtractor ex,
       SymmetricalWordAlignment sent) {
     for (int i = 0; i < extractors.size(); i++) {
       AbstractFeatureExtractor e = extractors.get(i);
-      String infoLine = (nThreads == 0) ? infoLinesForExtractors.get(i) : "";
-      e.featurizeSentence(sent, infoLine, ex.getAlGrid());
+      e.featurizeSentence(sent, ex.getAlGrid());
     }
   }
 
   // Write combined features to a stream.
-  boolean write(PrintStream oStream, boolean withAlign) {
-    if (oStream == null)
-      oStream = System.out;
-    long startTimeMillis = System.currentTimeMillis();
-    long startStepTimeMillis = startTimeMillis;
+  boolean write(boolean withAlign) {
 
-    System.err.printf("Phrases in memory: %d\n", alTemps.size());
+    final long startTime = System.nanoTime();
+
+    System.err.printf("Phrases in memory: %d%n", alTemps.size());
     int phrasesWritten = 0;
 
     for (int idx = 0; idx < alTemps.size(); ++idx) {
-      boolean skip = false;
-      StringBuilder str = new StringBuilder();
-
-      if (idx % 10000 == 0 || idx + 1 == alTemps.size()) {
-        long totalMemory = Runtime.getRuntime().totalMemory() / (1 << 20);
-        long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);
-        double totalStepSecs = (System.currentTimeMillis() - startStepTimeMillis) / 1000.0;
-        startStepTimeMillis = System.currentTimeMillis();
-        if (verbose)
-          System.err
-              .printf(
-                  "writing phrase %d (secs = %.3f, totalmem = %dm, freemem = %dm)...\n",
-                  idx, totalStepSecs, totalMemory, freeMemory);
-      }
-
       if (!alTemps.reconstructAlignmentTemplate(alTemp, idx)) {
         continue;
       }
       
       // Filter phrases that have occured less than n times
-      // Note that by filtering the phrases here, the generative extractor scores are not necessarily
-      // correct.
-      // TODO(spenceg): Maybe we should move the generative features?
+      // Note that by filtering the phrases here, the generative extractor scores 
+      // are not necessarily correct.
+      // TODO(spenceg): This should be replaced with leave-one-out.
       if (alTemps.getAlignmentCount(alTemp) < minPhraseCount) {
         continue;
       }
       
-      str.append(phrasePrinter.toString(alTemp, withAlign));
-      str.append(AlignmentTemplate.DELIM);
+      StringBuilder ruleStr = new StringBuilder();
+      ruleStr.append(phrasePrinter.toString(alTemp, withAlign));
+      ruleStr.append(" ").append(AlignmentTemplate.DELIM).append(" ");
 
+      Map<String,StringBuilder> fileToScores = Generics.newHashMap();
+      for (String file : fileStringToWriter.keySet()) {
+        fileToScores.put(file, new StringBuilder());
+      }
+      boolean skip = false;
       for (AbstractFeatureExtractor e : extractors) {
         Object scores = e.score(alTemp);
-
         if (scores == null) {
           skip = true;
           break;
         }
-
+        
+        String outFileName = extractorToFileString.get(e);
+        if (outFileName == null) {
+          // Impossible unless the init() method is changed....
+          throw new RuntimeException("No output file for extractor: " + e.getClass().getName());
+        }
+        StringBuilder scoreStr = fileToScores.get(outFileName);
+        if (scoreStr == null) {
+          // Impossible unless the init() method is changed....
+          throw new RuntimeException("No score collector for output file: " + outFileName);  
+        }
+        
         if (scores instanceof float[]) { // as dense vector
           float[] scoreArray = (float[]) scores;
-          for (float aScoreArray : scoreArray) {
-            aScoreArray = (aScoreArray > 0.0) ? (float) Math.log(aScoreArray) : aScoreArray;
-            str.append(aScoreArray).append(" ");
+          for (float score : scoreArray) {
+            score = (score > 0.0) ? (float) Math.log(score) : score;
+            scoreStr.append(score).append(" ");
           }
+        
         } else if (scores instanceof double[]) {
           double[] scoreArray = (double[]) scores;
-          for (double aScoreArray : scoreArray) {
-            aScoreArray = (aScoreArray > 0.0) ? Math.log(aScoreArray) : aScoreArray;
-            str.append((float) aScoreArray).append(" ");
+          for (double score : scoreArray) {
+            score = (score > 0.0) ? Math.log(score) : score;
+            scoreStr.append((float) score).append(" ");
           }
+        
         } else {
           throw new UnsupportedOperationException(
               "AbstractFeatureExtractor should return double[] or Counter, not "
@@ -769,15 +766,21 @@ public class PhraseExtract {
         }
       }
       if (!skip) {
-        oStream.println(str.toString());
+        for (String file : fileStringToWriter.keySet()) {
+          StringBuilder scores = fileToScores.get(file);
+          String line = ruleStr.toString() + scores.toString();
+          PrintStream outfile = fileStringToWriter.get(file);
+          outfile.println(line);
+        }
         ++phrasesWritten;
       }
     }
 
-    System.err.printf("Phrases written: %d\n", phrasesWritten);
-    double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-    System.err.printf("Done generating phrase table. Seconds: %.3f.\n",
-        totalTimeSecs);
+    System.err.printf("Phrases written: %d%n", phrasesWritten);
+    double elapsedTime = ((double) (System.nanoTime() - startTime)) / 1e9;
+    System.err.printf("Done generating phrase table. Elapsed time: %.3fs.%n",
+        elapsedTime);
+    
     return true;
   }
 
@@ -791,9 +794,6 @@ public class PhraseExtract {
   }
 
   public void extractAll() {
-
-    PrintStream oStream = IOTools.getWriterFromFile(outputFile);
-
     if (filterFromDev) {
       int sz = sourceFilter.size();
       int size = 1 + (numSplits == 0 ? sz : sz / numSplits);
@@ -802,18 +802,17 @@ public class PhraseExtract {
         init();
         sourceFilter.setRange(startLine, startLine + size);
         extractFromAlignedData();
-        write(oStream, withAlign);
+        write(withAlign);
         startLine += size;
       }
     } else {
       init();
       extractFromAlignedData();
-      write(oStream, withAlign);
+      write(withAlign);
     }
-
-    if (oStream != null)
-      oStream.close();
-
+    for (PrintStream file : fileStringToWriter.values()) {
+      file.close();
+    }
   }
 
   static void usage() {
@@ -834,7 +833,6 @@ public class PhraseExtract {
             + "Set 4:\n"
             + " -tripleFile <file> : source ||| target ||| alignment triple format\n"
             + "Optional arguments:\n"
-            + " -outputFile <file> : phrases are written to this file\n"
             + " -symmetrization <type> : alignment symmetrization heuristic (expects -feAlign and -efAlign)\n"
             + " -extractors <class1>[:<class2>:...:<classN>] : feature extractors\n"
             + " -fFilterCorpus <file> : filter against a specific dev/test set\n"
@@ -850,10 +848,16 @@ public class PhraseExtract {
             + " -endAtLine <n> : end at line <n> (<0 : all)\n"
             + " -noAlign : do not specify alignment in phrase table\n"
             + " -verbose : enable verbose mode\n"
-            + " -minCount <n> : Retain only phrases that occur >= n times\n");
-    //throw new RuntimeException();
+            + " -minCount <n> : Retain only phrases that occur >= n times\n"
+            + " -outputDir path : Output files to <path>\n");
   }
 
+  /**
+   * Extract phrases from an aligned bitext.
+   * 
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
     if (args.length == 1 && args[0].equals("-help")) {
       usage();
@@ -861,7 +865,7 @@ public class PhraseExtract {
     }
 
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd hh:mm aaa");
-    System.err.printf("Extraction started at %s on %s.\n",
+    System.err.printf("Extraction started at %s on %s.%n",
         formatter.format(new Date()), InetAddress.getLocalHost().getHostName());
 
     Properties prop = StringUtils.argsToProperties(args);

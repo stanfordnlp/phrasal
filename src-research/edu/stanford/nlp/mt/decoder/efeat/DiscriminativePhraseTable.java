@@ -7,7 +7,6 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.util.Index;
 
 /**
  * Indicator features for each rule in a derivation.
@@ -42,7 +41,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   }
   
   @Override
-  public void initialize(Index<String> featureIndex) {}
+  public void initialize() {}
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {

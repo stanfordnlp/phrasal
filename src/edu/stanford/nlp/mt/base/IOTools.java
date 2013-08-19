@@ -208,14 +208,15 @@ public final class IOTools {
     assert nbestListWriter != null;
     
     StringBuilder sb = new StringBuilder(translations.size() * 500);
+    String nl = System.getProperty("line.separator");
     for (RichTranslation<IString, String> tran : translations) {
       if (generateMosesNBestList) {
         tran.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
       } else {
-        sb.append(sourceInputId).append(" ").append(FlatNBestList.NBEST_SEP).append(" ");
+        sb.append(sourceInputId).append(" ").append(FlatNBestList.FIELD_DELIM).append(" ");
         sb.append(tran.toString());
       }
-      sb.append('\n');
+      sb.append(nl);
     }
     nbestListWriter.append(sb.toString());
   }

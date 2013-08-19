@@ -14,7 +14,6 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.tools.ComputeBitextIDF;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Index;
 
 /**
  * Chris' suggestion! Computes the sum of IDFs on either side of a rule,
@@ -90,6 +89,6 @@ public class DenseIDFFeature implements
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 }

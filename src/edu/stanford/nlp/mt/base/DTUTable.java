@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 public class DTUTable<FV> extends FlatPhraseTable<FV> {
@@ -47,9 +46,8 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     return gapSizeScoresE.get(fIndex)[gapId][binId];
   }
 
-  public DTUTable(RuleFeaturizer<IString, FV> phraseFeaturizer,
-      String filename) throws IOException {
-    super(phraseFeaturizer, filename);
+  public DTUTable(String filename) throws IOException {
+    super(filename);
     System.err.println("DTU phrase table: " + filename);
     File f = new File(filename);
     name = String.format("DTU(%s)", f.getName());

@@ -1,11 +1,10 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Index;
 
 /**
  * @author danielcer
@@ -37,9 +36,4 @@ public interface Scorer<FV> {
    * @return True if the scorer has any non-zero weights. False otherwise.
    */
   public boolean hasNonZeroWeight(FV featureName);
-  
-  /**
-   * @return this scorer's feature index.
-   */
-  public Index<String> getFeatureIndex();
 }

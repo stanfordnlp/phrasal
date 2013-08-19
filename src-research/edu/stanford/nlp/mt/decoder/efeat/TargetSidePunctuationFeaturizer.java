@@ -4,7 +4,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -46,7 +45,7 @@ RuleFeaturizer<IString, String> {
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 
   @Override

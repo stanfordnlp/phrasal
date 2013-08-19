@@ -48,6 +48,7 @@ echo Phrasal training and tuning
 echo ===========================
 echo System name: $SYS_NAME
 echo Start step: $START_STEP
+echo JavaNLP: $JAVANLP_HOME
 echo Loading local parameters from $VAR_FILE
 source $VAR_FILE
 
@@ -61,11 +62,7 @@ function extract {
     FILTSET=$1
     PTABLEDIR=$2
     mkdir -p $PTABLEDIR
-    java $JAVA_OPTS $EXTRACTOR_OPTS edu.stanford.nlp.mt.train.PhraseExtract -threads $THREADS_EXTRACT -extractors $EXTRACTORS $EXTRACT_SET -fFilterCorpus $FILTSET $LO_ARGS $OTHER_EXTRACT_OPTS 2> "$PTABLEDIR"/merged.gz.log | gzip -c > "$PTABLEDIR"/merged.gz
-
-    # Split the phrase table into rule scores and lex re-ordering
-    # scores
-    zcat "$PTABLEDIR"/merged.gz | filter_po_tables "$PTABLEDIR"/phrase-table.gz "$PTABLEDIR"/lo-hier.msd2-bidirectional-fe.gz -99999999 8 >& "$PTABLEDIR"/phrase-table.gz.log
+    java $JAVA_OPTS $EXTRACTOR_OPTS edu.stanford.nlp.mt.train.PhraseExtract -threads $THREADS_EXTRACT -extractors $EXTRACTORS $EXTRACT_SET -fFilterCorpus $FILTSET $LO_ARGS $OTHER_EXTRACT_OPTS -outputDir $PTABLEDIR 2> ${PTABLEDIR}/extract.gz.log
 }
 
 #
@@ -81,16 +78,25 @@ function prep-source {
 	"$INFILE" "$OUTFILE".tmp >& "$OUTFILE".err 
     cat "$OUTFILE".tmp | sed 's/^ *$/null/' > "$OUTFILE"
     rm -f "$OUTFILE".tmp
-    cat "$OUTFILE" | ngram-count -text - -write-vocab "$NAME".f.vocab -order 1 -unk
+}
+
+function tune-setup {
+    # Check to see if the user pre-processed the tuning file
+    if [ ! -e $TUNE_FILE ]; then
+	ln -s $TUNE_SET $TUNE_FILE
+    fi
+    
+    # Setup the ini file and run online tuning
+    update_ini -n $TUNE_NBEST SETID $TUNE_SET_NAME \
+	< $INI_FILE > $TUNE_INI_FILE   
 }
 
 #
 # Batch tuning (e.g., MERT, PRO)
 #
 function tune-batch {
-    # Setup the input ini file and run batch tuning
-    update_ini SETID $TUNE_SET_NAME < $INI_FILE > $TUNE_INI_FILE
-    
+    tune-setup    
+
     phrasal-mert.pl \
 	--opt-flags="$OPT_FLAGS" \
 	--working-dir="$TUNEDIR" \
@@ -124,10 +130,8 @@ function make-ini-from-batch-run {
 # Online tuning (e.g., Mira, PRO+SGD)
 #
 function tune-online {
-    # Setup the ini file and run online tuning
-    update_ini -n $TUNE_NBEST SETID $TUNE_SET_NAME \
-	< $INI_FILE > $TUNE_INI_FILE    
-
+    tune-setup
+    
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.tune.OnlineTuner \
 	$TUNE_FILE $TUNE_REF \
 	$TUNE_INI_FILE \
@@ -158,6 +162,11 @@ function make-ini-from-online-run {
 # Decode an input file given an ini file from a tuning run
 #
 function decode {
+    # Check to see if the user pre-processed the input file
+    if [ ! -e $DECODE_FILE ]; then
+	ln -s $DECODE_SET $DECODE_FILE
+    fi
+    
     java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
 	"$RUNNAME".ini \
 	< $DECODE_FILE > "$RUNNAME".trans 2> logs/"$RUNNAME".log

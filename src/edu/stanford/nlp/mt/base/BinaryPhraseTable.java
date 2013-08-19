@@ -18,8 +18,6 @@ import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;
   final int longestForeignPhrase;
@@ -27,9 +25,8 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   final Environment dbEnv;
   final Database db;
   
-  public BinaryPhraseTable(RuleFeaturizer<IString, FV> phraseFeaturizer,
-      String filename) throws IOException {
-    super(phraseFeaturizer);
+  public BinaryPhraseTable(String filename) throws IOException {
+    super(null);
     name = String.format("BinaryPhraseTable(%s)", filename);
     EnvironmentConfig envConfig = new EnvironmentConfig();
     envConfig.setTransactional(false);

@@ -225,7 +225,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     int totalHypothesesGenerated = 1;
 
-    featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
+    featurizer.initialize(sourceInputId, options, source);
 
     // main translation loop
     long decodeLoopTime = -System.currentTimeMillis();

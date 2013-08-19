@@ -38,8 +38,7 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
   }
 
   @Override
-  public void featurizeSentence(SymmetricalWordAlignment sent, String info,
-      AlignmentGrid alGrid) {
+  public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid) {
   }
 
   @Override

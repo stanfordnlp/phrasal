@@ -42,7 +42,7 @@ import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
-import edu.stanford.nlp.mt.decoder.util.OptionGrid;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.stats.ClassicCounter;
 
@@ -151,39 +151,39 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // TM (phrase table) query for applicable rules
     if (DEBUG) System.err.println("Generating Translation Options");
-    List<ConcreteRule<TK,FV>> options = phraseGenerator
+    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
         .getRules(source, targets, sourceInputId, scorer);
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
-        for (ConcreteRule<TK,FV> option : options)
+        for (ConcreteRule<TK,FV> option : ruleList)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
               option.abstractRule.source, option.abstractRule.target,
               option.isolationScore, option.sourceCoverage);
         System.err.println(">> End translation options <<");
       }
     } else {
-      System.err.printf("Translation options: %d\n", options.size());
+      System.err.printf("Translation options: %d\n", ruleList.size());
     }
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     if (constrainedOutputSpace != null) {
-      options = constrainedOutputSpace.filterOptions(options);
+      ruleList = constrainedOutputSpace.filterOptions(ruleList);
       System.err
           .printf(
               "Translation options after reduction by output space constraint: %d\n",
-              options.size());
+              ruleList.size());
     }
 
     // Create rule lookup chart. Rules can be fetched by span.
-    OptionGrid<TK,FV> optionGrid = new OptionGrid<TK,FV>(options, source);
+    RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source);
 
     // Generate null/start hypothesis
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
-    allOptions.add(options);
+    allOptions.add(ruleList);
     Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source,
         heuristic, scorer, annotators, allOptions);
     beams[0].put(nullHyp);
@@ -194,12 +194,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     // Initialize feature extractors
-    featurizer.initialize(sourceInputId, options, source, scorer.getFeatureIndex());
+    featurizer.initialize(sourceInputId, ruleList, source);
 
     // main translation loop---beam expansion
     long startTime = System.nanoTime();
     for (int i = 0; i < beams.length; i++) {
-      expandBeam(beams, i, sourceSz, optionGrid, 
+      expandBeam(beams, i, sourceSz, ruleGrid, 
           constrainedOutputSpace, sourceInputId);
       
       if (DEBUG) {
@@ -324,7 +324,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
    * @return number of generated hypotheses
    */
   private int expandBeam(Beam<Derivation<TK, FV>>[] beams, int beamId,
-      int sourceSz, OptionGrid<TK,FV> optionGrid,
+      int sourceSz, RuleGrid<TK,FV> optionGrid,
       ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       int sourceInputId) {
     int optionsApplied = 0;

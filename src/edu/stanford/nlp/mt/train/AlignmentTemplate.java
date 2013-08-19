@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.train;
 import java.util.*;
 import java.io.IOException;
 
+import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -20,7 +21,7 @@ public class AlignmentTemplate {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  public static final String DELIM = " ||| ";
+  public static final String DELIM = FlatNBestList.FIELD_DELIM;
 
   // phrases:
   Sequence<IString> f;
@@ -136,14 +137,16 @@ public class AlignmentTemplate {
 
   public String toString(boolean withAlign) {
     StringBuilder buf = new StringBuilder();
-    buf.append(f.toString()).append(DELIM).append(e.toString());
+    String delim = ' ' + DELIM + ' ';
+    buf.append(f.toString()).append(delim).append(e.toString());
     if (withAlign)
       addAlignmentString(buf);
     return buf.toString();
   }
 
   public void addAlignmentString(StringBuilder buf) {
-    buf.append(DELIM);
+    String delim = ' ' + DELIM + ' ';
+    buf.append(delim);
     if (f2e != null) {
       for (int i = 0; i < f2e.length; ++i) {
         if (i > 0)
@@ -151,7 +154,7 @@ public class AlignmentTemplate {
         buf.append("(").append(alignmentToString(f2e[i])).append(")");
       }
     }
-    buf.append(DELIM);
+    buf.append(delim);
     if (e2f != null) {
       for (int i = 0; i < e2f.length; ++i) {
         if (i > 0)

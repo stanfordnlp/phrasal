@@ -5,7 +5,6 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 /**
  *
@@ -43,6 +42,6 @@ public class UnknownWordFeaturizer<TK> implements
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 }

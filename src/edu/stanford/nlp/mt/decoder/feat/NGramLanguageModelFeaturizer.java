@@ -5,7 +5,6 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Index;
 
 /**
  *
@@ -364,12 +363,12 @@ public class NGramLanguageModelFeaturizer implements
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign, Index<String> featureIndex) {
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
     rawLMScoreHistory.clear();
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {
+  public void initialize() {
   }
 
 }
