@@ -22,32 +22,30 @@ import edu.stanford.nlp.util.Generics;
 
 /**
  * 
- * TODO(spenceg): Maybe need to do label set pruning?
+ * TODO(spenceg): Maybe need to do label set pruning for InsertBefore, InsertAfter and Replace here?
+ * We'd only allow those operations after seeing the operation a certain number of times.
  * 
  * @author Spence Green
  *
  */
 public final class ProcessorTools {
 
-  private static final String OP_DELETE = "D";
-  private static final String OP_REPLACE = "R";
-  private static final String OP_TOUPPER = "TU";
-  private static final String OP_INSERT_BEFORE = "IB";
-  private static final String OP_INSERT_AFTER = "IA";
-  private static final String OP_NONE = "N";
-  private static final String OP_WHITESPACE = ".#.";
-  
+  private static enum Operation {Delete, Replace, ToUpper, InsertBefore, InsertAfter, None, Whitespace};
+    
   // Delimiter must *not* be a regex special character!
   private static final String OP_DELIM = "#";
-  private static final String WHITESPACE = ".##.";
-  private static final String WHITESPACE_INTERNAL = ".###.";
+  public static final String WHITESPACE = ".##.";
+  
+  // TODO(spenceg): Change this to non-breaking space or something.
+  // Must be a single character!
+  private static final String WHITESPACE_INTERNAL = " ";
 
   // Needleman-Wunsch parameters
   private static final int gapPenalty = -1;
   private static final int penalty = -2;
   
   
-  private ProcessorTools(){}
+  private ProcessorTools() {}
   
   /**
    * Convert a raw/preprocessed String pair to a labeled sequence appropriate for training
@@ -67,15 +65,16 @@ public final class ProcessorTools {
       for (int j : eAlignments) {
         eTokens.add(alignment.e().get(j).toString());
       }
-      if (sequence.size() > 0) sequence.add(createDatum(WHITESPACE, OP_WHITESPACE, sequence.size()));
-      sequence.addAll(toSequence(alignment.f().get(i).toString(), eTokens, sequence.size()));
+      if (sequence.size() > 0) sequence.add(createDatum(WHITESPACE, Operation.Whitespace.toString(), sequence.size()));
+      List<CoreLabel> charSequence = toSequence(alignment.f().get(i).toString(), eTokens, sequence.size());
+      sequence.addAll(charSequence);
     }
     return sequence;
   }
 
   
   private static List<CoreLabel> toSequence(String rawToken,
-      List<String> tokenList, int sequenceIndex) {
+      List<String> tokenList, int outputIndex) {
     
     StringBuilder sb = new StringBuilder();
     for (String s : tokenList) {
@@ -95,27 +94,27 @@ public final class ProcessorTools {
       int sIndex = t2sGrid[i];
       if (sIndex < 0) {
         // Delete (insert target character)
-        sequence.add(createDatum(tChar, OP_DELETE, i));
+        sequence.add(createDatum(tChar, Operation.Delete.toString(), i));
       } else {
         String sChar = String.valueOf(rawToken.charAt(sIndex));
         assert sIndex < s2t.length;
         s2t[sIndex] = i;
         if (tChar.equals(sChar)) {
           // NoOp
-          sequence.add(createDatum(tChar, OP_NONE, i));
+          sequence.add(createDatum(tChar, Operation.None.toString(), i));
         } else if (tChar.equals(sChar.toLowerCase())) {
           // Uppercase
-          sequence.add(createDatum(tChar, OP_TOUPPER, i));
+          sequence.add(createDatum(tChar, Operation.ToUpper.toString(), i));
         } else {
           // Replace
-          String label = OP_REPLACE + OP_DELIM + sChar;
+          String label = Operation.Replace.toString() + OP_DELIM + sChar;
           sequence.add(createDatum(tChar, label, i));
         }
       }
     }
     
     // Now look for unaligned source spans (deleted source spans)
-    for (int i = 0; i < rawToken.length(); ) {
+    for (int i = 0; i < rawToken.length(); ++i) {
       if (s2t[i] >= 0) continue;
       int j = i + 1;
       while (j < rawToken.length() && s2t[j] < 0) ++j;
@@ -123,16 +122,16 @@ public final class ProcessorTools {
       int p = s2t[i];
       int q = s2t[j];
       // Span p/q in the target bounds this gap
-      String pLabel = sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class);
-      String qLabel = sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class);
-      if (pLabel.equals(OP_NONE)) {
+      Operation pLabel = Operation.valueOf(sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class));
+      Operation qLabel = Operation.valueOf(sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class));
+      if (pLabel == Operation.None) {
         // Insert after
-        String label = OP_INSERT_AFTER + OP_DELIM + rawToken.substring(i, j);
+        String label = Operation.InsertAfter.toString() + OP_DELIM + rawToken.substring(i, j);
         sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
         
-      } else if (qLabel.equals(OP_NONE)) {
+      } else if (qLabel == Operation.None) {
         // Insert before
-        String label = OP_INSERT_BEFORE + OP_DELIM + rawToken.substring(i, j);
+        String label = Operation.InsertBefore.toString() + OP_DELIM + rawToken.substring(i, j);
         sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
       
       } else {
@@ -144,7 +143,7 @@ public final class ProcessorTools {
   }
 
   /**
-   * Needleman-Wunch. Orientation is t2s since we want to know how each target
+   * Needleman-Wunsch. Orientation is t2s since we want to know how each target
    * character was produced.
    * 
    * http://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
@@ -160,9 +159,11 @@ public final class ProcessorTools {
   }
 
   private static int[] backwardPass(int[][] grid, String source, String target) {
-    int[] t2sGrid = new int[grid[0].length];
-    int i = grid.length;
-    int j = grid[0].length;
+    int targetLength = grid[0].length;
+    int[] t2sGrid = new int[targetLength];
+    Arrays.fill(t2sGrid, -1);
+    int i = grid.length - 1;
+    int j = targetLength - 1;
     while (i > 0 && j > 0) {
       int simScore = sim(source.charAt(i), target.charAt(j));
       if (i > 0 && j > 0 && grid[i][j] == grid[i-1][j-1] + simScore) {
@@ -180,7 +181,13 @@ public final class ProcessorTools {
         throw new RuntimeException("Corrupt alignment grid");
       }
     }
-    Arrays.fill(t2sGrid, -1);
+    
+    // Either i or j or both are equal to 0
+    // TODO(spenceg): Is this right?
+    int simScore = sim(source.charAt(i), target.charAt(j));
+    if (simScore > 0) {
+      t2sGrid[j] = i;
+    }
     return t2sGrid;
   }
 
@@ -204,6 +211,7 @@ public final class ProcessorTools {
   }
 
   private static int sim(char char1, char char2) {
+    // TODO(spenceg): Should pass in the appropriate pre-processor for lowercasing.
     boolean isMatch = String.valueOf(char1).toLowerCase().equals(String.valueOf(char2).toLowerCase());
     return isMatch ? 1 : penalty;
   }
@@ -235,7 +243,8 @@ public final class ProcessorTools {
     
     for (CoreLabel outputChar : charSequence) {
       String text = outputChar.get(CharAnnotation.class);
-      String label = outputChar.get(AnswerAnnotation.class);
+      String[] fields = outputChar.get(AnswerAnnotation.class).split(OP_DELIM);
+      Operation label = Operation.valueOf(fields[0]);
       if (text.equals(WHITESPACE)) {
         // Process originalToken and currentToken
         String original = originalToken.toString();
@@ -257,28 +266,25 @@ public final class ProcessorTools {
         
         } else {
           originalToken.append(text);
-          if (label.equals(OP_NONE)) {
+          if (label == Operation.None) {
             currentToken.append(text);
             
-          } else if (label.startsWith(OP_INSERT_AFTER)) {
-            String[] fields = label.split(OP_DELIM);
+          } else if (label == Operation.InsertAfter) {
             assert fields.length == 2;
             currentToken.append(text).append(fields[1]);
             
-          } else if (label.startsWith(OP_INSERT_BEFORE)) {
-            String[] fields = label.split(OP_DELIM);
+          } else if (label == Operation.InsertBefore) {
             assert fields.length == 2;
             currentToken.append(fields[1]).append(text);
             
-          } else if (label.startsWith(OP_REPLACE)) {
-            String[] fields = label.split(OP_DELIM);
+          } else if (label == Operation.Replace) {
             assert fields.length == 2;
             currentToken.append(fields[1]);
             
-          } else if (label.equals(OP_TOUPPER)) {
+          } else if (label == Operation.ToUpper) {
             currentToken.append(text.toUpperCase());
             
-          } else if (label.equals(OP_DELETE)) {
+          } else if (label == Operation.Delete) {
             // delete output character
           }
         }
@@ -295,14 +301,14 @@ public final class ProcessorTools {
    * @author Spence Green
    *
    */
-  public static class PostProcessorDocumentReaderAndWriter implements DocumentReaderAndWriter<CoreLabel> {
+  public static class PostprocessorDocumentReaderAndWriter implements DocumentReaderAndWriter<CoreLabel> {
 
     private static final long serialVersionUID = -7761401510813091925L;
 
     private final IteratorFromReaderFactory<List<CoreLabel>> factory;
     private final Preprocessor preProcessor;
     
-    public PostProcessorDocumentReaderAndWriter(Preprocessor preprocessor) {
+    public PostprocessorDocumentReaderAndWriter(Preprocessor preprocessor) {
       this.preProcessor = preprocessor;
       this.factory = LineIterator.getFactory(new SerializableFunction<String, List<CoreLabel>>() {
         private static final long serialVersionUID = 3695624909844929834L;
@@ -332,11 +338,4 @@ public final class ProcessorTools {
       }
     }
   }
-  
-  /**
-   * @param args
-   */
-  public static void main(String[] args) {
-    // TODO Auto-generated method stub
   }
-}

@@ -11,5 +11,13 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  */
 public interface Postprocessor {
   
+  /**
+   * Postprocess a pre-processed input. Typically the input has been
+   * pre-processed with a class that implements the Preprocessor
+   * interface.
+   * 
+   * @param input
+   * @return
+   */
   public SymmetricalWordAlignment process(Sequence<IString> input);
 }

@@ -22,7 +22,7 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public class CoreNLPPreprocessor implements Preprocessor {
+public abstract class CoreNLPPreprocessor implements Preprocessor {
 
  protected final TokenizerFactory<CoreLabel> tf;
   
@@ -32,7 +32,8 @@ public class CoreNLPPreprocessor implements Preprocessor {
   
   @Override
   public SymmetricalWordAlignment process(String input) {
-    Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(input));
+    String uncased = toUncased(input);
+    Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(uncased.trim()));
     List<CoreLabel> outputTokens = tokenizer.tokenize();
     
     // Convert tokenized string to sequence
@@ -46,24 +47,31 @@ public class CoreNLPPreprocessor implements Preprocessor {
     
     // Generate the alignment
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, outputSequence);
-    int i = 0;
-    for (int j = 0; j < outputTokens.size(); ++j) {
-      if ( ! inputSequence.get(i).toString().equals(outputTokens.get(j).get(OriginalTextAnnotation.class))) {
-        ++i;
+    int j = 0;
+    for (int i = 0; i < inputSequence.size(); ++i) {
+      if (j >= outputTokens.size()) {
+        System.err.println("WARNING: Non-invertible input: " + input);
+        break;
       }
-      alignment.addAlign(i, j);
-      assert inputSequence.get(i).toString().equals(outputTokens.get(j).get(OriginalTextAnnotation.class));
+      String uncasedInputToken = toUncased(inputSequence.get(i).toString());
+      List<Integer> targets = Generics.newLinkedList();
+      StringBuilder sb = new StringBuilder();
+      String original = outputTokens.get(j).get(OriginalTextAnnotation.class);
+      targets.add(j++);
+      sb.append(original);
+      while ( (! uncasedInputToken.equals(original)) && j < outputSequence.size()) {
+        sb.append(outputTokens.get(j).get(OriginalTextAnnotation.class));
+        targets.add(j++);
+        original = sb.toString();
+      }
+      for (int targetIndex : targets) {
+        alignment.addAlign(i, targetIndex);
+      }
     }
     
     return alignment;
   }
 
-  /**
-   * @param args
-   */
-  public static void main(String[] args) {
-    // TODO Auto-generated method stub
-
-  }
-
+  @Override
+  public abstract String toUncased(String input);
 }
