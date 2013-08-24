@@ -68,11 +68,6 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     alignerRv.params = paramsRv;
   }
 
-  @Override
-  public boolean shutdown() {
-    return true;
-  }
-
   public PhraseGenerator<IString,FV> getPhraseGenerator() {
     return phraseGenerator;
   }

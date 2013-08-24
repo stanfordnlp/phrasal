@@ -1218,14 +1218,6 @@ public class Phrasal {
    * Free resources and cleanup.
    */
   public void shutdown() {
-    // Cleanup each inferer
-    for(Inferer<IString, String> inferer : inferers) {
-      boolean failed = (! inferer.shutdown());
-      if (failed) {
-        System.err.println("Unable to shutdown inferer: " + inferer.getClass().getName());
-      }
-    }
-
     if (nbestListWriter != null) {
       System.err.println("Closing n-best writer");
       nbestListWriter.close();

@@ -36,11 +36,4 @@ public interface Inferer<TK, FV> {
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> source,
       int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
       List<Sequence<TK>> targets, int size);
-
-  /**
-   * Free resources and cleanup (if necessary).
-   * 
-   * @return True if successful, false otherwise.
-   */
-  public boolean shutdown();
 }
