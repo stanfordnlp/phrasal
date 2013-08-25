@@ -42,6 +42,8 @@ public class FDACorpusSelection {
    final LineIndexedCorpus bitextFr;
    final LineIndexedCorpus bitextEn;
    
+   private boolean isMono = false; // Thang Aug13: handle monolingual data
+   
    static public void usage() {
       err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
           "(bitext.tgt) (bitext.src) (test.src) (selected.tgt) (selected.src) " +
@@ -72,6 +74,8 @@ public class FDACorpusSelection {
      bitextFr, LineIndexedCorpus testFr) {
       this.bitextEn = bitextEn;
       this.bitextFr = bitextFr;      
+      
+      if (bitextEn==null) { isMono = true; } // Thang Aug13: handle mono
       
       // construct F
       Counter<String> testFrNgramCounts = new ClassicCounter<String>();
@@ -136,7 +140,7 @@ public class FDACorpusSelection {
          if (VERBOSE) {
             err.printf("checking: %d %f\n", id, score[id]);
             err.printf("  src: %s\n", bitextFr.get(id));
-            err.printf("  trg: %s\n", bitextEn.get(id));
+            if (!isMono) { err.printf("  trg: %s\n", bitextEn.get(id)); } // Thang Aug13: handle mono
          }
          Counter<String> lineNgramCounts = new ClassicCounter<String>();
          String line = bitextFr.get(id);
@@ -158,7 +162,12 @@ public class FDACorpusSelection {
          // the current item - if there is, we'll need to double check
          // that the current item is still the best choice         
          if (Q.size() == 0) {
-            return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
+           if (!isMono) { // Thang Aug13: handle mono 
+             return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
+           } else {
+             return new Triple<String,String,Integer>(line,null,id);
+           }
+            
          }
          
          // compare the re-computed score with the score
@@ -177,7 +186,13 @@ public class FDACorpusSelection {
             if (VERBOSE) {
                err.printf(" - accepting: %d %f\n", id, score[id]);
             }
-            return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
+            if (!isMono) { // Thang Aug13: handle mono 
+              return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
+            } else {
+              return new Triple<String,String,Integer>(line,null,id);
+            }
+            
+            
          } else {
             if (VERBOSE) {
               err.printf(" - rejecting: %d %f < %f\n", id, score[id], score[nextId]);
@@ -194,28 +209,48 @@ public class FDACorpusSelection {
       }
       
       int selectionSize = Integer.parseInt(args[0]);
-      String bitextEnFn = args[1];
+      String bitextEnFn = args[1]; // Thang Aug13: could be "" for monolingual
       String bitextFrFn = args[2];
       String testFn = args[3];
-      String selectedEnFn = args[4];
+      String selectedEnFn = args[4]; // Thang Aug13: could be "" for monolingual
       String selectedFrFn = args[5];
       String selectedLines = (args.length == 7 ? args[6] : null);
-      
-      err.printf("Opening %s\n", bitextEnFn);
-      LineIndexedCorpus bitextEn = new LineIndexedCorpus(bitextEnFn);
+            
+      // src bitext
       err.printf("Opening %s\n", bitextFrFn);
       LineIndexedCorpus bitextFr = new LineIndexedCorpus(bitextFrFn);
+      
+      // src test
       err.printf("Opening %s\n", testFn);
       LineIndexedCorpus testFr = new LineIndexedCorpus(testFn);
-      if (bitextEn.size() != bitextFr.size()) {
-         err.printf("Bitext files %s and %s are of different lengths (%d vs %d)", 
-               bitextEnFn, bitextFrFn, bitextEn.size(), bitextFr.size());
+      
+      // Thang Aug13: handle "" tgt bitext
+      LineIndexedCorpus bitextEn = null;
+      PrintWriter selectedEn = null;
+      boolean isMono = bitextEnFn.equals(""); 
+      if(!isMono){ 
+        // tgt bitext
+        err.printf("Opening %s\n", bitextEnFn);
+        bitextEn = new LineIndexedCorpus(bitextEnFn);
+      
+        if (bitextEn.size() != bitextFr.size()) {
+          err.printf("Bitext files %s and %s are of different lengths (%d vs %d)", 
+                bitextEnFn, bitextFrFn, bitextEn.size(), bitextFr.size());
+        }
+        
+        // tgt out
+        selectedEn = new PrintWriter(new OutputStreamWriter(
+          new FileOutputStream(selectedEnFn), "UTF-8"));
       }
-      selectionSize = Math.min(selectionSize, bitextEn.size());
-      PrintWriter selectedEn = new PrintWriter(new OutputStreamWriter(
-        new FileOutputStream(selectedEnFn), "UTF-8"));
+      
+      
+      selectionSize = Math.min(selectionSize, bitextFr.size());
+
+      // src out
       PrintWriter selectedFr = new PrintWriter(new OutputStreamWriter(
         new FileOutputStream(selectedFrFn), "UTF-8"));
+      
+      // line out
       PrintWriter selectedLn = (selectedLines == null ? null : 
         new PrintWriter(new OutputStreamWriter(new FileOutputStream(
             selectedLines), "UTF-8")));
@@ -224,12 +259,11 @@ public class FDACorpusSelection {
       for (int n = 0; n < selectionSize; n++) {
          Triple<String,String,Integer> frEn = fsacs.getNextBest();
          selectedFr.println(frEn.first());
-         selectedEn.println(frEn.second());
+         if (!isMono) { selectedEn.println(frEn.second()); } // Thang Aug13: handle mono
          if (selectedLn != null) selectedLn.println(frEn.third());
       }
       selectedFr.close();
-      selectedEn.close();      
+      if (!isMono) { selectedEn.close(); } // Thang Aug13: handle mono     
       if (selectedLn != null) selectedLn.close();
    }
-
 }
