@@ -67,8 +67,9 @@ public class EnglishPostprocessor extends CRFPostprocessor {
 
     int nThreads = PropertiesUtils.getInt(options, "nthreads", 1);
     EnglishPreprocessor preProcessor = new EnglishPreprocessor();
-    EnglishPostprocessor postProcessor = (EnglishPostprocessor) CRFPostprocessor.getPostprocessor(preProcessor, options);
-
+    EnglishPostprocessor postProcessor = new EnglishPostprocessor(options);
+    
+    CRFPostprocessor.setup(postProcessor, preProcessor, options);
     CRFPostprocessor.execute(nThreads, preProcessor, postProcessor);    
   }
 }

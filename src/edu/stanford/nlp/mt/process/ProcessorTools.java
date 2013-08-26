@@ -89,7 +89,7 @@ public final class ProcessorTools {
     List<CoreLabel> sequence = Generics.newArrayList(target.length());
     int[] s2t = new int[rawToken.length()];
     Arrays.fill(s2t, -1);
-    for (int i = 0; i < target.length(); ++i) {
+    for (int i = 0; i < t2sGrid.length; ++i) {
       String tChar = String.valueOf(target.charAt(i));
       int sIndex = t2sGrid[i];
       if (sIndex < 0) {
@@ -114,10 +114,10 @@ public final class ProcessorTools {
     }
     
     // Now look for unaligned source spans (deleted source spans)
-    for (int i = 0; i < rawToken.length(); ++i) {
+    for (int i = 0; i < s2t.length; ++i) {
       if (s2t[i] >= 0) continue;
       int j = i + 1;
-      while (j < rawToken.length() && s2t[j] < 0) ++j;
+      while (j < s2t.length && s2t[j] < 0) ++j;
       // Span i/j is uncovered
       int p = s2t[i];
       int q = s2t[j];
@@ -159,15 +159,18 @@ public final class ProcessorTools {
   }
 
   private static int[] backwardPass(int[][] grid, String source, String target) {
-    int targetLength = grid[0].length;
-    int[] t2sGrid = new int[targetLength];
+    int[] t2sGrid = new int[target.length()];
     Arrays.fill(t2sGrid, -1);
     int i = grid.length - 1;
-    int j = targetLength - 1;
+    int j = grid[0].length - 1;
     while (i > 0 && j > 0) {
-      int simScore = sim(source.charAt(i), target.charAt(j));
+      // Convert from 1-indexing to 0-indexing
+      int sourceIdx = i-1;
+      int targetIdx = j-1;
+      
+      int simScore = sim(source.charAt(sourceIdx), target.charAt(targetIdx));
       if (i > 0 && j > 0 && grid[i][j] == grid[i-1][j-1] + simScore) {
-        t2sGrid[j] = i;
+        t2sGrid[targetIdx] = sourceIdx;
         --i;
         --j;
         
@@ -181,27 +184,24 @@ public final class ProcessorTools {
         throw new RuntimeException("Corrupt alignment grid");
       }
     }
-    
-    // Either i or j or both are equal to 0
-    // TODO(spenceg): Is this right?
-    int simScore = sim(source.charAt(i), target.charAt(j));
-    if (simScore > 0) {
-      t2sGrid[j] = i;
-    }
     return t2sGrid;
   }
 
   private static int[][] forwardPass(String source, String target) {
-    int[][] grid = new int[source.length()][];
-    grid[0] = new int[target.length()];
+    int[][] grid = new int[source.length()+1][];
+    grid[0] = new int[target.length()+1];
     for (int j = 0; j < grid[0].length; ++j) {
       grid[0][j] = gapPenalty * j;
     }
-    for (int i = 1; i < source.length(); ++i) {
-      grid[i] = new int[target.length()];
+    for (int i = 1; i < grid.length; ++i) {
+      grid[i] = new int[target.length()+1];
       grid[i][0] = gapPenalty * i;
       for (int j = 1; j < grid[i].length; ++j) {
-        int matchCost = grid[i-1][j-1] + sim(source.charAt(i), target.charAt(j));
+        // Convert from 1-indexing to 0-indexing
+        int sourceIdx = i-1;
+        int targetIdx = j-1;
+        
+        int matchCost = grid[i-1][j-1] + sim(source.charAt(sourceIdx), target.charAt(targetIdx));
         int deleteCost = grid[i-1][j] + gapPenalty;
         int insertCost = grid[i][j-1] + gapPenalty;
         grid[i][j] = Math.max(matchCost, Math.max(deleteCost, insertCost));
@@ -239,6 +239,7 @@ public final class ProcessorTools {
     // Cause the processing loop to terminate
     CoreLabel stopSymbol = new CoreLabel();
     stopSymbol.set(CharAnnotation.class, WHITESPACE);
+    stopSymbol.set(AnswerAnnotation.class, Operation.Whitespace.toString());
     charSequence.add(stopSymbol);
     
     for (CoreLabel outputChar : charSequence) {
@@ -260,33 +261,27 @@ public final class ProcessorTools {
         currentToken = new StringBuilder();
         
       } else {
-        if (text.equals(WHITESPACE_INTERNAL)) {
-          originalToken.append(" ");
-          currentToken.append(" ");
-        
-        } else {
-          originalToken.append(text);
-          if (label == Operation.None) {
-            currentToken.append(text);
-            
-          } else if (label == Operation.InsertAfter) {
-            assert fields.length == 2;
-            currentToken.append(text).append(fields[1]);
-            
-          } else if (label == Operation.InsertBefore) {
-            assert fields.length == 2;
-            currentToken.append(fields[1]).append(text);
-            
-          } else if (label == Operation.Replace) {
-            assert fields.length == 2;
-            currentToken.append(fields[1]);
-            
-          } else if (label == Operation.ToUpper) {
-            currentToken.append(text.toUpperCase());
-            
-          } else if (label == Operation.Delete) {
-            // delete output character
-          }
+        originalToken.append(text);
+        if (label == Operation.None) {
+          currentToken.append(text);
+
+        } else if (label == Operation.InsertAfter) {
+          assert fields.length == 2;
+          currentToken.append(text).append(fields[1]);
+
+        } else if (label == Operation.InsertBefore) {
+          assert fields.length == 2;
+          currentToken.append(fields[1]).append(text);
+
+        } else if (label == Operation.Replace) {
+          assert fields.length == 2;
+          currentToken.append(fields[1]);
+
+        } else if (label == Operation.ToUpper) {
+          currentToken.append(text.toUpperCase());
+
+        } else if (label == Operation.Delete) {
+          // delete output character
         }
       }
     }
@@ -338,4 +333,4 @@ public final class ProcessorTools {
       }
     }
   }
-  }
+}

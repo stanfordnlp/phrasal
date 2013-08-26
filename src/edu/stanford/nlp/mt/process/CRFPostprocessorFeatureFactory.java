@@ -2,19 +2,17 @@ package edu.stanford.nlp.mt.process;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.regex.Pattern;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.sequences.Clique;
 import edu.stanford.nlp.sequences.FeatureFactory;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
-import edu.stanford.nlp.util.Characters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PaddedList;
 
 /**
- * Feature factory for an IOB clitic segmentation model.
+ * Feature factory for an post processor models.
  * 
  * @author Spence Green
  *
@@ -22,8 +20,7 @@ import edu.stanford.nlp.util.PaddedList;
  */
 public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends FeatureFactory<IN> {
   
-  private static final Pattern isPunc = Pattern.compile("\\p{Punct}+");
-  private static final Pattern isDigit = Pattern.compile("\\p{Digit}+");
+  private static final long serialVersionUID = 6254391859573982318L;
   
   public void init(SeqClassifierFlags flags) {
     super.init(flags);
@@ -42,12 +39,11 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
       addAllInterningAndSuffixing(features, featuresC(cInfo, loc), "C");
     } else if (clique == cliqueCpC) {
       addAllInterningAndSuffixing(features, featuresCpC(cInfo, loc), "CpC");
-    } 
-//    else if (clique == cliqueCp2C) {
-//      addAllInterningAndSuffixing(features, featuresCp2C(cInfo, loc), "Cp2C");
-//    } else if (clique == cliqueCp3C) {
-//      addAllInterningAndSuffixing(features, featuresCp3C(cInfo, loc), "Cp3C");
-//    }
+    } else if (clique == cliqueCp2C) {
+      addAllInterningAndSuffixing(features, featuresCp2C(cInfo, loc), "Cp2C");
+    } else if (clique == cliqueCp3C) {
+      addAllInterningAndSuffixing(features, featuresCp3C(cInfo, loc), "Cp3C");
+    }
 
     return features;
   }
@@ -74,84 +70,114 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     features.add(charp + "-p");
     features.add(charp2 + "-p2");
 
-    // Digit and punctuation features for current word
-    if (isPunc.matcher(charc).find()) {
-      features.add("haspunc");
-    }
-    if (isDigit.matcher(charc).find()) {
-      features.add("hasdigit");
-    }
+    addCharacterFeatures(features, charp, "-p");
+    addCharacterFeatures(features, charc, "-c");
+    addCharacterFeatures(features, charn, "-n");
     
-    // Length feature 
-    if (charc.length() > 1) {
-      features.add("length");
-    }
-    
-    // Unicode block and type features
-    for (int i = 0; i < charc.length(); ++i) {
-      String cuBlock = Characters.unicodeBlockStringOf(charc.charAt(i));
-      features.add(cuBlock + "-uBlock");
-      String cuType = String.valueOf(Character.getType(charc.charAt(i)));
-      features.add(cuType + "-uType");
-    }
-
     // Indicator transition feature
     features.add("cliqueC");
 
     return features;
   }
 
+  /**
+   * Internationalized character-level features.
+   * 
+   * @param features
+   * @param str
+   * @param suffix
+   */
+  private void addCharacterFeatures(Collection<String> features, String str,
+      String suffix) {
+    if (str == null || str.length() > 1) return;
+
+    char c = str.charAt(0);
+    if (Character.isDigit(c)) {
+      features.add("digit" + suffix);
+    }
+    if (Character.getType(c) == Character.START_PUNCTUATION) {
+      features.add("start_punc" + suffix);
+    }
+    if (Character.getType(c) == Character.END_PUNCTUATION) {
+      features.add("end_punc" + suffix);
+    }
+    if (Character.getType(c) == Character.OTHER_PUNCTUATION) {
+      features.add("other_punc" + suffix);
+    }
+    if (Character.getType(c) == Character.CONNECTOR_PUNCTUATION ||
+        Character.getType(c) == Character.DASH_PUNCTUATION) {
+      features.add("conn_punc" + suffix);
+    }
+    if (Character.getType(c) == Character.CURRENCY_SYMBOL) {
+      features.add("currency" + suffix);
+    }
+    if (Character.getType(c) == Character.MATH_SYMBOL) {
+      features.add("math" + suffix);
+    }
+  }
+
   private Collection<String> featuresCpC(PaddedList<IN> cInfo, int loc) {
     Collection<String> features = new ArrayList<String>();
     CoreLabel c = cInfo.get(loc);
     CoreLabel p = cInfo.get(loc - 1);
-
+    CoreLabel n = cInfo.get(loc + 1);
+    
     String charc = c.get(CoreAnnotations.CharAnnotation.class);
     String charp = p.get(CoreAnnotations.CharAnnotation.class);
-    
+    String charn = n.get(CoreAnnotations.CharAnnotation.class);
+
     features.add(charc + charp + "-cngram");
+    features.add(charn + "-n");
     
     // Indicator transition feature
     features.add("cliqueCpC");
     
     return features;
   }
-//
-//  private Collection<String> featuresCp2C(PaddedList<IN> cInfo, int loc) {
-//    Collection<String> features = new ArrayList<String>();
-//    CoreLabel c = cInfo.get(loc);
-//    CoreLabel p = cInfo.get(loc - 1);
-//    CoreLabel p2 = cInfo.get(loc - 2);
-//
-//    String charc = c.get(CoreAnnotations.CharAnnotation.class);
-//    String charp = p.get(CoreAnnotations.CharAnnotation.class);
-//    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
-//
-//    features.add(charc + charp + charp2 + "-cngram");
-//
-//    // Indicator transition feature
-//    features.add("cliqueCp2C");
-//    
-//    return features;
-//  }
-//
-//  private Collection<String> featuresCp3C(PaddedList<IN> cInfo, int loc) {
-//    Collection<String> features = new ArrayList<String>();
-//    CoreLabel c = cInfo.get(loc);
-//    CoreLabel p = cInfo.get(loc - 1);
-//    CoreLabel p2 = cInfo.get(loc - 2);
-//    CoreLabel p3 = cInfo.get(loc - 3);
-//
-//    String charc = c.get(CoreAnnotations.CharAnnotation.class);
-//    String charp = p.get(CoreAnnotations.CharAnnotation.class);
-//    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
-//    String charp3 = p3.get(CoreAnnotations.CharAnnotation.class);
-//    
-//    features.add(charc + charp + charp2 + charp3 + "-cngram");
-//    
-//    // Indicator transition feature
-//    features.add("cliqueCp3C");
-//    
-//    return features;
-//  }
+
+  private Collection<String> featuresCp2C(PaddedList<IN> cInfo, int loc) {
+    Collection<String> features = new ArrayList<String>();
+    CoreLabel c = cInfo.get(loc);
+    CoreLabel p = cInfo.get(loc - 1);
+    CoreLabel p2 = cInfo.get(loc - 2);
+
+    String charc = c.get(CoreAnnotations.CharAnnotation.class);
+    String charp = p.get(CoreAnnotations.CharAnnotation.class);
+    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
+
+    features.add(charc + charp + charp2 + "-cngram");
+
+    CoreLabel n = cInfo.get(loc + 1);
+    String charn = n.get(CoreAnnotations.CharAnnotation.class);
+    features.add(charn + "-n");
+    
+    // Indicator transition feature
+    features.add("cliqueCp2C");
+    
+    return features;
+  }
+
+  private Collection<String> featuresCp3C(PaddedList<IN> cInfo, int loc) {
+    Collection<String> features = new ArrayList<String>();
+    CoreLabel c = cInfo.get(loc);
+    CoreLabel p = cInfo.get(loc - 1);
+    CoreLabel p2 = cInfo.get(loc - 2);
+    CoreLabel p3 = cInfo.get(loc - 3);
+
+    String charc = c.get(CoreAnnotations.CharAnnotation.class);
+    String charp = p.get(CoreAnnotations.CharAnnotation.class);
+    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
+    String charp3 = p3.get(CoreAnnotations.CharAnnotation.class);
+    
+    features.add(charc + charp + charp2 + charp3 + "-cngram");
+    
+    CoreLabel n = cInfo.get(loc + 1);
+    String charn = n.get(CoreAnnotations.CharAnnotation.class);
+    features.add(charn + "-n");
+    
+    // Indicator transition feature
+    features.add("cliqueCp3C");
+    
+    return features;
+  }
 }

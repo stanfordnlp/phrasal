@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -15,6 +16,8 @@ import java.util.Properties;
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Sentence;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -86,8 +89,10 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     Counter<String> labelCorrect = new ClassicCounter<String>();
     int total = 0;
     int correct = 0;
+//    PrintStream pw = IOTools.getWriterFromFile("eval.out");
     for (List<CoreLabel> line : lines) {
       line = classifier.classify(line);
+//      pw.append(Sentence.listToString(ProcessorTools.toPostProcessedSequence(line))).append("\n");
       for (CoreLabel label : line) {
         // Do not evaluate labeling of whitespace
         String observation = label.get(CoreAnnotations.CharAnnotation.class);
@@ -103,6 +108,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
         }
       }
     }
+//    pw.close();
 
     double accuracy = ((double) correct) / ((double) total);
     accuracy *= 100.0;
@@ -124,8 +130,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
   }
 
   
-  protected static CRFPostprocessor getPostprocessor(Preprocessor preProcessor, Properties options) {
-    CRFPostprocessor postProcessor = new CRFPostprocessor(options);
+  protected static void setup(CRFPostprocessor postProcessor, Preprocessor preProcessor, Properties options) {
     if (postProcessor.flags.inputEncoding == null) {
       postProcessor.flags.inputEncoding = System.getProperty("file.encoding");
     }
@@ -143,7 +148,6 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     } else {
       throw new RuntimeException("No training file or trained model specified!");
     }
-    return postProcessor;
   }
 
   protected static double decode(CRFPostprocessor postProcessor,
