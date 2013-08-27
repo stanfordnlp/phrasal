@@ -38,6 +38,9 @@ import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.process.Postprocessor;
+import edu.stanford.nlp.mt.process.Preprocessor;
+import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.annotators.AnnotatorFactory;
 import edu.stanford.nlp.mt.decoder.feat.*;
@@ -101,6 +104,8 @@ public class Phrasal {
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
   public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
+  public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
+  public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
 
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -125,7 +130,7 @@ public class Phrasal {
         MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
-        ALIGNMENT_OUTPUT_FILE));
+        ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -203,6 +208,15 @@ public class Phrasal {
    */
   private static String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 
+  /**
+   * Pre/post processing filters.
+   */
+  private Preprocessor preprocessor;
+  private Postprocessor postprocessor;
+  
+  public Preprocessor getPreprocessor() { return preprocessor; }
+  public Postprocessor getPostprocessor() { return postprocessor; }
+  
   /**
    * Access the decoder's scorer, which contains the model weights. THere is one scorer
    * per thread.
@@ -286,6 +300,25 @@ public class Phrasal {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
 
+    // Pre/post processor filters. These may be accessed programmatically, but they
+    // are only applied automatically to text read from the console.
+    if (config.containsKey(PREPROCESSOR_FILTER)) {
+      List<String> parameters = config.get(PREPROCESSOR_FILTER);
+      if (parameters.size() == 0) throw new RuntimeException("Preprocessor configuration requires at least one argument");
+      String language = parameters.get(0);
+      String[] options = parameters.size() > 1 ? parameters.get(1).split("\\s+") : (String[]) null;
+      preprocessor = ProcessorFactory.getPreprocessor(language, options);
+      System.err.printf("Preprocessor filter: %s%n", preprocessor.getClass().getName());
+    }
+    if (config.containsKey(POSTPROCESSOR_FILTER)) {
+      List<String> parameters = config.get(POSTPROCESSOR_FILTER);
+      if (parameters.size() == 0) throw new RuntimeException("Postprocessor configuration requires at least one argument");
+      String language = parameters.get(0);
+      String[] options = parameters.size() > 1 ? parameters.get(1).split("\\s+") : (String[]) null;
+      postprocessor = ProcessorFactory.getPostprocessor(language, options);
+      System.err.printf("Postprocessor filter: %s%n", postprocessor.getClass().getName());
+    }
+    
     boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
     if (config.containsKey(CONSTRAIN_TO_REFS)) {
@@ -1009,7 +1042,9 @@ public class Phrasal {
 
     if (translations.size() > 0) {
       RichTranslation<IString, String> bestTranslation = translations.get(0);
-      System.out.println(bestTranslation.translation);
+      Sequence<IString> targetSequence = postprocessor == null ? bestTranslation.translation : 
+        postprocessor.process(bestTranslation.translation).e();
+      System.out.println(targetSequence);
 
       // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation.translation);
@@ -1047,28 +1082,30 @@ public class Phrasal {
   }
 
   /**
-   * Decode input from stdin and write translations to stdout.
-   *
+   * Decode input from inputStream and write translations to stdout.
+   * 
+   * @param inputStream 
    * @throws IOException
    */
-  private void decodeFromConsole() throws IOException {
+  private void decode(InputStream inputStream) throws IOException {
     System.err.println("Entering main translation loop");
     final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
         new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
     final LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in, "UTF-8"));
+        inputStream, "UTF-8"));
     final long startTime = System.nanoTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
-      Sequence<IString> tokens = IStrings.tokenize(line);
-      if (tokens.size() > maxSentenceSize || tokens.size() < minSentenceSize) {
+      Sequence<IString> source = preprocessor == null ? IStrings.tokenize(line) :
+        preprocessor.process(line.trim()).e();
+      if (source.size() > maxSentenceSize || source.size() < minSentenceSize) {
         System.err.printf("Skipping: %s%n", line);
-        System.err.printf("Tokens: %d (min: %d max: %d)%n", tokens.size(), minSentenceSize,
+        System.err.printf("Tokens: %d (min: %d max: %d)%n", source.size(), minSentenceSize,
             maxSentenceSize);
         continue;
       }
 
-      wrapper.put(new DecoderInput(tokens, sourceInputId));
+      wrapper.put(new DecoderInput(source, sourceInputId));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
         processConsoleResult(result.translations, result.sourceLength, result.sourceInputId);
@@ -1087,15 +1124,16 @@ public class Phrasal {
     System.err.printf("Total Decoding time: %.3f seconds%n", totalTime / 1e9);
   }
 
-
   /**
    * Decode an input list according to the current decoder settings. Returns
    * null for inputs that are shorter than <code>minSentenceSize</code> or
    * longer than <code>maxSentenceSize</code>.
+   * 
+   * @param sourceList
+   * @return
    */
-  public List<Sequence<IString>> decode(List<Sequence<IString>> sourceList) {
-    List<Sequence<IString>> translations =
-        new ArrayList<Sequence<IString>>(sourceList.size());
+  public List<RichTranslation<IString,String>> decode(List<Sequence<IString>> sourceList) {
+    List<RichTranslation<IString,String>> translations = Generics.newArrayList(sourceList.size());
     for (int i = 0; i < sourceList.size(); ++i) translations.add(null);
 
     final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
@@ -1113,7 +1151,7 @@ public class Phrasal {
       wrapper.put(new DecoderInput(sequence, sourceInputId++));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
-        translations.set(result.sourceInputId, result.translations.get(0).translation);
+        translations.set(result.sourceInputId, result.translations.get(0));
       }
     }
 
@@ -1122,7 +1160,7 @@ public class Phrasal {
     wrapper.join();
     while(wrapper.peek()) {
       DecoderOutput result = wrapper.poll();
-      translations.set(result.sourceInputId, result.translations.get(0).translation);
+      translations.set(result.sourceInputId, result.translations.get(0));
     }
 
     return translations;
@@ -1368,6 +1406,6 @@ public class Phrasal {
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
         : readArgs(args);
     Phrasal p = Phrasal.loadDecoder(config);
-    p.decodeFromConsole();
+    p.decode(System.in);
   }
 }

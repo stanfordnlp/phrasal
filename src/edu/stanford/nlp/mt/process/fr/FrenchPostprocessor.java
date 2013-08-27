@@ -6,19 +6,15 @@ import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 /**
- * TODO(spenceg): Needs a constructor for reflection loading.
+ * CRF-based post-processor for French.
  * 
- * @author rayder441
+ * @author Spence Green
  *
  */
 public class FrenchPostprocessor implements Postprocessor {
 
-  /**
-   * @param args
-   */
-  public static void main(String[] args) {
-    // TODO Auto-generated method stub
-
+  public FrenchPostprocessor(String...options) {
+    // TODO Auto-generated constructor stub
   }
 
   @Override
@@ -27,4 +23,11 @@ public class FrenchPostprocessor implements Postprocessor {
     return null;
   }
 
+  /**
+   * @param args
+   */
+  public static void main(String[] args) {
+    // TODO Auto-generated method stub
+
+  }
 }
