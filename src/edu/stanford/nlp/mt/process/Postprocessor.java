@@ -5,6 +5,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 /**
+ * Generic interface for text post-processors.
  * 
  * @author Spence Green
  *

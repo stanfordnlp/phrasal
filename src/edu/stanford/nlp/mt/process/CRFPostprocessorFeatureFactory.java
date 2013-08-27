@@ -39,11 +39,12 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
       addAllInterningAndSuffixing(features, featuresC(cInfo, loc), "C");
     } else if (clique == cliqueCpC) {
       addAllInterningAndSuffixing(features, featuresCpC(cInfo, loc), "CpC");
-    } else if (clique == cliqueCp2C) {
-      addAllInterningAndSuffixing(features, featuresCp2C(cInfo, loc), "Cp2C");
-    } else if (clique == cliqueCp3C) {
-      addAllInterningAndSuffixing(features, featuresCp3C(cInfo, loc), "Cp3C");
-    }
+    } 
+//    else if (clique == cliqueCp2C) {
+//      addAllInterningAndSuffixing(features, featuresCp2C(cInfo, loc), "Cp2C");
+//    } else if (clique == cliqueCp3C) {
+//      addAllInterningAndSuffixing(features, featuresCp3C(cInfo, loc), "Cp3C");
+//    }
 
     return features;
   }
@@ -73,6 +74,21 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     addCharacterFeatures(features, charp, "-p");
     addCharacterFeatures(features, charc, "-c");
     addCharacterFeatures(features, charn, "-n");
+    
+    // Full token if focus is the first character after whitespace.
+    if (charp == null || charp.equals(ProcessorTools.WHITESPACE)) {
+      StringBuilder sb = new StringBuilder();
+      int seqLength = cInfo.size();
+      for (int i = loc; i < seqLength; ++i) {
+        String thisC = cInfo.get(i).get(CoreAnnotations.CharAnnotation.class);
+        if (thisC.equals(ProcessorTools.WHITESPACE)) break;
+        sb.append(thisC);
+      }
+      features.add(sb.toString() + "-word");
+    }
+    
+    // Sequence start indicator
+    if (loc == 0) features.add("start");
     
     // Indicator transition feature
     features.add("cliqueC");
@@ -135,49 +151,49 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     return features;
   }
 
-  private Collection<String> featuresCp2C(PaddedList<IN> cInfo, int loc) {
-    Collection<String> features = new ArrayList<String>();
-    CoreLabel c = cInfo.get(loc);
-    CoreLabel p = cInfo.get(loc - 1);
-    CoreLabel p2 = cInfo.get(loc - 2);
-
-    String charc = c.get(CoreAnnotations.CharAnnotation.class);
-    String charp = p.get(CoreAnnotations.CharAnnotation.class);
-    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
-
-    features.add(charc + charp + charp2 + "-cngram");
-
-    CoreLabel n = cInfo.get(loc + 1);
-    String charn = n.get(CoreAnnotations.CharAnnotation.class);
-    features.add(charn + "-n");
-    
-    // Indicator transition feature
-    features.add("cliqueCp2C");
-    
-    return features;
-  }
-
-  private Collection<String> featuresCp3C(PaddedList<IN> cInfo, int loc) {
-    Collection<String> features = new ArrayList<String>();
-    CoreLabel c = cInfo.get(loc);
-    CoreLabel p = cInfo.get(loc - 1);
-    CoreLabel p2 = cInfo.get(loc - 2);
-    CoreLabel p3 = cInfo.get(loc - 3);
-
-    String charc = c.get(CoreAnnotations.CharAnnotation.class);
-    String charp = p.get(CoreAnnotations.CharAnnotation.class);
-    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
-    String charp3 = p3.get(CoreAnnotations.CharAnnotation.class);
-    
-    features.add(charc + charp + charp2 + charp3 + "-cngram");
-    
-    CoreLabel n = cInfo.get(loc + 1);
-    String charn = n.get(CoreAnnotations.CharAnnotation.class);
-    features.add(charn + "-n");
-    
-    // Indicator transition feature
-    features.add("cliqueCp3C");
-    
-    return features;
-  }
+//  private Collection<String> featuresCp2C(PaddedList<IN> cInfo, int loc) {
+//    Collection<String> features = new ArrayList<String>();
+//    CoreLabel c = cInfo.get(loc);
+//    CoreLabel p = cInfo.get(loc - 1);
+//    CoreLabel p2 = cInfo.get(loc - 2);
+//
+//    String charc = c.get(CoreAnnotations.CharAnnotation.class);
+//    String charp = p.get(CoreAnnotations.CharAnnotation.class);
+//    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
+//
+//    features.add(charc + charp + charp2 + "-cngram");
+//
+//    CoreLabel n = cInfo.get(loc + 1);
+//    String charn = n.get(CoreAnnotations.CharAnnotation.class);
+//    features.add(charn + "-n");
+//    
+//    // Indicator transition feature
+//    features.add("cliqueCp2C");
+//    
+//    return features;
+//  }
+//
+//  private Collection<String> featuresCp3C(PaddedList<IN> cInfo, int loc) {
+//    Collection<String> features = new ArrayList<String>();
+//    CoreLabel c = cInfo.get(loc);
+//    CoreLabel p = cInfo.get(loc - 1);
+//    CoreLabel p2 = cInfo.get(loc - 2);
+//    CoreLabel p3 = cInfo.get(loc - 3);
+//
+//    String charc = c.get(CoreAnnotations.CharAnnotation.class);
+//    String charp = p.get(CoreAnnotations.CharAnnotation.class);
+//    String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
+//    String charp3 = p3.get(CoreAnnotations.CharAnnotation.class);
+//    
+//    features.add(charc + charp + charp2 + charp3 + "-cngram");
+//    
+//    CoreLabel n = cInfo.get(loc + 1);
+//    String charn = n.get(CoreAnnotations.CharAnnotation.class);
+//    features.add(charn + "-n");
+//    
+//    // Indicator transition feature
+//    features.add("cliqueCp3C");
+//    
+//    return features;
+//  }
 }

@@ -6,19 +6,21 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreAnnotations.OriginalTextAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.objectbank.ObjectBank;
@@ -26,7 +28,15 @@ import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.util.Generics;
 
+/**
+ * CRF-based text post-processor.
+ * 
+ * @author Spence Green
+ *
+ */
 public class CRFPostprocessor implements Postprocessor, Serializable {
 
   private static final long serialVersionUID = -4149700323492795549L;
@@ -74,9 +84,30 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
   }
 
   @Override
-  public SymmetricalWordAlignment process(Sequence<IString> input) {
-    // TODO(spenceg)
-    return null;
+  public SymmetricalWordAlignment process(Sequence<IString> sequence) {
+    String[] tokens = new String[sequence.size()];
+    for (int i = 0; i < tokens.length; ++i) {
+      tokens[i] = sequence.get(i).toString();
+    }
+    List<CoreLabel> labeledTokens = ProcessorTools.stringToCharacterSequence(tokens);
+    labeledTokens = classifier.classify(labeledTokens);
+    List<CoreLabel> processedTokens = ProcessorTools.toPostProcessedSequence(labeledTokens);
+    List<String> targetStrings = Generics.newLinkedList();
+    for (CoreLabel label : processedTokens) {
+      targetStrings.add(label.word());
+    }
+    Sequence<IString> target = IStrings.toIStringSequence(targetStrings);
+    SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sequence, target);
+    
+    int i = 0;
+    for (int j = 0; j < processedTokens.size(); ++j) {
+      String originalToken = processedTokens.get(j).get(OriginalTextAnnotation.class);
+      if ( ! originalToken.equals(sequence.get(i).toString())) {
+        ++i;
+      }
+      alignment.addAlign(i, j);
+    }
+    return alignment;
   }
   
   protected void evaluate(Preprocessor preProcessor, PrintWriter pwOut) {
@@ -89,26 +120,22 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     Counter<String> labelCorrect = new ClassicCounter<String>();
     int total = 0;
     int correct = 0;
-//    PrintStream pw = IOTools.getWriterFromFile("eval.out");
+    PrintWriter pw = new PrintWriter(IOTools.getWriterFromFile("eval.out"));
     for (List<CoreLabel> line : lines) {
       line = classifier.classify(line);
-//      pw.append(Sentence.listToString(ProcessorTools.toPostProcessedSequence(line))).append("\n");
+      pw.println(Sentence.listToString(ProcessorTools.toPostProcessedSequence(line)));
+      total += line.size();
       for (CoreLabel label : line) {
-        // Do not evaluate labeling of whitespace
-        String observation = label.get(CoreAnnotations.CharAnnotation.class);
-        if ( ! observation.equals(ProcessorTools.WHITESPACE)) {
-          total++;
-          String hypothesis = label.get(CoreAnnotations.AnswerAnnotation.class);
-          String reference = label.get(CoreAnnotations.GoldAnswerAnnotation.class);
-          labelTotal.incrementCount(reference);
-          if (hypothesis.equals(reference)) {
-            correct++;
-            labelCorrect.incrementCount(reference);
-          }
+        String hypothesis = label.get(CoreAnnotations.AnswerAnnotation.class);
+        String reference = label.get(CoreAnnotations.GoldAnswerAnnotation.class);
+        labelTotal.incrementCount(reference);
+        if (hypothesis.equals(reference)) {
+          correct++;
+          labelCorrect.incrementCount(reference);
         }
       }
     }
-//    pw.close();
+    pw.close();
 
     double accuracy = ((double) correct) / ((double) total);
     accuracy *= 100.0;
@@ -140,6 +167,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
       postProcessor.load(postProcessor.flags.loadClassifier, options);
     } else if (postProcessor.flags.trainFile != null){
       postProcessor.train(preProcessor);
+      printWeightVector(postProcessor, postProcessor.flags.trainFile + ".weights.txt");
 
       if(postProcessor.flags.serializeTo != null) {
         postProcessor.serialize(postProcessor.flags.serializeTo);
@@ -150,12 +178,49 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     }
   }
 
-  protected static double decode(CRFPostprocessor postProcessor,
-      BufferedReader br, PrintWriter pwOut, int nThreads) {
-    // TODO Auto-generated method stub
-    return 0;
+  private static void printWeightVector(CRFPostprocessor postProcessor, String filename) {
+    PrintWriter pw = new PrintWriter(IOTools.getWriterFromFile(filename));
+    Map<String,Counter<String>> weights = postProcessor.classifier.topWeights();
+    for (String label : weights.keySet()) {
+      Counter<String> labelWeights = weights.get(label);
+      List<String> featureList = Counters.toSortedList(labelWeights);
+      pw.println(label);
+      for (String feature : featureList) {
+        pw.printf(" %s\t%.5f%n",feature, labelWeights.getCount(feature));
+      }
+    }
+    pw.close();
   }
-  
+
+  /**
+   * Decode raw text input.
+   * 
+   * @param postProcessor
+   * @param reader
+   * @param outstream
+   * @param nThreads
+   * @return
+   */
+  protected static double decode(CRFPostprocessor postProcessor,
+      BufferedReader reader, PrintWriter outstream, int nThreads) {
+    // TODO(spenceg): Add multithreading support
+    long numChars = 0;
+    long startTime = System.nanoTime();
+    try {
+      for (String line; (line = reader.readLine()) != null;) {
+        List<CoreLabel> labeledSeq = ProcessorTools.stringToCharacterSequence(line.trim());
+        numChars += labeledSeq.size();
+        labeledSeq = postProcessor.classifier.classify(labeledSeq);
+        List<CoreLabel> tokenSeq = ProcessorTools.toPostProcessedSequence(labeledSeq);
+        outstream.println(Sentence.listToString(tokenSeq));
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
+    double charsPerSecond = (double) numChars / elapsedTime;
+    return charsPerSecond;
+  }
 
   protected static void execute(int nThreads, Preprocessor preProcessor,
       CRFPostprocessor postProcessor) {
@@ -186,5 +251,4 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
       e.printStackTrace();
     }
   }
-
 }

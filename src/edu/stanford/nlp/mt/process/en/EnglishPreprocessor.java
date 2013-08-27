@@ -3,10 +3,10 @@ package edu.stanford.nlp.mt.process.en;
 import java.util.Locale;
 
 import edu.stanford.nlp.mt.process.CoreNLPPreprocessor;
-import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.process.PTBTokenizer;
 
 /**
+ * Pre-processes English raw text.
  * 
  * @author Spence Green
  *

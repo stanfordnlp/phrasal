@@ -21,6 +21,7 @@ import edu.stanford.nlp.sequences.SeqClassifierFlags;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Utility methods for character-level, sequence-based post-processors.
  * 
  * TODO(spenceg): Maybe need to do label set pruning for InsertBefore, InsertAfter and Replace here?
  * We'd only allow those operations after seeing the operation a certain number of times.
@@ -34,18 +35,45 @@ public final class ProcessorTools {
     
   // Delimiter must *not* be a regex special character!
   private static final String OP_DELIM = "#";
-  public static final String WHITESPACE = ".##.";
+  public static final String WHITESPACE = " ";
   
-  // TODO(spenceg): Change this to non-breaking space or something.
-  // Must be a single character!
-  private static final String WHITESPACE_INTERNAL = " ";
-
   // Needleman-Wunsch parameters
   private static final int gapPenalty = -1;
   private static final int penalty = -2;
   
   
   private ProcessorTools() {}
+  
+  /**
+   * Convert a string to an unlabeled character sequence.
+   * 
+   * @param str
+   * @return
+   */
+  public static List<CoreLabel> stringToCharacterSequence(String str) {
+    String[] tokens = str.split("\\s+");
+    return stringToCharacterSequence(tokens);
+  }
+  
+  public static List<CoreLabel> stringToCharacterSequence(String[] tokens) {
+    List<CoreLabel> sequence = Generics.newArrayList(tokens.length * 7);
+    int charIndex = 0;
+    for (String token : tokens) {
+      if (sequence.size() > 0) {
+        CoreLabel charLabel = new CoreLabel();
+        charLabel.set(CoreAnnotations.CharAnnotation.class, WHITESPACE);
+        charLabel.setIndex(charIndex++);
+        sequence.add(charLabel);
+      }
+      for (int j = 0; j < token.length(); ++j) {
+        CoreLabel charLabel = new CoreLabel();
+        charLabel.set(CoreAnnotations.CharAnnotation.class, String.valueOf(token.charAt(j)));
+        charLabel.setIndex(charIndex++);
+        sequence.add(charLabel);
+      }
+    } 
+    return sequence;
+  }
   
   /**
    * Convert a raw/preprocessed String pair to a labeled sequence appropriate for training
@@ -74,11 +102,11 @@ public final class ProcessorTools {
 
   
   private static List<CoreLabel> toSequence(String rawToken,
-      List<String> tokenList, int outputIndex) {
+      List<String> tokenizedList, int outputIndex) {
     
     StringBuilder sb = new StringBuilder();
-    for (String s : tokenList) {
-      if (sb.length() > 0) sb.append(WHITESPACE_INTERNAL);
+    for (String s : tokenizedList) {
+      if (sb.length() > 0) sb.append(WHITESPACE);
       sb.append(s);
     }
     String target = sb.toString();
@@ -210,6 +238,13 @@ public final class ProcessorTools {
     return grid;
   }
 
+  /**
+   * Similarity score of two characters.
+   * 
+   * @param char1
+   * @param char2
+   * @return
+   */
   private static int sim(char char1, char char2) {
     // TODO(spenceg): Should pass in the appropriate pre-processor for lowercasing.
     boolean isMatch = String.valueOf(char1).toLowerCase().equals(String.valueOf(char2).toLowerCase());
@@ -246,8 +281,8 @@ public final class ProcessorTools {
       String text = outputChar.get(CharAnnotation.class);
       String[] fields = outputChar.get(AnswerAnnotation.class).split(OP_DELIM);
       Operation label = Operation.valueOf(fields[0]);
-      if (text.equals(WHITESPACE)) {
-        // Process originalToken and currentToken
+      if (label == Operation.Whitespace) {
+        // This is the token delimiter.
         String original = originalToken.toString();
         String[] outputTokens = currentToken.toString().split("\\s+");
         for (String tokenText : outputTokens) {

@@ -8,14 +8,30 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
+/**
+ * Inverts the pre-processing performed by EnglishPreprocessor.
+ * 
+ * @author Spence Green
+ *
+ */
 public class EnglishPostprocessor extends CRFPostprocessor {
 
   private static final long serialVersionUID = -3355581863585846099L;
 
+  /**
+   * Constructor for untrained models.
+   * 
+   * @param props
+   */
   public EnglishPostprocessor(Properties props) {
     super(props);
   }
 
+  /**
+   * Constructor for loading pre-trained models.
+   * 
+   * @param args
+   */
   public EnglishPostprocessor(String...args) {
     super(new Properties());
     if (args.length == 0) throw new IllegalArgumentException("Requires at least one argument");
