@@ -15,7 +15,7 @@ public class EnglishPreprocessor extends CoreNLPPreprocessor {
 
   public EnglishPreprocessor() {
     super(PTBTokenizer.coreLabelFactory());
-    tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true");
+    tf.setOptions("invertible=true,ptb3Escaping=false,ptb3Ellipsis=false,asciiQuotes=true");
   }
 
   @Override

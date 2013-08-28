@@ -88,19 +88,24 @@ public final class ProcessorTools {
     List<CoreLabel> sequence = Generics.newArrayList(alignment.eSize() * 7);
     
     for (int i = 0; i < alignment.fSize(); ++i) {
-      Set<Integer> eAlignments = alignment.f2e(i);
-      List<String> eTokens = Generics.newArrayList(eAlignments.size());
-      for (int j : eAlignments) {
-        eTokens.add(alignment.e().get(j).toString());
-      }
       if (sequence.size() > 0) sequence.add(createDatum(WHITESPACE, Operation.Whitespace.toString(), sequence.size()));
-      List<CoreLabel> charSequence = toSequence(alignment.f().get(i).toString(), eTokens, sequence.size());
-      sequence.addAll(charSequence);
+      String token = alignment.f().get(i).toString();
+      Set<Integer> eAlignments = alignment.f2e(i);
+      if (eAlignments.size() == 0) {
+        System.err.printf("%s: WARNING: discarding unaligned token (%s)%n", ProcessorTools.class.getName(), token);
+        
+      } else {
+        List<String> eTokens = Generics.newArrayList(eAlignments.size());
+        for (int j : eAlignments) {
+          eTokens.add(alignment.e().get(j).toString());
+        }
+        List<CoreLabel> charSequence = toSequence(token, eTokens, sequence.size());
+        sequence.addAll(charSequence);
+      }
     }
     return sequence;
   }
 
-  
   private static List<CoreLabel> toSequence(String rawToken,
       List<String> tokenizedList, int outputIndex) {
     
@@ -146,20 +151,22 @@ public final class ProcessorTools {
       if (s2t[i] >= 0) continue;
       int j = i + 1;
       while (j < s2t.length && s2t[j] < 0) ++j;
-      // Span i/j is uncovered
-      int p = s2t[i];
+      // Source span i/j is uncovered
+      int p = i > 0 ? s2t[i-1] : -1;
       int q = s2t[j];
       // Span p/q in the target bounds this gap
-      Operation pLabel = Operation.valueOf(sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class));
+      Operation pLabel = p > 0 ? Operation.valueOf(sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class)) : null;
       Operation qLabel = Operation.valueOf(sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class));
-      if (pLabel == Operation.None) {
+      if (pLabel != null && pLabel == Operation.None) {
         // Insert after
-        String label = Operation.InsertAfter.toString() + OP_DELIM + rawToken.substring(i, j);
+        String span = rawToken.substring(i, j);
+        String label = Operation.InsertAfter.toString() + OP_DELIM + span;
         sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
         
       } else if (qLabel == Operation.None) {
         // Insert before
-        String label = Operation.InsertBefore.toString() + OP_DELIM + rawToken.substring(i, j);
+        String span = rawToken.substring(i, j);
+        String label = Operation.InsertBefore.toString() + OP_DELIM + span;
         sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
       
       } else {
@@ -344,7 +351,7 @@ public final class ProcessorTools {
         private static final long serialVersionUID = 3695624909844929834L;
         @Override
         public List<CoreLabel> apply(String in) {
-          SymmetricalWordAlignment alignment = preProcessor.process(in);
+          SymmetricalWordAlignment alignment = preProcessor.process(in.trim());
           return ProcessorTools.alignedPairToLabeledSequence(alignment);
         }
       });

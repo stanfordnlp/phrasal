@@ -30,6 +30,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     this.tf = tf;
   }
   
+  // TODO(spenceg): This is still broken for ellipses from PTBLexer.
   @Override
   public SymmetricalWordAlignment process(String input) {
     String uncased = toUncased(input);
