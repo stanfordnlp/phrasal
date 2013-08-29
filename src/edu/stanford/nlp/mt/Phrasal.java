@@ -983,12 +983,14 @@ public class Phrasal {
    */
   private static class DecoderOutput {
     public final List<RichTranslation<IString, String>> translations;
+    public final Sequence<IString> bestTranslation;
     public final int sourceInputId;
     public final int sourceLength;
 
-    public DecoderOutput(int sourceLength, List<RichTranslation<IString, String>> translations, int sourceInputId) {
+    public DecoderOutput(int sourceLength, List<RichTranslation<IString, String>> translations, Sequence<IString> bestTranslation, int sourceInputId) {
       this.sourceLength = sourceLength;
       this.translations = translations;
+      this.bestTranslation = bestTranslation;
       this.sourceInputId = sourceInputId;
     }
   }
@@ -1016,9 +1018,25 @@ public class Phrasal {
 
     @Override
     public DecoderOutput process(DecoderInput input) {
+      // Generate n-best list
       List<RichTranslation<IString, String>> translations = 
           decode(input.source, input.sourceInputId, infererId);
-      return new DecoderOutput(input.source.size(), translations, input.sourceInputId);
+      
+      // Select and process the best translation
+      Sequence<IString> bestTranslation = null;
+      if (translations.size() > 0) {
+        bestTranslation = translations.get(0).translation;
+        if (postprocessor != null) {
+          try {
+            bestTranslation = postprocessor.process(bestTranslation).e();
+          } catch (Exception e) {
+            // The postprocessor exploded. Silently ignore and return
+            // the unprocessed translation.
+            bestTranslation = translations.get(0).translation;
+          }
+        }
+      }
+      return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);
     }
 
     @Override
@@ -1034,28 +1052,27 @@ public class Phrasal {
    * NOTE: This call is *not* threadsafe.
    *
    * @param translations
+   * @param bestTranslation 
    * @param sourceInputId
    */
   private void processConsoleResult(List<RichTranslation<IString, String>> translations,
-      int sourceLength,
+      Sequence<IString> bestTranslation, int sourceLength,
       int sourceInputId) {
 
     if (translations.size() > 0) {
-      RichTranslation<IString, String> bestTranslation = translations.get(0);
-      Sequence<IString> targetSequence = postprocessor == null ? bestTranslation.translation : 
-        postprocessor.process(bestTranslation.translation).e();
-      System.out.println(targetSequence);
+      System.out.println(bestTranslation);
 
       // log additional information to stderr
-      System.err.printf("Best Translation: %s%n", bestTranslation.translation);
-      System.err.printf("Final score: %.3f%n", (float) bestTranslation.score);
-      if (bestTranslation.sourceCoverage != null) {
-        System.err.printf("Coverage: %s%n", bestTranslation.sourceCoverage);
+      RichTranslation<IString,String> bestTranslationInfo = translations.get(0);
+      System.err.printf("Best Translation: %s%n", bestTranslation);
+      System.err.printf("Final score: %.3f%n", (float) bestTranslationInfo.score);
+      if (bestTranslationInfo.sourceCoverage != null) {
+        System.err.printf("Coverage: %s%n", bestTranslationInfo.sourceCoverage);
         System.err.printf(
-            "Foreign words covered: %d (/%d)  - %.3f %%%n",
-            bestTranslation.sourceCoverage.cardinality(),
+            "Foreign words covered: %d (/%d) - %.3f %%%n",
+            bestTranslationInfo.sourceCoverage.cardinality(),
             sourceLength,
-            bestTranslation.sourceCoverage.cardinality() * 100.0
+            bestTranslationInfo.sourceCoverage.cardinality() * 100.0
             / sourceLength);
       } else {
         System.err.println("Coverage: {}");
@@ -1108,7 +1125,7 @@ public class Phrasal {
       wrapper.put(new DecoderInput(source, sourceInputId));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
-        processConsoleResult(result.translations, result.sourceLength, result.sourceInputId);
+        processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
       }
     }
 
@@ -1117,7 +1134,7 @@ public class Phrasal {
     wrapper.join();
     while(wrapper.peek()) {
       DecoderOutput result = wrapper.poll();
-      processConsoleResult(result.translations, result.sourceLength, result.sourceInputId);
+      processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
     }
 
     long totalTime = System.nanoTime() - startTime;
