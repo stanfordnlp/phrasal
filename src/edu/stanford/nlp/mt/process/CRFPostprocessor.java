@@ -167,6 +167,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
       postProcessor.load(postProcessor.flags.loadClassifier, options);
     } else if (postProcessor.flags.trainFile != null){
       postProcessor.train(preProcessor);
+      // WSGDEBUG
       printWeightVector(postProcessor, postProcessor.flags.trainFile + ".weights.txt");
 
       if(postProcessor.flags.serializeTo != null) {
@@ -178,15 +179,20 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     }
   }
 
+  /**
+   * Prints out the learned weight vector after training.
+   * 
+   * @param postProcessor
+   * @param filename
+   */
   private static void printWeightVector(CRFPostprocessor postProcessor, String filename) {
     PrintWriter pw = new PrintWriter(IOTools.getWriterFromFile(filename));
     Map<String,Counter<String>> weights = postProcessor.classifier.topWeights();
     for (String label : weights.keySet()) {
       Counter<String> labelWeights = weights.get(label);
       List<String> featureList = Counters.toSortedList(labelWeights);
-      pw.println(label);
       for (String feature : featureList) {
-        pw.printf(" %s\t%.5f%n",feature, labelWeights.getCount(feature));
+        pw.printf("%s\t%s\t%.5f%n",label, feature, labelWeights.getCount(feature));
       }
     }
     pw.close();

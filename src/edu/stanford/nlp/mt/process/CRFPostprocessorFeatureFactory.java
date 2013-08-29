@@ -1,10 +1,11 @@
 package edu.stanford.nlp.mt.process;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
+import edu.stanford.nlp.ling.CoreAnnotations.ParentAnnotation;
 import edu.stanford.nlp.sequences.Clique;
 import edu.stanford.nlp.sequences.FeatureFactory;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
@@ -50,7 +51,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
   }
 
   protected Collection<String> featuresC(PaddedList<? extends CoreLabel> cInfo, int loc) {
-    Collection<String> features = new ArrayList<String>();
+    Collection<String> features = Generics.newArrayList();
     CoreLabel c = cInfo.get(loc);
     CoreLabel n = cInfo.get(loc + 1);
     CoreLabel n2 = cInfo.get(loc + 2);
@@ -65,85 +66,174 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
 
     // Default feature set...a 5 character window
     // plus a few other language-independent features
-    features.add(charc +"-c");
-    features.add(charn + "-n1");
-    features.add(charn2 + "-n2" );
-    features.add(charp + "-p");
-    features.add(charp2 + "-p2");
+//    features.add(charc +"-c");
+//    features.add(charn + "-n1");
+//    features.add(charn2 + "-n2" );
+//    features.add(charp + "-p");
+//    features.add(charp2 + "-p2");
 
-    addCharacterFeatures(features, charp, "-p");
-    addCharacterFeatures(features, charc, "-c");
-    addCharacterFeatures(features, charn, "-n");
+    // Sequence start indicator
+    if (loc == 0) features.add("seq-start");
+
+    // Character-level context features
+    addCharacterClassFeatures(features, charp2, "-p2", true);
+    addCharacterClassFeatures(features, charp, "-p", true);
+    addCharacterClassFeatures(features, charn, "-n", true);
+    addCharacterClassFeatures(features, charn2, "-n2", true);
     
-    // Full token if focus is the first character after whitespace.
-    if (charp == null || charp.equals(ProcessorTools.WHITESPACE)) {
-      StringBuilder sb = new StringBuilder();
-      int seqLength = cInfo.size();
-      for (int i = loc; i < seqLength; ++i) {
-        String thisC = cInfo.get(i).get(CoreAnnotations.CharAnnotation.class);
-        if (thisC.equals(ProcessorTools.WHITESPACE)) break;
-        sb.append(thisC);
+    // Focus character features. Adding the character itself tends to overfit.
+//  features.add(charc + "-c");
+    addCharacterClassFeatures(features, charc, "-c", false);
+    
+    // Token features
+    if (charc != null && ! charc.equals(ProcessorTools.WHITESPACE)) {
+      // Current token
+      String cToken = tokenClass(cInfo.get(loc).get(ParentAnnotation.class));
+      features.add(cToken + "-cword");
+           
+      // Character position in the current token.
+      int cPosition = cInfo.get(loc).get(CharacterOffsetBeginAnnotation.class);
+      if (cPosition == 0) {
+        features.add("char-start");
+        features.add("start-" + cToken);
+      } else {
+//        features.add("char-inside");
+        features.add("inside-" + cToken);
       }
-      features.add(sb.toString() + "-word");
+//      features.add(String.format("%d-%s-cword-pos", cPosition, cToken));
+
+      // Left context
+      String leftToken = "<S>";
+      for (int i = loc-1; i >= 0; --i) {
+        String leftC = cInfo.get(i).get(CoreAnnotations.CharAnnotation.class);
+        if (leftC != null && leftC.equals(ProcessorTools.WHITESPACE)) {
+          leftToken = tokenClass(cInfo.get(i-1).get(CoreAnnotations.ParentAnnotation.class));
+          if (leftToken != null) {
+            features.add(leftToken + "-lcontext"); 
+          }
+          break;
+        }
+      }
+      
+      // Left context bigram
+      if (cPosition == 0) {
+        features.add(leftToken + "-" + cToken + "-lbigram");
+      }
+
+//      // Right context
+//      String rightToken = "</S>";
+//      for (int i = loc+1; i < cInfo.size(); ++i) {
+//        String rightC = cInfo.get(i).get(CoreAnnotations.CharAnnotation.class);
+//        if (rightC != null && rightC.equals(ProcessorTools.WHITESPACE)) {
+//          rightToken = cInfo.get(i+1).get(CoreAnnotations.ParentAnnotation.class);
+//          if (rightToken != null) {
+//            features.add(rightToken + "-rcontext"); 
+//          }
+//          break;
+//        }
+//      }
+//      
+//      // Right context bigram
+//      if (cPosition == 0) {
+//        features.add(cToken + "-" + rightToken + "-rbigram");
+//      }
     }
     
-    // Sequence start indicator
-    if (loc == 0) features.add("start");
-    
     // Indicator transition feature
-    features.add("cliqueC");
+//    features.add("cliqueC");
 
     return features;
+  }
+
+  private String tokenClass(String string) {
+    if (string.startsWith("http://")) {
+      return "#UrL#";
+    } else if (isNumber(string)) {
+      return "#0#";
+    }
+    return string;
+  }
+
+  private boolean isNumber(String string) {
+    int length = string.length();
+    for (int i = 0; i < length; ++i) {
+      char c = string.charAt(i);
+      int cType = Character.getType(c);
+      if ( ! (Character.isDigit(c) || 
+          cType == Character.START_PUNCTUATION ||
+          cType == Character.END_PUNCTUATION ||
+          cType == Character.OTHER_PUNCTUATION ||
+          cType == Character.CONNECTOR_PUNCTUATION ||
+          cType == Character.DASH_PUNCTUATION)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
    * Internationalized character-level features.
    * 
    * @param features
-   * @param str
+   * @param string
    * @param suffix
+   * @param b 
    */
-  private void addCharacterFeatures(Collection<String> features, String str,
-      String suffix) {
-    if (str == null || str.length() > 1) return;
-
-    char c = str.charAt(0);
-    if (Character.isDigit(c)) {
+  private void addCharacterClassFeatures(Collection<String> features, String string,
+      String suffix, boolean enableAlphaClass) {
+    if (string == null) {
+      features.add("boundary" + suffix);
+      return;
+    }
+    if (string.length() > 1) return;
+    
+    final char c = string.charAt(0);
+    
+    if (Character.isLetter(c)) {
+      if (enableAlphaClass) features.add("alpha" + suffix);
+    
+    } else if (Character.isDigit(c)) {
       features.add("digit" + suffix);
-    }
-    if (Character.getType(c) == Character.START_PUNCTUATION) {
+    
+    } else if (Character.isWhitespace(c)) {
+      features.add("ws" + suffix);
+    
+    } else if (Character.getType(c) == Character.START_PUNCTUATION) {
       features.add("start_punc" + suffix);
-    }
-    if (Character.getType(c) == Character.END_PUNCTUATION) {
+    
+    } else if (Character.getType(c) == Character.END_PUNCTUATION) {
       features.add("end_punc" + suffix);
-    }
-    if (Character.getType(c) == Character.OTHER_PUNCTUATION) {
+    
+    } else if (Character.getType(c) == Character.OTHER_PUNCTUATION) {
       features.add("other_punc" + suffix);
-    }
-    if (Character.getType(c) == Character.CONNECTOR_PUNCTUATION ||
+    
+    } else if (Character.getType(c) == Character.CONNECTOR_PUNCTUATION ||
         Character.getType(c) == Character.DASH_PUNCTUATION) {
       features.add("conn_punc" + suffix);
-    }
-    if (Character.getType(c) == Character.CURRENCY_SYMBOL) {
+    
+    } else if (Character.getType(c) == Character.CURRENCY_SYMBOL) {
       features.add("currency" + suffix);
-    }
-    if (Character.getType(c) == Character.MATH_SYMBOL) {
+    
+    } else if (Character.getType(c) == Character.MATH_SYMBOL) {
       features.add("math" + suffix);
+    
+    } else {
+      features.add("unk" + suffix);
     }
   }
 
   private Collection<String> featuresCpC(PaddedList<IN> cInfo, int loc) {
-    Collection<String> features = new ArrayList<String>();
-    CoreLabel c = cInfo.get(loc);
-    CoreLabel p = cInfo.get(loc - 1);
-    CoreLabel n = cInfo.get(loc + 1);
-    
-    String charc = c.get(CoreAnnotations.CharAnnotation.class);
-    String charp = p.get(CoreAnnotations.CharAnnotation.class);
-    String charn = n.get(CoreAnnotations.CharAnnotation.class);
-
-    features.add(charc + charp + "-cngram");
-    features.add(charn + "-n");
+    Collection<String> features = Generics.newArrayList();
+//    CoreLabel c = cInfo.get(loc);
+//    CoreLabel p = cInfo.get(loc - 1);
+//    CoreLabel n = cInfo.get(loc + 1);
+//    
+//    String charc = c.get(CoreAnnotations.CharAnnotation.class);
+//    String charp = p.get(CoreAnnotations.CharAnnotation.class);
+//    String charn = n.get(CoreAnnotations.CharAnnotation.class);
+//
+//    features.add(charc + charp + "-cngram");
+//    features.add(charn + "-n");
     
     // Indicator transition feature
     features.add("cliqueCpC");

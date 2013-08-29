@@ -31,7 +31,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public final class ProcessorTools {
 
-  private static enum Operation {Delete, Replace, ToUpper, InsertBefore, InsertAfter, None, Whitespace};
+  public static enum Operation {Delete, Replace, ToUpper, InsertBefore, InsertAfter, None, Whitespace};
     
   // Delimiter must *not* be a regex special character!
   private static final String OP_DELIM = "#";
@@ -62,12 +62,16 @@ public final class ProcessorTools {
       if (sequence.size() > 0) {
         CoreLabel charLabel = new CoreLabel();
         charLabel.set(CoreAnnotations.CharAnnotation.class, WHITESPACE);
+        charLabel.set(CoreAnnotations.ParentAnnotation.class, WHITESPACE);
+        charLabel.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, -1);
         charLabel.setIndex(charIndex++);
         sequence.add(charLabel);
       }
       for (int j = 0; j < token.length(); ++j) {
         CoreLabel charLabel = new CoreLabel();
         charLabel.set(CoreAnnotations.CharAnnotation.class, String.valueOf(token.charAt(j)));
+        charLabel.set(CoreAnnotations.ParentAnnotation.class, token);
+        charLabel.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, j);
         charLabel.setIndex(charIndex++);
         sequence.add(charLabel);
       }
@@ -88,7 +92,7 @@ public final class ProcessorTools {
     List<CoreLabel> sequence = Generics.newArrayList(alignment.eSize() * 7);
     
     for (int i = 0; i < alignment.fSize(); ++i) {
-      if (sequence.size() > 0) sequence.add(createDatum(WHITESPACE, Operation.Whitespace.toString(), sequence.size()));
+      if (sequence.size() > 0) sequence.add(createDatum(WHITESPACE, Operation.Whitespace.toString(), sequence.size(), WHITESPACE, 0));
       String token = alignment.f().get(i).toString();
       Set<Integer> eAlignments = alignment.f2e(i);
       if (eAlignments.size() == 0) {
@@ -106,44 +110,51 @@ public final class ProcessorTools {
     return sequence;
   }
 
-  private static List<CoreLabel> toSequence(String rawToken,
-      List<String> tokenizedList, int outputIndex) {
-    
+  private static List<CoreLabel> toSequence(String sourceToken, List<String> targetTokens, int outputIndex) {
+    // Concatenate the target tokens
     StringBuilder sb = new StringBuilder();
-    for (String s : tokenizedList) {
+    for (String s : targetTokens) {
       if (sb.length() > 0) sb.append(WHITESPACE);
       sb.append(s);
     }
     String target = sb.toString();
-    int[] t2sGrid = alignStrings(rawToken, target);
+    int[] t2sGrid = alignStrings(sourceToken, target);
     assert t2sGrid.length == target.length();
     
     // Loop over the target
     List<CoreLabel> sequence = Generics.newArrayList(target.length());
-    int[] s2t = new int[rawToken.length()];
+    int[] s2t = new int[sourceToken.length()];
     Arrays.fill(s2t, -1);
+    int parentIndex = 0;
+    int charIndex = 0;
     for (int i = 0; i < t2sGrid.length; ++i) {
       String tChar = String.valueOf(target.charAt(i));
+      if (tChar.equals(WHITESPACE)) {
+        ++parentIndex;
+        charIndex = -1;
+      }
+      String parentToken = parentIndex >= targetTokens.size() ? "#NoNe#" : targetTokens.get(parentIndex);
       int sIndex = t2sGrid[i];
       if (sIndex < 0) {
         // Delete (insert target character)
-        sequence.add(createDatum(tChar, Operation.Delete.toString(), i));
+        sequence.add(createDatum(tChar, Operation.Delete.toString(), i, parentToken, charIndex));
       } else {
-        String sChar = String.valueOf(rawToken.charAt(sIndex));
+        String sChar = String.valueOf(sourceToken.charAt(sIndex));
         assert sIndex < s2t.length;
         s2t[sIndex] = i;
         if (tChar.equals(sChar)) {
           // NoOp
-          sequence.add(createDatum(tChar, Operation.None.toString(), i));
+          sequence.add(createDatum(tChar, Operation.None.toString(), i, parentToken, charIndex));
         } else if (tChar.equals(sChar.toLowerCase())) {
           // Uppercase
-          sequence.add(createDatum(tChar, Operation.ToUpper.toString(), i));
+          sequence.add(createDatum(tChar, Operation.ToUpper.toString(), i, parentToken, charIndex));
         } else {
           // Replace
           String label = Operation.Replace.toString() + OP_DELIM + sChar;
-          sequence.add(createDatum(tChar, label, i));
+          sequence.add(createDatum(tChar, label, i, parentToken, charIndex));
         }
       }
+      ++charIndex;
     }
     
     // Now look for unaligned source spans (deleted source spans)
@@ -159,19 +170,19 @@ public final class ProcessorTools {
       Operation qLabel = Operation.valueOf(sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class));
       if (pLabel != null && pLabel == Operation.None) {
         // Insert after
-        String span = rawToken.substring(i, j);
+        String span = sourceToken.substring(i, j);
         String label = Operation.InsertAfter.toString() + OP_DELIM + span;
         sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
         
       } else if (qLabel == Operation.None) {
         // Insert before
-        String span = rawToken.substring(i, j);
+        String span = sourceToken.substring(i, j);
         String label = Operation.InsertBefore.toString() + OP_DELIM + span;
         sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
       
       } else {
         // TODO(spenceg): How often does this happen. What to do here?
-        System.err.printf("WARNING: Unmanageable span (%s): %s -> %s%n", rawToken.substring(i,j), rawToken, target);
+        System.err.printf("WARNING: Unmanageable span (%s): %s -> %s%n", sourceToken.substring(i,j), sourceToken, target);
       }
     }
     return sequence;
@@ -258,13 +269,15 @@ public final class ProcessorTools {
     return isMatch ? 1 : penalty;
   }
 
-  private static CoreLabel createDatum(String token, String label, int index) {
-    CoreLabel newTok = new CoreLabel();
-    newTok.set(CoreAnnotations.CharAnnotation.class, token);
-    newTok.set(CoreAnnotations.AnswerAnnotation.class, label);
-    newTok.set(CoreAnnotations.GoldAnswerAnnotation.class, label);
-    newTok.setIndex(index);
-    return newTok;
+  private static CoreLabel createDatum(String character, String label, int index, String parentToken, int charIndex) {
+    CoreLabel labeledCharacter = new CoreLabel();
+    labeledCharacter.set(CoreAnnotations.CharAnnotation.class, character);
+    labeledCharacter.set(CoreAnnotations.ParentAnnotation.class, parentToken);
+    labeledCharacter.set(CoreAnnotations.AnswerAnnotation.class, label);
+    labeledCharacter.set(CoreAnnotations.GoldAnswerAnnotation.class, label);
+    labeledCharacter.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, charIndex);
+    labeledCharacter.setIndex(index);
+    return labeledCharacter;
   }
   
   /**
@@ -287,7 +300,13 @@ public final class ProcessorTools {
     for (CoreLabel outputChar : charSequence) {
       String text = outputChar.get(CharAnnotation.class);
       String[] fields = outputChar.get(AnswerAnnotation.class).split(OP_DELIM);
-      Operation label = Operation.valueOf(fields[0]);
+      Operation label;
+      try {
+        label = Operation.valueOf(fields[0]);
+      } catch (IllegalArgumentException e) {
+        System.err.printf("%s: WARNING Illegal operation %s/%s%n", ProcessorTools.class.getName(), text, fields[0]);
+        label = Operation.None;
+      }
       if (label == Operation.Whitespace) {
         // This is the token delimiter.
         String original = originalToken.toString();
