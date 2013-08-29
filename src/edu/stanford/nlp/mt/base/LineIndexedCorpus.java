@@ -23,6 +23,8 @@ public class LineIndexedCorpus extends AbstractList<String> {
    final File fh;
    final RandomAccessFile rfh;
    final List<Long> lineIndex;
+   public static boolean VERBOSE = true; // Thang Aug13
+   
    public LineIndexedCorpus(String filename) throws IOException {
       fh = new File(filename);
       lineIndex = new ArrayList<Long>();      
@@ -35,10 +37,18 @@ public class LineIndexedCorpus extends AbstractList<String> {
       long pos = 0;
       char[] charArray = new char[2]; 
       boolean lastPosWasEOL = false;
+      int numLines = 0; // Thang Aug13: num lines
       for (int charPoint = fin.read(); charPoint != -1; charPoint = fin.read()) {
          if (lastPosWasEOL) {
             lineIndex.add(pos);
             lastPosWasEOL = false;
+            
+            if(VERBOSE){ // Thang Aug13
+              numLines++;
+              if(numLines%100000==0){
+                err.print(" (" + numLines/1000 + "K) ");
+              }
+            }
          }         
          charArray[0] = (char)charPoint;
          String s;
@@ -58,7 +68,11 @@ public class LineIndexedCorpus extends AbstractList<String> {
       }
       lineIndex.add(pos); // position of eof;
       fin.close();
-      rfh = new RandomAccessFile(fh, "r");      
+      rfh = new RandomAccessFile(fh, "r");
+      
+      if(VERBOSE){ // Thang Aug13
+        err.println("Done! Num lines = " + numLines);
+      }
    }
       
    @Override

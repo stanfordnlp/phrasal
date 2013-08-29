@@ -157,11 +157,9 @@ public class ExtendedLexicalReorderingTable {
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
 
-  // TODO(spenceg): This is rather different than the implementation
-  // in LexicalReorderingTable.
   private static int[] mergeInts(int[] array1, int[] array2) {
-    return new int[] { FlatPhraseTable.foreignIndex.indexOf(array1, true),
-        FlatPhraseTable.translationIndex.indexOf(array2, true) };
+    return new int[] { FlatPhraseTable.foreignIndex.indexOf(array1),
+        FlatPhraseTable.translationIndex.indexOf(array2) };
   }
 
   public float[] getReorderingScores(int phraseId) {

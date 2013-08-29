@@ -19,35 +19,34 @@ import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.util.Pair;
 
-import edu.berkeley.nlp.wordAlignment.EMWordAligner;
-import edu.berkeley.nlp.wordAlignment.Model;
-import edu.berkeley.nlp.wordAlignment.distortion.DistortionModel;
-import edu.berkeley.nlp.wordAlignment.distortion.StringDistanceModel;
-import edu.berkeley.nlp.wordAlignment.distortion.StateMapper.EndsStateMapper;
-import edu.berkeley.nlp.wordAlignment.distortion.StateMapper;
-import edu.berkeley.nlp.wordAlignment.SentencePairState;
-import edu.berkeley.nlp.wa.mt.SentencePair;
+//import edu.berkeley.nlp.wordAlignment.EMWordAligner;
+//import edu.berkeley.nlp.wordAlignment.Model;
+//import edu.berkeley.nlp.wordAlignment.distortion.DistortionModel;
+//import edu.berkeley.nlp.wordAlignment.distortion.StringDistanceModel;
+//import edu.berkeley.nlp.wordAlignment.distortion.StateMapper.EndsStateMapper;
+//import edu.berkeley.nlp.wordAlignment.distortion.StateMapper;
+//import edu.berkeley.nlp.wordAlignment.SentencePairState;
+//import edu.berkeley.nlp.wa.mt.SentencePair;
 //import edu.berkeley.nlp.mt.SentencePair;
-import edu.berkeley.nlp.wa.mt.Alignment;
+//import edu.berkeley.nlp.wa.mt.Alignment;
 //import edu.berkeley.nlp.mt.Alignment;
 
 /**
  * Prefix decoder
  *
+ * TODO(spenceg): Disabled to Berkeley Aligner dependencies so that we can
+ * remove berkeleyaligner.jar from mt.
+ *
  * @author daniel
  */
 public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
-  public static boolean DEBUG = true;
 
-  int maxDistortion = -1;
-  EMWordAligner alignerRv;
-
-  public PrefixDecoder(AbstractInferer<IString, FV> inferer, String reverseWAModel) {
+  protected PrefixDecoder(AbstractInferer<IString, FV> inferer) {
     super(inferer);
     if (inferer instanceof MultiBeamDecoder) {
       MultiBeamDecoder<IString, FV> mbd = (MultiBeamDecoder<IString, FV>)inferer;
@@ -55,18 +54,33 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     } else if (inferer instanceof DTUDecoder) {
       throw new UnsupportedOperationException();
     }
-    Model<DistortionModel> paramsRv = Model.load(reverseWAModel);
-    System.err.printf("paramsRv: %s\n", paramsRv);
-    System.err.printf("paramsRv.transProbs: %s\n", paramsRv.transProbs);
-
-    paramsRv.transProbs.lock();
-    StateMapper mapper = new EndsStateMapper();
-    DistortionModel distModel = new StringDistanceModel(mapper);
-    SentencePairState.Factory spsFactory = distModel.getSpsFactory();
-    alignerRv = new EMWordAligner(spsFactory, null, true);
-    alignerRv.trainingCache = distModel.getTrainingCache();
-    alignerRv.params = paramsRv;
   }
+
+  public static boolean DEBUG = true;
+
+  int maxDistortion = -1;
+//  EMWordAligner alignerRv;
+//
+//  public PrefixDecoder(AbstractInferer<IString, FV> inferer, String reverseWAModel) {
+//    super(inferer);
+//    if (inferer instanceof MultiBeamDecoder) {
+//      MultiBeamDecoder<IString, FV> mbd = (MultiBeamDecoder<IString, FV>)inferer;
+//      maxDistortion = mbd.maxDistortion;
+//    } else if (inferer instanceof DTUDecoder) {
+//      throw new UnsupportedOperationException();
+//    }
+//    Model<DistortionModel> paramsRv = Model.load(reverseWAModel);
+//    System.err.printf("paramsRv: %s\n", paramsRv);
+//    System.err.printf("paramsRv.transProbs: %s\n", paramsRv.transProbs);
+//
+//    paramsRv.transProbs.lock();
+//    StateMapper mapper = new EndsStateMapper();
+//    DistortionModel distModel = new StringDistanceModel(mapper);
+//    SentencePairState.Factory spsFactory = distModel.getSpsFactory();
+//    alignerRv = new EMWordAligner(spsFactory, null, true);
+//    alignerRv.trainingCache = distModel.getTrainingCache();
+//    alignerRv.params = paramsRv;
+//  }
 
   @Override
   public boolean shutdown() {
@@ -181,26 +195,26 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
       System.err.println("Targets:\n"+targets);
     }
 
-    SentencePair sp = new SentencePair(0, "none", eWords, fWords);
+//    SentencePair sp = new SentencePair(0, "none", eWords, fWords);
     if (targets != null && targets.size() > 0 && !targets.get(0).toString().equals("")) {
-      Alignment aRv = alignerRv.alignSentencePair(sp);
+//      Alignment aRv = alignerRv.alignSentencePair(sp);
       System.out.println("Alignment:");
-      System.out.println(aRv);
+//      System.out.println(aRv);
       int lastF = 0;
       for (int i = 0; i < targets.get(0).size(); i++) {
-        List<Integer> e2fA = aRv.getAlignmentsToEnglish(i);
+//        List<Integer> e2fA = aRv.getAlignmentsToEnglish(i);
         int sureAlignment = -1;
-        for (Integer a : e2fA) {
-          if (sureAlignment == -1 ||
-                  (Math.abs(sureAlignment - lastF)  > Math.abs(a - lastF) &&
-                          waHyp.sourceCoverage.get(a) == false)) {
-            sureAlignment = a;
-          }
-            /* if (aRv.containsSureAlignment(i, a)) {
-              sureAlignment = a;
-              break;
-            } */
-        }
+//        for (Integer a : e2fA) {
+//          if (sureAlignment == -1 ||
+//                  (Math.abs(sureAlignment - lastF)  > Math.abs(a - lastF) &&
+//                          waHyp.sourceCoverage.get(a) == false)) {
+//            sureAlignment = a;
+//          }
+//            /* if (aRv.containsSureAlignment(i, a)) {
+//              sureAlignment = a;
+//              break;
+//            } */
+//        }
         if (DEBUG) {
           System.out.printf("e.%d -> f.%d\n", i, sureAlignment);
         }
