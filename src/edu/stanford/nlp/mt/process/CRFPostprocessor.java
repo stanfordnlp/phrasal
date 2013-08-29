@@ -30,9 +30,12 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
+import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 /**
- * CRF-based text post-processor.
+ * CRF-based text post-processor. The model depends on a companion Preprocessor
+ * for training.
  * 
  * @author Spence Green
  *
@@ -80,6 +83,11 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     classifier = new CRFClassifier<CoreLabel>(flags);
   }
 
+  /**
+   * Train a model given a preprocessor.
+   * 
+   * @param preProcessor
+   */
   protected void train(Preprocessor preProcessor) {
     DocumentReaderAndWriter<CoreLabel> docReader = 
         new ProcessorTools.PostprocessorDocumentReaderAndWriter(preProcessor);
@@ -90,10 +98,22 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     System.err.println("Finished training.");
   }
   
+  /**
+   * Serialize a model to file.
+   * 
+   * @param filename
+   */
   protected void serialize(String filename) {
     classifier.serializeClassifier(filename);
   }
 
+  /**
+   * Load a serialized model.
+   * 
+   * @param filename
+   * @param p
+   * @throws FileNotFoundException
+   */
   protected void load(String filename, Properties p) throws FileNotFoundException {
     File file = new File(filename);
     if ( ! file.exists()) throw new FileNotFoundException(filename);
@@ -109,6 +129,12 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     }
   }
 
+  /**
+   * Load a serialized model.
+   * 
+   * @param filename
+   * @throws FileNotFoundException
+   */
   protected void load(String filename) throws FileNotFoundException {
     load(filename, new Properties());
   }
@@ -145,6 +171,12 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     return alignment;
   }
   
+  /**
+   * Evaluate the postprocessor given an input file specified in the flags.
+   * 
+   * @param preProcessor
+   * @param pwOut
+   */
   protected void evaluate(Preprocessor preProcessor, PrintWriter pwOut) {
     System.err.println("Starting evaluation...");
     DocumentReaderAndWriter<CoreLabel> docReader = new ProcessorTools.PostprocessorDocumentReaderAndWriter(preProcessor);
@@ -191,7 +223,13 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     }
   }
 
-  
+  /**
+   * Confgiure a post-processor, either by loading from a serialized file or training a new model.
+   * 
+   * @param postProcessor
+   * @param preProcessor
+   * @param options
+   */
   protected static void setup(CRFPostprocessor postProcessor, Preprocessor preProcessor, Properties options) {
     if (postProcessor.flags.inputEncoding == null) {
       postProcessor.flags.inputEncoding = System.getProperty("file.encoding");
@@ -246,36 +284,62 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
    * @param nThreads
    * @return
    */
-  protected static double decode(CRFPostprocessor postProcessor,
+  protected static double decode(final CRFPostprocessor postProcessor,
       BufferedReader reader, PrintWriter outstream, int nThreads) {
-    // TODO(spenceg): Add multithreading support
     long numChars = 0;
+    int lineNumber = 0;
     long startTime = System.nanoTime();
     try {
-      for (String line; (line = reader.readLine()) != null;) {
-        List<CoreLabel> labeledSeq = ProcessorTools.stringToCharacterSequence(line.trim());
-        numChars += labeledSeq.size();
-        labeledSeq = postProcessor.classifier.classify(labeledSeq);
-        List<CoreLabel> tokenSeq = ProcessorTools.toPostProcessedSequence(labeledSeq);
-        outstream.println(Sentence.listToString(tokenSeq));
+      // Setup the threadpool
+      MulticoreWrapper<String,String> wrapper = 
+          new MulticoreWrapper<String,String>(nThreads, 
+              new ThreadsafeProcessor<String,String>() {
+                @Override
+                public String process(String input) {
+                  List<CoreLabel> labeledSeq = ProcessorTools.stringToCharacterSequence(input);
+                  labeledSeq = postProcessor.classifier.classify(labeledSeq);
+                  List<CoreLabel> tokenSeq = ProcessorTools.toPostProcessedSequence(labeledSeq);
+                  return Sentence.listToString(tokenSeq);
+                }
+                @Override
+                public ThreadsafeProcessor<String, String> newInstance() {
+                  return this;
+                }
+      });
+      
+      // Read the input
+      for (String line; (line = reader.readLine()) != null; ++lineNumber) {
+        numChars += line.length();
+        wrapper.put(line.trim());
+        while(wrapper.peek()) outstream.println(wrapper.poll());
       }
+      
+      wrapper.join();
+      while(wrapper.peek()) outstream.println(wrapper.poll());
+      
     } catch (IOException e) {
+      System.err.printf("%s: Error at input line %d%s", CRFPostprocessor.class.getName(), lineNumber);
       e.printStackTrace();
     }
+    // Calculate throughput
     double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
     double charsPerSecond = (double) numChars / elapsedTime;
     return charsPerSecond;
   }
 
+  /**
+   * Decode an evaluate file or raw input based on postProcessor.flags.
+   * 
+   * @param nThreads
+   * @param preProcessor
+   * @param postProcessor
+   */
   protected static void execute(int nThreads, Preprocessor preProcessor,
       CRFPostprocessor postProcessor) {
-    // Decode either an evaluation file or raw text
     try {
       PrintWriter pwOut = new PrintWriter(System.out, true);
       if (postProcessor.flags.testFile != null) {
-        if (postProcessor.flags.answerFile == null) {
-          postProcessor.evaluate(preProcessor, pwOut);
-        }
+        postProcessor.evaluate(preProcessor, pwOut);
 
       } else {
         BufferedReader reader = postProcessor.flags.textFile == null ?

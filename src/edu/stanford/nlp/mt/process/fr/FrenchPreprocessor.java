@@ -6,8 +6,7 @@ import edu.stanford.nlp.international.french.process.FrenchTokenizer;
 import edu.stanford.nlp.mt.process.CoreNLPPreprocessor;
 
 /**
- * TODO(spenceg): FrenchTokenizer does not support invertible!
- * 
+ * Pre-processes French raw text.
  * 
  * @author Spence Green
  *
@@ -15,7 +14,7 @@ import edu.stanford.nlp.mt.process.CoreNLPPreprocessor;
 public class FrenchPreprocessor extends CoreNLPPreprocessor {
   public FrenchPreprocessor() {
     super(FrenchTokenizer.factory());
-    tf.setOptions("invertible=true,preserveLines=true,ptb3Escaping=false,asciiQuotes=true");
+    tf.setOptions("invertible=true,ptb3Ellipsis=false,ptb3Dashes=false");
   }
 
   @Override

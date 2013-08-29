@@ -33,8 +33,8 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
   
   @Override
   public SymmetricalWordAlignment process(String input) {
-    String uncased = toUncased(input);
-    Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(uncased.trim()));
+    String uncased = toUncased(input.trim());
+    Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(uncased));
     List<CoreLabel> outputTokens = tokenizer.tokenize();
     
     // Convert tokenized string to sequence
@@ -44,7 +44,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
       String outputToken = token.get(TextAnnotation.class);
       String inputToken = token.get(OriginalTextAnnotation.class);
       if (inputToken == null) {
-        throw new RuntimeException("Invertible option not set in preprocessor");
+        throw new RuntimeException("Invertible option not set in preprocessor/tokenizer");
       }
       
       // Oooh. This is gross and slow. But some core tokenizers return whitespace
@@ -56,7 +56,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
         originalStrings.addAll(Arrays.asList(inputFields));
       
       } else {
-        throw new RuntimeException();
+        throw new RuntimeException("Non-invertible input: " + input);
       }
     }
     
@@ -64,8 +64,6 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     Sequence<IString> outputSequence = 
         new SimpleSequence<IString>(true, IStrings.toIStringArray(outputStrings)); 
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, outputSequence);
-    
-//    assert inputSequence.size() == originalStrings.size() : String.format("%s/%s", inputSequence.size(), originalStrings.size());
     
     // Generate the alignments
     int j = 0;
@@ -80,7 +78,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
       String original = originalStrings.get(j);
       targets.add(j++);
       sb.append(original);
-      while ( (! uncasedInputToken.equals(original)) && j < outputSequence.size()) {
+      while ( ! uncasedInputToken.equals(original) && j < outputSequence.size()) {
         sb.append(originalStrings.get(j));
         targets.add(j++);
         original = sb.toString();

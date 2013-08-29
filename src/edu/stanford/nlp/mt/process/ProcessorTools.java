@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -166,23 +167,39 @@ public final class ProcessorTools {
       int p = i > 0 ? s2t[i-1] : -1;
       int q = s2t[j];
       // Span p/q in the target bounds this gap
-      Operation pLabel = p > 0 ? Operation.valueOf(sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class)) : null;
-      Operation qLabel = Operation.valueOf(sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class));
-      if (pLabel != null && pLabel == Operation.None) {
+      String pLabel = p > 0 ? sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class) : null;
+      String qLabel = sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class);
+      Operation pOperation = null;
+      Operation qOperation = null;
+      try {
+        pOperation = pLabel == null ? null : Operation.valueOf(pLabel);
+      } catch (Exception e) {
+        // The label is lexicalized, so it clearly isn't None.
+      }
+      try {
+        qOperation = Operation.valueOf(qLabel);
+      } catch (Exception e) {
+        // The label is lexicalized, so it clearly isn't None.
+      }
+      
+      if (pOperation != null && pOperation == Operation.None) {
         // Insert after
         String span = sourceToken.substring(i, j);
         String label = Operation.InsertAfter.toString() + OP_DELIM + span;
         sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
         
-      } else if (qLabel == Operation.None) {
+      } else if (qOperation == Operation.None) {
         // Insert before
         String span = sourceToken.substring(i, j);
         String label = Operation.InsertBefore.toString() + OP_DELIM + span;
         sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
       
       } else {
-        // TODO(spenceg): How often does this happen. What to do here?
-        System.err.printf("WARNING: Unmanageable span (%s): %s -> %s%n", sourceToken.substring(i,j), sourceToken, target);
+        if (Pattern.compile("\u00AD").matcher(sourceToken).find()) {
+          // Soft hyphen nonsense. Do nothing
+        } else {
+          System.err.printf("WARNING: Unmanageable span (%s): %s -> %s%n", sourceToken.substring(i,j), sourceToken, target);
+        }
       }
     }
     return sequence;

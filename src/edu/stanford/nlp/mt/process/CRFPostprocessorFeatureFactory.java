@@ -65,7 +65,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     String charp2 = p2.get(CoreAnnotations.CharAnnotation.class);
 
     // Default feature set...a 5 character window
-    // plus a few other language-independent features
+    // Adding actual characters causes overfitting.
 //    features.add(charc +"-c");
 //    features.add(charn + "-n1");
 //    features.add(charn2 + "-n2" );
@@ -75,14 +75,11 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     // Sequence start indicator
     if (loc == 0) features.add("seq-start");
 
-    // Character-level context features
+    // Character-class features
     addCharacterClassFeatures(features, charp2, "-p2");
     addCharacterClassFeatures(features, charp, "-p");
     addCharacterClassFeatures(features, charn, "-n");
     addCharacterClassFeatures(features, charn2, "-n2");
-    
-    // Focus character features. Adding the character itself tends to overfit.
-//  features.add(charc + "-c");
     addCharacterClassFeatures(features, charc, "-c");
     
     // Token features
@@ -100,7 +97,6 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
 //        features.add("char-inside");
         features.add("inside-" + cToken);
       }
-//      features.add(String.format("%d-%s-cword-pos", cPosition, cToken));
 
       // Left context
       String leftToken = "<S>";
@@ -119,24 +115,6 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
       if (cPosition == 0) {
         features.add(leftToken + "-" + cToken + "-lbigram");
       }
-
-//      // Right context
-//      String rightToken = "</S>";
-//      for (int i = loc+1; i < cInfo.size(); ++i) {
-//        String rightC = cInfo.get(i).get(CoreAnnotations.CharAnnotation.class);
-//        if (rightC != null && rightC.equals(ProcessorTools.WHITESPACE)) {
-//          rightToken = cInfo.get(i+1).get(CoreAnnotations.ParentAnnotation.class);
-//          if (rightToken != null) {
-//            features.add(rightToken + "-rcontext"); 
-//          }
-//          break;
-//        }
-//      }
-//      
-//      // Right context bigram
-//      if (cPosition == 0) {
-//        features.add(cToken + "-" + rightToken + "-rbigram");
-//      }
     }
     
     // Indicator transition feature
@@ -145,6 +123,12 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     return features;
   }
 
+  /**
+   * Returns an equivalence class for an input string.
+   * 
+   * @param string
+   * @return
+   */
   private String tokenClass(String string) {
     if (string.startsWith("http://")) {
       return "#UrL#";
@@ -154,6 +138,13 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     return string;
   }
 
+  /**
+   * Returns true if a strong consists entirely of digits and punctuation.
+   * False otherwise.
+   * 
+   * @param string
+   * @return
+   */
   private boolean isNumber(String string) {
     int length = string.length();
     for (int i = 0; i < length; ++i) {
@@ -224,6 +215,8 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
 
   private Collection<String> featuresCpC(PaddedList<IN> cInfo, int loc) {
     Collection<String> features = Generics.newArrayList();
+
+    // Caused overfitting.
 //    CoreLabel c = cInfo.get(loc);
 //    CoreLabel p = cInfo.get(loc - 1);
 //    CoreLabel n = cInfo.get(loc + 1);
@@ -232,9 +225,10 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
 //    String charp = p.get(CoreAnnotations.CharAnnotation.class);
 //    String charn = n.get(CoreAnnotations.CharAnnotation.class);
 //
-//    features.add(charc + charp + "-cngram");
-//    features.add(charn + "-n");
-    
+//    addCharacterClassFeatures(features, charp, "-p");
+//    addCharacterClassFeatures(features, charn, "-n");
+//    addCharacterClassFeatures(features, charc, "-c");
+ 
     // Indicator transition feature
     features.add("cliqueCpC");
     
