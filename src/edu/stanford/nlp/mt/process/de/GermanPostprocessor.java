@@ -1,9 +1,10 @@
 package edu.stanford.nlp.mt.process.de;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.process.Postprocessor;
-import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import java.util.Properties;
+
+import edu.stanford.nlp.mt.process.CRFPostprocessor;
+import edu.stanford.nlp.util.PropertiesUtils;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * CRF-based post-processor for German.
@@ -11,23 +12,50 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  * @author Spence Green
  *
  */
-public class GermanPostprocessor implements Postprocessor {
+public class GermanPostprocessor extends CRFPostprocessor {
 
-  public GermanPostprocessor(String...options) {
-    // TODO Auto-generated constructor stub
-  }
+  private static final long serialVersionUID = -2611602459669509968L;
 
-  @Override
-  public SymmetricalWordAlignment process(Sequence<IString> input) {
-    // TODO Auto-generated method stub
-    return null;
+  /**
+   * Constructor loading a new model before training.
+   * 
+   * @param options
+   */
+  public GermanPostprocessor(Properties options) {
+    super(options);
   }
 
   /**
+   * Constructor for loading pre-trained models.
+   * 
+   * @param args
+   */
+  public GermanPostprocessor(String...args) {
+    super(new Properties());
+    if (args.length == 0) throw new IllegalArgumentException("Requires at least one argument");
+    String serializedFile = args[0];
+    load(serializedFile);
+    System.err.println("Loaded GermanPostprocessor from: " + args[0]);
+  }
+
+  /**
+   * A main method for training and evaluating the postprocessor.
+   * 
    * @param args
    */
   public static void main(String[] args) {
-    // TODO Auto-generated method stub
+    // Strips off hyphens
+    Properties options = StringUtils.argsToProperties(args, optionArgDefs());
+    if (options.containsKey("help") || args.length == 0) {
+      System.err.println(usage(GermanPostprocessor.class.getName()));
+      System.exit(-1);
+    }
 
+    int nThreads = PropertiesUtils.getInt(options, "nthreads", 1);
+    GermanPreprocessor preProcessor = new GermanPreprocessor();
+    GermanPostprocessor postProcessor = new GermanPostprocessor(options);
+    
+    CRFPostprocessor.setup(postProcessor, preProcessor, options);
+    CRFPostprocessor.execute(nThreads, preProcessor, postProcessor);    
   }
 }

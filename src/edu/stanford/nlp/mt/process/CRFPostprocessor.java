@@ -44,6 +44,34 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
   protected transient CRFClassifier<CoreLabel> classifier;
   protected final SeqClassifierFlags flags;
   
+  protected static String usage(String className) {
+    String nl = System.getProperty("line.separator");
+    StringBuilder sb = new StringBuilder();
+    sb.append("Usage: java ").append(className).append(" OPTS < file").append(nl);
+    sb.append(nl).append(" Options:").append(nl);
+    sb.append("  -help                : Print this message.").append(nl);
+    sb.append("  -orthoOptions str    : Comma-separated list of orthographic normalization options to pass to PTBTokenizer.").append(nl);
+    sb.append("  -trainFile file      : Training file.").append(nl);
+    sb.append("  -testFile  file      : Evaluation file.").append(nl);
+    sb.append("  -textFile  file      : Raw input file to be postProcessed.").append(nl);
+    sb.append("  -loadClassifier file : Load serialized classifier from file.").append(nl);
+    sb.append("  -nthreads num        : Number of threads  (default: 1)").append(nl);
+    sb.append(nl).append(" Otherwise, all flags correspond to those present in SeqClassifierFlags.java.").append(nl);
+    return sb.toString();
+  }
+
+  protected static Map<String,Integer> optionArgDefs() {
+    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    optionArgDefs.put("help", 0);
+    optionArgDefs.put("orthoOptions", 1);
+    optionArgDefs.put("trainFile", 1);
+    optionArgDefs.put("testFile", 1);
+    optionArgDefs.put("textFile", 1);
+    optionArgDefs.put("loadClassifier", 1);
+    optionArgDefs.put("nthreads", 1);
+    return optionArgDefs;
+  }
+  
   public CRFPostprocessor(Properties props) {
     // Currently, this class only supports one featureFactory.
     props.put("featureFactory", CRFPostprocessorFeatureFactory.class.getName());
