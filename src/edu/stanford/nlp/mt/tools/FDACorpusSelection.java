@@ -42,6 +42,7 @@ public class FDACorpusSelection {
    final LineIndexedCorpus bitextFr;
    final LineIndexedCorpus bitextEn;
    
+   int rejectedCount; // Thang Aug13: count how many times
    private boolean isMono = false; // Thang Aug13: handle monolingual data
    
    static public void usage() {
@@ -56,7 +57,7 @@ public class FDACorpusSelection {
          return (int)Math.signum(score[o2]-score[o1]);
       }      
    }
-
+   
    // Bicici and Yuret found that log inverse initialization, log(|U|/cnt(f,U)),
    // improved run time performance by decreasing the number of tied segment 
    // scores
@@ -76,6 +77,7 @@ public class FDACorpusSelection {
       this.bitextFr = bitextFr;      
       
       if (bitextEn==null) { isMono = true; } // Thang Aug13: handle mono
+      rejectedCount = 0;
       
       // construct F
       if (VERBOSE>=1) { err.println("# Constructing test set features ..."); }
@@ -93,12 +95,12 @@ public class FDACorpusSelection {
       if (VERBOSE>=1) { err.println("# Collecting cnt(f,U) values and |U| ..."); }
       cntfU = new ClassicCounter<String>();
       int sizeU = 0;
-      int numLines = 0; // Thang Aug13: num lines
+      int numLines = 0;
       for (String line : bitextFr) {
          CoverageChecker.countNgrams(line, cntfU, F, NGRAM_ORDER);
          sizeU += line.split("\\s+").length;
          
-         if(VERBOSE>=1){ // Thang Aug13
+         if(VERBOSE>=1){
            numLines++;
            if(numLines%100000==0){
              err.print(" (" + numLines/1000 + "K) ");
@@ -106,11 +108,12 @@ public class FDACorpusSelection {
          }
       }
       this.sizeU = sizeU;
-      if (VERBOSE>=1) { err.println("Done. Num lines = " + numLines + ". Num distinct ngrams = " + cntfU.size() + ". Num total tokens = " + sizeU); }
+      if (VERBOSE>=1) { err.println("Done. Num lines = " + numLines + ". Num distinct ngrams = " + cntfU.size() + 
+          ". Num total tokens = " + sizeU + "."); }
       
       // initial feature weights
       fvalue = new ClassicCounter<String>();
-      if (VERBOSE>=1) { err.println("Initializing feature weights ..."); }
+      if (VERBOSE>=1) { err.println("# Initializing feature weights ..."); }
       for (String f : F) {         
          fvalue.setCount(f, init(f));
          if (VERBOSE>=2) {           
@@ -121,7 +124,7 @@ public class FDACorpusSelection {
       // score sentences using initial feature weights and place them in the PriorityQueue
       score = new double[bitextFr.size()];
       Q = new PriorityQueue<Integer>(bitextFr.size(), new SentenceScoreComparator());
-      numLines = 0; // Thang Aug13: num lines
+      numLines = 0; 
       if (VERBOSE>=1) { err.println("# Computing sent scores and adding to a priority queue ..."); }
       for (int i = 0; i < score.length; i++) {
          Counter<String> lineNgramCounts = new ClassicCounter<String>();
@@ -138,7 +141,7 @@ public class FDACorpusSelection {
          // err.printf("init score: %d %.3f\n", i, score[i]);
          Q.add(i);
          
-         if(VERBOSE>=1){ // Thang Aug13
+         if(VERBOSE>=1){
            numLines++;
            if(numLines%100000==0){
              err.print(" (" + numLines/1000 + "K) ");
@@ -218,6 +221,7 @@ public class FDACorpusSelection {
               err.printf(" - rejecting: %d %f < %f\n", id, score[id], score[nextId]);
             }
             Q.add(id);
+            rejectedCount++;
          }         
       }
    }
@@ -237,11 +241,11 @@ public class FDACorpusSelection {
       String selectedLines = (args.length == 7 ? args[6] : null);
        
       // src bitext
-      err.printf("Opening %s\n", bitextFrFn);
+      err.printf("# Opening %s\n", bitextFrFn);
       LineIndexedCorpus bitextFr = new LineIndexedCorpus(bitextFrFn);
       
       // src test
-      err.printf("Opening %s\n", testFn);
+      err.printf("# Opening %s\n", testFn);
       LineIndexedCorpus testFr = new LineIndexedCorpus(testFn);
       
       // Thang Aug13: handle "" tgt bitext
@@ -283,9 +287,11 @@ public class FDACorpusSelection {
          if (!isMono) { selectedEn.println(frEn.second()); } // Thang Aug13: handle mono
          if (selectedLn != null) selectedLn.println(frEn.third());
          
-         if(VERBOSE>=1 && (n%1000==0)){ err.print(" (" + n/1000 + "K) "); }
+         if(VERBOSE>=1 && ((n+1)%1000==0)){ err.print(" (" + (n+1)/1000 + "K, rejected=" + 
+             fsacs.rejectedCount + ")"); }
       }
-      if (VERBOSE>=1) { err.println("Done! Num training instances selected = " + selectionSize); }
+      if (VERBOSE>=1) { err.println("Done! Num training instances selected = " + selectionSize + 
+          ". Rejected count = " + fsacs.rejectedCount + "."); }
       
       selectedFr.close();
       if (!isMono) { selectedEn.close(); } // Thang Aug13: handle mono     
