@@ -94,10 +94,12 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     classifier.serializeClassifier(filename);
   }
 
-  protected void load(String filename, Properties p) {
+  protected void load(String filename, Properties p) throws FileNotFoundException {
+    File file = new File(filename);
+    if ( ! file.exists()) throw new FileNotFoundException(filename);
     classifier = new CRFClassifier<CoreLabel>(p);
     try {
-      classifier.loadClassifier(new File(filename), p);
+      classifier.loadClassifier(file, p);
     } catch (ClassCastException e) {
       e.printStackTrace();
     } catch (IOException e) {
@@ -107,7 +109,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     }
   }
 
-  protected void load(String filename) {
+  protected void load(String filename) throws FileNotFoundException {
     load(filename, new Properties());
   }
 
@@ -127,13 +129,18 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     Sequence<IString> target = IStrings.toIStringSequence(targetStrings);
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sequence, target);
     
+    // Try to reconstruct the alignment
     int i = 0;
     for (int j = 0; j < processedTokens.size(); ++j) {
       String originalToken = processedTokens.get(j).get(OriginalTextAnnotation.class);
       if ( ! originalToken.equals(sequence.get(i).toString())) {
         ++i;
       }
-      alignment.addAlign(i, j);
+      if (i < alignment.fSize() && j < alignment.eSize()) {
+        alignment.addAlign(i, j);
+      } else {
+        System.err.printf("%s: WARNING: Discarding bad alignment%n", this.getClass().getName());
+      }
     }
     return alignment;
   }
@@ -192,7 +199,11 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
 
     // Load or train the classifier
     if (postProcessor.flags.loadClassifier != null) {
-      postProcessor.load(postProcessor.flags.loadClassifier, options);
+      try {
+        postProcessor.load(postProcessor.flags.loadClassifier, options);
+      } catch (FileNotFoundException e) {
+        throw new RuntimeException(e);
+      }
     } else if (postProcessor.flags.trainFile != null){
       postProcessor.train(preProcessor);
       // WSGDEBUG

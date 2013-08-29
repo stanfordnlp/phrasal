@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.process;
 
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.List;
 
 import edu.stanford.nlp.ling.CoreLabel;
@@ -30,7 +31,6 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     this.tf = tf;
   }
   
-  // TODO(spenceg): This is still broken for ellipses from PTBLexer.
   @Override
   public SymmetricalWordAlignment process(String input) {
     String uncased = toUncased(input);
@@ -38,30 +38,50 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     List<CoreLabel> outputTokens = tokenizer.tokenize();
     
     // Convert tokenized string to sequence
+    List<String> originalStrings = Generics.newArrayList(outputTokens.size());
     List<String> outputStrings = Generics.newArrayList(outputTokens.size());
     for (CoreLabel token : outputTokens) {
-      outputStrings.add(token.get(TextAnnotation.class));
+      String outputToken = token.get(TextAnnotation.class);
+      String inputToken = token.get(OriginalTextAnnotation.class);
+      if (inputToken == null) {
+        throw new RuntimeException("Invertible option not set in preprocessor");
+      }
+      
+      // Oooh. This is gross and slow. But some core tokenizers return whitespace
+      // in a CoreLabel. The MT system never does that.
+      String[] inputFields = inputToken.split("\\s+");
+      String[] outputFields = outputToken.split("\\s+");
+      if (inputFields.length == outputFields.length) {
+        outputStrings.addAll(Arrays.asList(outputFields));
+        originalStrings.addAll(Arrays.asList(inputFields));
+      
+      } else {
+        throw new RuntimeException();
+      }
     }
+    
+    Sequence<IString> inputSequence = IStrings.tokenize(input);
     Sequence<IString> outputSequence = 
         new SimpleSequence<IString>(true, IStrings.toIStringArray(outputStrings)); 
-    Sequence<IString> inputSequence = IStrings.tokenize(input);
-    
-    // Generate the alignment
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, outputSequence);
+    
+//    assert inputSequence.size() == originalStrings.size() : String.format("%s/%s", inputSequence.size(), originalStrings.size());
+    
+    // Generate the alignments
     int j = 0;
     for (int i = 0; i < inputSequence.size(); ++i) {
       if (j >= outputTokens.size()) {
-        System.err.println("WARNING: Non-invertible input: " + input);
+        System.err.printf("%s: WARNING: Non-invertible input: %s%n", this.getClass().getName(), input);
         break;
       }
       String uncasedInputToken = toUncased(inputSequence.get(i).toString());
       List<Integer> targets = Generics.newLinkedList();
       StringBuilder sb = new StringBuilder();
-      String original = outputTokens.get(j).get(OriginalTextAnnotation.class);
+      String original = originalStrings.get(j);
       targets.add(j++);
       sb.append(original);
       while ( (! uncasedInputToken.equals(original)) && j < outputSequence.size()) {
-        sb.append(outputTokens.get(j).get(OriginalTextAnnotation.class));
+        sb.append(originalStrings.get(j));
         targets.add(j++);
         original = sb.toString();
       }

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.process.de;
 
+import java.io.FileNotFoundException;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.process.CRFPostprocessor;
@@ -34,7 +35,11 @@ public class GermanPostprocessor extends CRFPostprocessor {
     super(new Properties());
     if (args.length == 0) throw new IllegalArgumentException("Requires at least one argument");
     String serializedFile = args[0];
-    load(serializedFile);
+    try {
+      load(serializedFile);
+    } catch (FileNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     System.err.println("Loaded GermanPostprocessor from: " + args[0]);
   }
 

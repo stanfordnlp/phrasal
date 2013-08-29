@@ -76,23 +76,23 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     if (loc == 0) features.add("seq-start");
 
     // Character-level context features
-    addCharacterClassFeatures(features, charp2, "-p2", true);
-    addCharacterClassFeatures(features, charp, "-p", true);
-    addCharacterClassFeatures(features, charn, "-n", true);
-    addCharacterClassFeatures(features, charn2, "-n2", true);
+    addCharacterClassFeatures(features, charp2, "-p2");
+    addCharacterClassFeatures(features, charp, "-p");
+    addCharacterClassFeatures(features, charn, "-n");
+    addCharacterClassFeatures(features, charn2, "-n2");
     
     // Focus character features. Adding the character itself tends to overfit.
 //  features.add(charc + "-c");
-    addCharacterClassFeatures(features, charc, "-c", false);
+    addCharacterClassFeatures(features, charc, "-c");
     
     // Token features
     if (charc != null && ! charc.equals(ProcessorTools.WHITESPACE)) {
       // Current token
-      String cToken = tokenClass(cInfo.get(loc).get(ParentAnnotation.class));
+      String cToken = tokenClass(c.get(ParentAnnotation.class));
       features.add(cToken + "-cword");
            
       // Character position in the current token.
-      int cPosition = cInfo.get(loc).get(CharacterOffsetBeginAnnotation.class);
+      int cPosition = c.get(CharacterOffsetBeginAnnotation.class);
       if (cPosition == 0) {
         features.add("char-start");
         features.add("start-" + cToken);
@@ -140,7 +140,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     }
     
     // Indicator transition feature
-//    features.add("cliqueC");
+    features.add("cliqueC");
 
     return features;
   }
@@ -180,7 +180,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
    * @param b 
    */
   private void addCharacterClassFeatures(Collection<String> features, String string,
-      String suffix, boolean enableAlphaClass) {
+      String suffix) {
     if (string == null) {
       features.add("boundary" + suffix);
       return;
@@ -190,7 +190,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     final char c = string.charAt(0);
     
     if (Character.isLetter(c)) {
-      if (enableAlphaClass) features.add("alpha" + suffix);
+      features.add("alpha" + suffix);
     
     } else if (Character.isDigit(c)) {
       features.add("digit" + suffix);
