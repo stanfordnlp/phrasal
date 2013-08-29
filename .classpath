@@ -15,7 +15,6 @@
 	<classpathentry kind="lib" path="lib/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
 	<classpathentry kind="lib" path="lib/tercom.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
-	<classpathentry kind="lib" path="lib/berkeleyaligner.jar"/>
 	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib/guava-11.0.2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
