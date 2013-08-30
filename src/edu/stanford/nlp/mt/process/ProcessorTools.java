@@ -111,6 +111,18 @@ public final class ProcessorTools {
     return sequence;
   }
 
+  /**
+   * Create the observed label sequence from a training example.
+   * 
+   * NOTE: this method ignores punctuation normalization, which causes a huge blow-up
+   * in the number of Replace and Insert operations. Most pre-processors convert punctuation
+   * to ASCII equivalents, which is probably acceptable as output for most users.
+   * 
+   * @param sourceToken
+   * @param targetTokens
+   * @param outputIndex
+   * @return
+   */
   private static List<CoreLabel> toSequence(String sourceToken, List<String> targetTokens, int outputIndex) {
     // Concatenate the target tokens
     StringBuilder sb = new StringBuilder();
@@ -143,7 +155,7 @@ public final class ProcessorTools {
         String sChar = String.valueOf(sourceToken.charAt(sIndex));
         assert sIndex < s2t.length;
         s2t[sIndex] = i;
-        if (tChar.equals(sChar)) {
+        if (tChar.equals(sChar) || isPunctuation(sChar)) {
           // NoOp
           sequence.add(createDatum(tChar, Operation.None.toString(), i, parentToken, charIndex));
         } else if (tChar.equals(sChar.toLowerCase())) {
@@ -185,15 +197,19 @@ public final class ProcessorTools {
       if (pOperation != null && pOperation == Operation.None) {
         // Insert after
         String span = sourceToken.substring(i, j);
-        String label = Operation.InsertAfter.toString() + OP_DELIM + span;
-        sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
+        if ( ! isPunctuation(span)) {
+          String label = Operation.InsertAfter.toString() + OP_DELIM + span;
+          sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
+        }
         
       } else if (qOperation == Operation.None) {
         // Insert before
         String span = sourceToken.substring(i, j);
-        String label = Operation.InsertBefore.toString() + OP_DELIM + span;
-        sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
-      
+        if ( ! isPunctuation(span)) {
+          String label = Operation.InsertBefore.toString() + OP_DELIM + span;
+          sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
+        }
+        
       } else {
         if (Pattern.compile("\u00AD").matcher(sourceToken).find()) {
           // Soft hyphen nonsense. Do nothing
@@ -205,6 +221,31 @@ public final class ProcessorTools {
     return sequence;
   }
 
+  /**
+   * Returns true if a strong consists entirely of digits and punctuation.
+   * False otherwise.
+   * 
+   * @param string
+   * @return
+   */
+  private static boolean isPunctuation(String string) {
+    int length = string.length();
+    for (int i = 0; i < length; ++i) {
+      char c = string.charAt(i);
+      int cType = Character.getType(c);
+      if ( ! (cType == Character.START_PUNCTUATION ||
+          cType == Character.END_PUNCTUATION ||
+          cType == Character.OTHER_PUNCTUATION ||
+          cType == Character.CONNECTOR_PUNCTUATION ||
+          cType == Character.DASH_PUNCTUATION ||
+          cType == Character.INITIAL_QUOTE_PUNCTUATION ||
+          cType == Character.FINAL_QUOTE_PUNCTUATION)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   /**
    * Needleman-Wunsch. Orientation is t2s since we want to know how each target
    * character was produced.
@@ -281,7 +322,7 @@ public final class ProcessorTools {
    * @return
    */
   private static int sim(char char1, char char2) {
-    // TODO(spenceg): Should pass in the appropriate pre-processor for lowercasing.
+    // Strict lexical match.
     boolean isMatch = String.valueOf(char1).toLowerCase().equals(String.valueOf(char2).toLowerCase());
     return isMatch ? 1 : penalty;
   }

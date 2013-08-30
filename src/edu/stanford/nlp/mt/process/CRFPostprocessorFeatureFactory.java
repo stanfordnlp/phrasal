@@ -132,7 +132,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
   private String tokenClass(String string) {
     if (string.startsWith("http://")) {
       return "#UrL#";
-    } else if (isNumber(string)) {
+    } else if (isNumberAndPunctuation(string)) {
       return "#0#";
     }
     return string;
@@ -145,7 +145,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
    * @param string
    * @return
    */
-  private boolean isNumber(String string) {
+  private boolean isNumberAndPunctuation(String string) {
     int length = string.length();
     for (int i = 0; i < length; ++i) {
       char c = string.charAt(i);
@@ -155,7 +155,9 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
           cType == Character.END_PUNCTUATION ||
           cType == Character.OTHER_PUNCTUATION ||
           cType == Character.CONNECTOR_PUNCTUATION ||
-          cType == Character.DASH_PUNCTUATION)) {
+          cType == Character.DASH_PUNCTUATION) ||
+          cType == Character.INITIAL_QUOTE_PUNCTUATION ||
+          cType == Character.FINAL_QUOTE_PUNCTUATION) {
         return false;
       }
     }
@@ -179,6 +181,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     if (string.length() > 1) return;
     
     final char c = string.charAt(0);
+    final int cType = Character.getType(c);
     
     if (Character.isLetter(c)) {
       features.add("alpha" + suffix);
@@ -189,23 +192,28 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
     } else if (Character.isWhitespace(c)) {
       features.add("ws" + suffix);
     
-    } else if (Character.getType(c) == Character.START_PUNCTUATION) {
+    } else if (c == ',' || c == '"' || c == '.' || c == '/' || c == ':' || c == ';') {
+      features.add(c + suffix);
+    
+    } else if (cType == Character.START_PUNCTUATION ||
+        cType == Character.INITIAL_QUOTE_PUNCTUATION) {
       features.add("start_punc" + suffix);
     
-    } else if (Character.getType(c) == Character.END_PUNCTUATION) {
+    } else if (cType == Character.END_PUNCTUATION ||
+        cType == Character.FINAL_QUOTE_PUNCTUATION) {
       features.add("end_punc" + suffix);
     
-    } else if (Character.getType(c) == Character.OTHER_PUNCTUATION) {
+    } else if (cType == Character.OTHER_PUNCTUATION) {
       features.add("other_punc" + suffix);
     
-    } else if (Character.getType(c) == Character.CONNECTOR_PUNCTUATION ||
-        Character.getType(c) == Character.DASH_PUNCTUATION) {
+    } else if (cType == Character.CONNECTOR_PUNCTUATION ||
+        cType == Character.DASH_PUNCTUATION) {
       features.add("conn_punc" + suffix);
     
-    } else if (Character.getType(c) == Character.CURRENCY_SYMBOL) {
+    } else if (cType == Character.CURRENCY_SYMBOL) {
       features.add("currency" + suffix);
     
-    } else if (Character.getType(c) == Character.MATH_SYMBOL) {
+    } else if (cType == Character.MATH_SYMBOL) {
       features.add("math" + suffix);
     
     } else {
