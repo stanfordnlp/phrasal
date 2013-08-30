@@ -19,6 +19,7 @@ import edu.stanford.nlp.objectbank.LineIterator;
 import edu.stanford.nlp.process.SerializableFunction;
 import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
+import edu.stanford.nlp.util.Characters;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -232,14 +233,7 @@ public final class ProcessorTools {
     int length = string.length();
     for (int i = 0; i < length; ++i) {
       char c = string.charAt(i);
-      int cType = Character.getType(c);
-      if ( ! (cType == Character.START_PUNCTUATION ||
-          cType == Character.END_PUNCTUATION ||
-          cType == Character.OTHER_PUNCTUATION ||
-          cType == Character.CONNECTOR_PUNCTUATION ||
-          cType == Character.DASH_PUNCTUATION ||
-          cType == Character.INITIAL_QUOTE_PUNCTUATION ||
-          cType == Character.FINAL_QUOTE_PUNCTUATION)) {
+      if ( ! Characters.isPunctuation(c)) {
         return false;
       }
     }
