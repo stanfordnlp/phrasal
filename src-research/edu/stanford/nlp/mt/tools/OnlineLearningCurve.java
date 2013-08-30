@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
@@ -72,14 +72,12 @@ public class OnlineLearningCurve {
       
       System.err.printf("Decoding with %s%n", wtsFile);
       
-      List<Sequence<IString>> translations = p.decode(sourceList);
+      List<RichTranslation<IString,String>> translations = p.decode(sourceList);
       BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
       BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = bleu
           .getIncrementalMetric();
-      for (Sequence<IString> translation : translations) {
-        ScoredFeaturizedTranslation<IString,String> nbestTranslation = 
-            new ScoredFeaturizedTranslation<IString,String>(translation,null,0.0);
-        incMetric.add(nbestTranslation);
+      for (RichTranslation<IString,String> translation : translations) {
+        incMetric.add(translation);
       }
       System.out.printf("%s\t%.2f%n",wtsFile,100.0*incMetric.score());
     }

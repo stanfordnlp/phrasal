@@ -78,30 +78,34 @@ public class ChineseSourcePreordering {
   public static void main(String[] args) throws IOException {
 	// for testing purposes: args[0] is the location of a pre-trained berkeley parser .gr file, and args[1] is the location of a word-segmented file to reorder
 	  
-    String parserModel = args[0];
-    String inputFile = args[1];    
-    BerkeleyParserWrapper parser = new BerkeleyParserWrapper(parserModel, false, false, false, false, false, true, 1, false); // new berkeley parser for chinese (the one true is the chinese boolean)
+    //String parserModel = args[0];
+    String inputFile = args[0];    
+    //BerkeleyParserWrapper parser = new BerkeleyParserWrapper(parserModel, false, false, false, false, false, true, 1, false); // new berkeley parser for chinese (the one true is the chinese boolean)
    
     InputStream fis = new FileInputStream(inputFile);
     BufferedReader br = new BufferedReader(new InputStreamReader(fis, Charset.forName("UTF-8")));
     String line;
     while ((line = br.readLine()) != null) {
-      List<String> words = Arrays.asList(line.split(" "));
-      ScoredObject<Tree> parse = parser.getParses(words, null).get(0);
-      Tree tree = parse.object();
+      
+      //List<String> words = Arrays.asList(line.split(" "));
+      //ScoredObject<Tree> parse = parser.getParses(words, null).get(0);
+      //Tree tree = parse.object();
       //System.out.println("\n--------------\n");
       //System.out.println("Original Tree:");
       //tree.pennPrint();
       //System.out.println(tree.toString());
-      tree = preorderTree(tree);
       //System.out.println("\nModified Tree:");
       //tree.pennPrint();
+      //System.out.println(tree.toString());
+      
+      Tree tree = Tree.valueOf(line.trim());
+      tree = preorderTree(tree);
       String flatTree = "";
       for (Tree word : tree.getLeaves()) {
     	  flatTree += word.toString() + " ";
       }
       System.out.println(flatTree.trim());
-      //System.out.println(tree.toString());
+
     }
   }
 }
