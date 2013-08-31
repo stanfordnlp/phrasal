@@ -1056,9 +1056,7 @@ public class Phrasal {
    * @param sourceInputId
    */
   private void processConsoleResult(List<RichTranslation<IString, String>> translations,
-      Sequence<IString> bestTranslation, int sourceLength,
-      int sourceInputId) {
-
+      Sequence<IString> bestTranslation, int sourceLength, int sourceInputId) {
     if (translations.size() > 0) {
       System.out.println(bestTranslation);
 
@@ -1099,17 +1097,23 @@ public class Phrasal {
   }
 
   /**
-   * Decode input from inputStream and write translations to stdout.
+   * Decode input from inputStream and either write 1-best translations to stdout or
+   * return them in a <code>List</code>.
    * 
    * @param inputStream 
+   * @param outputToConsole if true, output the 1-best translations to the console. Otherwise,
+   *                        return them in a <code>List</code>
    * @throws IOException
    */
-  private void decode(InputStream inputStream) throws IOException {
+  public List<RichTranslation<IString,String>> decode(InputStream inputStream, boolean outputToConsole) throws IOException {
     System.err.println("Entering main translation loop");
     final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
         new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
     final LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         inputStream, "UTF-8"));
+    final List<RichTranslation<IString,String>> bestTranslationList = outputToConsole ? null :
+      new ArrayList<RichTranslation<IString,String>>();
+    
     final long startTime = System.nanoTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
@@ -1125,62 +1129,32 @@ public class Phrasal {
       wrapper.put(new DecoderInput(source, sourceInputId));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
+        if (outputToConsole) {
+          processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
+        } else {
+          RichTranslation<IString,String> best = result.translations.size() > 0 ? result.translations.get(0) : null;
+          bestTranslationList.add(best);
+        }
+      }
+    }
+
+    // Finished reading the input. Wait for threadpool to finish, then process
+    // last few translations.
+    wrapper.join();
+    while(wrapper.peek()) {
+      DecoderOutput result = wrapper.poll();
+      if (outputToConsole) {
         processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
+      } else {
+        RichTranslation<IString,String> best = result.translations.size() > 0 ? result.translations.get(0) : null;
+        bestTranslationList.add(best);
       }
     }
 
-    // Finished reading the input. Wait for threadpool to finish, then process
-    // last few translations.
-    wrapper.join();
-    while(wrapper.peek()) {
-      DecoderOutput result = wrapper.poll();
-      processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
-    }
-
-    long totalTime = System.nanoTime() - startTime;
-    System.err.printf("Total Decoding time: %.3f seconds%n", totalTime / 1e9);
-  }
-
-  /**
-   * Decode an input list according to the current decoder settings. Returns
-   * null for inputs that are shorter than <code>minSentenceSize</code> or
-   * longer than <code>maxSentenceSize</code>.
-   * 
-   * @param sourceList
-   * @return
-   */
-  public List<RichTranslation<IString,String>> decode(List<Sequence<IString>> sourceList) {
-    List<RichTranslation<IString,String>> translations = Generics.newArrayList(sourceList.size());
-    for (int i = 0; i < sourceList.size(); ++i) translations.add(null);
-
-    final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
-        new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
-    int sourceInputId = 0;
-    for (Sequence<IString> sequence : sourceList) {
-      if (sequence.size() > maxSentenceSize || sequence.size() < minSentenceSize) {
-        System.err.printf("Skipping: %s%n", sequence.toString());
-        System.err.printf("Tokens: %d (min: %d max: %d)%n", sequence.size(), minSentenceSize,
-            maxSentenceSize);
-        sourceInputId++;
-        continue;
-      }
-
-      wrapper.put(new DecoderInput(sequence, sourceInputId++));
-      while(wrapper.peek()) {
-        DecoderOutput result = wrapper.poll();
-        translations.set(result.sourceInputId, result.translations.get(0));
-      }
-    }
-
-    // Finished reading the input. Wait for threadpool to finish, then process
-    // last few translations.
-    wrapper.join();
-    while(wrapper.peek()) {
-      DecoderOutput result = wrapper.poll();
-      translations.set(result.sourceInputId, result.translations.get(0));
-    }
-
-    return translations;
+    double totalTime = ((double) System.nanoTime() - startTime) / 1e9;
+    double segmentsPerSec = (double) sourceInputId / totalTime;
+    System.err.printf("Decoding at %.2f segments/sec (total: %.2f sec)%n", segmentsPerSec, totalTime);
+    return bestTranslationList;
   }
 
   /**
@@ -1415,6 +1389,6 @@ public class Phrasal {
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
         : readArgs(args);
     Phrasal p = Phrasal.loadDecoder(config);
-    p.decode(System.in);
+    p.decode(System.in, true);
   }
 }

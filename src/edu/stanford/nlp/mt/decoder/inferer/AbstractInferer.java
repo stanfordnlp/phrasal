@@ -8,7 +8,6 @@ import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
-import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -21,17 +20,6 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final RecombinationFilter<Derivation<TK, FV>> filter;
   protected final List<Annotator<TK,FV>> annotators;
 
-  
-  @Override
-  abstract public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
-      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-      List<Sequence<TK>> targets, int size);
-
-  @Override
-  abstract public RichTranslation<TK, FV> translate(Sequence<TK> source,
-      int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
-      List<Sequence<TK>> targets);
-  
   protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
     featurizer = builder.incrementalFeaturizer;
     phraseGenerator = builder.phraseGenerator;
