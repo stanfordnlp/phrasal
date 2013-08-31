@@ -44,13 +44,17 @@ AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
 AR_TOK="java $JAVA_OPTS -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker + -nthreads 4"
 
 # English tokenizer setup
-EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Ellipsis=true,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
 
 # French tokenizer setup
 FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false,asciiQuotes=true"
 
 # German segmentation and tokenization setup
-DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true"
+DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Ellipsis=true,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
+
+# spenceg[aug.2013] Segmentation was used in WMT2013, but German people
+# at ACL suggested that compound splitting is only good for De-En, not
+# for En-De.
 DE_SEG="${CDEC_PATH}/compound-split/compound-split.pl"
 DE_PP="java $JAVA_OPTS edu.stanford.nlp.util.Lattice"
 
@@ -85,7 +89,9 @@ elif [ $lang == "German" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
     fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower | gzip -c > ${outfile}.gz
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $tolower | gzip -c > ${outfile}.gz
+# WMT2013 command (with compound splitting)
+#$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower | gzip -c > ${outfile}.gz
     
 elif [ $lang == "English" ]; then
     if [ "$fixnl" != "tee" ]; then

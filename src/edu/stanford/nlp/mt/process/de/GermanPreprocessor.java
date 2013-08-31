@@ -15,7 +15,7 @@ public class GermanPreprocessor extends CoreNLPPreprocessor {
   
   public GermanPreprocessor() {
     super(PTBTokenizer.coreLabelFactory());
-    tf.setOptions("invertible=true,ptb3Escaping=false,ptb3Ellipsis=false,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true");
+    tf.setOptions("invertible=true,ptb3Escaping=false,ptb3Ellipsis=true,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true");
   }
 
   @Override
