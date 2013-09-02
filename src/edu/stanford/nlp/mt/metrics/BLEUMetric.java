@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.*;
 import java.io.*;
 
-import edu.berkeley.nlp.util.StringUtils;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
@@ -12,6 +11,7 @@ import edu.stanford.nlp.stats.Counter;
 
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  *
@@ -82,24 +82,24 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   public static double computeLocalSmoothScore(String strSeq, List<String> strRefs, int order) {
     Sequence<String> seq = new SimpleSequence<String>(strSeq.split("\\s+"));
     List<Sequence<String>> refs = new ArrayList<Sequence<String>>(strRefs.size());
-    for (int i = 0; i < strRefs.size(); i++) {
-      refs.add(new SimpleSequence<String>(strRefs.get(i).split("\\s+")));
+    for (String strRef : strRefs) {
+      refs.add(new SimpleSequence<String>(strRef.split("\\s+")));
     }
     return computeLocalSmoothScore(seq, refs, order, false);
   }
 
-  public static <TK> double computeLocalSmoothScore(Sequence<TK> seq, 
-      List<Sequence<TK>> refs, 
+  public static <TK> double computeLocalSmoothScore(Sequence<TK> seq,
+      List<Sequence<TK>> refs,
       int order, boolean doNakovExtension) {
     return computeLocalSmoothScore(seq, refs, null, order, doNakovExtension);
   }
 
   public static <TK> double computeLocalSmoothScore(Sequence<TK> seq,
       List<Sequence<TK>> refs, double[] refWeights, int order, boolean doNakovExtension) {
-    
+
     Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(seq,
         order);
-    Counter<Sequence<TK>> maxReferenceCount = (refWeights == null) ? 
+    Counter<Sequence<TK>> maxReferenceCount = (refWeights == null) ?
         Metrics.getMaxNGramCounts(refs, order) : Metrics.getMaxNGramCounts(refs, refWeights, order);
 
     Metrics.clipCounts(candidateCounts, maxReferenceCount);
@@ -117,7 +117,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
     int localR = bestMatchLength(refLengths, seq.size());
     if (doNakovExtension) ++localR;
-    
+
     double localLogBP;
     if (localC < localR) {
       localLogBP = 1 - localR / (1.0 * localC);
@@ -211,7 +211,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       Counter<Sequence<TK>> maxReferenceCount = Metrics.getMaxNGramCounts(
           references, order);
       maxReferenceCounts.add(maxReferenceCount);
-      
+
       int refsSz = references.size();
       assert refsSz > 0;
       refLengths[listI] = new int[refsSz];
@@ -314,7 +314,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       for (int i = 0; i < futureMatchCounts.length; i++) {
         System.err.printf("%d:", i);
         for (int j = 0; j < futureMatchCounts[i].length; j++) {
-          System.err.printf(" %d/%d", futureMatchCounts[i][j],
+          System.err.printf(" %f/%f", futureMatchCounts[i][j],
               futurePossibleCounts[i][j]);
         }
         System.err.println();
@@ -673,7 +673,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public int depth() {
       return sequences.size();
     }
-    
+
     @Override
     public String scoreDetails() {
       return "None";
@@ -692,16 +692,16 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     sb.append("   -cased          : Don't lowercase the input").append(nl);
     return sb.toString();
   }
-  
+
   private static Map<String,Integer> argDefs() {
     Map<String,Integer> argDefs = new HashMap<String,Integer>();
     argDefs.put("order", 1);
-    argDefs.put("nist", 0); 
+    argDefs.put("nist", 0);
     argDefs.put("smooth", 0);
     argDefs.put("cased", 0);
     return argDefs;
   }
-  
+
   public static void main(String[] args) throws IOException {
     if (args.length < 1) {
       System.err.print(usage());
@@ -713,12 +713,12 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     boolean doSmooth = PropertiesUtils.getBool(options, "smooth", false);
     boolean doTokenization = PropertiesUtils.getBool(options, "nist", false);
     boolean doCased = PropertiesUtils.getBool(options, "cased", false);
-    
+
     // Setup the metric tokenization scheme. Applies to both the references and
     // hypotheses
     if (doCased) NISTTokenizer.lowercase(false);
     NISTTokenizer.normalize(doTokenization);
-    
+
     // Load the references
     String[] refs = options.getProperty("").split("\\s+");
     System.out.printf("Metric: BLEU-%d with %d references%n", BLEUOrder, refs.length);
