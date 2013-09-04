@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
-import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
@@ -83,7 +83,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
-      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
     final int sourceLength = source.size();
 
@@ -97,13 +97,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
-    if (constrainedOutputSpace != null) {
-      ruleList = constrainedOutputSpace.filter(ruleList);
-      System.err
-      .printf(
-          "Translation options after reduction by output space constraint: %d%n",
-          ruleList.size());
-    }
+    ruleList = outputSpace.filter(ruleList);
+    System.err.printf(
+        "Translation options after reduction by output space constraint: %d%n",
+        ruleList.size());
 
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
@@ -134,7 +131,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(beamCapacity);
       for (BundleBeam<TK,FV> beam : beams) {
         for (HyperedgeBundle<TK,FV> bundle : beam.getBundlesForConsequentSize(i)) {
-          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, constrainedOutputSpace);
+          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, outputSpace);
           pq.addAll(consequents);
           totalHypothesesGenerated += consequents.size();
         }
@@ -149,14 +146,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         // Derivations can be null if force decoding is enabled. This means that the derivation for this
         // item was not allowable and thus was not built. However, we need to maintain the consequent
         // so that we can generate successors.
-        if (item.derivation != null) {
-          if (constrainedOutputSpace == null || constrainedOutputSpace.allowableFinal(item.derivation.featurizable)) {
-            newBeam.put(item.derivation);
-          }
+        if (item.derivation != null && outputSpace.allowableFinal(item.derivation.featurizable)) {
+          newBeam.put(item.derivation);
         }
         
         List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, constrainedOutputSpace);
+            sourceInputId, outputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
       }
@@ -169,9 +164,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     boolean isGoalBeam = true;
     Collections.reverse(beams);
     for (Beam<Derivation<TK,FV>> beam : beams) {
-      if (beam.size() != 0
-          && (constrainedOutputSpace == null || constrainedOutputSpace
-          .allowableFinal(beam.iterator().next().featurizable))) {
+      if (beam.size() != 0 && outputSpace
+          .allowableFinal(beam.iterator().next().featurizable)) {
 
         // TODO(spenceg) This should be an error message
         if ( ! isGoalBeam) {
@@ -193,16 +187,16 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * 
    * @param bundle
    * @param sourceInputId
-   * @param constrainedOutputSpace 
+   * @param outputSpace 
    * @return
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
-      HyperedgeBundle<TK, FV> bundle, int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace) {
+      HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
     List<Item<TK,FV>> consequents = Generics.newArrayList(2);
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
       // Derivation generation
-      boolean buildDerivation = constrainedOutputSpace == null || constrainedOutputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
+      boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic) :
             null;

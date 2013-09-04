@@ -1189,11 +1189,11 @@ public class Phrasal {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
-    // Force decoding setup---constrain the decoder output space to these references
-    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (forceDecodeReferences == null ? null
-        : new EnumeratedConstrainedOutputSpace<IString, String>(
-            forceDecodeReferences.get(sourceInputId),
-            phraseGenerator.longestSourcePhrase()));
+    // Output space of the decoder
+    // TODO(spenceg): Move references out to a "targets" parameter
+    OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, 
+        forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId), 
+            phraseGenerator.longestSourcePhrase(), false);
 
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);
@@ -1203,9 +1203,8 @@ public class Phrasal {
           .get(threadId).nbest(
               source,
               sourceInputId,
-              constrainedOutputSpace,
-              (constrainedOutputSpace == null ? null : constrainedOutputSpace
-                  .getAllowableSequences()), numTranslations);
+              outputSpace,
+              outputSpace.getAllowableSequences(), numTranslations);
 
       // Return an empty n-best list
       if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
@@ -1217,9 +1216,8 @@ public class Phrasal {
       RichTranslation<IString, String> translation = inferers.get(threadId).translate(
           source,
           sourceInputId,
-          constrainedOutputSpace,
-          (constrainedOutputSpace == null ? null : constrainedOutputSpace
-              .getAllowableSequences()));
+          outputSpace,
+          outputSpace.getAllowableSequences());
       if (translation != null) {
         translations.add(translation);
       }

@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
@@ -19,7 +18,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <FV>
  */
 public class EnumeratedConstrainedOutputSpace<TK, FV> implements
-    ConstrainedOutputSpace<TK, FV> {
+    OutputSpace<TK, FV> {
   public static final String DEBUG_PROPERTY = "EnumeratedConstrainedOutputSpaceDebug";
   public static final int DEBUG = Integer.parseInt(System.getProperty(
       DEBUG_PROPERTY, "0"));
@@ -36,8 +35,8 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
    * @param longestPhrase
    */
   public EnumeratedConstrainedOutputSpace(
-      Collection<? extends Sequence<TK>> allowableSequences, int longestPhrase) {
-    this.allowableSequences = new ArrayList<Sequence<TK>>(allowableSequences);
+      List<Sequence<TK>> allowableSequences, int longestPhrase) {
+    this.allowableSequences = allowableSequences;
     this.longestPhrase = longestPhrase;
   }
   

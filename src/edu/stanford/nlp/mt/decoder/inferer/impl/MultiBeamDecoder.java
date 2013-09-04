@@ -39,7 +39,7 @@ import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
-import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
@@ -139,7 +139,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
-      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
     final int sourceSz = source.size();
 
@@ -168,15 +168,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.printf("Translation options: %d\n", ruleList.size());
     }
 
-    // Force decoding---if it is enabled, then filter the rule set according
-    // to the references
-    if (constrainedOutputSpace != null) {
-      ruleList = constrainedOutputSpace.filter(ruleList);
-      System.err
-          .printf(
-              "Translation options after reduction by output space constraint: %d\n",
-              ruleList.size());
-    }
+    ruleList = outputSpace.filter(ruleList);
+    System.err
+    .printf(
+        "Translation options after reduction by output space constraint: %d\n",
+        ruleList.size());
 
     // Create rule lookup chart. Rules can be fetched by span.
     RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source);
@@ -200,7 +196,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     long startTime = System.nanoTime();
     for (int i = 0; i < beams.length; i++) {
       expandBeam(beams, i, sourceSz, ruleGrid, 
-          constrainedOutputSpace, sourceInputId);
+          outputSpace, sourceInputId);
       
       if (DEBUG) {
         displayBeams(beams);
@@ -242,8 +238,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // actually fail.
     for (int i = beams.length - 1; i >= 0; i--) {
       if (beams[i].size() != 0
-          && (constrainedOutputSpace == null || constrainedOutputSpace
-              .allowableFinal(beams[i].iterator().next().featurizable))) {
+          && outputSpace.allowableFinal(beams[i].iterator().next().featurizable)) {
         Derivation<TK, FV> bestHyp = beams[i].iterator().next();
         System.err.printf("Annotator output for best hypothesis (%d vs %d)\n", bestHyp.annotators.size(), annotators.size());
         System.err.println("===========================================");
@@ -319,13 +314,13 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
    * @param beamId
    * @param sourceSz
    * @param optionGrid
-   * @param constrainedOutputSpace
+   * @param outputSpace
    * @param sourceInputId
    * @return number of generated hypotheses
    */
   private int expandBeam(Beam<Derivation<TK, FV>>[] beams, int beamId,
       int sourceSz, RuleGrid<TK,FV> optionGrid,
-      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      OutputSpace<TK, FV> outputSpace,
       int sourceInputId) {
     int optionsApplied = 0;
     int hypPos = -1;
@@ -400,9 +395,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
             // // TODO: put back
 
-            // Force decoding check
-            if (constrainedOutputSpace != null
-                && !constrainedOutputSpace.allowableContinuation(
+            if (!outputSpace.allowableContinuation(
                     hyp.featurizable, option)) {
               continue;
             }
@@ -435,8 +428,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             totalHypothesesGenerated++;
 
             if (newHyp.featurizable.untranslatedTokens == 0
-                && constrainedOutputSpace != null
-                && !constrainedOutputSpace
+                && !outputSpace
                   .allowableFinal(newHyp.featurizable)) {
                 continue;
             }

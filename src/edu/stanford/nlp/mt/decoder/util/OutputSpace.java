@@ -7,14 +7,15 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
- * Constrains the output space of the decoder for force
+ * Specifies the output space of the decoder for force
  * decoding.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  */
-public interface ConstrainedOutputSpace<TK, FV> {
+public interface OutputSpace<TK, FV> {
 
   /**
    * Filter a list of translation rules to a set of target
@@ -45,7 +46,8 @@ public interface ConstrainedOutputSpace<TK, FV> {
   public boolean allowableFinal(Featurizable<TK, FV> featurizable);
 
   /**
-   * Return all allowable target sequences.
+   * Return all allowable target sequences. A null return value has the semantics of
+   * allowing all output sequences.
    * 
    * @return
    */
