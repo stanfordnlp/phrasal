@@ -73,7 +73,7 @@ public class Phrasal {
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
-  public static final String CONSTRAIN_TO_REFS = "constrain-to-refs";
+  public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
   public static final String SEARCH_ALGORITHM = "search-algorithm";
   public static final String DISTORTION_FILE = "distortion-file";
@@ -121,7 +121,7 @@ public class Phrasal {
         DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
         DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
-        DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS,
+        DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
@@ -195,7 +195,7 @@ public class Phrasal {
   /**
    * References for force decoding
    */
-  private List<List<Sequence<IString>>> constrainedToRefs = null;
+  private List<List<Sequence<IString>>> forceDecodeReferences;
 
   /**
    * Hard limits on inputs to be decoded
@@ -321,9 +321,9 @@ public class Phrasal {
     
     boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
-    if (config.containsKey(CONSTRAIN_TO_REFS)) {
-      constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)
-          .toArray(new String[config.get(CONSTRAIN_TO_REFS).size()]));
+    if (config.containsKey(FORCE_DECODE)) {
+      forceDecodeReferences = Metrics.readReferences(config.get(FORCE_DECODE)
+          .toArray(new String[config.get(FORCE_DECODE).size()]));
     }
 
     // int distortionLimit = -1;
@@ -1158,7 +1158,8 @@ public class Phrasal {
   }
 
   /**
-   * Decode a tokenized input string. Returns an n-best list of translations.
+   * Decode a tokenized input string. Returns an n-best list of translations as
+   * specified by the decoders <code>nbestListSize</code> parameter.
    *
    * NOTE: This call is threadsafe.
    *
@@ -1172,14 +1173,15 @@ public class Phrasal {
   }
   
   /**
-   * Decode a tokenized input string. Returns an n-best list of translations.
+   * Decode a tokenized input string. Returns an n-best list of translations
+   * specified by the parameter.
    *
    * NOTE: This call is threadsafe.
    *
    * @param source
    * @param sourceInputId
    * @param threadId -- Inferer object to use (one per thread)
-   * @param numTranslations number of hypotheses to generate
+   * @param numTranslations number of translations to generate
    * 
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
@@ -1188,9 +1190,9 @@ public class Phrasal {
     assert sourceInputId >= 0;
 
     // Force decoding setup---constrain the decoder output space to these references
-    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
+    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (forceDecodeReferences == null ? null
         : new EnumeratedConstrainedOutputSpace<IString, String>(
-            constrainedToRefs.get(sourceInputId),
+            forceDecodeReferences.get(sourceInputId),
             phraseGenerator.longestSourcePhrase()));
 
     List<RichTranslation<IString, String>> translations =

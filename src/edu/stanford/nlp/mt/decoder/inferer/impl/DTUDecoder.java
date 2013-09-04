@@ -203,7 +203,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     if (constrainedOutputSpace != null) {
-      options = constrainedOutputSpace.filterOptions(options);
+      options = constrainedOutputSpace.filter(options);
       System.err
           .printf(
               "Translation options after reduction by output space constraint: %d\n",
@@ -529,18 +529,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 }
                 totalHypothesesGenerated++;
 
-                if (newHyp.featurizable.untranslatedTokens != 0) {
-                  if (constrainedOutputSpace != null
-                      && !constrainedOutputSpace
-                          .allowablePartial(newHyp.featurizable)) {
-                    continue;
-                  }
-                } else {
-                  if (constrainedOutputSpace != null
-                      && !constrainedOutputSpace
+                if (newHyp.featurizable.untranslatedTokens == 0
+                    && constrainedOutputSpace != null
+                    && !constrainedOutputSpace
                           .allowableFinal(newHyp.featurizable)) {
                     continue;
-                  }
                 }
 
                 if (newHyp.score == Double.NEGATIVE_INFINITY

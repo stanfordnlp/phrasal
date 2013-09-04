@@ -171,7 +171,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     if (constrainedOutputSpace != null) {
-      ruleList = constrainedOutputSpace.filterOptions(ruleList);
+      ruleList = constrainedOutputSpace.filter(ruleList);
       System.err
           .printf(
               "Translation options after reduction by output space constraint: %d\n",
@@ -434,22 +434,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             }
             totalHypothesesGenerated++;
 
-            if (newHyp.featurizable.untranslatedTokens != 0) {
-              if (constrainedOutputSpace != null
-                  && !constrainedOutputSpace
-                  .allowablePartial(newHyp.featurizable)) {
-                continue;
-              }
-            } else {
-              // System.err.printf("checking final %s\n",
-              // newHyp.featurizable.partialTranslation);
-              if (constrainedOutputSpace != null
-                  && !constrainedOutputSpace
+            if (newHyp.featurizable.untranslatedTokens == 0
+                && constrainedOutputSpace != null
+                && !constrainedOutputSpace
                   .allowableFinal(newHyp.featurizable)) {
-                // System.err.printf("bad final: %s\n",
-                // newHyp.featurizable.partialTranslation);
                 continue;
-              }
             }
 
             if (newHyp.score == Double.NEGATIVE_INFINITY

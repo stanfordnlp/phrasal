@@ -98,7 +98,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     if (constrainedOutputSpace != null) {
-      ruleList = constrainedOutputSpace.filterOptions(ruleList);
+      ruleList = constrainedOutputSpace.filter(ruleList);
       System.err
       .printf(
           "Translation options after reduction by output space constraint: %d%n",
@@ -134,7 +134,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(beamCapacity);
       for (BundleBeam<TK,FV> beam : beams) {
         for (HyperedgeBundle<TK,FV> bundle : beam.getBundlesForConsequentSize(i)) {
-          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId);
+          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, constrainedOutputSpace);
           pq.addAll(consequents);
           totalHypothesesGenerated += consequents.size();
         }
@@ -145,8 +145,18 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           recombinationHistory, maxDistortion, i);
       while (newBeam.size() < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
-        newBeam.put(item.hypothesis);
-        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, sourceInputId);
+
+        // Derivations can be null if force decoding is enabled. This means that the derivation for this
+        // item was not allowable and thus was not built. However, we need to maintain the consequent
+        // so that we can generate successors.
+        if (item.derivation != null) {
+          if (constrainedOutputSpace == null || constrainedOutputSpace.allowableFinal(item.derivation.featurizable)) {
+            newBeam.put(item.derivation);
+          }
+        }
+        
+        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
+            sourceInputId, constrainedOutputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
       }
@@ -183,17 +193,20 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * 
    * @param bundle
    * @param sourceInputId
+   * @param constrainedOutputSpace 
    * @return
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
-      HyperedgeBundle<TK, FV> bundle, int sourceInputId) {
+      HyperedgeBundle<TK, FV> bundle, int sourceInputId, ConstrainedOutputSpace<TK, FV> constrainedOutputSpace) {
     List<Item<TK,FV>> consequents = Generics.newArrayList(2);
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
-      // Hypothesis generation
-      Derivation<TK, FV> newHyp = new Derivation<TK, FV>(sourceInputId,
-          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic);
-      consequents.add(new Item<TK,FV>(newHyp, successor));
+      // Derivation generation
+      boolean buildDerivation = constrainedOutputSpace == null || constrainedOutputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
+      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
+          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic) :
+            null;
+      consequents.add(new Item<TK,FV>(derivation, successor));
     }
     return consequents;
   }
@@ -207,22 +220,29 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <FV>
    */
   private static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
-    public final Derivation<TK, FV> hypothesis;
+    public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
 
     public Item(Derivation<TK,FV> hypothesis, Consequent<TK,FV> consequent) {
-      this.hypothesis = hypothesis;
+      this.derivation = hypothesis;
       this.consequent = consequent;
     }
 
     @Override
     public int compareTo(Item<TK,FV> o) {
-      return this.hypothesis.compareTo(o.hypothesis);
+      if (derivation == null && o.derivation == null) {
+        return 0;
+      } else if (derivation == null) {
+        return -1;
+      } else if (o.derivation == null) {
+        return 1;
+      }
+      return this.derivation.compareTo(o.derivation);
     }
     
     @Override
     public String toString() {
-      return hypothesis.toString();
+      return derivation.toString();
     }
   }
 

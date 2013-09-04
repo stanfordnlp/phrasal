@@ -1,14 +1,19 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
+ * Constrains the output (translation) space for conventional
+ * force decoding.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
@@ -22,14 +27,31 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   public static final int DEBUG_LEVEL_COMPUTATION = 2;
   public final int longestPhrase;
 
-  public final List<Sequence<TK>> allowableSequences;
+  private final List<Sequence<TK>> allowableSequences;
+ 
+  /**
+   * Constructor.
+   * 
+   * @param allowableSequences
+   * @param longestPhrase
+   */
+  public EnumeratedConstrainedOutputSpace(
+      Collection<? extends Sequence<TK>> allowableSequences, int longestPhrase) {
+    this.allowableSequences = new ArrayList<Sequence<TK>>(allowableSequences);
+    this.longestPhrase = longestPhrase;
+  }
+  
+  @SuppressWarnings("rawtypes")
   @Override 
   public boolean equals(Object o) {
-	  if (o instanceof EnumeratedConstrainedOutputSpace) {
+	  if (this == o) {
+	    return true;
+	  } else if ( !(o instanceof EnumeratedConstrainedOutputSpace)) {
+	    return false;
+	  } else {
 		  EnumeratedConstrainedOutputSpace ecos = (EnumeratedConstrainedOutputSpace)o;
 		  return ecos.allowableSequences.equals(allowableSequences);
 	  }
-	  return false;
   }
   
   @Override
@@ -47,45 +69,25 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
     return allowableSequences;
   }
 
-  /**
-	 * 
-	 */
-  public EnumeratedConstrainedOutputSpace(
-      Collection<? extends Sequence<TK>> allowableSequences, int longestPhrase) {
-    this.allowableSequences = new ArrayList<Sequence<TK>>(allowableSequences);
-    this.longestPhrase = longestPhrase;
-  }
-
   @Override
   public boolean allowableFinal(Featurizable<TK, FV> featurizable) {
-    if (featurizable == null)
-      return false;
-
-    Sequence<TK> translation = featurizable.targetPrefix;
-
-    for (Sequence<TK> allowableSequence : allowableSequences) {
-      if (allowableSequence.equals(translation)) {
-        return true;
+    if (featurizable != null) {
+      Sequence<TK> translation = featurizable.targetPrefix;
+      for (Sequence<TK> allowableSequence : allowableSequences) {
+        if (allowableSequence.equals(translation)) {
+          return true;
+        }
       }
-      //System.err.printf("%s\n%s\n", allowableSequence, translation);
-      //System.err.printf("left %d\n",
-      //    allowableSequence.size() - translation.size());
     }
-
     return false;
   }
 
   @Override
-  public boolean allowablePartial(Featurizable<TK, FV> featurizable) {
-    return true;
-  }
-
-  @Override
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteRule<TK,FV> option) {
-
-    Sequence<TK> nextPhrase = option.abstractRule.target;
-
+      ConcreteRule<TK,FV> rule) {
+    final Sequence<TK> nextPhrase = rule.abstractRule.target;
+    
+    // First rule in a derivation
     if (featurizable == null) {
       for (Sequence<TK> allowableSequence : allowableSequences) {
         if (allowableSequence.startsWith(nextPhrase)) {
@@ -95,7 +97,8 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
       return false;
     }
 
-    Sequence<TK> partialTranslation = featurizable.targetPrefix;
+    // Next rule in a derivation
+    final Sequence<TK> partialTranslation = featurizable.targetPrefix;
 
     asfor: for (Sequence<TK> allowableSequence : allowableSequences) {
       if (allowableSequence.startsWith(partialTranslation)) {
@@ -113,7 +116,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
         int tMissing = allowableSequence.size()
             - (partialTranslation.size() + nextPhrase.size());
         int fMissing = featurizable.untranslatedTokens
-            - option.abstractRule.source.size();
+            - rule.abstractRule.source.size();
         if ((fMissing == 0 && tMissing != 0)
             || (fMissing != 0 && tMissing == 0))
           continue;
@@ -146,12 +149,11 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public List<ConcreteRule<TK,FV>> filterOptions(
-      List<ConcreteRule<TK,FV>> optionList) {
+  public List<ConcreteRule<TK,FV>> filter(List<ConcreteRule<TK,FV>> ruleList) {
     List<ConcreteRule<TK,FV>> filteredOptions = new ArrayList<ConcreteRule<TK,FV>>(
-        optionList.size());
+        ruleList.size());
 
-    for (ConcreteRule<TK,FV> option : optionList) {
+    for (ConcreteRule<TK,FV> option : ruleList) {
       if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
         System.err.printf("Examining: %s %s\n",
             option.abstractRule.target, option.sourceCoverage);
