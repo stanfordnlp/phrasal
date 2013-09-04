@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -22,7 +23,7 @@ public class ConcreteRule<TK,FV> implements
   public final CoverageSet sourceCoverage;
   public final String phraseTableName;
   public final int sourcePosition;
-  public final double isolationScore;
+  public double isolationScore;
   public final List<FeatureValue<FV>> cachedFeatureList;
 
   public enum LinearDistortionType {
@@ -50,14 +51,15 @@ public class ConcreteRule<TK,FV> implements
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
         sourceInputId);
-    List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
+    List<FeatureValue<FV>> features = phraseFeaturizer == null ? 
+        new ArrayList<FeatureValue<FV>>() : phraseFeaturizer.ruleFeaturize(f);
     cachedFeatureList = Generics.newLinkedList();
     for (FeatureValue<FV> feature : features) {
       if ( ! feature.doNotCache) {
         cachedFeatureList.add(feature);
       }
     }
-    this.isolationScore = scorer.getIncrementalScore(features);
+    this.isolationScore = scorer == null ? Double.MIN_VALUE : scorer.getIncrementalScore(features);
   }
 
   /**

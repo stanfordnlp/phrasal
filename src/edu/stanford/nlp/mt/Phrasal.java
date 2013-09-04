@@ -1191,7 +1191,7 @@ public class Phrasal {
 
     // Output space of the decoder
     // TODO(spenceg): Move references out to a "targets" parameter
-    OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, 
+    OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, sourceInputId, 
         forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId), 
             phraseGenerator.longestSourcePhrase(), false);
 

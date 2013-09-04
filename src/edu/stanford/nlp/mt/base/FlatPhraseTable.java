@@ -29,10 +29,11 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static IntegerArrayIndex foreignIndex;
   public static IntegerArrayIndex translationIndex;
 
-  static String[] customScores;
-
-  final String[] scoreNames;
+  protected final String[] scoreNames;
   protected String name;
+  public final List<List<IntArrayTranslationOption>> translations;
+  private int longestForeignPhrase = -1;
+
 
   // Originally, PharaohPhraseTables were backed by a nice simple
   // HashMap from a foreign sequence to a list of translations.
@@ -56,8 +57,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   // java 6 64-bit 254 MiB
   // ///////////////////////////////////////////////////////////////
 
-  private int longestForeignPhrase = -1;
-
   public static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
     public final int[] translation;
@@ -78,8 +77,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       return (int) Math.signum(o.scores[0] - scores[0]);
     }
   }
-
-  public final List<List<IntArrayTranslationOption>> translations;
 
   /**
    * Convert rule scores from string to a numeric array.

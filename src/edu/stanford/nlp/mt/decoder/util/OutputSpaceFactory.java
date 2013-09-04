@@ -19,23 +19,22 @@ public class OutputSpaceFactory {
    * Create an OutputSpace instance for a source input.
    * 
    * @param source
-   * @param sequences
+   * @param sourceInputId 
+   * @param sequences if null, don't constrain the output space
    * @param longestPhrase
    * @param sequencesArePrefixes
    * @return
    */
   public static OutputSpace<IString,String> getOutputSpace(Sequence<IString> source, 
-      List<Sequence<IString>> sequences, int longestPhrase, boolean sequencesArePrefixes) {
-    if (sequences == null) {
+      int sourceInputId, List<Sequence<IString>> sequences, int longestPhrase, boolean sequencesArePrefixes) {
+    if (sequences == null || sequences.size() == 0) {
       return new UnconstrainedOutputSpace<IString,String>();
     
-    } 
-//    else if (sequencesArePrefixes) {
-//      return new SoftPrefixOutputSpace<IString,String>(source, sequences);
-//    
-//    } 
-    else {
-      return new EnumeratedConstrainedOutputSpace<IString,String>(sequences, longestPhrase);
+    } else if (sequencesArePrefixes) {
+      return new SoftPrefixOutputSpace<IString,String>(source, sequences.get(0), sourceInputId);
+    
+    } else {
+      return new ConstrainedOutputSpace<IString,String>(sequences, longestPhrase);
     }
   }
 }

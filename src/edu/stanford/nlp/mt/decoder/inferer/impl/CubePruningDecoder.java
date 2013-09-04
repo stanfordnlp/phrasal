@@ -146,7 +146,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         // Derivations can be null if force decoding is enabled. This means that the derivation for this
         // item was not allowable and thus was not built. However, we need to maintain the consequent
         // so that we can generate successors.
-        if (item.derivation != null && outputSpace.allowableFinal(item.derivation.featurizable)) {
+        if (item.derivation != null) {
           newBeam.put(item.derivation);
         }
         
@@ -217,8 +217,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
 
-    public Item(Derivation<TK,FV> hypothesis, Consequent<TK,FV> consequent) {
-      this.derivation = hypothesis;
+    public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
+      this.derivation = derivation;
       this.consequent = consequent;
     }
 

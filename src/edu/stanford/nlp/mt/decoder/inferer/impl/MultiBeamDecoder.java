@@ -257,7 +257,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   @Override
   public void dump(Derivation<TK, FV> bestHyp) {
-
     List<Derivation<TK, FV>> trace = new ArrayList<Derivation<TK, FV>>();
     for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingDerivation) {
       trace.add(hyp);
@@ -395,8 +394,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             // assert(!hyp.foreignCoverage.intersects(option.foreignCoverage));
             // // TODO: put back
 
-            if (!outputSpace.allowableContinuation(
-                    hyp.featurizable, option)) {
+            if (!outputSpace.allowableContinuation(hyp.featurizable, option)) {
               continue;
             }
 
@@ -423,15 +421,8 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                   newHyp.rule.abstractRule.target);
               System.err.printf("\tscore: %.3f + future cost %.3f = %.3f\n",
                   newHyp.score, newHyp.h, newHyp.score());
-
             }
             totalHypothesesGenerated++;
-
-            if (newHyp.featurizable.untranslatedTokens == 0
-                && !outputSpace
-                  .allowableFinal(newHyp.featurizable)) {
-                continue;
-            }
 
             if (newHyp.score == Double.NEGATIVE_INFINITY
                 || newHyp.score == Double.POSITIVE_INFINITY
@@ -441,6 +432,10 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               // this normally happens when there's something brain dead about
               // the user's baseline model/featurizers,
               // like log(p) values that equal -inf for some featurizers.
+              continue;
+            }
+            if (newHyp.featurizable.untranslatedTokens == 0
+                && !outputSpace.allowableFinal(newHyp.featurizable)) {
               continue;
             }
 

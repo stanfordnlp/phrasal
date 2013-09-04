@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * Constrains the output (translation) space for conventional
- * force decoding.
+ * force decoding to references.
  * 
  * @author danielcer
  * @author Spence Green
@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public class EnumeratedConstrainedOutputSpace<TK, FV> implements
+public class ConstrainedOutputSpace<TK, FV> implements
     OutputSpace<TK, FV> {
   public static final String DEBUG_PROPERTY = "EnumeratedConstrainedOutputSpaceDebug";
   public static final int DEBUG = Integer.parseInt(System.getProperty(
@@ -34,7 +34,7 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
    * @param allowableSequences
    * @param longestPhrase
    */
-  public EnumeratedConstrainedOutputSpace(
+  public ConstrainedOutputSpace(
       List<Sequence<TK>> allowableSequences, int longestPhrase) {
     this.allowableSequences = allowableSequences;
     this.longestPhrase = longestPhrase;
@@ -45,10 +45,10 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
   public boolean equals(Object o) {
 	  if (this == o) {
 	    return true;
-	  } else if ( !(o instanceof EnumeratedConstrainedOutputSpace)) {
+	  } else if ( !(o instanceof ConstrainedOutputSpace)) {
 	    return false;
 	  } else {
-		  EnumeratedConstrainedOutputSpace ecos = (EnumeratedConstrainedOutputSpace)o;
+		  ConstrainedOutputSpace ecos = (ConstrainedOutputSpace)o;
 		  return ecos.allowableSequences.equals(allowableSequences);
 	  }
   }
@@ -117,8 +117,9 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
         int fMissing = featurizable.untranslatedTokens
             - rule.abstractRule.source.size();
         if ((fMissing == 0 && tMissing != 0)
-            || (fMissing != 0 && tMissing == 0))
+            || (fMissing != 0 && tMissing == 0)) {
           continue;
+        }
         /*
          * int priorTM = allowableSequence.size() - (partialTranslation.size());
          * int priorFM = featurizable.untranslatedTokens;
@@ -135,10 +136,16 @@ public class EnumeratedConstrainedOutputSpace<TK, FV> implements
          * System.out.printf("foreign size: %d\n",
          * featurizable.foreignSentence.size());
          */
-        if (fMissing != 0 && tMissing / (double) fMissing > longestPhrase)
+        
+        // TODO(spenceg): Usage of longestPhrase for source and target is
+        // wrong. What is passed in from PhraseGenerator is the longest
+        // source phrase. Need to access the longest target phrase.
+        if (fMissing != 0 && tMissing / (double) fMissing > longestPhrase) {
           continue;
-        if (tMissing != 0 && fMissing / (double) tMissing > longestPhrase)
+        }
+        if (tMissing != 0 && fMissing / (double) tMissing > longestPhrase) {
           continue;
+        }
 
         return true;
       }

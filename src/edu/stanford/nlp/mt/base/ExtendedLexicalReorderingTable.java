@@ -163,9 +163,7 @@ public class ExtendedLexicalReorderingTable {
   }
 
   public float[] getReorderingScores(int phraseId) {
-
     int reorderingId = -1;
-
     if (conditionType == ConditionTypes.f) {
       reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[0];
     } else if (conditionType == ConditionTypes.e) {
@@ -173,11 +171,8 @@ public class ExtendedLexicalReorderingTable {
     } else if (conditionType == ConditionTypes.fe) {
       reorderingId = phraseId;
     }
-
-    if (reorderingId < 0)
-      return null;
-
-    return reorderingScores.get(reorderingId);
+    return reorderingId < 0 || reorderingId >= reorderingScores.size() ? 
+        null : reorderingScores.get(reorderingId);
   }
 
   /**
