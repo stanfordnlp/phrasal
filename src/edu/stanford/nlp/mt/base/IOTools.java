@@ -209,12 +209,12 @@ public final class IOTools {
     
     StringBuilder sb = new StringBuilder(translations.size() * 500);
     String nl = System.getProperty("line.separator");
-    for (RichTranslation<IString, String> tran : translations) {
+    for (RichTranslation<IString, String> translation : translations) {
       if (generateMosesNBestList) {
-        tran.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatNBestList.FIELD_DELIM).append(" ");
-        sb.append(tran.toString());
+        sb.append(translation.toString());
       }
       sb.append(nl);
     }
