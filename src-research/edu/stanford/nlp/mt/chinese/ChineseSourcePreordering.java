@@ -54,7 +54,7 @@ public class ChineseSourcePreordering {
     ruleMap.put(TregexPattern.compile("NP [<< ((DNP=dnp << (NP !<< PN)) $++ NP)] & [<` NP=np]"), Tsurgeon.parseOperation("move dnp $- np")); // DNP(NP):NP
     ruleMap.put(TregexPattern.compile("NP [<< ((DNP=dnp << PP) $++ NP)] & [<` NP=np]"), Tsurgeon.parseOperation("move dnp $- np")); // DNP(PP):NP
     ruleMap.put(TregexPattern.compile("NP [<< ((DNP=dnp << LCP) $++ NP)] & [<` NP=np]"), Tsurgeon.parseOperation("move dnp $- np")); // DNP(LCP):NP
-    ruleMap.put(TregexPattern.compile("LCP << (__=left $+ LC=lc)"), Tsurgeon.parseOperation("move lc $+ left")); // LCP(XP:LC)
+    ruleMap.put(TregexPattern.compile("LCP << (/^(?!LC).*$/=left $+ LC=lc)"), Tsurgeon.parseOperation("move lc $+ left")); // LCP(XP:LC)
     rules = Collections.unmodifiableMap(ruleMap);
   }
   
