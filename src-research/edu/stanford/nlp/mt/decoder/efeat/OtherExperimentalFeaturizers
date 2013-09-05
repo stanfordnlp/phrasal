@@ -1,3 +1,0 @@
-Discriminative NGram - edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer
-Discriminative Phrase Pairs - edu.stanford.nlp.mt.decoder.feat.PhraseTableScoresFeaturizer
-Discriminative Lexical reordering - edu.stanford.nlp.mt.decoder.feat.LexicalReorderingFeaturizer
