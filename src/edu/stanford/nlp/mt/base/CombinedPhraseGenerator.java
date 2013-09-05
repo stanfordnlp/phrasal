@@ -61,10 +61,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
           "CombinedPhraseGenerator#translationOptions type: %s\n", type);
     }
 
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
-      phraseGenerator.setCurrentSequence(sequence, targets);
-    }
-
     if (type.equals(Type.CONCATENATIVE)) {
       for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
          if (DEBUG) {
@@ -200,6 +196,33 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     this.phraseLimit = phraseLimit;
   }
 
+  @Override
+  public int longestSourcePhrase() {
+    int longest = -1;
+    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+      if (longest < phraseGenerator.longestSourcePhrase())
+        longest = phraseGenerator.longestSourcePhrase();
+    }
+    return longest;
+  }
+
+  @Override
+  public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
+    for (PhraseGenerator<TK,FV> phraseTable : phraseGenerators) {
+      phraseTable.setFeaturizer(featurizer);
+    }
+  }
+
+  @Override
+  public int longestTargetPhrase() {
+    int longest = -1;
+    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+      if (longest < phraseGenerator.longestTargetPhrase())
+        longest = phraseGenerator.longestTargetPhrase();
+    }
+    return longest;
+  }
+  
   /**
    * 
    * @throws IOException
@@ -236,32 +259,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
             option.abstractRule.target, option.sourceCoverage,
             Arrays.toString(option.abstractRule.scores));
       }
-    }
-  }
-
-  @Override
-  public void setCurrentSequence(Sequence<TK> foreign,
-      List<Sequence<TK>> tranList) {
-    for (PhraseGenerator<TK,FV> pGen : phraseGenerators) {
-      pGen.setCurrentSequence(foreign, tranList);
-    }
-
-  }
-
-  @Override
-  public int longestSourcePhrase() {
-    int longest = -1;
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
-      if (longest < phraseGenerator.longestSourcePhrase())
-        longest = phraseGenerator.longestSourcePhrase();
-    }
-    return longest;
-  }
-
-  @Override
-  public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
-    for (PhraseGenerator<TK,FV> phraseTable : phraseGenerators) {
-      phraseTable.setFeaturizer(featurizer);
     }
   }
 }

@@ -29,11 +29,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static IntegerArrayIndex foreignIndex;
   public static IntegerArrayIndex translationIndex;
 
-  protected final String[] scoreNames;
+  public final String[] scoreNames;
   protected String name;
   public final List<List<IntArrayTranslationOption>> translations;
-  private int longestForeignPhrase = -1;
-
+  
+  private int longestSourcePhrase = -1;
+  private int longestTargetPhrase = -1;
 
   // Originally, PharaohPhraseTables were backed by a nice simple
   // HashMap from a foreign sequence to a list of translations.
@@ -60,9 +61,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
     public final int[] translation;
-    final float[] scores;
-    final PhraseAlignment alignment;
-    final int id;
+    public final float[] scores;
+    public final PhraseAlignment alignment;
+    public final int id;
 
     public IntArrayTranslationOption(int id, int[] translation, float[] scores,
         PhraseAlignment alignment) {
@@ -227,8 +228,11 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             PhraseAlignment.getPhraseAlignment(targetConstellation), scores);
       }
 
-      if (source.size() > longestForeignPhrase) {
-        longestForeignPhrase = source.size();
+      if (source.size() > longestSourcePhrase) {
+        longestSourcePhrase = source.size();
+      }
+      if (target.size() > longestTargetPhrase) {
+        longestTargetPhrase = target.size();
       }
     }
     reader.close();
@@ -242,14 +246,19 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             f.getAbsolutePath(),
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
                 / (1024 * 1024), elapsedTime);
-    System.err.println("Longest foreign phrase: " + longestForeignPhrase);
+    System.err.println("Longest foreign phrase: " + longestSourcePhrase);
     System.err.printf("Phrase table signature: %d%n", getSignature());
     return numScores;
   }
 
   @Override
   public int longestSourcePhrase() {
-    return longestForeignPhrase;
+    return longestSourcePhrase;
+  }
+  
+  @Override
+  public int longestTargetPhrase() {
+    return longestTargetPhrase;
   }
 
   @Override
@@ -331,12 +340,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return getName();
   }
 
-  @Override
-  public void setCurrentSequence(Sequence<IString> foreign,
-      List<Sequence<IString>> tranList) {
-    // no op
-  }
-
   /**
    * Sort of like hashCode(), but for debugging purposes
    * only.
@@ -361,5 +364,4 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static void lockIndex() {
     foreignIndex.lock();
   }
-
 }

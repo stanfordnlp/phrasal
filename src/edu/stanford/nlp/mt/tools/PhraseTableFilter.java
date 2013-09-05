@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.math.ArrayMath;
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.FlatPhraseTable.IntArrayTranslationOption;
 
 /**

@@ -439,8 +439,11 @@ public class Phrasal {
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }
 
+    // TODO(spenceg) For better or worse, all phrase tables use the source index in FlatPhraseTable
+    // Pass it to the UnknownWord generator. Would be better for the source index to be located
+    // in a common place.
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords, FlatPhraseTable.foreignIndex)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
     
     FlatPhraseTable.lockIndex();
@@ -1390,5 +1393,8 @@ public class Phrasal {
         : readArgs(args);
     Phrasal p = Phrasal.loadDecoder(config);
     p.decode(System.in, true);
+
+    // [spenceg]: For execution in the debugger
+    //    p.decode(new FileInputStream(new File("debug.1")), true);
   }
 }
