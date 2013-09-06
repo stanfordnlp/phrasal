@@ -837,7 +837,7 @@ public class OnlineTuner {
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
-    sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] src tgt phrasal_ini wts_initial").append(nl);
+    sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] source_file target_file phrasal_ini initial_weights").append(nl);
     sb.append(nl);
     sb.append("Options:").append(nl);
     sb.append("   -uw        : Uniform weight initialization").append(nl);
