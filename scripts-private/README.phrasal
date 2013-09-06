@@ -69,9 +69,10 @@ Optionally, you can binarize the LM for faster loading:
 ##
 ## MT Training and Tuning
 ##
-Now we can train Phrasal. First decide whether to use batch or online tuning. Copy the appropriate variables file:
+Now we can train Phrasal. First decide whether to use batch or online tuning. Copy and rename the 
+example variables file:
 
-  cp $SCRPR/example.vars .
+  cp $SCRPR/example.vars my.vars
 
 You can configure all aspects of training and tuning using the vars file. The actual train/tune script takes this file as input, along with a Phrasal ini file and a start step. The steps are:
 
@@ -86,7 +87,7 @@ Steps:
 
 You'll need to set the path to the bitext in the vars file, and the path to the LM in the ini file. Then run the train/tune script as follows:
 
-  $SCRPR/phrasal-train-tune.sh example.vars phrasal.ini my-unique-experiment-name
+  $SCRPR/phrasal-train-tune.sh my.vars phrasal.ini my-unique-experiment-name
 
 ##
 ## Online Tuning Notes
