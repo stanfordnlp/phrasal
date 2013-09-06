@@ -27,7 +27,8 @@ public class OutputSpaceFactory {
    * @return
    */
   public static OutputSpace<IString,String> getOutputSpace(Sequence<IString> source, 
-      int sourceInputId, List<Sequence<IString>> sequences, int longestSourcePhrase, int longestTargetPhrase, boolean sequencesArePrefixes) {
+      int sourceInputId, List<Sequence<IString>> sequences, int longestSourcePhrase, int longestTargetPhrase, 
+      boolean sequencesArePrefixes) {
     if (sequences == null || sequences.size() == 0) {
       return new UnconstrainedOutputSpace<IString,String>();
     

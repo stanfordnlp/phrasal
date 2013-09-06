@@ -88,8 +88,9 @@ public class TranslationRequestHandler implements RequestHandler {
     @Override
     public Boolean process(DecoderInput input) {
       // Decode n-best list
+      // TODO(spenceg): Update for prefix decoding.
       List<RichTranslation<IString,String>> translations = 
-          phrasal.decode(input.text, inputId.incrementAndGet(), threadId, input.n); 
+          phrasal.decode(input.text, inputId.incrementAndGet(), threadId, input.n,null,false); 
 
       List<String> translationList = Generics.newLinkedList();
       List<String> alignments = Generics.newLinkedList();

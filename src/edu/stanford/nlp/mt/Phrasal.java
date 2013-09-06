@@ -1070,14 +1070,15 @@ public class Phrasal {
    *
    * NOTE: This call is *not* threadsafe.
    *
-   * @param translations
-   * @param bestTranslation 
+   * @param translations n-best list
+   * @param bestTranslation if post-processing has been applied, then this is post-processed
+   *        sequence at the top of the n-best list
    * @param sourceInputId
    */
   private void processConsoleResult(List<RichTranslation<IString, String>> translations,
       Sequence<IString> bestTranslation, int sourceLength, int sourceInputId) {
     if (translations.size() > 0) {
-      System.out.println(bestTranslation);
+      System.out.println(bestTranslation.toString());
 
       // log additional information to stderr
       RichTranslation<IString,String> bestTranslationInfo = translations.get(0);
@@ -1188,7 +1189,9 @@ public class Phrasal {
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId) {
-    return decode(source, sourceInputId, threadId, nbestListSize);
+    List<Sequence<IString>> targets = 
+        forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, false);
   }
   
   /**
@@ -1204,15 +1207,14 @@ public class Phrasal {
    * 
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
-      int sourceInputId, int threadId, int numTranslations) {
+      int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
+      boolean targetsArePrefixes) {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
     // Output space of the decoder
-    // TODO(spenceg): Move references out to a "targets" parameter
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, sourceInputId, 
-        forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId), 
-            phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(), false);
+        targets, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(), targetsArePrefixes);
 
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);
