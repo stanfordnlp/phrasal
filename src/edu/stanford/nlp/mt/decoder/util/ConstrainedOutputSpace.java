@@ -24,20 +24,23 @@ public class ConstrainedOutputSpace<TK, FV> implements
       DEBUG_PROPERTY, "0"));
   public static final int DEBUG_LEVEL_RESULTS = 1;
   public static final int DEBUG_LEVEL_COMPUTATION = 2;
-  public final int longestPhrase;
-
+  
+  private final int longestSourcePhrase;
+  private final int longestTargetPhrase;
   private final List<Sequence<TK>> allowableSequences;
  
   /**
    * Constructor.
    * 
    * @param allowableSequences
-   * @param longestPhrase
+   * @param longestSourcePhrase
+   * @param longestTargetPhrase 
    */
   public ConstrainedOutputSpace(
-      List<Sequence<TK>> allowableSequences, int longestPhrase) {
+      List<Sequence<TK>> allowableSequences, int longestSourcePhrase, int longestTargetPhrase) {
     this.allowableSequences = allowableSequences;
-    this.longestPhrase = longestPhrase;
+    this.longestSourcePhrase = longestSourcePhrase;
+    this.longestTargetPhrase = longestTargetPhrase;
   }
   
   @SuppressWarnings("rawtypes")
@@ -140,10 +143,10 @@ public class ConstrainedOutputSpace<TK, FV> implements
         // TODO(spenceg): Usage of longestPhrase for source and target is
         // wrong. What is passed in from PhraseGenerator is the longest
         // source phrase. Need to access the longest target phrase.
-        if (fMissing != 0 && tMissing / (double) fMissing > longestPhrase) {
+        if (fMissing != 0 && tMissing / (double) fMissing > longestSourcePhrase) {
           continue;
         }
-        if (tMissing != 0 && fMissing / (double) tMissing > longestPhrase) {
+        if (tMissing != 0 && fMissing / (double) tMissing > longestTargetPhrase) {
           continue;
         }
 

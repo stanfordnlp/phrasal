@@ -1212,7 +1212,7 @@ public class Phrasal {
     // TODO(spenceg): Move references out to a "targets" parameter
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, sourceInputId, 
         forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId), 
-            phraseGenerator.longestSourcePhrase(), false);
+            phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(), false);
 
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);

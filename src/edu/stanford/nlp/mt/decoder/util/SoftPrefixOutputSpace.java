@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -31,7 +30,6 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
 
   // Hyperparameters
   private static final int MAX_OPTIONS_PER_TOKEN = 3;
-  private static final double MAX_PREFIX_COST = 10.0;
   
   private final Sequence<TK> sourceSequence;
   private final int sourceLength;
