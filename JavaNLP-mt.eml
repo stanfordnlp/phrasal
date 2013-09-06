@@ -34,9 +34,6 @@
 	<lib name="tercom.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
 	</lib>
-	<lib name="berkeleyaligner.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/berkeleyaligner.jar!/"/>
-	</lib>
 	<lib name="JDBM-3.0-alpha2.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/JDBM-3.0-alpha2.jar!/"/>
 	</lib>

@@ -22,13 +22,13 @@ if [ $# -ne 4 ]; then
     exit 0
 fi
 VAR_FILE=$1
-START_STEP=$2
+EXEC_STEPS=$2
 INI_FILE=$3
 SYS_NAME=$4
 
 # Process steps
 let s=0
-IFS=',' read -ra ADDR <<< "$START_STEP"
+IFS=',' read -ra ADDR <<< "$EXEC_STEPS"
 for i in "${ADDR[@]}"; do
     IFS='-' read -ra SEQ <<< "$i"
     if [ ${#SEQ[@]} -eq 1 ]; then
@@ -46,11 +46,11 @@ done
 echo ===========================
 echo Phrasal training and tuning
 echo ===========================
-echo System name: $SYS_NAME
-echo Start step: $START_STEP
-echo JavaNLP: $JAVANLP_HOME
 echo Loading local parameters from $VAR_FILE
 source $VAR_FILE
+echo System name: $SYS_NAME
+echo Executing steps: $EXEC_STEPS
+echo JavaNLP: $JAVANLP_HOME
 
 ######################################################################
 ######################################################################

@@ -124,6 +124,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   }
   
   static {
-    System.loadLibrary("PhrasalKenLM");
+    System.load(System.getProperty("java.library.path") + "/libPhrasalKenLM.so");
+    //System.loadLibrary("PhrasalKenLM");
   }
 }

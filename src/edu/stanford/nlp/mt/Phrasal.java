@@ -106,6 +106,9 @@ public class Phrasal {
   public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
   public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
   public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
+  public static final String SOURCE_CLASS_MAP = "source-class-map";
+  public static final String TARGET_CLASS_MAP = "target-class-map";
+  
 
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -130,7 +133,8 @@ public class Phrasal {
         MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
-        ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER));
+        ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -319,7 +323,19 @@ public class Phrasal {
       System.err.printf("Postprocessor filter: %s%n", postprocessor.getClass().getName());
     }
     
-    boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
+    // Word class maps
+    if (config.containsKey(SOURCE_CLASS_MAP)) {
+      List<String> parameters = config.get(SOURCE_CLASS_MAP);
+      if (parameters.size() == 0) throw new RuntimeException("Source class map requires a file argument");
+      SourceClassMap.load(parameters.get(0));
+    }
+    if (config.containsKey(TARGET_CLASS_MAP)) {
+      List<String> parameters = config.get(TARGET_CLASS_MAP);
+      if (parameters.size() == 0) throw new RuntimeException("Target class map requires a file argument");
+      TargetClassMap.load(parameters.get(0));
+    }
+    
+    final boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
     if (config.containsKey(FORCE_DECODE)) {
       forceDecodeReferences = Metrics.readReferences(config.get(FORCE_DECODE)

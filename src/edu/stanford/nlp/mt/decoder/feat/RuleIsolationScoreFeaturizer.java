@@ -6,6 +6,8 @@ package edu.stanford.nlp.mt.decoder.feat;
  * The feature values will not be cached and will thus not be scored when
  * the rule is applied in a <code>Derivation</code>.
  * 
+ * The canonical example of this type of featurizer is an n-gram language model.
+ * 
  * @author Spence Green
  *
  */
