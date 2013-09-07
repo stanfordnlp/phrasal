@@ -159,7 +159,7 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
     // Exact match decoding check
     if ( ! exactMatch(prefix, rule.abstractRule.target)) {
       // TODO(spenceg): Add a fuzzy match cost to increase recall?
-      final int commonSpanLength = (int) Math.min(prefix.size(), allowablePrefix.size());
+      final int commonSpanLength = (int) Math.min(prefix == null ? 0 : prefix.size(), allowablePrefix.size());
       int i;
       for (i = 0; i < commonSpanLength; ++i) {
         TK allowableToken = allowablePrefix.get(i);
@@ -186,7 +186,8 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
     } else if (allowablePrefix.startsWith(prefix)) {
       int ruleLength = rule.size();
       int prefixLength = prefix.size();
-      for (int i = 0; i < ruleLength; i++) {
+      int upperBound = (int) Math.min(ruleLength, allowablePrefix.size() - prefixLength);
+      for (int i = 0; i < upperBound; i++) {
         if (!allowablePrefix.get(prefixLength + i).equals(rule.get(i))) {
           return false;
         }

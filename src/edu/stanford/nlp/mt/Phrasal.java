@@ -108,7 +108,7 @@ public class Phrasal {
   public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
-  
+  public static final String LOAD_ALIGNMENTS = "load-word-alignments";
 
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -134,7 +134,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -189,7 +189,11 @@ public class Phrasal {
   private boolean generateMosesNBestList = true;
   private PrintStream nbestListWriter;
   private int nbestListSize;
-  private boolean nbestWordInternalAlignments = false;
+  
+  /**
+   * Load phrase-internal alignments from phrase table.
+   */
+  private boolean loadWordAlignments = false;
   
   /**
    * Internal alignment options
@@ -954,11 +958,15 @@ public class Phrasal {
       nbestListWriter = null;
     }
     
+    if (config.containsKey(LOAD_ALIGNMENTS)) {
+      loadWordAlignments = true;
+    }
+    
     List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
     if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
       generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
-      if (mosesNbestOpt.size() > 1) {
-        nbestWordInternalAlignments = Boolean.parseBoolean(mosesNbestOpt.get(1));
+      if (mosesNbestOpt.size() > 1 && !loadWordAlignments) {
+        loadWordAlignments = Boolean.parseBoolean(mosesNbestOpt.get(1));
       }
     }
         
@@ -969,7 +977,7 @@ public class Phrasal {
     }
     
     // Should we enable word-internal alignments?
-    if (nbestWordInternalAlignments || alignmentWriter != null) {
+    if (loadWordAlignments || alignmentWriter != null) {
       Featurizable.enableAlignments();
     }
   }
@@ -1098,7 +1106,7 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, nbestWordInternalAlignments);
+        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, loadWordAlignments);
       }
       
       // Output the alignments if necessary
