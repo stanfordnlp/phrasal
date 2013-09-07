@@ -260,21 +260,8 @@ public class LexicalReorderingTable {
         indexInts = mergeInts(fIndexInts, eIndexInts);
       }
 
-      float[] scores = new float[scoreList.size()];
-      int scoreId = 0;
-      for (String score : scoreList) {
-        try {
-          float featureScore = (float) Double.parseDouble(score);
-          assert featureScore <= 0 : "Feature scores are not in log format";
-          scores[scoreId++] = featureScore;
-
-        } catch (NumberFormatException e) {
-          throw new RuntimeException(String.format(
-              "Can't parse %s as a number (line %d)", score,
-              reader.getLineNumber()));
-        }
-      }
-
+      float[] scores = IOTools.stringListToNumeric(scoreList);
+          
       // Lookup this rule in the phrase table
       int idx = FlatPhraseTable.ruleIndex.indexOf(indexInts);
       if (idx < 0) {

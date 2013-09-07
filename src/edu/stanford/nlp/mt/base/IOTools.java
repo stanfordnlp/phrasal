@@ -15,10 +15,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -30,13 +28,37 @@ import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 
 /**
- * Various static methods for reading and writing files.
+ * Various static methods for reading and writing files. Also includes
+ * utilities for converting string-valued objects to other types after
+ * reading from file.
  * 
  * @author danielcer
  * @author Spence Green
  *
  */
 public final class IOTools {
+  
+  private IOTools() {}
+
+  /**
+   * Converts a string list of scores to float.
+   * 
+   * @param scoreList
+   * @return
+   * @throws NumberFormatException
+   */
+  public static float[] stringListToNumeric(List<String> scoreList) throws NumberFormatException {
+    float[] scores = new float[scoreList.size()];
+    int scoreId = 0;
+    for (String score : scoreList) {
+      float floatScore = (float) Double.parseDouble(score);
+      if (Float.isNaN(floatScore)) {
+        throw new NumberFormatException("Unparseable number: " + score);
+      }
+      scores[scoreId++] = floatScore;
+    }
+    return scores;
+  }
   
   public static List<Sequence<IString>> slurpIStringSequences(String filename)
       throws IOException {
@@ -50,23 +72,6 @@ public final class IOTools {
     }
     reader.close();
     return sequences;
-  }
-
-  public static Set<IString> slurpIStringSet(String filename)
-      throws IOException {
-    Set<IString> set = new HashSet<IString>();
-    if (filename == null) {
-      System.err.println("IOTooks: slurpIStringSet: Warning, no file.");
-      return set;
-    }
-    BufferedReader reader = new BufferedReader(new FileReader(filename));
-
-    for (String inline; (inline = reader.readLine()) != null;) {
-      IString w = new IString(inline.trim());
-      set.add(w);
-    }
-    reader.close();
-    return set;
   }
 
   public static LineNumberReader getReaderFromFile(File fileName) {

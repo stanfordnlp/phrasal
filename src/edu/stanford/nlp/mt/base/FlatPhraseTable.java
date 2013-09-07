@@ -79,25 +79,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
   }
 
-  /**
-   * Convert rule scores from string to a numeric array.
-   *
-   * @param sList
-   * @return
-   */
-  private static float[] stringProbListToFloatProbArray(List<String> sList) throws NumberFormatException {
-    float[] fArray = new float[sList.size()];
-    int i = 0;
-    for (String s : sList) {
-      float f = Float.parseFloat(s);
-      if (Float.isNaN(f)) {
-        throw new NumberFormatException("Unparseable number: " + s);
-      }
-      fArray[i++] = f;
-    }
-    return fArray;
-  }
-
   protected void addEntry(Sequence<IString> foreignSequence,
       Sequence<IString> translationSequence, PhraseAlignment alignment,
       float[] scores) {
@@ -214,7 +195,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       }
       float[] scores;
       try {
-        scores = stringProbListToFloatProbArray(scoreList);
+        scores = IOTools.stringListToNumeric(scoreList);
       } catch (NumberFormatException e) {
         e.printStackTrace();
         throw new RuntimeException(String.format("Number format error on line %d",
