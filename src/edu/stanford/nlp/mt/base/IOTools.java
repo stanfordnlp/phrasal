@@ -213,7 +213,7 @@ public final class IOTools {
       if (generateMosesNBestList) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
       } else {
-        sb.append(sourceInputId).append(" ").append(FlatNBestList.FIELD_DELIM).append(" ");
+        sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());
       }
       sb.append(nl);
