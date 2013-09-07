@@ -117,10 +117,10 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     metaValue = new DatabaseEntry(mbostrm.toByteArray());
     meta.put(null, metaKey, metaValue);
     
-    if (!(FlatPhraseTable.foreignIndex instanceof DynamicIntegerArrayIndex)) {
+    if (!(FlatPhraseTable.sourceIndex instanceof DynamicIntegerArrayIndex)) {
       throw new RuntimeException("Gap phrase-tables are currently not supported");
     }    
-    DynamicIntegerArrayIndex diai = (DynamicIntegerArrayIndex)FlatPhraseTable.foreignIndex;
+    DynamicIntegerArrayIndex diai = (DynamicIntegerArrayIndex)FlatPhraseTable.sourceIndex;
     
     for (int[] sourceInts : diai) {
       Sequence<IString> source = new RawSequence<IString>(sourceInts, IString.identityIndex());

@@ -79,7 +79,7 @@ public class PhraseTableFilter {
 
       // Get foreign phrase:
       List<IntArrayTranslationOption> opts = ppt.translations.get(pi);
-      int[] foreignInts = FlatPhraseTable.foreignIndex.get(pi);
+      int[] foreignInts = FlatPhraseTable.sourceIndex.get(pi);
       RawSequence<IString> rawForeign = new RawSequence<IString>(IStrings.toIStringArray(foreignInts));
 
       // Generate translation options:

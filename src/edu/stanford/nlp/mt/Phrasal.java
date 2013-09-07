@@ -463,7 +463,7 @@ public class Phrasal {
     // Pass it to the UnknownWord generator. Would be better for the source index to be located
     // in a common place.
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords, FlatPhraseTable.foreignIndex)),
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords, FlatPhraseTable.sourceIndex)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
     
     FlatPhraseTable.lockIndex();

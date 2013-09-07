@@ -26,8 +26,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static final String DISABLED_SCORES = System
       .getProperty(DISABLED_SCORES_PROPERTY);
 
-  public static IntegerArrayIndex foreignIndex;
-  public static IntegerArrayIndex translationIndex;
+  public static IntegerArrayIndex sourceIndex;
+  public static IntegerArrayIndex ruleIndex;
 
   public final String[] scoreNames;
   protected String name;
@@ -103,9 +103,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       float[] scores) {
     int[] foreignInts = Sequences.toIntArray(foreignSequence);
     int[] translationInts = Sequences.toIntArray(translationSequence);
-    int fIndex = foreignIndex.indexOf(foreignInts, true);
-    int eIndex = translationIndex.indexOf(translationInts, true);
-    int id = translationIndex.indexOf(new int[] { fIndex, eIndex }, true);
+    int fIndex = sourceIndex.indexOf(foreignInts, true);
+    int eIndex = ruleIndex.indexOf(translationInts, true);
+    int id = ruleIndex.indexOf(new int[] { fIndex, eIndex }, true);
     /*
      * System.err.printf("foreign ints: %s translation ints: %s\n",
      * Arrays.toString(foreignInts), Arrays.toString(translationInts));
@@ -120,7 +120,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       intTransOpts = Generics.newLinkedList();
       translations.set(fIndex, intTransOpts);
     }
-    intTransOpts.add(new IntArrayTranslationOption(id, translationIndex
+    intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex
         .get(eIndex), scores, alignment));
   }
 
@@ -267,7 +267,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence,
         IString.identityIndex());
-    int fIndex = foreignIndex.indexOf(foreignInts);
+    int fIndex = sourceIndex.indexOf(foreignInts);
     if (fIndex == -1)
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
@@ -305,7 +305,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
     System.err.printf(
         "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",
-        foreignIndex.size(), totalSecs, totalMemory, freeMemory);
+        sourceIndex.size(), totalSecs, totalMemory, freeMemory);
 
     List<Rule<IString>> translationOptions = ppt
         .query(new SimpleSequence<IString>(IStrings
@@ -347,7 +347,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @return
    */
   public long getSignature() {
-    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) translationIndex;
+    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) ruleIndex;
     long signature = 0;
     for (int[] rule : index) {
       signature += Arrays.hashCode(rule);
@@ -356,12 +356,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
   
   public static void createIndex(boolean withGaps) {
-    foreignIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
+    sourceIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
         : new DynamicIntegerArrayIndex();
-    translationIndex = new DynamicIntegerArrayIndex();
+    ruleIndex = new DynamicIntegerArrayIndex();
   }
 
   public static void lockIndex() {
-    foreignIndex.lock();
+    sourceIndex.lock();
   }
 }

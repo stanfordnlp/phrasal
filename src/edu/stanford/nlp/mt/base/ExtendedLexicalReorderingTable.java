@@ -158,16 +158,16 @@ public class ExtendedLexicalReorderingTable {
   public final ConditionTypes conditionType;
 
   private static int[] mergeInts(int[] array1, int[] array2) {
-    return new int[] { FlatPhraseTable.foreignIndex.indexOf(array1),
-        FlatPhraseTable.translationIndex.indexOf(array2) };
+    return new int[] { FlatPhraseTable.sourceIndex.indexOf(array1),
+        FlatPhraseTable.ruleIndex.indexOf(array2) };
   }
 
   public float[] getReorderingScores(int phraseId) {
     int reorderingId = -1;
     if (conditionType == ConditionTypes.f) {
-      reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[0];
+      reorderingId = FlatPhraseTable.ruleIndex.get(phraseId)[0];
     } else if (conditionType == ConditionTypes.e) {
-      reorderingId = FlatPhraseTable.translationIndex.get(phraseId)[1];
+      reorderingId = FlatPhraseTable.ruleIndex.get(phraseId)[1];
     } else if (conditionType == ConditionTypes.fe) {
       reorderingId = phraseId;
     }
@@ -180,7 +180,7 @@ public class ExtendedLexicalReorderingTable {
    * @throws IOException
    */
   public ExtendedLexicalReorderingTable(String filename) throws IOException {
-    int phraseTableSize = FlatPhraseTable.translationIndex.size();
+    int phraseTableSize = FlatPhraseTable.ruleIndex.size();
     this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
     for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
 
@@ -194,7 +194,7 @@ public class ExtendedLexicalReorderingTable {
 
   public ExtendedLexicalReorderingTable(String filename, String desiredFileType)
       throws IOException {
-    int phraseTableSize = FlatPhraseTable.translationIndex.size();
+    int phraseTableSize = FlatPhraseTable.ruleIndex.size();
     this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
     for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
 
@@ -311,7 +311,7 @@ public class ExtendedLexicalReorderingTable {
       }
 
       // Lookup this rule in the phrase table
-      int idx = FlatPhraseTable.translationIndex.indexOf(indexInts);
+      int idx = FlatPhraseTable.ruleIndex.indexOf(indexInts);
       if (idx < 0) {
         throw new RuntimeException(String.format("Phrase %d not in phrase table", reader.getLineNumber()));
       }
@@ -352,7 +352,7 @@ public class ExtendedLexicalReorderingTable {
       int[] translation = IStrings.toIntArray(IStrings.toIStringArray(fields[1]
           .split("\\s+")));
       int[] merged = mergeInts(foreign, translation);
-      int id = FlatPhraseTable.translationIndex.indexOf(merged);
+      int id = FlatPhraseTable.ruleIndex.indexOf(merged);
       float[] scores = mlrt.getReorderingScores(id);
       for (int i = 0; i < scores.length; i++) {
         System.out.printf("%s: %e\n", mlrt.positionalMapping[i], scores[i]);
