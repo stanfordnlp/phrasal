@@ -95,7 +95,7 @@ public class RichTranslation<TK, FV> extends
    * @param nbestWordInternalAlignments 
    */
   public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean nbestWordInternalAlignments) {
-    final String delim = FlatNBestList.FIELD_DELIM;
+    final String delim = FlatPhraseTable.FIELD_DELIM;
     sbuf.append(id);
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(this.translation);
