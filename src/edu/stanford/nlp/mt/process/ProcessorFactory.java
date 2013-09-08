@@ -27,7 +27,7 @@ public final class ProcessorFactory {
    * @param options
    * @return
    */
-  public static Preprocessor getPreprocessor(String language, String...options) {
+  public static Preprocessor getPreprocessor(String language, String...options) throws IllegalArgumentException {
     language = language.toLowerCase();
     
     if (language.equals("en") || language.equals("english")) {
@@ -40,7 +40,7 @@ public final class ProcessorFactory {
       return new FrenchPreprocessor();
     }
     
-    throw new IllegalArgumentException("Invalid preprocessor langauge code: " + language);
+    throw new IllegalArgumentException("Invalid preprocessor language code: " + language);
   }
 
   /**

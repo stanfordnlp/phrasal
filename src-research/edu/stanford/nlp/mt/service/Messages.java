@@ -20,34 +20,35 @@ public final class Messages {
   // Supported languages in iso-639-1 format
   // TODO(spenceg) Make this more robust, and perhaps reconcile
   // with the JavaNLP core Languages package.
-  public static enum Language {UNK,EN,AR,ZH,DE,FR};
+  // TODO(spenceg) Add Chinese and Arabic
+  public static enum Language {UNK,EN,DE,FR};
   
   private static final Gson gson = new Gson();
   
   private Messages() {}
   
+  @SuppressWarnings("rawtypes")
   public static enum MessageType {
-    // Requests
-    TRANSLATION_REQUEST("translationRequest", TranslationRequest.class),
-    RULE_QUERY_REQUEST("ruleQueryRequest", RuleQueryRequest.class),
+    // Requests -- convention is camelcase letters followed by
+    // the "Req" suffix.
+    TRANSLATION_REQUEST("tReq", TranslationRequest.class),
+    RULE_QUERY_REQUEST("rqReq", RuleQueryRequest.class),
+    // Error catch-all request
+    UNKNOWN_REQUEST("unkReq", null),
     
-    // Responses
-    TRANSLATION_REPLY("translationReply", TranslationReply.class),
-    RULE_QUERY_REPLY("ruleQueryReply", RuleQueryReply.class),
-    
-    // Error
-    UNKNOWN("unkXXX", null);
-    
+    // Responses -- convention is camelcase letters followed by
+    // the "Rep" suffix.
+    TRANSLATION_REPLY("tRep", TranslationReply.class),
+    RULE_QUERY_REPLY("rqRep", RuleQueryReply.class);
+        
     private final String keyName;
-    @SuppressWarnings("rawtypes")
     private final Class msgClass;
     
-    @SuppressWarnings("rawtypes")
     MessageType(String keyName, Class className) {
       this.keyName = keyName;
       this.msgClass = className;
     }
-    @SuppressWarnings("rawtypes")
+    
     public Class msgClass() { return msgClass; }
     public String keyName() { return keyName; }
   };
@@ -59,14 +60,14 @@ public final class Messages {
         return messageType;
       }
     }
-    return MessageType.UNKNOWN;
+    return MessageType.UNKNOWN_REQUEST;
   }
   
   @SuppressWarnings("unchecked")
   public static Pair<MessageType,Request>parseRequest(HttpServletRequest request) {
     MessageType type = getMessageType(request);
-    Request message = null;
-    if (type != MessageType.UNKNOWN) {
+    Request message = new UnknownRequest();
+    if (type != MessageType.UNKNOWN_REQUEST) {
       String jsonString = request.getParameter(type.keyName());
       message = (Request) gson.fromJson(jsonString, type.msgClass());
     }
@@ -106,10 +107,12 @@ public final class Messages {
   public static class TranslationRequest extends Request {
     // The number of translations to generate
     public final int n;
-    public TranslationRequest(Language sourceLang, Language targetLang, String source, int n) {
+    public final String tgtPrefix;
+    public TranslationRequest(Language sourceLang, Language targetLang, String source, int n, String tgtPrefix) {
       super(sourceLang, targetLang, source);
-      this.n = (n <= 0 || n > 500) ? 10 : n;
+      this.n = (n <= 0 || n > 50) ? 10 : n;
       this.id = MessageType.TRANSLATION_REQUEST.ordinal();
+      this.tgtPrefix = tgtPrefix == null || tgtPrefix.length() == 0 ? "" : tgtPrefix.trim();
     }
     @Override
     public boolean isAsynchronous() {
@@ -133,6 +136,17 @@ public final class Messages {
     public boolean isAsynchronous() {
       return false;
     }    
+  }
+  
+  public static class UnknownRequest extends Request {
+    public UnknownRequest() {
+      super(null, null, null);
+    }
+
+    @Override
+    public boolean isAsynchronous() {
+      return false;
+    }
   }
   
   /**********************************************

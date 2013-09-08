@@ -193,7 +193,7 @@ public class Phrasal {
   /**
    * Load phrase-internal alignments from phrase table.
    */
-  private boolean loadWordAlignments = false;
+  private boolean wordAlignmentsEnabled = false;
   
   /**
    * Internal alignment options
@@ -958,16 +958,9 @@ public class Phrasal {
       nbestListWriter = null;
     }
     
-    if (config.containsKey(LOAD_ALIGNMENTS)) {
-      loadWordAlignments = true;
-    }
-    
     List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
     if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
       generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
-      if (mosesNbestOpt.size() > 1 && !loadWordAlignments) {
-        loadWordAlignments = Boolean.parseBoolean(mosesNbestOpt.get(1));
-      }
     }
         
     // Determine if we need to generate an alignment file
@@ -975,9 +968,13 @@ public class Phrasal {
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
       alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
     }
-    
+
+    if (config.containsKey(LOAD_ALIGNMENTS)) {
+      wordAlignmentsEnabled = true;
+    }
+
     // Should we enable word-internal alignments?
-    if (loadWordAlignments || alignmentWriter != null) {
+    if (wordAlignmentsEnabled || alignmentWriter != null) {
       Featurizable.enableAlignments();
     }
   }
@@ -1106,14 +1103,14 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, loadWordAlignments);
+        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, wordAlignmentsEnabled);
       }
       
       // Output the alignments if necessary
       if (alignmentWriter != null) {
         for (RichTranslation<IString,String> translation : translations) {
           alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatNBestList.FIELD_DELIM, 
-              translation.sourceTargetAlignmentString());
+              translation.alignmentString());
         }
       }
 
@@ -1222,7 +1219,7 @@ public class Phrasal {
 
     // Output space of the decoder
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, sourceInputId, 
-        targets, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(), targetsArePrefixes);
+        targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase());
 
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);

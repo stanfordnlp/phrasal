@@ -7,7 +7,6 @@ $(document).ready(function(){
   
   $('#form-src-input').submit(function(event) {
     event.preventDefault();
-    console.log('Inside click handler2');
     // Fetch the form input
     var source = $('#src-input').val();
     console.log(source);
@@ -24,7 +23,7 @@ $(document).ready(function(){
     $.ajax({
       url: _serverURL,
       dataType: "json",
-      data: {translationRequest : JSON.stringify(msg), },
+      data: {tReq : JSON.stringify(msg), },
 //      xhrFields: {
 //        withCredentials: true
 //      },

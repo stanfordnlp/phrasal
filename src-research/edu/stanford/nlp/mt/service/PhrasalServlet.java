@@ -17,19 +17,13 @@ import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandlerMock;
 import edu.stanford.nlp.mt.service.handlers.ServiceResponse;
 import edu.stanford.nlp.mt.service.handlers.TranslationRequestHandler;
 import edu.stanford.nlp.mt.service.handlers.TranslationRequestHandlerMock;
+import edu.stanford.nlp.mt.service.handlers.UnknownRequestHandler;
 import edu.stanford.nlp.util.Pair;
 
 /**
  * Servlet that loads Phrasal as a private member.
  *
- * TODO:
- *  PT query message
- *  Unknown message handler
- *  Pre-processing of input
- *  Post-processing of output
- *  Do we need to do forced word alignment?
- *  Add statistics about decoding time.
- *  Graceful exception handling. This servlet can't ever crash....
+ * TODO(spenceg):
  * 
  * @author Spence Green
  *
@@ -37,24 +31,27 @@ import edu.stanford.nlp.util.Pair;
 public class PhrasalServlet extends HttpServlet {
 
   private static final long serialVersionUID = -2229782317949182871L;
-  
+
   public static final String ASYNC_KEY = "as_result";
-  
+
   private final RequestHandler[] requestHandlers;
-
   private final Logger logger;
-
   private Phrasal decoder;
 
   public PhrasalServlet() {
     this(null);
   }
-  
+
+  /**
+   * Constructor.
+   * 
+   * @param phrasalIniName
+   */
   public PhrasalServlet(String phrasalIniName){
     logger = Logger.getLogger(PhrasalServlet.class.getName());
     PhrasalLogger.attach(logger, LogName.Service);
 
-    boolean debugMode = phrasalIniName == null;
+    boolean debugMode = (phrasalIniName == null);
 
     if (!debugMode) {
       try {
@@ -67,10 +64,10 @@ public class PhrasalServlet extends HttpServlet {
       }
       logger.info("Loaded phrasal from: " + phrasalIniName);
     }
-    
+
     requestHandlers = loadHandlers(debugMode);
   }
-  
+
   /**
    * Setup request handlers.
    * 
@@ -83,16 +80,23 @@ public class PhrasalServlet extends HttpServlet {
     for (MessageType type : MessageType.values()) {
       if (type == MessageType.TRANSLATION_REQUEST) {
         handlers[type.ordinal()] = loadMock ? new TranslationRequestHandlerMock() :
-           new TranslationRequestHandler(decoder);
+          new TranslationRequestHandler(decoder);
+
       } else if (type == MessageType.RULE_QUERY_REQUEST) {
         handlers[type.ordinal()] = loadMock ? new RuleQueryRequestHandlerMock() :
           new RuleQueryRequestHandler(decoder.getPhraseTable(), decoder.getScorer(0));
+
+      } else if (type == MessageType.UNKNOWN_REQUEST) {
+        handlers[type.ordinal()] = new UnknownRequestHandler();
       }
-      // TODO(spenceg): Add more handlers
+      // Add more request handlers here
     }
     return handlers;
   }
-  
+
+  /**
+   * Handle HTTP GET requests.
+   */
   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
     // Parse the message
     Pair<MessageType,Request> message = Messages.parseRequest(request);
@@ -100,21 +104,50 @@ public class PhrasalServlet extends HttpServlet {
     Request baseRequest = message.second();
     logger.info(String.format("Recv: %s %s", messageType.toString(), baseRequest.toString()));
 
+    // result will be non-null if this is an asynchronous request that has been dispatched
+    // by the service after processing completed
     Object result = request.getAttribute(ASYNC_KEY);
+
     if (result == null && baseRequest.isAsynchronous()) {
       // Asynchronous request that will be suspended by the handler
-      requestHandlers[messageType.ordinal()].handleAsynchronous(baseRequest, request, response);
+      RequestHandler handler = requestHandlers[messageType.ordinal()];
+      if (handler.validate(baseRequest)) {
+        handler.handleAsynchronous(baseRequest, request, response);
+
+      } else {
+        // Invalid asynchronous request. Do not suspend. Send the response immediately.
+        ServiceResponse.writeError(response);
+        logger.warning("Bad request received: " + request.toString());
+      }
 
     } else {
-      // Synchronous message
-      ServiceResponse r = result == null ? requestHandlers[messageType.ordinal()].handle(baseRequest) :
-        (ServiceResponse) result;
-      try {
-        r.writeInto(response);
-        logger.info(String.format("Send: %s", r.getReply().toString()));
-      } catch (IOException e) {
-        logger.warning("Unable to serialize response for: " + response.toString());
-      }      
+      ServiceResponse serviceResponse = null;
+      if (result == null) {
+        // Synchronous message
+        RequestHandler handler = requestHandlers[messageType.ordinal()];
+        if (handler.validate(baseRequest)) {
+          serviceResponse = handler.handle(baseRequest);
+        }
+
+      } else {
+        // Re-dispatched asynchronous message
+        serviceResponse = (ServiceResponse) result;
+      }
+
+      if (serviceResponse == null) {
+        ServiceResponse.writeError(response);
+        logger.warning("Bad request received: " + request.toString());
+
+      } else {
+        boolean responseOk = ServiceResponse.intoHttpResponse(serviceResponse, response);
+        String status = String.format("Response status %d: %s", response.getStatus(), 
+            serviceResponse.getReply().toString());
+        if (responseOk) {
+          logger.info(status);
+        } else {
+          logger.severe(status);
+        }
+      }
     }
   }
 }

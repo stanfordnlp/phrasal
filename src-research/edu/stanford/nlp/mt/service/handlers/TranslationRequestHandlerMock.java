@@ -19,6 +19,12 @@ import edu.stanford.nlp.mt.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
 import edu.stanford.nlp.util.Generics;
 
+/**
+ * Mock handler for translation requests.
+ * 
+ * @author Spence Green
+ *
+ */
 public class TranslationRequestHandlerMock implements RequestHandler {
 
   @Override
