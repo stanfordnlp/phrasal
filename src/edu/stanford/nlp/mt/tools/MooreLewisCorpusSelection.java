@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.KenLanguageModel;
@@ -31,9 +33,12 @@ public class MooreLewisCorpusSelection {
   
   static public void usage() {
     System.err.println("Usage:\n\tjava ...MooreLewisCorpusSelection " +
-        "(selectionSize) (inDomainKenLM) (outDomainKenLM) (data) (outPrefix)");
+        "(selectionSize) (inDomainKenLM) (outDomainKenLM) (data) (outPrefix) "
+        + "[lenThreshold] [isRemoveRepetition]");
     System.err.println("  outPrefix: for each selectSize we will output three files outPrefix.data, "
         + "outPrefix.score (cross-entropy diff scores), and outPrefix.line (0-based line indices)");
+    System.err.println("  lenThreshold: only select sentences with >= lenThreshold tokens (default=1)");
+    System.err.println("  isRemoveRepetition: if set to true, only keep non-duplicated sentences (default=false)");
   }
 
   public MooreLewisCorpusSelection(String inDomainKenLMFile, String outDomainKenLMFile, String dataFile){
@@ -77,8 +82,11 @@ public class MooreLewisCorpusSelection {
   }
   
   public double computeCrossEntDiff(String line){
+    return computeCrossEntDiff(line.split("\\s+"));
+  }
+  
+  public double computeCrossEntDiff(String[] tokens){
     // build sequence of IString
-    String[] tokens = line.split("\\s+");
     IString[] istrings = new IString[tokens.length+2];
     istrings[0] = startToken; // start token
     for (int i = 0; i < tokens.length; i++) {
@@ -92,12 +100,22 @@ public class MooreLewisCorpusSelection {
     return -inKenLM.score(sequence)/numNgrams + outKenLM.score(sequence)/numNgrams;
   }
   
-  public void select(String outPrefix, int selectionSize) throws IOException {
+  
+  public void select(String outPrefix, int selectionSize, int lenThreshold, boolean isRemoveRepetition) throws IOException {
     PriorityQueue<Integer> Q = new PriorityQueue<Integer>(crossEntDiffScores.length, new SentenceScoreComparator());
     int count=0;
+    
+    Set<String> uniqueLines = new HashSet<String>(); 
     for (String line : data) {
-      crossEntDiffScores[count] = computeCrossEntDiff(line);
-      Q.add(count);
+      String[] tokens = line.split("\\s+");
+      if(tokens.length>=lenThreshold && // >= lenThreshold tokens
+          (!isRemoveRepetition || !uniqueLines.contains(line))) // if isRemoveRepetition=true, line must be unique
+      { 
+        crossEntDiffScores[count] = computeCrossEntDiff(tokens);
+        Q.add(count);
+        if(isRemoveRepetition) { uniqueLines.add(line); }
+      }
+      
       
       if(++count % 100000 == 0){
         System.err.print(" (" + count/1000 + "K) ");
@@ -135,7 +153,7 @@ public class MooreLewisCorpusSelection {
   }
   
   public static void main(String[] args) throws IOException {
-    if (args.length != 5) {
+    if (args.length<5 || args.length>7) {
       System.err.print("Input arguments (count=" + args.length + "):");
       for (String string : args) { System.err.print(" " + string); }
       System.err.println();
@@ -148,10 +166,12 @@ public class MooreLewisCorpusSelection {
     String outDomainKenLMFile = args[2]; // out-domain
     String dataFile = args[3];
     String outPrefix = args[4];
+    int lenThreshold = (args.length>=6)? Integer.parseInt(args[5]):1; // select sentences >= lenThreshold tokens
+    boolean isRemoveRepetition = (args.length==7)? Boolean.parseBoolean(args[6]):false;
     
     MooreLewisCorpusSelection mlcs = new MooreLewisCorpusSelection(inDomainKenLMFile, outDomainKenLMFile, dataFile);
     
     // MooreLewis selection
-    mlcs.select(outPrefix, selectionSize);
+    mlcs.select(outPrefix, selectionSize, lenThreshold, isRemoveRepetition);
   }
 }
