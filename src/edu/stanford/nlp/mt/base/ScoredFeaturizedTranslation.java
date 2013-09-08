@@ -52,7 +52,7 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 
   @Override
   public String toString() {
-    final String delim = FlatNBestList.FIELD_DELIM;
+    final String delim = FlatPhraseTable.FIELD_DELIM;
     StringBuilder sb = new StringBuilder();
     sb.append(this.translation.toString());
     sb.append(' ').append(delim);

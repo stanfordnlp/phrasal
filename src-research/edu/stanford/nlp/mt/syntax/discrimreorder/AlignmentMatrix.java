@@ -55,17 +55,13 @@ public class AlignmentMatrix {
     return e[i];
   }
 
-  private static String[] preproc(String[] words) {
-    return AbstractWordAlignment.preproc(words);
-  }
-
   public AlignmentMatrix(String fStr, String eStr, String aStr)
       throws IOException {
     // for now, always append the boundary symbols
     fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
     eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
-    f = preproc(fStr.split("\\s+"));
-    e = preproc(eStr.split("\\s+"));
+    f = AbstractWordAlignment.escape(fStr.split("\\s+"));
+    e = AbstractWordAlignment.escape(eStr.split("\\s+"));
 
     fe = new boolean[f.length][e.length];
 
