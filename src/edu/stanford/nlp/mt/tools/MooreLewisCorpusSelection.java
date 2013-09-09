@@ -105,15 +105,11 @@ public class MooreLewisCorpusSelection {
     PriorityQueue<Integer> Q = new PriorityQueue<Integer>(crossEntDiffScores.length, new SentenceScoreComparator());
     int count=0;
     
-    Set<String> uniqueLines = new HashSet<String>(); 
     for (String line : data) {
       String[] tokens = line.split("\\s+");
-      if(tokens.length>=lenThreshold && // >= lenThreshold tokens
-          (!isRemoveRepetition || !uniqueLines.contains(line))) // if isRemoveRepetition=true, line must be unique
-      { 
+      if(tokens.length>=lenThreshold){ // >= lenThreshold tokens
         crossEntDiffScores[count] = computeCrossEntDiff(tokens);
         Q.add(count);
-        if(isRemoveRepetition) { uniqueLines.add(line); }
       }
       
       
@@ -134,16 +130,20 @@ public class MooreLewisCorpusSelection {
 
     // picking up smallest cross-entropy diff values first
     count = 0;
+    Set<String> uniqueLines = new HashSet<String>(); 
     while(!Q.isEmpty()){
       int lineId = Q.poll();
-      selectedDataPW.println(data.get(lineId));
-      selectedScorePW.println(crossEntDiffScores[lineId]);
-      selectedLinePW.println(lineId); // 0-based index
-      
-      count++;
-      
-      if(count==selectionSize){
-        break;
+      String line = data.get(lineId);
+      if(!isRemoveRepetition || !uniqueLines.contains(line)){ // if isRemoveRepetition=true, line must be unique
+        selectedDataPW.println(line);
+        selectedScorePW.println(crossEntDiffScores[lineId]);
+        selectedLinePW.println(lineId); // 0-based index
+        uniqueLines.add(line);
+        
+        count++;
+        if(count==selectionSize){
+          break;
+        }
       }
     }
     
