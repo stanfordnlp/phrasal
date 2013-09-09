@@ -148,6 +148,9 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
       int tgtPosition = featurizable.targetPosition;
       int tgtLength = featurizable.targetPhrase.size();
       PhraseAlignment al = featurizable.rule.abstractRule.alignment;
+      if (al == null) {
+        throw new RuntimeException("Alignments are not enabled. Cannot extract alignments from translation.");
+      }
       for (int i = 0; i < tgtLength; ++i) {
         int[] sIndices = al.t2s(i);
         if (sIndices != null) {

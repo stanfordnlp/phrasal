@@ -21,7 +21,7 @@ public final class Messages {
   // TODO(spenceg) Make this more robust, and perhaps reconcile
   // with the JavaNLP core Languages package.
   // TODO(spenceg) Add Chinese and Arabic
-  public static enum Language {UNK,EN,DE,FR};
+  public static enum Language {UNK,AR,EN,DE,FR};
   
   private static final Gson gson = new Gson();
   
@@ -98,6 +98,12 @@ public final class Messages {
       this.src = sourceLang == null ? Language.UNK : sourceLang;
       this.tgt = targetLang == null ? Language.UNK : targetLang;
       this.text = source == null ? "" : source.trim();
+    
+      // Sanity checking
+      System.err.println(tgt.toString());
+      assert src != null;
+      assert tgt != null;
+      assert text != null;
     }
     
     // Should this request be handled asynchronously?
@@ -113,6 +119,9 @@ public final class Messages {
       this.n = (n <= 0 || n > 50) ? 10 : n;
       this.id = MessageType.TRANSLATION_REQUEST.ordinal();
       this.tgtPrefix = tgtPrefix == null || tgtPrefix.length() == 0 ? "" : tgtPrefix.trim();
+    
+      // Sanity checking
+      assert this.tgtPrefix != null;
     }
     @Override
     public boolean isAsynchronous() {
@@ -120,6 +129,11 @@ public final class Messages {
     }
     @Override
     public String toString() {
+      // Sanity checking
+      assert src != null;
+      assert tgt != null;
+      assert text != null;
+
       return String.format("[%s-%s (%d) %s]", src.toString(), tgt.toString(), n, text);
     }
   }
@@ -135,7 +149,11 @@ public final class Messages {
     @Override
     public boolean isAsynchronous() {
       return false;
-    }    
+    }
+    @Override
+    public String toString() {
+      return String.format("[%d]", this.spanLimit);
+    }
   }
   
   public static class UnknownRequest extends Request {
@@ -146,6 +164,10 @@ public final class Messages {
     @Override
     public boolean isAsynchronous() {
       return false;
+    }
+    @Override
+    public String toString() {
+      return "Unknown reqeust";
     }
   }
   

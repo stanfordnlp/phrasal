@@ -102,7 +102,7 @@ public class PhrasalServlet extends HttpServlet {
     Pair<MessageType,Request> message = Messages.parseRequest(request);
     MessageType messageType = message.first();
     Request baseRequest = message.second();
-    logger.info(String.format("Recv: %s %s", messageType.toString(), baseRequest.toString()));
+    logger.info(String.format("Receive: %s %s", messageType.toString(), baseRequest.toString()));
 
     // result will be non-null if this is an asynchronous request that has been dispatched
     // by the service after processing completed
