@@ -1109,7 +1109,7 @@ public class Phrasal {
       // Output the alignments if necessary
       if (alignmentWriter != null) {
         for (RichTranslation<IString,String> translation : translations) {
-          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatNBestList.FIELD_DELIM, 
+          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatPhraseTable.FIELD_DELIM, 
               translation.alignmentString());
         }
       }

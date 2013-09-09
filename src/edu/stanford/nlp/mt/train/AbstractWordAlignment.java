@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.SortedSet;
 
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 
@@ -28,9 +29,7 @@ public class AbstractWordAlignment implements WordAlignment {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  public static final String KEEP_BAD_TOKENS_PROPERTY = "keepBadTokens";
-  public static final boolean KEEP_BAD_TOKENS = Boolean.parseBoolean(System
-      .getProperty(KEEP_BAD_TOKENS_PROPERTY, "false"));
+  public static final boolean KEEP_BAD_TOKENS = false;
 
   protected Integer id;
 
@@ -128,35 +127,15 @@ public class AbstractWordAlignment implements WordAlignment {
   }
 
   /**
-   * Any training data pre-processing can be applied here. Note that this
-   * pre-processing can't change the number of tokens. Probably not the right
-   * place for language specific stuff.
+   * Filter training data by escaping special characters.
    * 
    * @param words
-   *          input sentence
    * @return output sentence
    */
-  static public String[] preproc(String[] words) {
-    return removeBadTokens(words);
-  }
-
-  /**
-   * Convert words that may cause problems in phrase tables (for now, just '|').
-   * 
-   * @param words
-   *          input sentence
-   * @return output sentence
-   */
-  static public String[] removeBadTokens(String[] words) {
-    if (KEEP_BAD_TOKENS)
-      return words;
+  static public String[] escape(String[] words) {
     for (int i = 0; i < words.length; ++i) {
-      if (words[i].indexOf('|') >= 0) {
-        words[i] = ",";
-        if (DEBUG)
-          System.err
-              .println("AbstractWordAlignment: WARNING: "
-                  + "\"|\" converted to \";\" to avoid problems with phrase tables.");
+      if (words[i].contains(FlatPhraseTable.FIELD_DELIM)) {
+        words[i] = words[i].replace(FlatPhraseTable.FIELD_DELIM, ",");
       }
     }
     return words;

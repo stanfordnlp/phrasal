@@ -22,8 +22,6 @@ import edu.stanford.nlp.util.StringUtils;
  */
 public class FlatNBestList implements NBestListContainer<IString, String> {
 
-  static public final String FIELD_DELIM = "|||";
-
   static public final int MAX_DENSE_SIZE = 50;
 
   private static final int DEFAULT_INITIAL_CAPACITY = 2000;
@@ -83,7 +81,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     int lastId = -1;
     for (String inline; (inline = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(inline.trim(), FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(inline.trim(), FlatPhraseTable.FIELD_DELIM);
 
       if (fields.size() < 3) {
         System.err.printf(
@@ -250,7 +248,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       for (int j = 0; j < nbestLists.get(i).size(); j++) {
         ScoredFeaturizedTranslation<IString, String> tr = nbestLists.get(i)
             .get(j);
-        sbuf.append(i).append(" ").append(FIELD_DELIM).append(" ");
+        sbuf.append(i).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sbuf.append(tr.toString());
         sbuf.append(nl);
       }
