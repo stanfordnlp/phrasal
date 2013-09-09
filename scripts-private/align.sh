@@ -4,10 +4,13 @@
 # Berkeley aligner 2.1 and the Phrasal implementation
 # of symmetrization heuristics.
 #
-if [ $# -ne 5 ]; then
-    echo Usage: `basename $0` src_file src_lang tgt_file tgt_lang lines_per_split
+# Thang Sep, 2013: add an optional is_write_posterior to output individual alignment probabilities
+#
+if [[ $# -ne 5 && $# -ne 6 ]]; then
+    echo "Usage: `basename $0` src_file src_lang tgt_file tgt_lang lines_per_split [is_write_posterior]"
     echo
     echo src_lang/tgt_lang should be two-letter ISO 639-1 language codes.
+    echo "is_write_posterior (optional): set to 1 to output individual alignment probabilities (default=0)"
     exit -1
 fi
 
@@ -22,6 +25,11 @@ src_lang=$2
 tgt_file=$3
 tgt_lang=$4
 split_size=$5
+if [ $# -eq 6 ]; then
+  is_write_posterior=$6
+else
+  is_write_posterior=0
+fi
 
 src_name=$(basename "$src_file")
 src_ext="${src_name##*.}"
@@ -44,7 +52,12 @@ fi
 
 scriptdir=${JAVANLP_HOME}/projects/mt/scripts-private
 mkconf=${scriptdir}/mkconf.py
-conf_template=${scriptdir}/ucb-align.conf
+if [ $is_write_posterior -eq 1 ]; then
+  conf_template=${scriptdir}/ucb-align-posterior.conf
+  echo "# Writing out individual alignment probabilities, use config template $conf_template instead"
+else
+  conf_template=${scriptdir}/ucb-align.conf
+fi
 align=${JAVANLP_HOME}/projects/mt/scripts/align
 
 
