@@ -109,7 +109,7 @@ public class TranslationRequestHandler implements RequestHandler {
         s2sPrime = identityAlignment(source);
       
       } else {
-        s2sPrime = sourcePreprocessor.process(input.text);
+        s2sPrime = sourcePreprocessor.processAndAlign(input.text);
         source = s2sPrime.e();
       }
       
@@ -119,7 +119,7 @@ public class TranslationRequestHandler implements RequestHandler {
       if (decodeWithPrefix) {
         // TODO(spenceg): Add try/catch
         Preprocessor targetPreprocessor = ProcessorFactory.getPreprocessor(input.targetLanguage.name());
-        SymmetricalWordAlignment t2t = targetPreprocessor.process(input.tgtPrefix);
+        SymmetricalWordAlignment t2t = targetPreprocessor.processAndAlign(input.tgtPrefix);
         targets = Generics.newLinkedList();
         targets.add(t2t.e());
       }

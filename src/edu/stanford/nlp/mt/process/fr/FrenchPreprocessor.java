@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.process.CoreNLPPreprocessor;
 public class FrenchPreprocessor extends CoreNLPPreprocessor {
   public FrenchPreprocessor() {
     super(FrenchTokenizer.factory());
-    tf.setOptions("invertible=true,ptb3Ellipsis=true,ptb3Dashes=false");
+    tf.setOptions("invertible=true,ptb3Escaping=false,ptb3Dashes=false");
   }
 
   @Override

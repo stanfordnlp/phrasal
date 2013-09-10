@@ -79,14 +79,14 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
       
       // Oooh. This is gross and slow. But some core tokenizers return whitespace
       // in a CoreLabel. The MT system never does that.
-      String[] inputFields = inputToken.split("\\s+");
-      String[] outputFields = outputToken.split("\\s+");
-      if (inputFields.length == outputFields.length) {
-        outputStrings.addAll(Arrays.asList(outputFields));
-        originalStrings.addAll(Arrays.asList(inputFields));
+      List<String> inputFields = Arrays.asList(inputToken.split("\\s+"));
+      List<String> outputFields = Arrays.asList(outputToken.split("\\s+"));
+      if (inputFields.size() == outputFields.size()) {
+        outputStrings.addAll(outputFields);
+        originalStrings.addAll(inputFields);
       
       } else {
-        // Skip token...we're only making training data here
+        // Skip token
         System.err.printf("%s: Skipping non-invertible token ||%s|| -> ||%s||%n", this.getClass().getName(),
             inputToken, outputToken);
       }
