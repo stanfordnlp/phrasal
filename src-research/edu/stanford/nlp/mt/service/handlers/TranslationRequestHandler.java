@@ -22,9 +22,9 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
+import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.PhrasalLogger;
 import edu.stanford.nlp.mt.service.PhrasalServlet;
-import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
@@ -168,7 +168,6 @@ public class TranslationRequestHandler implements RequestHandler {
     private static String mapAlignments(SymmetricalWordAlignment s2sPrime,
         SymmetricalWordAlignment sPrime2tPrime,
         SymmetricalWordAlignment tPrime2t) {
-      // TODO(spenceg): Convert to exceptions.
       assert s2sPrime.e().size() == sPrime2tPrime.f().size();
       assert sPrime2tPrime.e().size() == tPrime2t.f().size();
       

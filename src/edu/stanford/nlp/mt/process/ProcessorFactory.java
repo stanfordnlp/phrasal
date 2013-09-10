@@ -18,6 +18,11 @@ import edu.stanford.nlp.mt.process.fr.FrenchPreprocessor;
  */
 public final class ProcessorFactory {
 
+  // Supported languages in iso-639-1 format
+  // TODO(spenceg) Make this more robust, and perhaps reconcile
+  // with the JavaNLP core Languages package.
+  public static enum Language {UNK,AR,EN,DE,FR};
+  
   private ProcessorFactory() {}
   
   /**

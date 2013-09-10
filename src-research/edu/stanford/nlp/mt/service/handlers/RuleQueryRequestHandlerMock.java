@@ -14,7 +14,7 @@ import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.service.Messages.Language;
+import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;

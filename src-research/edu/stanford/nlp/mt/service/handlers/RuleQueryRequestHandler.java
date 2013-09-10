@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.service.Messages.Language;
+import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.PhrasalLogger;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;

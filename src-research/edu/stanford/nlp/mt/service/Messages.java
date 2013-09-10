@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.google.gson.Gson;
 
+import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.handlers.RuleQuery;
 import edu.stanford.nlp.util.Pair;
 
@@ -16,12 +17,6 @@ import edu.stanford.nlp.util.Pair;
  *
  */
 public final class Messages {
-  
-  // Supported languages in iso-639-1 format
-  // TODO(spenceg) Make this more robust, and perhaps reconcile
-  // with the JavaNLP core Languages package.
-  // TODO(spenceg) Add Chinese and Arabic
-  public static enum Language {UNK,AR,EN,DE,FR};
   
   private static final Gson gson = new Gson();
   
