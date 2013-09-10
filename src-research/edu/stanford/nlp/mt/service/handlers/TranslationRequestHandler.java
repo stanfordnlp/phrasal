@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -174,11 +174,11 @@ public class TranslationRequestHandler implements RequestHandler {
       
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < s2sPrime.fSize(); ++i) {
-        SortedSet<Integer> alignments = s2sPrime.f2e(i);
+        Set<Integer> alignments = s2sPrime.f2e(i);
         for (int j : alignments) {
-          SortedSet<Integer> alignments2 = sPrime2tPrime.f2e(j);
+          Set<Integer> alignments2 = sPrime2tPrime.f2e(j);
           for (int k : alignments2) {
-            SortedSet<Integer> alignments3 = tPrime2t.f2e(k);
+            Set<Integer> alignments3 = tPrime2t.f2e(k);
             for (int q : alignments3) {
               if (sb.length() > 0) sb.append(" ");
               sb.append(String.format("%d-%d",i,q));

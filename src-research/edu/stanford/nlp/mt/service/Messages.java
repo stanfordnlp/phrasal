@@ -100,7 +100,6 @@ public final class Messages {
       this.text = source == null ? "" : source.trim();
     
       // Sanity checking
-      System.err.println(tgt.toString());
       assert src != null;
       assert tgt != null;
       assert text != null;

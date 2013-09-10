@@ -144,10 +144,10 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
         (Sequence<IString>) this.translation);
     
     for (Featurizable<TK,FV> f = this.featurizable; f != null; f = f.prior) {
-      int srcPosition = featurizable.sourcePosition;
-      int tgtPosition = featurizable.targetPosition;
-      int tgtLength = featurizable.targetPhrase.size();
-      PhraseAlignment al = featurizable.rule.abstractRule.alignment;
+      int srcPosition = f.sourcePosition;
+      int tgtPosition = f.targetPosition;
+      int tgtLength = f.targetPhrase.size();
+      PhraseAlignment al = f.rule.abstractRule.alignment;
       if (al == null) {
         throw new RuntimeException("Alignments are not enabled. Cannot extract alignments from translation.");
       }
