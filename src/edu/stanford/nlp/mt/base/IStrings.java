@@ -36,7 +36,7 @@ public class IStrings {
     }
     return sequences;
   }
-  
+
   /**
    * Apply whitespace tokenization then convert to a Sequence
    * of IString objects.

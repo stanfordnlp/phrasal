@@ -41,6 +41,9 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.NakovBLEUGain;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
+import edu.stanford.nlp.mt.metrics.SLTERpMetric;
+import edu.stanford.nlp.mt.metrics.SLLinearCombinationMetric;
+import edu.stanford.nlp.mt.metrics.SLGeometricCombinationMetric;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
@@ -764,9 +767,45 @@ public class OnlineTuner {
     } else if (scoreMetricStr.equals("bleu-cherry")) {
       // Cherry and Foster (2012)
       return new BLEUOracleCost<IString,String>(BLEUOracleCost.DEFAULT_ORDER, true);
-
+    } else if (scoreMetricStr.equals("terp")) {
+      return new SLTERpMetric<IString,String>();
+    } else if (scoreMetricStr.equals("2bleu-terp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{2.0, 1.0}, metrics);
+    } else if (scoreMetricStr.equals("bleu-terp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{1.0, 1.0}, metrics);
+    } else if (scoreMetricStr.equals("bleu-2terp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{1.0, 2.0}, metrics);
+    } else if (scoreMetricStr.equals("bleuX2terp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLGeometricCombinationMetric<IString,String>(
+        new double[]{1.0, 2.0}, new boolean[]{false, true}, metrics);
+    } else if (scoreMetricStr.equals("bleuXterp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLGeometricCombinationMetric<IString,String>(
+        new double[]{1.0, 1.0}, new boolean[]{false, true}, metrics);
+    } else if (scoreMetricStr.equals("bleu-2fastterp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>(5));
+      return new SLLinearCombinationMetric<IString,String>(new double[]{1.0, 2.0}, metrics);
     } else {
-      throw new UnsupportedOperationException("Unsupported scoring metric: " + scoreMetricStr);
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
     }
   }
 
