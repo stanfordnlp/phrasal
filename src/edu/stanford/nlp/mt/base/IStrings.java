@@ -101,14 +101,6 @@ public class IStrings {
     return intArray;
   }
 
-  static public String[] toStringArray(IString[] strings) {
-    String[] stringArray = new String[strings.length];
-    for (int i = 0; i < strings.length; i++) {
-      stringArray[i] = strings[i].toString();
-    }
-    return stringArray;
-  }
-
   static public IString[] toIStringArray(int[] ids) {
     IString[] istrs = new IString[ids.length];
     for (int i = 0; i < istrs.length; i++) {
