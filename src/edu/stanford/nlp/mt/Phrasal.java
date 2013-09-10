@@ -1130,7 +1130,7 @@ public class Phrasal {
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
       Sequence<IString> source = preprocessor == null ? IStrings.tokenize(line) :
-        preprocessor.process(line.trim()).e();
+        preprocessor.process(line.trim());
       if (source.size() > maxSentenceSize || source.size() < minSentenceSize) {
         System.err.printf("Skipping: %s%n", line);
         System.err.printf("Tokens: %d (min: %d max: %d)%n", source.size(), minSentenceSize,

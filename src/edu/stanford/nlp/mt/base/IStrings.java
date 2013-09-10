@@ -36,7 +36,7 @@ public class IStrings {
     }
     return sequences;
   }
-  
+
   /**
    * Apply whitespace tokenization then convert to a Sequence
    * of IString objects.
@@ -99,14 +99,6 @@ public class IStrings {
       intArray[i] = strings[i].id;
     }
     return intArray;
-  }
-
-  static public String[] toStringArray(IString[] strings) {
-    String[] stringArray = new String[strings.length];
-    for (int i = 0; i < strings.length; i++) {
-      stringArray[i] = strings[i].toString();
-    }
-    return stringArray;
   }
 
   static public IString[] toIStringArray(int[] ids) {

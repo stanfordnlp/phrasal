@@ -422,7 +422,7 @@ public final class ProcessorTools {
         private static final long serialVersionUID = 3695624909844929834L;
         @Override
         public List<CoreLabel> apply(String in) {
-          SymmetricalWordAlignment alignment = preProcessor.process(in.trim());
+          SymmetricalWordAlignment alignment = preProcessor.processAndAlign(in.trim());
           return ProcessorTools.alignedPairToLabeledSequence(alignment);
         }
       });

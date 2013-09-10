@@ -10,10 +10,10 @@ import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.process.TokenizerFactory;
+import edu.stanford.nlp.util.Characters;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -31,9 +31,39 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     this.tf = tf;
   }
   
+  /**
+   * Converts control characters to whitespace. The underlying CoreNLP tokenizers
+   * typically delete these characters. In MT bitexts they usually function as
+   * whitespace.
+   * 
+   * @param input
+   * @return
+   */
+  private String removeControlCharacters(String input) {
+    StringBuilder sb = new StringBuilder();
+    int inputLength = input.length();
+    for (int i = 0; i < inputLength; ++i) {
+      char c = input.charAt(i);
+      sb.append(Characters.isControl(c) ? " " : c);
+    }
+    return sb.toString();
+  }
+  
   @Override
-  public SymmetricalWordAlignment process(String input) {
-    String uncased = toUncased(input.trim());
+  public Sequence<IString> process(String input) {
+    String uncased = removeControlCharacters(toUncased(input.trim()));
+    Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(uncased));
+    List<String> outputStrings = Generics.newLinkedList();
+    while (tokenizer.hasNext()) {
+      String string = tokenizer.next().get(TextAnnotation.class);
+      outputStrings.add(string);
+    }
+    return IStrings.toIStringSequence(outputStrings);
+  }
+  
+  @Override
+  public SymmetricalWordAlignment processAndAlign(String input) {
+    String uncased = removeControlCharacters(toUncased(input.trim()));
     Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(uncased));
     List<CoreLabel> outputTokens = tokenizer.tokenize();
     
@@ -56,13 +86,14 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
         originalStrings.addAll(Arrays.asList(inputFields));
       
       } else {
-        throw new RuntimeException("Non-invertible input: " + input);
+        // Skip token...we're only making training data here
+        System.err.printf("%s: Skipping non-invertible token ||%s|| -> ||%s||%n", this.getClass().getName(),
+            inputToken, outputToken);
       }
     }
     
     Sequence<IString> inputSequence = IStrings.tokenize(input);
-    Sequence<IString> outputSequence = 
-        new SimpleSequence<IString>(true, IStrings.toIStringArray(outputStrings)); 
+    Sequence<IString> outputSequence = IStrings.toIStringSequence(outputStrings);
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, outputSequence);
     
     // Generate the alignments
