@@ -114,7 +114,7 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
     final int id = -1;
     Rule<TK> abstractRule = new Rule<TK>(id, scores, phraseScoreNames,
         new RawSequence<TK>(target), new RawSequence<TK>(source),
-        PhraseAlignment.getPhraseAlignment("0-0"));
+        PhraseAlignment.getPhraseAlignment("(0)"));
 
     CoverageSet sourceCoverage = new CoverageSet();
     sourceCoverage.set(sourceIndex);
