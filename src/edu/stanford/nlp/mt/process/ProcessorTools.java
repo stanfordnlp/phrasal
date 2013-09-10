@@ -178,21 +178,23 @@ public final class ProcessorTools {
       while (j < s2t.length && s2t[j] < 0) ++j;
       // Source span i/j is uncovered
       int p = i > 0 ? s2t[i-1] : -1;
-      int q = s2t[j];
+      int q = j < s2t.length ? s2t[j] : -1;
       // Span p/q in the target bounds this gap
       String pLabel = p > 0 ? sequence.get(p).get(CoreAnnotations.GoldAnswerAnnotation.class) : null;
-      String qLabel = sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class);
+      String qLabel = q > 0 ? sequence.get(q).get(CoreAnnotations.GoldAnswerAnnotation.class) : null;
       Operation pOperation = null;
       Operation qOperation = null;
       try {
         pOperation = pLabel == null ? null : Operation.valueOf(pLabel);
       } catch (Exception e) {
-        // The label is lexicalized, so it clearly isn't None.
+        // The label is lexicalized, so it clearly isn't None,
+        // which is the label we're seeking.
       }
       try {
-        qOperation = Operation.valueOf(qLabel);
+        qOperation = qLabel == null ? null : Operation.valueOf(qLabel);
       } catch (Exception e) {
-        // The label is lexicalized, so it clearly isn't None.
+        // The label is lexicalized, so it clearly isn't None,
+        // which is the label we're seeking.
       }
       
       if (pOperation != null && pOperation == Operation.None) {
