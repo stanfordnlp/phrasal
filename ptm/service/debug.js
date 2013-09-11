@@ -1,6 +1,6 @@
 $(document).ready(function(){
   // URL of the PTM service
-  var _serverURL = 'http://joan.stanford.edu:8017/t';
+  var _serverURL = 'http://127.0.0.1:8017/t';
   console.log('URL: ' + _serverURL);
 
   $('#src-input').change(function(e) {
