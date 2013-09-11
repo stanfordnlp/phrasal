@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
@@ -9,14 +9,14 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
- * The target dimension of the rule.
+ * Source dimension of the rule.
  * 
  * @author Spence Green
  *
  */
-public class TargetRuleDimension implements RuleFeaturizer<IString, String> {
+public class SourceRuleDimension implements RuleFeaturizer<IString, String> {
 
-  private static final String FEATURE_NAME = "TGTD";
+  private static final String FEATURE_NAME = "SRCD";
   
   @Override
   public void initialize() {}
@@ -25,7 +25,7 @@ public class TargetRuleDimension implements RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(String.format("%s:%d",FEATURE_NAME, f.targetPhrase.size()), 1.0));
+    features.add(new FeatureValue<String>(String.format("%s:%d",FEATURE_NAME, f.sourcePhrase.size()), 1.0));
     return features;
   }
 }
