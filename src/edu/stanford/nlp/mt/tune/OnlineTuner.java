@@ -527,8 +527,7 @@ public class OnlineTuner {
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
       double expectedBleu = 0.0;
       if (doExpectedBleu) {
-        expectedBleu = approximateBLEUObjective(nbestLists);
-        logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
+        expectedBleu = approximateBLEUObjective(nbestLists, epoch);
       }
       // Purge history if we're not picking the best weight vector
       if ( ! returnBestDev) epochWeights.clear();
@@ -597,7 +596,7 @@ public class OnlineTuner {
    * @param epoch
    * @return
    */
-  private double approximateBLEUObjective(Map<Integer, Sequence<IString>> nbestLists) {
+  private double approximateBLEUObjective(Map<Integer, Sequence<IString>> nbestLists, int epoch) {
     assert nbestLists.keySet().size() == references.size();
 
     BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
@@ -608,7 +607,9 @@ public class OnlineTuner {
     for (Map.Entry<Integer, Sequence<IString>> entry : sortedMap.entrySet()) {
       incMetric.add(new ScoredFeaturizedTranslation<IString,String>(entry.getValue(), null, 0.0));
     }
-    return incMetric.score() * 100.0;
+    double expectedBleu = incMetric.score() * 100.0;
+    logger.info(String.format("Epoch %d expected BLEU: %.2f / BP: %.3f", epoch, expectedBleu, incMetric.brevityPenalty()));
+    return expectedBleu;
   }
 
   /**
