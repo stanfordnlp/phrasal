@@ -73,7 +73,7 @@ Add the <tt>scripts</tt> directory to your shell PATH:
  export PATH="$PATH":$HOME/phrasal.ver/scripts
 
 Now build the C++ code for KenLM:
- cd $HOME/src-cc
+ cd $HOME/phrasal.ver/src-cc
  ./compile_JNI.sh
  
 === KenLM ===
