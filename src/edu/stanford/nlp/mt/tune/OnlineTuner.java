@@ -40,6 +40,7 @@ import edu.stanford.nlp.mt.metrics.BLEUSmoothGain;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.NakovBLEUGain;
+import edu.stanford.nlp.mt.metrics.NakovBLEUGain2;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SLTERpMetric;
 import edu.stanford.nlp.mt.metrics.SLLinearCombinationMetric;
@@ -759,7 +760,11 @@ public class OnlineTuner {
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
       return new NakovBLEUGain<IString,String>();
-      
+    
+    } else if (scoreMetricStr.equals("bleu-nakov2")) {
+      // Nakov's extensions to BLEU+1 with variable reference length scaling
+      return new NakovBLEUGain2<IString,String>();
+
     } else if (scoreMetricStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
       return new BLEUOracleCost<IString,String>(BLEUOracleCost.DEFAULT_ORDER, false);
