@@ -33,14 +33,15 @@ public class TargetClassBigramBoundary implements DerivationFeaturizer<IString, 
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    String leftEdge = f.prior == null ? "<S>" :
-      TargetClassMap.get(f.prior.targetPhrase.get(f.prior.targetPhrase.size()-1)).toString();
-    String rightEdge = TargetClassMap.get(f.targetPhrase.get(0)).toString();
-    features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));
-    
-    if (f.done) {
-      leftEdge = TargetClassMap.get(f.targetPhrase.get(f.targetPhrase.size()-1)).toString();
-      rightEdge = "</S>";
+    if ((f.prior == null || f.prior.targetPhrase != null) && f.targetPhrase != null) {
+      String leftEdge = f.prior == null ? "<S>" :
+        TargetClassMap.get(f.prior.targetPhrase.get(f.prior.targetPhrase.size()-1)).toString();
+      String rightEdge = TargetClassMap.get(f.targetPhrase.get(0)).toString();
+      features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));
+    }
+    if (f.done && f.targetPhrase != null) {
+      String leftEdge = TargetClassMap.get(f.targetPhrase.get(f.targetPhrase.size()-1)).toString();
+      String rightEdge = "</S>";
       features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));  
     } 
     return features;
