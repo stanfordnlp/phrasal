@@ -792,6 +792,13 @@ public class OnlineTuner {
       metrics.add(new SLTERpMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
+    } else if (scoreMetricStr.equals("bleu-nakov2-2terp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new NakovBLEUGain2<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{1.0, 2.0}, metrics);
+    
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
       metrics.add(new NakovBLEUGain<IString,String>());
