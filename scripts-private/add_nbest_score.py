@@ -73,9 +73,15 @@ def process_files(in_file, score_file, out_file):
     tokens = re.split(' \|\|\| ', eachline)
     rnnlm_score = clean_line(score_inf.readline())
     
+    if len(tokens)<3:
+      break
+
     id = tokens[0]
     translation = tokens[1]
-    decode_score = tokens[2]
+    if len(tokens)>3:
+      decode_score = tokens[3]
+    else:
+      decode_score = tokens[2]
     ouf.write('%s ||| %s ||| rnnlm: %s DM: %s ||| %s\n' % (id, translation, rnnlm_score, decode_score, decode_score))
 
     if debug==True:
