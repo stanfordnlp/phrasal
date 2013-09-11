@@ -31,7 +31,7 @@ Contributors:
     * Chris Manning
 
 
-Quick Start Guide:
+Documentation / User Guide:
 ==================
 
 http://www-nlp.stanford.edu/wiki/Software/Phrasal

@@ -78,7 +78,7 @@ cd -
 rm -rf phrasal.$1
 mkdir phrasal.$1 || exit
 
-cp -r src scripts README.txt LICENSE.txt phrasal.$1 || exit
+cp -r src src-cc scripts example README.txt LICENSE.txt phrasal.$1 || exit
 cp userbuild.xml  phrasal.$1/build.xml || exit
 
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
@@ -109,7 +109,6 @@ cp ../more/src/edu/stanford/nlp/classify/RegressionFactory.java phrasal.$1/src/e
 cp ../more/src/edu/stanford/nlp/classify/CorrelationLinearRegressionObjectiveFunction.java phrasal.$1/src/edu/stanford/nlp/classify || exit
 
 mkdir -p phrasal.$1/lib || exit
-cp lib/berkeleyaligner.jar phrasal.$1/lib || exit
 cp ../core/lib/junit.jar phrasal.$1/lib || exit
 cp ../core/lib/commons-lang3-3.1.jar phrasal.$1/lib || exit
 cp ../more/lib/fastutil.jar phrasal.$1/lib || exit
