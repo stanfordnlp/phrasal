@@ -56,7 +56,7 @@ If you enable the lexicalized re-ordering model (which is enabled in the system 
 
 Download the [http://nlp.stanford.edu/phrasal/ latest version of Phrasal] and the latest version of [http://nlp.stanford.edu/software/corenlp.shtml Stanford CoreNLP].
 
-The Phrasal download file has the format <tt>phrasal.ver.tar.gz</tt> where <tt>ver</tt> is the current version number. Assume that you download to the directory <tt>$HOME</tt>.
+The Phrasal download file has the format <tt>phrasal.ver.tar.gz</tt> where <tt>ver</tt> is the current version number. Assume that you download to the directory <tt>$HOME=/home/me</tt>.
 
 The CoreNLP download file has the format <tt>stanford-corenlp-full-date.zip</tt> where <tt>data</tt> is the release date.
 
@@ -145,9 +145,13 @@ Estimate a language model from both the monolingual data and the target-side of 
 
 Create a new directory for the MT system and copy over the system tuning files:
  mkdir $HOME/phrasal.fr-en
+ cd $HOME/phrasal.fr-en
  cp $HOME/phrasal.ver/example/example.vars fr-en.vars
  cp $HOME/phrasal.ver/example/example.ini fr-en.ini
  cp $HOME/phrasal.ver/example/example.binwts fr-en.initial.binwts
+
+You might also want to copy over the language model:
+ cp 4gm.bin $HOME/phrasal.fr-en
  
 Open the vars file and read the comments. If you've followed the instructions carefully until now, then all of the filenames and paths should match. However, you should verify the files and paths before proceeding.
 
