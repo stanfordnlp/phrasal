@@ -32,7 +32,7 @@ public class PhrasalServlet extends HttpServlet {
 
   private static final long serialVersionUID = -2229782317949182871L;
 
-  public static final String ASYNC_KEY = "as_result";
+  public static final String ASYNC_KEY = "As#R";
 
   private final RequestHandler[] requestHandlers;
   private final Logger logger;
@@ -84,7 +84,8 @@ public class PhrasalServlet extends HttpServlet {
 
       } else if (type == MessageType.RULE_QUERY_REQUEST) {
         handlers[type.ordinal()] = loadMock ? new RuleQueryRequestHandlerMock() :
-          new RuleQueryRequestHandler(decoder.getPhraseTable(), decoder.getScorer(0));
+          new RuleQueryRequestHandler(decoder.getPhraseTable(), decoder.getScorer(0),
+              decoder.getPreprocessor(), decoder.getPostprocessor());
 
       } else if (type == MessageType.UNKNOWN_REQUEST) {
         handlers[type.ordinal()] = new UnknownRequestHandler();
