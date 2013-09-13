@@ -346,5 +346,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   public static void lockIndex() {
     sourceIndex.lock();
+    ruleIndex.lock();
   }
 }

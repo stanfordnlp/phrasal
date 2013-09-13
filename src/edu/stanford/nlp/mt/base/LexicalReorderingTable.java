@@ -129,14 +129,16 @@ public class LexicalReorderingTable {
         FlatPhraseTable.ruleIndex.indexOf(array2) };
   }
 
-  public float[] getReorderingScores(int phraseId) {
+  public float[] getReorderingScores(int ruleId) {
     int reorderingId = -1;
-    if (conditionType == ConditionTypes.f) {
-      reorderingId = FlatPhraseTable.ruleIndex.get(phraseId)[0];
+    if (ruleId == Rule.DEFAULT_RULE_ID) {
+      // Do nothing
+    } if (conditionType == ConditionTypes.f) {
+      reorderingId = FlatPhraseTable.ruleIndex.get(ruleId)[0];
     } else if (conditionType == ConditionTypes.e) {
-      reorderingId = FlatPhraseTable.ruleIndex.get(phraseId)[1];
+      reorderingId = FlatPhraseTable.ruleIndex.get(ruleId)[1];
     } else if (conditionType == ConditionTypes.fe) {
-      reorderingId = phraseId;
+      reorderingId = ruleId;
     }
     return reorderingId < 0 || reorderingId >= reorderingScores.size() ? 
         null : reorderingScores.get(reorderingId);

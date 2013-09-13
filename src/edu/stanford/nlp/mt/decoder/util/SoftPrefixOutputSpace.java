@@ -108,11 +108,7 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
       double ruleScore, ConcreteRule<TK, FV> rulePrototype) {
     String[] phraseScoreNames = rulePrototype.abstractRule.phraseScoreNames;
     float[] scores = new float[phraseScoreNames.length];
-    // TODO(spenceg): Should we assign a unique score (via FlatPhraseTable) to synthetic
-    // rules? Right now this only affects the LR featurizers. An id of -1 will just force
-    // the LR featurizers not to add any feature scores.
-    final int id = -1;
-    Rule<TK> abstractRule = new Rule<TK>(id, scores, phraseScoreNames,
+    Rule<TK> abstractRule = new Rule<TK>(scores, phraseScoreNames,
         new RawSequence<TK>(target), new RawSequence<TK>(source),
         PhraseAlignment.getPhraseAlignment("(0)"));
 
