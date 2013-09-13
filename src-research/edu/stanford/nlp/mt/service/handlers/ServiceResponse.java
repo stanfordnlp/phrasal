@@ -9,7 +9,12 @@ import com.google.gson.Gson;
 
 import edu.stanford.nlp.mt.service.Messages.Reply;
 
-
+/**
+ * Service-internal object that contains the result of a request.
+ * 
+ * @author Spence Green
+ *
+ */
 public class ServiceResponse {
   
   private static final Gson gson = new Gson();
@@ -29,10 +34,21 @@ public class ServiceResponse {
     return gson.toJson(reply, type);
   }
   
-  public void writeInto(HttpServletResponse response) throws IOException {
-    String responseString = this.toString();
-    response.getWriter().println(responseString);
-    response.setContentType("application/x-javascript;charset=utf-8");     
-    response.setStatus(HttpServletResponse.SC_OK);
+  public static boolean intoHttpResponse(ServiceResponse serviceResponse, HttpServletResponse response) {
+    String responseString = serviceResponse.toString();
+    try {
+      response.getWriter().println(responseString);
+      response.setContentType("application/x-javascript;charset=utf-8");     
+      response.setStatus(HttpServletResponse.SC_OK);
+
+    } catch (IOException e) {
+      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      return false;
+    }
+    return true;
+  }
+  
+  public static void writeError(HttpServletResponse response) {
+    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
   }
 }

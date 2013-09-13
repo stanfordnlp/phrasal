@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.math.ArrayMath;
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.FlatPhraseTable.IntArrayTranslationOption;
 
 /**
@@ -73,7 +79,7 @@ public class PhraseTableFilter {
 
       // Get foreign phrase:
       List<IntArrayTranslationOption> opts = ppt.translations.get(pi);
-      int[] foreignInts = FlatPhraseTable.foreignIndex.get(pi);
+      int[] foreignInts = FlatPhraseTable.sourceIndex.get(pi);
       RawSequence<IString> rawForeign = new RawSequence<IString>(IStrings.toIStringArray(foreignInts));
 
       // Generate translation options:

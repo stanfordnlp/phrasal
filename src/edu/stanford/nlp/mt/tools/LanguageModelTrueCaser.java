@@ -207,4 +207,9 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
       List<Sequence<IString>> tranList) {
     // no op
   }
+
+  @Override
+  public int longestTargetPhrase() {
+    return 1;
+  }
 }

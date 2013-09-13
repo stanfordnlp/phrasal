@@ -40,7 +40,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        return numStr;
    }
 
-   public static boolean usesArabicNumbers(String inString) {
+   @SuppressWarnings("unused")
+  public static boolean usesArabicNumbers(String inString) {
        String newString = ""; // new string without auxillary characters
        for (int i = 0; i < inString.length(); i++) {
            String charAtI = inString.substring(i, i+1);
@@ -100,7 +101,6 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    public static long getRawNumber(String chStr, boolean usesArabic) {
        // takes a string that is assumed to be a well-formed raw counting number in Chinese, using Chinese or Arabic numerals
        // returns its English equivalent as a long
-       String enStr = "";
        long enNum = 0;
        for (int i = chStr.length() - 1; i >= 0; i--) {
            String charAtI = chStr.substring(i, i+1);
@@ -611,10 +611,10 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
       return 6; // change to the longest Mandarin phrase this phrase generator can reasonably process
    }
 
+
    @Override
-   public void setCurrentSequence(Sequence<IString> foreign,
-         List<Sequence<IString>> tranList) {
-      // do nothing
+   public int longestTargetPhrase() {
+     return 6; // change to the longest Mandarin phrase this phrase generator can reasonably generate
    }
 
    static public void main(String[] args) throws IOException {

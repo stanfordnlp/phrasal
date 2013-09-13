@@ -38,6 +38,7 @@ public final class PhrasalService {
     optionArgDefs.put("m", 0);
     optionArgDefs.put("l", 0);
     optionArgDefs.put("u", 1);
+    optionArgDefs.put("r", 1);
     return optionArgDefs;
   }
 
@@ -51,6 +52,7 @@ public final class PhrasalService {
     sb.append(" -l       : Run on localhost").append(nl);
     sb.append(" -m       : Load mock servlet").append(nl);
     sb.append(" -u file  : UI to load (html file)").append(nl);
+    sb.append(" -r path  : Static resource base path").append(nl);
     return sb.toString();
   }
 
@@ -61,6 +63,7 @@ public final class PhrasalService {
     boolean loadMockServlet = PropertiesUtils.getBool(options, "m", false);
     boolean localHost = PropertiesUtils.getBool(options, "l", false);
     String uiFile = options.getProperty("u", "debug.html");
+    String resourcePath = options.getProperty("r", ".");
 
     // Parse arguments
     String argList = options.getProperty("",null);
@@ -106,7 +109,7 @@ public final class PhrasalService {
     // Add debugging web-page
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setWelcomeFiles(new String[]{ uiFile });
-    resourceHandler.setResourceBase(".");
+    resourceHandler.setResourceBase(resourcePath);
 
     HandlerList handlers = new HandlerList();
     handlers.setHandlers(new Handler[] { resourceHandler, context });

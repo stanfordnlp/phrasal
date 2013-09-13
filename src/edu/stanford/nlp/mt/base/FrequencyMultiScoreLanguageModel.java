@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 import edu.stanford.nlp.mt.misc.BloomFilter;
 import com.google.common.hash.Funnel;
-import com.google.common.hash.Sink;
+import com.google.common.hash.PrimitiveSink;
 
 import edu.stanford.nlp.util.Pair;
 
@@ -155,7 +155,7 @@ class StringIntegerPairFunnel implements Funnel<Pair<String,Integer>>, Serializa
   private static final long serialVersionUID = 1L;
 
   @Override
-  public void funnel(Pair<String, Integer> from, Sink into) {
+  public void funnel(Pair<String, Integer> from, PrimitiveSink into) {
     into.putString(from.first);
     into.putInt(from.second);
   }

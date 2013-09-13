@@ -27,14 +27,16 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       .getProperty(DISABLED_SCORES_PROPERTY);
 
   public static final String FIELD_DELIM = "|||";
+
+  public static IntegerArrayIndex sourceIndex;
+  public static IntegerArrayIndex ruleIndex;
   
-  public static IntegerArrayIndex foreignIndex;
-  public static IntegerArrayIndex translationIndex;
-
-  static String[] customScores;
-
-  final String[] scoreNames;
+  public final String[] scoreNames;
   protected String name;
+  public final List<List<IntArrayTranslationOption>> translations;
+  
+  private int longestSourcePhrase = -1;
+  private int longestTargetPhrase = -1;
 
   // Originally, PharaohPhraseTables were backed by a nice simple
   // HashMap from a foreign sequence to a list of translations.
@@ -58,14 +60,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   // java 6 64-bit 254 MiB
   // ///////////////////////////////////////////////////////////////
 
-  private int longestForeignPhrase = -1;
-
   public static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
     public final int[] translation;
-    final float[] scores;
-    final PhraseAlignment alignment;
-    final int id;
+    public final float[] scores;
+    public final PhraseAlignment alignment;
+    public final int id;
 
     public IntArrayTranslationOption(int id, int[] translation, float[] scores,
         PhraseAlignment alignment) {
@@ -81,35 +81,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
   }
 
-  public final List<List<IntArrayTranslationOption>> translations;
-
-  /**
-   * Convert rule scores from string to a numeric array.
-   *
-   * @param sList
-   * @return
-   */
-  private static float[] stringProbListToFloatProbArray(List<String> sList) throws NumberFormatException {
-    float[] fArray = new float[sList.size()];
-    int i = 0;
-    for (String s : sList) {
-      float f = Float.parseFloat(s);
-      if (Float.isNaN(f)) {
-        throw new NumberFormatException("Unparseable number: " + s);
-      }
-      fArray[i++] = f;
-    }
-    return fArray;
-  }
-
   protected void addEntry(Sequence<IString> foreignSequence,
       Sequence<IString> translationSequence, PhraseAlignment alignment,
       float[] scores) {
     int[] foreignInts = Sequences.toIntArray(foreignSequence);
     int[] translationInts = Sequences.toIntArray(translationSequence);
-    int fIndex = foreignIndex.indexOf(foreignInts, true);
-    int eIndex = translationIndex.indexOf(translationInts, true);
-    int id = translationIndex.indexOf(new int[] { fIndex, eIndex }, true);
+    int fIndex = sourceIndex.indexOf(foreignInts, true);
+    int eIndex = ruleIndex.indexOf(translationInts, true);
+    int id = ruleIndex.indexOf(new int[] { fIndex, eIndex }, true);
     /*
      * System.err.printf("foreign ints: %s translation ints: %s\n",
      * Arrays.toString(foreignInts), Arrays.toString(translationInts));
@@ -124,7 +103,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       intTransOpts = Generics.newLinkedList();
       translations.set(fIndex, intTransOpts);
     }
-    intTransOpts.add(new IntArrayTranslationOption(id, translationIndex
+    intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex
         .get(eIndex), scores, alignment));
   }
 
@@ -218,7 +197,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       }
       float[] scores;
       try {
-        scores = stringProbListToFloatProbArray(scoreList);
+        scores = IOTools.stringListToNumeric(scoreList);
       } catch (NumberFormatException e) {
         e.printStackTrace();
         throw new RuntimeException(String.format("Number format error on line %d",
@@ -232,8 +211,11 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             PhraseAlignment.getPhraseAlignment(targetConstellation), scores);
       }
 
-      if (source.size() > longestForeignPhrase) {
-        longestForeignPhrase = source.size();
+      if (source.size() > longestSourcePhrase) {
+        longestSourcePhrase = source.size();
+      }
+      if (target.size() > longestTargetPhrase) {
+        longestTargetPhrase = target.size();
       }
     }
     reader.close();
@@ -247,14 +229,19 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             f.getAbsolutePath(),
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
                 / (1024 * 1024), elapsedTime);
-    System.err.println("Longest foreign phrase: " + longestForeignPhrase);
+    System.err.println("Longest foreign phrase: " + longestSourcePhrase);
     System.err.printf("Phrase table signature: %d%n", getSignature());
     return numScores;
   }
 
   @Override
   public int longestSourcePhrase() {
-    return longestForeignPhrase;
+    return longestSourcePhrase;
+  }
+  
+  @Override
+  public int longestTargetPhrase() {
+    return longestTargetPhrase;
   }
 
   @Override
@@ -263,7 +250,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence,
         IString.identityIndex());
-    int fIndex = foreignIndex.indexOf(foreignInts);
+    int fIndex = sourceIndex.indexOf(foreignInts);
     if (fIndex == -1)
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
@@ -301,7 +288,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
     System.err.printf(
         "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",
-        foreignIndex.size(), totalSecs, totalMemory, freeMemory);
+        sourceIndex.size(), totalSecs, totalMemory, freeMemory);
 
     List<Rule<IString>> translationOptions = ppt
         .query(new SimpleSequence<IString>(IStrings
@@ -336,12 +323,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return getName();
   }
 
-  @Override
-  public void setCurrentSequence(Sequence<IString> foreign,
-      List<Sequence<IString>> tranList) {
-    // no op
-  }
-
   /**
    * Sort of like hashCode(), but for debugging purposes
    * only.
@@ -349,7 +330,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @return
    */
   public long getSignature() {
-    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) translationIndex;
+    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) ruleIndex;
     long signature = 0;
     for (int[] rule : index) {
       signature += Arrays.hashCode(rule);
@@ -358,13 +339,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   }
   
   public static void createIndex(boolean withGaps) {
-    foreignIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
+    sourceIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
         : new DynamicIntegerArrayIndex();
-    translationIndex = new DynamicIntegerArrayIndex();
+    ruleIndex = new DynamicIntegerArrayIndex();
   }
 
   public static void lockIndex() {
-    foreignIndex.lock();
+    sourceIndex.lock();
   }
-
 }

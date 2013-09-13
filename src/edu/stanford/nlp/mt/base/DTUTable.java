@@ -109,8 +109,8 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     int sequenceSz = sequence.size();
     // System.err.println("Seq to match: "+sequence);
 
-    assert (foreignIndex instanceof TrieIntegerArrayIndex);
-    TrieIntegerArrayIndex trieIndex = (TrieIntegerArrayIndex) foreignIndex;
+    assert (sourceIndex instanceof TrieIntegerArrayIndex);
+    TrieIntegerArrayIndex trieIndex = (TrieIntegerArrayIndex) sourceIndex;
 
     for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
       // System.err.println("startIdx: "+startIdx);
@@ -279,9 +279,9 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
 
     int[] foreignInts = toWordIndexArray(foreignSequence);
     int[] translationInts = toWordIndexArray(translationSequence);
-    int fIndex = foreignIndex.indexOf(foreignInts, true);
-    int eIndex = translationIndex.indexOf(translationInts, true);
-    int id = translationIndex.indexOf(new int[] { fIndex, eIndex }, true);
+    int fIndex = sourceIndex.indexOf(foreignInts, true);
+    int eIndex = ruleIndex.indexOf(translationInts, true);
+    int id = ruleIndex.indexOf(new int[] { fIndex, eIndex }, true);
 
     float[][] foreignGapSzScores = toGapSizeScores(foreignSequence);
     float[][] translationGapSzScores = toGapSizeScores(translationSequence);
@@ -322,7 +322,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     }
     if (numTgtSegments == 1) {
       // no gaps:
-      intTransOpts.add(new IntArrayTranslationOption(id, translationIndex
+      intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex
           .get(eIndex), scores, alignment));
     } else {
       // gaps:
