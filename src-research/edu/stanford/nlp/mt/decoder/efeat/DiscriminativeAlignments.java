@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.efeat;
 
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -112,12 +113,12 @@ RuleFeaturizer<IString,String> {
         }
         
       } else {
-        Set<String> alignedWords = new TreeSet<String>();
+        List<String> alignedWords = Generics.newArrayList(srcLength+tgtLength);
         alignedWords.add(sourceRepresentation(srcWord));
         for (int tgtIndex : alignments) {
           alignedWords.add(targetRepresentation(f.targetPhrase.get(tgtIndex)));
           if (hasMultipleAlignments.get(tgtIndex)) {
-            int[] srcIndices = alignment.t2s(i);
+            int[] srcIndices = alignment.t2s(tgtIndex);
             for (int sIndex : srcIndices) {
               IString srcToken = f.sourcePhrase.get(sIndex);
               alignedWords.add(sourceRepresentation(srcToken));
@@ -125,6 +126,7 @@ RuleFeaturizer<IString,String> {
           }
         }
         StringBuilder sb = new StringBuilder();
+        Collections.sort(alignedWords);
         for (String token : alignedWords) {
           if (sb.length() > 0) sb.append("-");
           sb.append(token);
