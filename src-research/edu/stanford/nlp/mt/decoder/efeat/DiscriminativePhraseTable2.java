@@ -53,10 +53,9 @@ public class DiscriminativePhraseTable2 implements RuleFeaturizer<IString, Strin
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     if (addLexicalizedRule) {
-      int ruleId = f.rule.abstractRule.id;
-      String ruleString = ruleId == Rule.DEFAULT_RULE_ID ?
-        String.format("%s>%s", f.sourcePhrase.toString("-"), f.targetPhrase.toString("-")) :
-          String.valueOf(ruleId);
+      String sourcePhrase = f.sourcePhrase.toString("-");
+      String targetPhrase = f.targetPhrase.toString("-");
+      String ruleString = String.format("%s>%s", sourcePhrase, targetPhrase);
       features.add(new FeatureValue<String>(FEATURE_NAME + ":" + ruleString, 1.0));        
     }
     if (addClassBasedRule) {

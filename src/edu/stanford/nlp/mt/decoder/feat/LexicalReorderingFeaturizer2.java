@@ -217,11 +217,9 @@ public class LexicalReorderingFeaturizer2 implements
       
     } else {
       // Lexicalized
-      Rule<IString> rule = f.rule.abstractRule;
-      int ruleId = rule.id;
-      rep = ruleId == Rule.DEFAULT_RULE_ID ?
-        String.format("%s>%s", rule.source.toString("-"), rule.target.toString("-")) :
-          String.valueOf(ruleId);
+      String sourcePhrase = f.sourcePhrase.toString("-");
+      String targetPhrase = f.targetPhrase.toString("-");
+      rep = String.format("%s>%s", sourcePhrase, targetPhrase);
     }
     return rep;
   }
