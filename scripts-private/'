@@ -29,16 +29,20 @@ fi
 
 echo ""
 echo "# Preprocessing ..."
-cp $nbest_in ${nbest_out}.in
 nbest_in_processed=${nbest_out}.in
+cp $nbest_in $nbest_in_processed.nonUnique 
 
-echo " removing the last part ..."
-echo "  perl -pi -e 's/ \|\|\| [^\|]+$/\n/g' $nbest_in_processed"
-perl -pi -e 's/ \|\|\| [^\|]+$/\n/g' $nbest_in_processed
+echo "  removing the last part ..."
+echo "  perl -pi -e 's/ \|\|\| [^\|]+$/\n/g' $nbest_in_processed.nonUnique"
+perl -pi -e 's/ \|\|\| [^\|]+$/\n/g' $nbest_in_processed.nonUnique
 
-echo " removing the front ||| part ..."
-echo "  perl -pi -e 's/ \|\|\| / /g' $nbest_in_processed"
-perl -pi -e 's/ \|\|\| / /g' $nbest_in_processed
+echo "  removing the front ||| part ..."
+echo "  perl -pi -e 's/^\d+ \|\|\| /0 /g' $nbest_in_processed.nonUnique"
+perl -pi -e 's/^\d+ \|\|\| /0 /g' $nbest_in_processed.nonUnique
+
+echo "  selecting unique sentences ..."
+echo "  uniq $nbest_in_processed.nonUnique > $nbest_in_processed"
+uniq $nbest_in_processed.nonUnique > $nbest_in_processed
 
 echo ""
 echo "# RNNLM scoring"
@@ -55,8 +59,8 @@ fi
 # concat scores line by line
 echo ""
 echo "# Add rnnlm scores ..."
-echo "~lmthang/bin/mt/add_nbest_score.py $nbest_in $scoreFile $nbest_out" 
-~lmthang/bin/mt/add_nbest_score.py $nbest_in $scoreFile $nbest_out 
+echo "$JAVANLP_HOME/projects/mt/scripts-private/add_nbest_score.py $nbest_in $scoreFile $nbest_out" 
+$JAVANLP_HOME/projects/mt/scripts-private/add_nbest_score.py $nbest_in $scoreFile $nbest_out 
 
 #echo "rm -rf $nbest_in_processed"
 #rm -rf $nbest_in_processed
