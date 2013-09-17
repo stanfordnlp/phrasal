@@ -9,13 +9,22 @@
 
 <body>
 
-<div id="textbox">
-<form action="" name="form-src-input" id="form-src-input">
-<textarea cols="60" rows="10" id="src-input"></textarea>
+<div id="source">
+Source (enter text, then tab to target box):
 <br>
-<input type="submit" value="Submit" name="form-submit" id="form-submit" />
+<textarea cols="60" rows="10" id="src-input"></textarea>
+</div>
+
+<br>
+
+Target (updates retrieved on space key):
+<br>
+<div id="textbox">
+<form action="" name="form-tgt-input" id="form-tgt-input">
+<textarea cols="60" rows="10" id="tgt-input"></textarea>
 </form>
 </div>
+
 <br>
 
 <div id="output"></div>

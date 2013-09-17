@@ -44,13 +44,13 @@ AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
 AR_TOK="java $JAVA_OPTS -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker + -nthreads 4"
 
 # English tokenizer setup
-EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Ellipsis=true,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
+EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
 
 # French tokenizer setup
-FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false,asciiQuotes=true"
+FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false,ptb3Dashes=false"
 
 # German segmentation and tokenization setup
-DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Ellipsis=true,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
+DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
 
 # spenceg[aug.2013] Segmentation was used in WMT2013, but German people
 # at ACL suggested that compound splitting is only good for De-En, not

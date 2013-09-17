@@ -113,11 +113,10 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
   public int longestSourcePhrase() {
     return -Integer.MAX_VALUE;
   }
-
+  
   @Override
-  public void setCurrentSequence(Sequence<TK> foreign,
-                                 List<Sequence<TK>> tranList) {
-    // no op
+  public int longestTargetPhrase() {
+    return -Integer.MAX_VALUE;
   }
 
   public static void main(String[] args) throws IOException {
@@ -232,5 +231,4 @@ public class PinyinNameTransliterationPhraseGenerator<TK extends IString, FV> ex
     }
 
   } // end static class ProbableChineseNameFilter
-
 }

@@ -87,6 +87,9 @@ public class CombinedFeaturizer<TK, FV> implements
       }
     }
     this.nbStatefulFeaturizers = id + 1;
+    
+    // Initialize rule featurizers
+    initialize();
   }
 
   public int getNumberStatefulFeaturizers() {
@@ -97,6 +100,9 @@ public class CombinedFeaturizer<TK, FV> implements
 	 */
   public CombinedFeaturizer(Featurizer<TK, FV>...featurizers) {
     this(Arrays.asList(featurizers));
+    
+    // Initialize rule featurizers
+    initialize();
   }
 
   @SuppressWarnings("unchecked")

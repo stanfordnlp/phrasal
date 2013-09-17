@@ -11,6 +11,12 @@ import java.util.Arrays;
  */
 public class Rule<T> implements Comparable<Rule<T>>{
 
+  // Usually only on-disk phrase tables set the rule id
+  // to something other than the default. Synthetic rules
+  // such as those created by UnknownWordPhraseGenerator
+  // should use DEFAULT_RULE_ID.
+  public static final int DEFAULT_RULE_ID = -1;
+  
   public final int id;
   public final float[] scores;
   public final String[] phraseScoreNames;
@@ -20,33 +26,48 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public final boolean forceAdd;
   private int hashCode = -1;
 
+  /**
+   * Constructor that uses <code>DEFAULT_RULE_ID</code>.
+   * 
+   * @param scores
+   * @param phraseScoreNames
+   * @param target
+   * @param source
+   * @param alignment
+   */
   public Rule(float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
-    this(0, scores, phraseScoreNames, target, source, alignment);
-  }
-
-  public Rule(float[] scores, String[] phraseScoreNames,
-      RawSequence<T> target, RawSequence<T> source,
-      PhraseAlignment alignment, boolean forceAdd) {
-    this(0, scores, phraseScoreNames, target, source, alignment, forceAdd);
+    this(DEFAULT_RULE_ID, scores, phraseScoreNames, target, source, alignment);
   }
 
   /**
-	 *
-	 */
+   * Constructor.
+   * 
+   * @param id
+   * @param scores
+   * @param phraseScoreNames
+   * @param target
+   * @param source
+   * @param alignment
+   */
   public Rule(int id, float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
-    this.id = id;
-    this.alignment = alignment;
-    this.scores = Arrays.copyOf(scores, scores.length);
-    this.target = target;
-    this.source = source;
-    this.phraseScoreNames = phraseScoreNames;
-    this.forceAdd = false;
+    this(id, scores, phraseScoreNames, target, source, alignment, false);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param id
+   * @param scores
+   * @param phraseScoreNames
+   * @param target
+   * @param source
+   * @param alignment
+   * @param forceAdd
+   */
   public Rule(int id, float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment, boolean forceAdd) {
@@ -87,5 +108,4 @@ public class Rule<T> implements Comparable<Rule<T>>{
     }
     return scores.length - o.scores.length;
   }
-
 }

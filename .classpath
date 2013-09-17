@@ -18,7 +18,6 @@
 	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
-	<classpathentry kind="lib" path="lib-research/gson-2.2.4.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-annotations-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-client-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-continuation-9.0.4.v20130625.jar"/>

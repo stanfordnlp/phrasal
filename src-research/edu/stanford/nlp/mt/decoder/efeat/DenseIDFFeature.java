@@ -20,6 +20,8 @@ import edu.stanford.nlp.stats.Counter;
  * and then fires a feature for the squared sum. The goal is to discourage
  * content word deletion.
  * 
+ * For computing IDF, see <code>ComputeBitextIDF</code>.
+ * 
  * @author Spence Green
  *
  */

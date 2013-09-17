@@ -73,7 +73,7 @@ public class Phrasal {
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
-  public static final String CONSTRAIN_TO_REFS = "constrain-to-refs";
+  public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
   public static final String SEARCH_ALGORITHM = "search-algorithm";
   public static final String DISTORTION_FILE = "distortion-file";
@@ -108,7 +108,7 @@ public class Phrasal {
   public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
-  
+  public static final String LOAD_ALIGNMENTS = "load-word-alignments";
 
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
@@ -124,7 +124,7 @@ public class Phrasal {
         DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
         DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
-        DISTINCT_NBEST_LIST_OPT, CONSTRAIN_TO_REFS,
+        DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
@@ -134,7 +134,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS));
     IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
         FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -189,7 +189,11 @@ public class Phrasal {
   private boolean generateMosesNBestList = true;
   private PrintStream nbestListWriter;
   private int nbestListSize;
-  private boolean nbestWordInternalAlignments = false;
+  
+  /**
+   * Load phrase-internal alignments from phrase table.
+   */
+  private boolean wordAlignmentsEnabled = false;
   
   /**
    * Internal alignment options
@@ -199,7 +203,7 @@ public class Phrasal {
   /**
    * References for force decoding
    */
-  private List<List<Sequence<IString>>> constrainedToRefs = null;
+  private List<List<Sequence<IString>>> forceDecodeReferences;
 
   /**
    * Hard limits on inputs to be decoded
@@ -337,9 +341,9 @@ public class Phrasal {
     
     final boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
 
-    if (config.containsKey(CONSTRAIN_TO_REFS)) {
-      constrainedToRefs = Metrics.readReferences(config.get(CONSTRAIN_TO_REFS)
-          .toArray(new String[config.get(CONSTRAIN_TO_REFS).size()]));
+    if (config.containsKey(FORCE_DECODE)) {
+      forceDecodeReferences = Metrics.readReferences(config.get(FORCE_DECODE)
+          .toArray(new String[config.get(FORCE_DECODE).size()]));
     }
 
     // int distortionLimit = -1;
@@ -455,8 +459,11 @@ public class Phrasal {
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }
 
+    // TODO(spenceg) For better or worse, all phrase tables use the source index in FlatPhraseTable
+    // Pass it to the UnknownWord generator. Would be better for the source index to be located
+    // in a common place.
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords, FlatPhraseTable.sourceIndex)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
     
     FlatPhraseTable.lockIndex();
@@ -954,9 +961,6 @@ public class Phrasal {
     List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
     if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
       generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
-      if (mosesNbestOpt.size() > 1) {
-        nbestWordInternalAlignments = Boolean.parseBoolean(mosesNbestOpt.get(1));
-      }
     }
         
     // Determine if we need to generate an alignment file
@@ -964,9 +968,13 @@ public class Phrasal {
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
       alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
     }
-    
+
+    if (config.containsKey(LOAD_ALIGNMENTS)) {
+      wordAlignmentsEnabled = true;
+    }
+
     // Should we enable word-internal alignments?
-    if (nbestWordInternalAlignments || alignmentWriter != null) {
+    if (wordAlignmentsEnabled || alignmentWriter != null) {
       Featurizable.enableAlignments();
     }
   }
@@ -1067,16 +1075,15 @@ public class Phrasal {
    *
    * NOTE: This call is *not* threadsafe.
    *
-   * @param translations
-   * @param bestTranslation 
+   * @param translations n-best list
+   * @param bestTranslation if post-processing has been applied, then this is post-processed
+   *        sequence at the top of the n-best list
    * @param sourceInputId
    */
   private void processConsoleResult(List<RichTranslation<IString, String>> translations,
-      Sequence<IString> bestTranslation, int sourceLength,
-      int sourceInputId) {
-
+      Sequence<IString> bestTranslation, int sourceLength, int sourceInputId) {
     if (translations.size() > 0) {
-      System.out.println(bestTranslation);
+      System.out.println(bestTranslation.toString());
 
       // log additional information to stderr
       RichTranslation<IString,String> bestTranslationInfo = translations.get(0);
@@ -1096,14 +1103,14 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, nbestWordInternalAlignments);
+        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, wordAlignmentsEnabled);
       }
       
       // Output the alignments if necessary
       if (alignmentWriter != null) {
         for (RichTranslation<IString,String> translation : translations) {
           alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatPhraseTable.FIELD_DELIM, 
-              translation.sourceTargetAlignmentString());
+              translation.alignmentString());
         }
       }
 
@@ -1115,17 +1122,23 @@ public class Phrasal {
   }
 
   /**
-   * Decode input from inputStream and write translations to stdout.
+   * Decode input from inputStream and either write 1-best translations to stdout or
+   * return them in a <code>List</code>.
    * 
    * @param inputStream 
+   * @param outputToConsole if true, output the 1-best translations to the console. Otherwise,
+   *                        return them in a <code>List</code>
    * @throws IOException
    */
-  private void decode(InputStream inputStream) throws IOException {
+  public List<RichTranslation<IString,String>> decode(InputStream inputStream, boolean outputToConsole) throws IOException {
     System.err.println("Entering main translation loop");
     final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
         new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
     final LineNumberReader reader = new LineNumberReader(new InputStreamReader(
         inputStream, "UTF-8"));
+    final List<RichTranslation<IString,String>> bestTranslationList = outputToConsole ? null :
+      new ArrayList<RichTranslation<IString,String>>();
+    
     final long startTime = System.nanoTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
@@ -1141,66 +1154,37 @@ public class Phrasal {
       wrapper.put(new DecoderInput(source, sourceInputId));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
+        if (outputToConsole) {
+          processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
+        } else {
+          RichTranslation<IString,String> best = result.translations.size() > 0 ? result.translations.get(0) : null;
+          bestTranslationList.add(best);
+        }
+      }
+    }
+
+    // Finished reading the input. Wait for threadpool to finish, then process
+    // last few translations.
+    wrapper.join();
+    while(wrapper.peek()) {
+      DecoderOutput result = wrapper.poll();
+      if (outputToConsole) {
         processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
+      } else {
+        RichTranslation<IString,String> best = result.translations.size() > 0 ? result.translations.get(0) : null;
+        bestTranslationList.add(best);
       }
     }
 
-    // Finished reading the input. Wait for threadpool to finish, then process
-    // last few translations.
-    wrapper.join();
-    while(wrapper.peek()) {
-      DecoderOutput result = wrapper.poll();
-      processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
-    }
-
-    long totalTime = System.nanoTime() - startTime;
-    System.err.printf("Total Decoding time: %.3f seconds%n", totalTime / 1e9);
+    double totalTime = ((double) System.nanoTime() - startTime) / 1e9;
+    double segmentsPerSec = (double) sourceInputId / totalTime;
+    System.err.printf("Decoding at %.2f segments/sec (total: %.2f sec)%n", segmentsPerSec, totalTime);
+    return bestTranslationList;
   }
 
   /**
-   * Decode an input list according to the current decoder settings. Returns
-   * null for inputs that are shorter than <code>minSentenceSize</code> or
-   * longer than <code>maxSentenceSize</code>.
-   * 
-   * @param sourceList
-   * @return
-   */
-  public List<RichTranslation<IString,String>> decode(List<Sequence<IString>> sourceList) {
-    List<RichTranslation<IString,String>> translations = Generics.newArrayList(sourceList.size());
-    for (int i = 0; i < sourceList.size(); ++i) translations.add(null);
-
-    final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
-        new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
-    int sourceInputId = 0;
-    for (Sequence<IString> sequence : sourceList) {
-      if (sequence.size() > maxSentenceSize || sequence.size() < minSentenceSize) {
-        System.err.printf("Skipping: %s%n", sequence.toString());
-        System.err.printf("Tokens: %d (min: %d max: %d)%n", sequence.size(), minSentenceSize,
-            maxSentenceSize);
-        sourceInputId++;
-        continue;
-      }
-
-      wrapper.put(new DecoderInput(sequence, sourceInputId++));
-      while(wrapper.peek()) {
-        DecoderOutput result = wrapper.poll();
-        translations.set(result.sourceInputId, result.translations.get(0));
-      }
-    }
-
-    // Finished reading the input. Wait for threadpool to finish, then process
-    // last few translations.
-    wrapper.join();
-    while(wrapper.peek()) {
-      DecoderOutput result = wrapper.poll();
-      translations.set(result.sourceInputId, result.translations.get(0));
-    }
-
-    return translations;
-  }
-
-  /**
-   * Decode a tokenized input string. Returns an n-best list of translations.
+   * Decode a tokenized input string. Returns an n-best list of translations as
+   * specified by the decoders <code>nbestListSize</code> parameter.
    *
    * NOTE: This call is threadsafe.
    *
@@ -1210,30 +1194,32 @@ public class Phrasal {
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId) {
-    return decode(source, sourceInputId, threadId, nbestListSize);
+    List<Sequence<IString>> targets = 
+        forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, false);
   }
   
   /**
-   * Decode a tokenized input string. Returns an n-best list of translations.
+   * Decode a tokenized input string. Returns an n-best list of translations
+   * specified by the parameter.
    *
    * NOTE: This call is threadsafe.
    *
    * @param source
    * @param sourceInputId
    * @param threadId -- Inferer object to use (one per thread)
-   * @param numTranslations number of hypotheses to generate
+   * @param numTranslations number of translations to generate
    * 
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
-      int sourceInputId, int threadId, int numTranslations) {
+      int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
+      boolean targetsArePrefixes) {
     assert threadId >= 0 && threadId < numThreads;
     assert sourceInputId >= 0;
 
-    // Force decoding setup---constrain the decoder output space to these references
-    ConstrainedOutputSpace<IString, String> constrainedOutputSpace = (constrainedToRefs == null ? null
-        : new EnumeratedConstrainedOutputSpace<IString, String>(
-            constrainedToRefs.get(sourceInputId),
-            phraseGenerator.longestSourcePhrase()));
+    // Output space of the decoder
+    OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, sourceInputId, 
+        targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase());
 
     List<RichTranslation<IString, String>> translations =
         new ArrayList<RichTranslation<IString, String>>(1);
@@ -1243,9 +1229,8 @@ public class Phrasal {
           .get(threadId).nbest(
               source,
               sourceInputId,
-              constrainedOutputSpace,
-              (constrainedOutputSpace == null ? null : constrainedOutputSpace
-                  .getAllowableSequences()), numTranslations);
+              outputSpace,
+              outputSpace.getAllowableSequences(), numTranslations);
 
       // Return an empty n-best list
       if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
@@ -1257,9 +1242,8 @@ public class Phrasal {
       RichTranslation<IString, String> translation = inferers.get(threadId).translate(
           source,
           sourceInputId,
-          constrainedOutputSpace,
-          (constrainedOutputSpace == null ? null : constrainedOutputSpace
-              .getAllowableSequences()));
+          outputSpace,
+          outputSpace.getAllowableSequences());
       if (translation != null) {
         translations.add(translation);
       }
@@ -1270,15 +1254,7 @@ public class Phrasal {
   /**
    * Free resources and cleanup.
    */
-  private void shutdown() {
-    // Cleanup each inferer
-    for(Inferer<IString, String> inferer : inferers) {
-      boolean failed = (! inferer.shutdown());
-      if (failed) {
-        System.err.println("Unable to shutdown inferer: " + inferer.getClass().getName());
-      }
-    }
-
+  public void shutdown() {
     if (nbestListWriter != null) {
       System.err.println("Closing n-best writer");
       nbestListWriter.close();
@@ -1439,6 +1415,9 @@ public class Phrasal {
     Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
         : readArgs(args);
     Phrasal p = Phrasal.loadDecoder(config);
-    p.decode(System.in);
+    p.decode(System.in, true);
+
+    // [spenceg]: For execution in the debugger
+    //    p.decode(new FileInputStream(new File("debug.1")), true);
   }
 }

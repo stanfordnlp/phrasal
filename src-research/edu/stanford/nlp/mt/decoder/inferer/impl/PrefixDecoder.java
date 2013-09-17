@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.inferer.AbstractInferer;
-import edu.stanford.nlp.mt.decoder.util.ConstrainedOutputSpace;
+import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
@@ -82,18 +82,13 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 //    alignerRv.params = paramsRv;
 //  }
 
-  @Override
-  public boolean shutdown() {
-    return true;
-  }
-
   public PhraseGenerator<IString,FV> getPhraseGenerator() {
     return phraseGenerator;
   }
 
   @Override
   public RichTranslation<IString, FV> translate(Sequence<IString> source,
-                                                int translationId, ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
+                                                int translationId, OutputSpace<IString, FV> constrainedOutputSpace,
                                                 List<Sequence<IString>> targets) {
     throw new UnsupportedOperationException();
   }
@@ -102,7 +97,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   @Override
   public RichTranslation<IString, FV> translate(Scorer<FV> scorer,
                                                 Sequence<IString> source, int translationId,
-                                                ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
+                                                OutputSpace<IString, FV> constrainedOutputSpace,
                                                 List<Sequence<IString>> targets) {
     throw new UnsupportedOperationException();
   }
@@ -114,7 +109,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
   @Override
   public List<RichTranslation<IString, FV>> nbest(Scorer<FV> scorer,
                                                   Sequence<IString> source, int sourceInputId,
-                                                  ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
+                                                  OutputSpace<IString, FV> constrainedOutputSpace,
                                                   List<Sequence<IString>> targets, int size) {
 
     PriorityQueue<Derivation<IString, FV>> agenda = new PriorityQueue<Derivation<IString,FV>>();
@@ -123,7 +118,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
     int maxPrefixCompletion = 0;
 
     List<ConcreteRule<IString,FV>> options = phraseGenerator.getRules(source, targets, sourceInputId, scorer);
-    List<ConcreteRule<IString,FV>> filteredOptions = constrainedOutputSpace.filterOptions(options);
+    List<ConcreteRule<IString,FV>> filteredOptions = constrainedOutputSpace.filter(options);
     float[] autoInsertScores = new float[options.get(0).abstractRule.scores.length];
     String[] scoreNames = options.get(0).abstractRule.phraseScoreNames;
 
@@ -333,7 +328,7 @@ public class PrefixDecoder<FV> extends AbstractInferer<IString, FV> {
 
   @Override
   public List<RichTranslation<IString, FV>> nbest(Sequence<IString> source,
-                                                  int translationId, ConstrainedOutputSpace<IString, FV> constrainedOutputSpace,
+                                                  int translationId, OutputSpace<IString, FV> constrainedOutputSpace,
                                                   List<Sequence<IString>> targets, int size) {
     return nbest(scorer, source, translationId, constrainedOutputSpace, targets, size);
   }

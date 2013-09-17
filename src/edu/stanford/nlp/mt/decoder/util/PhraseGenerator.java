@@ -24,10 +24,9 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
 
   public Object clone() throws CloneNotSupportedException;
 
-  public void setCurrentSequence(Sequence<TK> foreign,
-      List<Sequence<TK>> tranList);
-
   public int longestSourcePhrase();
+  
+  public int longestTargetPhrase();
   
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer);
 }

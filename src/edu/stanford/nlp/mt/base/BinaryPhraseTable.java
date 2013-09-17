@@ -20,7 +20,8 @@ import com.sleepycat.je.OperationStatus;
 
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;
-  final int longestForeignPhrase;
+  final int longestSourcePhrase;
+  final int longestTargetPhrase;
   final String[] scoreNames;
   final Environment dbEnv;
   final Database db;
@@ -41,11 +42,22 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     
     db = dbEnv.openDatabase(null, "phrases", dbConfig);
     Database meta = dbEnv.openDatabase(null, "meta", dbConfig);
-    DatabaseEntry metaKey = new DatabaseEntry("longestForeignPhrase".getBytes());
+    
+    // Longest source phrase
+    DatabaseEntry metaKey = new DatabaseEntry("longestSourcePhrase".getBytes());
     DatabaseEntry metaValue = new DatabaseEntry();
     meta.get(null, metaKey, metaValue, LockMode.DEFAULT);
     System.err.printf("metaValue: "+metaValue);
-    longestForeignPhrase = IntegerBinding.entryToInt(metaValue);
+    longestSourcePhrase = IntegerBinding.entryToInt(metaValue);
+    
+    // Longest target phrase
+    metaKey = new DatabaseEntry("longestTargetPhrase".getBytes());
+    metaValue = new DatabaseEntry();
+    meta.get(null, metaKey, metaValue, LockMode.DEFAULT);
+    System.err.printf("metaValue: "+metaValue);
+    longestTargetPhrase = IntegerBinding.entryToInt(metaValue);
+    
+    // scoreNames
     metaKey = new DatabaseEntry("scoreNames".getBytes());
     meta.get(null, metaKey, metaValue, LockMode.DEFAULT);
     ByteArrayInputStream mbistrm = new ByteArrayInputStream(metaValue.getData());
@@ -57,11 +69,6 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
       scoreNames[i] = mdistrm.readUTF(); 
     }
     meta.close();  
-  }
-
-  @Override
-  public void setCurrentSequence(Sequence<IString> foreign, List<Sequence<IString>> tranList) {
-     // no op - TODO make it so we don't need this stub    
   }
   
   static public void convertToBinaryPhraseTable(String flatPhraseTableName, String binaryPhraseTableName) throws IOException {
@@ -86,9 +93,16 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     
     Database db = dbEnv.openDatabase(null, "phrases", dbConfig);
     Database meta = dbEnv.openDatabase(null, "meta", dbConfig);
-    DatabaseEntry metaKey = new DatabaseEntry("longestForeignPhrase".getBytes());
+    
+    DatabaseEntry metaKey = new DatabaseEntry("longestSourcePhrase".getBytes());
     DatabaseEntry metaValue = new DatabaseEntry();
     IntegerBinding.intToEntry(flatPhraseTable.longestSourcePhrase(), metaValue);
+    meta.put(null, metaKey, metaValue);
+    System.err.println("metavalue: "+metaValue);
+    
+    metaKey = new DatabaseEntry("longestTargetPhrase".getBytes());
+    metaValue = new DatabaseEntry();
+    IntegerBinding.intToEntry(flatPhraseTable.longestTargetPhrase(), metaValue);
     meta.put(null, metaKey, metaValue);
     System.err.println("metavalue: "+metaValue);
     
@@ -103,10 +117,10 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     metaValue = new DatabaseEntry(mbostrm.toByteArray());
     meta.put(null, metaKey, metaValue);
     
-    if (!(FlatPhraseTable.foreignIndex instanceof DynamicIntegerArrayIndex)) {
+    if (!(FlatPhraseTable.sourceIndex instanceof DynamicIntegerArrayIndex)) {
       throw new RuntimeException("Gap phrase-tables are currently not supported");
     }    
-    DynamicIntegerArrayIndex diai = (DynamicIntegerArrayIndex)FlatPhraseTable.foreignIndex;
+    DynamicIntegerArrayIndex diai = (DynamicIntegerArrayIndex)FlatPhraseTable.sourceIndex;
     
     for (int[] sourceInts : diai) {
       Sequence<IString> source = new RawSequence<IString>(sourceInts, IString.identityIndex());
@@ -175,7 +189,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
 
   @Override
   public int longestSourcePhrase() {
-    return longestForeignPhrase;
+    return longestSourcePhrase;
   }
   public static void main(String[] args) throws IOException {
     if (args.length != 2) {
@@ -184,5 +198,10 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
       System.exit(-1);
     }
     convertToBinaryPhraseTable(args[0], args[1]);    
+  }
+
+  @Override
+  public int longestTargetPhrase() {
+    return longestTargetPhrase;
   }
 }

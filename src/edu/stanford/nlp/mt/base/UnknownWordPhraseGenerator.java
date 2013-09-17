@@ -1,16 +1,19 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
+import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.util.Characters;
+import edu.stanford.nlp.util.Generics;
 
 /**
+ * Generates synthetic rules for unknown words.
  *
  * @author danielcer
+ * @author Spence Green
  *
  * @param <TK>
  */
-public class UnknownWordPhraseGenerator<TK, FV> extends
+public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> extends
     AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
 
   public static final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
@@ -24,52 +27,21 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
       .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
 
-  private final String[] scoreNames;
-  private final SequenceFilter<TK> filter;
-  final boolean dropUnknownWords;
-  private RawSequence<TK> empty = new RawSequence<TK>();
+  private final String[] scoreNames = DEFAULT_SCORE_NAMES;
+  private final boolean dropUnknownWords;
+  private final RawSequence<TK> empty = new RawSequence<TK>();
+  private final IntegerArrayIndex sourceIndex;
 
   /**
-   *
+   * Constructor.
+   * 
+   * @param dropUnknownWords
+   * @param sourceIndex 
    */
-  public UnknownWordPhraseGenerator(
-      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
-      SequenceFilter<TK> filter) {
-    super(phraseFeaturizer);
-    this.filter = filter;
-    scoreNames = DEFAULT_SCORE_NAMES;
-    this.dropUnknownWords = dropUnknownWords;
-  }
-
-  /**
-   *
-   */
-  public UnknownWordPhraseGenerator(
-      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
-      SequenceFilter<TK> filter, String scoreName) {
-    super(phraseFeaturizer);
-    this.filter = filter;
-    scoreNames = new String[] { scoreName };
-    this.dropUnknownWords = dropUnknownWords;
-  }
-
-  /**
-   *
-   */
-  public UnknownWordPhraseGenerator(boolean dropUnknownWords) {
+  public UnknownWordPhraseGenerator(boolean dropUnknownWords, IntegerArrayIndex sourceIndex) {
     super(null);
-    this.filter = null;
-    scoreNames = DEFAULT_SCORE_NAMES;
     this.dropUnknownWords = dropUnknownWords;
-  }
-
-  public UnknownWordPhraseGenerator(
-      RuleFeaturizer<TK, FV> phraseFeaturizer, boolean dropUnknownWords,
-      String scoreName) {
-    super(phraseFeaturizer);
-    this.filter = null;
-    scoreNames = new String[] { scoreName };
-    this.dropUnknownWords = dropUnknownWords;
+    this.sourceIndex = sourceIndex;
   }
 
   @Override
@@ -79,40 +51,58 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
   @Override
   public List<Rule<TK>> query(Sequence<TK> sequence) {
-    List<Rule<TK>> list = new LinkedList<Rule<TK>>();
-    RawSequence<TK> raw = new RawSequence<TK>(sequence);
-    if (filter == null || filter.accepts(raw)) {
-      String word = raw.toString();
+    if (sequence.size() > longestSourcePhrase()) {
+      throw new RuntimeException("Source phrase too long: " + String.valueOf(sequence.size()));
+    }
+    List<Rule<TK>> list = Generics.newLinkedList();
 
-      if (dropUnknownWords && !isNumeric(word) && !isASCII(word)) {
-          list.add(new Rule<TK>(SCORE_VALUES, scoreNames, empty, raw,
-          DEFAULT_ALIGNMENT));
+    // Check to see if this word is unknown
+    int[] foreignInts = Sequences.toIntArray(sequence);
+    int sIndex = sourceIndex.indexOf(foreignInts);
+    if (sIndex < 0) {
+      RawSequence<TK> raw = new RawSequence<TK>(sequence);
+      final String word = sequence.get(0).toString();
+
+      if (dropUnknownWords && !isNumericOrPunctuationOrSymbols(word)) {
+        // Deletion rule
+        list.add(new Rule<TK>(SCORE_VALUES, scoreNames, empty, raw,
+            DEFAULT_ALIGNMENT));
+
       } else {
-    	  list.add(new Rule<TK>(SCORE_VALUES, scoreNames, raw, raw,
-              DEFAULT_ALIGNMENT));
+        // Identity translation rule
+        list.add(new Rule<TK>(SCORE_VALUES, scoreNames, raw, raw,
+            DEFAULT_ALIGNMENT));
       }
     }
     return list;
   }
 
-  // TODO make this more general in the future by matching to unicode pages of the target language
-  private static boolean isASCII(String word) {
-	return word.matches("\\p{ASCII}*");
-  }
-
-  private static boolean isNumeric(String word) {
-	return word.matches(".*[0-9\\.\\\\/,:-]+[%A-Za-z]*");
+  /**
+   * Returns true if a string consists entirely of numbers, punctuation, 
+   * and/or symbols.
+   * 
+   * @param word
+   * @return
+   */
+  private static boolean isNumericOrPunctuationOrSymbols(String word) {
+    int len = word.length();
+    for (int i = 0; i < len; ++i) {
+      char c = word.charAt(i);
+      if ( !(Character.isDigit(c) || Characters.isPunctuation(c) || Characters.isSymbol(c))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
   public int longestSourcePhrase() {
-    return -Integer.MAX_VALUE;
+    // DO NOT change this value unless you know what you're doing.
+    return 1;
   }
 
   @Override
-  public void setCurrentSequence(Sequence<TK> foreign,
-      List<Sequence<TK>> tranList) {
-    // no op
+  public int longestTargetPhrase() {
+    return 1;
   }
-
 }
