@@ -24,7 +24,7 @@ public class ConcreteRule<TK,FV> implements
   public final String phraseTableName;
   public final int sourcePosition;
   public double isolationScore;
-  public final List<FeatureValue<FV>> cachedFeatureList;
+  public List<FeatureValue<FV>> cachedFeatureList;
 
   public enum LinearDistortionType {
     standard, first_contiguous_segment, last_contiguous_segment, closest_contiguous_segment, min_first_last_contiguous_segment, average_distance

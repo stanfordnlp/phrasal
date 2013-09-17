@@ -198,7 +198,6 @@ State<Derivation<TK, FV>> {
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
 
-
     localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);
     score = base.score + scorer.getIncrementalScore(localFeatures);
