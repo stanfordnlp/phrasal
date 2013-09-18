@@ -73,7 +73,7 @@ def process_files(in_file, out_file):
   check_dir(out_file)
   distinct_ouf = codecs.open(out_file, 'w', 'utf-8')
   line_id = 0
-  #sys.stderr.write('# Processing file %s ...\n' % (in_file))
+  sys.stderr.write('  processing file %s ... ' % (in_file))
   sent_map = {}
   for eachline in inf:
     eachline = clean_line(eachline)
@@ -87,7 +87,7 @@ def process_files(in_file, out_file):
     if (line_id % 10000 == 0):
       sys.stderr.write(' (%d) ' % line_id)
 
-  sys.stderr.write('  Done! Num lines = %d, num distinct lines = %d\n' % (line_id, len(sent_map)))
+  sys.stderr.write('done! Num lines = %d, num distinct lines = %d\n' % (line_id, len(sent_map)))
 
   for eachline in sent_map:
     distinct_ouf.write('0 %s\n' % eachline) 

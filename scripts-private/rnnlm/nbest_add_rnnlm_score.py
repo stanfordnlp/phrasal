@@ -36,6 +36,7 @@ def process_command_line():
   parser.add_argument('score_file', metavar='score_file', type=str, help='nbest score file with the same number of lines as distinct_nbest_file') 
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
 
+  parser.add_argument('-e', '--escape', dest='is_escape', action='store_true', default=False, help='escape \uFFFA by space when output (default: false)') 
   parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='option (default=0)')
   # version info
   parser.add_argument('-v', '--version', action='version', version=__version__ )
@@ -64,8 +65,13 @@ def load_nbest_score(nbest_file, score_file):
   sys.stderr.write('  loading nbest scores %s, %s ...' % (nbest_file, score_file));
   line_id = 0
   for nbest_line in nbest_inf:
-    score = clean_line(score_inf.readline())
-    tokens = re.split(' ', clean_line(nbest_line))
+    nbest_line = clean_line(nbest_line)
+    while True:
+      score = clean_line(score_inf.readline())
+      if score!='' and re.search('^[a-zA-Z#]', score)==None: # skip debug text
+        break
+
+    tokens = re.split(' ', nbest_line)
     nbest_map[' '.join(tokens[1:])] = score
     line_id = line_id + 1
     if (line_id % 10000 == 0):
@@ -78,7 +84,7 @@ def load_nbest_score(nbest_file, score_file):
 
   return nbest_map
 
-def process_files(in_file, distinct_nbest_file, score_file, out_file):
+def process_files(in_file, distinct_nbest_file, score_file, out_file, is_escape):
   """
   Read data from in_file, and output to out_file
   """
@@ -99,6 +105,10 @@ def process_files(in_file, distinct_nbest_file, score_file, out_file):
     id = tokens[0]
     translation = tokens[1]
     rnnlm_score = nbest_map[translation] 
+    
+    if is_escape: # replace \uFFFA by space. Important: this line should come after nbest_map lookup
+      translation = re.sub(ur'\uFFFA', ' ', translation)
+    
     if len(tokens)>3:
       decode_score = tokens[3]
     else:
@@ -120,4 +130,4 @@ if __name__ == '__main__':
   if args.debug == True:
     debug = True
 
-  process_files(args.in_file, args.distinct_nbest_file, args.score_file, args.out_file)
+  process_files(args.in_file, args.distinct_nbest_file, args.score_file, args.out_file, args.is_escape)
