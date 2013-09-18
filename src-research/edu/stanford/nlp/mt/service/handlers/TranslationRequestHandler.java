@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.service.handlers;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
@@ -114,19 +116,26 @@ public class TranslationRequestHandler implements RequestHandler {
       }
       
       // Target prefix pre-processing
-      boolean decodeWithPrefix = input.tgtPrefix != null;
       List<Sequence<IString>> targets = null;
-      if (decodeWithPrefix) {
-        // TODO(spenceg): Add try/catch
-        Preprocessor targetPreprocessor = ProcessorFactory.getPreprocessor(input.targetLanguage.name());
-        SymmetricalWordAlignment t2t = targetPreprocessor.processAndAlign(input.tgtPrefix);
+      if (input.tgtPrefix != null && input.tgtPrefix.length() > 0) {
+        SymmetricalWordAlignment t2t;
+        try {
+          Preprocessor targetPreprocessor = ProcessorFactory.getPreprocessor(input.targetLanguage.name());
+          t2t = targetPreprocessor.processAndAlign(input.tgtPrefix);
+        } catch (Exception e) {
+          StringWriter sw = new StringWriter();
+          e.printStackTrace(new PrintWriter(sw));
+          logger.warning("Prefix preprocessor threw an exception: " + sw.toString());
+          Sequence<IString> prefix = IStrings.tokenize(input.tgtPrefix);
+          t2t = identityAlignment(prefix);
+        }
         targets = Generics.newLinkedList();
         targets.add(t2t.e());
       }
       
       // Decode
       List<RichTranslation<IString,String>> translations = 
-          decoder.decode(source, inputId.incrementAndGet(), threadId, input.n, targets, decodeWithPrefix); 
+          decoder.decode(source, inputId.incrementAndGet(), threadId, input.n, targets, targets != null); 
 
       // Result extraction and post-processing
       List<String> translationList = Generics.newLinkedList();

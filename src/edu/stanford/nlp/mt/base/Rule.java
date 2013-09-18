@@ -6,16 +6,13 @@ import java.util.Arrays;
  * A translation rule.
  *
  * @author danielcer
+ * @author Spence Green
  *
  * @param <T>
  */
 public class Rule<T> implements Comparable<Rule<T>>{
 
-  // Usually only on-disk phrase tables set the rule id
-  // to something other than the default. Synthetic rules
-  // such as those created by UnknownWordPhraseGenerator
-  // should use DEFAULT_RULE_ID.
-  public static final int DEFAULT_RULE_ID = -1;
+  private static final int SYNTHETIC_RULE_ID = -1;
   
   public final int id;
   public final float[] scores;
@@ -27,7 +24,8 @@ public class Rule<T> implements Comparable<Rule<T>>{
   private int hashCode = -1;
 
   /**
-   * Constructor that uses <code>DEFAULT_RULE_ID</code>.
+   * Constructor for synthetic rules, which typically are generated at runtime
+   * and contained faked-up scores and/or alignments.
    * 
    * @param scores
    * @param phraseScoreNames
@@ -38,7 +36,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public Rule(float[] scores, String[] phraseScoreNames,
       RawSequence<T> target, RawSequence<T> source,
       PhraseAlignment alignment) {
-    this(DEFAULT_RULE_ID, scores, phraseScoreNames, target, source, alignment);
+    this(SYNTHETIC_RULE_ID, scores, phraseScoreNames, target, source, alignment);
   }
 
   /**
@@ -80,6 +78,14 @@ public class Rule<T> implements Comparable<Rule<T>>{
     this.forceAdd = forceAdd;
   }
 
+  /**
+   * True if this rule is synthetic, namely it was not extracted by PhraseExtract and thus
+   * probably has faked-up scores or alignments.
+   * 
+   * @return
+   */
+  public boolean isSynthetic() { return id == SYNTHETIC_RULE_ID; }
+  
   @Override
   public String toString() {
     StringBuilder sbuf = new StringBuilder();

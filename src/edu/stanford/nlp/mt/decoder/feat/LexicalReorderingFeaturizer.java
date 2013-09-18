@@ -135,9 +135,9 @@ public class LexicalReorderingFeaturizer implements
 
     if (mlrt != null) {
       float[] scores = mlrt
-          .getReorderingScores(f.derivation.rule.abstractRule.id);
+          .getReorderingScores(f.derivation.rule.abstractRule);
       float[] priorScores = (f.prior == null ? null : mlrt
-          .getReorderingScores(f.prior.derivation.rule.abstractRule.id));
+          .getReorderingScores(f.prior.derivation.rule.abstractRule));
 
       if (DETAILED_DEBUG) {
         System.err.printf("%s(%d) => %s(%d)\n", f.sourcePhrase,

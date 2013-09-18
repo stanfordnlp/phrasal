@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -129,16 +127,16 @@ public class LexicalReorderingTable {
         FlatPhraseTable.ruleIndex.indexOf(array2) };
   }
 
-  public float[] getReorderingScores(int ruleId) {
+  public float[] getReorderingScores(Rule<IString> rule) {
     int reorderingId = -1;
-    if (ruleId == Rule.DEFAULT_RULE_ID) {
+    if (rule.isSynthetic()) {
       // Do nothing
     } if (conditionType == ConditionTypes.f) {
-      reorderingId = FlatPhraseTable.ruleIndex.get(ruleId)[0];
+      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[0];
     } else if (conditionType == ConditionTypes.e) {
-      reorderingId = FlatPhraseTable.ruleIndex.get(ruleId)[1];
+      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[1];
     } else if (conditionType == ConditionTypes.fe) {
-      reorderingId = ruleId;
+      reorderingId = rule.id;
     }
     return reorderingId < 0 || reorderingId >= reorderingScores.size() ? 
         null : reorderingScores.get(reorderingId);
@@ -286,33 +284,4 @@ public class LexicalReorderingTable {
 
     return selectedFiletype;
   }
-
-  public static void main(String[] args) throws IOException {
-    if (args.length != 1) {
-      System.err
-          .printf("Usage:\n\tjava LexicalReorderingTable (lexical reordering filename)\n");
-      System.exit(-1);
-    }
-
-    LexicalReorderingTable mlrt = new LexicalReorderingTable(args[0]);
-
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    System.out.print("\n>");
-    for (String query; (query = reader.readLine()) != null; ) {
-      String[] fields = query.split("\\s*\\|\\|\\|\\s*");
-      int[] foreign = IStrings.toIntArray(IStrings.toIStringArray(fields[0]
-          .split("\\s+")));
-      int[] translation = IStrings.toIntArray(IStrings.toIStringArray(fields[1]
-          .split("\\s+")));
-      int[] merged = mergeInts(foreign, translation);
-      int id = FlatPhraseTable.ruleIndex.indexOf(merged);
-      float[] scores = mlrt.getReorderingScores(id);
-      for (int i = 0; i < scores.length; i++) {
-        System.out.printf("%s: %e\n", mlrt.positionalMapping[i], scores[i]);
-      }
-      System.out.print("\n>");
-    }
-    reader.close();
-  }
-
 }
