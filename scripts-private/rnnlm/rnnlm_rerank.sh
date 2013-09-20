@@ -49,8 +49,8 @@ if [ "$nbest_dir" != "" ]; then # concat all nbest lists in this dir
     echo "! File all_nbest $all_nbest exists. Skip."
   else 
     echo " # compiling all_nbest $all_nbest ..."
-    echo "  cat $nbest_dir/*.nbest > $all_nbest"
-    cat $nbest_dir/*.nbest > $all_nbest
+    echo "  cat $nbest_dir/*best > $all_nbest"
+    cat $nbest_dir/*best > $all_nbest
 
     # for temporary use
     echo "  cat $nbest_dir/*.short >> $all_nbest"

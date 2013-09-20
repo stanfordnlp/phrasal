@@ -131,12 +131,12 @@ def process_files(in_file, token_map_file, out_file):
 
     new_line = ' '.join(new_tokens)
     new_line = re.sub('([\S])\.$', '\g<1> .', new_line) # make sure the last . is separated
-    new_line = re.sub('(\d+)-year-old', '\g<1> - year - old', new_line) # 27-year-old
+    new_line = re.sub('(\S+)-year-old', '\g<1> - year - old', new_line) # 27-year-old, three-year-old
     new_line = re.sub('(\d+)-([a-z]+)', '\g<1> - \g<2>', new_line) # 27-year
-    new_line = re.sub(' &amp; ', ' & ', new_line) #
-    new_line = re.sub('([a-z]\.[a-z]+) \.', '\g<1>\.', new_line) #
-    new_line = re.sub(' \.([a-z]+) ', ' . \g<1> ', new_line) #
-    new_line = re.sub(' \. \.\. ', ' ... ', new_line) #
+    new_line = re.sub(' &amp; ', ' & ', new_line)
+    new_line = re.sub('([a-z]\.[a-z]+) \.', '\g<1>\.', new_line) # u.s .
+    new_line = re.sub(' \.([a-z]+) ', ' . \g<1> ', new_line) # .it 
+    new_line = re.sub(' \. \.\. ', ' ... ', new_line) # . ..
 
     #if eachline != new_line:
     #  print "#\n  ", eachline, "\n  ", new_line
