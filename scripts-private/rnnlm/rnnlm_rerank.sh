@@ -61,8 +61,8 @@ else # copy the input nbest list
   if [ -f "$all_nbest" ]; then
     echo "! File all_nbest $all_nbest exists. Skip."
   else
-    echo "  cp $nbest_in $all_nbest"
-    cp $nbest_in $all_nbest
+    echo "  cat $nbest_in > $all_nbest"
+    cat $nbest_in > $all_nbest
   fi
 fi
 echo "# all_nbest=$all_nbest"
