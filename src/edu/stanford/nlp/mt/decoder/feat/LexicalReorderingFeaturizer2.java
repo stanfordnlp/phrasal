@@ -2,20 +2,25 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.LexicalReorderingTable;
+import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.SourceClassMap;
+import edu.stanford.nlp.mt.base.TargetClassMap;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * 
  * @author danielcer
  */
-public class LexicalReorderingFeaturizer implements
+public class LexicalReorderingFeaturizer2 implements
     NeedsReorderingRecombination<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";
@@ -27,32 +32,26 @@ public class LexicalReorderingFeaturizer implements
   public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
       ARPALanguageModel.START_TOKEN);
   final boolean useAlignmentConstellations;
-
-  private static final double DEFAULT_DISCRIMINATIVE_FEATURE_VALUE = 1.0;
-  private double discriminativeFeatureValue = DEFAULT_DISCRIMINATIVE_FEATURE_VALUE;
+  private boolean useClasses;
 
   /**
-   * Discriminative Lexical Reordering - using all reordering types
-   * 
+   * Constructor for discriminative lexicalized reordering.
    */
-  public LexicalReorderingFeaturizer() {
-    this(DEFAULT_DISCRIMINATIVE_FEATURE_VALUE);
-  }
-  
-  public LexicalReorderingFeaturizer(double featureValue) {
+  public LexicalReorderingFeaturizer2() {
     // by default include everything
     discriminativeSet = new ArrayList<LexicalReorderingTable.ReorderingTypes>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     mlrt = null;
     featureTags = null;
     useAlignmentConstellations = false;
-    discriminativeFeatureValue = featureValue;
+    useClasses = false;
   }
 
   /**
-   * Discriminative lexical reordering - using selected reordering types
+   * Constructor for discriminative lexicalized reordering.
    * 
+   * @param args
    */
-  public LexicalReorderingFeaturizer(String... args) {
+  public LexicalReorderingFeaturizer2(String...args) {
     discriminativeSet = new ArrayList<LexicalReorderingTable.ReorderingTypes>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     boolean useAlignmentConstellations = false;
     for (String argument : args) {
@@ -61,10 +60,8 @@ public class LexicalReorderingFeaturizer implements
       if (argument.equals("conditionOnConstellations")) {
         useAlignmentConstellations = true;
         System.err.printf("using constellations\n");
-      }
       
-      // Specify the re-ordering classes
-      if (argument.startsWith("classes")) {
+      } else if (argument.startsWith("classes")) {
         String[] toks = argument.trim().split(":");
         assert toks.length == 2;
         String[] typeStrings = toks[1].split("-");
@@ -72,6 +69,16 @@ public class LexicalReorderingFeaturizer implements
         for (String type : typeStrings) {
           discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
         }
+      } else if (argument.equals("useClasses")) {
+        useClasses = true;
+      }
+    }
+    if (useClasses) {
+      if (! SourceClassMap.isLoaded()) {
+        throw new RuntimeException("You must enable the " + Phrasal.SOURCE_CLASS_MAP + " decoder option");
+      }
+      if (! TargetClassMap.isLoaded()) {
+        throw new RuntimeException("You must enable the " + Phrasal.TARGET_CLASS_MAP + " decoder option");
       }
     }
     this.useAlignmentConstellations = useAlignmentConstellations;
@@ -79,7 +86,12 @@ public class LexicalReorderingFeaturizer implements
     featureTags = null;
   }
 
-  public LexicalReorderingFeaturizer(LexicalReorderingTable mlrt) {
+  /**
+   * Constructor for the generative model.
+   * 
+   * @param mlrt
+   */
+  public LexicalReorderingFeaturizer2(LexicalReorderingTable mlrt) {
     this.mlrt = mlrt;
     useAlignmentConstellations = false;
     featureTags = new String[mlrt.positionalMapping.length];
@@ -88,51 +100,50 @@ public class LexicalReorderingFeaturizer implements
           mlrt.positionalMapping[i]);
     discriminativeSet = null;
   }
+  
+  @Override
+  public void initialize(int sourceInputId,
+      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
+  }
 
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-
-    List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
+    List<FeatureValue<String>> values = Generics.newLinkedList();
 
     boolean monotone = f.linearDistortion == 0;
     boolean swap = (f.prior != null && f.sourcePosition
         + f.sourcePhrase.size() == f.prior.sourcePosition);
 
+    // Discriminative model
     if (discriminativeSet != null) {
       for (LexicalReorderingTable.ReorderingTypes mrt : discriminativeSet) {
         if (!featureFunction(monotone, swap, mrt))
           continue;
         if (usePrior(mrt)) {
-          String condRep; // = null;
-          if (!useAlignmentConstellations) {
-            Sequence<IString> priorForeignPhrase = (f.prior != null ? f.prior.sourcePhrase
-                : INITIAL_PHRASE);
-            Sequence<IString> priorTranslatedPhrase = (f.prior != null ? f.prior.targetPhrase
-                : INITIAL_PHRASE);
-            condRep = priorForeignPhrase.toString("_") + "=>"
-                + priorTranslatedPhrase.toString("_");
-          } else {
+          String ruleRep;
+          if (useAlignmentConstellations) {
             IString priorAlignConst = (f.prior != null ? f.prior.rule.abstractRule.alignment
                 .toIString() : INITIAL_PHRASE.get(0));
-            condRep = priorAlignConst.toString();
-          }
-          values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
-              + condRep, discriminativeFeatureValue));
-        } else {
-          String condRep; // = null;
-          if (!useAlignmentConstellations) {
-            condRep = f.sourcePhrase.toString("_") + "=>"
-                + f.targetPhrase.toString("_");
+            ruleRep = priorAlignConst.toString();
+          
           } else {
-            condRep = f.rule.abstractRule.alignment.toString();
+            ruleRep = getDiscriminativeRepresentation(f.prior);
           }
           values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
-              + condRep, discriminativeFeatureValue));
+              + ruleRep, 1.0));
+        
+        } else {
+          String ruleRep = useAlignmentConstellations ? 
+              f.rule.abstractRule.alignment.toString() :
+                getDiscriminativeRepresentation(f);
+          values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
+              + ruleRep, 1.0));
         }
       }
     }
 
+    // Generative model
     if (mlrt != null) {
       float[] scores = mlrt
           .getReorderingScores(f.derivation.rule.abstractRule);
@@ -174,6 +185,45 @@ public class LexicalReorderingFeaturizer implements
     return values;
   }
 
+  /**
+   * Return a representation of the rule contained by the <code>Featurizable</code>.
+   * 
+   * @param f
+   * @return
+   */
+  private String getDiscriminativeRepresentation(Featurizable<IString, String> f) {
+    String rep = "";
+    if (f == null) {
+      rep = String.format("%s>%s", INITIAL_PHRASE, INITIAL_PHRASE);
+    
+    } else if (useClasses) {
+      // Class-based
+      Rule<IString> rule = f.rule.abstractRule;
+      StringBuilder sb = new StringBuilder();
+      for (IString token : rule.source) {
+        if (sb.length() > 0) sb.append("-");
+        String tokenClass = SourceClassMap.get(token).toString();
+        sb.append(tokenClass);
+      }
+      sb.append(">");
+      boolean seenFirst = false;
+      for (IString token : rule.target) {
+        if (seenFirst) sb.append("-");
+        String tokenClass = TargetClassMap.get(token).toString();
+        sb.append(tokenClass);
+        seenFirst = true;
+      }
+      rep = sb.toString();
+      
+    } else {
+      // Lexicalized
+      String sourcePhrase = f.sourcePhrase.toString("-");
+      String targetPhrase = f.targetPhrase.toString("-");
+      rep = String.format("%s>%s", sourcePhrase, targetPhrase);
+    }
+    return rep;
+  }
+
   private boolean usePrior(LexicalReorderingTable.ReorderingTypes type) {
     switch (type) {
     case monotoneWithNext:
@@ -204,10 +254,5 @@ public class LexicalReorderingFeaturizer implements
       return !monotone;
     }
     return false;
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
   }
 }

@@ -40,7 +40,7 @@ public class MergePhraseTableEntries {
     
     for (int pi=0; pi<ppt.translations.size(); ++pi) { // For each input phrase:
       List<IntArrayTranslationOption> iOpts = ppt.translations.get(pi);
-      int[] foreignInts = FlatPhraseTable.foreignIndex.get(pi);
+      int[] foreignInts = FlatPhraseTable.sourceIndex.get(pi);
       RawSequence<IString> sPhrase = new RawSequence<IString>(IStrings.toIStringArray(foreignInts));
       Set<Sequence<IString>> mergeCandidates = new HashSet<Sequence<IString>>();
       

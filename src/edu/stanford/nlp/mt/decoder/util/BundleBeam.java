@@ -70,12 +70,12 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   }
 
   @Override
-  public Derivation<TK,FV> put(Derivation<TK,FV> hypothesis) {
-    if (hypothesis.sourceCoverage.cardinality() != coverageCardinality) {
+  public Derivation<TK,FV> put(Derivation<TK,FV> derivation) {
+    if (derivation.sourceCoverage.cardinality() != coverageCardinality) {
       throw new RuntimeException("Derivation cardinality does not match beam cardinality");
     }
 
-    final Status status = recombinationHash.update(hypothesis);
+    final Status status = recombinationHash.update(derivation);
     if (recombinationHistory != null) {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
           recombinationHash.getLastRedundant());
@@ -84,7 +84,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     Derivation<TK,FV> recombinedDerivation = null;
     if (status == Status.COMBINABLE) {
       recombined++;
-      recombinedDerivation = hypothesis;
+      recombinedDerivation = derivation;
 
     } else if(status == Status.BETTER) {
       recombined++;

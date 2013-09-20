@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
 
+import com.google.gson.Gson;
+
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.HasIndex;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -18,63 +20,67 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.tregex.TregexMatcher;
 import edu.stanford.nlp.trees.tregex.TregexPattern;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.Generics;
 
 /**
- * Converts English CoreNLP annotations to the PTM source side 
- * format.
+ * Converts CoreNLP annotations to the PTM source side 
+ * format, which is in json.
  * 
  * @author Spence Green
  *
  */
-public final class SourceSidePreprocessor {
+public final class CoreNLPToPTMJson {
 
-  
   /**
    * @param args
    */
   public static void main(String[] args) {
     if (args.length != 1) {
-      System.err.printf("Usage: java %s corenlp_ser_gz%n", SourceSidePreprocessor.class.getName());
+      System.err.printf("Usage: java %s corenlp_ser_gz > json_output%n", CoreNLPToPTMJson.class.getName());
       System.exit(-1);
     }
-    
+
     String annotationFile = args[0];
     Annotation document = null;
     try {
       document = (Annotation) IOUtils.readObjectFromFile(annotationFile);
     } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
     }
     System.err.println("Loaded " + annotationFile);
-    
-    System.out.println("index\ttoken\tpos\tne\tis_np");
+
     List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+    List<AnnotationContainer> annotations = Generics.newLinkedList();
     for (CoreMap sentence : sentences) {
-      // Get the parse tree
       Tree tree = sentence.get(TreeAnnotation.class);
       tree.indexLeaves();
-      
       BitSet isBaseNPToken = markBaseNPs(tree);
+      AnnotationContainer container = new AnnotationContainer();
       int i = 0;
       for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
         String word = token.get(TextAnnotation.class);
+        container.tokens.add(word);
         String pos = token.get(PartOfSpeechAnnotation.class);
+        container.pos.add(pos);
         String ne = token.get(NamedEntityTagAnnotation.class);
-        System.out.printf("%d\t%s\t%s\t%s\t%b%n", i, word,pos,ne,isBaseNPToken.get(i));
-        ++i;
+        container.ner.add(ne);
+        container.isBaseNP.add(isBaseNPToken.get(i++));
       }
-      System.out.println();
+      annotations.add(container);
     }
     System.err.printf("Processed %d sentences%n", sentences.size());
+    
+    // Convert to json
+    Gson gson = new Gson();
+    String json = gson.toJson(annotations);
+    System.out.println(json);
   }
 
   private static BitSet markBaseNPs(Tree tree) {
     TregexPattern baseNPMatcher = TregexPattern.compile("@NP < (/NN/ < (__ !< __)) !< @NP");
-    
+
     TregexMatcher tregexMatcher = baseNPMatcher.matcher(tree);
     BitSet b = new BitSet();
     while (tregexMatcher.find()) {
@@ -84,8 +90,20 @@ public final class SourceSidePreprocessor {
         b.set(((HasIndex) leaf.label()).index() - 1);
       }
     }
-      
+
     return b;
   }
-
+  
+  private static class AnnotationContainer {
+    public final List<String> tokens;
+    public final List<String> pos;
+    public final List<String> ner;
+    public final List<Boolean> isBaseNP; 
+    public AnnotationContainer() {
+      this.tokens = Generics.newLinkedList();
+      this.pos = Generics.newLinkedList();
+      this.ner = Generics.newLinkedList();
+      this.isBaseNP = Generics.newLinkedList();
+    }
+  }
 }

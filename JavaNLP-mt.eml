@@ -42,9 +42,6 @@
 		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/pinyin4j-2.5.0.zip!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/pinyin4j-2.5.0.jar!/"/>
 	</lib>
-	<lib name="gson-2.2.4.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/gson-2.2.4.jar!/"/>
-	</lib>
 	<lib name="jetty-annotations-9.0.4.v20130625.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-annotations-9.0.4.v20130625.jar!/"/>
 	</lib>

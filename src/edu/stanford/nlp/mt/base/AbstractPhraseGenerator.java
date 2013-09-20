@@ -68,6 +68,9 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
 
   @Override
   abstract public int longestSourcePhrase();
+  
+  @Override
+  abstract public int longestTargetPhrase();
 
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {

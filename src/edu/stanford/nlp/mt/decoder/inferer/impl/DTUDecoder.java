@@ -141,7 +141,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
-      ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+      OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
     int sourceSz = source.size();
     BufferedWriter alignmentDump = null;
@@ -202,13 +202,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       }
     }
 
-    if (constrainedOutputSpace != null) {
-      options = constrainedOutputSpace.filterOptions(options);
-      System.err
-          .printf(
-              "Translation options after reduction by output space constraint: %d\n",
-              options.size());
-    }
+    options = outputSpace.filter(options);
+    System.err
+    .printf(
+        "Translation options after reduction by output space constraint: %d\n",
+        options.size());
 
     DTUOptionGrid optionGrid = new DTUOptionGrid(options, source);
 
@@ -246,7 +244,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         System.err.println();
 
       BeamExpander beamExpander = new BeamExpander(beams, i, sourceSz,
-            optionGrid, constrainedOutputSpace, sourceInputId);
+            optionGrid, outputSpace, sourceInputId);
       beamExpander.expandBeam();
 
       if (DEBUG) {
@@ -285,8 +283,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     for (int i = beams.length - 1; i >= 0; i--) {
       if (beams[i].size() != 0
-          && (constrainedOutputSpace == null || constrainedOutputSpace
-              .allowableFinal(beams[i].iterator().next().featurizable))) {
+          && outputSpace
+              .allowableFinal(beams[i].iterator().next().featurizable)) {
         Derivation<TK, FV> bestHyp = beams[i].iterator().next();
         try {
           writeAlignments(alignmentDump, bestHyp);
@@ -389,28 +387,28 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     int beamId;
     int sourceSz;
     DTUOptionGrid optionGrid;
-    ConstrainedOutputSpace<TK, FV> constrainedOutputSpace;
+    OutputSpace<TK, FV> outputSpace;
     int sourceInputId;
 
     public BeamExpander(Beam<Derivation<TK, FV>>[] beams, int beamId,
         int sourceSz, DTUOptionGrid optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace,
+        OutputSpace<TK, FV> outputSpace,
         int sourceInputId) {
       this.beams = beams;
       this.beamId = beamId;
       this.sourceSz = sourceSz;
       this.optionGrid = optionGrid;
-      this.constrainedOutputSpace = constrainedOutputSpace;
+      this.outputSpace = outputSpace;
       this.sourceInputId = sourceInputId;
     }
 
     private void expandBeam() {
-      expandBeam(beams, beamId, sourceSz, optionGrid, constrainedOutputSpace, sourceInputId);
+      expandBeam(beams, beamId, sourceSz, optionGrid, outputSpace, sourceInputId);
     }
 
     public int expandBeam(Beam<Derivation<TK, FV>>[] beams, int beamId,
         int sourceSz, DTUOptionGrid optionGrid,
-        ConstrainedOutputSpace<TK, FV> constrainedOutputSpace, int sourceInputId) {
+        OutputSpace<TK, FV> outputSpace, int sourceInputId) {
 
       int optionsApplied = 0;
       int hypPos = -1;
@@ -489,8 +487,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 continue;
               }
 
-              if (constrainedOutputSpace != null
-                  && !constrainedOutputSpace.allowableContinuation(
+              if (!outputSpace.allowableContinuation(
                       hyp.featurizable, option)) {
                 continue;
               }
@@ -529,18 +526,10 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 }
                 totalHypothesesGenerated++;
 
-                if (newHyp.featurizable.untranslatedTokens != 0) {
-                  if (constrainedOutputSpace != null
-                      && !constrainedOutputSpace
-                          .allowablePartial(newHyp.featurizable)) {
-                    continue;
-                  }
-                } else {
-                  if (constrainedOutputSpace != null
-                      && !constrainedOutputSpace
+                if (newHyp.featurizable.untranslatedTokens == 0
+                    && !outputSpace
                           .allowableFinal(newHyp.featurizable)) {
                     continue;
-                  }
                 }
 
                 if (newHyp.score == Double.NEGATIVE_INFINITY

@@ -37,8 +37,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   boolean addBoundaryMarkers = false;
   boolean unalignedBoundaryMarkers = false;
 
-  public SymmetricalWordAlignment() {
-  }
+  public SymmetricalWordAlignment() {}
 
   public SymmetricalWordAlignment(Properties prop) {
     addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(

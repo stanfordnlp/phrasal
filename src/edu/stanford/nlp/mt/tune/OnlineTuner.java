@@ -526,8 +526,7 @@ public class OnlineTuner {
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
       double expectedBleu = 0.0;
       if (doExpectedBleu) {
-        expectedBleu = approximateBLEUObjective(nbestLists);
-        logger.info(String.format("Epoch %d expected BLEU: %.2f", epoch, expectedBleu));
+        expectedBleu = approximateBLEUObjective(nbestLists, epoch);
       }
       // Purge history if we're not picking the best weight vector
       if ( ! returnBestDev) epochWeights.clear();
@@ -596,7 +595,7 @@ public class OnlineTuner {
    * @param epoch
    * @return
    */
-  private double approximateBLEUObjective(Map<Integer, Sequence<IString>> nbestLists) {
+  private double approximateBLEUObjective(Map<Integer, Sequence<IString>> nbestLists, int epoch) {
     assert nbestLists.keySet().size() == references.size();
 
     BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
@@ -607,7 +606,9 @@ public class OnlineTuner {
     for (Map.Entry<Integer, Sequence<IString>> entry : sortedMap.entrySet()) {
       incMetric.add(new ScoredFeaturizedTranslation<IString,String>(entry.getValue(), null, 0.0));
     }
-    return incMetric.score() * 100.0;
+    double expectedBleu = incMetric.score() * 100.0;
+    logger.info(String.format("Epoch %d expected BLEU: %.2f / BP: %.3f", epoch, expectedBleu, incMetric.brevityPenalty()));
+    return expectedBleu;
   }
 
   /**
@@ -759,7 +760,7 @@ public class OnlineTuner {
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
       return new NakovBLEUGain<IString,String>();
-      
+    
     } else if (scoreMetricStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
       return new BLEUOracleCost<IString,String>(BLEUOracleCost.DEFAULT_ORDER, false);
@@ -787,6 +788,14 @@ public class OnlineTuner {
       metrics.add(new SLTERpMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
+    
+    } else if (scoreMetricStr.equals("bleu-s-2terp")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
+      metrics.add(new BLEUSmoothGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{1.0, 2.0}, metrics);
+    
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<SentenceLevelMetric<IString,String>>();
       metrics.add(new NakovBLEUGain<IString,String>());

@@ -10,7 +10,6 @@ import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
@@ -59,8 +58,6 @@ State<Derivation<TK, FV>> {
 
   public final List<FeatureValue<FV>> localFeatures;
   public final List<Annotator<TK,FV>> annotators;
-
-  public IString[] posTags;
 
   /**
    * 
@@ -200,7 +197,6 @@ State<Derivation<TK, FV>> {
       annotators.add(annotator.extend(rule));
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
-
 
     localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);

@@ -7,10 +7,10 @@
 # TODO(spenceg) Add Chinese
 #
 # Author: Spence Green
+# Changes: Thang Sep13 allow to specify outFile, decide to gzip or not, and update tokenization for English.
 #
-#
-if [ $# -lt 2 ]; then
-    echo "Usage: `basename $0` language file [clean|tolower]"
+if [ $# -lt 4 ]; then
+    echo "Usage: `basename $0` language inFile outFile isGzip [clean|tolower]"
     echo
     echo "  clean    : Heuristic data cleaning"
     echo "  tolower  : Convert to lowercase" 
@@ -20,9 +20,14 @@ fi
 
 lang=$1
 infile=$2
-shift 2
+outfile=$3
+isGzip=$4
+shift 4
 
-outfile=`basename $infile`.tok
+gzipCmd=""
+if [ $isGzip -eq 1 ]; then
+  gzipCmd="| gzip -c"
+fi
 
 # Detect file encoding
 ext="${infile##*.}"
@@ -44,7 +49,7 @@ AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
 AR_TOK="java $JAVA_OPTS -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.process.ArabicSegmenter -loadClassifier $AR_MODEL -prefixMarker # -suffixMarker + -nthreads 4"
 
 # English tokenizer setup
-EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
+EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false" # Thang: shorten options and add splitAssimilations as Chris suggested. # ptb3Escaping=false,ptb3Dashes=false,americanize=false,latexQuotes=false,asciiQuotes=true"
 
 # French tokenizer setup
 FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false,ptb3Dashes=false"
@@ -77,26 +82,29 @@ done
 # Run the tokenizers for each language
 #
 if [ $lang == "Arabic" ]; then
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | $tolower | gzip -c > ${outfile}.gz
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | $tolower $gzipCmd > ${outfile}
 
 elif [ $lang == "French" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
     fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $FR_TOK | gzip -c > ${outfile}.gz
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $FR_TOK $gzipCmd > ${outfile}
 
 elif [ $lang == "German" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
     fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $tolower | gzip -c > ${outfile}.gz
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $tolower $gzipCmd > ${outfile}
 # WMT2013 command (with compound splitting)
-#$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower | gzip -c > ${outfile}.gz
+#$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower $gzipCmd > ${outfile}
     
 elif [ $lang == "English" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
     fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
+    
+    # Thang add Perl one-liner to split at - and / 
+    echo "$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | perl -pi -e \"s/([a-zA-Z])(-|\/)([a-zA-Z])/\1 \2 \3/g\" $gzipCmd > ${outfile}" 
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | perl -pi -e "s/([a-zA-Z])(-|\/)([a-zA-Z])/\1 \2 \3/g" $gzipCmd > ${outfile} 
 fi
 

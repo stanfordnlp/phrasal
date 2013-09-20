@@ -14,7 +14,7 @@ import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.service.Messages.Language;
+import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
@@ -39,11 +39,11 @@ public class RuleQueryRequestHandlerMock implements RequestHandler {
       for (int j = i+1; j <= sourceLength; ++j) {
         String sourceSide = source.subsequence(i, j).toString();
         String targetSide = sourceSide.toLowerCase();
-        queriedRules.add(new RuleQuery(sourceSide, targetSide, i, 0.6));
+        queriedRules.add(new RuleQuery(sourceSide, targetSide, 0.6, ""));
         List<String> tgtReverse = Arrays.asList(targetSide.split("\\s+"));
         Collections.reverse(tgtReverse);
         String targetSideRev = Sentence.listToString(tgtReverse);
-        queriedRules.add(new RuleQuery(sourceSide, targetSideRev, i, 0.5));
+        queriedRules.add(new RuleQuery(sourceSide, targetSideRev, 0.5, ""));
       }
     }
     RuleQueryReply reply = new RuleQueryReply(queriedRules);

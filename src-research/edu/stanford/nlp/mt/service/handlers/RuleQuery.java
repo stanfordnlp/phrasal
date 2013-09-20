@@ -1,28 +1,24 @@
 package edu.stanford.nlp.mt.service.handlers;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.IString;
-
 /**
  * 
  * @author Spence Green
  *
  */
-public class RuleQuery {
+public class RuleQuery implements Comparable<RuleQuery> {
   public final String src;
   public final String tgt;
-  public final int srcPos;
   public final double score;
-  public RuleQuery(ConcreteRule<IString,String> rule) {
-    this.src = rule.abstractRule.source.toString();
-    this.tgt = rule.abstractRule.target.toString();
-    this.srcPos = rule.sourcePosition;
-    this.score = rule.isolationScore;
-  }
-  public RuleQuery(String src, String tgt, int srcPos, double score) {
-    this.src = src;
-    this.tgt = tgt;
-    this.srcPos = srcPos;
+  public final String align;
+  public RuleQuery(String source, String target, double score, String alignment) {
+    this.src = source;
+    this.tgt = target;
     this.score = score;
+    this.align = alignment;
+  }
+  
+  @Override
+  public int compareTo(RuleQuery o) {
+    return (int) Math.signum(this.score - o.score);
   }
 }

@@ -12,13 +12,19 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.gson.reflect.TypeToken;
 
+import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.PhrasalServlet;
-import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
 import edu.stanford.nlp.util.Generics;
 
+/**
+ * Mock handler for translation requests.
+ * 
+ * @author Spence Green
+ *
+ */
 public class TranslationRequestHandlerMock implements RequestHandler {
 
   @Override
