@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * Basic AdaGrad update rule from Duchi et al. (2010).

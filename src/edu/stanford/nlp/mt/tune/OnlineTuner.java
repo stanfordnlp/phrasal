@@ -404,16 +404,16 @@ public class OnlineTuner {
       final ProcessorOutput result = threadpool.poll();
       boolean isEndOfEpoch = endOfEpoch && ! threadpool.peek();
 
-      logger.info(String.format("Weight update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
+      logger.info(String.format("Update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
       
       // Update rule. 
       updater.update(currentWts, result.gradient, updateStep, isEndOfEpoch);
 
       // Debug info
-      logger.info(String.format("Weight update %d with gradient from input step %d (diff: %d)", 
+      logger.info(String.format("Update %d with gradient from input step %d (diff: %d)", 
           updateStep, result.inputId, result.inputId - updateStep));
-      logger.info(String.format("Weight update %d approximate L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(result.gradient)));
-
+      logger.info(String.format("Update %d approximate L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(result.gradient)));
+      logger.info(String.format("Update %d cardinality: %d", updateStep, currentWts.keySet().size()));
       ++updateStep;
 
       // Accumulate intermediate weights for parameter averaging
