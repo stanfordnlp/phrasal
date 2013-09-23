@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.base;
 
-
-import java.io.*;
-import java.util.*;
-import java.util.zip.GZIPInputStream;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.StringTokenizer;
+import java.util.WeakHashMap;
 
 /**
  * 
@@ -65,18 +65,12 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   }
 
   protected void init(String filename) throws IOException {
-    File f = new File(filename);
-
-    System.gc();
     Runtime rt = Runtime.getRuntime();
     long preLMLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long startTimeMillis = System.currentTimeMillis();
 
-    LineNumberReader reader = (filename.endsWith(".gz") ? new LineNumberReader(
-        new InputStreamReader(
-            new GZIPInputStream(new FileInputStream(filename))))
-        : new LineNumberReader(new FileReader(f)));
-
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
+    
     // skip everything until the line that begins with '\data\'
     while (!readLineNonNull(reader).startsWith("\\data\\")) {
     }
@@ -131,7 +125,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
         // during profiling, 'split' turned out to be a bottle neck
         // and using StringTokenizer is about twice as fast
         StringTokenizer tok = new StringTokenizer(inline);
-        float prob = Float.parseFloat(tok.nextToken()) * log10LogConstant;
+        float prob = strToFloat(tok.nextToken()) * log10LogConstant;
 
         for (int i = 0; i <= order; i++) {
           ngram[i] = new IString(tok.nextToken());
@@ -147,8 +141,6 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       }
     }
 
-    System.gc();
-
     // print some status information
     long postLMLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     long loadTimeMillis = System.currentTimeMillis() - startTimeMillis;
@@ -158,6 +150,11 @@ public class ARPALanguageModel implements LanguageModel<IString> {
             filename, maxOrder, (postLMLoadMemUsed - preLMLoadMemUsed)
                 / (1024 * 1024), loadTimeMillis / 1000.0);
     reader.close();
+  }
+
+  private static float strToFloat(String token) {
+    // Escape for KenLM
+    return token.equals("-inf") ? Float.NEGATIVE_INFINITY : Float.parseFloat(token);
   }
 
   @Override
