@@ -193,9 +193,9 @@ public class HierarchicalReorderingFeaturizer extends
     boolean discont2 = (f.prior != null && fEnd(f) <= fStart(f.prior));
 
     float[] scores = mlrt
-        .getReorderingScores(f.derivation.rule.abstractRule.id);
+        .getReorderingScores(f.derivation.rule.abstractRule);
     float[] priorScores = (f.prior == null ? null : mlrt
-        .getReorderingScores(f.prior.derivation.rule.abstractRule.id));
+        .getReorderingScores(f.prior.derivation.rule.abstractRule));
 
     ReorderingTypes forwardOrientation = ReorderingTypes.discontinuousWithPrevious, backwardOrientation = ReorderingTypes.discontinuousWithNext;
 
@@ -364,7 +364,7 @@ public class HierarchicalReorderingFeaturizer extends
           : ReorderingTypes.discontinuousWithNext;
 
       float[] finalScores = mlrt
-          .getReorderingScores(f.derivation.rule.abstractRule.id);
+          .getReorderingScores(f.derivation.rule.abstractRule);
       // Create feature functions:
       for (int i = 0; i < mlrt.positionalMapping.length; ++i) {
         ReorderingTypes type = mlrt.positionalMapping[i];

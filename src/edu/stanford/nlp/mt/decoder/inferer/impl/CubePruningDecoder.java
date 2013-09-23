@@ -143,7 +143,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       while (newBeam.size() < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
 
-        // Derivations can be null if force decoding is enabled. This means that the derivation for this
+        // Derivations can be null if the output space is constrained. This means that the derivation for this
         // item was not allowable and thus was not built. However, we need to maintain the consequent
         // so that we can generate successors.
         if (item.derivation != null) {
@@ -167,7 +167,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       if (beam.size() != 0 && outputSpace
           .allowableFinal(beam.iterator().next().featurizable)) {
 
-        // TODO(spenceg) This should be an error message
+        // TODO(spenceg) This should be a more informative error message
         if ( ! isGoalBeam) {
           System.err.println("WSGDEBUG: Decoder failure for sourceId: " + Integer.toString(sourceInputId));
         }
@@ -195,8 +195,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<Item<TK,FV>> consequents = Generics.newArrayList(2);
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
-      // Derivation generation
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
+      // Derivation construction: this is the expensive part
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic) :
             null;

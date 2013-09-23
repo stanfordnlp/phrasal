@@ -39,11 +39,11 @@ public class RuleQueryRequestHandlerMock implements RequestHandler {
       for (int j = i+1; j <= sourceLength; ++j) {
         String sourceSide = source.subsequence(i, j).toString();
         String targetSide = sourceSide.toLowerCase();
-        queriedRules.add(new RuleQuery(sourceSide, targetSide, i, 0.6, ""));
+        queriedRules.add(new RuleQuery(sourceSide, targetSide, 0.6, ""));
         List<String> tgtReverse = Arrays.asList(targetSide.split("\\s+"));
         Collections.reverse(tgtReverse);
         String targetSideRev = Sentence.listToString(tgtReverse);
-        queriedRules.add(new RuleQuery(sourceSide, targetSideRev, i, 0.5, ""));
+        queriedRules.add(new RuleQuery(sourceSide, targetSideRev, 0.5, ""));
       }
     }
     RuleQueryReply reply = new RuleQueryReply(queriedRules);

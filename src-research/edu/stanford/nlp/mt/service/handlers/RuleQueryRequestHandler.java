@@ -33,8 +33,6 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Synchronous handler for phrase table query messages.
  * 
- * TODO: Tokenization and detokenization.
- * 
  * @author Spence Green
  *
  */
@@ -78,33 +76,27 @@ public class RuleQueryRequestHandler implements RequestHandler {
     List<ConcreteRule<IString,String>> ruleList = phraseTable
         .getRules(source, null, qId.incrementAndGet(), scorer);
 
-    List<RuleQuery> queriedRules = Generics.newLinkedList();
+    // Enable rule sorting with the "true" parameter.
     RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, source, true);
-    final int spanLimit = ruleRequest.spanLimit;
-    final int maxPhraseLength = phraseTable.longestSourcePhrase();
-    final int sourceLength = source.size();
-    for (int i = 0; i < sourceLength; ++i) {
-      int rightEdge = i+maxPhraseLength > sourceLength ? sourceLength : i+maxPhraseLength; 
-      for (int j = i; j < rightEdge; ++j) {
-        List<ConcreteRule<IString,String>> rulesForSpan = ruleGrid.get(i, j);
-        int addedRules = 0;
-        for(ConcreteRule<IString,String> rule : rulesForSpan) {
-          if (addedRules >= spanLimit) {
-            break;
-          } else if (rule.abstractRule.target == null || rule.abstractRule.target.size() == 0) {
-            continue;
-          }
-          SymmetricalWordAlignment tPrime2t = postprocessor == null ?
-              identityAlignment(rule.abstractRule.target) :
-                postprocessor.process(rule.abstractRule.target);    
-          SymmetricalWordAlignment sPrime2tPrime = getAlignment(rule.abstractRule);
-              RuleQuery ruleQuery = createQuery(rule, i, j, s2sPrime, sPrime2tPrime, tPrime2t);
-          queriedRules.add(ruleQuery);
-          ++addedRules;
-        }
+    List<RuleQuery> queriedRules = Generics.newArrayList();
+    List<ConcreteRule<IString,String>> rulesForSpan = ruleGrid.get(0, source.size()-1);
+    for(ConcreteRule<IString,String> rule : rulesForSpan) {
+      if (queriedRules.size() >= ruleRequest.spanLimit) {
+        break;
+      } else if (rule.abstractRule.target == null || rule.abstractRule.target.size() == 0) {
+        // Ignore deletion rules from the unknown word model
+        continue;
       }
+
+      SymmetricalWordAlignment sPrime2tPrime = getAlignment(rule.abstractRule);
+      SymmetricalWordAlignment tPrime2t = postprocessor == null ?
+          identityAlignment(rule.abstractRule.target) :
+            postprocessor.process(rule.abstractRule.target);    
+      RuleQuery query = createQueryResult(rule, s2sPrime, sPrime2tPrime, tPrime2t);
+      queriedRules.add(query);
     }
     RuleQueryReply reply = new RuleQueryReply(queriedRules);
+    
     Type t = new TypeToken<RuleQueryReply>() {}.getType();
     ServiceResponse response = new ServiceResponse(reply, t);
 
@@ -119,14 +111,16 @@ public class RuleQueryRequestHandler implements RequestHandler {
    * PhraseAlignment only stores t2s alignments, but we need the other direction for
    * creating the query.
    * 
-   * @param abstractRule
+   * @param rule
+   * @param srcPos 
    * @return
    */
-  private SymmetricalWordAlignment getAlignment(Rule<IString> abstractRule) {
+  private SymmetricalWordAlignment getAlignment(Rule<IString> rule) {
     SymmetricalWordAlignment alignment = 
-        new SymmetricalWordAlignment(abstractRule.source, abstractRule.target);
-    for (int i = 0; i < abstractRule.alignment.size(); ++i) {
-      int[] sIndices = abstractRule.alignment.t2s(i);
+        new SymmetricalWordAlignment(rule.source, rule.target);
+    int tgtLength = rule.target.size();
+    for (int i = 0; i < tgtLength; ++i) {
+      int[] sIndices = rule.alignment.t2s(i);
       if (sIndices != null) {
         for (int sIndex : sIndices) {
           alignment.addAlign(sIndex, i);
@@ -147,18 +141,16 @@ public class RuleQueryRequestHandler implements RequestHandler {
    * @param tPrime2t
    * @return
    */
-  private RuleQuery createQuery(ConcreteRule<IString, String> rule, int left, int right, SymmetricalWordAlignment s2sPrime,
-      SymmetricalWordAlignment sPrime2tPrime, SymmetricalWordAlignment tPrime2t) {
-    String src = s2sPrime.f().subsequence(left, right+1).toString();
-    String tgt = tPrime2t.e().toString();
-    int srcPos = s2sPrime.e2f(rule.sourcePosition).first();
-    double score = rule.isolationScore;
-    
+  private RuleQuery createQueryResult(ConcreteRule<IString, String> rule, 
+      SymmetricalWordAlignment s2sPrime, SymmetricalWordAlignment sPrime2tPrime, 
+      SymmetricalWordAlignment tPrime2t) {
+
+    // Alignments
     StringBuilder sb = new StringBuilder();
-    for (int i = left; i <= right; ++i) {
+    for (int i = 0; i < s2sPrime.fSize(); ++i) {
       Set<Integer> alignments = s2sPrime.f2e(i);
       for (int j : alignments) {
-        Set<Integer> alignments2 = sPrime2tPrime.f2e(j-left);
+        Set<Integer> alignments2 = sPrime2tPrime.f2e(j);
         for (int k : alignments2) {
           Set<Integer> alignments3 = tPrime2t.f2e(k);
           for (int q : alignments3) {
@@ -168,7 +160,10 @@ public class RuleQueryRequestHandler implements RequestHandler {
         }
       }
     }
-    return new RuleQuery(src, tgt, srcPos, score, sb.toString());
+    String src = s2sPrime.f().toString();
+    String tgt = tPrime2t.e().toString();
+    double score = rule.isolationScore;
+    return new RuleQuery(src, tgt, score, sb.toString());
   }
 
   /**

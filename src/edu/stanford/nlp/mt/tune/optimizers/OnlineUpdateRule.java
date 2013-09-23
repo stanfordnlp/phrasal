@@ -3,7 +3,8 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import edu.stanford.nlp.stats.Counter;
 
 /**
- * Applies an online update rule.
+ * Applies an online update rule to a weight vector given a gradient
+ * evaluated at a time step.
  * 
  * @author Spence Green
  *
@@ -17,7 +18,7 @@ public interface OnlineUpdateRule<FV> {
    * @param weights
    * @param gradient
    * @param timeStep
-   * @param endOfEpoch TODO
+   * @param endOfEpoch
    * @return
    */
   public void update(Counter<FV> weights, Counter<FV> gradient, int timeStep, boolean endOfEpoch);
