@@ -92,7 +92,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
       SymmetricalWordAlignment tPrime2t = postprocessor == null ?
           identityAlignment(rule.abstractRule.target) :
             postprocessor.process(rule.abstractRule.target);    
-      RuleQuery query = createQueryResult(rule, s2sPrime, sPrime2tPrime, tPrime2t);
+      RuleQuery query = createQueryResult(ruleRequest.text, rule.isolationScore, s2sPrime, sPrime2tPrime, tPrime2t);
       queriedRules.add(query);
     }
     RuleQueryReply reply = new RuleQueryReply(queriedRules);
@@ -141,29 +141,27 @@ public class RuleQueryRequestHandler implements RequestHandler {
    * @param tPrime2t
    * @return
    */
-  private RuleQuery createQueryResult(ConcreteRule<IString, String> rule, 
+  private RuleQuery createQueryResult(String sourceText, double isolationScore, 
       SymmetricalWordAlignment s2sPrime, SymmetricalWordAlignment sPrime2tPrime, 
       SymmetricalWordAlignment tPrime2t) {
 
     // Alignments
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < s2sPrime.fSize(); ++i) {
-      Set<Integer> alignments = s2sPrime.f2e(i);
-      for (int j : alignments) {
-        Set<Integer> alignments2 = sPrime2tPrime.f2e(j);
-        for (int k : alignments2) {
-          Set<Integer> alignments3 = tPrime2t.f2e(k);
-          for (int q : alignments3) {
-            if (sb.length() > 0) sb.append(" ");
-            sb.append(String.format("%d-%d",i,q));
-          }
+    Set<Integer> alignments = s2sPrime.f2e(0);
+    for (int i : alignments) {
+      Set<Integer> alignments2 = sPrime2tPrime.f2e(i);
+      for (int j : alignments2) {
+        Set<Integer> alignments3 = tPrime2t.f2e(j);
+        for (int k : alignments3) {
+          if (sb.length() > 0) sb.append(" ");
+          sb.append(String.format("%d-%d",0,k));
         }
       }
     }
-    String src = s2sPrime.f().toString();
-    String tgt = tPrime2t.e().toString();
-    double score = rule.isolationScore;
-    return new RuleQuery(src, tgt, score, sb.toString());
+    // TODO(spenceg): Post-processing needs to occur in context so that the casing
+    // is correct.
+    String tgt = tPrime2t.e().toString().toLowerCase();
+    return new RuleQuery(sourceText, tgt, isolationScore, sb.toString());
   }
 
   /**
