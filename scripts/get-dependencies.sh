@@ -16,5 +16,5 @@ mv terp.v1/dist/lib/*.jar lib-nodistrib
 mv tercom-0.7.25/tercom.7.25.jar lib-nodistrib
 
 # Cleanup
-rm -f tercom-0.7.25.tgz terp.v1.tgz
+rm -rf tercom* terp*
 
