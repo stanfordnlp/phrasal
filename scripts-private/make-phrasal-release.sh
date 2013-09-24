@@ -153,8 +153,8 @@ else
   exit -1
 fi
 
-#rm -rf phrasal.$1/classes/*
-rm -rf phrasal.$1/lib-nodistrib/*
+rm -rf phrasal.$1/classes/
+rm -rf phrasal.$1/lib-nodistrib/
 
 # This time, look without excluding make-phrasal-release so that we can stash it if needed
 gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted`

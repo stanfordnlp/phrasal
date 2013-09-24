@@ -2,15 +2,23 @@
     <description>
         Phrasal machine translation system.
     </description>
-  <property name="src" location="src"/>
-  <property name="classes" location="classes"/>
+  <property name="src" location="${basedir}/src"/>
+  <property name="build.path"     value="${basedir}/classes"/>
   <property environment="env"/>
 
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+  <property name="compile.source"      value="1.7" />
+  <property name="compile.target"      value="1.7" />
+  <property name="compile.encoding"    value="utf-8" />
 
-  <target name="init">
-    <mkdir dir="${classes}"/>
-  </target>
-
+	<target name="extdeps">
+	  <exec executable="/bin/bash" failonerror="true">
+	    <arg value="${basedir}/scripts/get-dependencies.sh"/>
+	  </exec>
+	</target>
+	
    <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">
@@ -27,25 +35,33 @@
       </fileset>
     </path>
   </target>
-
 			
-  <target name="compile" depends="init,classpath"
+  <target name="compile" depends="classpath,extdeps"
         description="compile the source">
     <echo message="${env.CLASSPATH}"/>
-    <javac srcdir="${src}" destdir="${classes}"
+    <mkdir    dir="${build.path}" />
+    <javac srcdir="${src}" destdir="${build.path}"
+      debug="${compile.debug}"
+        encoding="${compile.encoding}"   
+     deprecation="${compile.deprecation}"
+        optimize="${compile.optimize}"
+          source="${compile.source}"
+          target="${compile.target}"
+          fork="true"
         includeantruntime="false">
         <classpath refid="classpath" />
     </javac>
     <!-- copy application resources -->
-     <copy todir="${classes}">
+     <copy todir="${build.path}">
       <fileset dir="${src}" excludes="**/*.java,**/*.html"/>
     </copy>
   </target>
 
   <target name="clean"
         description="clean up" >
-    <delete dir="${classes}"/>
+    <delete dir="${build.path}"/>
   </target>
+	
   <target name="all" depends="clean,compile"
           description="Clean and re-compile." />
 </project>

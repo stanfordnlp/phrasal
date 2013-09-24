@@ -65,7 +65,7 @@
     <javac srcdir="${source.path}:${source-research.path}:${tests.path}:${itests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
-         encoding="utf-8"   
+         encoding="${compile.encoding}"   
       deprecation="${compile.deprecation}"
          optimize="${compile.optimize}"
            source="${compile.source}"
