@@ -5,9 +5,29 @@ echo "JAVANLP_HOME set to $JAVANLP_HOME"
 
 cd $JAVANLP_HOME
 
+expectedBranch="master"
+version=""
+while getopts "b:v:" OPTION
+do
+  case $OPTION in 
+  b)
+    expectedBranch=$OPTARG
+    ;;
+  v)
+    version=$OPTARG
+    ;;
+  esac
+done
+
+if [ "$version" == "" ]; then
+  echo "FAIL: must specify a version name"
+  exit 2
+fi
+
+
 gitBranch=`git branch | grep "*" | cut -d " " -f 2`
 echo "GIT branch: " $gitBranch
-if [ "$gitBranch" = "master" ]; then
+if [ "$gitBranch" = "$expectedBranch" ]; then
     echo "PASS: GIT branch " $gitBranch
 else
     echo "FAIL: GIT should be on branch master, is on " $gitBranch
@@ -75,53 +95,53 @@ else
 fi 
 cd -
 
-rm -rf phrasal.$1
-mkdir phrasal.$1 || exit
+rm -rf phrasal.$version
+mkdir phrasal.$version || exit
 
-cp -r src src-cc scripts example README.txt LICENSE.txt phrasal.$1 || exit
-cp userbuild.xml  phrasal.$1/build.xml || exit
+cp -r src src-cc scripts example README.txt LICENSE.txt phrasal.$version || exit
+cp userbuild.xml  phrasal.$version/build.xml || exit
 
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
     edu.stanford.nlp.classify.LogisticClassifierFactory \
     edu.stanford.nlp.trees.DependencyScoring \
     
-mkdir -p phrasal.$1/src
-cd phrasal.$1/src
+mkdir -p phrasal.$version/src
+cd phrasal.$version/src
 jar xf ../../src.jar edu
 cd -
 
 # TODO: if these dependencies start getting more complicated, find an
 # automatic way to solve them (would need to make gen-dependencies
 # work across multiple directories)
-mkdir -p phrasal.$1/src/edu/stanford/nlp/lm
-cp ../more/src/edu/stanford/nlp/lm/* phrasal.$1/src/edu/stanford/nlp/lm || exit
+mkdir -p phrasal.$version/src/edu/stanford/nlp/lm
+cp ../more/src/edu/stanford/nlp/lm/* phrasal.$version/src/edu/stanford/nlp/lm || exit
 
-mkdir -p phrasal.$1/src/edu/stanford/nlp/stats
-cp ../more/src/edu/stanford/nlp/stats/OpenAddressCounter.java phrasal.$1/src/edu/stanford/nlp/stats/OpenAddressCounter.java || exit
+mkdir -p phrasal.$version/src/edu/stanford/nlp/stats
+cp ../more/src/edu/stanford/nlp/stats/OpenAddressCounter.java phrasal.$version/src/edu/stanford/nlp/stats/OpenAddressCounter.java || exit
 
-mkdir -p phrasal.$1/src/edu/stanford/nlp/classify
-cp ../more/src/edu/stanford/nlp/classify/LinearRegressionFactory.java phrasal.$1/src/edu/stanford/nlp/classify || exit
-cp ../more/src/edu/stanford/nlp/classify/LinearRegressionObjectiveFunction.java phrasal.$1/src/edu/stanford/nlp/classify || exit
-cp ../more/src/edu/stanford/nlp/classify/LinearRegressor.java phrasal.$1/src/edu/stanford/nlp/classify || exit
-cp ../more/src/edu/stanford/nlp/classify/Regressor.java phrasal.$1/src/edu/stanford/nlp/classify || exit
-cp ../more/src/edu/stanford/nlp/classify/RegressionFactory.java phrasal.$1/src/edu/stanford/nlp/classify || exit
-cp ../more/src/edu/stanford/nlp/classify/CorrelationLinearRegressionObjectiveFunction.java phrasal.$1/src/edu/stanford/nlp/classify || exit
+mkdir -p phrasal.$version/src/edu/stanford/nlp/classify
+cp ../more/src/edu/stanford/nlp/classify/LinearRegressionFactory.java phrasal.$version/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/LinearRegressionObjectiveFunction.java phrasal.$version/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/LinearRegressor.java phrasal.$version/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/Regressor.java phrasal.$version/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/RegressionFactory.java phrasal.$version/src/edu/stanford/nlp/classify || exit
+cp ../more/src/edu/stanford/nlp/classify/CorrelationLinearRegressionObjectiveFunction.java phrasal.$version/src/edu/stanford/nlp/classify || exit
 
-mkdir -p phrasal.$1/lib || exit
-cp ../core/lib/junit.jar phrasal.$1/lib || exit
-cp ../core/lib/commons-lang3-3.1.jar phrasal.$1/lib || exit
-cp ../more/lib/fastutil.jar phrasal.$1/lib || exit
-cp lib/je-4.1.10.jar phrasal.$1/lib || exit
-cp lib/guava-11.0.2.jar phrasal.$1/lib || exit
+mkdir -p phrasal.$version/lib || exit
+cp ../core/lib/junit.jar phrasal.$version/lib || exit
+cp ../core/lib/commons-lang3-3.1.jar phrasal.$version/lib || exit
+cp ../more/lib/fastutil.jar phrasal.$version/lib || exit
+cp ../more/lib/je.jar phrasal.$version/lib || exit
+cp ../more/lib/google-guava.jar phrasal.$version/lib || exit
 
-mkdir `pwd`/phrasal.$1/classes
-mkdir `pwd`/phrasal.$1/lib-nodistrib
+mkdir `pwd`/phrasal.$version/classes
+mkdir `pwd`/phrasal.$version/lib-nodistrib
 
 export CLASSPATH=.
 export CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-full-201*-0*[0-9] | head -1`
 
-(cd  phrasal.$1/; ./scripts/first-build.sh all)
+(cd  phrasal.$version/; ./scripts/first-build.sh all)
 if [ $? = 0 ]; then
    echo "PASS: User distribution builds successfully"
 else
@@ -129,17 +149,18 @@ else
    exit -1
 fi
 
-jar -cf phrasal.$1/phrasal.$1.jar -C phrasal.$1/classes edu
+jar -cf phrasal.$version/phrasal.$version.jar -C phrasal.$version/classes edu
 
 echo "Running phrasal integration test" 
-export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$1/classes
+export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$version/classes
 for jarFile in $CORENLP/*.jar; do
   export CLASSPATH=$CLASSPATH:$jarFile
 done
-export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$1/lib/fastutil.jar
+export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$version/lib/fastutil.jar
 echo $CLASSPATH
 
-scripts/standard_mert_test.pl distro.$1
+#scripts/standard_mert_test.pl distro.$version
+true
 
 if [ $? = 0 ]; then
   echo "PASS: Phrasal integration test"
@@ -156,43 +177,45 @@ fi
 rm -rf phrasal.$1/classes/
 rm -rf phrasal.$1/lib-nodistrib/
 
-# This time, look without excluding make-phrasal-release so that we can stash it if needed
-gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted`
-if [ "$gitCommitDryrun" == "" ]; then
+if [ "$expectedBranch" = "master" ]; then 
+  # This time, look without excluding make-phrasal-release so that we can stash it if needed
+  gitCommitDryrun=`git commit --dry-run -am foo 2>&1 | grep -e modified -e deleted`
+  if [ "$gitCommitDryrun" == "" ]; then
     stash="false"
-else
+  else
     stash="true"
     echo "Stashing your changes to make-phrasal-release.sh.  If something goes wrong, you will need to run"
     echo "  git stash pop"
     git stash
-fi
+  fi
 
-gitBranch=phrasal-release-$1
-echo "Pushing new git branch $gitBranch"
+  gitBranch=phrasal-release-$version
+  echo "Pushing new git branch $gitBranch"
 
-existingBranch=`git branch -r 2>&1 | grep $gitBranch`
-if [ "existingBranch" == "" ]; then
+  existingBranch=`git branch -r 2>&1 | grep $gitBranch`
+  if [ "existingBranch" == "" ]; then
     echo "PASS: no existing $gitBranch found"
-else
+  else
     echo "Apparently found existing $gitBranch, attempting to delete"
     git push origin :$gitBranch
-fi
+  fi
 
-git branch $gitBranch
-git push origin $gitBranch
+  git branch $gitBranch
+  git push origin $gitBranch
 
-git checkout master || exit
-if [ "$stash" == "true" ]; then
+  git checkout master || exit
+  if [ "$stash" == "true" ]; then
     git stash pop
+  fi
 fi
 
-rm -rf phrasal.$1/tercom*
-rm -rf phrasal.$1/terp*
+rm -rf phrasal.$version/tercom*
+rm -rf phrasal.$version/terp*
 
-tar -czf phrasal.$1.tar.gz phrasal.$1
+tar -czf phrasal.$version.tar.gz phrasal.$version
 
 if [ $? = 0 ]; then
-  echo "SUCCESS: Stanford Phrasal distribution phrasal.$1.tar.gz successfully built"
+  echo "SUCCESS: Stanford Phrasal distribution phrasal.$version.tar.gz successfully built"
 else
   echo "FAIL: Tar went wrong somehow"
   exit -1
