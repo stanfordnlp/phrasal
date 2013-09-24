@@ -210,10 +210,14 @@ function step-status {
 
 function bookmark {
     cp $VAR_FILE "$RUNNAME".vars
-    WDIR=`pwd`
-    cd $JAVANLP_HOME
-    git log | head -n 1 | awk '{ print $2 }' > $WDIR/"$RUNNAME".version
-    cd $WDIR
+    if [ -n $JAVANLP_HOME ]; then
+	WDIR=`pwd`
+	cd $JAVANLP_HOME
+	if hash git 2>/dev/null; then
+	    git log | head -n 1 | awk '{ print $2 }' > $WDIR/"$RUNNAME".version
+	fi
+	cd $WDIR
+    fi
 }
 
 # Synthetic parameters and commands

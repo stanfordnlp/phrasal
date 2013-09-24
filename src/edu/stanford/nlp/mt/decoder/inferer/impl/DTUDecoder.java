@@ -526,7 +526,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                 }
                 totalHypothesesGenerated++;
 
-                if (newHyp.featurizable.untranslatedTokens == 0
+                if (newHyp.featurizable.numUntranslatedSourceTokens == 0
                     && !outputSpace
                           .allowableFinal(newHyp.featurizable)) {
                     continue;

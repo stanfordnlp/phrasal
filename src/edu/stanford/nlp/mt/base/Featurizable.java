@@ -5,8 +5,8 @@ import edu.stanford.nlp.mt.decoder.feat.NeedsState;
 import edu.stanford.nlp.mt.Phrasal;
 
 /**
- * Packages information about a newly constructed hypothesis for use by the
- * CombinationFeaturizer.
+ * Packages information about a newly constructed hypothesis for use in the 
+ * feature API.
  * 
  * @author danielcer
  * 
@@ -21,12 +21,12 @@ public class Featurizable<TK, FV> {
   public final int sourceInputId;
 
   /**
-   * Most recently translated foreign phrase (source side)
+   * Most recently translated source phrase (source side of rule)
    */
   public final Sequence<TK> sourcePhrase;
 
   /**
-   * Translated Phrase produced for the most recently translated foreign phrase (target side)
+   * Most recently translated target phrase (target side of rule)
    */
   public final Sequence<TK> targetPhrase;
 
@@ -36,12 +36,12 @@ public class Featurizable<TK, FV> {
   public final String phraseTableName;
 
   /**
-   * Translation Scores as provided by the phrase table
+   * Rule scores as provided by the phrase table
    */
   public final float[] translationScores;
 
   /**
-   * Names associated with the Translation Scores provided by the phrase table
+   * Feature names associated with <code>translationScores</code>
    */
   public final String[] phraseScoreNames;
 
@@ -56,14 +56,14 @@ public class Featurizable<TK, FV> {
   public final int targetPosition;
 
   /**
-   * First position in the source sequence covered by the most recently phrase
+   * First position in the source sequence covered by the source side of the rule
    */
   public final int sourcePosition;
 
   /**
    * Number of tokens in the source sequence that are still untranslated
    */
-  public final int untranslatedTokens;
+  public final int numUntranslatedSourceTokens;
 
   /**
    * Partial Target sequence associated with the current hypothesis
@@ -71,7 +71,7 @@ public class Featurizable<TK, FV> {
   public final Sequence<TK> targetPrefix;
 
   /**
-   * Source sequence
+   * Full source input sentence.
    */
   public final Sequence<TK> sourceSentence;
 
@@ -176,7 +176,7 @@ public class Featurizable<TK, FV> {
     targetPrefix = targetPrefixRaw = new RawSequence<TK>(
         (TK[]) tokens);
     sourceSentence = derivation.sourceSequence;
-    untranslatedTokens = derivation.untranslatedTokens;
+    numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
     if (prior != null) {
       if (constructAlignment) {
@@ -229,7 +229,7 @@ public class Featurizable<TK, FV> {
     targetPrefix = targetPrefixRaw = new RawSequence<TK>(
         (TK[]) tokens);
     sourceSentence = derivation.sourceSequence;
-    untranslatedTokens = derivation.untranslatedTokens;
+    numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
     if (prior != null) {
       if (constructAlignment) {
@@ -309,7 +309,7 @@ public class Featurizable<TK, FV> {
     targetPrefix = targetPhrase;
     targetPrefixRaw = null;
     sourceSentence = sourceSequence;
-    untranslatedTokens = sourceSequence.size() - sourcePhrase.size();
+    numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;
@@ -341,7 +341,7 @@ public class Featurizable<TK, FV> {
     targetPrefix = targetPhrase;
     targetPrefixRaw = null;
     sourceSentence = sourceSequence;
-    untranslatedTokens = sourceSequence.size() - sourcePhrase.size();
+    numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;

@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -11,15 +10,8 @@ import edu.stanford.nlp.mt.base.Sequence;
 /**
  * Extract features from partial derivations. The featurizer is called each
  * time a new rule is applied to a derivation.  initialize()
- * is called once on a new sentence.  Then, each time derivation 
+ * is called once on a new sentence.  Then, each time a derivation 
  * is extended with a new rule application, featurize is called.
- * Features should have unique prefixes so that the featurizer does
- * not conflict with any other featurizer.
- * <br>
- * If CombinationFeaturizer needs to be re-entrant, then it should implement
- * the <code>NeedsCloneable</code> interface.
- * Information calculated during <code>initialize</code> can be stored
- * directly in the Featurizer.
  * 
  * @author danielcer
  * @author Spence Green

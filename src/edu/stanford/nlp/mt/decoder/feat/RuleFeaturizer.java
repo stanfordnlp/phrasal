@@ -6,7 +6,7 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 
 /**
- * Extract features from a translation rule (phrase pair) before it is used in a derivation.
+ * Extract features from a translation rule (phrase pair) independent of a derivation.
  * 
  * 
  * @author danielcer
@@ -23,7 +23,8 @@ public interface RuleFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   void initialize();
   
   /**
-   * Extract and return features for <code>f.rule</code>.
+   * Extract and return features for <code>f.rule</code>. If features overlap 
+   * in the list, their values will be added.
    * 
 	 * @return a list of features or null.
 	 */

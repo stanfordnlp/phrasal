@@ -117,7 +117,7 @@ public class ConstrainedOutputSpace<TK, FV> implements
         }
         int tMissing = allowableSequence.size()
             - (partialTranslation.size() + nextPhrase.size());
-        int fMissing = featurizable.untranslatedTokens
+        int fMissing = featurizable.numUntranslatedSourceTokens
             - rule.abstractRule.source.size();
         if ((fMissing == 0 && tMissing != 0)
             || (fMissing != 0 && tMissing == 0)) {

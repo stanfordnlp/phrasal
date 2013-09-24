@@ -247,7 +247,7 @@ public class NGramLanguageModelFeaturizer implements
         System.out.printf("Sequence: %s\n\tNovel Phrase: %s\n",
             f.targetPrefix, f.targetPhrase);
         System.out.printf("Untranslated tokens: %d\n",
-            f.untranslatedTokens);
+            f.numUntranslatedSourceTokens);
         System.out.println("ngram scoring:");
         System.out.println("===================");
       }

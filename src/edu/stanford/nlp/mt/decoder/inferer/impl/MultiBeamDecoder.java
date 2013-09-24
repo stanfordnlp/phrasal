@@ -434,7 +434,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               // like log(p) values that equal -inf for some featurizers.
               continue;
             }
-            if (newHyp.featurizable.untranslatedTokens == 0
+            if (newHyp.featurizable.numUntranslatedSourceTokens == 0
                 && !outputSpace.allowableFinal(newHyp.featurizable)) {
               continue;
             }
