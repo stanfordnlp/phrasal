@@ -100,8 +100,8 @@ public class RuleQueryRequestHandler implements RequestHandler {
     Type t = new TypeToken<RuleQueryReply>() {}.getType();
     ServiceResponse response = new ServiceResponse(reply, t);
 
-    double querySeconds = ((double) System.nanoTime() - startTime) / 1e9;
-    logger.info(String.format("Elapsed time: %.3fs", querySeconds));
+    double querySeconds = (System.nanoTime() - startTime) / 1e9;
+    logger.info(String.format("Rule query elapsed time: %.3fs", querySeconds));
 
     return response;
   }

@@ -5,6 +5,7 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * 
@@ -45,44 +46,38 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int size) {
-    /*
-     * if (size > beamCapacity) { System.err .printf(
-     * "Warning: Requested nbest list size, %d, exceeds beam capacity of %d\n",
-     * size, beamCapacity); }
-     */
-    RecombinationHistory<Derivation<TK, FV>> recombinationHistory = new RecombinationHistory<Derivation<TK, FV>>();
 
+    // Decoding
+    RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
+        new RecombinationHistory<Derivation<TK, FV>>();
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         recombinationHistory, outputSpace, targets, size);
     if (beam == null)
       return null;
-    List<RichTranslation<TK, FV>> translations = new LinkedList<RichTranslation<TK, FV>>();
-
-    List<Derivation<TK, FV>> goalStates = new ArrayList<Derivation<TK, FV>>(
-        beam.size());
-
+    List<Derivation<TK, FV>> goalStates = Generics.newArrayList(beam.size());
     for (Derivation<TK, FV> hyp : beam) {
       goalStates.add(hyp);
     }
 
-    long nbestStartTime = System.nanoTime();
-
-    Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<Sequence<TK>>();
-    if (DISTINCT_SURFACE_TRANSLATIONS)
-      System.err.println("N-best list with distinct surface strings: " + DISTINCT_SURFACE_TRANSLATIONS);
-
+    // Setup for n-best extraction
     featurizer.rerankingMode(true);
-
     StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<Derivation<TK, FV>>(
         goalStates, recombinationHistory);
+    Set<Sequence<TK>> distinctSurfaceTranslations = Generics.newHashSet();
+    if (DISTINCT_SURFACE_TRANSLATIONS) {
+      System.err.println("N-best list with distinct surface strings: " + DISTINCT_SURFACE_TRANSLATIONS);
+    }
 
-    int hypCount = 0, maxDuplicateCount = size * MAX_DUPLICATE_FACTOR;
+    // Extract
+    int hypCount = 0;
+    final int maxDuplicateCount = size * MAX_DUPLICATE_FACTOR;
+    List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
+    final long nbestStartTime = System.nanoTime();
     for (List<Derivation<TK, FV>> hypList : latticeDecoder) {
-
       boolean withDTUs = false;
       ++hypCount;
       Derivation<TK, FV> hyp = null;
-      Set<Rule<TK>> seenOptions = new HashSet<Rule<TK>>();
+      Set<Rule<TK>> seenOptions = Generics.newHashSet();
 
       for (Derivation<TK, FV> nextHyp : hypList) {
         if (hyp == null) {
@@ -108,10 +103,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
               translations.size(), dtuHyp.hasExpired(), hyp);
       }
 
+      if (hyp == null) {
+        System.err.printf("%s: WARNING: null n-best hypothesis for input %d%n", 
+            this.getClass().getName(), sourceInputId);
+        continue;
+      }
+      
       if (DISTINCT_SURFACE_TRANSLATIONS) {
-
         // Get surface string:
-        assert (hyp != null);
         AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.targetPrefix;
 
         // If seen this string before and not among the top-k, skip it:
@@ -130,16 +129,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           break;
 
       } else {
-
         Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
-        assert (hyp != null);
-        
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
             hyp.score, FeatureValues.combine(hyp), collectAlignments(hyp),
             beamGoalHyp.id));
-        if (translations.size() >= size)
+        if (translations.size() >= size) {
           break;
-
+        }
       }
     }
 
@@ -172,7 +168,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     featurizer.rerankingMode(false);
 
     if (DISTINCT_SURFACE_TRANSLATIONS) {
-      List<RichTranslation<TK, FV>> dtranslations = new LinkedList<RichTranslation<TK, FV>>();
+      List<RichTranslation<TK, FV>> dtranslations = Generics.newLinkedList();
       distinctSurfaceTranslations.clear();
       for (RichTranslation<TK, FV> rt : translations) {
         if (distinctSurfaceTranslations.contains(rt.translation)) {
