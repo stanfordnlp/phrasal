@@ -4,6 +4,7 @@
     </description>
   <property name="src" location="${basedir}/src"/>
   <property name="build.path"     value="${basedir}/classes"/>
+	<property name="extdeps.path"   value="${basedir}/lib-nodistrib"/>
   <property environment="env"/>
 
   <property name="compile.debug"       value="true"/>
@@ -13,10 +14,18 @@
   <property name="compile.target"      value="1.7" />
   <property name="compile.encoding"    value="utf-8" />
 
-	<target name="extdeps">
-	  <exec executable="/bin/bash" failonerror="true">
-	    <arg value="${basedir}/scripts/get-dependencies.sh"/>
-	  </exec>
+	<target name="checkdeps">
+		<available file="${extdeps.path}" type="dir" property="extdeps.present"/>
+	</target>
+	
+	<target name="extdeps" depends="checkdeps" unless="extdeps.present">
+		<!-- TODO Windows users need to specify path to Cygwin -->
+		<exec dir="." executable="C:\Path\to\cygwin\bin\bash" osfamily="windows">
+			<arg value="${basedir}/scripts/get-dependencies.sh"/>
+		</exec>
+		<exec executable="/bin/bash" osfamily="unix">
+			<arg value="${basedir}/scripts/get-dependencies.sh"/>
+		</exec>
 	</target>
 	
    <target name="classpath" description="Sets the classpath">
@@ -26,8 +35,7 @@
       <fileset dir="${basedir}/lib">
         <include name="*.jar"/>
       </fileset>
-
-      <fileset dir="${basedir}/lib-nodistrib">
+      <fileset dir="${extdeps.path}">
         <include name="*.jar"/>
       </fileset>
       <fileset dir="${env.CORENLP}">
