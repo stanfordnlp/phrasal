@@ -12,10 +12,10 @@ if [ $# -ne 4 ]; then
     echo
     echo Step definitions:
     echo "  1  Extract phrases from dev set"
-    echo "  2  Pre-process dev set for OOVs"
+    echo "  2  Pre-process the dev set"
     echo "  3  Run tuning"
     echo "  4  Extract phrases from test set"
-    echo "  5  Pre-process test set for OOVs"
+    echo "  5  Pre-process the test set"
     echo "  6  Decode test set"
     echo "  7  Output results file"
     echo "  8  Generate a learning curve from an online run"
@@ -71,13 +71,8 @@ function extract {
 function prep-source {
     INFILE=$1
     OUTFILE=$2
-    PTABLEDIR=$3
-    NAME=$4
     rm -f $OUTFILE
-    remove_unk_before_decode $MAX_PHRASE_LEN "$PTABLEDIR"/phrase-table.gz \
-	"$INFILE" "$OUTFILE".tmp >& "$OUTFILE".err 
-    cat "$OUTFILE".tmp | sed 's/^ *$/null/' > "$OUTFILE"
-    rm -f "$OUTFILE".tmp
+    ln -s $INFILE $OUTFILE
 }
 
 function tune-setup {
@@ -210,7 +205,7 @@ function step-status {
 
 function bookmark {
     cp $VAR_FILE "$RUNNAME".vars
-    if [ -n $JAVANLP_HOME ]; then
+    if [ -n "$JAVANLP_HOME" ]; then
 	WDIR=`pwd`
 	cd $JAVANLP_HOME
 	if hash git 2>/dev/null; then
@@ -244,7 +239,7 @@ do
     fi
     if [ $step -eq 2 ]; then
 	step-status $step
-	prep-source $TUNE_SET $TUNE_FILE $TUNE_PTABLE_DIR $TUNE_SET_NAME
+	prep-source $TUNE_SET $TUNE_FILE
     fi
     if [ $step -eq 3 ]; then
 	step-status $step
@@ -260,7 +255,7 @@ do
     fi
     if [ $step -eq 5 ]; then
 	step-status $step
-	prep-source $DECODE_SET $DECODE_FILE $DECODE_PTABLE_DIR $DECODE_SET_NAME
+	prep-source $DECODE_SET $DECODE_FILE
     fi
     if [ $step -eq 6 ]; then
 	step-status $step
