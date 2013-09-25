@@ -151,29 +151,6 @@ fi
 
 jar -cf phrasal.$version/phrasal.$version.jar -C phrasal.$version/classes edu
 
-echo "Running phrasal integration test" 
-export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$version/classes
-for jarFile in $CORENLP/*.jar; do
-  export CLASSPATH=$CLASSPATH:$jarFile
-done
-export CLASSPATH=$CLASSPATH:`pwd`/phrasal.$version/lib/fastutil.jar
-echo $CLASSPATH
-
-#scripts/standard_mert_test.pl distro.$version
-true
-
-if [ $? = 0 ]; then
-  echo "PASS: Phrasal integration test"
-else
-  echo "FAIL: Phrasal integration test"
-  echo "Log file in /u/nlp/data/mt_test/mert:"
-  echo `ls -t  /u/nlp/data/mt_test/mert/*.log | head -1`
-  echo "End of log dump for FAIL: Phrasal integration test"
-  cat `ls -t  /u/nlp/data/mt_test/mert/*.log | head -1`
-  echo "FAIL: Phrasal integration test"
-  exit -1
-fi
-
 rm -rf phrasal.$1/classes/
 rm -rf phrasal.$1/lib-nodistrib/
 
