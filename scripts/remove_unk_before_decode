@@ -1,5 +1,10 @@
 #!/usr/bin/perl
-BEGIN { push @INC, "$ENV{JAVANLP_HOME}/projects/mt/scripts" }
+#
+# Load local Phrasal Perl modules from the scripts directory.
+#
+use Cwd 'abs_path';
+use File::Basename;
+BEGIN { push @INC, dirname(abs_path($0)) }
 
 ###################################################
 # Remove all tokens that satisfy both requirements:
