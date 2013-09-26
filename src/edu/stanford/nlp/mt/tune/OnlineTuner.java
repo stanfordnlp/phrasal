@@ -691,7 +691,7 @@ public class OnlineTuner {
 
     Counter<String> weights;
     try {
-      weights = IOTools.readWeights(wtsInitialFile, null);
+      weights = IOTools.readWeights(wtsInitialFile);
       weights = new OpenAddressCounter<String>(weights, 1.0f);
     } catch (IOException e) {
       e.printStackTrace();

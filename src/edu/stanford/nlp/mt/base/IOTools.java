@@ -38,6 +38,10 @@ import edu.stanford.nlp.util.Index;
  */
 public final class IOTools {
   
+  // TODO(spenceg): Should be user-configurable via various main methods (Phrasal,
+  // OnlineTuner, PhraseExtract, etc.)
+  public static final String DEFAULT_ENCODING = "UTF-8";
+  
   private IOTools() {}
 
   /**
@@ -84,10 +88,10 @@ public final class IOTools {
     try {
       if (f.getAbsolutePath().endsWith(".gz")) {
         reader = new LineNumberReader(new InputStreamReader(
-            new GZIPInputStream(new FileInputStream(f), 8192), "UTF-8"));
+            new GZIPInputStream(new FileInputStream(f), 8192), DEFAULT_ENCODING));
       } else {
         reader = new LineNumberReader(new InputStreamReader(
-            new BufferedInputStream(new FileInputStream(f)), "UTF-8"));
+            new BufferedInputStream(new FileInputStream(f)), DEFAULT_ENCODING));
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -107,10 +111,10 @@ public final class IOTools {
         System.err.println("output file: " + fileName);
         if (fileName.endsWith(".gz")) {
           output = new PrintStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
-              fileName))));
+              fileName))), false, DEFAULT_ENCODING);
         } else {
           output = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName)), false,
-              "UTF-8");
+              DEFAULT_ENCODING);
         }
       }
     } catch (IOException e) {
@@ -241,9 +245,9 @@ public final class IOTools {
     
     try {
       if (op.equals("print-wts")) {
-        Counters.printCounterSortedByKeys(IOTools.readWeights(file, null));
+        Counters.printCounterSortedByKeys(IOTools.readWeights(file));
       } else if (op.equals("write-wts")) {
-        IOTools.writeWeights(file + ".txt", IOTools.readWeights(file, null));
+        IOTools.writeWeights(file + ".txt", IOTools.readWeights(file));
       } else {
         System.err.println("Unsupported operation: " + op);
       }
