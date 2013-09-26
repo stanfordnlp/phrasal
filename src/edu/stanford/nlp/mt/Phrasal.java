@@ -67,9 +67,6 @@ public class Phrasal {
   public static final String LANGUAGE_MODEL_WT_OPT = "weight-l";
   public static final String TRANSLATION_MODEL_WT_OPT = "weight-t";
   public static final String WORD_PENALTY_WT_OPT = "weight-w";
-  public static final String INPUT_FACTORS_OPT = "input-factors";
-  public static final String FACTOR_DELIM_OPT = "factor-delimiter";
-  public static final String MAPPING_OPT = "mapping";
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
@@ -113,10 +110,9 @@ public class Phrasal {
   private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
   private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
 
-  static final Set<String> REQUIRED_FIELDS = new HashSet<String>();
-  static final Set<String> OPTIONAL_FIELDS = new HashSet<String>();
-  static final Set<String> IGNORED_FIELDS = new HashSet<String>();
-  static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<String>();
+  static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
+  static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
+  static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
 
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,WEIGHTS_FILE));
@@ -135,11 +131,8 @@ public class Phrasal {
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS));
-    IGNORED_FIELDS.addAll(Arrays.asList(INPUT_FACTORS_OPT, MAPPING_OPT,
-        FACTOR_DELIM_OPT));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
-    ALL_RECOGNIZED_FIELDS.addAll(IGNORED_FIELDS);
   }
 
   /**
@@ -295,13 +288,6 @@ public class Phrasal {
       extraFields.removeAll(ALL_RECOGNIZED_FIELDS);
       throw new RuntimeException(String.format(
           "The following fields are unrecognized: %s\n", extraFields));
-    }
-
-    Set<String> ignoredItems = new HashSet<String>(config.keySet());
-    ignoredItems.retainAll(IGNORED_FIELDS);
-
-    for (String ignored : ignoredItems) {
-      System.err.printf("Ignoring Moses field: %s\n", ignored);
     }
 
     if (config.containsKey(RECOMBINATION_HEURISTIC)) {
