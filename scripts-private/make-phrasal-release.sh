@@ -141,7 +141,7 @@ mkdir `pwd`/phrasal.$version/lib-nodistrib
 export CLASSPATH=.
 export CORENLP=`ls -dt /u/nlp/distrib/stanford-corenlp-full-201*-0*[0-9] | head -1`
 
-(cd  phrasal.$version/; ./scripts/first-build.sh all)
+(cd  phrasal.$version/; ./scripts/get-dependencies.sh all)
 if [ $? = 0 ]; then
    echo "PASS: User distribution builds successfully"
 else
