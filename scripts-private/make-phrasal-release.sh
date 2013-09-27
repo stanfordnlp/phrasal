@@ -101,6 +101,10 @@ mkdir phrasal.$version || exit
 cp -r src src-cc scripts example README.txt LICENSE.txt phrasal.$version || exit
 cp userbuild.xml  phrasal.$version/build.xml || exit
 
+# Documentation
+mkdir -p phrasal.$version/doc || exit
+cp doc/featureapi/phrasal-featureapi.pdf phrasal.$version/doc || exit
+
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
     edu.stanford.nlp.classify.LogisticClassifierFactory \
