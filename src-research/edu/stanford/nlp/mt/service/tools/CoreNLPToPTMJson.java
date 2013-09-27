@@ -61,8 +61,8 @@ public final class CoreNLPToPTMJson {
       int i = 0;
       for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
         String word = token.get(TextAnnotation.class);
-        container.tokens.add(word);
-        String pos = token.get(PartOfSpeechAnnotation.class);
+        container.tokens.add(unescape(word));
+        String pos = mapPOS(token.get(PartOfSpeechAnnotation.class));
         container.pos.add(pos);
         String ne = token.get(NamedEntityTagAnnotation.class);
         container.ner.add(ne);
@@ -76,6 +76,34 @@ public final class CoreNLPToPTMJson {
     Gson gson = new Gson();
     String json = gson.toJson(annotations);
     System.out.println(json);
+  }
+
+  private static String unescape(String word) {
+    if (word.equals("-LRB-")) {
+      return "(";
+    } else if (word.equals("-RRB-")) {
+      return ")";
+    }
+    return word;
+  }
+
+  /**
+   * Map PTB tags to reduced form.
+   * 
+   * @param posTag
+   * @return
+   */
+  private static String mapPOS(String posTag) {
+    if (posTag.startsWith("NN")) {
+      return "N";
+    } else if (posTag.startsWith("VB")) {
+      return "V";
+    } else if (posTag.startsWith("JJ")) {
+      return "A";
+    } else if (posTag.startsWith("RB")) {
+      return "ADV";
+    }
+    return "O";
   }
 
   private static BitSet markBaseNPs(Tree tree) {

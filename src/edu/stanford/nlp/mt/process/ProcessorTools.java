@@ -47,7 +47,8 @@ public final class ProcessorTools {
   private ProcessorTools() {}
   
   /**
-   * Convert a string to an unlabeled character sequence.
+   * Convert a string to an unlabeled character sequence. Applies whitespace
+   * tokenization.
    * 
    * @param str
    * @return
@@ -57,6 +58,12 @@ public final class ProcessorTools {
     return stringToCharacterSequence(tokens);
   }
   
+  /**
+   * Convert a tokenized sequence to a character string.
+   * 
+   * @param tokens
+   * @return
+   */
   public static List<CoreLabel> stringToCharacterSequence(String[] tokens) {
     List<CoreLabel> sequence = Generics.newArrayList(tokens.length * 7);
     int charIndex = 0;
