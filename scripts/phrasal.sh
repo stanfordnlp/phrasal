@@ -8,7 +8,7 @@
 if [ $# -ne 4 ]; then
     echo Usage: `basename $0` var_file steps ini_file sys_name
     echo
-    echo "Use dashes and commas in the steps specification e.g. 1-3,6,7"
+    echo "Use dashes and commas in the steps specification e.g. 1-3,6"
     echo
     echo Step definitions:
     echo "  1  Extract phrases from dev set"
