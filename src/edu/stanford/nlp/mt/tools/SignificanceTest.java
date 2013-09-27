@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.metrics.*;
  * @author danielcer
  * 
  */
-public class SigTestApproxRand {
+public class SignificanceTest {
   static public final int SAMPLES = 1000;
 
   static double scoreList(List<Sequence<IString>> transList,
