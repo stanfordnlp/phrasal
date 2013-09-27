@@ -229,32 +229,4 @@ public final class IOTools {
     }
     nbestListWriter.append(sb.toString());
   }
-  
-  /**
-   * Read and write weights files.
-   * 
-   * @param args
-   */
-  public static void main(String[] args) {
-    if (args.length != 2) {
-      System.out.printf("Usage: java %s [print-wts|write-wts] file%n", IOTools.class.getName());
-      System.exit(-1);
-    }
-    String op = args[0];
-    String file = args[1];
-    
-    try {
-      if (op.equals("print-wts")) {
-        Counters.printCounterSortedByKeys(IOTools.readWeights(file));
-      } else if (op.equals("write-wts")) {
-        IOTools.writeWeights(file + ".txt", IOTools.readWeights(file));
-      } else {
-        System.err.println("Unsupported operation: " + op);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
-  }
 }
