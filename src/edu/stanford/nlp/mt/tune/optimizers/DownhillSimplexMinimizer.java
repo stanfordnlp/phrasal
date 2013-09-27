@@ -1,6 +1,9 @@
-package edu.stanford.nlp.optimization;
+package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.Arrays;
+
+import edu.stanford.nlp.optimization.Function;
+import edu.stanford.nlp.optimization.Minimizer;
 
 /**
  * Downhill Simplex (Nelder-Mead)

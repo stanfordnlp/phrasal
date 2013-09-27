@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import edu.stanford.nlp.mt.tune.MERT;
-import edu.stanford.nlp.optimization.DownhillSimplexMinimizer;
 import edu.stanford.nlp.optimization.Function;
 import edu.stanford.nlp.optimization.Minimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
