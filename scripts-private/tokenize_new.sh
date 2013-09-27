@@ -9,8 +9,8 @@
 # Author: Spence Green
 # Changes: Thang Sep13 allow to specify outFile, decide to gzip or not, and update tokenization for English.
 #
-if [ $# -lt 4 ]; then
-    echo "Usage: `basename $0` language inFile outFile isGzip [clean|tolower]"
+if [ $# -lt 5 ]; then
+    echo "Usage: `basename $0` language inFile outFile isGzip isIBMPostProcessing [clean|tolower]"
     echo
     echo "  clean    : Heuristic data cleaning"
     echo "  tolower  : Convert to lowercase" 
@@ -22,7 +22,8 @@ lang=$1
 infile=$2
 outfile=$3
 isGzip=$4
-shift 4
+isIBMPostProcessing=$5
+shift 5
 
 gzipCmd=""
 if [ $isGzip -eq 1 ]; then
@@ -103,8 +104,22 @@ elif [ $lang == "English" ]; then
 	fixnl="$fixnl --latin"
     fi
     
-    # Thang add Perl one-liner to split at - and / 
-    echo "$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | perl -pi -e \"s/([a-zA-Z])(-|\/)([a-zA-Z])/\1 \2 \3/g\" $gzipCmd > ${outfile}" 
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | perl -pi -e "s/([a-zA-Z])(-|\/)([a-zA-Z])/\1 \2 \3/g" $gzipCmd > ${outfile} 
-fi
+    echo "$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK $gzipCmd > ${outfile}.notPostprocess" 
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK > ${outfile}.notPostprocess
 
+    # post processing
+    if [ $isIBMPostProcessing -eq 1 ]; then
+      echo "$JAVANLP_HOME/projects/mt/scripts-private/post_process_ibm.py ${outfile}.notPostprocess $JAVANLP_HOME/projects/mt/scripts-private/token.map ${outfile}"
+      $JAVANLP_HOME/projects/mt/scripts-private/post_process_ibm.py ${outfile}.notPostprocess $JAVANLP_HOME/projects/mt/scripts-private/token.map ${outfile}
+      rm ${outfile}.notPostprocess
+    else
+      mv ${outfile}.notPostprocess ${outfile}
+    fi
+
+    if [ $isGzip -eq 1 ]; then
+      gzip ${outfile}
+    fi
+    
+    # Thang add Perl one-liner to split at - and / 
+    #  | perl -pi -e "s/([a-zA-Z])(-|\/)([a-zA-Z])/\1 \2 \3/g"
+fi

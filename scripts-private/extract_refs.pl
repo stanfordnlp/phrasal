@@ -76,8 +76,9 @@ for(my $refid=1; $refid<$refidx; $refid++){ # go through each reference
   my $rawFile = "$outDir/ref$refid.raw";
   my $tokenizedFile = "$outDir/ref$refid.tokenized";
   my $isGzip = 0;
+  my $isIBMPostProcessing = 1;
   #my $cmd = "java edu.stanford.nlp.process.PTBTokenizer  -preserveLines -options $options < $rawFile > $tokenizedFile";
-  my $cmd = "$ENV{JAVANLP_HOME}/projects/mt/scripts-private/tokenize_new.sh $lang $rawFile $tokenizedFile $isGzip tolower";
+  my $cmd = "$ENV{JAVANLP_HOME}/projects/mt/scripts-private/tokenize_new.sh $lang $rawFile $tokenizedFile $isGzip $isIBMPostProcessing tolower";
   print stderr "\n# Tokenizing ...\n  $cmd\n";
   system($cmd);
   

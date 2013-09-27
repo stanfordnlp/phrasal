@@ -78,10 +78,11 @@ def process_files(in_file, out_file):
   for eachline in inf:
     eachline = clean_line(eachline)
     tokens = re.split(' \|\|\| ', eachline)
-    if len(tokens)==4 or len(tokens)==3:
+    if len(tokens)>=2:
       sent_map[tokens[1]] = 1
     else:
-      print line_id, tokens
+      sys.stderr.write('! Line % doesn\'t have a translation\n' % line_id)
+      sys.exit(1)
 
     line_id = line_id + 1
     if (line_id % 10000 == 0):
