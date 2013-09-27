@@ -33,7 +33,6 @@ import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
 
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.process.TrueCaser;
 
 
 /**

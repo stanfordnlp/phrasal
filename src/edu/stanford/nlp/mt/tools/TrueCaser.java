@@ -1,4 +1,4 @@
-package edu.stanford.nlp.process;
+package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.ling.CoreLabel;
 

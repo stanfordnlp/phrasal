@@ -54,10 +54,7 @@ public class LanguageModels {
 
     LanguageModel<IString> languageModel;
 
-    if (filename.endsWith("bloomlm")) {
-      languageModel = FrequencyMultiScoreLanguageModel.load(filename);
-    
-    } else if (filename.endsWith(".disklm")) {
+    if (filename.endsWith(".disklm")) {
       languageModel = new DiskLM(filename);
     
     } else if (filename.startsWith(KEN_LM_TAG)) {
