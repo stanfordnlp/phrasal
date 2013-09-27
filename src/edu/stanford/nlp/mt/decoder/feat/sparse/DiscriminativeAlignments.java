@@ -1,11 +1,10 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.FeatureValue;

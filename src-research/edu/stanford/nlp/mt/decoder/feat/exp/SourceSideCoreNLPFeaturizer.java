@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat.exp;
 
 import java.io.IOException;
 import java.io.LineNumberReader;

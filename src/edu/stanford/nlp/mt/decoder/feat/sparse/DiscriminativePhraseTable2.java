@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.efeat;
+package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
@@ -6,7 +6,6 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
