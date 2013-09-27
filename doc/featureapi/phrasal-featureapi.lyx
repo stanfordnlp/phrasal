@@ -1,0 +1,1603 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage[T1]{fontenc}
+\usepackage{tgpagella}
+\usepackage{tgheros}             % Helvetica (sans-serif)
+\usepackage{tgcursor}            % Courier   (typewriter)
+
+%% Microtypesetting extensions
+%% Obviously only works with PDFLatex, which supports microfont expansion
+\usepackage[protrusion=true,expansion=true]{microtype}
+
+%% Math typesetting
+\usepackage{amssymb}
+\usepackage{bm} %% For bold greek symbols, use either \bm{} or \boldsymbol{}
+
+%% Convenient mathematical functions
+\usepackage{fixltx2e}
+\usepackage{bbm}
+\newcommand{\indicator}[1]{\mathbbm{1}\left({#1}\right) }
+\newcommand{\abs}[1]{\vert{#1}\vert}
+\newcommand{\norm}[1]{\Vert{#1}\Vert}
+
+%% Source code
+\usepackage{color}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+\definecolor{light-gray}{gray}{0.95}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  backgroundcolor=\color{light-gray},
+  language=Java,
+  numbers=left
+}
+
+\usepackage{hyperref}
+\hypersetup{
+pdftitle={Phrasal Feature API Tutorial},
+pdfauthor={Spence Green},
+bookmarksnumbered,
+pdfstartview={FitH},
+colorlinks,
+citecolor=black,
+filecolor=black,
+linkcolor=black,
+urlcolor=black,
+breaklinks=true,
+}
+
+%% Linguistics packages
+%% \usepackage{qtree}
+%\usepackage{linguex}
+%\setlength{\Extopsep}{5pt}
+%\usepackage{cgloss4e}
+%\renewcommand{\refdash}{}
+
+%% Multirow tables
+% \usepackage{multirow}
+% \renewcommand{\multirowsetup}{\centering}
+
+%% Algorithms packages
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+
+%% Automata and drawing
+%\usepackage{tikz}
+%\usetikzlibrary{automata,positioning}
+\end_preamble
+\use_default_options true
+\begin_modules
+theorems-ams
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 12
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+\noindent
+
+\series bold
+Phrasal Feature API Tutorial
+\end_layout
+
+\begin_layout Standard
+\noindent
+Spence Green // 27 June 2013
+\end_layout
+
+\begin_layout Section*
+Introduction
+\end_layout
+
+\begin_layout Standard
+The Phrasal feature API supports rich feature templates.
+ For most of the last decade 
+\begin_inset Quotes eld
+\end_inset
+
+rich features
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+machine translation
+\begin_inset Quotes erd
+\end_inset
+
+ seldom appeared in the same sentence.
+ Times have changed.
+ Our recent work (Green et al., 2013) on tuning algorithms for these models
+ showed how to learn 
+\begin_inset Quotes eld
+\end_inset
+
+sparse
+\begin_inset Quotes erd
+\end_inset
+
+ models with millions of features in less time than it took to build classical
+ 
+\begin_inset Quotes eld
+\end_inset
+
+dense
+\begin_inset Quotes erd
+\end_inset
+
+ models containing a few features.
+ The new learning procedure permits the style of discriminative feature
+ engineering familiar in other NLP systems such as parsers and taggers.
+ However, the MT search algorithm differs from those systems, and those
+ differences are material for potential feature designs:
+\end_layout
+
+\begin_layout Enumerate
+MT search is approximate
+\end_layout
+
+\begin_layout Enumerate
+Features guide the search heuristics
+\end_layout
+
+\begin_layout Enumerate
+Therefore, 
+\begin_inset Quotes eld
+\end_inset
+
+bad
+\begin_inset Quotes erd
+\end_inset
+
+ features can cause search errors
+\end_layout
+
+\begin_layout Standard
+Because of (3), awareness of the search procedure is important for MT feature
+ engineering.
+\end_layout
+
+\begin_layout Subsection*
+Approximate Hypergraph Inference
+\end_layout
+
+\begin_layout Standard
+Phrase-based MT can be cast as a hypergraph inference problem.
+ 
+\series bold
+Hypergraphs
+\series default
+ generalize the idea of a graph by allowing edges to connect two or more
+ nodes.
+ Define a hypergraph 
+\begin_inset Formula $G=(V,E)$
+\end_inset
+
+, where 
+\begin_inset Formula $V$
+\end_inset
+
+ is a set of vertices and 
+\begin_inset Formula $E$
+\end_inset
+
+ is a set of directed hyperedges.
+ Each directed hyperedge is a tuple 
+\begin_inset Formula $(T,H)$
+\end_inset
+
+, where 
+\begin_inset Formula $T\subseteq V$
+\end_inset
+
+ is a set of 
+\series bold
+tail nodes
+\series default
+ and 
+\begin_inset Formula $H\subseteq V$
+\end_inset
+
+ is a set of 
+\series bold
+head nodes
+\series default
+.
+ For MT, 
+\begin_inset Formula $|H|=1$
+\end_inset
+
+, and the resulting hypergraph is called a 
+\series bold
+B-hypergraph
+\series default
+ (Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:B-arc"
+
+\end_inset
+
+).
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename b-arc.png
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:B-arc"
+
+\end_inset
+
+A B-hypergraph with two tail nodes and one head node.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Hypergraph inference can be written as a 
+\series bold
+deductive system
+\series default
+.
+ Deductive inference involves determination of a new true statement from
+ a set of statements that are assumed to be true.
+ The existing statements are called 
+\series bold
+antecedents
+\series default
+, from which the procedure deduces the 
+\series bold
+consequent
+\series default
+.
+ Concretely, phrase-based MT systems combine an existing partial translation
+ with a translation rule to form a new partial translation.
+ In terms of Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:B-arc"
+
+\end_inset
+
+, the initial hypothesis and rule would be the tail nodes, and the new hypothesi
+s would be the head node.
+\end_layout
+
+\begin_layout Standard
+Let's define some notation:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $r=\langle s,t\rangle$
+\end_inset
+
+ : a 
+\series bold
+translation rule
+\series default
+ that translates a source sequence 
+\begin_inset Formula $s$
+\end_inset
+
+ to a target sequence 
+\begin_inset Formula $t$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $R$
+\end_inset
+
+ : the set of all such rules.
+ 
+\begin_inset Formula $R$
+\end_inset
+
+ is conventionally called a 
+\series bold
+phrase table
+\series default
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $d=\{r_{i}\}_{i=1\dots N}$
+\end_inset
+
+ : a 
+\series bold
+derivation
+\series default
+ consisting of 
+\begin_inset Formula $N$
+\end_inset
+
+ rules.
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $w(\cdot)$
+\end_inset
+
+ : a function that returns the weight of a rule or derivations.
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $cov(d)$
+\end_inset
+
+ : a function that returns a bit vector---called a 
+\series bold
+coverage set
+\series default
+---indicating which source positions have been translated in the derivation.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+MT systems impose the constraint that each source token must be translated
+ exactly once.
+\end_layout
+
+\end_inset
+
+ The expression 
+\begin_inset Formula $r\notin cov(d)$
+\end_inset
+
+ means that 
+\begin_inset Formula $r$
+\end_inset
+
+ maps to an empty/uncovered span in 
+\begin_inset Formula $d$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $comb(d,r)$
+\end_inset
+
+ : returns the weight/cost of combining derivation 
+\begin_inset Formula $d$
+\end_inset
+
+ and rule 
+\begin_inset Formula $r$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+For an input sequence 
+\begin_inset Formula $S$
+\end_inset
+
+, the MT system performs the following procedure:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="7" columns="2">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="0">
+<column alignment="right" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" topline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+\begin_inset Formula $\frac{}{r\;:\; w(r)}\; r\in R$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+axiom
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+\begin_inset Formula $\frac{d\;:\; w(d)\quad r\;:\; w(r)}{d'\;:\; w(d)\cdot w(r)\cdot comb(d,r)}\; r\notin cov(d)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+item
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+\begin_inset Formula $|cov(d)|=|S|$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="right" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+goal
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Phrase-based-MT-as"
+
+\end_inset
+
+Phrase-based MT as deductive inference.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This notation can be read as follows: if the antecedents on the top are
+ true, then the consequent on the bottom is true subject to the conditions
+ on the right.
+ The items are precisely B-hyperedges in the search hypergraph.
+ The MT search space contains exponentially many items, so approximate inference
+ in the form of a 
+\series bold
+beam search
+\series default
+ is typically applied.
+ Phrasal implements a beam-filling algorithm known as 
+\series bold
+cube pruning
+\series default
+.
+\end_layout
+
+\begin_layout Standard
+The weights are computed via an inner product between a weight vector and
+ a feature map.
+ For example, 
+\begin_inset Formula $w(r)=\theta^{\top}\Phi(r)$
+\end_inset
+
+, where 
+\begin_inset Formula $\theta$
+\end_inset
+
+ is the model's weight vector and 
+\begin_inset Formula $\Phi(r)$
+\end_inset
+
+ is a feature map.
+ The Phrasal feature API specifies that feature map.
+\end_layout
+
+\begin_layout Section*
+Feature Types
+\end_layout
+
+\begin_layout Standard
+In Phrasal, feature extractors are known as featurizers.
+ Featurizer functionality is controlled via Java interfaces.
+ There are two major featurizer interfaces:
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="3" columns="2">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="0">
+<column alignment="center" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Interface
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Correspondence
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+\size small
+edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+axiom : 
+\begin_inset Formula $w(r)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+\size small
+edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+item : 
+\begin_inset Formula $comb(d,r)$
+\end_inset
+
+
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+Featurizers return 
+\family typewriter
+FeatureValue
+\family default
+ objects, which are simply key/value pairs.
+ 
+\series bold
+Feature values must be monotone
+\series default
+.
+ 
+\end_layout
+
+\begin_layout Subsection*
+RuleFeaturizer
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+RuleFeaturizer
+\family default
+ is called when a rule 
+\begin_inset Formula $r$
+\end_inset
+
+ is queried from the phrase table, i.e., for the axiom in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Phrase-based-MT-as"
+
+\end_inset
+
+.
+ Feature values are cached with the rule.
+ Therefore, this type of featurizer is appropriate for features that can
+ be extracted independent of context in a derivation.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstinputlisting{RuleFeaturizer.java}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{1.0em}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Example
+
+\family typewriter
+WordPenaltyFeaturizer
+\family default
+ returns the cardinality of the target side of each translation rule.
+ These counts are summed for each derivation, and balance the strength of
+ the target language model, which prefers shorter strings.
+\end_layout
+
+\begin_layout Example
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstinputlisting{WordPenaltyFeaturizer.java}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{1.0em}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+DerivationFeaturizer
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+DerivationFeaturizer
+\family default
+ is called each time a new derivation is created, i.e.
+ for the item in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Phrase-based-MT-as"
+
+\end_inset
+
+.
+ It should score the new translation rule in the context of derivation,
+ i.e., generate features that depend on context in the derivation.
+ The canonical example is the language model, which requires some 
+\begin_inset Formula $n$
+\end_inset
+
+-gram history for scoring.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstinputlisting{DerivationFeaturizer.java}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{1.0em}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Example
+The 
+\family typewriter
+NGramLanguageModelFeaturizer
+\family default
+ scores a derivation based on some fixed-length 
+\begin_inset Formula $n$
+\end_inset
+
+-gram history that must be extracted from the partial translation.
+ This history cannot be computed until the derivation is created.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstinputlisting{NGramLanguageModelFeaturizer.java}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{1.0em}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Notice that 
+\family typewriter
+NGramLanguageModelFeaturizer
+\family default
+ also implements the interface 
+\family typewriter
+RuleIsolationScoreFeaturizer
+\family default
+, which extends 
+\family typewriter
+RuleFeaturizer
+\family default
+.
+ This is because the LM also provides rule scores that are used as part
+ of the search heuristic.
+ However, we want to discard these estimates when the derivation is actually
+ created.
+ 
+\family typewriter
+RuleIsolationScoreFeaturizer
+\family default
+ prevents the decoder from caching the feature value.
+ Typically this interface is implemented in conjunction with 
+\family typewriter
+DerivationFeaturizer
+\family default
+.
+\end_layout
+
+\begin_layout Subsection*
+Featurizer Concurrency Issues
+\end_layout
+
+\begin_layout Standard
+Phrasal parallelizes decoding by first instantiating a threadpool and then
+ assigning one search instance---called an 
+\series bold
+inferer
+\series default
+---to each thread.
+ By default, featurizers are not cloned.
+ Therefore, if the featurizer maintains any local state, then it will not
+ be re-entrant.
+ To instruct the decoder to clone one featurizer per inferer, implement
+ the 
+\family typewriter
+NeedsCloneable
+\family default
+ interface (Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Interfaces-that-provide"
+
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Section*
+Additional Interfaces
+\end_layout
+
+\begin_layout Standard
+The feature API provides additional functionality via companion interfaces.
+ The interfaces may or may not specify required methods.
+ These interfaces may only be implemented along with either 
+\family typewriter
+RuleFeaturizer
+\family default
+ or 
+\family typewriter
+DerivationFeaturizer
+\family default
+ (or both).
+ Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Interfaces-that-provide"
+
+\end_inset
+
+ describes the interfaces.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="2">
+<features tabularvalignment="middle">
+<column alignment="left" valignment="top" width="0">
+<column alignment="left" valignment="top" width="0">
+<row>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Interface
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Description
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+NeedsInternalAlignments
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Loads phrase-internal alignments
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+NeedsCloneable
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Required for re-entrancy
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+NeedsState
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Permits the decoder to store additional state
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\family typewriter
+NeedsReorderingRecombination
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Enables reordering recombination history
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Interfaces-that-provide"
+
+\end_inset
+
+Interfaces that provide additional featurizer functionality.
+ These interfaces are located in the package 
+\family typewriter
+edu.stanford.nlp.mt.decoder.feat
+\family default
+.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here are example feature types for each interface:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+NeedsInternalAlignments
+\family default
+---suppose that you want to penalize phrase-internal alignment errors such
+ as 
+\shape italic
+maison
+\shape default
+
+\begin_inset Formula $\Rightarrow$
+\end_inset
+
+
+\shape italic
+the
+\shape default
+.
+ Alignment to punctuation and function words---a phenomenon known as 
+\series bold
+garbage collection
+\series default
+---is a common problem in MT.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+NeedsCloneable
+\family default
+---you want to write source-side features so you load CoreNLP.
+ When initialize() is called, you annotate the source sentence and save
+ it in the featurizer.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+NeedsState
+\family default
+---you want to implement a target-side syntactic feature that saves some
+ syntactic information about the target prefix.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+NeedsReorderingRecombination
+\family default
+---you want to implement a new lexicalized reordering model.
+\end_layout
+
+\begin_layout Section*
+Practical Matters
+\end_layout
+
+\begin_layout Standard
+Phrasal loads featurizers by reflection.
+ The featurizer should be specified in the *.ini file that configures the
+ system.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The file 
+\family typewriter
+\size normal
+$JAVANLP_HOME/projects/mt/scripts-private/README.phrasal
+\family default
+\size default
+ describes the *.ini file format.
+ It also demonstrates how to build and run the system.
+ Each featurizer change requires a full system tuning run, which may last
+ several hours.
+ Think carefully before committing yourself to that endeavor!
+\end_layout
+
+\end_inset
+
+ Let's look at an example *.ini file:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstinputlisting{phrasal.online.ini}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{1.0em}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+This file loads two featurizers, the first of which takes two boolean arguments.
+ Constructors with variable-length argument lists are specified as follows:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+lstinputlisting{DiscriminativePhraseTable.java}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+vspace{1.0em}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\noindent
+The example *.ini file also specifies a few other parameters germane to learning:
+\end_layout
+
+\begin_layout Itemize
+localprocs---the number of decoding threads.
+ We usually set this parameter to the number of 
+\shape italic
+physical
+\shape default
+ cores on the machine.
+ Hyperthreading offers not performance benefit for Phrasal.
+\end_layout
+
+\begin_layout Itemize
+stack---the beam size of the search procedure.
+ Larger beam sizes allow the search procedure to explore more of the search
+ space.
+ Search is slower, but this may be a worthwhile tradeoff when experimenting
+ with a new feature.
+\end_layout
+
+\begin_layout Itemize
+weights-file---the initial weight vector.
+\end_layout
+
+\begin_layout Itemize
+n-best-list---the size of the ranked translation list generated for each
+ input instance.
+ The learning algorithm benefits from more examples.
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+pagebreak
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+How to inspect weight vectors
+\end_layout
+
+\begin_layout Standard
+The learner generates intermediate weight vectors after each epoch.
+ The weight vectors are binary files.
+ To inspect them, run:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{lstlisting}
+\end_layout
+
+\begin_layout Plain Layout
+
+java edu.stanford.nlp.mt.base.IOTools print-wts my.binwts
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{lstlisting}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+Tips and Tricks
+\end_layout
+
+\begin_layout Standard
+Getting features to work involves tradeoffs among (1) the frequency with
+ which the feature fires, (2) the speed with which the feature can be extracted,
+ and (3) the effect of the feature on search.
+ If the feature fires infrequently, then it is unlikely to affect the corpus-lev
+el error metric (BLEU).
+ If it cannot be extracted quickly, then the learning time may be unacceptable.
+ Finally, if the feature causes search errors, then translation quality
+ may fall below the baseline.
+\end_layout
+
+\begin_layout Standard
+Here are a few common problems and associated diagnostics:
+\end_layout
+
+\begin_layout Itemize
+Feature weight set to 0 (does not appear in the weight vector)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Increase the beam size
+\end_layout
+
+\begin_layout Itemize
+Increase the 
+\begin_inset Formula $n$
+\end_inset
+
+-best list size
+\end_layout
+
+\begin_layout Itemize
+Lower the regularization strength
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Search is slow
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Use primitive arrays instead of HashMaps!
+\end_layout
+
+\begin_layout Itemize
+Move computation to the initialize() method
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+The model overfits to the tuning set (to see the tuning score, 
+\family typewriter
+grep
+\family default
+ for 
+\begin_inset Quotes eld
+\end_inset
+
+BLEU
+\begin_inset Quotes erd
+\end_inset
+
+ in the tuning log)
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Tuning set has multiple references
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Increase the regularization strength
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Tuning set has a single reference
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Try feature filtering (see usage of OnlineTuner.java)
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+The tuning score is unstable
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Are the feature weights monotone? If not, then consider splitting the feature
+ into multiple non-decreasing features.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Unexplainable 
+\family typewriter
+ArrayIndexOutOfBoundsException
+\family default
+ or 
+\family typewriter
+NullPointerException
+\family default
+ when running the featurizer
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Set localprocs to 1.
+ If the exceptions disappear, then the featurizer is not threadsafe.
+ Implement the 
+\family typewriter
+NeedsCloneable
+\family default
+ interface.
+\end_layout
+
+\end_deeper
+\end_body
+\end_document
