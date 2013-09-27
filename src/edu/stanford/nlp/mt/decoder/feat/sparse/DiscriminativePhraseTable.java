@@ -18,19 +18,19 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  * 
  */
-public class DiscriminativePhraseTable2 implements RuleFeaturizer<IString, String> {
+public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "DPT";
 
   private final boolean addLexicalizedRule;
   private final boolean addClassBasedRule;
 
-  public DiscriminativePhraseTable2() {
+  public DiscriminativePhraseTable() {
     this.addLexicalizedRule = true;
     this.addClassBasedRule = false;
   }
 
-  public DiscriminativePhraseTable2(String... args) {
+  public DiscriminativePhraseTable(String... args) {
     this.addLexicalizedRule = args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
     this.addClassBasedRule = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     
