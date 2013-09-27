@@ -1,4 +1,0 @@
-#!/usr/bin/perl -p
-
-# Remove hyphens in long words:
-s=(\w{6,}) - (\w{6,})=$1 $2=g;

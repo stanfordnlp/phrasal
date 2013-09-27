@@ -1,2 +1,0 @@
-time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -featurizer mt.translationtreebank.AroundDEFeaturizer -useReducedCategory true -dePos true -nonOracleTree true > projects/mt/src/mt/translationtreebank/report/aroundDE/nonoracle/dePos.report &
-time java -Xmx1g mt.translationtreebank.ClassifyingExperiment -featurizer mt.translationtreebank.AroundDEFeaturizer -useReducedCategory true -dePos true -revised true -nonOracleTree true > projects/mt/src/mt/translationtreebank/report/aroundDE/nonoracle/revised.report &

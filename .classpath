@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-research"/>
-	<classpathentry kind="src" path="itest/src"/>
 	<classpathentry kind="src" path="test/src"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP-more"/>
 	<classpathentry kind="lib" path="lib/bsh.jar" sourcepath="libsrc/bsh-2.0b4-src.zip"/>
