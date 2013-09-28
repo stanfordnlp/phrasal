@@ -12,7 +12,6 @@ package edu.stanford.nlp.mt.train.hmmalign;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
-import edu.stanford.nlp.util.ArrayN;
 
 public class ATableHMM extends ATable {
 

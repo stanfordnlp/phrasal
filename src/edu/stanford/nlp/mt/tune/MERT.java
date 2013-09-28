@@ -37,7 +37,6 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Pair;
 
 import edu.stanford.nlp.mt.metrics.Metrics;

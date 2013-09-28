@@ -8,7 +8,6 @@ package edu.stanford.nlp.mt.train.hmmalign;
  *
  * @author Kristina Toutanova (kristina@cs.stanford.edu)
  */
-import edu.stanford.nlp.util.ArrayN;
 
 public class ATableHMMFull extends ATable {
 

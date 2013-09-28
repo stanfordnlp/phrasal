@@ -1,4 +1,4 @@
-package edu.stanford.nlp.util;
+package edu.stanford.nlp.mt.train.hmmalign;
 
 /**
  * N-dimensional array implemented using an underlying 1-dimensional array.

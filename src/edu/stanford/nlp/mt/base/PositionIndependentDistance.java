@@ -1,6 +1,8 @@
-package edu.stanford.nlp.util;
+package edu.stanford.nlp.mt.base;
 
 import java.util.Hashtable;
+
+import edu.stanford.nlp.util.Characters;
 
 /** Find the (Levenshtein) Position Independent edit distance between two Strings or Character
  *  arrays.  

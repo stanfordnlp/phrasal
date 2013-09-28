@@ -1,5 +1,6 @@
 package edu.stanford.nlp.util;
 
+import edu.stanford.nlp.mt.base.PositionIndependentDistance;
 import junit.framework.TestCase;
 
 /**

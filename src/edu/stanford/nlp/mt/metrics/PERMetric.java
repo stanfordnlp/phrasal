@@ -6,11 +6,11 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.util.PositionIndependentDistance;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.NBestListContainer;
+import edu.stanford.nlp.mt.base.PositionIndependentDistance;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;

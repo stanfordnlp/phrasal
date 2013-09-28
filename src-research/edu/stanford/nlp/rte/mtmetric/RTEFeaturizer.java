@@ -1,5 +1,6 @@
 package edu.stanford.nlp.rte.mtmetric;
 
+import edu.stanford.nlp.mt.base.OAIndex;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.rte.FeatureOccurrence;
 import edu.stanford.nlp.rte.Global;
@@ -7,7 +8,6 @@ import edu.stanford.nlp.rte.MockProblem;
 import edu.stanford.nlp.rte.NoLearningExperiment;
 import edu.stanford.nlp.rte.RTEPipeline;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;

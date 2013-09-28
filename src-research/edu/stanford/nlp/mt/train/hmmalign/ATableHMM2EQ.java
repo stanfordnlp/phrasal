@@ -11,7 +11,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.StringTokenizer;
-import edu.stanford.nlp.util.ArrayN;
 
 public class ATableHMM2EQ extends ATable {
 

@@ -6,10 +6,10 @@ import java.util.Collection;
 import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.OAIndex;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.OAIndex;
 import edu.stanford.nlp.math.ArrayMath;
 
 /**

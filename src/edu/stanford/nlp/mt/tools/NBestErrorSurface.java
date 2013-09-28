@@ -9,10 +9,10 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.FlatNBestList;
+import edu.stanford.nlp.mt.base.OAIndex;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricFactory;
-import edu.stanford.nlp.util.OAIndex;
 
 /**
  * 

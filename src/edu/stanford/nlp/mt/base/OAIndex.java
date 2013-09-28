@@ -1,4 +1,4 @@
-package edu.stanford.nlp.util;
+package edu.stanford.nlp.mt.base;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import edu.stanford.nlp.util.Index;
 
 /**
  * Open addressing backed index for arbitrary object types. Includes support for

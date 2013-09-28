@@ -1,4 +1,4 @@
-package edu.stanford.nlp.util;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
