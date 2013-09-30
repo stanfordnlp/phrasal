@@ -1,9 +1,16 @@
 package edu.stanford.nlp.mt.tools;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Approximate Randomization Test for Statistical Significance Testing.
@@ -32,7 +39,7 @@ public class SignificanceTest {
   static public void main(String[] args) throws Exception {
     if (args.length != 4) {
       System.err
-          .printf("Usage:\n\tjava edu.stanford.nlp.mt.tools.SigTestApproxRand (eval type:bleu/ter) (reference prefix) (system1.trans) (system2.trans)\n");
+          .printf("Usage: java %s [bleu|ter] reference_prefix system1 system2%n", SignificanceTest.class.getName());
       System.exit(-1);
     }
     String evalMetricName = args[0];
@@ -51,11 +58,11 @@ public class SignificanceTest {
     if (system1Trans.size() != system2Trans.size()) {
       System.err
           .printf(
-              "Warning: %s contains %d translations while %s contains %d translations\n",
+              "Warning: %s contains %d translations while %s contains %d translations%n",
               system1TransFilename, system1Trans.size(), system2TransFilename,
               system2Trans.size());
       int min = Math.min(system1Trans.size(), system2Trans.size());
-      System.err.printf("Truncating both to %d translations\n", min);
+      System.err.printf("Truncating both to %d translations%n", min);
       system1Trans = system1Trans.subList(0, min);
       system2Trans = system2Trans.subList(0, min);
     }
@@ -66,7 +73,7 @@ public class SignificanceTest {
 
     double trueSystemDiff = Math.abs(system1Eval - system2Eval);
 
-    System.out.printf("System1 Eval: %f System2 Eval: %f abs(Diff): %f\n",
+    System.out.printf("System1 Eval: %f System2 Eval: %f abs(Diff): %f%n",
         system1Eval, system2Eval, trueSystemDiff);
     System.out.printf("Sampling...");
     Random r = new Random(8682522807148012L);
@@ -74,10 +81,8 @@ public class SignificanceTest {
     for (int i = 0; i < SAMPLES; i++) {
       if ((i % 10) == 0)
         System.out.printf(".");
-      List<Sequence<IString>> sample1Trans = new ArrayList<Sequence<IString>>(
-          system1Trans.size());
-      List<Sequence<IString>> sample2Trans = new ArrayList<Sequence<IString>>(
-          system2Trans.size());
+      List<Sequence<IString>> sample1Trans = Generics.newArrayList(system1Trans.size());
+      List<Sequence<IString>> sample2Trans = Generics.newArrayList(system2Trans.size());
       int sz = system1Trans.size();
       for (int ii = 0; ii < sz; ii++) {
         if (r.nextDouble() >= 0.5) {
@@ -95,7 +100,7 @@ public class SignificanceTest {
         matchedOrExceededDiffs++;
     }
     double p = (matchedOrExceededDiffs + 1.0) / (SAMPLES + 1.0);
-    System.out.printf("\np = %f (%d+1)/(%d+1)\n", p, matchedOrExceededDiffs,
+    System.out.printf("\np = %f (%d+1)/(%d+1)%n", p, matchedOrExceededDiffs,
         SAMPLES);
   }
 }
