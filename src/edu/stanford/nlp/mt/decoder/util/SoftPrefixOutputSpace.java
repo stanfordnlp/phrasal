@@ -21,7 +21,6 @@ import edu.stanford.nlp.util.Generics;
  * Constrained output space for prefix decoding. Uses the phrase table
  * to allow alternate translations for prefixes.
  * 
- * TODO(spenceg): 
  * 
  * @author Spence Green
  *
@@ -148,9 +147,8 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
 
   @Override
   public boolean allowableFinal(Featurizable<TK, FV> featurizable) {
-    // TODO(spenceg): I think that allowableContinuation is sufficient. Don't
-    // need a final check.
-    return true;
+    // Allow everything except for the NULL hypothesis
+    return featurizable != null;
   }
 
   @Override

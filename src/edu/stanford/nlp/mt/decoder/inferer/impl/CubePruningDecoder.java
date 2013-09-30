@@ -169,7 +169,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
         // TODO(spenceg) This should be a more informative error message
         if ( ! isGoalBeam) {
-          System.err.println("WSGDEBUG: Decoder failure for sourceId: " + Integer.toString(sourceInputId));
+          System.err.println("WARNING: Decoder failure for sourceId: " + Integer.toString(sourceInputId));
         }
 
         return beam;

@@ -103,10 +103,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
               translations.size(), dtuHyp.hasExpired(), hyp);
       }
 
-      if (hyp == null) {
-        System.err.printf("%s: WARNING: null n-best hypothesis for input %d%n", 
+      // Decoder failure in which the null hypothesis was returned.
+      if (hyp == null || hyp.featurizable == null) {
+        System.err.printf("%s: WARNING: null hypothesis encountered for input %d; decoder failed%n", 
             this.getClass().getName(), sourceInputId);
-        continue;
+        return null;
       }
       
       if (DISTINCT_SURFACE_TRANSLATIONS) {
