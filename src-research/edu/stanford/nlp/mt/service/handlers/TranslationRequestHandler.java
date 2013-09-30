@@ -256,6 +256,7 @@ public class TranslationRequestHandler implements RequestHandler {
         translationRequest.n, translationRequest.tgt, request, continuation);
     
     try {
+      // Clear the wrapper of status messages of completed jobs
       wrapper.put(input);
       while(wrapper.peek()) {
         DecoderOutput status = wrapper.poll();
