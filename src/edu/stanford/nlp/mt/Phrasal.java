@@ -280,14 +280,14 @@ public class Phrasal {
       Set<String> missingFields = new HashSet<String>(REQUIRED_FIELDS);
       missingFields.removeAll(config.keySet());
       throw new RuntimeException(String.format(
-          "The following required fields are missing: %s\n", missingFields));
+          "The following required fields are missing: %s%n", missingFields));
     }
 
     if (!ALL_RECOGNIZED_FIELDS.containsAll(config.keySet())) {
       Set<String> extraFields = new HashSet<String>(config.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_FIELDS);
       throw new RuntimeException(String.format(
-          "The following fields are unrecognized: %s\n", extraFields));
+          "The following fields are unrecognized: %s%n", extraFields));
     }
 
     if (config.containsKey(RECOMBINATION_HEURISTIC)) {
@@ -345,7 +345,7 @@ public class Phrasal {
         throw new RuntimeException(
             String
                 .format(
-                    "Argument '%s' to parameter '%s' can not be parsed as an integer value\n",
+                    "Argument '%s' to parameter '%s' can not be parsed as an integer value%n",
                     strDistortionLimit.get(0), DISTORTION_LIMIT));
       }
     }
@@ -365,7 +365,7 @@ public class Phrasal {
       List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
       System.err
           .printf(
-              "Ignoring Moses factor & phrase feature count information: %s, %s, %s\n",
+              "Ignoring Moses factor & phrase feature count information: %s, %s, %s%n",
               ptOpts.get(0), ptOpts.get(1), ptOpts.get(2));
       phraseTable = ptOpts.get(3);
     } else {
@@ -408,7 +408,7 @@ public class Phrasal {
     }
 
     String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
-    System.err.printf("Phrase table: %s Unknown words policy: %s\n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
+    System.err.printf("Phrase table: %s Unknown words policy: %s%n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
 
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
@@ -417,7 +417,7 @@ public class Phrasal {
           optionLimit));
     } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
 
-      System.err.println("Dyanamic pt\n========================");
+      System.err.printf("Dyanamic pt%n========================");
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
           false, PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
           phraseTable, optionLimit));
@@ -533,7 +533,7 @@ public class Phrasal {
                 args = args.replaceAll("^\\s+", "");
                 args = args.replaceAll("\\s+$", "");
                 String[] argsList = args.split(",");
-                System.err.printf("Additional annotators: %s.\nArgs: %s\n",
+                System.err.printf("Additional annotators: %s.%nArgs: %s%n",
                     annotatorName, Arrays.toString(argsList));
                 // TODO(spenceg) Seems like this will throw an exception?
                 Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
@@ -552,7 +552,7 @@ public class Phrasal {
               System.err.printf(
                   "Error: '(' expected immediately after annotator name %s", token);
               System.err
-                  .printf("Note that no whitespace between '(' and the associated annotator name is allowed\n");
+                  .printf("Note that no whitespace between '(' and the associated annotator name is allowed%n");
               System.exit(-1);
             }
           } else {
@@ -562,7 +562,7 @@ public class Phrasal {
               args = args.replaceAll("^\\s+", "");
               args = args.replaceAll("\\s+$", "");
               String[] argsList = args.split(",");
-              System.err.printf("args: %s\n", Arrays.toString(argsList));
+              System.err.printf("args: %s%n", Arrays.toString(argsList));
               Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
                   .loadAnnotator(annotatorName);
               annotator = (Annotator<IString,String>) annotatorClass
@@ -577,12 +577,12 @@ public class Phrasal {
           }
         }
         if (annotatorName != null) {
-          System.err.printf("Error: no ')' found for annotator %s\n",
+          System.err.printf("Error: no ')' found for annotator %s%n",
               annotatorName);
           System.exit(-1);
         }
     }
-    System.err.printf("Number of additional annotators loaded: %d\n", additionalAnnotators.size());
+    System.err.printf("Number of additional annotators loaded: %d%n", additionalAnnotators.size());
 
     List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
@@ -608,7 +608,7 @@ public class Phrasal {
               args = args.replaceAll("^\\s+", "");
               args = args.replaceAll("\\s+$", "");
               String[] argsList = args.split(",");
-              System.err.printf("Additional featurizer: %s.\nArgs: %s\n",
+              System.err.printf("Additional featurizer: %s.%nArgs: %s%n",
                   featurizerName, Arrays.toString(argsList));
               Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                   .loadFeaturizer(featurizerName);
@@ -626,7 +626,7 @@ public class Phrasal {
             System.err.printf(
                 "Error: '(' expected immediately after feature name %s", token);
             System.err
-                .printf("Note that no whitespace between '(' and the associated feature name is allowed\n");
+                .printf("Note that no whitespace between '(' and the associated feature name is allowed%n");
             System.exit(-1);
           }
         } else {
@@ -636,7 +636,7 @@ public class Phrasal {
             args = args.replaceAll("^\\s+", "");
             args = args.replaceAll("\\s+$", "");
             String[] argsList = args.split(",");
-            System.err.printf("args: %s\n", Arrays.toString(argsList));
+            System.err.printf("args: %s%n", Arrays.toString(argsList));
             Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(featurizerName);
             featurizer = (Featurizer<IString, String>) featurizerClass
@@ -655,7 +655,7 @@ public class Phrasal {
           msdRecombination = true;
       }
       if (featurizerName != null) {
-        System.err.printf("Error: no ')' found for featurizer %s\n",
+        System.err.printf("Error: no ')' found for featurizer %s%n",
             featurizerName);
         System.exit(-1);
       }
@@ -680,7 +680,7 @@ public class Phrasal {
       } else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
         List<String> lmOpts = config.get(LANGUAGE_MODEL_OPT);
         System.err.printf(
-            "Ignoring Moses factor & model order information: %s, %s, %s\n",
+            "Ignoring Moses factor & model order information: %s, %s, %s%n",
             lmOpts.get(0), lmOpts.get(1), lmOpts.get(2));
         lgModel = lmOpts.get(3);
       } else {
@@ -688,17 +688,17 @@ public class Phrasal {
             + config.get(LANGUAGE_MODEL_OPT));
       }
 
-      System.err.printf("Language model: %s\n", lgModel);
+      System.err.printf("Language model: %s%n", lgModel);
     }
 
     if (discriminativeLMOrder != 0) {
-      System.err.printf("Discriminative LM order: %d\n", discriminativeLMOrder);
+      System.err.printf("Discriminative LM order: %d%n", discriminativeLMOrder);
     }
 
     CombinedFeaturizer<IString, String> featurizer;
 
     if (discriminativeTMParameter) {
-      System.err.printf("Using Discriminative TM\n");
+      System.err.printf("Using Discriminative TM%n");
     }
 
     String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class
@@ -746,7 +746,7 @@ public class Phrasal {
     Counter<String> weightVector = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
-      System.err.printf("Weights file: %s\n", config.get(WEIGHTS_FILE).get(0));
+      System.err.printf("Weights file: %s%n", config.get(WEIGHTS_FILE).get(0));
 
       weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     } else {
@@ -830,7 +830,7 @@ public class Phrasal {
       }
     }
 
-    System.err.printf("WeightConfig: '%s' %s\n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
+    System.err.printf("WeightConfig: '%s' %s%n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
 
 
     // Create Recombination Filter
@@ -908,7 +908,7 @@ public class Phrasal {
           throw new RuntimeException(
               String
                   .format(
-                      "Beam size %s, as specified by argument %s, can not be parsed as an integer value\n",
+                      "Beam size %s, as specified by argument %s, can not be parsed as an integer value%n",
                       config.get(BEAM_SIZE).get(0), BEAM_SIZE));
         }
       }
@@ -930,7 +930,7 @@ public class Phrasal {
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
         assert nbestListSize >= 0;
         nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
-        System.err.printf("Generating n-best lists to: %s (size: %d)\n",
+        System.err.printf("Generating n-best lists to: %s (size: %d)%n",
             nbestListFilename, nbestListSize);
 
       } else {
@@ -1392,7 +1392,7 @@ public class Phrasal {
           @Override
           public void uncaughtException(Thread t, Throwable ex) {
             System.err.println("Uncaught exception from thread: " + t.getName());
-            System.err.println(ex.toString());
+            // System.err.println(ex.toString());
             ex.printStackTrace();
             System.exit(-1);
           }
