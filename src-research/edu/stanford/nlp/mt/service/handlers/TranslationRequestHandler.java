@@ -243,6 +243,8 @@ public class TranslationRequestHandler implements RequestHandler {
   @Override
   public void handleAsynchronous(Request baseRequest,
       HttpServletRequest request, HttpServletResponse response) {
+    logger.info(wrapper.toString());
+    
     // Suspend the request
     Continuation continuation = ContinuationSupport.getContinuation(request);
     continuation.suspend(response);
