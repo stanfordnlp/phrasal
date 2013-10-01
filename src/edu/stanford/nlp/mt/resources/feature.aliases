@@ -1,8 +1,0 @@
-# Classical Machine Translation Features
-########################################
-
-lineardistortion edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer
-wordpenalty edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer
-unknownword edu.stanford.nlp.mt.decoder.feat.UnknownWordFeaturizer
-ngramlm edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer
-phrasetablescores edu.stanford.nlp.mt.decoder.feat.PhraseTableScoresFeaturizer
