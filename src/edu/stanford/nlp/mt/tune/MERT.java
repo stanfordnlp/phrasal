@@ -59,42 +59,6 @@ public class MERT extends Thread {
   static boolean breakTiesWithLastBest = false;
   static boolean smoothBLEU = System.getProperty("smoothBLEU") != null;
 
-  public static final String GENERATIVE_FEATURES_LIST_RESOURCE = "edu/stanford/nlp/mt/resources/generative.features";
-
-  static public final Set<String> generativeFeatures =
-      readGenerativeFeatureList(GENERATIVE_FEATURES_LIST_RESOURCE);
-
-  public static Set<String> readGenerativeFeatureList(String resourceName) {
-    return readGenerativeFeatureList(resourceName, false);
-  }
-
-  public static Set<String> readGenerativeFeatureList(String resourceName,
-      boolean verbose) {
-    Set<String> gF = new HashSet<String>();
-    try {
-      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-          ClassLoader.getSystemClassLoader().getResource(resourceName)
-              .openStream()));
-      if (verbose)
-        System.err.printf("known generative features:\n");
-      for (String line = reader.readLine(); line != null; line = reader
-          .readLine()) {
-        String featureName = line.replaceAll("\\s*#.*$", "")
-            .replaceAll("\\s+$", "").replaceAll("^\\s+", "");
-        if (featureName.equals(""))
-          continue;
-        gF.add(featureName);
-        if (verbose)
-          System.err.printf("\t'%s'\n", featureName);
-      }
-    } catch (IOException e) {
-      System.err.printf("Unable to load resource: %s\n", resourceName);
-      System.exit(-1);
-    }
-    return gF;
-  }
-
-
   public static final String DEBUG_PROPERTY = "MERTDebug";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
@@ -675,14 +639,9 @@ public class MERT extends Thread {
   static Counter<String> randomWts(Set<String> keySet) {
     Counter<String> randpt = new ClassicCounter<String>();
     for (String f : keySet) {
-      if (generativeFeatures.contains(f)) {
-        randpt.setCount(f, globalRandom.nextDouble());
-      } else {
-        randpt.setCount(f, globalRandom.nextDouble() * 2 - 1.0);
-      }
+      randpt.setCount(f, globalRandom.nextDouble());
     }
-
-    System.err.printf("random Wts: %s\n", randpt);
+    System.err.printf("random Wts: %s%n", randpt);
     return randpt;
   }
 
