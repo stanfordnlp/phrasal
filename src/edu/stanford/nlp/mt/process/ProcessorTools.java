@@ -70,6 +70,7 @@ public final class ProcessorTools {
     for (String token : tokens) {
       if (sequence.size() > 0) {
         CoreLabel charLabel = new CoreLabel();
+        charLabel.set(CoreAnnotations.TextAnnotation.class, WHITESPACE);
         charLabel.set(CoreAnnotations.CharAnnotation.class, WHITESPACE);
         charLabel.set(CoreAnnotations.ParentAnnotation.class, WHITESPACE);
         charLabel.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, -1);
@@ -78,7 +79,9 @@ public final class ProcessorTools {
       }
       for (int j = 0; j < token.length(); ++j) {
         CoreLabel charLabel = new CoreLabel();
-        charLabel.set(CoreAnnotations.CharAnnotation.class, String.valueOf(token.charAt(j)));
+        String ch = String.valueOf(token.charAt(j));
+        charLabel.set(CoreAnnotations.TextAnnotation.class, ch);
+        charLabel.set(CoreAnnotations.CharAnnotation.class, ch);
         charLabel.set(CoreAnnotations.ParentAnnotation.class, token);
         charLabel.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, j);
         charLabel.setIndex(charIndex++);
@@ -332,6 +335,7 @@ public final class ProcessorTools {
 
   private static CoreLabel createDatum(String character, String label, int index, String parentToken, int charIndex) {
     CoreLabel labeledCharacter = new CoreLabel();
+    labeledCharacter.set(CoreAnnotations.TextAnnotation.class, character);
     labeledCharacter.set(CoreAnnotations.CharAnnotation.class, character);
     labeledCharacter.set(CoreAnnotations.ParentAnnotation.class, parentToken);
     labeledCharacter.set(CoreAnnotations.AnswerAnnotation.class, label);
@@ -451,7 +455,7 @@ public final class ProcessorTools {
       for(CoreLabel word : doc) {
         pw.printf("%s\t%s\t%s%n", word.get(CoreAnnotations.AnswerAnnotation.class),
                                   word.get(CoreAnnotations.GoldAnswerAnnotation.class),
-                                  word.get(CoreAnnotations.CharAnnotation.class));
+                                  word.get(CoreAnnotations.TextAnnotation.class));
       }
     }
   }
