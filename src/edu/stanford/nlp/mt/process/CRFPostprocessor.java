@@ -136,7 +136,10 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
    * @throws FileNotFoundException
    */
   protected void load(String filename) throws FileNotFoundException {
-    load(filename, new Properties());
+    Properties props = new Properties();
+    // Currently, this class only supports one featureFactory.
+    props.put("featureFactory", CRFPostprocessorFeatureFactory.class.getName());
+    load(filename, props);
   }
 
   @Override
