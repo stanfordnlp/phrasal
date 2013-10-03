@@ -49,6 +49,7 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
+import edu.stanford.nlp.mt.tune.optimizers.SmoothMERT;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -738,7 +739,12 @@ public class OnlineTuner {
       Counters.normalize(wtsAccumulator);
       return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
-    } else {
+    } else if (optimizerAlg.equals("smoothedMERT")) {
+       assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
+       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
+       Counters.normalize(wtsAccumulator);
+       return new SmoothMERT(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+     } else {
       throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
     }
   }
