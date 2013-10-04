@@ -44,7 +44,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
   public static final String DEFAULT_REGCONFIG="";
-
+  public static final boolean VERBOSE = true;
+  
   // Logistic classifier labels
   private static enum Label {POSITIVE, NEGATIVE}
 
@@ -263,6 +264,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient for sourceId: " + sourceId);
     }
+    
+    if (VERBOSE) {
+       System.err.printf("True online gradient");
+       displayGradient(gradient);
+    }
+ 
     return gradient;
   }
 
@@ -287,9 +294,25 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.isEmpty()) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
     }
+    
+    if (VERBOSE) {
+       System.err.printf("N-best list sizes:\n");
+       for (int i = 0; i < translations.size(); i++) {
+          System.err.printf(" %d: %d\n", i, translations.get(i).size());
+       }
+       System.err.printf("Data set size: %d\n", dataset.size());
+       System.err.println("Batch gradient");
+       displayGradient(gradient);
+    }
+    
     return gradient;
   }
 
+  private void displayGradient(Counter<String> gradient) {
+     System.err.printf("Gradient: ");
+     System.err.println(gradient);
+  }
+  
   /**
    * Compute the gradient for the specified set of PRO samples.
    *
