@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.tools;
 
-import static java.lang.System.*;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.List;
@@ -14,6 +12,7 @@ import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 import edu.stanford.nlp.stats.Counter;
+
 /**
  * NBestListDecoder is a utility for finding the highest scoring 
  * hypotheses on a set of n-best lists given a different weight 
@@ -22,17 +21,14 @@ import edu.stanford.nlp.stats.Counter;
  * @author daniel cer (danielcer@stanford.edu)
  *
  */
-public class NBestListDecoder {
-  static public void usage() {
-    err.printf("Usage:\n\t%s \\\n"+
-      "\t  (n-best list) (alternative weights) (output translations)\n", 
-      NBestListDecoder.class.getName());
-  }
+public class NBestReranker {
   
   static public void main(String[] args) throws Exception {
     if (args.length != 3) {
-      usage();
-      exit(-1);
+      System.err.printf("Usage:\n\t%s \\%n"+
+          "\t  (n-best list) (alternative weights) (output translations)%n", 
+          NBestReranker.class.getName());
+      System.exit(-1);
     }
     
     String nbestFn = args[0];
@@ -42,7 +38,7 @@ public class NBestListDecoder {
     FlatNBestList nbest = new FlatNBestList(nbestFn);
     Counter<String> weights = IOTools.readWeights(weightsFn);
     Scorer<String> scorer = new DenseScorer(weights);
-    
+    final String nl = System.getProperty("line.separator");
     BufferedWriter outputFh = new BufferedWriter(new FileWriter(outputFn));
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
     for (List<ScoredFeaturizedTranslation<IString, String>> nbestList : nbestLists) {
@@ -56,7 +52,7 @@ public class NBestListDecoder {
          }
        }
        outputFh.write(bestTrans.translation.toString());
-       outputFh.write("\n");
+       outputFh.write(nl);
     }
     outputFh.close();
   }
