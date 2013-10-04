@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * Smooth MERT (Och 2003, Cherry and Foster 2012)
@@ -34,17 +35,17 @@ import edu.stanford.nlp.stats.Counters;
  */
 public class SmoothMERT extends AbstractOnlineOptimizer {
 
-   static public boolean VERBOSE = true;
+   static public boolean VERBOSE = false;
    
 	public SmoothMERT(int tuneSetSize, int expectedNumFeatures, String[] args) {
 		super(tuneSetSize, expectedNumFeatures, args);
 	}	
 
 	public SmoothMERT(int tuneSetSize, int expectedNumFeatures,
-			int minFeatureSegmentCount, int gamma, int xi, double nThreshold,
+		   int gamma, int xi, double nThreshold,
 			double sigma, double rate, String updaterType, double L1lambda,
 			String regconfig) {
-		super(tuneSetSize, expectedNumFeatures, minFeatureSegmentCount, sigma, rate, updaterType, L1lambda, regconfig);
+		super(tuneSetSize, expectedNumFeatures, sigma, rate, updaterType, L1lambda, regconfig);
 	}
 
    private double logZ(
@@ -89,7 +90,7 @@ public class SmoothMERT extends AbstractOnlineOptimizer {
          double logP = score - logZ;
          double p = Math.exp(logP);
          double eval = scoreMetric.score(sourceId, references, referenceWeights, trans.translation);
-         System.err.printf("score: %.3f p: %.3f eval %.3f\n", score, p, eval);
+         // System.err.printf("score: %.3f p: %.3f eval %.3f\n", score, p, eval);
          double Eeval = p*eval;
          expectedLoss += Eeval;
          for (FeatureValue<String> feat : trans.features) {
@@ -107,7 +108,7 @@ public class SmoothMERT extends AbstractOnlineOptimizer {
       }
       Counter<String> expectedLossExpectedF = new ClassicCounter<String>(expectedF);
       Counters.multiplyInPlace(expectedLossExpectedF, expectedLoss);
-      Counter<String> gradient = new ClassicCounter<String>(expectedLossF);
+      Counter<String> gradient = new OpenAddressCounter<String>(expectedLossF);
       Counters.subtractInPlace(gradient, expectedLossExpectedF);
       
       if (VERBOSE) {

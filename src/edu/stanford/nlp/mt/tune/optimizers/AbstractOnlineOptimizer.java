@@ -18,17 +18,20 @@ import edu.stanford.nlp.mt.tune.OnlineTuner;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
+/**
+ * Abstract class that makes it simpler and easier to implement the OnlineOptimizer interface
+ * 
+ * @author daniel cer, spence green
+ *
+ */
 abstract public class AbstractOnlineOptimizer implements
       OnlineOptimizer<IString, String> {
-   public static final int DEFAULT_MIN_FEATURE_SEGMENT_COUNT = 3;
    public static final double DEFAULT_SIGMA = 0.1;
    public static final double DEFAULT_RATE = 0.1;
    public static final String DEFAULT_UPDATER = "sgd";
    public static final double DEFAULT_L1 = 0;
    public static final String DEFAULT_REGCONFIG = "";
 
-   // PRO sampling and feature filtering
-   private final int minFeatureSegmentCount;
    private final int tuneSetSize;
 
    private final double learningRate;
@@ -48,23 +51,18 @@ abstract public class AbstractOnlineOptimizer implements
    public AbstractOnlineOptimizer(int tuneSetSize, int expectedNumFeatures,
          String... args) {
       this(tuneSetSize, expectedNumFeatures,
-            args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT, 
-            args != null && args.length > 1 ? Double.parseDouble(args[1]) : DEFAULT_SIGMA, 
-            args != null && args.length > 2 ? Double.parseDouble(args[2]) : DEFAULT_RATE, 
-            args != null && args.length > 3 ? args[3] : DEFAULT_UPDATER,
-            args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_L1, 
-            args != null && args.length > 5 ? args[5] : DEFAULT_REGCONFIG);
+            args != null && args.length > 0 ? Double.parseDouble(args[0]) : DEFAULT_SIGMA, 
+            args != null && args.length > 1 ? Double.parseDouble(args[1]) : DEFAULT_RATE, 
+            args != null && args.length > 2 ? args[2] : DEFAULT_UPDATER,
+            args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_L1, 
+            args != null && args.length > 4 ? args[4] : DEFAULT_REGCONFIG);
    }
 
    public AbstractOnlineOptimizer(int tuneSetSize, int expectedNumFeatures,
-         int minFeatureSegmentCount, double sigma, double rate, String updaterType, double L1lambda,
+         double sigma, double rate, String updaterType, double L1lambda,
          String regconfig) {
-      if (minFeatureSegmentCount < 1)
-         throw new RuntimeException("Feature segment count must be >= 1: "
-               + minFeatureSegmentCount);
 
       this.expectedNumFeatures = expectedNumFeatures;
-      this.minFeatureSegmentCount = minFeatureSegmentCount;
       this.tuneSetSize = tuneSetSize;
       this.learningRate = rate;
       this.updaterType = updaterType;
@@ -79,9 +77,16 @@ abstract public class AbstractOnlineOptimizer implements
       this.sigmaSq = l2Regularization ? sigma * sigma : 0.0;
 
       // Setup the logger
-      logger = Logger.getLogger(PairwiseRankingOptimizerSGD.class
+      logger = Logger.getLogger(AbstractOnlineOptimizer.class
             .getCanonicalName());
       OnlineTuner.attach(logger);
+      System.err.printf("AbstractOnlineOptimizer\n");
+      System.err.printf("\ttuneSetSize: %d\n", tuneSetSize);
+      System.err.printf("\tlearningRate: %e\n", learningRate);
+      System.err.printf("\tL1lambda: %e\n", L1lambda);
+      System.err.printf("\tl2Regularization: %b\n", l2Regularization);
+      System.err.printf("\tsigmaSq: %e\n", sigmaSq);
+      
    }
 
    @Override
@@ -141,11 +146,11 @@ abstract public class AbstractOnlineOptimizer implements
       if (this.l2Regularization) {
         final Set<String> features = new HashSet<String>(weights.keySet());
         features.addAll(weights.keySet());
-        final double dataFraction = sourceIds.length / ((double) 2*tuneSetSize);
-        final double scaledSigmaSquared = sigmaSq / dataFraction;
+        final double dataFraction = sourceIds.length /(double) tuneSetSize;
+        final double scaledInvSigmaSquared = dataFraction/(2*sigmaSq);
         for (String key : features) {
           double x = weights.getCount(key);
-          batchGradient.incrementCount(key, x / scaledSigmaSquared);
+          batchGradient.incrementCount(key, x * scaledInvSigmaSquared);
         }
       }
 

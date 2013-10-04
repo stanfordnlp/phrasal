@@ -363,11 +363,13 @@ public class OnlineTuner {
 
       if (minFeatureCount > 0) {
         updateFeatureCounts(input.translationIds, nbestLists);
-        for (String feature : gradient.keySet()) {
-          if (!hasMinFeatureCount(feature)) {
-             gradient.remove(feature);
-          }
+        Set<String> features = new TreeSet<String>(gradient.keySet());
+        for (String feature : features) {
+           if (!hasMinFeatureCount(feature)) {
+              gradient.remove(feature);
+           }
         } 
+       
       }
      
 

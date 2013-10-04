@@ -78,14 +78,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures, String... args) {
     this(tuneSetSize, expectedNumFeatures,
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
-            args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
-                args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
-                    args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_N_THRESHOLD,
-                        args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_SIGMA,
-                            args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
-                            		args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
-                            				args != null && args.length > 7 ? Double.parseDouble(args[7]) : DEFAULT_L1,
-                            						args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
+        args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
+        args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
+        args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_N_THRESHOLD,
+        args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_SIGMA,
+        args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
+        args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
+        args != null && args.length > 7 ? Double.parseDouble(args[7]) : DEFAULT_L1,
+        args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
   }
 
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures,
