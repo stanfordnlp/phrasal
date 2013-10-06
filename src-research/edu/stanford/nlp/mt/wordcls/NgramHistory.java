@@ -1,27 +1,38 @@
-package edu.stanford.nlp.mt.mkcls;
+package edu.stanford.nlp.mt.wordcls;
 
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.IntegerArrayIndex;
 
 /**
- * TODO(spenceg): Cache these histories internally.
  * 
- * @author rayder441
+ * @author Spence Green
  *
  */
 public class NgramHistory implements Iterable<IString> {
-  private final IString[] history;
+  
+  private static final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
+  
+  private final int id;
+  private final int hashCode;
   
   public NgramHistory(List<IString> hist) {
-    history = new IString[hist.size()];
+    IString[] history = new IString[hist.size()];
     int i = 0;
     for (IString s : hist) {
       history[i++] = s;
     }
+    int[] h = IStrings.toIntArray(history);
+    id = index.indexOf(h, true);
+    hashCode = Arrays.hashCode(h);
   }
+
+  public static void lockIndex() { index.lock(); }
   
   @Override
   public Iterator<IString> iterator() {
@@ -30,11 +41,14 @@ public class NgramHistory implements Iterable<IString> {
   
   private class HistoryIterator implements Iterator<IString> {
     private int i = 0;
-    private int hLen = history.length;
+    private final IString[] history;
+    public HistoryIterator() {
+      history = IStrings.toIStringArray(index.get(id));
+    }
     
     @Override
     public boolean hasNext() {
-      return i < hLen-1;
+      return i < history.length-1;
     }
 
     @Override
@@ -51,6 +65,7 @@ public class NgramHistory implements Iterable<IString> {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
+    IString[] history = IStrings.toIStringArray(index.get(id));
     for (IString t : history) {
       if (sb.length() > 0) sb.append(" ");
       sb.append(t.toString());
@@ -60,7 +75,7 @@ public class NgramHistory implements Iterable<IString> {
   
   @Override
   public int hashCode() {
-    return history.hashCode();
+    return hashCode;
   }
   
   @Override
@@ -71,7 +86,7 @@ public class NgramHistory implements Iterable<IString> {
       return false;
     } else {
       NgramHistory other = (NgramHistory) o;
-      return Arrays.equals(this.history, other.history);
+      return this.id == other.id;
     }
   }
 }

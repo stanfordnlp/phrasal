@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.mkcls;
+package edu.stanford.nlp.mt.wordcls;
 
 import java.util.Map;
 import java.util.Set;
@@ -9,15 +9,21 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.util.Generics;
 
+/**
+ * The one-sided class model of Uszkoreit and Brants (2008).
+ * 
+ * @author Spence Green
+ *
+ */
 public class GoogleObjectiveFunction {
 
   private double objValue = 0.0;
-  
+
   private final ClustererInput input;
   private final Map<IString, Integer> localWordToClass;
   private final Counter<Integer> localClassCount;
   private final TwoDimensionalCounter<Integer, NgramHistory> localClassHistoryCount;
-  
+
   public GoogleObjectiveFunction(ClustererInput input) {
     // Setup delta data structures
     this.input = input;
@@ -33,7 +39,8 @@ public class GoogleObjectiveFunction {
       localClassHistoryCount.setCounter(classId, historyCount);
     }
 
-    // Compute initial objective function value
+    // Compute initial objective function value from the input data structures
+    // Later values will be updated with the delta data structures
     // First summation
     for (Integer classId : input.classHistoryCount.firstKeySet()) {
       Counter<NgramHistory> historyCount = input.classHistoryCount.getCounter(classId);
@@ -56,34 +63,43 @@ public class GoogleObjectiveFunction {
       Integer argMax = currentClass;
       double maxObjectiveValue = objValue;
       final Counter<NgramHistory> historiesForWord = input.historyCount.getCounter(word);
-      
+
       // Remove the word from the local data structures
       double reducedObjValue = objectiveAfterRemoving(word, currentClass);
       assert reducedObjValue < objValue;
-      localClassCount.decrementCount(currentClass);
-      
+
       // Compute objective value under tentative moves
       for (Integer classId : wordClasses) {
         if (classId == currentClass) continue;
         double objDelta = 0.0;
-        // TODO(spenceg): This is not quite right. Need to tie the histories
-        // to the class
-        Counter<NgramHistory> classHistory = input.classHistoryCount.getCounter(classId);
+        final Counter<NgramHistory> classHistory = localClassHistoryCount.getCounter(classId);
         for (NgramHistory history : historiesForWord.keySet()) {
+          double oldCount = classHistory.getCount(history);
           double count = historiesForWord.getCount(history);
-          objDelta += count * Math.log(count);
+          if (oldCount > 0.0) {
+            // Remove the old term
+            objDelta -= oldCount * Math.log(oldCount);
+          }
+          double newCount = oldCount + count;
+          // Add the new term
+          objDelta += newCount * Math.log(newCount);
         }
-        double classCount = localClassCount.getCount(classId) + 1;
+        double classCount = localClassCount.getCount(classId);
+        if (classCount > 0.0) {
+          // Remove the old term
+          objDelta += classCount * Math.log(classCount);
+        }
+        ++classCount;
+        // Add the new term
         objDelta -= classCount * Math.log(classCount);
+
         if (reducedObjValue + objDelta > maxObjectiveValue) {
           argMax = classId;
           maxObjectiveValue = reducedObjValue + objDelta;
         }
       }
       // Final move
-      if (argMax == currentClass) {
-        localClassCount.incrementCount(currentClass);
-      } else {
+      if (argMax != currentClass) {
         move(word, currentClass, argMax);
       }
     }
@@ -91,15 +107,46 @@ public class GoogleObjectiveFunction {
   }
 
   /**
-   * Explicitly update the local data structures.
+   * Explicitly update the local data structures and objective function value.
    * 
    * @param word
    * @param fromClass
    * @param toClass
    */
   private void move(IString word, Integer fromClass, Integer toClass) {
-    // TODO Auto-generated method stub
-    
+    final Counter <NgramHistory> historiesForFromClass = this.localClassHistoryCount.getCounter(fromClass);
+    final Counter <NgramHistory> historiesForToClass = this.localClassHistoryCount.getCounter(toClass);
+    final Counter<NgramHistory> historiesForWord = input.historyCount.getCounter(word);
+    // Update first term
+    for (NgramHistory history : historiesForWord.keySet()) {
+      double fromCount = historiesForFromClass.getCount(history);
+      double toCount = historiesForToClass.getCount(history);
+      double count = historiesForWord.getCount(history);
+      objValue -= fromCount*Math.log(fromCount);
+      objValue -= toCount*Math.log(toCount);
+      fromCount -= count;
+      toCount += count;
+      historiesForFromClass.setCount(history, fromCount);
+      historiesForToClass.setCount(history, toCount);
+      if (fromCount > 0.0) {
+        objValue += fromCount*Math.log(fromCount);
+      }
+      objValue += toCount*Math.log(toCount);
+    }
+
+    // Update second term
+    double fromClassCount = localClassCount.getCount(fromClass);
+    double toClassCount = localClassCount.getCount(toClass);
+    objValue += fromClassCount*Math.log(fromClassCount);
+    objValue += toClassCount*Math.log(toClassCount);
+    localClassCount.decrementCount(fromClass);
+    localClassCount.incrementCount(toClass);
+    --fromClassCount;
+    ++toClassCount;
+    if (fromClassCount > 0.0) {
+      objValue -= fromClassCount*Math.log(fromClassCount);
+    }
+    objValue += toClassCount*Math.log(toClassCount);
   }
 
   /**
@@ -112,24 +159,25 @@ public class GoogleObjectiveFunction {
    */
   private double objectiveAfterRemoving(IString word, Integer currentClass) {
     double reducedObjective = objValue;
-    // TODO(spenceg) This is not quite right. Need to tie to the histories
-    // to the class
     final Counter<NgramHistory> historiesForWord = input.historyCount.getCounter(word);
+    final Counter<NgramHistory> classHistory = localClassHistoryCount.getCounter(currentClass);
     for (NgramHistory history : historiesForWord.keySet()) {
+      double currentCount = classHistory.getCount(history);
       double count = historiesForWord.getCount(history);
+      assert currentCount - count >= 0.0;
       // Remove original term
-      reducedObjective -= count * Math.log(count);
-      --count;
-      if (count > 0) {
+      reducedObjective -= currentCount * Math.log(currentCount);
+      double newCount = currentCount - count;
+      if (newCount > 0.0) {
         // Add updated term
-        reducedObjective += count * Math.log(count);
+        reducedObjective += newCount * Math.log(newCount);
       }
     }
     double classCount = localClassCount.getCount(currentClass);
     // Remove original term
     reducedObjective += classCount * Math.log(classCount);
     --classCount;
-    if (classCount > 0) {
+    if (classCount > 0.0) {
       // Add updated term
       reducedObjective -= classCount * Math.log(classCount);
     }

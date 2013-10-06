@@ -19,14 +19,14 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.log.PhrasalLogger;
+import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
-import edu.stanford.nlp.mt.service.PhrasalLogger;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
-import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.util.Generics;
 
@@ -53,7 +53,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
     this.preprocessor = preprocessor;
     this.postprocessor = postprocessor;
     this.logger = Logger.getLogger(RuleQueryRequestHandler.class.getName());
-    PhrasalLogger.attach(logger, LogName.Service);
+    PhrasalLogger.attach(logger, LogName.SERVICE);
   }
 
   @Override

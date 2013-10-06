@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.mkcls;
+package edu.stanford.nlp.mt.wordcls;
 
 import java.util.List;
 import java.util.Map;

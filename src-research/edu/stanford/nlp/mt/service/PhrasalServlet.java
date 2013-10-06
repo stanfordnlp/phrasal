@@ -11,9 +11,10 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.log.PhrasalLogger;
+import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.service.Messages.MessageType;
 import edu.stanford.nlp.mt.service.Messages.Request;
-import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.service.handlers.RequestHandler;
 import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandler;
 import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandlerMock;
@@ -52,7 +53,7 @@ public class PhrasalServlet extends HttpServlet {
    */
   public PhrasalServlet(String phrasalIniName){
     logger = Logger.getLogger(PhrasalServlet.class.getName());
-    PhrasalLogger.attach(logger, LogName.Service);
+    PhrasalLogger.attach(logger, LogName.SERVICE);
 
     boolean debugMode = (phrasalIniName == null);
 

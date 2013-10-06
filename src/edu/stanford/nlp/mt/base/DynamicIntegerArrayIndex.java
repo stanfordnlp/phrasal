@@ -24,8 +24,6 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>,
   protected int load;
   protected boolean locked = false;
 
-  public static final DynamicIntegerArrayIndex CommonDynamiIntegerArrayIndex = new DynamicIntegerArrayIndex();
-
   public DynamicIntegerArrayIndex() {
     keys = new int[INIT_SZ][];
     values = new int[INIT_SZ];
@@ -114,19 +112,13 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>,
     return distance;
   }
 
-  private int add(int key[], int pos, boolean sharedRep) {
+  private int add(int key[], int pos) {
     if ((load++) / (double) keys.length > MAX_LOAD) {
       sizeUp();
       pos = -findPos(key) - 1;
     }
-    if (!sharedRep) {
-      keys[pos] = Arrays.copyOf(key, key.length);
-      values[pos] = maxIndex++;
-    } else {
-      keys[pos] = CommonDynamiIntegerArrayIndex
-          .get(CommonDynamiIntegerArrayIndex.indexOf(key, true));
-      values[pos] = maxIndex++;
-    }
+    keys[pos] = Arrays.copyOf(key, key.length);
+    values[pos] = maxIndex++;
     reverseIndex[values[pos]] = pos;
     hashCodes[pos] = supplementalHash(Arrays.hashCode(key));
     return maxIndex - 1;
@@ -178,7 +170,7 @@ public class DynamicIntegerArrayIndex implements Iterable<int[]>,
       return values[pos];
     if (!add)
       return -1;
-    return add(key, -pos - 1, false);
+    return add(key, -pos - 1);
   }
 
   @Override

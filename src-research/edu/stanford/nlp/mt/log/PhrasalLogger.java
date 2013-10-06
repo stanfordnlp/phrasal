@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.service;
+package edu.stanford.nlp.mt.log;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.Generics;
 public final class PhrasalLogger {
 
   // TODO(spenceg): Add more logs, at least "Online" and "General"
-  public static enum LogName {Service};
+  public static enum LogName {SERVICE, WORD_CLASS};
   
   private PhrasalLogger() {}
   
