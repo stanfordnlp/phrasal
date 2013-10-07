@@ -121,9 +121,10 @@ public class MakeWordClasses {
       classCount.incrementCount(classId);
       IString word = vocab.get(i);
       wordToClass.put(word, classId);
-      Set<NgramHistory> historiesForWord = historyCount.getCounter(word).keySet();
-      for (NgramHistory h : historiesForWord) {
-        classHistoryCount.incrementCount(classId, h);
+      Counter<NgramHistory> historiesForWord = historyCount.getCounter(word);
+      for (NgramHistory h : historiesForWord.keySet()) {
+        double count = historiesForWord.getCount(h);
+        classHistoryCount.incrementCount(classId, h, count);
       }
     }
     logger.info("Finished generating initial cluster assignment");
@@ -191,7 +192,6 @@ public class MakeWordClasses {
         objValue += count * Math.log(count);
       }
       double count = classCount.getCount(classId);
-      assert historyCount.totalCount() == count;
       if (count > 0.0) {
         objValue -= count * Math.log(count);
       } else {
@@ -254,7 +254,7 @@ public class MakeWordClasses {
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     final String nl = System.getProperty("line.separator");
-    sb.append("Usage: java ").append(MakeWordClasses.class.getName()).append(" OPTS file [file]").append(nl)
+    sb.append("Usage: java ").append(MakeWordClasses.class.getName()).append(" OPTS file [file] > output").append(nl)
     .append(" -order num     : Model order (default: 2)").append(nl)
     .append(" -nthreads num  : Number of threads (default: 1)").append(nl)
     .append(" -nclasses num  : Number of classes (default: 512)").append(nl)

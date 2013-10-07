@@ -66,7 +66,7 @@ public class GoogleObjectiveFunction {
 
       // Remove the word from the local data structures
       double reducedObjValue = objectiveAfterRemoving(word, currentClass);
-      assert reducedObjValue < objValue;
+//      assert reducedObjValue < objValue;
 
       // Compute objective value under tentative moves
       for (Integer classId : wordClasses) {
@@ -102,6 +102,7 @@ public class GoogleObjectiveFunction {
       if (argMax != currentClass) {
         move(word, currentClass, argMax);
       }
+//      assert objValue == maxObjectiveValue : String.format("%.10f vs. %.10f", objValue, maxObjectiveValue);
     }
     return new ClustererOutput(localWordToClass, localClassCount, localClassHistoryCount);
   }
@@ -120,10 +121,13 @@ public class GoogleObjectiveFunction {
     // Update first term
     for (NgramHistory history : historiesForWord.keySet()) {
       double fromCount = historiesForFromClass.getCount(history);
+      assert fromCount > 0.0;
       double toCount = historiesForToClass.getCount(history);
       double count = historiesForWord.getCount(history);
       objValue -= fromCount*Math.log(fromCount);
-      objValue -= toCount*Math.log(toCount);
+      if (toCount > 0.0) {
+        objValue -= toCount*Math.log(toCount);
+      }
       fromCount -= count;
       toCount += count;
       historiesForFromClass.setCount(history, fromCount);
@@ -136,9 +140,12 @@ public class GoogleObjectiveFunction {
 
     // Update second term
     double fromClassCount = localClassCount.getCount(fromClass);
+    assert fromClassCount > 0.0;
     double toClassCount = localClassCount.getCount(toClass);
     objValue += fromClassCount*Math.log(fromClassCount);
-    objValue += toClassCount*Math.log(toClassCount);
+    if (toClassCount > 0.0) {
+      objValue += toClassCount*Math.log(toClassCount);
+    }
     localClassCount.decrementCount(fromClass);
     localClassCount.incrementCount(toClass);
     --fromClassCount;
@@ -146,7 +153,7 @@ public class GoogleObjectiveFunction {
     if (fromClassCount > 0.0) {
       objValue -= fromClassCount*Math.log(fromClassCount);
     }
-    objValue += toClassCount*Math.log(toClassCount);
+    objValue -= toClassCount*Math.log(toClassCount);
   }
 
   /**
@@ -163,6 +170,7 @@ public class GoogleObjectiveFunction {
     final Counter<NgramHistory> classHistory = localClassHistoryCount.getCounter(currentClass);
     for (NgramHistory history : historiesForWord.keySet()) {
       double currentCount = classHistory.getCount(history);
+      assert currentCount > 0.0;
       double count = historiesForWord.getCount(history);
       assert currentCount - count >= 0.0;
       // Remove original term

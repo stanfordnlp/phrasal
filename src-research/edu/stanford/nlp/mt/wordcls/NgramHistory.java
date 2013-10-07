@@ -70,7 +70,7 @@ public class NgramHistory implements Iterable<IString> {
       if (sb.length() > 0) sb.append(" ");
       sb.append(t.toString());
     }
-    return toString();
+    return sb.toString();
   }
   
   @Override
