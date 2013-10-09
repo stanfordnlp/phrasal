@@ -157,7 +157,7 @@ public class MakeWordClasses {
               new ThreadsafeProcessor<ClustererState,PartialStateUpdate>() {
                 @Override
                 public PartialStateUpdate process(ClustererState input) {
-                  GoogleObjectiveFunction algorithm = new GoogleObjectiveFunction(input);
+                  OneSidedObjectiveFunction algorithm = new OneSidedObjectiveFunction(input);
                   return algorithm.cluster();
                 }
                 @Override

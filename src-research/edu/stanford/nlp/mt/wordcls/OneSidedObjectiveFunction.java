@@ -9,22 +9,23 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.util.Generics;
 
 /**
- * The one-sided class model of Uszkoreit and Brants (2008).
+ * The one-sided class model of Uszkoreit and Brants (2008), which comes
+ * from Whitaker and Woodland (2001).
  * 
  * @author Spence Green
  *
  */
-public class GoogleObjectiveFunction {
+public class OneSidedObjectiveFunction {
 
   private double objValue = 0.0;
 
   private final ClustererState inputState;
   private final Map<IString, Integer> localWordToClass;
-  
+
   private final Counter<Integer> deltaClassCount;
   private final TwoDimensionalCounter<Integer, NgramHistory> deltaClassHistoryCount;
 
-  public GoogleObjectiveFunction(ClustererState input) {
+  public OneSidedObjectiveFunction(ClustererState input) {
     // Setup delta data structures
     this.inputState = input;
     localWordToClass = Generics.newHashMap(input.vocabularySubset.size());
@@ -47,7 +48,7 @@ public class GoogleObjectiveFunction {
       // Compute objective value under tentative moves
       for (int candidateClass = 0; candidateClass < inputState.numClasses; ++candidateClass) {
         if (candidateClass == currentClass) continue;
-        
+
         double newObjective = move(word, currentClass, candidateClass, false);
         if (newObjective > maxObjectiveValue) {
           argMaxClass = candidateClass;
@@ -76,16 +77,16 @@ public class GoogleObjectiveFunction {
   private double move(IString word, Integer fromClass, Integer toClass, boolean updateDeltaState) {
     final Counter<NgramHistory> fullHistoryFromClass = inputState.classHistoryCount.getCounter(fromClass);
     final Counter<NgramHistory> deltaFromClass = deltaClassHistoryCount.getCounter(fromClass);
-    
+
     final Counter<NgramHistory> fullHistoryToClass = inputState.classHistoryCount.getCounter(toClass);
     final Counter<NgramHistory> deltaToClass = deltaClassHistoryCount.getCounter(toClass);
-    
+
     final Counter<NgramHistory> historiesForWord = inputState.historyCount.getCounter(word);
-    
+
     double fromClassCount = inputState.classCount.getCount(fromClass) + deltaClassCount.getCount(fromClass);
     assert fromClassCount > 0.0;
     double toClassCount = inputState.classCount.getCount(toClass) + deltaClassCount.getCount(toClass);
-    
+
     //
     // Update first summation
     //
@@ -95,13 +96,13 @@ public class GoogleObjectiveFunction {
       assert fromCount > 0.0;
       double toCount = fullHistoryToClass.getCount(history) + deltaToClass.getCount(history);
       double historyCount = historiesForWord.getCount(history);
-      
+
       // Remove old summands
       newObjValue -= fromCount*Math.log(fromCount);
       if (toCount > 0.0) {
         newObjValue -= toCount*Math.log(toCount);
       }
-      
+
       // Update summands
       fromCount -= historyCount;
       toCount += historyCount;
@@ -109,7 +110,7 @@ public class GoogleObjectiveFunction {
         deltaFromClass.decrementCount(history, historyCount);
         deltaToClass.incrementCount(history, historyCount);
       }
-      
+
       // Add updated summands
       if (fromCount > 0.0) {
         newObjValue += fromCount*Math.log(fromCount);
@@ -133,18 +134,17 @@ public class GoogleObjectiveFunction {
       deltaClassCount.decrementCount(fromClass);
       deltaClassCount.incrementCount(toClass);
     }
-    
+
     // Add updated summands
     if (fromClassCount > 0.0) {
       newObjValue -= fromClassCount*Math.log(fromClassCount);
     }
     newObjValue -= toClassCount*Math.log(toClassCount);
-    
+
     // Change the class assignment
     if (updateDeltaState) {
       localWordToClass.put(word, toClass);
     }
-    
     return newObjValue;
   }
 }

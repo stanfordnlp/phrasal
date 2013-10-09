@@ -22,6 +22,11 @@ public class NgramHistory implements Iterable<IString> {
   private final int id;
   private final int hashCode;
   
+  /**
+   * Constructor.
+   * 
+   * @param hist
+   */
   public NgramHistory(List<IString> hist) {
     IString[] history = new IString[hist.size()];
     int i = 0;
