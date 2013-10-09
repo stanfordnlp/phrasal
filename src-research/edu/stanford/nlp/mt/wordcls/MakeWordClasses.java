@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.base.IOTools;
@@ -45,6 +46,7 @@ public class MakeWordClasses {
   private final int numIterations;
   private final int numClasses;
   private final int numThreads;
+  private final int vparts;
   private final int order;
   
   private final Logger logger;
@@ -55,6 +57,8 @@ public class MakeWordClasses {
   private final TwoDimensionalCounter<IString, NgramHistory> historyCount;
   private TwoDimensionalCounter<Integer,NgramHistory> classHistoryCount;
   private final ClassicCounter<Integer> classCount;
+  
+  private double currentObjectiveValue = 0.0;
   
   public MakeWordClasses(Properties properties) {
     // User options
@@ -67,10 +71,14 @@ public class MakeWordClasses {
     this.numThreads = PropertiesUtils.getInt(properties, "nthreads", 1);
     assert this.numThreads > 0;
     
+    this.vparts = PropertiesUtils.getInt(properties, "vparts", 3);
+    assert this.vparts > 0;
+    
     this.order = PropertiesUtils.getInt(properties, "order", 2);
     assert this.order > 1;
     
     logger = Logger.getLogger(this.getClass().getName());
+    PhrasalLogger.logLevel = Level.INFO;
     PhrasalLogger.prefix = String.valueOf(numClasses) + "-classes";
     PhrasalLogger.attach(logger, LogName.WORD_CLASS);
     logger.info("#iterations: " + String.valueOf(numIterations));
@@ -127,7 +135,9 @@ public class MakeWordClasses {
         classHistoryCount.incrementCount(classId, h, count);
       }
     }
+    currentObjectiveValue = objectiveFunctionValue();
     logger.info("Finished generating initial cluster assignment");
+    logger.info(String.format("Initial objective function value: %.3f%n", currentObjectiveValue));
   }
 
   public void run(String[] filenames) {
@@ -138,37 +148,37 @@ public class MakeWordClasses {
     }
     
     logger.info(String.format("Starting clustering with %d threads", numThreads));
-    final List<IString> vocab = Generics.newArrayList(wordCount.keySet());
+    final List<IString> fullVocabulary = Generics.newArrayList(wordCount.keySet());
+    Collections.shuffle(fullVocabulary);
+
     for (int e = 0; e < numIterations; ++e) {
-      logger.info(String.format("Iteration %d: start", e));
-      final long startTime = System.nanoTime();
-      // Create threadpool and dispatch workers
-      MulticoreWrapper<ClustererInput,ClustererOutput> threadpool = 
-          new MulticoreWrapper<ClustererInput,ClustererOutput>(numThreads, 
-              new ThreadsafeProcessor<ClustererInput,ClustererOutput>() {
+      MulticoreWrapper<ClustererState,PartialStateUpdate> threadpool = 
+          new MulticoreWrapper<ClustererState,PartialStateUpdate>(numThreads, 
+              new ThreadsafeProcessor<ClustererState,PartialStateUpdate>() {
                 @Override
-                public ClustererOutput process(ClustererInput input) {
+                public PartialStateUpdate process(ClustererState input) {
                   GoogleObjectiveFunction algorithm = new GoogleObjectiveFunction(input);
                   return algorithm.cluster();
                 }
                 @Override
-                public ThreadsafeProcessor<ClustererInput, ClustererOutput> newInstance() {
+                public ThreadsafeProcessor<ClustererState, PartialStateUpdate> newInstance() {
                   return this;
                 }
           });
-      // Randomly shuffle the vocabulary
-      Collections.shuffle(vocab);
+      // Select partition and dispatch workers
+      final int partitionNumber = e % vparts;
+      logger.info(String.format("Iteration %d: partition %d start", e, partitionNumber));
+      final long startTime = System.nanoTime();
       for (int t = 0; t < numThreads; ++t) {
-        ClustererInput input = createInput(vocab, t);
+        ClustererState input = createInput(fullVocabulary, partitionNumber, t);
         threadpool.put(input);
       }
 
       // Wait for shutdown and process results
       threadpool.join();
-      clearDataStructures();
       int numUpdates = 0;
       while(threadpool.peek()) {
-        ClustererOutput result = threadpool.poll();
+        PartialStateUpdate result = threadpool.poll();
         numUpdates += updateCountsWith(result);
       }
       double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
@@ -184,11 +194,16 @@ public class MakeWordClasses {
    * @return
    */
   private double objectiveFunctionValue() {
+    // Clean up counters
+    classHistoryCount.clean();
+    Counters.retainNonZeros(classCount);
+    
     double objValue = 0.0;
     for (int classId = 0; classId < numClasses; ++classId) {
       Counter<NgramHistory> historyCount = classHistoryCount.getCounter(classId);
       for (NgramHistory history : historyCount.keySet()) {
         double count = historyCount.getCount(history);
+        assert count > 0.0;
         objValue += count * Math.log(count);
       }
       double count = classCount.getCount(classId);
@@ -200,27 +215,29 @@ public class MakeWordClasses {
     }
     return objValue;
   }
-  
-  private void clearDataStructures() {
-    classCount.clear();
-    classHistoryCount = new TwoDimensionalCounter<Integer,NgramHistory>();
+
+  private ClustererState createInput(List<IString> fullVocabulary, int partitionNumber, int threadId) {
+    int partitionSize = fullVocabulary.size() / vparts;
+    int partitionStart = partitionNumber*partitionSize;
+    int partitionEnd = Math.min(fullVocabulary.size(), (partitionNumber+1)*partitionSize);
+    partitionSize = partitionEnd-partitionStart;
+    
+    int inputSize = partitionSize / numThreads;
+    int inputStart = threadId * inputSize;
+    int inputEnd = Math.min(partitionStart + ((threadId+1)*inputSize), partitionEnd);
+    List<IString> inputVocab = fullVocabulary.subList(partitionStart + inputStart, inputEnd);
+    return new ClustererState(inputVocab, this.wordCount, 
+        this.historyCount, this.wordToClass, this.classCount, this.classHistoryCount,
+        this.numClasses, this.currentObjectiveValue);
   }
 
-  private ClustererInput createInput(List<IString> vocab, int t) {
-    int inputSize = vocab.size() / numThreads;
-    int start = t * inputSize;
-    int end = Math.min((t+1)*inputSize, vocab.size());
-    List<IString> inputVocab = vocab.subList(start, end);
-    return new ClustererInput(inputVocab, this.wordCount, 
-        this.historyCount, this.wordToClass, this.classCount, this.classHistoryCount);
-  }
-
-  private int updateCountsWith(ClustererOutput result) {
-    Counters.addInPlace(classCount, result.classCount);
-    Set<Integer> classes = result.classHistoryCount.firstKeySet();
+  private int updateCountsWith(PartialStateUpdate result) {
+    // Update counts
+    Counters.addInPlace(classCount, result.deltaClassCount);
+    Set<Integer> classes = result.deltaClassHistoryCount.firstKeySet();
     for (Integer classId : classes) {
       Counter<NgramHistory> counter = this.classHistoryCount.getCounter(classId);
-      Counter<NgramHistory> delta = result.classHistoryCount.getCounter(classId);
+      Counter<NgramHistory> delta = result.deltaClassHistoryCount.getCounter(classId);
       Counters.addInPlace(counter, delta);
     }
     
@@ -248,6 +265,7 @@ public class MakeWordClasses {
     argDefs.put("nthreads", 1);
     argDefs.put("nclasses", 1);
     argDefs.put("niters", 1);
+    argDefs.put("vparts", 1);
     return argDefs;
   }
   
@@ -258,7 +276,8 @@ public class MakeWordClasses {
     .append(" -order num     : Model order (default: 2)").append(nl)
     .append(" -nthreads num  : Number of threads (default: 1)").append(nl)
     .append(" -nclasses num  : Number of classes (default: 512)").append(nl)
-    .append(" -niters num    : Number of iterations (default: 20)");
+    .append(" -niters num    : Number of iterations (default: 20)").append(nl)
+    .append(" -vparts num    : Number of vocabulary partitions (default: 3)");
     
     return sb.toString();
   }
