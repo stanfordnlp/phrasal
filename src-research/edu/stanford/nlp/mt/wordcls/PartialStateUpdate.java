@@ -6,6 +6,13 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 
+/**
+ * Delta data structures for updates to one-sided clusterer
+ * class state.
+ * 
+ * @author Spence Green
+ *
+ */
 public class PartialStateUpdate {
 
   // Class assignments for the input vocabulary

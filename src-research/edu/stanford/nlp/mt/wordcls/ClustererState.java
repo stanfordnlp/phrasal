@@ -8,6 +8,12 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 
+/**
+ * State required for distributed one-sided class clustering.
+ * 
+ * @author Spence Green
+ *
+ */
 public class ClustererState implements Serializable {
   
   private static final long serialVersionUID = 6116063336985767319L;

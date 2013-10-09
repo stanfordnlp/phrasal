@@ -10,6 +10,7 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.IntegerArrayIndex;
 
 /**
+ * An (semi!)-efficient implementation of n-gram history storage.
  * 
  * @author Spence Green
  *
