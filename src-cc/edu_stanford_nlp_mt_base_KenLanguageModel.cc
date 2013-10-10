@@ -51,6 +51,7 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_readKenLM
     
     }
   } else {
+    model_type = lm::ngram::PROBING;
     kenLM = new lm::ngram::Model(lm_filename);
   }
 
