@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.inferer.impl;
+package edu.stanford.nlp.mt.decoder;
 
 import java.util.Collections;
 import java.util.List;
@@ -7,9 +7,6 @@ import java.util.Queue;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInferer;
-import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInfererBuilder;
-import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;

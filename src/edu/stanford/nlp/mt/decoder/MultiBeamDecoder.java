@@ -25,7 +25,7 @@
 //    java-nlp-user@lists.stanford.edu
 //    http://nlp.stanford.edu/software/phrasal
 
-package edu.stanford.nlp.mt.decoder.inferer.impl;
+package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,9 +34,6 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
-import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInferer;
-import edu.stanford.nlp.mt.decoder.inferer.AbstractBeamInfererBuilder;
-import edu.stanford.nlp.mt.decoder.inferer.Inferer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;

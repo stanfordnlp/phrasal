@@ -32,9 +32,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
+import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
+import edu.stanford.nlp.mt.decoder.DTUDecoder;
+import edu.stanford.nlp.mt.decoder.Inferer;
+import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.h.*;
-import edu.stanford.nlp.mt.decoder.inferer.*;
-import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.*;
