@@ -211,4 +211,9 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
   public int longestTargetPhrase() {
     return 1;
   }
+
+  @Override
+  public List<String> getFeatureNames() {
+    return Generics.newArrayList(1);
+  }
 }

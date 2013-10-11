@@ -288,7 +288,7 @@ public class MakeWordClasses {
   public static void main(String[] args) {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     String[] filenames = options.getProperty("","").split("\\s+");
-    if (filenames.length < 1) {
+    if (filenames.length < 1 || filenames[0].length() == 0) {
       System.err.println(usage());
       System.exit(-1);
     }

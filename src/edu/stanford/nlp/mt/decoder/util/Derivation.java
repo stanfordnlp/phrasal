@@ -14,7 +14,6 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
-import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
@@ -160,9 +159,9 @@ State<Derivation<TK, FV>> {
     	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
       Annotator<TK,FV> extendedAnnotator = annotator.extend(rule);
       annotators.add(extendedAnnotator);
-      if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
-        ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
-      }
+//      if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
+//        ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
+//      }
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
 

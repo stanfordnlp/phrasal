@@ -29,4 +29,6 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
   public int longestTargetPhrase();
   
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer);
+  
+  public List<String> getFeatureNames();
 }

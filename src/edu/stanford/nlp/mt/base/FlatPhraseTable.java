@@ -137,19 +137,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     // DynamicIntegerArrayIndex();
     translations = new ArrayList<List<IntArrayTranslationOption>>();
     int countScores = init(f, reverse);
-    scoreNames = getScoreNames(countScores);
-  }
-
-  private static String[] getScoreNames(int countScores) {
-    String[] scoreNames;
-
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
-        scoreNames[i] = String.format("FPT.%d", i);
+      scoreNames[i] = String.format("FPT.%d", i);
     }
-
-    return scoreNames;
   }
+
+  @Override
+  public List<String> getFeatureNames() { return Arrays.asList(scoreNames); }
 
   /**
    * Load the phrase table from file. 

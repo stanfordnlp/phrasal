@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.base;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,6 +18,8 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    public static final String NUMBER_PHRASE_GENERATOR_NAME = "NumberPhraseGenerator";
    public static boolean DEBUG = true;
 
+   private static final String[] SCORE_NAMES = new String[]{"zhNumberScore1"};
+       
    public MandarinNumberPhraseGenerator(RuleFeaturizer<IString, String> phraseFeaturizer) {
       super(phraseFeaturizer);
    }
@@ -24,6 +27,11 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
    @Override
    public String getName() {
       return NUMBER_PHRASE_GENERATOR_NAME;
+   }
+   
+   @Override
+   public List<String> getFeatureNames() {
+     return Arrays.asList(SCORE_NAMES);
    }
 
    public static String addCommas(long num) {
@@ -581,7 +589,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                new RawSequence<IString>(new IString[] { new IString(firstTrans.toString()) });
           candidateTranslations.add(new Rule<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
-                  new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
+                  SCORE_NAMES, // score names you wan to assign to this translation,
                   firstTransAsSequence,
                   new RawSequence<IString>(chinesePhrase), null));
       }
@@ -590,7 +598,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                new RawSequence<IString>(new IString[] { new IString(secondTrans.toString()) });
           candidateTranslations.add(new Rule<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
-                  new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
+                  SCORE_NAMES, // score names you wan to assign to this translation,
                   secondTransAsSequence,
                   new RawSequence<IString>(chinesePhrase), null));
       }
@@ -599,7 +607,7 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
                new RawSequence<IString>(new IString[] { new IString(thirdTrans.toString()) });
           candidateTranslations.add(new Rule<IString>(
                   new float[]{(float)1.0}, // whatever scores you want to assign to this translation
-                  new String[]{"zhNumberScore1"}, // score names you wan to assign to this translation,
+                  SCORE_NAMES, // score names you wan to assign to this translation,
                   thirdTransAsSequence,
                   new RawSequence<IString>(chinesePhrase), null));
       }

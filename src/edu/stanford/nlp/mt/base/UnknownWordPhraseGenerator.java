@@ -1,12 +1,13 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.Arrays;
 import java.util.List;
 
 import edu.stanford.nlp.util.Characters;
 import edu.stanford.nlp.util.Generics;
 
 /**
- * Generates synthetic rules for unknown words.
+ * Unknown word model. Generates synthetic rules for unknown words.
  *
  * @author danielcer
  * @author Spence Green
@@ -16,21 +17,18 @@ import edu.stanford.nlp.util.Generics;
 public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> extends
     AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
 
-  public static final String PHRASE_TABLE_NAMES = "IdentityPhraseGenerator(Dyn)";
-  public static final String[] DEFAULT_SCORE_NAMES = { "p_i(t|f)" };
-  public static final float[] SCORE_VALUES = { (float) 1.0 };
-  public static final String DEBUG_PROPERTY = "UnknownWordPhraseGeneratorDebug";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "false"));
+  public static final String PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
+  public static final String UNK_FEATURE_NAME = "TM.UNK";
 
   // do we need to account for "(0) (1)", etc?
   public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
       .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
 
-  private final String[] scoreNames = DEFAULT_SCORE_NAMES;
   private final boolean dropUnknownWords;
   private final RawSequence<TK> empty = new RawSequence<TK>();
   private final IntegerArrayIndex sourceIndex;
+  private final String[] featureNames = { UNK_FEATURE_NAME };
+  private final float[] featureValues = { (float) 1.0 };
 
   /**
    * Constructor.
@@ -46,7 +44,12 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
 
   @Override
   public String getName() {
-    return PHRASE_TABLE_NAMES;
+    return PHRASE_TABLE_NAME;
+  }
+  
+  @Override
+  public List<String> getFeatureNames() {
+    return Arrays.asList(featureNames);
   }
 
   @Override
@@ -65,12 +68,12 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
 
       if (dropUnknownWords && !isNumericOrPunctuationOrSymbols(word)) {
         // Deletion rule
-        list.add(new Rule<TK>(SCORE_VALUES, scoreNames, empty, raw,
+        list.add(new Rule<TK>(featureValues, featureNames, empty, raw,
             DEFAULT_ALIGNMENT));
 
       } else {
         // Identity translation rule
-        list.add(new Rule<TK>(SCORE_VALUES, scoreNames, raw, raw,
+        list.add(new Rule<TK>(featureValues, featureNames, raw, raw,
             DEFAULT_ALIGNMENT));
       }
     }

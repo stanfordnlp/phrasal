@@ -53,80 +53,121 @@ import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 /**
- * Phrasal: a phrase-based machine translation system.
+ * Phrasal: a phrase-based machine translation system from the Stanford University
+ *          NLP group.
  *
  * @author danielcer
+ * @author Michel Galley
+ * @author Spence Green
  *
  */
 public class Phrasal {
 
-  public static final String TRANSLATION_TABLE_OPT = "ttable-file";
-  public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
-  public static final String OPTION_LIMIT_OPT = "ttable-limit";
-  public static final String DISTORTION_WT_OPT = "weight-d";
-  public static final String LANGUAGE_MODEL_WT_OPT = "weight-l";
-  public static final String TRANSLATION_MODEL_WT_OPT = "weight-t";
-  public static final String WORD_PENALTY_WT_OPT = "weight-w";
+  // TODO(spenceg): Add future cost delay as a parameter. Currently it must be set as a JVM parameter.
+  // TODO(spenceg): Add input encoding option. Replace all instances of "UTF-8" in the codebase. 
+  private static String usage() {
+    StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
+    sb.append("Usage: java ").append(Phrasal.class.getName()).append(" OPTS [ini_file] < input > output").append(nl).append(nl)
+      .append("Phrasal: A phrase-based machine translation decoder from the Stanford NLP group.").append(nl).append(nl)
+      .append("Command-line arguments override arguments specified in the optional ini_file:").append(nl)
+      .append("  -").append(TRANSLATION_TABLE_OPT).append(" filename : Translation model file.").append(nl)
+      .append("  -").append(LANGUAGE_MODEL_OPT).append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl)
+      .append("  -").append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl)
+      .append("  -").append(DISTORTION_WT_OPT).append(" num : Linear distortion weight.").append(nl)
+      .append("  -").append(LANGUAGE_MODEL_WT_OPT).append(" num : Language model weight.").append(nl)
+      .append("  -").append(TRANSLATION_MODEL_WT_OPT).append(" num [num] : Translation model weights.").append(nl)
+      .append("  -").append(WORD_PENALTY_WT_OPT).append(" num : Word penalty weight.").append(nl)
+      .append("  -").append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl)
+      .append("  -").append(MOSES_NBEST_LIST_OPT).append(" filename : Generate Moses-format n-best lists.").append(nl)
+      .append("  -").append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl)
+      .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).").append(nl)
+      .append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl)
+      .append("  -").append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
+      .append("  -").append(DISTORTION_FILE).append(" model_type filename : Lexicalized re-ordering model.").append(nl)
+      .append("  -").append(HIER_DISTORTION_FILE).append(" model_type filename : Hierarchical lexicalized re-ordering model.").append(nl)
+      .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
+      .append("  -").append(CONFIG_FILE).append(" filename : Configuration file.").append(nl)
+      .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
+      .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
+      .append("  -").append(DISTORTION_LIMIT).append(" num : Hard distortion limit.").append(nl)
+      .append("  -").append(ADDITIONAL_FEATURIZERS).append(" class [class] : List of additional feature functions.").append(nl)
+      .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
+      .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
+      .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
+      .append("  -").append(RECOMBINATION_HEURISTIC).append(" name : See RecombinationFilterFactory javadocs.").append(nl)
+      .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: true)").append(nl)
+      .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
+      .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
+      .append("  -").append(PREPROCESSOR_FILTER).append(" language [opts] : Pre-processor to apply to source input.").append(nl)
+      .append("  -").append(POSTPROCESSOR_FILTER).append(" language [opts] : Post-processor to apply to target output.").append(nl)
+      .append("  -").append(SOURCE_CLASS_MAP).append(" filename : Feature API: Line-delimited source word->class mapping (TSV format).").append(nl)
+      .append("  -").append(TARGET_CLASS_MAP).append(" filename : Feature API: Line-delimited target word->class mapping (TSV format).").append(nl)
+      .append("  -").append(LOAD_ALIGNMENTS).append(" boolean : Feature API: Load word-word alignments (default: false)").append(nl)
+      .append("  -").append(GAPS_OPT).append(" options : DTU: Enable Galley and Manning (2010) gappy decoding.").append(nl)
+      .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
+      .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
+      .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)");
+    return sb.toString();
+  }
+
+  // TODO(spenceg): Document or deprecate the Annotator API. The same functionality can be achieved
+  //                with the Featurizer API.
+  private static final String TRANSLATION_TABLE_OPT = "ttable-file";
+  private static final String LANGUAGE_MODEL_OPT = "lmodel-file";
+  private static final String OPTION_LIMIT_OPT = "ttable-limit";
+  private static final String DISTORTION_WT_OPT = "weight-d";
+  private static final String LANGUAGE_MODEL_WT_OPT = "weight-l";
+  private static final String TRANSLATION_MODEL_WT_OPT = "weight-t";
+  private static final String WORD_PENALTY_WT_OPT = "weight-w";
   public static final String NBEST_LIST_OPT = "n-best-list";
-  public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
-  public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
-  public static final String FORCE_DECODE = "force-decode";
-  public static final String BEAM_SIZE = "stack";
-  public static final String SEARCH_ALGORITHM = "search-algorithm";
-  public static final String DISTORTION_FILE = "distortion-file";
-  public static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
-  public static final String WEIGHTS_FILE = "weights-file";
-  public static final String CONFIG_FILE = "config-file";
-  public static final String USE_DISCRIMINATIVE_LM = "discriminative-lm";
-  public static final String USE_DISCRIMINATIVE_TM = "discriminative-tm";
-  public static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
-  public static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
-  public static final String FORCE_DECODE_ONLY = "force-decode-only";
-  public static final String DISTORTION_LIMIT = "distortion-limit";
-  public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
-  public static final String ADDITIONAL_ANNOTATORS = "additional-annotators";
-  public static final String DISABLED_FEATURIZERS = "disabled-featurizers";
-  public static final String INLINE_WEIGHTS = "inline-weights";
-  public static final String LOCAL_PROCS = "localprocs";
-  public static final String ITER_LIMIT = "iter-limit";
-  public static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
-  public static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
-  public static final String GAPS_OPT = "gaps";
-  public static final String MAX_GAP_SPAN_OPT = "max-gap-span";
-  public static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
-  public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
-  public static final String ISTRING_VOC_OPT = "istring-vocabulary";
-  public static final String MOSES_COMPATIBILITY_OPT = "moses-compatibility";
-  public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
-  public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
-  public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
-  public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
-  public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
-  public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
+  private static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
+  private static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
+  private static final String FORCE_DECODE = "force-decode";
+  private static final String BEAM_SIZE = "stack";
+  private static final String SEARCH_ALGORITHM = "search-algorithm";
+  private static final String DISTORTION_FILE = "distortion-file";
+  private static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
+  private static final String WEIGHTS_FILE = "weights-file";
+  private static final String CONFIG_FILE = "config-file";
+  private static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
+  private static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
+  private static final String DISTORTION_LIMIT = "distortion-limit";
+  private static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
+  private static final String ADDITIONAL_ANNOTATORS = "additional-annotators";
+  private static final String DISABLED_FEATURIZERS = "disabled-featurizers";
+  private static final String NUM_THREADS = "threads";
+  private static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
+  private static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
+  private static final String GAPS_OPT = "gaps";
+  private static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
+  private static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
+  private static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
+  private static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
+  private static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
+  private static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
+  private static final String PREPROCESSOR_FILTER = "preprocessor-filter";
+  private static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
-  public static final String LOAD_ALIGNMENTS = "load-word-alignments";
+  private static final String LOAD_ALIGNMENTS = "load-word-alignments";
 
-  private static final int DEFAULT_DISCRIMINATIVE_LM_ORDER = 0;
-  private static final boolean DEFAULT_DISCRIMINATIVE_TM_PARAMETER = false;
-
-  static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
-  static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
-  static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
-
+  private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
+  private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
+  private static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
   static {
-    REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT,WEIGHTS_FILE));
-    OPTIONAL_FIELDS.addAll(Arrays.asList(INLINE_WEIGHTS, ITER_LIMIT,
-        DISTORTION_FILE, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, USE_DISCRIMINATIVE_TM, FORCE_DECODE_ONLY,
+    REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT));
+    OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE,
+        DISTORTION_FILE, DISTORTION_LIMIT, 
+        ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
-        BEAM_SIZE, WEIGHTS_FILE, USE_DISCRIMINATIVE_LM, MAX_SENTENCE_LENGTH,
+        BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
-        LOCAL_PROCS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, MAX_GAP_SPAN_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT, ISTRING_VOC_OPT,
-        MOSES_COMPATIBILITY_OPT, ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
+        NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
+        LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT,
+        ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
@@ -140,14 +181,12 @@ public class Phrasal {
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
    */
-  private static final int DEFAULT_NUM_THREADS = 1;
-  private int numThreads = DEFAULT_NUM_THREADS;
+  private int numThreads = 1;
 
   /**
    * Hard distortion limit for phrase-based decoder
    */
-  private static final int DEFAULT_DISTORTION_LIMIT = 5;
-  private int distortionLimit = DEFAULT_DISTORTION_LIMIT;
+  private int distortionLimit = 5;
 
   /**
    * DTU options
@@ -166,15 +205,14 @@ public class Phrasal {
   private List<Scorer<String>> scorers;
 
   /**
-   * Phrase table type
+   * Phrase table / translation model
    */
   private PhraseGenerator<IString,String> phraseGenerator;
 
   /**
    * Whether to filter unknown words in the output
    */
-  private static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
-  private boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
+  private boolean dropUnknownWords = true;
 
   /**
    * n-best list options
@@ -225,8 +263,10 @@ public class Phrasal {
    * @return the scorer
    */
   public Scorer<String> getScorer(int threadId) {
-    assert threadId >= 0 && threadId < numThreads;
-    return scorers.get(threadId);
+    if(threadId >= 0 && threadId < numThreads) {
+      return scorers.get(threadId);
+    }
+    throw new RuntimeException("Illegal thread id: " + String.valueOf(threadId));
   }
 
   /**
@@ -242,15 +282,8 @@ public class Phrasal {
   public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
   
   public static void initStaticMembers(Map<String, List<String>> config) {
-
-    if (config.containsKey(ISTRING_VOC_OPT))
-      IString.load(config.get(ISTRING_VOC_OPT).get(0));
-
-    withGaps = config.containsKey(GAPS_OPT)
-        || config.containsKey(MAX_GAP_SPAN_OPT);
-    if (withGaps)
-      gapOpts = config.containsKey(MAX_GAP_SPAN_OPT) ? config
-          .get(MAX_GAP_SPAN_OPT) : config.get(GAPS_OPT);
+    withGaps = config.containsKey(GAPS_OPT);
+    gapOpts = withGaps ? config.get(GAPS_OPT) : null;
     FlatPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
@@ -276,13 +309,14 @@ public class Phrasal {
       InstantiationException, IllegalAccessException, IllegalArgumentException,
       SecurityException, InvocationTargetException, NoSuchMethodException,
       ClassNotFoundException {
+    // Check for required parameters
     if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
       Set<String> missingFields = new HashSet<String>(REQUIRED_FIELDS);
       missingFields.removeAll(config.keySet());
       throw new RuntimeException(String.format(
           "The following required fields are missing: %s%n", missingFields));
     }
-
+    // Check for unrecognized parameters
     if (!ALL_RECOGNIZED_FIELDS.containsAll(config.keySet())) {
       Set<String> extraFields = new HashSet<String>(config.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_FIELDS);
@@ -325,8 +359,6 @@ public class Phrasal {
       TargetClassMap.load(parameters.get(0));
     }
     
-    final boolean mosesMode = config.containsKey(MOSES_COMPATIBILITY_OPT);
-
     if (config.containsKey(FORCE_DECODE)) {
       forceDecodeReferences = Metrics.readReferences(config.get(FORCE_DECODE)
           .toArray(new String[config.get(FORCE_DECODE).size()]));
@@ -430,7 +462,7 @@ public class Phrasal {
               optionLimit));
     }
     if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
-       List<PhraseGenerator<IString,String>> pgens = new LinkedList<PhraseGenerator<IString,String>>();
+       List<PhraseGenerator<IString,String>> pgens = Generics.newLinkedList();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
           PhraseGenerator<IString,String> pgen;
@@ -479,9 +511,6 @@ public class Phrasal {
         modelType = strDistortionFile.get(0);
         modelFilename = strDistortionFile.get(1);
 
-      } else if (strDistortionFile.size() == 4) {
-        modelType = strDistortionFile.get(1);
-        modelFilename = strDistortionFile.get(3);
       } else {
         throw new RuntimeException(
             String
@@ -489,28 +518,14 @@ public class Phrasal {
                     "Parameter '%s' takes two arguments: distortion-model-type & model-filename)",
                     DISTORTION_FILE));
       }
-      lexReorderFeaturizer = mosesMode || stdDistFile ? new LexicalReorderingFeaturizer(
+      lexReorderFeaturizer = stdDistFile ? new LexicalReorderingFeaturizer(
           new LexicalReorderingTable(modelFilename, modelType))
           : new HierarchicalReorderingFeaturizer(modelFilename, modelType);
     }
-    int discriminativeLMOrder;
-    if (config.containsKey(USE_DISCRIMINATIVE_LM)) {
-      String orderStr = config.get(USE_DISCRIMINATIVE_LM).get(0);
-      try {
-        discriminativeLMOrder = Integer.parseInt(orderStr);
-      } catch (NumberFormatException e) {
-        throw new RuntimeException(String.format(
-            "Parameter %s to %s can not be parsed as an integer value",
-            orderStr, USE_DISCRIMINATIVE_LM));
-      }
-    } else {
-      discriminativeLMOrder = DEFAULT_DISCRIMINATIVE_LM_ORDER;
-    }
 
+    // TODO(spenceg) This functionality is not used. Deprecate.
     List<Annotator<IString,String>> additionalAnnotators = new ArrayList<Annotator<IString,String>>();
     if (config.containsKey(ADDITIONAL_ANNOTATORS)) {
-    	// todo make some general method that can parse both additional annotators
-    	// and additional featurizers
     	List<String> tokens = config.get(ADDITIONAL_ANNOTATORS);
         String annotatorName = null;
         String args = null;
@@ -535,10 +550,9 @@ public class Phrasal {
                 String[] argsList = args.split(",");
                 System.err.printf("Additional annotators: %s.%nArgs: %s%n",
                     annotatorName, Arrays.toString(argsList));
-                // TODO(spenceg) Seems like this will throw an exception?
-                Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
-                    .loadFeaturizer(annotatorName);
-                annotator = (Annotator<IString,String>) featurizerClass
+                Class<Annotator<IString, String>> annotatorClass = AnnotatorFactory
+                    .loadAnnotator(annotatorName);
+                annotator = (Annotator<IString,String>) annotatorClass
                     .getConstructor(argsList.getClass()).newInstance(
                         new Object[] { argsList });
                 additionalAnnotators.add(annotator);
@@ -661,14 +675,6 @@ public class Phrasal {
       }
     }
 
-    boolean discriminativeTMParameter;
-    if (config.containsKey(USE_DISCRIMINATIVE_TM)) {
-      discriminativeTMParameter = Boolean.parseBoolean(config.get(
-          USE_DISCRIMINATIVE_TM).get(0));
-    } else {
-      discriminativeTMParameter = DEFAULT_DISCRIMINATIVE_TM_PARAMETER;
-    }
-
     // Create Featurizer
     String lgModel = null, lgModelVoc = "";
     if (config.containsKey(LANGUAGE_MODEL_OPT)) {
@@ -687,23 +693,13 @@ public class Phrasal {
         throw new RuntimeException("Unsupported configuration "
             + config.get(LANGUAGE_MODEL_OPT));
       }
-
       System.err.printf("Language model: %s%n", lgModel);
-    }
-
-    if (discriminativeLMOrder != 0) {
-      System.err.printf("Discriminative LM order: %d%n", discriminativeLMOrder);
     }
 
     CombinedFeaturizer<IString, String> featurizer;
 
-    if (discriminativeTMParameter) {
-      System.err.printf("Using Discriminative TM%n");
-    }
-
     String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class
-        .getName() : (mosesMode ? LinearDistortionFeaturizer.class.getName()
-        : LinearFutureCostFeaturizer.class.getName());
+        .getName() : LinearFutureCostFeaturizer.class.getName();
 
     if (lgModel != null) {
       featurizer = FeaturizerFactory.factory(
@@ -742,22 +738,27 @@ public class Phrasal {
     // Link the final featurizer and the phrase table
     phraseGenerator.setFeaturizer(featurizer);
 
-    // Create Scorer
+    // Create Scorer / weight vector
     Counter<String> weightVector = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s%n", config.get(WEIGHTS_FILE).get(0));
-
       weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
+
     } else {
-      if (config.containsKey(INLINE_WEIGHTS)) {
+      if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
         List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);
-        for (String inlineWt : inlineWts) {
-          String[] fields = inlineWt.split("=");
-          weightVector.setCount(fields[0], Double.parseDouble(fields[1]));
+        List<String> featureNames = phraseGenerator.getFeatureNames();
+        if (inlineWts.size() > featureNames.size()) {
+          throw new RuntimeException(String.format("%d weights specified by %s, but translation model has only %d features",
+              inlineWts.size(), TRANSLATION_MODEL_WT_OPT,
+              featureNames.size()));
+        }
+        int i = 0;
+        for (String wtValue : inlineWts) {
+          weightVector.setCount(featureNames.get(i++), Double.parseDouble(wtValue));
         }
       }
-
       if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
         weightVector.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
@@ -765,7 +766,6 @@ public class Phrasal {
       if (config.containsKey(DISTORTION_WT_OPT)) {
         weightVector.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
-
 
         if (config.get(DISTORTION_WT_OPT).size() > 1) {
           int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
@@ -846,8 +846,8 @@ public class Phrasal {
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
     // Create Inferers and scorers
-    if (config.containsKey(LOCAL_PROCS))
-      numThreads = Integer.parseInt(config.get(LOCAL_PROCS).get(0));
+    if (config.containsKey(NUM_THREADS))
+      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
     if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
     System.err.printf("Number of threads: %d%n", numThreads);
 
@@ -1240,7 +1240,7 @@ public class Phrasal {
   /**
    * Free resources and cleanup.
    */
-  public void shutdown() {
+  private void shutdown() {
     if (nbestListWriter != null) {
       System.err.println("Closing n-best writer");
       nbestListWriter.close();
@@ -1253,14 +1253,14 @@ public class Phrasal {
   }
 
   /**
-   * Load options from a Moses-style ini file.
+   * Parse a Phrasal ini file.
    *
    * @param filename
    * @throws IOException
    */
   public static Map<String, List<String>> readConfig(String filename)
       throws IOException {
-    Map<String, List<String>> config = new HashMap<String, List<String>>();
+    Map<String, List<String>> config = Generics.newHashMap();
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     for (String line; (line = reader.readLine()) != null;) {
       line = line.trim().replaceAll("#.*$", "");
@@ -1293,7 +1293,6 @@ public class Phrasal {
           String[] fields = line.split("\\s+");
           entries.addAll(Arrays.asList(fields));
         }
-
         if (!entries.isEmpty())
           config.put(key, entries);
       }
@@ -1305,32 +1304,30 @@ public class Phrasal {
   /**
    * Read a combination of config file and other command line arguments.
    *
-   * @param args
+   * @param options
    * @return
    * @throws IOException
    */
-  private static Map<String, List<String>> readArgs(String[] args) throws IOException {
-    Map<String, List<String>> configArgs = new HashMap<String, List<String>>();
-    Map<String, List<String>> configFile = new HashMap<String, List<String>>();
-    Map<String, List<String>> configFinal = new HashMap<String, List<String>>();
-
-    for (Map.Entry<Object, Object> e : StringUtils.argsToProperties(args)
-        .entrySet()) {
+  private static Map<String, List<String>> readArgs(Properties options) throws IOException {
+    Map<String, List<String>> configArgs = Generics.newHashMap();
+    Map<String, List<String>> configFile = Generics.newHashMap();
+    for (Map.Entry<Object, Object> e : options.entrySet()) {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
       if (CONFIG_FILE.equals(key)) {
         configFile.putAll(readConfig(value));
       } else {
-        configArgs.put(key, Arrays.asList(value.split(" ")));
+        configArgs.put(key, Arrays.asList(value.split("\\s+")));
       }
     }
+    Map<String, List<String>> configFinal = Generics.newHashMap();
     configFinal.putAll(configFile);
-    configFinal.putAll(configArgs); // command line args overwrite config file options
+    configFinal.putAll(configArgs);
     return configFinal;
   }
 
   /**
-   * Load an instance of phrasal from an ini file.
+   * Load an instance of Phrasal from an ini file.
    *
    * @param phrasalIniFile
    * @throws IOException
@@ -1340,6 +1337,12 @@ public class Phrasal {
     return loadDecoder(config);
   }
 
+  /**
+   * Load an instance of Phrasal from a parsed ini file.
+   * 
+   * @param config
+   * @return
+   */
   public static Phrasal loadDecoder(Map<String, List<String>> config) {
     try {
       Phrasal.initStaticMembers(config);
@@ -1373,7 +1376,7 @@ public class Phrasal {
     }
     throw new RuntimeException("Could not load Phrasal from config file!");
   }
-
+  
   /**
    * Run Phrasal from the command line.
    *
@@ -1381,8 +1384,11 @@ public class Phrasal {
    * @throws Exception
    */
   public static void main(String[] args) throws Exception {
-    if (args.length < 1) {
-      System.err.printf("Usage: java %s (model.ini) [OPTS]%n", Phrasal.class.getName());
+    Properties options = StringUtils.argsToProperties(args);
+    String configFile = options.containsKey("") ? (String) options.get("") : null;
+    if ((options.size() == 0 && configFile == null) ||
+        options.containsKey("help") || options.containsKey("h")) {
+      System.err.println(usage());
       System.exit(-1);
     }
 
@@ -1392,18 +1398,14 @@ public class Phrasal {
           @Override
           public void uncaughtException(Thread t, Throwable ex) {
             System.err.println("Uncaught exception from thread: " + t.getName());
-            // System.err.println(ex.toString());
             ex.printStackTrace();
             System.exit(-1);
           }
         });
 
-    Map<String, List<String>> config = (args.length == 1) ? readConfig(args[0])
-        : readArgs(args);
+    Map<String, List<String>> config = configFile == null ? readArgs(options) :
+      readConfig(configFile);
     Phrasal p = Phrasal.loadDecoder(config);
     p.decode(System.in, true);
-
-    // [spenceg]: For execution in the debugger
-    //    p.decode(new FileInputStream(new File("debug.1")), true);
   }
 }
