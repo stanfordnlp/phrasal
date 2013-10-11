@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -51,12 +52,15 @@ public class MakeWordClasses {
   
   private final Logger logger;
   
+  private static enum OutputFormat {SRILM, TSV};
+  
   private static final int INITIAL_CAPACITY = 100000;
   private final Map<IString,Integer> wordToClass;
   private final Counter<IString> wordCount;
   private final TwoDimensionalCounter<IString, NgramHistory> historyCount;
   private TwoDimensionalCounter<Integer,NgramHistory> classHistoryCount;
   private final ClassicCounter<Integer> classCount;
+  private final OutputFormat outputFormat;
   
   private double currentObjectiveValue = 0.0;
   
@@ -76,6 +80,9 @@ public class MakeWordClasses {
     
     this.order = PropertiesUtils.getInt(properties, "order", 2);
     assert this.order > 1;
+    
+    this.outputFormat = OutputFormat.valueOf(
+        properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
     
     logger = Logger.getLogger(this.getClass().getName());
     PhrasalLogger.logLevel = Level.INFO;
@@ -219,12 +226,14 @@ public class MakeWordClasses {
   private ClustererState createInput(List<IString> fullVocabulary, int partitionNumber, int threadId) {
     int partitionSize = fullVocabulary.size() / vparts;
     int partitionStart = partitionNumber*partitionSize;
-    int partitionEnd = Math.min(fullVocabulary.size(), (partitionNumber+1)*partitionSize);
+    int partitionEnd = partitionNumber == vparts-1 ? fullVocabulary.size() : (partitionNumber+1)*partitionSize;
     partitionSize = partitionEnd-partitionStart;
     
     int inputSize = partitionSize / numThreads;
     int inputStart = threadId * inputSize;
-    int inputEnd = Math.min(partitionStart + ((threadId+1)*inputSize), partitionEnd);
+    int inputEnd = threadId == numThreads-1 ? partitionEnd : partitionStart + ((threadId+1)*inputSize);
+    logger.info(String.format("Partition %d thread %d size %d: input %d-%d", partitionNumber,
+        threadId, partitionSize, partitionStart+inputStart, inputEnd-1));
     List<IString> inputVocab = fullVocabulary.subList(partitionStart + inputStart, inputEnd);
     return new ClustererState(inputVocab, this.wordCount, 
         this.historyCount, this.wordToClass, this.classCount, this.classHistoryCount,
@@ -253,9 +262,35 @@ public class MakeWordClasses {
   }
 
   public void writeResults(PrintStream out) {
-    logger.info("Writing final class assignments");
-    for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
-      out.printf("%s\t%d%n", assignment.getKey().toString(), assignment.getValue());
+    logger.info(String.format("Writing final class assignments in %s format",
+        outputFormat.toString()));
+    if (outputFormat == OutputFormat.TSV) {
+      for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
+        out.printf("%s\t%d%n", assignment.getKey().toString(), assignment.getValue());
+      }
+    
+    } else if (outputFormat == OutputFormat.SRILM) {
+      Map<Integer,Set<IString>> classToWords = Generics.newHashMap();
+      for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
+        if ( ! classToWords.containsKey(assignment.getValue())) {
+          classToWords.put(assignment.getValue(), new HashSet<IString>());
+        }
+        classToWords.get(assignment.getValue()).add(assignment.getKey());
+      }
+      int numOutputWords = 0;
+      for (int classId : classToWords.keySet()) {
+        Set<IString> words = classToWords.get(classId);
+        out.print(classId);
+        out.print(" 1.0"); // Probability 1
+        for (IString word : words) {
+          out.print(" ");
+          out.print(word.toString());
+          ++numOutputWords;
+        }
+        out.println();
+      }
+      // Sanity check
+      assert numOutputWords == wordToClass.size() : String.format("%d / %d", numOutputWords, wordToClass.size());
     }
   }
 
@@ -266,6 +301,7 @@ public class MakeWordClasses {
     argDefs.put("nclasses", 1);
     argDefs.put("niters", 1);
     argDefs.put("vparts", 1);
+    argDefs.put("format", 1);
     return argDefs;
   }
   
@@ -277,8 +313,9 @@ public class MakeWordClasses {
     .append(" -nthreads num  : Number of threads (default: 1)").append(nl)
     .append(" -nclasses num  : Number of classes (default: 512)").append(nl)
     .append(" -niters num    : Number of iterations (default: 20)").append(nl)
-    .append(" -vparts num    : Number of vocabulary partitions (default: 3)");
-    
+    .append(" -vparts num    : Number of vocabulary partitions (default: 3)").append(nl)
+    .append(" -format type   : Output format [srilm|tsv] (default: tsv)");
+
     return sb.toString();
   }
   
@@ -288,7 +325,8 @@ public class MakeWordClasses {
   public static void main(String[] args) {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     String[] filenames = options.getProperty("","").split("\\s+");
-    if (filenames.length < 1 || filenames[0].length() == 0) {
+    if (filenames.length < 1 || filenames[0].length() == 0 || options.containsKey("h")
+        || options.containsKey("help")) {
       System.err.println(usage());
       System.exit(-1);
     }
