@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.sleepycat.bind.tuple.IntegerBinding;
@@ -203,5 +204,10 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   @Override
   public int longestTargetPhrase() {
     return longestTargetPhrase;
+  }
+
+  @Override
+  public List<String> getFeatureNames() {
+    return Arrays.asList(scoreNames);
   }
 }

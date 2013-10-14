@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
 import java.util.List;

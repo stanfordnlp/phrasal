@@ -7,6 +7,7 @@ import java.util.Map;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 
 /**
  * @author danielcer
@@ -63,9 +64,8 @@ RuleFeaturizer<T, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<T, String> featurizable) {
     FeatureValue<String>[] featureValues;
-    if (featurizable.phraseTableName == UnknownWordFeaturizer.UNKNOWN_PHRASE_TABLE_NAME) {
-      return null; // TODO implement some other type of flagging, so this isn't
-      // necessary (/can be done more cleanly)
+    if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
+      return null;
     }
     if (phraseReweighting) {
       featureValues = new FeatureValue[1];

@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat.exp;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 

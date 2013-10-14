@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.decoder.annotators;
 
-
 /**
  * 
  * @author danielcer

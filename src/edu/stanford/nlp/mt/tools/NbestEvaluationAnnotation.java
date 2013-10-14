@@ -23,11 +23,11 @@ import edu.stanford.nlp.mt.metrics.Metrics;
  * @author daniel cer (danielcer@stanford.edu)
  *
  */
-public class NbestEvaluatationAnnotation {
+public class NbestEvaluationAnnotation {
   
   static public void usage() {
     err.printf("Usage:\n\t%s \\\n"+
-      "(input n-best) (metric) (output annotated n-best) (ref1) [ref2] ... [ref n]\n", NbestEvaluatationAnnotation.class.getName());
+      "(input n-best) (metric) (output annotated n-best) (ref1) [ref2] ... [ref n]\n", NbestEvaluationAnnotation.class.getName());
   }
   
   static public void main(String[] args) throws Exception {

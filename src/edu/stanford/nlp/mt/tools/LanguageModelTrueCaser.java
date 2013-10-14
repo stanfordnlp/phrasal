@@ -16,10 +16,10 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.Rule;
+import edu.stanford.nlp.mt.decoder.Inferer;
+import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
+import edu.stanford.nlp.mt.decoder.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
-import edu.stanford.nlp.mt.decoder.inferer.Inferer;
-import edu.stanford.nlp.mt.decoder.inferer.InfererBuilderFactory;
-import edu.stanford.nlp.mt.decoder.inferer.impl.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -210,5 +210,10 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
   @Override
   public int longestTargetPhrase() {
     return 1;
+  }
+
+  @Override
+  public List<String> getFeatureNames() {
+    return Generics.newArrayList(1);
   }
 }

@@ -25,13 +25,12 @@
 //    java-nlp-user@lists.stanford.edu
 //    http://nlp.stanford.edu/software/phrasal
 
-package edu.stanford.nlp.mt.decoder.inferer.impl;
+package edu.stanford.nlp.mt.decoder;
 
 import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.inferer.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 

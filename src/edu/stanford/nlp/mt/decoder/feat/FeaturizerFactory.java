@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
-import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.LanguageModels;
 import edu.stanford.nlp.util.Generics;
@@ -20,11 +19,9 @@ public class FeaturizerFactory {
   public static final String DEFAULT_WEIGHTING_BASELINE_FEATURIZERS = "weightedbaseline";
   // public static final String WEIGHTED_NGRAM_MATCH = "weightedngrammatch";
   public static final String DEFAULT_FEATURIZERS = DEFAULT_WEIGHTING_BASELINE_FEATURIZERS;
-  public static final String DISCRIMINATIVE_TM_PARAMETER = "discrimtm";
   public static final String ARPA_LM_PARAMETER = "arpalm";
   public static final String ARPA_LM_VOC_PARAMETER = "arpalmvoc";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
-  public static final String DISCRIMINATIVE_LM_PARAMETER = "discrimlm";
   public static final String GAP_PARAMETER = "gap";
   // public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
 
@@ -172,30 +169,6 @@ public class FeaturizerFactory {
         pharaohFeaturizers.add(arpaLmFeaturizer);
       }
 
-      String discriminativeLMOrderStr = paramPairs
-          .get(DISCRIMINATIVE_LM_PARAMETER);
-      int discriminativeLMOrder = (discriminativeLMOrderStr == null ? 0
-          : Integer.parseInt(discriminativeLMOrderStr));
-
-      String discriminativeTMStr = paramPairs.get(DISCRIMINATIVE_TM_PARAMETER);
-      boolean discriminativeTM = (discriminativeTMStr != null && Boolean
-          .parseBoolean(discriminativeTMStr));
-
-      if (discriminativeLMOrder != 0) {
-        LanguageModel<IString> dLM = new IndicatorFunctionLM(
-            discriminativeLMOrder);
-        NGramLanguageModelFeaturizer dLMFeaturizer = new NGramLanguageModelFeaturizer(
-            dLM, "DLM", true);
-        pharaohFeaturizers.add(dLMFeaturizer);
-      }
-
-      if (discriminativeTM) {
-        System.err.printf("Using discriminative TM\n");
-        PhraseTableScoresFeaturizer<IString> dTMFeaturizer = new PhraseTableScoresFeaturizer<IString>(
-            false, true);
-        pharaohFeaturizers.add(dTMFeaturizer);
-      }
-
       // Precomputed phrase to phrase translation scores
       phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
       pharaohFeaturizers.add(phraseTableScoresFeaturizer);
@@ -214,9 +187,7 @@ public class FeaturizerFactory {
       // return combined model
       return new CombinedFeaturizer<IString, String>(pharaohFeaturizers);
     }
-
     throw new RuntimeException(String.format("Unrecognized featurizer '%s'",
         featurizerName));
   }
-
 }

@@ -941,7 +941,7 @@ public class OnlineTuner {
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {
-      System.out.println(usage());
+      System.err.println(usage());
       System.exit(-1);
     }
     String srcFile = parsedArgs[0];

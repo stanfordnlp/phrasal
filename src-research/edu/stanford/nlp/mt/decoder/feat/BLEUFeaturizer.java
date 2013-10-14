@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat.oracle;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.stats.Counter;

@@ -14,11 +14,11 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
-import edu.stanford.nlp.mt.decoder.annotators.TargetDependencyAnnotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
 /**
+ * A derivation that maps a source input to a target output.
  * 
  * Note: this class has a natural ordering that is inconsistent with equals
  * 
@@ -82,7 +82,14 @@ State<Derivation<TK, FV>> {
   }
 
   /**
+   * Constructor for null hypotheses (root of translation lattice).
    * 
+   * @param sourceInputId
+   * @param sourceSequence
+   * @param heuristic
+   * @param scorer
+   * @param annotators
+   * @param ruleList
    */
   public Derivation(int sourceInputId, Sequence<TK> sourceSequence,
       SearchHeuristic<TK, FV> heuristic,
@@ -110,7 +117,15 @@ State<Derivation<TK, FV>> {
   }
 
   /**
+   * Constructor for derivation/hypothesis expansion.
    * 
+   * @param sourceInputId
+   * @param rule
+   * @param insertionPosition
+   * @param base
+   * @param featurizer
+   * @param scorer
+   * @param heuristic
    */
   public Derivation(int sourceInputId,
       ConcreteRule<TK,FV> rule, int insertionPosition,
@@ -144,9 +159,9 @@ State<Derivation<TK, FV>> {
     	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
       Annotator<TK,FV> extendedAnnotator = annotator.extend(rule);
       annotators.add(extendedAnnotator);
-      if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
-        ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
-      }
+//      if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
+//        ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
+//      }
       // System.out.println("done with extension "+translationOpt.abstractOption.translation);
     }
 
@@ -162,7 +177,21 @@ State<Derivation<TK, FV>> {
     depth = base.depth + 1;
   }
 
-
+  /**
+   * Constructor for DTU.
+   * 
+   * @param sourceInputId
+   * @param rule
+   * @param abstractRule
+   * @param insertionPosition
+   * @param base
+   * @param featurizer
+   * @param scorer
+   * @param heuristic
+   * @param targetPhrase
+   * @param hasPendingPhrases
+   * @param segmentIdx
+   */
   protected Derivation(int sourceInputId,
       ConcreteRule<TK,FV> rule,
       Rule<TK> abstractRule, int insertionPosition,

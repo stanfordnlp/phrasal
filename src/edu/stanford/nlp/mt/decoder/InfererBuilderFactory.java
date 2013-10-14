@@ -1,12 +1,9 @@
-package edu.stanford.nlp.mt.decoder.inferer;
+package edu.stanford.nlp.mt.decoder;
 
 import java.util.Map;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.inferer.impl.CubePruningDecoder;
-import edu.stanford.nlp.mt.decoder.inferer.impl.DTUDecoder;
-import edu.stanford.nlp.mt.decoder.inferer.impl.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 
 /**
