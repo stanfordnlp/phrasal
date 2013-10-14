@@ -83,7 +83,7 @@ public class MakeWordClasses {
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
     
     logger = Logger.getLogger(this.getClass().getName());
-    PhrasalLogger.logLevel = Level.INFO;
+    PhrasalLogger.logLevel = Level.FINE;
     PhrasalLogger.prefix = String.valueOf(numClasses) + "-classes";
     PhrasalLogger.attach(logger, LogName.WORD_CLASS);
     logger.info("#iterations: " + String.valueOf(numIterations));
@@ -131,8 +131,8 @@ public class MakeWordClasses {
     Collections.sort(vocab, Counters.toComparator(wordCount, false, true));
     for (int i = 0; i < vocab.size(); ++i) {
       final int classId = i % numClasses;
-      classCount.incrementCount(classId);
       IString word = vocab.get(i);
+      classCount.incrementCount(classId, wordCount.getCount(word));
       wordToClass.put(word, classId);
       Counter<NgramHistory> historiesForWord = historyCount.getCounter(word);
       for (NgramHistory h : historiesForWord.keySet()) {
