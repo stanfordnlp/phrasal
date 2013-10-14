@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -33,7 +32,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  * word to an output equivalence class.
  * 
  * TODO Add encoding parameter
- * TODO Output sufficient statistics for test evaluation
  * TODO Extract out objective function as an interface to support
  * other clustering algorithms if needed.
  * 
@@ -147,6 +145,11 @@ public class MakeWordClasses {
     logger.info(String.format("Initial objective function value: %.3f%n", currentObjectiveValue));
   }
 
+  /**
+   * Create word clusters from the list of input files.
+   * 
+   * @param filenames
+   */
   public void run(String[] filenames) {
     try {
       initialize(filenames);
@@ -261,36 +264,21 @@ public class MakeWordClasses {
     return numUpdates;
   }
 
+  /**
+   * Write the final cluster assignments to the specified output stream.
+   * 
+   * @param out
+   */
   public void writeResults(PrintStream out) {
     logger.info(String.format("Writing final class assignments in %s format",
         outputFormat.toString()));
-    if (outputFormat == OutputFormat.TSV) {
-      for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
+    for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
+      if (outputFormat == OutputFormat.TSV) {
         out.printf("%s\t%d%n", assignment.getKey().toString(), assignment.getValue());
+      
+      } else if (outputFormat == OutputFormat.SRILM) {
+        out.printf("%d 1.0 %s%n", assignment.getValue(), assignment.getKey().toString());
       }
-    
-    } else if (outputFormat == OutputFormat.SRILM) {
-      Map<Integer,Set<IString>> classToWords = Generics.newHashMap();
-      for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
-        if ( ! classToWords.containsKey(assignment.getValue())) {
-          classToWords.put(assignment.getValue(), new HashSet<IString>());
-        }
-        classToWords.get(assignment.getValue()).add(assignment.getKey());
-      }
-      int numOutputWords = 0;
-      for (int classId : classToWords.keySet()) {
-        Set<IString> words = classToWords.get(classId);
-        out.print(classId);
-        out.print(" 1.0"); // Probability 1
-        for (IString word : words) {
-          out.print(" ");
-          out.print(word.toString());
-          ++numOutputWords;
-        }
-        out.println();
-      }
-      // Sanity check
-      assert numOutputWords == wordToClass.size() : String.format("%d / %d", numOutputWords, wordToClass.size());
     }
   }
 
