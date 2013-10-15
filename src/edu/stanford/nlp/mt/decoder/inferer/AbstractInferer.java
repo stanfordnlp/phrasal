@@ -19,6 +19,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Derivation<TK, FV>> filter;
   protected final List<Annotator<TK,FV>> annotators;
+  protected final boolean filterUnknownWords;
 
   protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
     featurizer = builder.incrementalFeaturizer;
@@ -27,6 +28,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     heuristic = builder.heuristic;
     filter = builder.filter;
     annotators = builder.annotators;
+    filterUnknownWords = builder.filterUnknownWords;
   }
 
   protected AbstractInferer(AbstractInferer<TK, FV> inferer) {
@@ -36,6 +38,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     heuristic = inferer.heuristic;
     filter = inferer.filter;
     annotators = inferer.annotators;
+    filterUnknownWords = inferer.filterUnknownWords;
   }
 
   protected FeatureValueCollection<FV> collectFeatureValues(

@@ -41,12 +41,36 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         targets, size);
   }
 
-  @Override
+@SuppressWarnings("unchecked")
+private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
+      List<TK> filteredToks = new LinkedList<TK>();
+      for (TK tok : source) {
+         Sequence<TK> tokAsSeq = new SimpleSequence<TK>(tok);
+         List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(tokAsSeq, null, -1, null);
+         if (rules.size() == 0) {
+            continue;
+         }
+         for (ConcreteRule<TK,FV> rule : rules) {
+            if (rule.abstractRule.target.size() > 0 && !rule.abstractRule.target.equals(tokAsSeq)) {
+               filteredToks.add(tok);
+               break;
+            }
+         }
+      }
+      return new SimpleSequence<TK>(filteredToks);
+}
+
+@Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int size) {
 
+    // filter unknown words
+    if (filterUnknownWords) {
+       source = filterUnknownWords(source);
+    }
+    
     // Decoding
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
         new RecombinationHistory<Derivation<TK, FV>>();
@@ -196,6 +220,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets) {
+    // filter unknown words
+    if (filterUnknownWords) {
+      source = filterUnknownWords(source);
+    }
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         null, outputSpace, targets, 1);
     if (beam == null)

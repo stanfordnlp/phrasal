@@ -24,6 +24,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
   Scorer<FV> scorer;
   SearchHeuristic<TK, FV> heuristic;
   RecombinationFilter<Derivation<TK, FV>> filter;
+  boolean filterUnknownWords;
 
   @Override
   abstract public Inferer<TK, FV> build();
@@ -60,6 +61,12 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
       SearchHeuristic<TK, FV> heuristic) {
     this.heuristic = heuristic;
     return this;
+  }
+  
+  @Override
+  public InfererBuilder<TK, FV> setFilterUnknownWords(boolean filterUnknownWords) {
+     this.filterUnknownWords = filterUnknownWords;
+     return this;
   }
 
   @Override

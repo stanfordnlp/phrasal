@@ -50,6 +50,14 @@ public interface InfererBuilder<TK, FV> {
    * @param annotators
    */
   InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK,FV>> annotators);
+  
+  /**
+   * 
+   * @param filterUnknownWords
+   * @return
+   */
+  InfererBuilder<TK, FV> setFilterUnknownWords(boolean filterUnknownWords);
+  
   /**
 	 * 
 	 */

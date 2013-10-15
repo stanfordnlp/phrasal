@@ -173,7 +173,7 @@ public class Phrasal {
   /**
    * Whether to filter unknown words in the output
    */
-  private static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
+  private static final boolean DROP_UNKNOWN_WORDS_DEFAULT = false;
   private boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
 
   /**
@@ -868,6 +868,7 @@ public class Phrasal {
       AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
           InfererBuilderFactory.factory(searchAlgorithm);
       try {
+        infererBuilder.setFilterUnknownWords(dropUnknownWords);
         infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
             .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
