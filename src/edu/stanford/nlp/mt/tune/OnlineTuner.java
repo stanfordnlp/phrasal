@@ -885,29 +885,30 @@ public class OnlineTuner {
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
-    sb.append("Usage: java ").append(OnlineTuner.class.getName()).append(" [OPTIONS] source_file target_file phrasal_ini initial_weights").append(nl);
-    sb.append(nl);
-    sb.append("Options:").append(nl);
-    sb.append("   -uw        : Uniform weight initialization").append(nl);
-    sb.append("   -rw        : Randomize starting weights at the start of each epoch").append(nl);
-    sb.append("   -e num     : Number of online epochs").append(nl);
-    sb.append("   -o str     : Optimizer: [pro-sgd,mira-1best]").append(nl);
-    sb.append("   -of str    : Optimizer flags (format: CSV list)").append(nl);
-    sb.append("   -m str     : Gold scoring metric for the tuning algorithm (default: bleu-smooth)").append(nl);
-    sb.append("   -mf str    : Gold scoring metric flags (format: CSV list)").append(nl);
-    sb.append("   -n str     : Experiment name").append(nl);
-    sb.append("   -r str     : Use multiple references (format: CSV list)").append(nl);
-    sb.append("   -bw        : Set final weights to the best training epoch.").append(nl);
-    sb.append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl);
-    sb.append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl);
-    sb.append("   -l level   : Set java.logging level").append(nl);
-    sb.append("   -ne        : Disable expected BLEU calculation (saves memory)").append(nl);
-    sb.append("   -ef        : Expected # of features").append(nl);
-    sb.append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl);
-    sb.append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl);
-    sb.append("   -tmp path  : Temp directory (default: /tmp)").append(nl);
-    sb.append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl);
-    return sb.toString().trim();
+    sb.append("Usage: java ").append(OnlineTuner.class.getName())
+      .append(" [OPTIONS] source_file target_file phrasal_ini initial_weights").append(nl).append(nl)
+      .append("Options:").append(nl)
+      .append("   -uw        : Uniform weight initialization").append(nl)
+      .append("   -rw        : Randomize starting weights at the start of each epoch").append(nl)
+      .append("   -e num     : Number of online epochs").append(nl)
+      .append("   -o str     : Optimizer: [pro-sgd,mira-1best]").append(nl)
+      .append("   -of str    : Optimizer flags (format: CSV list)").append(nl)
+      .append("   -m str     : Gold scoring metric for the tuning algorithm (default: bleu-smooth)").append(nl)
+      .append("   -mf str    : Gold scoring metric flags (format: CSV list)").append(nl)
+      .append("   -n str     : Experiment name").append(nl)
+      .append("   -r str     : Use multiple references (format: CSV list)").append(nl)
+      .append("   -bw        : Set final weights to the best training epoch.").append(nl)
+      .append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl)
+      .append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl)
+      .append("   -l level   : Set java.logging level").append(nl)
+      .append("   -ne        : Disable expected BLEU calculation (saves memory)").append(nl)
+      .append("   -ef        : Expected # of features").append(nl)
+      .append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl)
+      .append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl)
+      .append("   -tmp path  : Temp directory (default: /tmp)").append(nl)
+      .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)");
+    
+    return sb.toString();
   }
 
   /**
