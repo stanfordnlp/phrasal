@@ -3,7 +3,9 @@ package edu.stanford.nlp.mt.wordcls;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -84,7 +86,8 @@ public class MakeWordClasses {
     
     logger = Logger.getLogger(this.getClass().getName());
     PhrasalLogger.logLevel = Level.FINE;
-    PhrasalLogger.prefix = String.valueOf(numClasses) + "-classes";
+    SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
+    PhrasalLogger.prefix = String.format("%d-classes.%s", numClasses, sdf.format(new Date()));
     PhrasalLogger.attach(logger, LogName.WORD_CLASS);
     logger.info("#iterations: " + String.valueOf(numIterations));
     logger.info("#classes: " + String.valueOf(numClasses));

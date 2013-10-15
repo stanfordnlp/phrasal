@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.wordcls;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.base.IString;
