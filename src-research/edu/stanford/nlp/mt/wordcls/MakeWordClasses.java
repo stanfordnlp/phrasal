@@ -87,7 +87,8 @@ public class MakeWordClasses {
     logger = Logger.getLogger(this.getClass().getName());
     PhrasalLogger.logLevel = Level.FINE;
     SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
-    PhrasalLogger.prefix = String.format("%d-classes.%s", numClasses, sdf.format(new Date()));
+    PhrasalLogger.prefix = properties.getProperty("name", 
+        String.format("%d-classes.%s", numClasses, sdf.format(new Date())));
     PhrasalLogger.attach(logger, LogName.WORD_CLASS);
     logger.info("#iterations: " + String.valueOf(numIterations));
     logger.info("#classes: " + String.valueOf(numClasses));
@@ -293,6 +294,7 @@ public class MakeWordClasses {
     argDefs.put("niters", 1);
     argDefs.put("vparts", 1);
     argDefs.put("format", 1);
+    argDefs.put("name", 1);
     return argDefs;
   }
   
@@ -305,7 +307,8 @@ public class MakeWordClasses {
     .append(" -nclasses num  : Number of classes (default: 512)").append(nl)
     .append(" -niters num    : Number of iterations (default: 20)").append(nl)
     .append(" -vparts num    : Number of vocabulary partitions (default: 3)").append(nl)
-    .append(" -format type   : Output format [srilm|tsv] (default: tsv)");
+    .append(" -format type   : Output format [srilm|tsv] (default: tsv)").append(nl)
+    .append(" -name str      : Run name for log file.");
 
     return sb.toString();
   }
