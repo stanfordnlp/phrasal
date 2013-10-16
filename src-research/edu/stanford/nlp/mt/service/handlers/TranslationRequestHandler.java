@@ -17,6 +17,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.gson.reflect.TypeToken;
 
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -155,18 +156,20 @@ public class TranslationRequestHandler implements RequestHandler {
 
         // Result extraction and post-processing
         final long postprocStart = System.nanoTime();
-        List<String> translationList = Generics.newLinkedList();
-        List<String> alignments = Generics.newLinkedList();
+        List<Sequence<IString>> translationList = Generics.newLinkedList();
+        List<List<String>> alignments = Generics.newLinkedList();
+        double[] scoreList = new double[translations.size()];
+        int i = 0;
         for (RichTranslation<IString,String> translation : translations) {
           SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
           SymmetricalWordAlignment tPrime2t = postprocessor == null ?
               identityAlignment(translation.translation) :
                 postprocessor.process(translation.translation);
-              String alignmentString = mapAlignments(s2sPrime, sPrime2tPrime, tPrime2t);
-              translationList.add(tPrime2t.e().toString());
-              alignments.add(alignmentString);
+          List<String> alignmentString = mapAlignments(s2sPrime, sPrime2tPrime, tPrime2t);
+          translationList.add(tPrime2t.e());
+          alignments.add(alignmentString);
+          scoreList[i++] = Math.exp(translation.score);
         }
-        assert translationList.size() == alignments.size();
 
         // Timing statistics
         final long doneTime = System.nanoTime();
@@ -179,7 +182,8 @@ public class TranslationRequestHandler implements RequestHandler {
 
         // Create the service reply
         Type t = new TypeToken<TranslationReply>() {}.getType();
-        TranslationReply baseResponse = new TranslationReply(translationList, alignments);
+        List<TranslationQuery> queryList = toQuery(translationList, alignments, scoreList);
+        TranslationReply baseResponse = new TranslationReply(queryList);
         ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
         input.request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
         input.continuation.resume(); // Re-dispatch/ resume to generate response
@@ -194,6 +198,27 @@ public class TranslationRequestHandler implements RequestHandler {
     }
 
     /**
+     * Package the output of the decoder and post-processor for return by the service.
+     * 
+     * @param translationList
+     * @param alignments
+     * @param scoreList
+     * @return
+     */
+    private static List<TranslationQuery> toQuery(List<Sequence<IString>> translationList,
+        List<List<String>> alignments, double[] scoreList) {
+      final int nTranslations = translationList.size();
+      final double normalizer = ArrayMath.sum(scoreList);
+      List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
+      for (int i = 0; i < nTranslations; ++i) {
+        TranslationQuery query = new TranslationQuery(IStrings.toStringList(translationList.get(i)),
+            alignments.get(i), scoreList[i] / normalizer);
+        sortedList.add(query);
+      }
+      return sortedList;
+    }
+
+    /**
      * Map alignments from source input to target output, with several
      * possible processing steps along the way.
      * 
@@ -202,13 +227,13 @@ public class TranslationRequestHandler implements RequestHandler {
      * @param tPrime2t
      * @return
      */
-    private static String mapAlignments(SymmetricalWordAlignment s2sPrime,
+    private static List<String> mapAlignments(SymmetricalWordAlignment s2sPrime,
         SymmetricalWordAlignment sPrime2tPrime,
         SymmetricalWordAlignment tPrime2t) {
       assert s2sPrime.e().size() == sPrime2tPrime.f().size();
       assert sPrime2tPrime.e().size() == tPrime2t.f().size();
       
-      StringBuilder sb = new StringBuilder();
+      List<String> alignmentList = Generics.newLinkedList();
       for (int i = 0; i < s2sPrime.fSize(); ++i) {
         Set<Integer> alignments = s2sPrime.f2e(i);
         for (int j : alignments) {
@@ -216,13 +241,12 @@ public class TranslationRequestHandler implements RequestHandler {
           for (int k : alignments2) {
             Set<Integer> alignments3 = tPrime2t.f2e(k);
             for (int q : alignments3) {
-              if (sb.length() > 0) sb.append(" ");
-              sb.append(String.format("%d-%d",i,q));
+              alignmentList.add(String.format("%d-%d",i,q));
             }
           }
         }
       }
-      return sb.toString();
+      return alignmentList;
     }
 
     private static SymmetricalWordAlignment identityAlignment(Sequence<IString> sequence) {

@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -43,17 +44,15 @@ public class TranslationRequestHandlerMock implements RequestHandler {
     TranslationRequest translationRequest = (TranslationRequest) baseRequest;
     
     // Translate to uppercase!
-    String translation = String.format("(%s-%s) : %s -> %s",
-        translationRequest.src.toString(),
-        translationRequest.tgt.toString(),
-        translationRequest.text,
-        translationRequest.text.toUpperCase());
-    List<String> translations = Generics.newLinkedList();
-    translations.add(translation);
-    List<String> alignments = Generics.newLinkedList();
-    alignments.add("1-1 2-2 3-3 4-4");
+    List<String> translation = Arrays.asList(translationRequest.text.toUpperCase().split("\\s+"));
+    List<String> alignments = Generics.newArrayList(2);
+    alignments.add("1-2");
+    alignments.add("2-1");
+    TranslationQuery query = new TranslationQuery(translation, alignments, 1.0);
+    List<TranslationQuery> queryList = Generics.newArrayList(1);
+    queryList.add(query);
     Type t = new TypeToken<TranslationReply>() {}.getType();
-    TranslationReply baseResponse = new TranslationReply(translations, alignments);
+    TranslationReply baseResponse = new TranslationReply(queryList);
 
     // Simulate a long call to the MT system
     Random random = new Random();

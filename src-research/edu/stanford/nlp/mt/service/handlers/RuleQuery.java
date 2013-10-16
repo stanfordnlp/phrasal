@@ -1,24 +1,28 @@
 package edu.stanford.nlp.mt.service.handlers;
 
+import java.util.List;
+
 /**
+ * A result of a query for a rule.
  * 
  * @author Spence Green
  *
  */
-public class RuleQuery implements Comparable<RuleQuery> {
-  public final String src;
-  public final String tgt;
-  public final double score;
-  public final String align;
-  public RuleQuery(String source, String target, double score, String alignment) {
-    this.src = source;
-    this.tgt = target;
-    this.score = score;
-    this.align = alignment;
-  }
+public class RuleQuery extends ScoredQuery {
   
-  @Override
-  public int compareTo(RuleQuery o) {
-    return (int) Math.signum(this.score - o.score);
+  public final List<String> tgt;
+  public final List<String> align;
+  
+  /**
+   * Constructor.
+   * @param target
+   * @param alignment
+   * @param score
+   * @param source
+   */
+  public RuleQuery(List<String> target, List<String> alignment, double score) {
+    super(score);
+    this.tgt = target;
+    this.align = alignment;
   }
 }

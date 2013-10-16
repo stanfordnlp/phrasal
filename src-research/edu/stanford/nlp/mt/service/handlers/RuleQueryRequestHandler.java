@@ -78,8 +78,9 @@ public class RuleQueryRequestHandler implements RequestHandler {
 
     // Enable rule sorting with the "true" parameter.
     RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, source, true);
-    List<RuleQuery> queriedRules = Generics.newArrayList();
+    List<RuleQuery> queriedRules = Generics.newArrayList(ruleRequest.spanLimit);
     List<ConcreteRule<IString,String>> rulesForSpan = ruleGrid.get(0, source.size()-1);
+    double normalizer = 0.0;
     for(ConcreteRule<IString,String> rule : rulesForSpan) {
       if (queriedRules.size() >= ruleRequest.spanLimit) {
         break;
@@ -88,13 +89,23 @@ public class RuleQueryRequestHandler implements RequestHandler {
         continue;
       }
 
+      // TODO(spenceg): Application of the postprocessor is incorrect. Need to add
+      // whitespace padding if this is not the first word in the sentence.
       SymmetricalWordAlignment sPrime2tPrime = getAlignment(rule.abstractRule);
       SymmetricalWordAlignment tPrime2t = postprocessor == null ?
           identityAlignment(rule.abstractRule.target) :
-            postprocessor.process(rule.abstractRule.target);    
-      RuleQuery query = createQueryResult(ruleRequest.text, rule.isolationScore, s2sPrime, sPrime2tPrime, tPrime2t);
+            postprocessor.process(rule.abstractRule.target);
+      
+      double score = Math.exp(rule.isolationScore);
+      normalizer += score;
+      RuleQuery query = createQueryResult(ruleRequest.text, score, s2sPrime, sPrime2tPrime, tPrime2t);
       queriedRules.add(query);
     }
+    // Normalize the model scores
+    for (RuleQuery query : queriedRules) {
+      query.setScore(query.score / normalizer);
+    }
+    
     RuleQueryReply reply = new RuleQueryReply(queriedRules);
     
     Type t = new TypeToken<RuleQueryReply>() {}.getType();
@@ -146,22 +157,19 @@ public class RuleQueryRequestHandler implements RequestHandler {
       SymmetricalWordAlignment tPrime2t) {
 
     // Alignments
-    StringBuilder sb = new StringBuilder();
+    List<String> alignmentList = Generics.newLinkedList();
     Set<Integer> alignments = s2sPrime.f2e(0);
     for (int i : alignments) {
       Set<Integer> alignments2 = sPrime2tPrime.f2e(i);
       for (int j : alignments2) {
         Set<Integer> alignments3 = tPrime2t.f2e(j);
         for (int k : alignments3) {
-          if (sb.length() > 0) sb.append(" ");
-          sb.append(String.format("%d-%d",0,k));
+          alignmentList.add(String.format("%d-%d",0,k));
         }
       }
     }
-    // TODO(spenceg): Post-processing needs to occur in context so that the casing
-    // is correct.
-    String tgt = tPrime2t.e().toString().toLowerCase();
-    return new RuleQuery(sourceText, tgt, isolationScore, sb.toString());
+    List<String> tgt = IStrings.toStringList(tPrime2t.e());
+    return new RuleQuery(tgt, alignmentList, isolationScore);
   }
 
   /**

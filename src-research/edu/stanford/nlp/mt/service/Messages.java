@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.handlers.RuleQuery;
+import edu.stanford.nlp.mt.service.handlers.TranslationQuery;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -180,27 +181,24 @@ public final class Messages {
   public static interface Reply {}
   
   public static class TranslationReply implements Reply {
-    public final List<String> tgtList;
-    public final List<String> alignList;
-    public TranslationReply(List<String> targets, List<String> alignments) {
-      this.tgtList = targets;
-      this.alignList = alignments;
+    public final List<TranslationQuery> result;
+    public TranslationReply(List<TranslationQuery> queryList) {
+      result = queryList;
     }
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
-      String nl = System.getProperty("line.separator");
-      for (int i = 0; i < tgtList.size(); ++i) {
-        sb.append(tgtList.get(i)).append("\t").append(alignList.get(i)).append(nl);
+      for (TranslationQuery query : result) {
+        sb.append(String.format("%.5f\t%s\t%s%n", query.score(), query.tgt, query.align));
       }
       return sb.toString();
     }
   }
   
   public static class RuleQueryReply implements Reply {
-    public final List<RuleQuery> rules;
+    public final List<RuleQuery> result;
     public RuleQueryReply(List<RuleQuery> ruleList) {
-      this.rules = ruleList;
+      this.result = ruleList;
     }
   }
 }
