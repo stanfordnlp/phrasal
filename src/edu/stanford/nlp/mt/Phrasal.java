@@ -173,7 +173,7 @@ public class Phrasal {
   /**
    * Whether to filter unknown words in the output
    */
-  private static final boolean DROP_UNKNOWN_WORDS_DEFAULT = false;
+  private static final boolean DROP_UNKNOWN_WORDS_DEFAULT = true;
   private boolean dropUnknownWords = DROP_UNKNOWN_WORDS_DEFAULT;
 
   /**

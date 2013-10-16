@@ -42,23 +42,36 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   }
 
 @SuppressWarnings("unchecked")
-private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
-      List<TK> filteredToks = new LinkedList<TK>();
-      for (TK tok : source) {
-         Sequence<TK> tokAsSeq = new SimpleSequence<TK>(tok);
-         List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(tokAsSeq, null, -1, null);
-         if (rules.size() == 0) {
-            continue;
-         }
-         for (ConcreteRule<TK,FV> rule : rules) {
-            if (rule.abstractRule.target.size() > 0 && !rule.abstractRule.target.equals(tokAsSeq)) {
-               filteredToks.add(tok);
-               break;
-            }
+  private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
+      List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, -1, null);
+    
+      BitSet possibleCoverage = new BitSet();
+      
+      for (ConcreteRule<TK,FV> rule : rules) {
+         if (rule.abstractRule.target.size() > 0 && !"".equals(rule.abstractRule.target.toString())) {
+            possibleCoverage.or(rule.sourceCoverage);
          }
       }
-      return new SimpleSequence<TK>(filteredToks);
-}
+      
+      List<TK> filteredToks = new LinkedList<TK>();
+      
+      for (int i = 0; i  < source.size(); i++) {
+         if (possibleCoverage.get(i)) {
+            filteredToks.add(source.get(i));
+         } else {
+            System.err.printf("WARNING: Dropping unknown word: %s - ", source.get(i));
+            System.err.println("If you are using Phrasal within a real application, this might be a REALLY BAD(tm) thing to do.");
+         }
+      }
+      
+      if (filteredToks.size() != 0) {
+        return new SimpleSequence<TK>(filteredToks);
+      } else if (source.size() > 0) {
+        return new SimpleSequence<TK>(source.get(0));
+      } else {
+         return source;
+      }
+  }
 
 @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
