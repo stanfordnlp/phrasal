@@ -23,6 +23,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.log.PhrasalLogger;
 import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.process.Postprocessor;
@@ -211,7 +212,7 @@ public class TranslationRequestHandler implements RequestHandler {
       final double normalizer = ArrayMath.sum(scoreList);
       List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
       for (int i = 0; i < nTranslations; ++i) {
-        TranslationQuery query = new TranslationQuery(IStrings.toStringList(translationList.get(i)),
+        TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
             alignments.get(i), scoreList[i] / normalizer);
         sortedList.add(query);
       }

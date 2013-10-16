@@ -4,20 +4,18 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.*;
 
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Utility functions for working with {@link IString}s.
  * 
  * @author danielcer
  * @author mgalley
+ * @author Spence Green
  * 
  */
-public class IStrings {
+public final class IStrings {
 
-  private IStrings() {
-    super();
-  }
+  private IStrings() {}
 
   /**
    * Convert a newline-delimited file to a list of Sequences.
@@ -117,13 +115,5 @@ public class IStrings {
       strs[i] = IString.getString(ids[i]);
     }
     return strs;
-  }
-  
-  static public List<String> toStringList(Sequence<IString> sequence) {
-    List<String> stringList = Generics.newArrayList(sequence.size());
-    for (IString token : sequence) {
-      stringList.add(token.toString());
-    }
-    return stringList;
   }
 }

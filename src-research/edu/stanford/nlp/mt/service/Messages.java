@@ -135,10 +135,12 @@ public final class Messages {
   
   public static class RuleQueryRequest extends Request {
     public final int spanLimit;
+    public final String leftContext;
     public RuleQueryRequest(Language sourceLang, Language targetLang,
-        String source, int spanLimit) {
+        String source, int spanLimit, String leftContext) {
       super(sourceLang, targetLang, source);
       this.spanLimit = (spanLimit <= 0 || spanLimit > 500) ? 10 : spanLimit;
+      this.leftContext = leftContext;
       this.id = MessageType.RULE_QUERY_REQUEST.ordinal();
     }
     @Override

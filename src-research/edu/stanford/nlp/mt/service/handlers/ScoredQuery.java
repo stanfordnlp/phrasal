@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.service.handlers;
 
-import java.math.BigDecimal;
-
 /**
  * A service query that has an associated score.
  * 
@@ -11,11 +9,12 @@ import java.math.BigDecimal;
 public abstract class ScoredQuery implements Comparable<ScoredQuery> {
   
   private static final int PRECISION = 5;
+  private static final double SCALE_FACTOR = Math.pow(10, PRECISION);
   
   public double score;
   
   public ScoredQuery(double score) {
-    this.score = round(score, PRECISION);
+    this.score = truncate(score);
   }
   
   /**
@@ -30,23 +29,18 @@ public abstract class ScoredQuery implements Comparable<ScoredQuery> {
    * 
    * @param s
    */
-  public void setScore(double s) { score = round(s, PRECISION); };
+  public void setScore(double s) { score = truncate(s); };
   
   /**
-   * Rounds a score to a specified precision.
-   * 
-   * TODO(spenceg): Safe, but not sure how fast this is. Could just cast
-   * to float for a quick-and-dirty solution.
+   * Quick and dirty truncation.
    * 
    * @param value
    * @param precision
    * @return
    */
-  public static double round(double value, int precision) {
-    if (precision < 0) throw new IllegalArgumentException();
-    BigDecimal bd = new BigDecimal(value);
-    bd = bd.setScale(precision, BigDecimal.ROUND_HALF_UP);
-    return bd.doubleValue();
+  public static double truncate(double value) {
+    int temp = (int) (value * SCALE_FACTOR);
+    return ((double) temp) / SCALE_FACTOR;
   }
   
   @Override
