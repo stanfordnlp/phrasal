@@ -107,6 +107,11 @@ public final class PhrasalService {
     PhrasalServlet servlet = loadMockServlet ? new PhrasalServlet() : new PhrasalServlet(phrasalIniFile);
     context.addServlet(new ServletHolder(servlet), "/t");
 
+    // TODO(spenceg): gzip compression causes an encoding problem for unicode characters
+    // on the client. Not sure if the compression or decompression is the problem.
+//    EnumSet<DispatcherType> dispatches = EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC);
+//    context.addFilter(new FilterHolder(new IncludableGzipFilter()), "/t", dispatches);
+
     // Add debugging web-page
     ResourceHandler resourceHandler = new ResourceHandler();
     resourceHandler.setWelcomeFiles(new String[]{ uiFile });
