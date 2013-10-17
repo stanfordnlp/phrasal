@@ -19,11 +19,36 @@ import edu.stanford.nlp.util.Generics;
 public class ConcreteRule<TK,FV> implements
     Comparable<ConcreteRule<TK,FV>> {
 
+  /**
+   * The underlying translation rule.
+   */
   public final Rule<TK> abstractRule;
+  
+  /**
+   * The source coverage of this rule.
+   */
   public final CoverageSet sourceCoverage;
+  
+  /**
+   * The phrase table from which the rule was queried.
+   */
   public final String phraseTableName;
+  
+  /**
+   * The left edge in the source sequence of the source side
+   * of this rule.
+   */
   public final int sourcePosition;
+  
+  /**
+   * The isolation score of this rule.
+   */
   public double isolationScore;
+  
+  /**
+   * Features that are extracted at query-time and then
+   * cached.
+   */
   public List<FeatureValue<FV>> cachedFeatureList;
 
   public enum LinearDistortionType {

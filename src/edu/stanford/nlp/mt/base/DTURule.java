@@ -22,13 +22,6 @@ public class DTURule<T> extends Rule<T> {
     this.dtus = dtus;
   }
 
-  public DTURule(int id, float[] scores, String[] phraseScoreNames,
-      RawSequence<T>[] dtus, RawSequence<T> foreign, PhraseAlignment alignment,
-      boolean forceAdd) {
-    super(id, scores, phraseScoreNames, null, foreign, alignment, forceAdd);
-    this.dtus = dtus;
-  }
-
   @Override
   public String toString() {
     StringBuilder sbuf = new StringBuilder("DTURule: \"");

@@ -14,13 +14,41 @@ public class Rule<T> implements Comparable<Rule<T>>{
 
   private static final int SYNTHETIC_RULE_ID = -1;
   
+  /**
+   * The id of this rule in the phrase table.
+   */
   public final int id;
+  
+  /**
+   * The phrase table rule scores.
+   */
   public final float[] scores;
+  
+  /**
+   * The features names of <code>scores</code>.
+   */
   public final String[] phraseScoreNames;
+  
+  /**
+   * The target side of the rule.
+   */
   public final RawSequence<T> target;
+  
+  /**
+   * The source side of the rule.
+   */
   public final RawSequence<T> source;
+  
+  /**
+   * The source/target word-word alignments.
+   */
   public final PhraseAlignment alignment;
+  
+  /**
+   * TODO(spenceg): Not sure what this does....
+   */
   public final boolean forceAdd;
+  
   private int hashCode = -1;
 
   /**
