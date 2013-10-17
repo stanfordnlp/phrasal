@@ -55,7 +55,7 @@ public final class CoreNLPToPTMJson {
 
     List<CoreMap> sentences = document.get(SentencesAnnotation.class);
     // Use a map with ordered keys so that the output is ordered by segmentId.
-    Map<String,AnnotationContainer> annotations = new TreeMap<String,AnnotationContainer>();
+    Map<Integer,AnnotationContainer> annotations = new TreeMap<Integer,AnnotationContainer>();
     for (int i = 0; i < sentences.size(); ++i) {
       CoreMap sentence = sentences.get(i);
       Tree tree = sentence.get(TreeAnnotation.class);
@@ -73,8 +73,7 @@ public final class CoreNLPToPTMJson {
         container.ner.add(ne);
         container.chunkIOB.add(chunkVector[j]);
       }
-      String segmentId = String.format("s%d", i);
-      annotations.put(segmentId, container);
+      annotations.put(i, container);
     }
     System.err.printf("Processed %d sentences%n", sentences.size());
     
@@ -145,8 +144,8 @@ public final class CoreNLPToPTMJson {
     // Name of this document
     public final String docId;
     // Annotated segments, indicated with a name
-    public final Map<String,AnnotationContainer> segments;
-    public Document(String docId, Map<String,AnnotationContainer> segments) {
+    public final Map<Integer,AnnotationContainer> segments;
+    public Document(String docId, Map<Integer,AnnotationContainer> segments) {
       this.docId = docId;
       this.segments = segments;
     }
