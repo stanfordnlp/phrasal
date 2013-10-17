@@ -155,6 +155,7 @@ public class MakeWordClasses {
    * @param filenames
    */
   public void run(String[] filenames) {
+    final long runStartTime = System.nanoTime();
     try {
       initialize(filenames);
     } catch (IOException e1) {
@@ -182,7 +183,7 @@ public class MakeWordClasses {
       // Select partition and dispatch workers
       final int partitionNumber = e % vparts;
       logger.info(String.format("Iteration %d: partition %d start", e, partitionNumber));
-      final long startTime = System.nanoTime();
+      final long iterationStartTime = System.nanoTime();
       for (int t = 0; t < numThreads; ++t) {
         ClustererState input = createInput(fullVocabulary, partitionNumber, t);
         threadpool.put(input);
@@ -195,11 +196,14 @@ public class MakeWordClasses {
         PartialStateUpdate result = threadpool.poll();
         numUpdates += updateCountsWith(result);
       }
-      double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
+      double elapsedTime = ((double) System.nanoTime() - iterationStartTime) / 1e9;
       logger.info(String.format("Iteration %d: elapsed time %.3fsec", e, elapsedTime));
       logger.info(String.format("Iteration %d: #updates %d", e, numUpdates));
       logger.info(String.format("Iteration %d: objective: %.4f", e, objectiveFunctionValue()));
     }
+    
+    double elapsedTime = ((double) System.nanoTime() - runStartTime) / 1e9;
+    logger.info(String.format("Total runtime: %.3fsec", elapsedTime));
   }
   
   /**
