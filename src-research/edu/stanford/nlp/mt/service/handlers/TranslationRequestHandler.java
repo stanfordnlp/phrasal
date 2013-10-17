@@ -17,7 +17,6 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -157,19 +156,24 @@ public class TranslationRequestHandler implements RequestHandler {
 
         // Result extraction and post-processing
         final long postprocStart = System.nanoTime();
-        List<Sequence<IString>> translationList = Generics.newLinkedList();
-        List<List<String>> alignments = Generics.newLinkedList();
-        double[] scoreList = new double[translations.size()];
-        int i = 0;
+        List<Sequence<IString>> translationList = Generics.newArrayList(translations.size());
+        List<List<String>> alignments = Generics.newArrayList(translations.size());
+        List<Double> scoreList = Generics.newArrayList(translations.size());
         for (RichTranslation<IString,String> translation : translations) {
+          if (translation.translation.size() == 0) {
+            // Input was simply deleted by the OOV model
+            continue;
+          }
           SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
           SymmetricalWordAlignment tPrime2t = postprocessor == null ?
               identityAlignment(translation.translation) :
                 postprocessor.process(translation.translation);
           List<String> alignmentString = mapAlignments(s2sPrime, sPrime2tPrime, tPrime2t);
+          
+          // Keep this translation
           translationList.add(tPrime2t.e());
           alignments.add(alignmentString);
-          scoreList[i++] = Math.exp(translation.score);
+          scoreList.add(Math.exp(translation.score));
         }
 
         // Timing statistics
@@ -207,13 +211,14 @@ public class TranslationRequestHandler implements RequestHandler {
      * @return
      */
     private static List<TranslationQuery> toQuery(List<Sequence<IString>> translationList,
-        List<List<String>> alignments, double[] scoreList) {
+        List<List<String>> alignments, List<Double> scoreList) {
       final int nTranslations = translationList.size();
-      final double normalizer = ArrayMath.sum(scoreList);
+      double normalizer = 0.0;
+      for (double d : scoreList) normalizer += d;
       List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
       for (int i = 0; i < nTranslations; ++i) {
         TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
-            alignments.get(i), scoreList[i] / normalizer);
+            alignments.get(i), scoreList.get(i) / normalizer);
         sortedList.add(query);
       }
       return sortedList;
