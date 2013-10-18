@@ -44,7 +44,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
   public static final String DEFAULT_REGCONFIG="";
-
+  public static final boolean VERBOSE = true;
+  
   // Logistic classifier labels
   private static enum Label {POSITIVE, NEGATIVE}
 
@@ -77,14 +78,14 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures, String... args) {
     this(tuneSetSize, expectedNumFeatures,
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
-            args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
-                args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
-                    args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_N_THRESHOLD,
-                        args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_SIGMA,
-                            args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
-                            		args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
-                            				args != null && args.length > 7 ? Double.parseDouble(args[7]) : DEFAULT_L1,
-                            						args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
+        args != null && args.length > 1 ? Integer.parseInt(args[1]) : DEFAULT_GAMMA,
+        args != null && args.length > 2 ? Integer.parseInt(args[2]) : DEFAULT_XI,
+        args != null && args.length > 3 ? Double.parseDouble(args[3]) : DEFAULT_N_THRESHOLD,
+        args != null && args.length > 4 ? Double.parseDouble(args[4]) : DEFAULT_SIGMA,
+        args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
+        args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
+        args != null && args.length > 7 ? Double.parseDouble(args[7]) : DEFAULT_L1,
+        args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
   }
 
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures,
@@ -263,6 +264,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.size() == 0) {
       logger.warning("Null gradient for sourceId: " + sourceId);
     }
+    
+    if (VERBOSE) {
+       System.err.printf("True online gradient");
+       displayGradient(gradient);
+    }
+ 
     return gradient;
   }
 
@@ -287,9 +294,25 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     if (dataset.isEmpty()) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
     }
+    
+    if (VERBOSE) {
+       System.err.printf("N-best list sizes:\n");
+       for (int i = 0; i < translations.size(); i++) {
+          System.err.printf(" %d: %d\n", i, translations.get(i).size());
+       }
+       System.err.printf("Data set size: %d\n", dataset.size());
+       System.err.println("Batch gradient");
+       displayGradient(gradient);
+    }
+    
     return gradient;
   }
 
+  private void displayGradient(Counter<String> gradient) {
+     System.err.printf("Gradient: ");
+     System.err.println(gradient);
+  }
+  
   /**
    * Compute the gradient for the specified set of PRO samples.
    *

@@ -66,7 +66,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
       RawSequence<TK> raw = new RawSequence<TK>(sequence);
       final String word = sequence.get(0).toString();
 
-      if (dropUnknownWords && !isNumericOrPunctuationOrSymbols(word)) {
+      if (dropUnknownWords && !isNumericOrPunctuationOrSymbols(word) && !asciiHeuristic(word)) {
         // Deletion rule
         list.add(new Rule<TK>(featureValues, featureNames, empty, raw,
             DEFAULT_ALIGNMENT));
@@ -97,6 +97,25 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
     }
     return true;
   }
+  
+  /** 
+   * Returns true if all letter and number characters are ASCII
+   * 
+   * @param word
+   * @return true/false all letter and number characters are ASCII 
+   */
+  private static boolean asciiHeuristic(String word) {
+     int len = word.length();
+     for (int i = 0; i < len; ++i) {
+       char c = word.charAt(i);
+       if (Character.isAlphabetic(c) && (int)c>>7 != 0) {
+         return false;
+       }
+     }
+     return true;
+  }
+     
+  
 
   @Override
   public int longestSourcePhrase() {

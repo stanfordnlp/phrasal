@@ -871,6 +871,7 @@ public class Phrasal {
       AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
           InfererBuilderFactory.factory(searchAlgorithm);
       try {
+        infererBuilder.setFilterUnknownWords(dropUnknownWords);
         infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
             .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
