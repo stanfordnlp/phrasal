@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Represents a String with a corresponding integer ID. Keeps a static index of
@@ -21,7 +20,10 @@ import java.util.Set;
  */
 public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     HasWord, Comparable<IString> {
+  private static final long serialVersionUID = 2718L;
 
+  // TODO(spenceg): Make this private and keep identityIndex() or
+  // keep this public and remove identityIndex()
   public static final OAIndex<String> index = new OAIndex<String>();
 
   public final int id;
@@ -29,24 +31,21 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   private enum Classing {
     BACKSLASH, IBM
   }
-
-  private static final Classing classing = Classing.IBM;
-
-  public static Set<String> keySet() {
-    return index.keySet();
-  }
+  private static final Classing CLASSING = Classing.IBM;
 
   /**
-   *
+   * Constructor.
+   * 
+   * @param string
    */
   public IString(String string) {
-    if (classing == Classing.BACKSLASH) { // e.g., on december 4\\num
+    if (CLASSING == Classing.BACKSLASH) { // e.g., on december 4\\num
       int doubleBackSlashPos = string.indexOf("\\\\");
       if (doubleBackSlashPos != -1) {
         id = index.indexOf(string.substring(doubleBackSlashPos), true);
         return;
       }
-    } else if (classing == Classing.IBM) { // e.g., on december $num_(4)
+    } else if (CLASSING == Classing.IBM) { // e.g., on december $num_(4)
       if (string.length() > 2 && string.startsWith("$")) {
         int delim = string.indexOf("_(");
         if (delim != -1 && string.endsWith(")")) {
@@ -63,13 +62,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
    */
   public IString(int id) {
     this.id = id;
-    
   }
-
-  /**
-   *
-   */
-  private static final long serialVersionUID = 2718L;
 
   @Override
   public char charAt(int charIndex) {
@@ -88,12 +81,14 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof IString)) {
-      System.err.printf("o class: %s\n", o.getClass());
-      throw new UnsupportedOperationException();
+    if (this == o) {
+      return true;
+    } else if ( !(o instanceof IString)) {
+      return false;
+    } else {
+      IString other = (IString) o;
+      return this.id == other.id;
     }
-    IString istr = (IString) o;
-    return this.id == istr.id;
   }
 
   @Override

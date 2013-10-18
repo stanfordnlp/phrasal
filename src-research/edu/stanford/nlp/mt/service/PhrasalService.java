@@ -14,7 +14,8 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.log.PhrasalLogger;
+import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -96,7 +97,7 @@ public final class PhrasalService {
       PhrasalLogger.disableConsoleLogger();
     }
     Logger logger = Logger.getLogger(PhrasalService.class.getName());
-    PhrasalLogger.attach(logger, LogName.Service);
+    PhrasalLogger.attach(logger, LogName.SERVICE);
     
     // Setup the servlet context
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);

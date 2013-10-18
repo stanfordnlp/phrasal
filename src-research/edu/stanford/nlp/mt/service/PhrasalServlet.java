@@ -7,10 +7,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationSupport;
+
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.log.PhrasalLogger;
+import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.service.Messages.MessageType;
 import edu.stanford.nlp.mt.service.Messages.Request;
-import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.service.handlers.RequestHandler;
 import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandler;
 import edu.stanford.nlp.mt.service.handlers.RuleQueryRequestHandlerMock;
@@ -49,7 +53,7 @@ public class PhrasalServlet extends HttpServlet {
    */
   public PhrasalServlet(String phrasalIniName){
     logger = Logger.getLogger(PhrasalServlet.class.getName());
-    PhrasalLogger.attach(logger, LogName.Service);
+    PhrasalLogger.attach(logger, LogName.SERVICE);
 
     boolean debugMode = (phrasalIniName == null);
 
@@ -105,11 +109,8 @@ public class PhrasalServlet extends HttpServlet {
     Request baseRequest = message.second();
     logger.info(String.format("Receive: %s %s", messageType.toString(), baseRequest.toString()));
 
-    // result will be non-null if this is an asynchronous request that has been dispatched
-    // by the service after processing completed
-    Object result = request.getAttribute(ASYNC_KEY);
-
-    if (result == null && baseRequest.isAsynchronous()) {
+    Continuation continuation = ContinuationSupport.getContinuation(request);
+    if (baseRequest.isAsynchronous() && continuation.isInitial()) {
       // Asynchronous request that will be suspended by the handler
       RequestHandler handler = requestHandlers[messageType.ordinal()];
       if (handler.validate(baseRequest)) {
@@ -122,6 +123,11 @@ public class PhrasalServlet extends HttpServlet {
       }
 
     } else {
+      // result will be non-null if this is an asynchronous request that has been dispatched
+      // by the service after processing completed
+      Object result = request.getAttribute(ASYNC_KEY);
+      
+      // Create the response
       ServiceResponse serviceResponse = null;
       if (result == null) {
         // Synchronous message
@@ -135,6 +141,7 @@ public class PhrasalServlet extends HttpServlet {
         serviceResponse = (ServiceResponse) result;
       }
 
+      // Write the response into the HttpServletResponse
       if (serviceResponse == null) {
         ServiceResponse.writeError(response);
         logger.warning("Bad request received: " + request.toString());

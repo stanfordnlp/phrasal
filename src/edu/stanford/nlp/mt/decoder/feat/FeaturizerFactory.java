@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
-import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.LanguageModels;
 import edu.stanford.nlp.util.Generics;
@@ -20,16 +19,11 @@ public class FeaturizerFactory {
   public static final String DEFAULT_WEIGHTING_BASELINE_FEATURIZERS = "weightedbaseline";
   // public static final String WEIGHTED_NGRAM_MATCH = "weightedngrammatch";
   public static final String DEFAULT_FEATURIZERS = DEFAULT_WEIGHTING_BASELINE_FEATURIZERS;
-  public static final String DISCRIMINATIVE_TM_PARAMETER = "discrimtm";
   public static final String ARPA_LM_PARAMETER = "arpalm";
   public static final String ARPA_LM_VOC_PARAMETER = "arpalmvoc";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
-  public static final String DISCRIMINATIVE_LM_PARAMETER = "discrimlm";
   public static final String GAP_PARAMETER = "gap";
   // public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
-
-  public static final String FEATURE_ALIASES_RESOURCE = "edu/stanford/nlp/mt/resources/feature.aliases";
-  public static final Map<String, List<String>> featureAliases = readFeatureAliases(FEATURE_ALIASES_RESOURCE);
 
 
   private FeaturizerFactory() { } // static class
@@ -66,77 +60,11 @@ public class FeaturizerFactory {
         DEFAULT_ARPALM_WT, DEFAULT_COLLAPSE_TM_WT };
   }
 
-  private static Map<String, List<String>> readFeatureAliases(
-      String aliasResource) {
-    if (ClassLoader.getSystemClassLoader().getResource(aliasResource) == null) {
-      System.err
-          .println("Warning: could not load alias file: " + aliasResource);
-      return null;
-    }
-
-    Map<String, List<String>> aliases = new HashMap<String, List<String>>();
-
-    try {
-      LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-          ClassLoader.getSystemClassLoader().getResource(aliasResource)
-              .openStream()));
-      for (String line; (line = reader.readLine()) != null; ) {
-        String lineOrig = line;
-        line = line.replaceAll("#.*", "").replaceAll("\\s+$", "");
-        if (line.matches("^\\s*$"))
-          continue;
-        String[] fields = line.split("\\s+");
-        if (fields.length < 2) {
-          System.err.printf("Error in resource: %s (line: %d)\n",
-              aliasResource, reader.getLineNumber());
-          System.err
-              .printf("Expecting: someAlias someFullName1 someFullName2 ....\n");
-          System.err.printf("Found: %s\n", lineOrig);
-          System.exit(-1);
-        }
-        String alias = fields[0];
-        List<String> names = new ArrayList<String>(fields.length - 1);
-        for (int i = 1; i < fields.length; i++) {
-          String className = fields[i];
-          names.add(className);
-          try {
-            ClassLoader.getSystemClassLoader().loadClass(className);
-          } catch (ClassNotFoundException e) {
-            System.err.printf("Error in resource: %s (line: %d)\n",
-                aliasResource, reader.getLineNumber());
-            System.err.printf("Can't load class: %s\n", className);
-            System.err.printf("Associated alias: %s\n", alias);
-            System.exit(-1);
-          }
-        }
-        aliases.put(alias, names);
-      }
-      reader.close();
-    } catch (IOException e) {
-      System.err.printf("Unable to load resource: %s\n", aliasResource);
-      System.exit(-1);
-    }
-
-    return aliases;
-  }
 
   @SuppressWarnings("unchecked")
   public static <TK, FV> Class<Featurizer<TK, FV>> loadFeaturizer(
-      String name) {
-    String trueName = (featureAliases.containsKey(name) ? featureAliases.get(
-        name).get(0) : name);
-    Class<Featurizer<TK, FV>> featurizerClass = null;
-
-    try {
-      featurizerClass = (Class<Featurizer<TK, FV>>) ClassLoader
-          .getSystemClassLoader().loadClass(trueName);
-    } catch (ClassNotFoundException c) {
-      System.err.printf("Failed to load featurizer %s (class name: %s)\n",
-          name, trueName);
-      System.exit(-1);
-    }
-
-    return featurizerClass;
+      String name) throws ClassNotFoundException {
+    return (Class<Featurizer<TK, FV>>) ClassLoader.getSystemClassLoader().loadClass(name);
   }
 
   /**
@@ -241,30 +169,6 @@ public class FeaturizerFactory {
         pharaohFeaturizers.add(arpaLmFeaturizer);
       }
 
-      String discriminativeLMOrderStr = paramPairs
-          .get(DISCRIMINATIVE_LM_PARAMETER);
-      int discriminativeLMOrder = (discriminativeLMOrderStr == null ? 0
-          : Integer.parseInt(discriminativeLMOrderStr));
-
-      String discriminativeTMStr = paramPairs.get(DISCRIMINATIVE_TM_PARAMETER);
-      boolean discriminativeTM = (discriminativeTMStr != null && Boolean
-          .parseBoolean(discriminativeTMStr));
-
-      if (discriminativeLMOrder != 0) {
-        LanguageModel<IString> dLM = new IndicatorFunctionLM(
-            discriminativeLMOrder);
-        NGramLanguageModelFeaturizer dLMFeaturizer = new NGramLanguageModelFeaturizer(
-            dLM, "DLM", true);
-        pharaohFeaturizers.add(dLMFeaturizer);
-      }
-
-      if (discriminativeTM) {
-        System.err.printf("Using discriminative TM\n");
-        PhraseTableScoresFeaturizer<IString> dTMFeaturizer = new PhraseTableScoresFeaturizer<IString>(
-            false, true);
-        pharaohFeaturizers.add(dTMFeaturizer);
-      }
-
       // Precomputed phrase to phrase translation scores
       phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
       pharaohFeaturizers.add(phraseTableScoresFeaturizer);
@@ -283,9 +187,7 @@ public class FeaturizerFactory {
       // return combined model
       return new CombinedFeaturizer<IString, String>(pharaohFeaturizers);
     }
-
     throw new RuntimeException(String.format("Unrecognized featurizer '%s'",
         featurizerName));
   }
-
 }

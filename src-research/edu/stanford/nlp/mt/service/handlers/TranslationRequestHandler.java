@@ -22,16 +22,16 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.log.PhrasalLogger;
+import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
-import edu.stanford.nlp.mt.service.PhrasalLogger;
 import edu.stanford.nlp.mt.service.PhrasalServlet;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
-import edu.stanford.nlp.mt.service.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
@@ -64,7 +64,7 @@ public class TranslationRequestHandler implements RequestHandler {
         new DecoderService(0, decoder), false);
     
     logger = Logger.getLogger(TranslationRequestHandler.class.getName());
-    PhrasalLogger.attach(logger, LogName.Service);
+    PhrasalLogger.attach(logger, LogName.SERVICE);
   }
 
   private static class DecoderInput {
@@ -243,6 +243,8 @@ public class TranslationRequestHandler implements RequestHandler {
   @Override
   public void handleAsynchronous(Request baseRequest,
       HttpServletRequest request, HttpServletResponse response) {
+    logger.info(wrapper.toString());
+    
     // Suspend the request
     Continuation continuation = ContinuationSupport.getContinuation(request);
     continuation.suspend(response);
@@ -254,6 +256,7 @@ public class TranslationRequestHandler implements RequestHandler {
         translationRequest.n, translationRequest.tgt, request, continuation);
     
     try {
+      // Clear the wrapper of status messages of completed jobs
       wrapper.put(input);
       while(wrapper.peek()) {
         DecoderOutput status = wrapper.poll();

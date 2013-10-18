@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * 
@@ -49,6 +50,15 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
 
   public int getPhraseLimit() {
     return phraseLimit;
+  }
+  
+  @Override
+  public List<String> getFeatureNames() {
+    List<String> featureNames = Generics.newArrayList();
+    for (PhraseGenerator<TK,FV> generator : phraseGenerators) {
+      featureNames.addAll(generator.getFeatureNames());
+    }
+    return featureNames;
   }
 
   @Override
