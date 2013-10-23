@@ -18,9 +18,6 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   static boolean verbose = false;
 
   protected final String name;
-  public static final IString START_TOKEN = new IString("<s>");
-  public static final IString END_TOKEN = new IString("</s>");
-  public static final IString UNK_TOKEN = new IString("<unk>");
   
   @Override
   public String getName() {
@@ -29,12 +26,12 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   @Override
   public IString getStartToken() {
-    return START_TOKEN;
+    return TokenUtils.START_TOKEN;
   }
 
   @Override
   public IString getEndToken() {
-    return END_TOKEN;
+    return TokenUtils.END_TOKEN;
   }
 
   protected static String readLineNonNull(LineNumberReader reader)
@@ -211,13 +208,13 @@ public class ARPALanguageModel implements LanguageModel<IString> {
    * and always returns false otherwise.
    */
   static boolean isBoundaryWord(Sequence<IString> sequence) {
-    if (sequence.size() == 2 && sequence.get(0).equals(START_TOKEN)
-        && sequence.get(1).equals(START_TOKEN)) {
+    if (sequence.size() == 2 && sequence.get(0).equals(TokenUtils.START_TOKEN)
+        && sequence.get(1).equals(TokenUtils.START_TOKEN)) {
       return true;
     }
     if (sequence.size() > 1) {
       int last = sequence.size() - 1;
-      IString endTok = END_TOKEN;
+      IString endTok = TokenUtils.END_TOKEN;
       if (sequence.get(last).equals(endTok)
           && sequence.get(last - 1).equals(endTok)) {
         return true;
