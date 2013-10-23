@@ -17,6 +17,7 @@ public final class TokenUtils {
   public static final IString START_TOKEN = new IString("<s>");
   public static final IString END_TOKEN = new IString("</s>");
   public static final IString UNK_TOKEN = new IString("<unk>");
+  public static final IString NULL_TOKEN = new IString("<<<NULL>>>");
 
   /**
    * True if a token consists entirely of numbers and punctuation, and false

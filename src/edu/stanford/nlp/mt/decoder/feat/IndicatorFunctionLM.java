@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
  * 
@@ -11,8 +12,6 @@ import edu.stanford.nlp.mt.base.Sequence;
  */
 public class IndicatorFunctionLM implements LanguageModel<IString> {
   public static final String NAME = "IndicatorFunctionLM";
-  public static final IString START_TOKEN = new IString("<s>");
-  public static final IString END_TOKEN = new IString("</s>");
 
   final int order;
 
@@ -26,7 +25,7 @@ public class IndicatorFunctionLM implements LanguageModel<IString> {
 
   @Override
   public IString getEndToken() {
-    return END_TOKEN;
+    return TokenUtils.END_TOKEN;
   }
 
   @Override
@@ -36,7 +35,7 @@ public class IndicatorFunctionLM implements LanguageModel<IString> {
 
   @Override
   public IString getStartToken() {
-    return START_TOKEN;
+    return TokenUtils.START_TOKEN;
   }
 
   @Override

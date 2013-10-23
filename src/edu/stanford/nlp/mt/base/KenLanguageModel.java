@@ -15,9 +15,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
   final String name;
   final int order;
   
-  private static final IString START_TOKEN = new IString("<s>");
-  private static final IString END_TOKEN = new IString("</s>");
-  
   private native long readKenLM(String filename);
   
   private native double scoreNGram(long kenLMPtr, int[] ngram);
@@ -105,12 +102,12 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
   @Override
   public IString getStartToken() {
-    return START_TOKEN;
+    return TokenUtils.START_TOKEN;
   }
 
   @Override
   public IString getEndToken() {
-    return END_TOKEN;
+    return TokenUtils.END_TOKEN;
   }
 
   @Override

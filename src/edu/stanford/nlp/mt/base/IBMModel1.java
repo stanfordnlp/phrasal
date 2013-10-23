@@ -16,7 +16,6 @@ public class IBMModel1 {
   final double[] scores;
   private static final double epsilon = 1.0;
   private static final double logEpsilon = Math.log(epsilon);
-  static final IString NULL_TOKEN = new IString("<<<NULL>>>");
   private static final double UNKNOWN_SCORE = 1e-7;
 
   static WeakHashMap<String, IBMModel1> model1Store = new WeakHashMap<String, IBMModel1>();
@@ -122,7 +121,7 @@ public class IBMModel1 {
     double singleAlignmentScore = -m * Math.log(l + 1);
     double transScore = 0;
     for (int j = 0; j < m; j++) {
-      double sumJ = score(NULL_TOKEN, target.get(j));
+      double sumJ = score(TokenUtils.NULL_TOKEN, target.get(j));
       for (int i = 0; i < l; i++) {
         sumJ += score(source.get(i), target.get(j));
       }
@@ -173,7 +172,7 @@ public class IBMModel1 {
     }
 
     public PartialTargetFeatureState appendTargetWord(IString targetWord) {
-      double sumJ = IBMModel1.this.score(NULL_TOKEN, targetWord);
+      double sumJ = IBMModel1.this.score(TokenUtils.NULL_TOKEN, targetWord);
       int l = source.size();
       for (int i = 0; i < l; i++) {
         sumJ += IBMModel1.this.score(source.get(i), targetWord);
@@ -196,7 +195,7 @@ public class IBMModel1 {
     int m = targetPhrase.size();
     double transScore = 0;
     for (int j = 0; j < m; j++) {
-      double sumJ = score(NULL_TOKEN, targetPhrase.get(j));
+      double sumJ = score(TokenUtils.NULL_TOKEN, targetPhrase.get(j));
       for (int i = 0; i < l; i++) {
         sumJ += score(source.get(i), targetPhrase.get(j));
       }
@@ -235,7 +234,7 @@ public class IBMModel1 {
       sourceSz = 0;
       this.target = target;
       for (int i = 0; i < targetSums.length; i++) {
-        targetSums[i] = IBMModel1.this.score(NULL_TOKEN, target.get(i));
+        targetSums[i] = IBMModel1.this.score(TokenUtils.NULL_TOKEN, target.get(i));
       }
     }
 

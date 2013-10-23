@@ -16,9 +16,6 @@ import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
 
 public class DiskLM implements LanguageModel<IString> {
-  public static final IString START_TOKEN = new IString("<s>");
-  public static final IString END_TOKEN = new IString("</s>");
-  public static final IString UNK_TOKEN = new IString("<unk>");
   protected final String name;
   //protected final Map<Integer,Integer> ngramOrder;
   //protected final Map<String, ProbBowPair> ngramProbBows;
@@ -141,12 +138,12 @@ public class DiskLM implements LanguageModel<IString> {
   
   @Override
   public IString getStartToken() {
-    return START_TOKEN;
+    return TokenUtils.START_TOKEN;
   }
 
   @Override
   public IString getEndToken() {
-    return END_TOKEN;
+    return TokenUtils.END_TOKEN;
   }
 
   @Override

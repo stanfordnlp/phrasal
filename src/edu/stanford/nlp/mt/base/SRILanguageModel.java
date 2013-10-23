@@ -45,8 +45,6 @@ public class SRILanguageModel implements LanguageModel<IString> {
 
   protected final String name;
 
-  private static final IString START_TOKEN = new IString("<s>");
-  private static final IString END_TOKEN = new IString("</s>");
   private static int NONE_TOKEN;
   private static final double LOG10 = Math.log(10);
   private final SWIGTYPE_p_Ngram p_srilm;
@@ -60,11 +58,11 @@ public class SRILanguageModel implements LanguageModel<IString> {
   }
 
   public IString getStartToken() {
-    return START_TOKEN;
+    return TokenUtils.START_TOKEN;
   }
 
   public IString getEndToken() {
-    return END_TOKEN;
+    return TokenUtils.END_TOKEN;
   }
 
   protected static final WeakHashMap<String, LanguageModel<IString>> lmStore = new WeakHashMap<String, LanguageModel<IString>>();
