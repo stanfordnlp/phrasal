@@ -9,6 +9,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TargetClassMap;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
@@ -34,7 +35,7 @@ public class TargetClassBigramBoundary implements DerivationFeaturizer<IString, 
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     // Detect last phrase
-    String leftEdge = "<S>";
+    String leftEdge = TokenUtils.START_TOKEN.toString();
     for (Featurizable<IString, String> fPrior = f.prior; fPrior != null; fPrior = fPrior.prior) {
       if (fPrior.targetPhrase != null && fPrior.targetPhrase.size() > 0) {
         leftEdge = TargetClassMap.get(fPrior.targetPhrase.get(fPrior.targetPhrase.size()-1)).toString();

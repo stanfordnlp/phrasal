@@ -355,11 +355,23 @@ public class Phrasal {
       List<String> parameters = config.get(SOURCE_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Source class map requires a file argument");
       SourceClassMap.load(parameters.get(0));
+      if (parameters.size() == 2) {
+        SourceClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
+      }
+      if (parameters.size() == 3) {
+        SourceClassMap.setUnknownClass(parameters.get(2));
+      }
     }
     if (config.containsKey(TARGET_CLASS_MAP)) {
       List<String> parameters = config.get(TARGET_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Target class map requires a file argument");
       TargetClassMap.load(parameters.get(0));
+      if (parameters.size() == 2) {
+        TargetClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
+      }
+      if (parameters.size() == 3) {
+        TargetClassMap.setUnknownClass(parameters.get(2));
+      }
     }
     
     if (config.containsKey(FORCE_DECODE)) {

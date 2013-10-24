@@ -13,8 +13,6 @@ import edu.stanford.nlp.util.Generics;
  *
  */
 public abstract class AbstractWordClassMap {
-
-  public static final IString UNK_CLASS = new IString("##UnK##");
   
   protected AbstractWordClassMap() {}
   
