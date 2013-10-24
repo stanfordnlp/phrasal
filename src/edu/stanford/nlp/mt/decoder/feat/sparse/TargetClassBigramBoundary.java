@@ -52,7 +52,7 @@ public class TargetClassBigramBoundary implements DerivationFeaturizer<IString, 
     // Detect done
     if (f.done && f.targetPhrase != null && f.targetPhrase.size() > 0) {
       leftEdge = TargetClassMap.get(f.targetPhrase.get(f.targetPhrase.size()-1)).toString();
-      String rightEdge = "</S>";
+      String rightEdge = TokenUtils.END_TOKEN.toString();
       features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));  
     }
     return features;
