@@ -65,7 +65,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
       RawSequence<TK> raw = new RawSequence<TK>(sequence);
       final String word = sequence.get(0).toString();
 
-      if (dropUnknownWords && !TokenUtils.isNumericOrPunctuationOrSymbols(word) && !TokenUtils.isASCII(word)) {
+      if (dropUnknownWords && !TokenUtils.isNumericOrPunctuationOrSymbols(word)) {
         // Deletion rule
         list.add(new Rule<TK>(featureValues, featureNames, empty, raw,
             DEFAULT_ALIGNMENT));
