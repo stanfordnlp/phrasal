@@ -142,7 +142,7 @@ public class SRILanguageModel implements LanguageModel<IString> {
     return order;
   }
 
-  public boolean releventPrefix(Sequence<IString> prefix) {
+  public boolean relevantPrefix(Sequence<IString> prefix) {
     if (prefix.size() > order - 1)
       return false;
     int hist_size = prefix.size();

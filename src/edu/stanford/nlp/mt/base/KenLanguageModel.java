@@ -90,7 +90,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   }
       
   @Override
-  public boolean releventPrefix(Sequence<IString> sequence) {
+  public boolean relevantPrefix(Sequence<IString> sequence) {
     if (sequence.size() > order - 1) {
       return false;
     }

@@ -326,7 +326,7 @@ public class DiskLM implements LanguageModel<IString> {
   }
   
   @Override
-  public boolean releventPrefix(Sequence<IString> sequence) {
+  public boolean relevantPrefix(Sequence<IString> sequence) {
     return getProbBow(sequence.toString(" ")) != null;
   }
   

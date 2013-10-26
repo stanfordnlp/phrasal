@@ -122,7 +122,7 @@ public class FrequencyMultiScoreLanguageModel implements MultiScoreLanguageModel
     }
 
     @Override
-    public boolean releventPrefix(Sequence<IString> sequence) {
+    public boolean relevantPrefix(Sequence<IString> sequence) {
       Pair<String,Integer> zeroPair = new Pair<String,Integer>(sequence.toString(" "), 0);
       return bloomFilter.mightContain(zeroPair);
     }

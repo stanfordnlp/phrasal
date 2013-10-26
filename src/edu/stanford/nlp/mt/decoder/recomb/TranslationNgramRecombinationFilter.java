@@ -73,7 +73,7 @@ public class TranslationNgramRecombinationFilter<TK extends IString, FV>
       int sz = maxNgram.size();
       relPrefixSearch: for (int i = 0; i < sz; i++) {
         ngram = maxNgram.subsequence(i, sz);
-        if (lm.releventPrefix(ngram)) {
+        if (lm.relevantPrefix(ngram)) {
           break relPrefixSearch;
         }
       }

@@ -250,7 +250,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   }
 
   @Override
-  public boolean releventPrefix(Sequence<IString> prefix) {
+  public boolean relevantPrefix(Sequence<IString> prefix) {
     if (prefix.size() > probs.length - 1)
       return false;
     int[] prefixInts = Sequences.toIntArray(prefix);

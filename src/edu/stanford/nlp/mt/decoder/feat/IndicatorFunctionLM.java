@@ -44,7 +44,7 @@ public class IndicatorFunctionLM implements LanguageModel<IString> {
   }
 
   @Override
-  public boolean releventPrefix(Sequence<IString> sequence) {
+  public boolean relevantPrefix(Sequence<IString> sequence) {
     // TODO: make this weight vector aware so we don't always need to return
     // 'true'
     // when sequence.size() <= order -1;

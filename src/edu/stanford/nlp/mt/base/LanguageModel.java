@@ -36,5 +36,5 @@ public interface LanguageModel<T> {
   /**
 	 * 
 	 */
-  boolean releventPrefix(Sequence<T> sequence);
+  boolean relevantPrefix(Sequence<T> sequence);
 }
