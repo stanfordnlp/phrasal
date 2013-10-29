@@ -41,12 +41,49 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         targets, size);
   }
 
-  @Override
+@SuppressWarnings("unchecked")
+  private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
+      List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, -1, null);
+    
+      BitSet possibleCoverage = new BitSet();
+      
+      for (ConcreteRule<TK,FV> rule : rules) {
+         if (rule.abstractRule.target.size() > 0 && !"".equals(rule.abstractRule.target.toString())) {
+            possibleCoverage.or(rule.sourceCoverage);
+         }
+      }
+      
+      List<TK> filteredToks = new LinkedList<TK>();
+      
+      for (int i = 0; i  < source.size(); i++) {
+         if (possibleCoverage.get(i)) {
+            filteredToks.add(source.get(i));
+         } else {
+            System.err.printf("WARNING: Dropping unknown word: %s - ", source.get(i));
+            System.err.println("If you are using Phrasal within a real application, this might be a REALLY BAD(tm) thing to do.");
+         }
+      }
+      
+      if (filteredToks.size() != 0) {
+        return new SimpleSequence<TK>(filteredToks);
+      } else if (source.size() > 0) {
+        return new SimpleSequence<TK>(source.get(0));
+      } else {
+         return source;
+      }
+  }
+
+@Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int size) {
 
+    // filter unknown words
+    if (filterUnknownWords) {
+       source = filterUnknownWords(source);
+    }
+    
     // Decoding
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
         new RecombinationHistory<Derivation<TK, FV>>();
@@ -197,6 +234,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets) {
+    // filter unknown words
+    if (filterUnknownWords) {
+      source = filterUnknownWords(source);
+    }
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         null, outputSpace, targets, 1);
     if (beam == null)

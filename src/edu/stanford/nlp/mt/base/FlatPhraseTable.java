@@ -243,8 +243,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public List<Rule<IString>> query(
       Sequence<IString> foreignSequence) {
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
-    int[] foreignInts = Sequences.toIntArray(foreignSequence,
-        IString.identityIndex());
+    int[] foreignInts = Sequences.toIntArray(foreignSequence);
     int fIndex = sourceIndex.indexOf(foreignInts);
     if (fIndex == -1)
       return null;

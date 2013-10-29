@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.tools;
 
-import static java.lang.System.*;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -46,7 +44,7 @@ public class FDACorpusSelection {
    private boolean isMono = false; // Thang Aug13: handle monolingual data
    
    static public void usage() {
-      err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
+      System.err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
           "(bitext.tgt) (bitext.src) (test.src) (selected.tgt) (selected.src) " +
           "[selected.ln]");
    }
@@ -80,19 +78,19 @@ public class FDACorpusSelection {
       rejectedCount = 0;
       
       // construct F
-      if (VERBOSE>=1) { err.println("# Constructing test set features ..."); }
+      if (VERBOSE>=1) { System.err.println("# Constructing test set features ..."); }
       Counter<String> testFrNgramCounts = new ClassicCounter<String>();
       for (String line : testFr) {
          if (VERBOSE>=2) {
-            err.println("test line:" + line);
+            System.err.println("test line:" + line);
          }
          CoverageChecker.countNgrams(line, testFrNgramCounts, null, NGRAM_ORDER);
       }
       F = new HashSet<String>(testFrNgramCounts.keySet());
-      if (VERBOSE>=1) { err.println("Done. Feature size = " + F.size()); }
+      if (VERBOSE>=1) { System.err.println("Done. Feature size = " + F.size()); }
       
       // collect cnt(f,U) values and |U|
-      if (VERBOSE>=1) { err.println("# Collecting cnt(f,U) values and |U| ..."); }
+      if (VERBOSE>=1) { System.err.println("# Collecting cnt(f,U) values and |U| ..."); }
       cntfU = new ClassicCounter<String>();
       int sizeU = 0;
       int numLines = 0;
@@ -103,21 +101,21 @@ public class FDACorpusSelection {
          if(VERBOSE>=1){
            numLines++;
            if(numLines%100000==0){
-             err.print(" (" + numLines/1000 + "K) ");
+             System.err.print(" (" + numLines/1000 + "K) ");
            }
          }
       }
       this.sizeU = sizeU;
-      if (VERBOSE>=1) { err.println("Done. Num lines = " + numLines + ". Num distinct ngrams = " + cntfU.size() + 
+      if (VERBOSE>=1) { System.err.println("Done. Num lines = " + numLines + ". Num distinct ngrams = " + cntfU.size() + 
           ". Num total tokens = " + sizeU + "."); }
       
       // initial feature weights
       fvalue = new ClassicCounter<String>();
-      if (VERBOSE>=1) { err.println("# Initializing feature weights ..."); }
+      if (VERBOSE>=1) { System.err.println("# Initializing feature weights ..."); }
       for (String f : F) {         
          fvalue.setCount(f, init(f));
          if (VERBOSE>=2) {           
-            err.printf("\t%s: %f cnt(f,U): %f\n", f, fvalue.getCount(f), cntfU.getCount(f));
+            System.err.printf("\t%s: %f cnt(f,U): %f\n", f, fvalue.getCount(f), cntfU.getCount(f));
          }
       }
       
@@ -125,7 +123,7 @@ public class FDACorpusSelection {
       score = new double[bitextFr.size()];
       Q = new PriorityQueue<Integer>(bitextFr.size(), new SentenceScoreComparator());
       numLines = 0; 
-      if (VERBOSE>=1) { err.println("# Computing sent scores and adding to a priority queue ..."); }
+      if (VERBOSE>=1) { System.err.println("# Computing sent scores and adding to a priority queue ..."); }
       for (int i = 0; i < score.length; i++) {
          Counter<String> lineNgramCounts = new ClassicCounter<String>();
          String line = bitextFr.get(i);
@@ -138,17 +136,17 @@ public class FDACorpusSelection {
             score[i] /= line.split("\\s+").length;
          }
          
-         // err.printf("init score: %d %.3f\n", i, score[i]);
+         // System.err.printf("init score: %d %.3f\n", i, score[i]);
          Q.add(i);
          
          if(VERBOSE>=1){
            numLines++;
            if(numLines%100000==0){
-             err.print(" (" + numLines/1000 + "K) ");
+             System.err.print(" (" + numLines/1000 + "K) ");
            }
          }
       }
-      if (VERBOSE>=1) { err.println("Done. Num lines = " + numLines); }
+      if (VERBOSE>=1) { System.err.println("Done. Num lines = " + numLines); }
       
       // We start with zero counts for everything in L
       cntfL = new ClassicCounter<String>();
@@ -161,9 +159,9 @@ public class FDACorpusSelection {
          // remove the best scoring segment from the priority queue         
          int id = Q.remove();
          if (VERBOSE>=2) {
-            err.printf("checking: %d %f\n", id, score[id]);
-            err.printf("  src: %s\n", bitextFr.get(id));
-            if (!isMono) { err.printf("  trg: %s\n", bitextEn.get(id)); } // Thang Aug13: handle mono
+            System.err.printf("checking: %d %f\n", id, score[id]);
+            System.err.printf("  src: %s\n", bitextFr.get(id));
+            if (!isMono) { System.err.printf("  trg: %s\n", bitextEn.get(id)); } // Thang Aug13: handle mono
          }
          Counter<String> lineNgramCounts = new ClassicCounter<String>();
          String line = bitextFr.get(id);
@@ -207,7 +205,7 @@ public class FDACorpusSelection {
                fvalue.setCount(f, decay(f));
             }
             if (VERBOSE>=2) {
-               err.printf(" - accepting: %d %f\n", id, score[id]);
+               System.err.printf(" - accepting: %d %f\n", id, score[id]);
             }
             if (!isMono) { // Thang Aug13: handle mono 
               return new Triple<String,String,Integer>(line,bitextEn.get(id),id);
@@ -218,7 +216,7 @@ public class FDACorpusSelection {
             
          } else {
             if (VERBOSE>=2) {
-              err.printf(" - rejecting: %d %f < %f\n", id, score[id], score[nextId]);
+              System.err.printf(" - rejecting: %d %f < %f\n", id, score[id], score[nextId]);
             }
             Q.add(id);
             rejectedCount++;
@@ -241,11 +239,11 @@ public class FDACorpusSelection {
       String selectedLines = (args.length == 7 ? args[6] : null);
        
       // src bitext
-      err.printf("# Opening %s\n", bitextFrFn);
+      System.err.printf("# Opening %s\n", bitextFrFn);
       LineIndexedCorpus bitextFr = new LineIndexedCorpus(bitextFrFn);
       
       // src test
-      err.printf("# Opening %s\n", testFn);
+      System.err.printf("# Opening %s\n", testFn);
       LineIndexedCorpus testFr = new LineIndexedCorpus(testFn);
       
       // Thang Aug13: handle "" tgt bitext
@@ -254,11 +252,11 @@ public class FDACorpusSelection {
       boolean isMono = bitextEnFn.equals(""); 
       if(!isMono){ 
         // tgt bitext
-        err.printf("Opening %s\n", bitextEnFn);
+        System.err.printf("Opening %s\n", bitextEnFn);
         bitextEn = new LineIndexedCorpus(bitextEnFn);
       
         if (bitextEn.size() != bitextFr.size()) {
-          err.printf("Bitext files %s and %s are of different lengths (%d vs %d)", 
+          System.err.printf("Bitext files %s and %s are of different lengths (%d vs %d)", 
                 bitextEnFn, bitextFrFn, bitextEn.size(), bitextFr.size());
         }
         
@@ -280,17 +278,17 @@ public class FDACorpusSelection {
             selectedLines), "UTF-8")));
       FDACorpusSelection fsacs = new FDACorpusSelection(bitextEn, bitextFr, 
          testFr);
-      if (VERBOSE>=1) { err.println("# Start selecting training instances ..."); }
+      if (VERBOSE>=1) { System.err.println("# Start selecting training instances ..."); }
       for (int n = 0; n < selectionSize; n++) {
          Triple<String,String,Integer> frEn = fsacs.getNextBest();
          selectedFr.println(frEn.first());
          if (!isMono) { selectedEn.println(frEn.second()); } // Thang Aug13: handle mono
          if (selectedLn != null) selectedLn.println(frEn.third());
          
-         if(VERBOSE>=1 && ((n+1)%1000==0)){ err.print(" (" + (n+1)/1000 + "K, rejected=" + 
+         if(VERBOSE>=1 && ((n+1)%1000==0)){ System.err.print(" (" + (n+1)/1000 + "K, rejected=" + 
              fsacs.rejectedCount + ")"); }
       }
-      if (VERBOSE>=1) { err.println("Done! Num training instances selected = " + selectionSize + 
+      if (VERBOSE>=1) { System.err.println("Done! Num training instances selected = " + selectionSize + 
           ". Rejected count = " + fsacs.rejectedCount + "."); }
       
       selectedFr.close();

@@ -1,10 +1,10 @@
 package edu.stanford.nlp.mt.wordcls;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.HasIntegerIdentity;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.IntegerArrayIndex;
@@ -15,12 +15,11 @@ import edu.stanford.nlp.mt.base.IntegerArrayIndex;
  * @author Spence Green
  *
  */
-public class NgramHistory implements Iterable<IString> {
+public class NgramHistory implements Iterable<IString>,HasIntegerIdentity {
   
   private static final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
   
   private final int id;
-  private final int hashCode;
   
   /**
    * Constructor.
@@ -28,16 +27,16 @@ public class NgramHistory implements Iterable<IString> {
    * @param hist
    */
   public NgramHistory(List<IString> hist) {
-    IString[] history = new IString[hist.size()];
-    int i = 0;
-    for (IString s : hist) {
-      history[i++] = s;
+    int[] intArray = new int[hist.size()];
+    for (int i = 0; i < intArray.length; i++) {
+      intArray[i] = hist.get(i).id;
     }
-    int[] h = IStrings.toIntArray(history);
-    id = index.indexOf(h, true);
-    hashCode = Arrays.hashCode(h);
+    id = index.indexOf(intArray, true);
   }
 
+  @Override
+  public int getId() { return id; }
+  
   public static void lockIndex() { index.lock(); }
   
   @Override
@@ -81,7 +80,7 @@ public class NgramHistory implements Iterable<IString> {
   
   @Override
   public int hashCode() {
-    return hashCode;
+    return id;
   }
   
   @Override

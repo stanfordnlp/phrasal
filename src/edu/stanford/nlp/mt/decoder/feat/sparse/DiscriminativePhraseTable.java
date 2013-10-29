@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Indicator features for each rule in a derivation.
  * 
- * @author danielcer
+ * @author Daniel Cer
  * @author Spence Green
  * 
  */

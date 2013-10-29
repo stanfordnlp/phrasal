@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,10 +8,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
@@ -37,13 +35,8 @@ public class RuleQueryRequestHandlerMock implements RequestHandler {
     final int sourceLength = source.size();
     for (int i = 0; i < sourceLength; ++i) {
       for (int j = i+1; j <= sourceLength; ++j) {
-        String sourceSide = source.subsequence(i, j).toString();
-        String targetSide = sourceSide.toLowerCase();
-        queriedRules.add(new RuleQuery(sourceSide, targetSide, 0.6, ""));
-        List<String> tgtReverse = Arrays.asList(targetSide.split("\\s+"));
-        Collections.reverse(tgtReverse);
-        String targetSideRev = Sentence.listToString(tgtReverse);
-        queriedRules.add(new RuleQuery(sourceSide, targetSideRev, 0.5, ""));
+        List<String> sourceSide = Sequences.toStringList(source.subsequence(i, j));
+        queriedRules.add(new RuleQuery(sourceSide, null, 0.6));
       }
     }
     RuleQueryReply reply = new RuleQueryReply(queriedRules);

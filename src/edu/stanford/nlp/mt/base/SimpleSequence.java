@@ -38,6 +38,16 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
     start = 0;
     end = intElements.length;
   }
+  
+  public SimpleSequence(List<T> toks) {
+     elements = new Object[toks.size()];
+     int idx = 0;
+     for (T tok : toks) {
+       elements[idx++] = tok;  
+     }
+     start = 0;
+     end = elements.length;
+  }
 
   /**
 	 * 

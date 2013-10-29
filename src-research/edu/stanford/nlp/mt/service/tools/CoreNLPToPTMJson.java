@@ -1,8 +1,10 @@
 package edu.stanford.nlp.mt.service.tools;
 
 import java.io.IOException;
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.google.gson.Gson;
 
@@ -52,29 +54,34 @@ public final class CoreNLPToPTMJson {
     System.err.println("Loaded " + annotationFile);
 
     List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-    List<AnnotationContainer> annotations = Generics.newLinkedList();
-    for (CoreMap sentence : sentences) {
+    // Use a map with ordered keys so that the output is ordered by segmentId.
+    Map<Integer,AnnotationContainer> annotations = new TreeMap<Integer,AnnotationContainer>();
+    for (int i = 0; i < sentences.size(); ++i) {
+      CoreMap sentence = sentences.get(i);
       Tree tree = sentence.get(TreeAnnotation.class);
       tree.indexLeaves();
-      BitSet isBaseNPToken = markBaseNPs(tree);
+      String[] chunkVector = getChunkVector(tree);
       AnnotationContainer container = new AnnotationContainer();
-      int i = 0;
-      for (CoreLabel token : sentence.get(TokensAnnotation.class)) {
+      List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
+      for (int j = 0; j < tokens.size(); ++j) {
+        CoreLabel token = tokens.get(j);
         String word = token.get(TextAnnotation.class);
         container.tokens.add(unescape(word));
         String pos = mapPOS(token.get(PartOfSpeechAnnotation.class));
         container.pos.add(pos);
         String ne = token.get(NamedEntityTagAnnotation.class);
         container.ner.add(ne);
-        container.isBaseNP.add(isBaseNPToken.get(i++));
+        container.chunkIOB.add(chunkVector[j]);
       }
-      annotations.add(container);
+      annotations.put(i, container);
     }
     System.err.printf("Processed %d sentences%n", sentences.size());
     
+    final Document jsonDocument = new Document(annotationFile, annotations);
+    
     // Convert to json
     Gson gson = new Gson();
-    String json = gson.toJson(annotations);
+    String json = gson.toJson(jsonDocument);
     System.out.println(json);
   }
 
@@ -89,6 +96,9 @@ public final class CoreNLPToPTMJson {
 
   /**
    * Map PTB tags to reduced form.
+   * 
+   * TODO(spenceg): Maybe this is too coarse. Could load Petrov's universal POS
+   * set or some thing to that effect.
    * 
    * @param posTag
    * @return
@@ -106,32 +116,51 @@ public final class CoreNLPToPTMJson {
     return "O";
   }
 
-  private static BitSet markBaseNPs(Tree tree) {
+  /**
+   * Extract chunks. Presently, a chunk is a base NP.
+   * 
+   * @param tree
+   * @return
+   */
+  private static String[] getChunkVector(Tree tree) {
     TregexPattern baseNPMatcher = TregexPattern.compile("@NP < (/NN/ < (__ !< __)) !< @NP");
-
     TregexMatcher tregexMatcher = baseNPMatcher.matcher(tree);
-    BitSet b = new BitSet();
+    String[] pattern = new String[tree.yield().size()];
+    Arrays.fill(pattern, "O");
     while (tregexMatcher.find()) {
       Tree match = tregexMatcher.getMatch();
       List<Tree> leaves = match.getLeaves();
+      boolean seenStart = false;
       for (Tree leaf : leaves) {
-        b.set(((HasIndex) leaf.label()).index() - 1);
+        int index = ((HasIndex) leaf.label()).index() - 1;
+        pattern[index] = seenStart ? "I" : "B";
+        seenStart = true;
       }
     }
-
-    return b;
+    return pattern;
+  }
+  
+  private static class Document {
+    // Name of this document
+    public final String docId;
+    // Annotated segments, indicated with a name
+    public final Map<Integer,AnnotationContainer> segments;
+    public Document(String docId, Map<Integer,AnnotationContainer> segments) {
+      this.docId = docId;
+      this.segments = segments;
+    }
   }
   
   private static class AnnotationContainer {
     public final List<String> tokens;
     public final List<String> pos;
     public final List<String> ner;
-    public final List<Boolean> isBaseNP; 
+    public final List<String> chunkIOB; 
     public AnnotationContainer() {
       this.tokens = Generics.newLinkedList();
       this.pos = Generics.newLinkedList();
       this.ner = Generics.newLinkedList();
-      this.isBaseNP = Generics.newLinkedList();
+      this.chunkIOB = Generics.newLinkedList();
     }
   }
 }

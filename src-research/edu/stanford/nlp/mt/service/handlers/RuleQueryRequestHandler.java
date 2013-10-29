@@ -16,6 +16,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -63,23 +64,43 @@ public class RuleQueryRequestHandler implements RequestHandler {
 
     // Source pre-processing
     Sequence<IString> source;
+    Sequence<IString> sourceContext;
     SymmetricalWordAlignment s2sPrime = null;
     if (preprocessor == null) {
       source = IStrings.tokenize(ruleRequest.text);
+      sourceContext = ruleRequest.leftContext != null && ruleRequest.leftContext.length() > 0 ? 
+          IStrings.tokenize(ruleRequest.leftContext) : null;
       s2sPrime = identityAlignment(source);
     
     } else {
       s2sPrime = preprocessor.processAndAlign(ruleRequest.text);
       source = s2sPrime.e();
+      sourceContext = ruleRequest.leftContext != null && ruleRequest.leftContext.length() > 0 ?
+          preprocessor.process(ruleRequest.leftContext) : null;
+    }
+
+    // Query the phrase table
+    List<ConcreteRule<IString,String>> rulesForSpan;
+    ConcreteRule<IString,String> bestLeftContext = null;
+    if (sourceContext == null) {
+      List<ConcreteRule<IString,String>> ruleList = phraseTable
+          .getRules(source, null, qId.incrementAndGet(), scorer);
+      RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, source, true);
+      rulesForSpan = ruleGrid.get(0, source.size()-1);
+      
+    } else {
+      Sequence<IString> queryString = Sequences.concatenate(sourceContext, source);
+      List<ConcreteRule<IString,String>> ruleList = phraseTable
+          .getRules(queryString, null, qId.incrementAndGet(), scorer);
+      RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, queryString, true);
+      rulesForSpan = ruleGrid.get(sourceContext.size(), queryString.size()-1);
+      List<ConcreteRule<IString,String>> rulesForContext = ruleGrid.get(0, sourceContext.size()-1);
+      bestLeftContext = rulesForContext.size() > 0 ? rulesForContext.get(0) : null;
     }
     
-    List<ConcreteRule<IString,String>> ruleList = phraseTable
-        .getRules(source, null, qId.incrementAndGet(), scorer);
-
-    // Enable rule sorting with the "true" parameter.
-    RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, source, true);
-    List<RuleQuery> queriedRules = Generics.newArrayList();
-    List<ConcreteRule<IString,String>> rulesForSpan = ruleGrid.get(0, source.size()-1);
+    // Process the query
+    double normalizer = 0.0;
+    List<RuleQuery> queriedRules = Generics.newArrayList(ruleRequest.spanLimit);
     for(ConcreteRule<IString,String> rule : rulesForSpan) {
       if (queriedRules.size() >= ruleRequest.spanLimit) {
         break;
@@ -88,13 +109,29 @@ public class RuleQueryRequestHandler implements RequestHandler {
         continue;
       }
 
+      // Extract word-word alignment from the rule.
       SymmetricalWordAlignment sPrime2tPrime = getAlignment(rule.abstractRule);
+
+      // Post-process the target side, possibly adding left context.
+      Sequence<IString> target = rule.abstractRule.target;
+      int offset = 0;
+      if (bestLeftContext != null) {
+        target = Sequences.concatenate(bestLeftContext.abstractRule.target, target);
+        offset = bestLeftContext.abstractRule.target.size();
+      }
       SymmetricalWordAlignment tPrime2t = postprocessor == null ?
-          identityAlignment(rule.abstractRule.target) :
-            postprocessor.process(rule.abstractRule.target);    
-      RuleQuery query = createQueryResult(ruleRequest.text, rule.isolationScore, s2sPrime, sPrime2tPrime, tPrime2t);
+          identityAlignment(target) : postprocessor.process(target);
+      
+      double score = Math.exp(rule.isolationScore);
+      normalizer += score;
+      RuleQuery query = createQueryResult(ruleRequest.text, score, s2sPrime, sPrime2tPrime, tPrime2t, offset);
       queriedRules.add(query);
     }
+    // Normalize the model scores
+    for (RuleQuery query : queriedRules) {
+      query.setScore(query.score / normalizer);
+    }
+    
     RuleQueryReply reply = new RuleQueryReply(queriedRules);
     
     Type t = new TypeToken<RuleQueryReply>() {}.getType();
@@ -139,29 +176,32 @@ public class RuleQueryRequestHandler implements RequestHandler {
    * @param s2sPrime
    * @param sPrime2tPrime
    * @param tPrime2t
+   * @param tContextOffset 
    * @return
    */
   private RuleQuery createQueryResult(String sourceText, double isolationScore, 
       SymmetricalWordAlignment s2sPrime, SymmetricalWordAlignment sPrime2tPrime, 
-      SymmetricalWordAlignment tPrime2t) {
+      SymmetricalWordAlignment tPrime2t, int tContextOffset) {
 
     // Alignments
-    StringBuilder sb = new StringBuilder();
+    List<String> alignmentList = Generics.newLinkedList();
     Set<Integer> alignments = s2sPrime.f2e(0);
     for (int i : alignments) {
       Set<Integer> alignments2 = sPrime2tPrime.f2e(i);
       for (int j : alignments2) {
+        j += tContextOffset;
         Set<Integer> alignments3 = tPrime2t.f2e(j);
         for (int k : alignments3) {
-          if (sb.length() > 0) sb.append(" ");
-          sb.append(String.format("%d-%d",0,k));
+          alignmentList.add(String.format("%d-%d",0,k));
         }
       }
     }
-    // TODO(spenceg): Post-processing needs to occur in context so that the casing
-    // is correct.
-    String tgt = tPrime2t.e().toString().toLowerCase();
-    return new RuleQuery(sourceText, tgt, isolationScore, sb.toString());
+    Sequence<IString> tgt = tPrime2t.e();
+    if (tContextOffset > 0) {
+      tgt = tgt.subsequence(tContextOffset, tgt.size());
+    }
+    List<String> tgtStrings = Sequences.toStringList(tgt);
+    return new RuleQuery(tgtStrings, alignmentList, isolationScore);
   }
 
   /**

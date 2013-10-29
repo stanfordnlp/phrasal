@@ -4,18 +4,18 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.*;
 
+
 /**
  * Utility functions for working with {@link IString}s.
  * 
  * @author danielcer
  * @author mgalley
+ * @author Spence Green
  * 
  */
-public class IStrings {
+public final class IStrings {
 
-  private IStrings() {
-    super();
-  }
+  private IStrings() {}
 
   /**
    * Convert a newline-delimited file to a list of Sequences.
