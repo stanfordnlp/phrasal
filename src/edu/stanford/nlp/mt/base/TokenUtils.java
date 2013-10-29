@@ -20,6 +20,23 @@ public final class TokenUtils {
   public static final IString NULL_TOKEN = new IString("<<<NULL>>>");
 
   /**
+   * Returns true if the token consists entirely of punctuation, and false
+   * otherwise.
+   * 
+   * @param token
+   * @return
+   */
+  public static boolean isPunctuation(String token) {
+    for (int i = 0; i < token.length(); ++i) {
+      char c = token.charAt(i);
+      if ( ! Characters.isPunctuation(c)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  /**
    * True if a token consists entirely of numbers and punctuation, and false
    * otherwise.
    * 
