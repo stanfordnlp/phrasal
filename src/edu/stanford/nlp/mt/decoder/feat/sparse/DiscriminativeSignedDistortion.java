@@ -35,8 +35,6 @@ public class DiscriminativeSignedDistortion implements DerivationFeaturizer<IStr
       features.add(new FeatureValue<String>(FEATURE_NAME + ":neg", 1.0));
     } else if (distortion > 0) {
       features.add(new FeatureValue<String>(FEATURE_NAME + ":pos", 1.0));
-    } else {
-      features.add(new FeatureValue<String>(FEATURE_NAME + ":zero", 1.0));
     }
     return features;
   }
