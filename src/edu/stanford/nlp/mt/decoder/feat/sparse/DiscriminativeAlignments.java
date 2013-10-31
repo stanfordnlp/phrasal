@@ -137,10 +137,10 @@ RuleFeaturizer<IString,String> {
   }
   
   private String sourceRepresentation(IString token) {
-    return sourceClasses ? SourceClassMap.get(token).toString() : token.toString();
+    return "||" + (sourceClasses ? SourceClassMap.get(token).toString() : token.toString());
   }
   
   private String targetRepresentation(IString token) {
-    return targetClasses ? TargetClassMap.get(token).toString() : token.toString();
+    return (targetClasses ? TargetClassMap.get(token).toString() : token.toString()) + "||";
   }
 }

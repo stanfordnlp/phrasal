@@ -21,6 +21,8 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.tregex.TregexMatcher;
 import edu.stanford.nlp.trees.tregex.TregexPattern;
+import edu.stanford.nlp.trees.tregex.tsurgeon.Tsurgeon;
+import edu.stanford.nlp.trees.tregex.tsurgeon.TsurgeonPattern;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Generics;
 
@@ -116,28 +118,64 @@ public final class CoreNLPToPTMJson {
     return "O";
   }
 
+  private static void fillVectorWithYield(String[] vector, TregexMatcher tregexMatcher) {
+    while (tregexMatcher.find()) {
+      Tree match = tregexMatcher.getMatch();
+      List<Tree> leaves = match.getLeaves();
+      if (leaves.size() == 1) continue;
+      boolean seenStart = false;
+      for (Tree leaf : leaves) {
+        int index = ((HasIndex) leaf.label()).index() - 1;
+        if ( ! vector[index].equals("O")) break;
+        vector[index] = seenStart ? "I" : "B";
+        seenStart = true;
+      }
+    }
+  }
+  
   /**
-   * Extract chunks. Presently, a chunk is a base NP.
+   * Extract chunks. 
    * 
    * @param tree
    * @return
    */
   private static String[] getChunkVector(Tree tree) {
-    TregexPattern baseNPMatcher = TregexPattern.compile("@NP < (/NN/ < (__ !< __)) !< @NP");
-    TregexMatcher tregexMatcher = baseNPMatcher.matcher(tree);
-    String[] pattern = new String[tree.yield().size()];
-    Arrays.fill(pattern, "O");
+    String[] vector = new String[tree.yield().size()];
+    Arrays.fill(vector, "O");
+    
+    // Yield patterns
+//    TregexPattern baseNPPattern = TregexPattern.compile("@NP < (/NN/ < (__ !< __)) !< @NP");
+    TregexPattern baseXPPattern = TregexPattern.compile("__ < (__ < (__ !< __)) !< (__ < (__ < __))");
+    TregexPattern basePPPattern = TregexPattern.compile("@PP <, @IN !<< @NP >! @PP");
+    TregexMatcher tregexMatcher = baseXPPattern.matcher(tree);
+    fillVectorWithYield(vector, tregexMatcher);
+    tregexMatcher = basePPPattern.matcher(tree);
+    fillVectorWithYield(vector, tregexMatcher);
+    
+    // Edge patterns
+    TregexPattern vpPattern = TregexPattern.compile("@VP >! @VP");
+    TregexPattern argumentPattern = TregexPattern.compile("!@VP=node > @VP !< (__ !< __)");
+    TregexPattern puncPattern = TregexPattern.compile("/^[^a-zA-Z0-9]+$/=node < __ ");
+    TsurgeonPattern p = Tsurgeon.parseOperation("delete node");
+    tregexMatcher = vpPattern.matcher(tree);
     while (tregexMatcher.find()) {
       Tree match = tregexMatcher.getMatch();
+      Tsurgeon.processPattern(argumentPattern, p, match);
+      Tsurgeon.processPattern(puncPattern, p, match);
       List<Tree> leaves = match.getLeaves();
+      if (leaves.size() == 1) continue;
       boolean seenStart = false;
+      int lastIndex = -1;
       for (Tree leaf : leaves) {
         int index = ((HasIndex) leaf.label()).index() - 1;
-        pattern[index] = seenStart ? "I" : "B";
+        if (lastIndex > 0 && index - lastIndex != 1) break;
+        if ( ! vector[index].equals("O")) break;
+        vector[index] = seenStart ? "I" : "B";
         seenStart = true;
+        lastIndex = index;
       }
     }
-    return pattern;
+    return vector;
   }
   
   private static class Document {
