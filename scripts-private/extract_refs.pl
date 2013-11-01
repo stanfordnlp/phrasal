@@ -41,7 +41,6 @@ while(<STDIN>) {
          print stderr "# Add new reference file $outDir/ref$refh{$refid}.raw\n";
        } 
        $refid = $refh{$refid};
-       #print stderr "REF: $oldid => ref$refid ($refidx)\n";
     }
     $refid = "$outDir/ref$refid.raw";
   }
@@ -66,19 +65,12 @@ while(<STDIN>) {
 }
 
 
-# execute PTBTokenizer
-#my $options = "keepAssimilations=false,asciiQuotes=true,normalizeParentheses=false,normalizeOtherBrackets=false,americanize=false,normalizeCurrency=false,escapeForwardSlashAsterisk=false"; # ptb3Escaping=false
-#my $options = "ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false"; # Sept 18th 2013 suggested options from Chris.
-#print stderr "# Executing PTBTokenizer with options=$options ... ";
-
 for(my $refid=1; $refid<$refidx; $refid++){ # go through each reference
-  my $lang = "English";
   my $rawFile = "$outDir/ref$refid.raw";
   my $tokenizedFile = "$outDir/ref$refid.tokenized";
   my $isGzip = 0;
   my $isIBMPostProcessing = 1;
-  #my $cmd = "java edu.stanford.nlp.process.PTBTokenizer  -preserveLines -options $options < $rawFile > $tokenizedFile";
-  my $cmd = "$ENV{JAVANLP_HOME}/projects/mt/scripts-private/tokenize_new.sh $lang $rawFile $tokenizedFile $isGzip $isIBMPostProcessing tolower";
+  my $cmd = "$ENV{JAVANLP_HOME}/projects/mt/scripts-private/tokenize-BOLTonly.sh $lang $rawFile $tokenizedFile $isGzip $isIBMPostProcessing tolower";
   print stderr "\n# Tokenizing ...\n  $cmd\n";
   system($cmd);
   

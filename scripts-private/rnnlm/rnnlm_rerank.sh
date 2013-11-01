@@ -4,7 +4,7 @@
 if [[ ! $# -eq 6 && ! $# -eq 4  && ! $# -eq 5 ]]
 then
     echo "`basename $0` rnnlm_model vocab_file nbest_in nbest_out [debug_opt] [nbest_dir]"
-    echo "  nbest_dir: contains all nbest files (end with extension .nbest), which we will concatenate and select only distinct sentences for the RNNLM to score."
+    echo "  nbest_dir: contains all nbest files (end with the suffix \"best\"), which we will concatenate and select only distinct sentences for the RNNLM to score."
     exit
 fi
 

@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 # Author: Minh-Thang Luong <luong.m.thang@gmail.com>, created on Thu Sep 19 14:26:11 PDT 2013
 
-"""
-Module docstrings.
-"""
-
-__author__ = "Minh-Thang Luong"
-__copyright__ = "Copyright \251"
-__version__ = "Version 1.0"
-usage = '%s %s' % (__copyright__, __author__) 
+usage = 'Post-process English tokenized text to better match IBM\'s tokenization'
 
 ### Module imports ###
 import sys
@@ -16,11 +9,6 @@ import os
 import argparse # option parsing
 import re # regular expression
 import codecs
-### Global variables ###
-
-
-### Class declarations ###
-
 
 ### Function declarations ###
 def process_command_line():
@@ -34,18 +22,8 @@ def process_command_line():
   parser.add_argument('in_file', metavar='in_file', type=str, help='input file') 
   parser.add_argument('token_map_file', metavar='token_map_file', type=str, help='token map file') 
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
-
-  parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='option (default=0)')
-  
-	# version info
-  parser.add_argument('-v', '--version', action='version', version=__version__ )
-
-  # optional arguments
-  parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='enable debugging mode (default: false)') 
   
   args = parser.parse_args()
-  #sys.stderr.write("# parsed arguments: %s\n" % str(args))
-
   return args
 
 def check_dir(out_file):
@@ -108,23 +86,7 @@ def process_files(in_file, token_map_file, out_file):
         new_tokens.append(token_map[substr])
         pos += 1
         continue
- 
-      # check two tokens:
-      #if (pos+1)<num_tokens:
-      #  substr += ' ' + tokens[pos+1]
-      #  if substr in token_map:
-      #    new_tokens.append(token_map[substr])
-      #    pos += 2 
-      #    continue
-  
-      # check three tokens:
-      #if (pos+2)<num_tokens:
-      #  substr += ' ' + tokens[pos+2]
-      #  if substr in token_map:
-      #    new_tokens.append(token_map[substr])
-      #    pos += 3 
-      #    continue
-      
+     
       # no match
       new_tokens.append(tokens[pos])
       pos += 1
@@ -138,8 +100,6 @@ def process_files(in_file, token_map_file, out_file):
     new_line = re.sub(' \.([a-z]+) ', ' . \g<1> ', new_line) # .it 
     new_line = re.sub(' \. \.\. ', ' ... ', new_line) # . ..
 
-    #if eachline != new_line:
-    #  print "#\n  ", eachline, "\n  ", new_line
     ouf.write('%s\n' % new_line)
     line_id = line_id + 1
     if (line_id % 10000 == 0):
@@ -157,3 +117,21 @@ if __name__ == '__main__':
     sys.stderr.write('Debug mode\n')
 
   process_files(args.in_file, args.token_map_file, args.out_file)
+
+## Unused code ##
+      # check two tokens:
+      #if (pos+1)<num_tokens:
+      #  substr += ' ' + tokens[pos+1]
+      #  if substr in token_map:
+      #    new_tokens.append(token_map[substr])
+      #    pos += 2 
+      #    continue
+  
+      # check three tokens:
+      #if (pos+2)<num_tokens:
+      #  substr += ' ' + tokens[pos+2]
+      #  if substr in token_map:
+      #    new_tokens.append(token_map[substr])
+      #    pos += 3 
+      #    continue
+ 
