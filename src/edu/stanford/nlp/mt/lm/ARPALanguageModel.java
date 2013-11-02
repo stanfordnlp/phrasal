@@ -19,10 +19,6 @@ import edu.stanford.nlp.mt.base.TokenUtils;
  */
 public class ARPALanguageModel implements LanguageModel<IString> {
 
-  // public static final String USE_SRILM_PROPERTY = "SRILM";
-  // public static final boolean USE_SRILM =
-  // Boolean.parseBoolean(System.getProperty(USE_SRILM_PROPERTY, "false"));
-
   static boolean verbose = false;
 
   protected final String name;

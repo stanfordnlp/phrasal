@@ -22,7 +22,6 @@ public class LanguageModels {
 
   // Supported language models
   public static final String KEN_LM_TAG = "kenlm:";
-  public static final String SRI_LM_TAG = "srilm:";
 
   public static final int MAX_NGRAM_ORDER = 10;
 
@@ -67,14 +66,6 @@ public class LanguageModels {
       String realFilename = filename.substring(KEN_LM_TAG.length());
       languageModel = new KenLanguageModel(realFilename);
     
-    } else if (filename.startsWith(SRI_LM_TAG)) {
-      String realFilename = filename.substring(SRI_LM_TAG.length());
-      try {
-        languageModel = new SRILanguageModel(realFilename, vocabFilename);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-
     } else {
       // Default Java LM data structure
       languageModel = new ARPALanguageModel(filename);
