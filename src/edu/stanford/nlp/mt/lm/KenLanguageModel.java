@@ -1,6 +1,10 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
+
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.TokenUtils;
 
 import static java.lang.System.*;
 

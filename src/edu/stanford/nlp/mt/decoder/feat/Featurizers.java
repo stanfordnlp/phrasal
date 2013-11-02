@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.LanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 
 /**
  * 

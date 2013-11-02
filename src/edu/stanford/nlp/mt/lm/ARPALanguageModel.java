@@ -1,9 +1,17 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
 import java.util.WeakHashMap;
+
+import edu.stanford.nlp.mt.base.FixedLengthIntegerArrayRawIndex;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IntegerArrayRawIndex;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
  * 

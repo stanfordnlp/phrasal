@@ -1,4 +1,6 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
+
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * 

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.*;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.lm.ARPALanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModels;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -151,30 +154,6 @@ public class NGramLanguageModelFeaturizer implements
     }
   }
 
-  private double[][] getMultiScore(int startPos, int limit, Sequence<IString> translation) {
-    double[][] multiScore;
-    int order = lmOrder;
-    MultiScoreLanguageModel<IString> mlm = (MultiScoreLanguageModel<IString>)lm;
-    multiScore = new double[2][];
-    multiScore[0] = new double[order];
-    multiScore[1] = new double[order];
-
-    for (int pos = startPos; pos < limit; pos++) {
-      int seqStart = pos - order + 1;
-      if (seqStart < 0)
-        seqStart = 0;
-      Sequence<IString> ngram = translation.subsequence(seqStart, pos + 1);
-      double[] ngramScore = mlm.multiScore(ngram);
-      for (int i = 0; i < order; i++)  {
-        if (ngramScore[i] == Double.NEGATIVE_INFINITY) {
-          multiScore[1][i] ++;
-        } else {
-          multiScore[0][i] += ngramScore[i];
-        }
-      }
-    }
-    return multiScore;
-  }
   /**
 	 *
 	 */
@@ -217,30 +196,6 @@ public class NGramLanguageModelFeaturizer implements
       }
       int limit = partialTranslation.size();
       return getFeatureList(startPos, limit, partialTranslation);
-
-    } else if (lm instanceof MultiScoreLanguageModel) {
-      IString startToken = lm.getStartToken();
-      IString endToken = lm.getEndToken();
-
-      Sequence<IString> partialTranslation;
-      int startPos = f.targetPosition + 1;
-      if (f.done) {
-        partialTranslation = new InsertedStartEndToken<IString>(
-            f.targetPrefix, startToken, endToken);
-      } else {
-        partialTranslation = new InsertedStartToken<IString>(
-            f.targetPrefix, startToken);
-      }
-      int limit = partialTranslation.size();
-
-      double[][] lmScore = getMultiScore(startPos, limit, partialTranslation);
-      List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(
-          2*lmOrder);
-      for (int i = 0; i < lmOrder; i++) {
-        feats.add(new FeatureValue<String>(featureNames[0][i], lmScore[0][i]));
-        feats.add(new FeatureValue<String>(featureNames[1][i], lmScore[1][i]));
-      }
-      return feats;
 
     } else {
       if (DEBUG) {
@@ -334,17 +289,6 @@ public class NGramLanguageModelFeaturizer implements
     if (ngramReweighting) {
       return getFeatureList(0, f.targetPhrase.size(), f.targetPhrase);
     
-    } else if (lm instanceof MultiScoreLanguageModel) {
-      int limit = f.targetPhrase.size();
-      double[][] lmScore = getMultiScore(0, limit, f.targetPhrase);
-      List<FeatureValue<String>> feats = new ArrayList<FeatureValue<String>>(
-          2*lmOrder);
-      for (int i = 0; i < lmOrder; i++) {
-        feats.add(new FeatureValue<String>(featureNames[0][i], lmScore[0][i]));
-        feats.add(new FeatureValue<String>(featureNames[1][i], lmScore[1][i]));
-      }
-      return feats;
-
     } else {
       List<FeatureValue<String>> features = Generics.newLinkedList();
       assert (f.targetPhrase != null);

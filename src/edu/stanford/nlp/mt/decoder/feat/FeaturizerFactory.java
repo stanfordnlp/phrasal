@@ -5,7 +5,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.LanguageModels;
+import edu.stanford.nlp.mt.lm.LanguageModels;
 import edu.stanford.nlp.util.Generics;
 
 /**

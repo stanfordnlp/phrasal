@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.*;
 
@@ -6,6 +6,10 @@ import junit.framework.TestCase;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.lm.ARPALanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModels;
 
 /**
  * @author Karthik Raghunathan

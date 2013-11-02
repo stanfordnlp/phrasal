@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,6 +14,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
+
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.TokenUtils;
 
 public class DiskLM implements LanguageModel<IString> {
   protected final String name;

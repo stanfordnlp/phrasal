@@ -4,10 +4,10 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.FactoryUtil;
-import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizers;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 
 /**
  * 

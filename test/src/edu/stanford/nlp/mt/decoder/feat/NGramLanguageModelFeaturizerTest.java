@@ -4,7 +4,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.ARPALanguageModel;
+import edu.stanford.nlp.mt.lm.ARPALanguageModel;
 
 import java.io.*;
 
@@ -25,7 +25,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
       lm = (ARPALanguageModel) ARPALanguageModel
           .load("projects/mt/test/inputs/sampleLM.gz");
       featurizer = new NGramLanguageModelFeaturizer(
-          edu.stanford.nlp.mt.base.ARPALanguageModel
+          edu.stanford.nlp.mt.lm.ARPALanguageModel
               .load("projects/mt/test/inputs/tinyLM.test"));
     } catch (IOException e) {
       throw new RuntimeException(e);

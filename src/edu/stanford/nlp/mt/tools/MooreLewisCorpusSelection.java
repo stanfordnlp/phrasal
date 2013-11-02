@@ -10,10 +10,10 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.KenLanguageModel;
 import edu.stanford.nlp.mt.base.LineIndexedCorpus;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.lm.KenLanguageModel;
 
 /**
  * Moore-Lewis's "Intelligent Selection of Language Model Training Data" (ACL2010).

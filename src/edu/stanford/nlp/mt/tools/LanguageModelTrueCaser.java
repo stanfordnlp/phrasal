@@ -9,7 +9,6 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
@@ -30,6 +29,7 @@ import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;

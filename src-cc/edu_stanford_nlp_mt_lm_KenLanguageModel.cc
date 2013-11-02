@@ -1,4 +1,4 @@
-#include "edu_stanford_nlp_mt_base_KenLanguageModel.h"
+#include "edu_stanford_nlp_mt_lm_KenLanguageModel.h"
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
 
@@ -11,11 +11,11 @@ int last_model_id = -1;
 
 
 /*
- * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    readKenLM
  * Signature: (Ljava/lang/String;)Z
  */
-JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_readKenLM
+JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
   (JNIEnv *env, jobject thisJObj, jstring jlm_filename) {
   lm::ngram::ModelType model_type;
   jboolean isCopy;
@@ -63,11 +63,11 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_readKenLM
 }
 
 /*
- * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    getId
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_getId
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getId
   (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jstring jstr_token) {
   lm::base::Model* kenLM = models[kenLM_ptr];
   const char* token = env->GetStringUTFChars(jstr_token, NULL);
@@ -80,11 +80,11 @@ void scoreNgram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, double &score, bool &relPrefix);
 
 /*
- * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    scoreNGram
  * Signature: ([Ljava/lang/String;)D
  */
-JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_scoreNGram
+JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
   (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
 
 
@@ -97,11 +97,11 @@ JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_scoreNG
 }
 
 /*
- * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    relevantPrefixGram
  * Signature: (J[Ljava/lang/String;ZZ)Z
  */
-JNIEXPORT jboolean JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_relevantPrefixGram
+JNIEXPORT jboolean JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_relevantPrefixGram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
   double score;
   bool relPrefix;
@@ -150,11 +150,11 @@ void scoreNgram
 }
 
 /*
- * Class:     edu_stanford_nlp_mt_base_KenLanguageModel
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    getOrder
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_getOrder
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {
   lm::base::Model* kenLM = models[kenLM_ptr];
   return kenLM->Order();

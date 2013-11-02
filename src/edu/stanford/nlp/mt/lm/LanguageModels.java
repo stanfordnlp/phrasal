@@ -1,8 +1,14 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InsertedStartEndToken;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * Factory for loading n-gram language models. Also includes a main method for scoring

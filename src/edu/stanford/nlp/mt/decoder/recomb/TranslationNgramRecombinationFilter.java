@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 
 /**
  * 
