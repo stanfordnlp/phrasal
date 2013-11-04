@@ -35,9 +35,4 @@ public interface LanguageModel<T> {
 	 * 
 	 */
   int order();
-
-  /**
-	 * 
-	 */
-  boolean relevantPrefix(Sequence<T> sequence);
 }

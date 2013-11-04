@@ -16,4 +16,6 @@ public abstract class LMState {
   public abstract int hashCode();
   
   public double getScore() { return score; };
+  
+  public abstract int length();
 }

@@ -2,141 +2,85 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
+import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsState;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.lm.LanguageModel;
+import edu.stanford.nlp.mt.lm.LMState;
+import edu.stanford.nlp.util.Generics;
 
 /**
+ * Implements n-gram language model recombination.
  * 
- * @author danielcer
+ * @author Spence Green
  * 
- * @param <TK>
- * @param <FV>
  */
-public class TranslationNgramRecombinationFilter<TK extends IString, FV>
-    implements RecombinationFilter<Derivation<TK, FV>> {
-  final int tokenHistoryExamined;
-  final List<LanguageModel<TK>> lgModels;
-  static final boolean DETAILED_DEBUG = false;
+public class TranslationNgramRecombinationFilter
+        implements RecombinationFilter<Derivation<IString, String>> {
+
+  private final List<NeedsState<IString,String>> lmFeaturizers;
+
+  /**
+   * Constructor.
+   * 
+   * @param featurizers
+   */
+  public TranslationNgramRecombinationFilter(
+      List<Featurizer<IString, String>> featurizers) {
+    lmFeaturizers = Generics.newLinkedList();
+    for (Featurizer<IString,String> featurizer : featurizers) {
+      if (featurizer instanceof NGramLanguageModelFeaturizer) {
+        lmFeaturizers.add((NGramLanguageModelFeaturizer) featurizer);
+      }
+    }
+  }
 
   @Override
-  public Object clone() throws CloneNotSupportedException {
-    return super.clone();
-  }
-
-  public TranslationNgramRecombinationFilter(List<LanguageModel<TK>> lgModels,
-      int maxTokenHistoryExamined) {
-    if (maxTokenHistoryExamined <= 0) {
-      throw new RuntimeException(
-          String
-              .format(
-                  "Invalid token history size for TranslationNgramRecombinationFilter. Token history must be > 0, not %d.",
-                  maxTokenHistoryExamined));
-    }
-    int highestOrder = -1;
-    for (LanguageModel<TK> lm : lgModels) {
-      int order = lm.order();
-      if (order > highestOrder) {
-        highestOrder = order;
-      }
-    }
-    if (highestOrder < maxTokenHistoryExamined) {
-      this.tokenHistoryExamined = highestOrder - 1;
-    } else {
-      this.tokenHistoryExamined = maxTokenHistoryExamined;
-    }
-    this.lgModels = lgModels;
-  }
-
-  private Sequence<TK> getMaxNgram(Derivation<TK, FV> hyp,
-      LanguageModel<TK> lgModel) {
-    if (hyp.featurizable == null) {
-      return null;
-    }
-    Sequence<TK> trans = (!hyp.isDone() ? new InsertedStartToken<TK>(
-        hyp.featurizable.targetPrefix, lgModel.getStartToken())
-        : new InsertedStartEndToken<TK>(hyp.featurizable.targetPrefix,
-            lgModel.getStartToken(), lgModel.getEndToken()));
-    int transSize = trans.size();
-    if (transSize <= tokenHistoryExamined) {
-      return trans;
-    }
-    return trans.subsequence(transSize - tokenHistoryExamined, transSize);
-  }
-
-  public Sequence<TK> getNgram(Derivation<TK, FV> hyp) {
-    Sequence<TK> longestRelNgram = null;
-    for (LanguageModel<TK> lm : lgModels) {
-      Sequence<TK> maxNgram = getMaxNgram(hyp, lm);
-      if (maxNgram == null)
-        return null;
-      Sequence<TK> ngram = maxNgram;
-      int sz = maxNgram.size();
-      relPrefixSearch: for (int i = 0; i < sz; i++) {
-        ngram = maxNgram.subsequence(i, sz);
-        if (lm.relevantPrefix(ngram)) {
-          break relPrefixSearch;
-        }
-      }
-      if (longestRelNgram == null || longestRelNgram.size() < ngram.size()) {
-        longestRelNgram = ngram;
-      }
+  public boolean combinable(Derivation<IString, String> hypA, Derivation<IString, String> hypB) {
+    if (hypA.featurizable == null && hypB.featurizable == null) {
+      // null hypothesis
+      return true;
+    } else if (hypA.featurizable == null || hypB.featurizable == null) {
+      // one or the other is the null hypothesis
+      return false;
     }
 
-    return longestRelNgram;
-  }
+    for (NeedsState<IString,String> lmFeaturizer : lmFeaturizers) {
+      LMState stateA = (LMState) hypA.featurizable.getState(lmFeaturizer);
+      LMState stateB = (LMState) hypB.featurizable.getState(lmFeaturizer);
 
-  @SuppressWarnings("unused")
-  private boolean compareNgrams(RawSequence<TK> transA, RawSequence<TK> transB) {
-    int aPos = transA.elements.length - tokenHistoryExamined;
-    int bPos = transB.elements.length - tokenHistoryExamined;
-    int aLimit = transA.elements.length;
-
-    if (aPos < 0 || bPos < 0) {
-      if (aPos != bPos)
+      // Do the two states hash to the same bucket?
+      if ( ! (stateA.hashCode() == stateB.hashCode() &&
+              stateA.equals(stateB))) {
         return false;
-      aPos = bPos = 0;
+      }
     }
-
-    while (aPos < aLimit) {
-      if (transA.get(aPos++).id != transB.get(bPos++).id)
-        return false;
-    }
-
     return true;
   }
 
   @Override
-  public boolean combinable(Derivation<TK, FV> hypA, Derivation<TK, FV> hypB) {
-    if (hypA.featurizable == null && hypB.featurizable == null)
-      return true;
-    if (hypA.featurizable == null || hypB.featurizable == null)
-      return false;
-
-    /*
-     * RawSequence<TK> transA = hypA.featurizable.partialTranslationRaw;
-     * RawSequence<TK> transB = hypB.featurizable.partialTranslationRaw; return
-     * compareNgrams(transA, transB);
-     */
-
-    Sequence<TK> ngramA = getNgram(hypA);
-    Sequence<TK> ngramB = getNgram(hypB);
-    if (DETAILED_DEBUG) {
-      if (ngramA.equals(ngramB)) {
-        System.err.printf("hypA: %s\n", hypA.featurizable.targetPrefix);
-        System.err.printf("\tn-gram: %s\n", ngramA);
-        System.err.printf("hypB: %s\n", hypB.featurizable.targetPrefix);
-        System.err.printf("\tn-gram: %s\n", ngramB);
+  public long recombinationHashCode(Derivation<IString, String> hyp) {
+    if (hyp.featurizable == null) {
+      // null hypothesis. This hashCode doesn't actually matter because of the checks
+      // in the combinable() function above.
+      return hyp.sourceSequence.hashCode();
+    }
+    int maxLength = -1;
+    int hashCode = 0;
+    for (NeedsState<IString,String> lmFeaturizer : lmFeaturizers) {
+      LMState state = (LMState) hyp.featurizable.getState(lmFeaturizer);
+      if (state.length() > maxLength) {
+        maxLength = state.length();
+        hashCode = state.hashCode();
       }
     }
-    return (ngramA != null && ngramA.equals(ngramB));
+    assert maxLength >= 0;
+    return hashCode;
   }
-
+  
   @Override
-  public long recombinationHashCode(Derivation<TK, FV> hyp) {
-    Sequence<TK> ngram = getNgram(hyp);
-    if (ngram == null)
-      return 0;
-    return ngram.longHashCode();
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
   }
 }

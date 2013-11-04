@@ -18,10 +18,10 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    scoreNGram
- * Signature: (J[Ljava/lang/String;)Ledu/stanford/nlp/mt/lm/KenLMState;
+ * Signature: (J[I)Ledu/stanford/nlp/mt/lm/KenLMState;
  */
 JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
-  (JNIEnv *, jobject, jlong, jobjectArray);
+  (JNIEnv *, jobject, jlong, jintArray);
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel

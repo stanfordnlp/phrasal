@@ -264,16 +264,4 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   public int order() {
     return probs.length;
   }
-
-  @Override
-  public boolean relevantPrefix(Sequence<IString> prefix) {
-    if (prefix.size() > probs.length - 1)
-      return false;
-    int[] prefixInts = Sequences.toIntArray(prefix);
-    int index = tables[prefixInts.length - 1].getIndex(prefixInts);
-    if (index < 0)
-      return false;
-    double bow = bows[prefixInts.length - 1][index];
-    return !Double.isNaN(bow);
-  }
 }

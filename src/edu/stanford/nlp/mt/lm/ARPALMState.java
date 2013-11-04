@@ -42,4 +42,9 @@ public class ARPALMState extends LMState {
       return this.state.equals(otherState.state);
     }
   }
+
+  @Override
+  public int length() {
+    return state.size();
+  }
 }

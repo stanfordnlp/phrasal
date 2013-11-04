@@ -22,8 +22,8 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @author danielcer
  */
-public class NGramLanguageModelFeaturizer implements
-    DerivationFeaturizer<IString, String>, RuleIsolationScoreFeaturizer<IString, String> {
+public class NGramLanguageModelFeaturizer extends NeedsState<IString, String> implements
+   RuleIsolationScoreFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LM:";
   public static final String FEATURE_NAME = "LM";
   public static final String DEBUG_PROPERTY = "ngramLMFeaturizerDebug";
@@ -141,18 +141,20 @@ public class NGramLanguageModelFeaturizer implements
   }
 
   /**
+   * @param f 
 	 *
 	 */
-  private double getScore(int startPos, int limit, Sequence<IString> translation) {
+  private double getScore(int startPos, int limit, Sequence<IString> translation, Featurizable<IString, String> f) {
     double lmSumScore = 0;
     int order = lmOrder;
 
+    LMState state = null;
     for (int pos = startPos; pos < limit; pos++) {
       int seqStart = pos - order + 1;
       if (seqStart < 0)
         seqStart = 0;
       Sequence<IString> ngram = translation.subsequence(seqStart, pos + 1);
-      LMState state = lm.score(ngram);
+      state = lm.score(ngram);
       double ngramScore = state.getScore();
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         lmSumScore += MOSES_LM_UNKNOWN_WORD_SCORE;
@@ -163,6 +165,15 @@ public class NGramLanguageModelFeaturizer implements
         System.out.printf("\tn-gram: %s score: %f\n", ngram, ngramScore);
       }
     }
+    // The featurizer state is the result of the last n-gram query
+    if (f != null) {
+      // Don't set state for rule queries
+      if (state == null) {
+        // Target-deletion rule
+        state = (LMState) f.prior.getState(this);
+      }
+      f.setState(this, state);
+    } 
     return lmSumScore;
   }
 
@@ -180,6 +191,8 @@ public class NGramLanguageModelFeaturizer implements
     IString startToken = lm.getStartToken();
     IString endToken = lm.getEndToken();
 
+    // TODO(spenceg): If we remove targetPrefix---which we should---then we'd need to retrieve the
+    // prior state to perform this calculation.
     Sequence<IString> partialTranslation;
     int startPos = f.targetPosition + 1;
     if (f.done) {
@@ -191,7 +204,7 @@ public class NGramLanguageModelFeaturizer implements
     }
     int limit = partialTranslation.size();
 
-    double lmScore = getScore(startPos, limit, partialTranslation);
+    double lmScore = getScore(startPos, limit, partialTranslation, f);
 
     if (DEBUG) {
       System.out.printf("Final score: %f\n", lmScore);
@@ -224,7 +237,7 @@ public class NGramLanguageModelFeaturizer implements
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     assert (f.targetPhrase != null);
-    double lmScore = getScore(0, f.targetPhrase.size(), f.targetPhrase);
+    double lmScore = getScore(0, f.targetPhrase.size(), f.targetPhrase, null);
     if (SVMNORM) {
       features.add(new FeatureValue<String>(featureName, lmScore / 2.0));
     } else if (lengthNorm) {

@@ -104,8 +104,8 @@ public class LanguageModelTrueCaser implements TrueCaser {
       lgModels.add(lmFeaturizer.lm);
 
       // misc. decoder configuration
-      RecombinationFilter<Derivation<IString, String>> recombinationFilter = new TranslationNgramRecombinationFilter<IString, String>(
-          lgModels, Integer.MAX_VALUE);
+      RecombinationFilter<Derivation<IString, String>> recombinationFilter = 
+          new TranslationNgramRecombinationFilter(listFeaturizers);
       infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
       infererBuilder.setBeamCapacity(BEAM_SIZE);

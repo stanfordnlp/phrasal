@@ -1,20 +1,18 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
-import edu.stanford.nlp.mt.decoder.feat.Featurizers;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.lm.LanguageModel;
 
 /**
  * 
  * @author danielcer
  * 
  */
-public class RecombinationFilterFactory {
+public final class RecombinationFilterFactory {
   static public final String NO_RECOMBINATION = "norecombination";
   static public final String TRANSLATION_IDENTITY = "translationidentity";
   static public final String FOREIGN_COVERAGE = "foreigncoverage";
@@ -28,10 +26,7 @@ public class RecombinationFilterFactory {
   static public final String DTU_TRANSLATION_MODEL_MSD = "dtumsd";
   static public final String DEFAULT_RECOMBINATION_FILTER = TRANSLATION_IDENTITY;
 
-  static public final String TRANSLATION_NGRAM_PARAMETER = "ngramsize";
-
-  private RecombinationFilterFactory() {
-  }
+  private RecombinationFilterFactory() {}
 
   /**
 	 * 
@@ -39,6 +34,7 @@ public class RecombinationFilterFactory {
   static public RecombinationFilter<Derivation<IString, String>> factory(
       List<Featurizer<IString, String>> featurizers,
       boolean msdRecombination, String... rfSpecs) {
+    
     String rfName;
     if (rfSpecs.length == 0) {
       rfName = DEFAULT_RECOMBINATION_FILTER;
@@ -61,25 +57,6 @@ public class RecombinationFilterFactory {
       }
     }
 
-    Map<String, String> paramPairs = FactoryUtil.getParamPairs(rfSpecs);
-
-    // default to a history window that is appropriate for the highest order lm
-    List<LanguageModel<IString>> lgModels = Featurizers
-        .extractNGramLanguageModels(featurizers);
-    int ngramHistory = Integer.MAX_VALUE;
-    String ngramParamStr = paramPairs.get(TRANSLATION_NGRAM_PARAMETER);
-    if (ngramParamStr != null) {
-      try {
-        ngramHistory = Integer.parseInt(ngramParamStr);
-      } catch (NumberFormatException e) {
-        throw new RuntimeException(
-            String
-                .format(
-                    "RecombinationFilter option %s:%s can not be converted into an integer value",
-                    TRANSLATION_NGRAM_PARAMETER, ngramParamStr));
-      }
-    }
-
     if (rfName.equals(NO_RECOMBINATION)) {
       return new NoRecombination<Derivation<IString, String>>();
     } else if (rfName.equals(TRANSLATION_IDENTITY)) {
@@ -90,8 +67,7 @@ public class RecombinationFilterFactory {
     } else if (rfName.equals(LINEAR_DISTORTION)) {
       return new LinearDistortionRecombinationFilter<IString, String>();
     } else if (rfName.equals(TRANSLATION_NGRAM)) {
-      return new TranslationNgramRecombinationFilter<IString, String>(lgModels,
-          ngramHistory);
+      return new TranslationNgramRecombinationFilter(featurizers);
     } else if (rfName.equals(CLASSICAL_TRANSLATION_MODEL)
         || rfName.endsWith(CLASSICAL_TRANSLATION_MODEL_ALT)
         || rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD)) {
@@ -103,8 +79,7 @@ public class RecombinationFilterFactory {
 
       // maintain uniqueness of hypotheses that differ by the last N-tokens,
       // this being relevant to lg model scoring
-      filters.add(new TranslationNgramRecombinationFilter<IString, String>(
-          lgModels, ngramHistory));
+      filters.add(new TranslationNgramRecombinationFilter(featurizers));
 
       // maintain uniqueness of hypotheses that differ in terms of foreign
       // sequence coverage
@@ -130,8 +105,7 @@ public class RecombinationFilterFactory {
         || rfName.equals(DTU_TRANSLATION_MODEL_MSD)) {
       List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<RecombinationFilter<Derivation<IString, String>>>();
       filters.add(new LinearDistortionRecombinationFilter<IString, String>());
-      filters.add(new TranslationNgramRecombinationFilter<IString, String>(
-          lgModels, ngramHistory));
+      filters.add(new TranslationNgramRecombinationFilter(featurizers));
       filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
       filters.add(new DTURecombinationFilter<IString, String>());
       if (rfName.equals(DTU_TRANSLATION_MODEL_MSD))

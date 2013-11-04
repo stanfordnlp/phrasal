@@ -20,6 +20,7 @@ lm::ngram::ModelType model_types[MAX_MODELS];
 
 int last_model_id = -1;
 
+const double LOG_10 = log(10);
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -91,9 +92,6 @@ void scoreNgram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, int ngram_array[], int ngram_sz, double &score, lm::ngram::State &out_state) {
   lm::base::Model* kenLM = models[kenLM_ptr];
   lm::ngram::ModelType model_type = model_types[kenLM_ptr];
-  //  jint ngram_sz = env->GetArrayLength(jint_ngram);
-  //jint ngram_array[ngram_sz]; 
-  //env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
   
   switch(model_type) {
     case lm::ngram::PROBING:
@@ -123,29 +121,20 @@ void scoreNgram
  * Signature: ([Ljava/lang/String;)D
  */
 JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
-  (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jobjectArray stringArray) {
-  lm::base::Model* kenLM = models[kenLM_ptr];
-
-  // KenLM stores n-grams in reverse order relative to Phrasal
-  const int string_count = env->GetArrayLength(stringArray);
-  int int_ngram [string_count];
-  for (int i=0; i < string_count; ++i) {
-    jstring string = (jstring) env->GetObjectArrayElement(stringArray, i);
-    const char *rawString = env->GetStringUTFChars(string, 0);
-    int id = kenLM->BaseVocabulary().Index(rawString);
-    int_ngram[string_count-i-1] = id;
-    env->ReleaseStringUTFChars(string, rawString);
-  }
+  (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
+  // Convert the input to a C array
+  jint ngram_sz = env->GetArrayLength(jint_ngram);
+  jint ngram_array[ngram_sz]; 
+  env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
 
   // LM query
   double score;
   lm::ngram::State out_state;
-  scoreNgram(env, this_jobj, kenLM_ptr, int_ngram, string_count, score, out_state);
+  scoreNgram(env, this_jobj, kenLM_ptr, ngram_array, ngram_sz, score, out_state);
 
   // Phrasal expects natural log.
-  score *= log(10.0);
+  score *= LOG_10;
   
-  // TODO(spenceg): These could be cached for fast lookup
   jclass cls = env->FindClass("edu/stanford/nlp/mt/lm/KenLMState");
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(D[I)V");
 
@@ -153,8 +142,8 @@ JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGra
   int state_sz = (sizeof(out_state.words)/sizeof(*(out_state.words)));
   jintArray state = env->NewIntArray(state_sz);
   env->SetIntArrayRegion(state, 0, state_sz, (jint*) out_state.words);
-  jobject object = env->NewObject(cls, constructor, score, state);
-  return object;
+  jobject result = env->NewObject(cls, constructor, score, state);
+  return result;
 }
 
 /*

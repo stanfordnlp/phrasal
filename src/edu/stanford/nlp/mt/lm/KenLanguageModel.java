@@ -23,12 +23,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
   final int order;
   private long kenLMPtr;
   
-  private final int kenLMStartId;
-  private final int kenLMEndId;
+  private int[] istringIdToKenLMId;
   
   // JNI methods
   private native long readKenLM(String filename);
-  private native KenLMState scoreNGram(long kenLMPtr, String[] ngram);
+  private native KenLMState scoreNGram(long kenLMPtr, int[] ngram);
   private native int getId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
   
@@ -46,8 +45,37 @@ public class KenLanguageModel implements LanguageModel<IString> {
       } 
     }
     order = getOrder(kenLMPtr);
-    kenLMStartId = getId(kenLMPtr, TokenUtils.START_TOKEN.toString());
-    kenLMEndId = getId(kenLMPtr, TokenUtils.END_TOKEN.toString());
+    initializeIdTable();
+  }
+  
+  private void initializeIdTable() {
+    // Don't remove this line!! Sanity check to make sure that start and end load before
+    // building the index.
+    System.err.printf("Special tokens: start: %s  end: %s%n", TokenUtils.START_TOKEN.toString(),
+        TokenUtils.END_TOKEN.toString());
+    istringIdToKenLMId = new int[IString.index.size()];
+    for (int i = 0; i < istringIdToKenLMId.length; ++i) {
+      istringIdToKenLMId[i] = getId(kenLMPtr, IString.index.get(i));
+    }
+  }
+  
+  // TODO(spenceg): This should not happen unless we start adding
+  // target-side vocabulary on the fly (i.e., after the bitext has
+  // been loaded).
+  private synchronized void updateIdTable() {
+    int[] newTable = new int[IString.index.size()];
+    System.arraycopy(istringIdToKenLMId, 0, newTable, 0, istringIdToKenLMId.length);
+    for (int i = istringIdToKenLMId.length; i < newTable.length; ++i) {
+      newTable[i] = getId(kenLMPtr, IString.index.get(i));
+    }
+    istringIdToKenLMId = newTable;
+  }
+  
+  private int toKenLMId(IString token) {
+    if (token.id >= istringIdToKenLMId.length) {
+      updateIdTable();
+    }
+    return istringIdToKenLMId[token.id];
   }
   
   static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
@@ -57,11 +85,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
       sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
   }
   
-  private int[] ngramIds(Sequence<IString> ngram) {
+  private int[] toKenLMIds(Sequence<IString> ngram) {
     int[] ngramIds = new int[ngram.size()];
     for (int i = 0; i < ngramIds.length; i++) {
       // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[ngramIds.length-1-i] = getId(kenLMPtr, ngram.get(i).toString());
+      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(i));
     }
     return ngramIds;
   }
@@ -70,35 +98,13 @@ public class KenLanguageModel implements LanguageModel<IString> {
   public LMState score(Sequence<IString> sequence) {
     Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
     if (boundaryState != null) {
-      int[] stateIds = boundarySequenceToKenlm(boundaryState);
-      return new KenLMState(0.0, stateIds);
+      return new KenLMState(0.0, toKenLMIds(boundaryState));
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
-    KenLMState state = scoreNGram(kenLMPtr, Sequences.toStringArray(ngram));
+    KenLMState state = scoreNGram(kenLMPtr, toKenLMIds(ngram));
     return state;
   }
   
-  private int[] boundarySequenceToKenlm(Sequence<IString> boundaryState) {
-    int size = boundaryState.size();
-    int[] tokenIds = new int[size];
-    for (int i = 0; i < size; ++i) {
-      if (boundaryState.get(i).equals(TokenUtils.START_TOKEN)) {
-        tokenIds[i] = kenLMStartId;
-      } else if (boundaryState.get(i).equals(TokenUtils.END_TOKEN)) {
-        tokenIds[i] = kenLMEndId;
-      } else {
-        throw new RuntimeException("Non-boundary token in boundary state: " + boundaryState.get(i).toString());
-      }
-    }
-    return tokenIds;
-  }
-  
-  @Override
-  public boolean relevantPrefix(Sequence<IString> sequence) {
-    // TODO(spenceg): Deprecate this method
-    return true;    
-  }
-
   @Override
   public IString getStartToken() {
     return TokenUtils.START_TOKEN;

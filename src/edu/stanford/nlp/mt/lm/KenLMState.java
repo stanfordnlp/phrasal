@@ -35,4 +35,9 @@ public class KenLMState extends LMState {
   public int hashCode() {
     return hashCode;
   }
+
+  @Override
+  public int length() {
+    return state.length;
+  }
 }
