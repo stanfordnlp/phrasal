@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
-import java.io.*;
+import java.io.IOException;
 
 import junit.framework.TestCase;
 
@@ -42,7 +42,7 @@ public class ARPALanguageModelTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = lm.score(seq);
+    double score = lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 

@@ -4,9 +4,8 @@ import java.io.File;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.TokenUtils;
-
-import static java.lang.System.*;
 
 /**
  * KenLanguageModel - KenLM language model support via JNI.
@@ -16,40 +15,26 @@ import static java.lang.System.*;
  */
 public class KenLanguageModel implements LanguageModel<IString> {
   
-  final String name;
-  final int order;
-  
-  private native long readKenLM(String filename);
-  
-  private native double scoreNGram(long kenLMPtr, int[] ngram);
-  private native boolean relevantPrefixGram(long kenLMPtr, int[] ngram);
-  private native int getId(long kenLMPtr, String token);
-  
-  int[] idMap = new int[0];
-  
-  private int id(IString tok) {
-    if (tok.id >= idMap.length) {
-      int[] newIdMap = new int[IString.index.size()];
-      for (int i = 0; i < idMap.length; i++) {
-        newIdMap[i] = idMap[i];
-      }
-      for (int i = idMap.length; i < newIdMap.length; i++) {
-        newIdMap[i] = getId(kenLMPtr, IString.index.get(i));
-      }
-      idMap = newIdMap;
-    }
-    
-    return idMap[tok.id];
+  static {
+    System.load(System.getProperty("java.library.path") + "/libPhrasalKenLM.so");
   }
   
-  private native int getOrder(long kenLMPtr);
+  final String name;
+  final int order;
   private long kenLMPtr;
   
-  static final float LOG_10 = (float) Math.log(10);
-
+  private final int kenLMStartId;
+  private final int kenLMEndId;
+  
+  // JNI methods
+  private native long readKenLM(String filename);
+  private native KenLMState scoreNGram(long kenLMPtr, String[] ngram);
+  private native int getId(long kenLMPtr, String token);
+  private native int getOrder(long kenLMPtr);
+  
   public KenLanguageModel(String filename) {
     name = String.format("KenLM(%s)", filename);
-    err.println("Reading " + filename);
+    System.err.println("Reading " + filename);
     if (0 == (kenLMPtr = readKenLM(filename))) {
       File f = new File(filename);
       if (!f.exists()) {
@@ -60,48 +45,58 @@ public class KenLanguageModel implements LanguageModel<IString> {
         new RuntimeException(String.format("Error loading %s - file is likely corrupt or created with an incompatible version of kenlm", filename));
       } 
     }
-    order = getOrder(kenLMPtr);    
+    order = getOrder(kenLMPtr);
+    kenLMStartId = getId(kenLMPtr, TokenUtils.START_TOKEN.toString());
+    kenLMEndId = getId(kenLMPtr, TokenUtils.END_TOKEN.toString());
   }
   
   static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
-    Sequence<T> ngram;
     int sequenceSz = sequence.size();
     int maxOrder = (order < sequenceSz ? order : sequenceSz);
-
-    if (sequenceSz == maxOrder) {
-      ngram = sequence;
-    } else {
-      ngram = sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
-    }
-    return ngram;
+    return sequenceSz == maxOrder ? sequence :
+      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
   }
   
   private int[] ngramIds(Sequence<IString> ngram) {
     int[] ngramIds = new int[ngram.size()];
     for (int i = 0; i < ngramIds.length; i++) {
-      ngramIds[ngramIds.length-1-i] = id(ngram.get(i));
+      // Notice: ngramids are in reverse order vv. the Sequence
+      ngramIds[ngramIds.length-1-i] = getId(kenLMPtr, ngram.get(i).toString());
     }
     return ngramIds;
   }
 
   @Override
-  public double score(Sequence<IString> sequence) {
-    if (ARPALanguageModel.isBoundaryWord(sequence))
-      return 0.0;
+  public LMState score(Sequence<IString> sequence) {
+    Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
+    if (boundaryState != null) {
+      int[] stateIds = boundarySequenceToKenlm(boundaryState);
+      return new KenLMState(0.0, stateIds);
+    }
     Sequence<IString> ngram = clipNgram(sequence, order);
-    int[] ngramIds = ngramIds(ngram);
-    return LOG_10*scoreNGram(kenLMPtr, ngramIds);
+    KenLMState state = scoreNGram(kenLMPtr, Sequences.toStringArray(ngram));
+    return state;
   }
-      
+  
+  private int[] boundarySequenceToKenlm(Sequence<IString> boundaryState) {
+    int size = boundaryState.size();
+    int[] tokenIds = new int[size];
+    for (int i = 0; i < size; ++i) {
+      if (boundaryState.get(i).equals(TokenUtils.START_TOKEN)) {
+        tokenIds[i] = kenLMStartId;
+      } else if (boundaryState.get(i).equals(TokenUtils.END_TOKEN)) {
+        tokenIds[i] = kenLMEndId;
+      } else {
+        throw new RuntimeException("Non-boundary token in boundary state: " + boundaryState.get(i).toString());
+      }
+    }
+    return tokenIds;
+  }
+  
   @Override
   public boolean relevantPrefix(Sequence<IString> sequence) {
-    if (sequence.size() > order - 1) {
-      return false;
-    }
-    Sequence<IString> ngram = clipNgram(sequence, order);    
-    int[] ngramIds = ngramIds(ngram);       
-    
-    return relevantPrefixGram(kenLMPtr, ngramIds);    
+    // TODO(spenceg): Deprecate this method
+    return true;    
   }
 
   @Override
@@ -122,10 +117,5 @@ public class KenLanguageModel implements LanguageModel<IString> {
   @Override
   public int order() {
     return order;
-  }
-  
-  static {
-    System.load(System.getProperty("java.library.path") + "/libPhrasalKenLM.so");
-    //System.loadLibrary("PhrasalKenLM");
   }
 }

@@ -97,7 +97,7 @@ public class MooreLewisCorpusSelection {
 
     // compute entropy diff = -1/N*log p_in - (-1/N*log p_out) 
     int numNgrams = (istrings.length<order)?1 : (istrings.length-order+1); // N
-    return -inKenLM.score(sequence)/numNgrams + outKenLM.score(sequence)/numNgrams;
+    return -inKenLM.score(sequence).getScore()/numNgrams + outKenLM.score(sequence).getScore()/numNgrams;
   }
   
   

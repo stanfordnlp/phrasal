@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.lm;
 import edu.stanford.nlp.mt.base.Sequence;
 
 /**
+ * Interface for MT language models.
  * 
  * @author danielcer
  * 
@@ -13,7 +14,7 @@ public interface LanguageModel<T> {
   /**
 	 * 
 	 */
-  double score(Sequence<T> sequence);
+  LMState score(Sequence<T> sequence);
 
   /**
 	 * 

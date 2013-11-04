@@ -33,10 +33,8 @@ public class LanguageModels {
         lm.getEndToken());
     int sz = s.size();
     for (int i = 1; i < sz; i++) {
-
       Sequence<T> ngram = s.subsequence(0, i + 1);
-      double ngramScore = lm.score(ngram);
-      
+      double ngramScore = lm.score(ngram).getScore();
       if (ngramScore == Double.NEGATIVE_INFINITY) {
         // like sri lm's n-gram utility w.r.t. closed vocab models,
         // right now we silently ignore unknown words.
@@ -58,11 +56,7 @@ public class LanguageModels {
       return ARPALanguageModel.lmStore.get(filename);
 
     LanguageModel<IString> languageModel;
-
-    if (filename.endsWith(".disklm")) {
-      languageModel = new DiskLM(filename);
-    
-    } else if (filename.startsWith(KEN_LM_TAG)) {
+    if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
       languageModel = new KenLanguageModel(realFilename);
     
@@ -95,7 +89,6 @@ public class LanguageModels {
     double logSum = 0;
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
-      sent = sent.toLowerCase();
       Sequence<IString> seq = IStrings.tokenize(sent);
       double score = scoreSequence(lm, seq);
       logSum += Math.log(score);

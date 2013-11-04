@@ -41,13 +41,13 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = featurizer.lm.score(seq);
+    double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
   public void testConstructor2() throws IOException {
     NGramLanguageModelFeaturizer featurizer = new NGramLanguageModelFeaturizer(
-        lm, "sampleLM", false);
+        lm, "sampleLM");
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
     assertTrue(featurizer.featureName == "sampleLM");
@@ -55,7 +55,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = featurizer.lm.score(seq);
+    double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
@@ -68,7 +68,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = featurizer.lm.score(seq);
+    double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
@@ -81,7 +81,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = featurizer.lm.score(seq);
+    double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
@@ -94,7 +94,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = featurizer.lm.score(seq);
+    double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
@@ -107,7 +107,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = featurizer.lm.score(seq);
+    double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
