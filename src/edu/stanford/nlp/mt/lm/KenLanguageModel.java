@@ -4,7 +4,6 @@ import java.io.File;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
