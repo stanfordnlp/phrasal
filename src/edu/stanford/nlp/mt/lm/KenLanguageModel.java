@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
 
+import cern.colt.Arrays;
+
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
@@ -100,7 +102,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
       return new KenLMState(0.0, toKenLMIds(boundaryState));
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
-    KenLMState state = scoreNGram(kenLMPtr, toKenLMIds(ngram));
+    int[] ngramIds = toKenLMIds(ngram);
+    KenLMState state = scoreNGram(kenLMPtr, ngramIds);
     return state;
   }
   

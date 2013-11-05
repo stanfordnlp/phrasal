@@ -21,6 +21,8 @@ lm::ngram::ModelType model_types[MAX_MODELS];
 int last_model_id = -1;
 
 const double LOG_10 = log(10);
+jclass cls;
+jmethodID constructor;
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -134,14 +136,18 @@ JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGra
 
   // Phrasal expects natural log.
   score *= LOG_10;
-  
-  jclass cls = env->FindClass("edu/stanford/nlp/mt/lm/KenLMState");
-  jmethodID constructor = env->GetMethodID(cls, "<init>", "(D[I)V");
+
+  if (cls == NULL) {
+    jclass cls_local = env->FindClass("edu/stanford/nlp/mt/lm/KenLMState");
+    cls = (jclass)env->NewGlobalRef(cls_local);
+  }
+  if (constructor == NULL) {
+    constructor = env->GetMethodID(cls, "<init>", "(D[I)V");
+  }
 
   // Create the state object to return
-  int state_sz = (sizeof(out_state.words)/sizeof(*(out_state.words)));
-  jintArray state = env->NewIntArray(state_sz);
-  env->SetIntArrayRegion(state, 0, state_sz, (jint*) out_state.words);
+  jintArray state = env->NewIntArray(out_state.length);
+  env->SetIntArrayRegion(state, 0, out_state.length, (jint*) out_state.words);
   jobject result = env->NewObject(cls, constructor, score, state);
   return result;
 }
