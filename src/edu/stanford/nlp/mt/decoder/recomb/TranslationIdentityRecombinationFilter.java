@@ -43,7 +43,7 @@ public class TranslationIdentityRecombinationFilter<TK, FV> implements
     if (hyp.featurizable == null) {
       return 0;
     }
-    return hyp.featurizable.targetPrefix.longHashCode();
+    return hyp.featurizable.targetPrefix.hashCode();
   }
 
 }

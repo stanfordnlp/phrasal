@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
+import cern.colt.Arrays;
+
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
@@ -22,12 +24,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
     System.load(System.getProperty("java.library.path") + "/libPhrasalKenLM.so");
   }
   
-  private static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
   private static final ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
   
   private final String name;
   private final int order;
-  private long kenLMPtr;
+  private final long kenLMPtr;
   private final ByteBuffer stateBuffer;
   private int[] istringIdToKenLMId;
   
@@ -53,7 +54,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     order = getOrder(kenLMPtr);
     int maxOrder = getMaxOrder(kenLMPtr);
-    stateBuffer = ByteBuffer.allocateDirect((maxOrder-1)*SIZEOF_INT);
+    int sizeofInt = Integer.SIZE / Byte.SIZE;
+    stateBuffer = ByteBuffer.allocateDirect((maxOrder-1)*sizeofInt);
     initializeIdTable();
   }
   
