@@ -2,8 +2,6 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
 
-import cern.colt.Arrays;
-
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
