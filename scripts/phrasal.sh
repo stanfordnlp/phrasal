@@ -4,9 +4,10 @@
 # at the top of this script.
 # 
 # Author: Spence Green
+# Change: Thang Nov13 -- add verbose option.
 #
-if [ $# -ne 4 ]; then
-    echo Usage: `basename $0` var_file steps ini_file sys_name
+if [[ $# -ne 4 && $# -ne 5 ]]; then
+    echo "Usage: `basename $0` var_file steps ini_file sys_name [verbose]"
     echo
     echo "Use dashes and commas in the steps specification e.g. 1-3,6"
     echo
@@ -17,12 +18,19 @@ if [ $# -ne 4 ]; then
     echo "  4  Decode test set"
     echo "  5  Output results file"
     echo "  6  Generate a learning curve from an online run"
+    echo
+    echo "Verbose (optional): set to 1 to output detailed commands executed."
     exit 0
 fi
 VAR_FILE=$1
 EXEC_STEPS=$2
 INI_FILE=$3
 SYS_NAME=$4
+
+VERBOSE=0
+if [ $# -eq 5 ]; then
+  VERBOSE=$5
+fi
 
 # Process steps
 let s=0
@@ -60,7 +68,7 @@ function extract {
     FILTSET=$1
     PTABLEDIR=$2
     mkdir -p $PTABLEDIR
-    java $JAVA_OPTS $EXTRACTOR_OPTS edu.stanford.nlp.mt.train.PhraseExtract -threads $THREADS_EXTRACT -extractors $EXTRACTORS $EXTRACT_SET -fFilterCorpus $FILTSET $LO_ARGS $OTHER_EXTRACT_OPTS -outputDir $PTABLEDIR 2> ${PTABLEDIR}/extract.gz.log
+    execute "java $JAVA_OPTS $EXTRACTOR_OPTS edu.stanford.nlp.mt.train.PhraseExtract -threads $THREADS_EXTRACT -extractors $EXTRACTORS $EXTRACT_SET -fFilterCorpus $FILTSET $LO_ARGS $OTHER_EXTRACT_OPTS -outputDir $PTABLEDIR 2> ${PTABLEDIR}/extract.gz.log"
 }
 
 function tune-setup {
@@ -80,7 +88,7 @@ function tune-setup {
 function tune-batch {
     tune-setup    
 
-    phrasal-mert.pl \
+    execute "phrasal-mert.pl \
 	--opt-flags="$OPT_FLAGS" \
 	--working-dir="$TUNEDIR" \
 	--phrasal-flags="" \
@@ -88,7 +96,7 @@ function tune-batch {
 	--mert-java-flags="$JAVA_OPTS $MERT_OPTS" \
 	--nbest=$TUNE_NBEST $TUNE_FILE $TUNE_REF \
 	$OBJECTIVE $TUNE_INI_FILE \
-	>& logs/"$TUNERUNNAME".mert.log
+	>& logs/$TUNERUNNAME.mert.log"
 }
 
 #
@@ -113,15 +121,15 @@ function make-ini-from-batch-run {
 # Online tuning (e.g., Mira, PRO+SGD)
 #
 function tune-online {
-    tune-setup
+  tune-setup
     
-    java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.tune.OnlineTuner \
+  execute "java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.tune.OnlineTuner \
 	$TUNE_FILE $TUNE_REF \
 	$TUNE_INI_FILE \
 	$INITIAL_WTS \
 	-n $TUNERUNNAME \
-	$ONLINE_OPTS > logs/"$TUNERUNNAME".online.stdout 2>&1
-}
+	$ONLINE_OPTS > logs/$TUNERUNNAME.online.stdout 2>&1"
+ }
 
 #
 # Create the Phrasal ini file from an online tuning run
@@ -150,9 +158,9 @@ function decode {
 	ln -s $DECODE_SET $DECODE_FILE
     fi
     
-    java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
+    execute "java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
 	"$RUNNAME".ini \
-	< $DECODE_FILE > "$RUNNAME".trans 2> logs/"$RUNNAME".log
+	< $DECODE_FILE > "$RUNNAME".trans 2> logs/$RUNNAME.log"
 }
 
 #
@@ -186,6 +194,15 @@ function create-learn-curve {
 
 ######################################################################
 ######################################################################
+
+# Thang Nov13
+function execute {
+  if [ $VERBOSE -eq 1 ]; then
+    echo " Executing: $1"
+  fi
+
+  eval $1
+}
 
 function step-status {
     echo "### Running Step $1"
@@ -221,37 +238,43 @@ bookmark
 
 for step in ${STEPS[@]};
 do
-    if [ $step -eq 1 ]; then
-	step-status $step
-	extract $TUNE_SET $TUNE_PTABLE_DIR
+  if [ $step -eq 1 ]; then
+	  step-status "$step -- Extract phrases from dev set" 
+	  extract $TUNE_SET $TUNE_PTABLE_DIR
+  fi
+    
+  if [ $step -eq 2 ]; then
+	  step-status "$step -- Run tuning"
+    if [ $TUNE_MODE == "batch" ]; then
+        tune-batch
+    else
+        tune-online
     fi
-    if [ $step -eq 2 ]; then
-	step-status $step
-	if [ $TUNE_MODE == "batch" ]; then
-	    tune-batch
-	else
-	    tune-online
-	fi
-    fi
-    if [ $step -eq 3 ]; then
-	step-status $step
-	extract $DECODE_SET $DECODE_PTABLE_DIR
-    fi
-    if [ $step -eq 4 ]; then
-	step-status $step
-	if [ $TUNE_MODE == "batch" ]; then
+  fi
+    
+  if [ $step -eq 3 ]; then
+	  step-status "$step -- Extract phrases from test set"
+    extract $DECODE_SET $DECODE_PTABLE_DIR
+  fi
+    
+  if [ $step -eq 4 ]; then
+	  step-status "$step -- Decode test set"
+	  
+    if [ $TUNE_MODE == "batch" ]; then
 	    make-ini-from-batch-run
-	else
+	  else
 	    make-ini-from-online-run
-	fi
-	decode
-    fi
-    if [ $step -eq 5 ]; then
-	step-status $step
-	evaluate
-    fi
-    if [ $step -eq 6 ]; then
-	step-status $step
-	create-learn-curve
-    fi
+	  fi
+	  decode
+  fi
+    
+  if [ $step -eq 5 ]; then
+    step-status "$step -- Output results file"
+	  evaluate
+  fi
+    
+  if [ $step -eq 6 ]; then
+	  step-status "$step -- Generate a learning curve from an online run"
+	  create-learn-curve
+  fi
 done
