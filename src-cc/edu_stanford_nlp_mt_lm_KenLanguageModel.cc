@@ -4,7 +4,7 @@
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
 
-#define MAX_MODELS 128
+#include <iostream>
 
 // Verify that jint and lm::ngram::WordIndex are the same size.
 template<bool> struct StaticCheck {
@@ -16,12 +16,28 @@ template<> struct StaticCheck<true> {
 
 typedef StaticCheck<sizeof(jint) == sizeof(lm::WordIndex)>::StaticAssertionPassed FloatSize;
 
-lm::base::Model *models[MAX_MODELS];
-lm::ngram::ModelType model_types[MAX_MODELS];
-
-int last_model_id = -1;
-
 const double LOG_10 = log(10);
+
+class JNIString {
+  public:
+    JNIString(JNIEnv *env, jstring from) : env_(env), from_(from) {
+      jboolean isCopy;
+      local_ = env->GetStringUTFChars(from, &isCopy);
+      UTIL_THROW_IF(!local_, util::Exception, "GetStringUTFChars JNI call failed.");
+    }
+
+    ~JNIString() {
+      env_->ReleaseStringUTFChars(from_, local_);
+    }
+
+    const char *get() const { return local_; }
+
+  private:
+    JNIEnv *env_;
+    jstring from_;
+    const char *local_;
+};
+
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -30,49 +46,44 @@ const double LOG_10 = log(10);
  */
 JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
   (JNIEnv *env, jobject thisJObj, jstring jlm_filename) {
-  lm::ngram::ModelType model_type;
-  jboolean isCopy;
-
-  const char* lm_filename = env->GetStringUTFChars(jlm_filename, &isCopy);
-
-  lm::base::Model *kenLM = NULL;
-
-  if (lm_filename == NULL) {
-     return 0;
-  }
-
-  if (RecognizeBinary(lm_filename, model_type)) {
+  try {
+    JNIString filename(env, jlm_filename);
+#ifdef WITH_NPLM
+    if (lm::np::Model::Recognize(filename.get())) {
+      return reinterpret_cast<jlong>(new lm::np::Model(filename.get()));
+    }
+#endif
+    lm::base::Model *kenLM;
+    // Recognize with default probing for ARPA files.
+    lm::ngram::ModelType model_type = lm::ngram::PROBING;
+    RecognizeBinary(filename.get(), model_type);
     switch(model_type) {
       case lm::ngram::PROBING:
-        kenLM = new lm::ngram::ProbingModel(lm_filename);
+        kenLM = new lm::ngram::ProbingModel(filename.get());
         break;
       case lm::ngram::REST_PROBING:
-        kenLM = new lm::ngram::RestProbingModel(lm_filename);
+        kenLM = new lm::ngram::RestProbingModel(filename.get());
         break;
       case lm::ngram::TRIE:
-        kenLM = new lm::ngram::TrieModel(lm_filename);
+        kenLM = new lm::ngram::TrieModel(filename.get());
         break;
       case lm::ngram::QUANT_TRIE:
-        kenLM = new lm::ngram::QuantTrieModel(lm_filename);
+        kenLM = new lm::ngram::QuantTrieModel(filename.get());
         break;
       case lm::ngram::ARRAY_TRIE:
-        kenLM = new lm::ngram::ArrayTrieModel(lm_filename); 
+        kenLM = new lm::ngram::ArrayTrieModel(filename.get()); 
         break;
       case lm::ngram::QUANT_ARRAY_TRIE:
-        kenLM = new lm::ngram::QuantArrayTrieModel(lm_filename); 
+        kenLM = new lm::ngram::QuantArrayTrieModel(filename.get()); 
         break;
-    
+      default:
+        UTIL_THROW(util::Exception, "Unrecognized model type " << model_type);
     }
-  } else {
-    model_type = lm::ngram::PROBING;
-    kenLM = new lm::ngram::Model(lm_filename);
+    return reinterpret_cast<jlong>(kenLM);
+  } catch (const std::exception &e) {
+    std::cerr << e.what();
+    return 0;
   }
-
-  env->ReleaseStringUTFChars(jlm_filename, lm_filename);
-  last_model_id++;
-  models[last_model_id] = kenLM;
-  model_types[last_model_id] = model_type;
-  return (jlong)last_model_id;
 }
 
 /*
@@ -82,38 +93,8 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
  */
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getId
   (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jstring jstr_token) {
-  lm::base::Model* kenLM = models[kenLM_ptr];
-  const char* token = env->GetStringUTFChars(jstr_token, NULL);
-  int id = kenLM->BaseVocabulary().Index(token);
-  env->ReleaseStringUTFChars(jstr_token, token);
-  return id;
-}
-
-void scoreNgram
-(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, int ngram_array[], int ngram_sz, double &score, lm::ngram::State &out_state) {
-  lm::base::Model* kenLM = models[kenLM_ptr];
-  lm::ngram::ModelType model_type = model_types[kenLM_ptr];
-  
-  switch(model_type) {
-    case lm::ngram::PROBING:
-        score = ((lm::ngram::ProbingModel*)kenLM)->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], out_state).prob;
-        break;
-    case lm::ngram::REST_PROBING:
-        score = ((lm::ngram::RestProbingModel*)kenLM)->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], out_state).prob;
-        break;
-    case lm::ngram::TRIE:
-        score = ((lm::ngram::TrieModel*)kenLM)->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], out_state).prob;
-        break;
-    case lm::ngram::QUANT_TRIE:
-        score = ((lm::ngram::QuantTrieModel*)kenLM)->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], out_state).prob;
-        break;
-    case lm::ngram::ARRAY_TRIE:
-        score = ((lm::ngram::ArrayTrieModel*)kenLM)->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], out_state).prob;
-        break;
-    case lm::ngram::QUANT_ARRAY_TRIE:
-        score = ((lm::ngram::QuantArrayTrieModel*)kenLM)->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], out_state).prob;
-        break;
-  }
+  JNIString token(env, jstr_token);
+  return reinterpret_cast<lm::base::Model*>(kenLM_ptr)->BaseVocabulary().Index(token.get());
 }
 
 /*
@@ -123,17 +104,17 @@ void scoreNgram
  */
 JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, jobject buf) {
-  // Convert the input to a C array
+  // Convert the sequence input to a C array
   jint ngram_sz = env->GetArrayLength(jint_ngram);
   jint ngram_array[ngram_sz]; 
   env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
 
   // LM query
-  double score;
   lm::ngram::State out_state;
-  scoreNgram(env, this_jobj, kenLM_ptr, ngram_array, ngram_sz, score, out_state);
+  lm::base::Model* kenLM = reinterpret_cast<lm::base::Model*>(kenLM_ptr);
+  double score = kenLM->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], &out_state).prob;
 
-  // Copy the state
+  // Extract and copy the state
   jbyte *cBuf = (jbyte*) env->GetDirectBufferAddress(buf);
   out_state.ZeroRemaining();
   memcpy(cBuf, out_state.words, (KENLM_MAX_ORDER-1) * sizeof(int));
@@ -149,8 +130,7 @@ JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGra
  */
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {
-  lm::base::Model* kenLM = models[kenLM_ptr];
-  return kenLM->Order();
+  return reinterpret_cast<lm::base::Model*>(kenLM_ptr)->Order();
 }
 
 /*

@@ -7,8 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef edu_stanford_nlp_mt_lm_KenLanguageModel_SIZEOF_INT
-#define edu_stanford_nlp_mt_lm_KenLanguageModel_SIZEOF_INT 4L
+#undef edu_stanford_nlp_mt_lm_KenLanguageModel_POOL_MULTIPLIER
+#define edu_stanford_nlp_mt_lm_KenLanguageModel_POOL_MULTIPLIER 3L
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    readKenLM
