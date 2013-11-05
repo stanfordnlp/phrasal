@@ -25,6 +25,21 @@ public class KenLanguageModel implements LanguageModel<IString> {
   
   private static final ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
   
+  /**
+   * The efficiency of the LM queries is dependent on the speed with which
+   * the LM contexts can be returned from JNI. Presently, we create a fixed-size
+   * pool of byte arrays that are re-used across queries. allocateDirect() is extremely
+   * slow, so the pool is created at initialization. However, this means that buffers
+   * are subject to race conditions in the multi-threaded case. Therefore, we create
+   * a ring-buffer of size POOL_MULTIPLIER * numThreads with the assumption that no
+   * particular process is fast enough to occupy the whole ring-buffer. This is empirically
+   * true, but means that the possibility of a race condition still exists.
+   * 
+   * Don't change the JNI query interface (scoreNGram) without profiling. The obvious stuff is
+   * slow. Trust me.
+   */
+  private static final int POOL_MULTIPLIER = 3;
+  
   private final String name;
   private final int order;
   private final long kenLMPtr;
@@ -32,7 +47,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private int[] istringIdToKenLMId;
  
   private final AtomicInteger bufferPtr;
-  private final int numThreads;
   
   // JNI methods
   private native long readKenLM(String filename);
@@ -57,7 +71,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
    * @param numThreads
    */
   public KenLanguageModel(String filename, int numThreads) {
-    this.numThreads = numThreads;
     name = String.format("KenLM(%s)", filename);
     System.err.printf("KenLM: Reading %s (%d threads)%n", filename, numThreads);
     if (0 == (kenLMPtr = readKenLM(filename))) {
@@ -71,8 +84,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
     order = getOrder(kenLMPtr);
     int maxOrder = getMaxOrder(kenLMPtr);
     int sizeofInt = Integer.SIZE / Byte.SIZE;
-    stateBuffers = new ByteBuffer[numThreads];
-    for (int i = 0; i < numThreads; ++i) {
+    stateBuffers = new ByteBuffer[numThreads * POOL_MULTIPLIER];
+    for (int i = 0; i < stateBuffers.length; ++i) {
       stateBuffers[i] = ByteBuffer.allocateDirect((maxOrder-1)*sizeofInt);
     }
     bufferPtr = new AtomicInteger();
@@ -137,7 +150,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
     int[] ngramIds = toKenLMIds(ngram);
-    final int bufferIdx = numThreads > 1 ? bufferPtr.getAndIncrement() % numThreads : 0;
+    final int bufferIdx = stateBuffers.length > 1 ? bufferPtr.getAndIncrement() % stateBuffers.length : 0;
     ByteBuffer stateBuffer = stateBuffers[bufferIdx];
     double score = scoreNGram(kenLMPtr, ngramIds, stateBuffer);
     IntBuffer contextBuffer = stateBuffer.order(NATIVE_ORDER).asIntBuffer();
