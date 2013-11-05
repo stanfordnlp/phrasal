@@ -5,11 +5,6 @@
 	<contentEntry url="file://$MODULE_DIR$">
 		<testFolder url="file://$MODULE_DIR$/test/src"/>
 	</contentEntry>
-	<lib name="bsh.jar" scope="COMPILE">
-		<srcroot url="jar://$MODULE_DIR$/libsrc/bsh-2.0b4-src.zip!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/bsh-2.0b4-src.zip!/"/>
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/bsh.jar!/"/>
-	</lib>
 	<lib name="tokyocabinet.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tokyocabinet.jar!/"/>
 	</lib>
@@ -25,11 +20,6 @@
 	</lib>
 	<lib name="terp.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/terp.jar!/"/>
-	</lib>
-	<lib name="jopt-simple.jar" scope="COMPILE">
-		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-4.3-sources.jar!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-4.3-sources.jar!/"/>
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/jopt-simple.jar!/"/>
 	</lib>
 	<lib name="tercom.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
@@ -98,5 +88,10 @@
 	</lib>
 	<lib name="jetty-xml-9.0.4.v20130625.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-xml-9.0.4.v20130625.jar!/"/>
+	</lib>
+	<lib name="jopt-simple.jar" scope="COMPILE">
+		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-4.3-sources.jar!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-4.3-sources.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jopt-simple.jar!/"/>
 	</lib>
 </component>
