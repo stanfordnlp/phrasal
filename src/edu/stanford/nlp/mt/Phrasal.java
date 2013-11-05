@@ -702,11 +702,9 @@ public class Phrasal {
       System.err.printf("Language model: %s%n", lgModel);
     }
 
+    final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
+        : LinearFutureCostFeaturizer.class.getName();
     CombinedFeaturizer<IString, String> featurizer;
-
-    String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class
-        .getName() : LinearFutureCostFeaturizer.class.getName();
-
     if (lgModel != null) {
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
