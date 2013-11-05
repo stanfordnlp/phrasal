@@ -83,8 +83,8 @@ public class LanguageModelTrueCaser implements TrueCaser {
 
     // Read in LM & create LM featurizer
     try {
-      NGramLanguageModelFeaturizer lmFeaturizer = NGramLanguageModelFeaturizer
-          .fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
+      NGramLanguageModelFeaturizer lmFeaturizer = new NGramLanguageModelFeaturizer
+          (lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
       List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
       listFeaturizers.add(lmFeaturizer);
       CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(

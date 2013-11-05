@@ -22,7 +22,7 @@ public class ARPALanguageModelTest extends TestCase {
 
   static {
     try {
-      lm = (ARPALanguageModel) ARPALanguageModel
+      lm = (ARPALanguageModel) LanguageModels
           .load("projects/mt/test/inputs/sampleLM.gz");
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -52,7 +52,7 @@ public class ARPALanguageModelTest extends TestCase {
     for (String lmFile : lmFiles) {
       boolean goodLM = false;
       try {
-        ARPALanguageModel.load(lmFile);
+        LanguageModels.load(lmFile);
         goodLM = true;
       } catch (Exception e) {
       }

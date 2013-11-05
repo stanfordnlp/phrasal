@@ -184,7 +184,7 @@ public class Phrasal {
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
    */
-  private int numThreads = 1;
+  private static int numThreads = 1;
 
   /**
    * Hard distortion limit for phrase-based decoder
@@ -275,7 +275,7 @@ public class Phrasal {
   /**
    * @return the number of threads specified in the ini file.
    */
-  public int getNumThreads() { return numThreads; }
+  public static int getNumThreads() { return numThreads; }
   
   /**
    * Access the decoder's phrase table.
@@ -330,6 +330,11 @@ public class Phrasal {
     if (config.containsKey(RECOMBINATION_HEURISTIC)) {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
+    
+    if (config.containsKey(NUM_THREADS))
+      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
+    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    System.err.printf("Number of threads: %d%n", numThreads);
 
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
@@ -691,23 +696,9 @@ public class Phrasal {
     }
 
     // Create Featurizer
-    String lgModel = null, lgModelVoc = "";
+    String lgModel = null;
     if (config.containsKey(LANGUAGE_MODEL_OPT)) {
-      if (config.get(LANGUAGE_MODEL_OPT).size() == 1) {
-        lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-      } else if (config.get(LANGUAGE_MODEL_OPT).size() == 2) {
-        lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-        lgModelVoc = config.get(LANGUAGE_MODEL_OPT).get(1);
-      } else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
-        List<String> lmOpts = config.get(LANGUAGE_MODEL_OPT);
-        System.err.printf(
-            "Ignoring Moses factor & model order information: %s, %s, %s%n",
-            lmOpts.get(0), lmOpts.get(1), lmOpts.get(2));
-        lgModel = lmOpts.get(3);
-      } else {
-        throw new RuntimeException("Unsupported configuration "
-            + config.get(LANGUAGE_MODEL_OPT));
-      }
+      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
       System.err.printf("Language model: %s%n", lgModel);
     }
 
@@ -723,7 +714,7 @@ public class Phrasal {
             linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
         makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
-        makePair(FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc));
+        makePair(FeaturizerFactory.NUM_THREADS, String.valueOf(numThreads)));
     } else {
       featurizer = FeaturizerFactory.factory(
           FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
@@ -861,11 +852,6 @@ public class Phrasal {
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
     // Create Inferers and scorers
-    if (config.containsKey(NUM_THREADS))
-      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
-    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
-    System.err.printf("Number of threads: %d%n", numThreads);
-
     inferers = new ArrayList<Inferer<IString, String>>(numThreads);
     scorers = new ArrayList<Scorer<String>>(numThreads);
 

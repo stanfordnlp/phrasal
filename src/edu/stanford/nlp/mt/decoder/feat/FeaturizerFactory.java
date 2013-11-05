@@ -17,13 +17,11 @@ public class FeaturizerFactory {
   public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
   public static final String BASELINE_FEATURIZERS = "baseline";
   public static final String DEFAULT_WEIGHTING_BASELINE_FEATURIZERS = "weightedbaseline";
-  // public static final String WEIGHTED_NGRAM_MATCH = "weightedngrammatch";
   public static final String DEFAULT_FEATURIZERS = DEFAULT_WEIGHTING_BASELINE_FEATURIZERS;
   public static final String ARPA_LM_PARAMETER = "arpalm";
-  public static final String ARPA_LM_VOC_PARAMETER = "arpalmvoc";
+  public static final String NUM_THREADS = "nthreads";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
   public static final String GAP_PARAMETER = "gap";
-  // public static final String ADDITIONAL_FEATURIZER = "additionalfeaturizers";
 
 
   private FeaturizerFactory() { } // static class
@@ -71,16 +69,11 @@ public class FeaturizerFactory {
 	 */
   @SuppressWarnings("unchecked")
   public static CombinedFeaturizer<IString, String> factory(
-      String... featurizerSpecs) throws IOException {
-    String featurizerName;
-
-    if (featurizerSpecs.length == 0) {
-      featurizerName = DEFAULT_FEATURIZERS;
-    } else {
-      featurizerName = featurizerSpecs[0].toLowerCase();
-    }
-
-    Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
+      String...featurizerSpecs) throws IOException {
+    final String featurizerName = featurizerSpecs.length == 0 ? DEFAULT_FEATURIZERS :
+      featurizerSpecs[0].toLowerCase();
+    final Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
+    final int numThreads = paramPairs.containsKey(NUM_THREADS) ? Integer.valueOf(paramPairs.get(NUM_THREADS)) : 1;
 
     // Linear distortion
     final DerivationFeaturizer<IString, String> linearDistortionFeaturizer;
@@ -114,21 +107,16 @@ public class FeaturizerFactory {
       List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
       baselineFeaturizers.addAll(gapFeaturizers);
 
-      DerivationFeaturizer<IString, String> arpaLmFeaturizer;
+      DerivationFeaturizer<IString, String> arpaLmFeaturizer = null;
       Featurizer<IString,String> phraseTableScoresFeaturizer;
 
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
-      String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
-      // System.err.println("LM vocabulary file: "+lmVoc);
-      if (lmVoc == null || lmVoc.equals("")) {
+      if (lm != null && ! lm.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModels.load(lm));
-      } else {
-        arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModels.load(lm, lmVoc));
+            LanguageModels.load(lm, numThreads));
+        baselineFeaturizers.add(arpaLmFeaturizer);
       }
-      baselineFeaturizers.add(arpaLmFeaturizer);
 
       // Precomputed phrase to phrase translation scores
       phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
@@ -148,6 +136,7 @@ public class FeaturizerFactory {
             linearDistortionFeaturizer, arpaLmFeaturizer, collapsedTmFeaturizer);
         return new CombinedFeaturizer<IString, String>(fullModel);
       }
+    
     } else if (featurizerName.equals(PSEUDO_PHARAOH_GENERATOR)) {
       List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
       pharaohFeaturizers.addAll(gapFeaturizers);
@@ -156,16 +145,9 @@ public class FeaturizerFactory {
       Featurizer<IString,String> phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
-      String lmVoc = paramPairs.get(ARPA_LM_VOC_PARAMETER);
-      // System.err.println("LM vocabulary file: "+lmVoc);
       if (lm != null) {
-        if (lmVoc == null || lmVoc.equals("")) {
-          arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-              LanguageModels.load(lm));
-        } else {
-          arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-              LanguageModels.load(lm, lmVoc));
-        }
+        arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
+            LanguageModels.load(lm, numThreads));
         pharaohFeaturizers.add(arpaLmFeaturizer);
       }
 

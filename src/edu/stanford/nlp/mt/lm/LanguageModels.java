@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @author Spence Green
  *
  */
-public class LanguageModels {
+public final class LanguageModels {
 
   // Supported language models
   public static final String KEN_LM_TAG = "kenlm:";
@@ -46,19 +46,14 @@ public class LanguageModels {
   }
 
   public static LanguageModel<IString> load(String filename) throws IOException {
-    return load(filename, null);
+    return load(filename, 1);
   }
 
-  public static LanguageModel<IString> load(String filename,
-      String vocabFilename) throws IOException {
-    
-    if (ARPALanguageModel.lmStore.containsKey(filename))
-      return ARPALanguageModel.lmStore.get(filename);
-
+  public static LanguageModel<IString> load(String filename, int numThreads) throws IOException {
     LanguageModel<IString> languageModel;
     if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
-      languageModel = new KenLanguageModel(realFilename);
+      languageModel = new KenLanguageModel(realFilename, numThreads);
     
     } else {
       // Default Java LM data structure

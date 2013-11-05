@@ -4,8 +4,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-
-import cern.colt.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -29,8 +28,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private final String name;
   private final int order;
   private final long kenLMPtr;
-  private final ByteBuffer stateBuffer;
+  private final ByteBuffer[] stateBuffers;
   private int[] istringIdToKenLMId;
+ 
+  private final AtomicInteger bufferPtr;
+  private final int numThreads;
   
   // JNI methods
   private native long readKenLM(String filename);
@@ -38,16 +40,30 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private native int getId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
   private native int getMaxOrder(long kenLMPtr);
-  
+
+  /**
+   * Constructor for single-threaded usage.
+   * 
+   * @param filename
+   */
   public KenLanguageModel(String filename) {
+    this(filename,1);
+  }
+  
+  /**
+   * Constructor for multi-threaded queries.
+   * 
+   * @param filename
+   * @param numThreads
+   */
+  public KenLanguageModel(String filename, int numThreads) {
+    this.numThreads = numThreads;
     name = String.format("KenLM(%s)", filename);
-    System.err.println("Reading " + filename);
+    System.err.printf("KenLM: Reading %s (%d threads)%n", filename, numThreads);
     if (0 == (kenLMPtr = readKenLM(filename))) {
       File f = new File(filename);
       if (!f.exists()) {
         new RuntimeException(String.format("Error loading %s - file not found", filename));
-      } else if (f.isDirectory()) {
-        new RuntimeException(String.format("Error loading %s - path points to a directory not a file", filename));
       } else {
         new RuntimeException(String.format("Error loading %s - file is likely corrupt or created with an incompatible version of kenlm", filename));
       } 
@@ -55,7 +71,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
     order = getOrder(kenLMPtr);
     int maxOrder = getMaxOrder(kenLMPtr);
     int sizeofInt = Integer.SIZE / Byte.SIZE;
-    stateBuffer = ByteBuffer.allocateDirect((maxOrder-1)*sizeofInt);
+    stateBuffers = new ByteBuffer[numThreads];
+    for (int i = 0; i < numThreads; ++i) {
+      stateBuffers[i] = ByteBuffer.allocateDirect((maxOrder-1)*sizeofInt);
+    }
+    bufferPtr = new AtomicInteger();
     initializeIdTable();
   }
   
@@ -70,11 +90,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
   }
   
-  // TODO(spenceg): This should not happen unless we start adding
-  // target-side vocabulary on the fly (i.e., after the bitext has
-  // been loaded). Or this could happen if an unknown source word
-  // is passed through to the target.
-  private synchronized void updateIdTable() {
+  private void updateIdTable() {
     int[] newTable = new int[IString.index.size()];
     System.arraycopy(istringIdToKenLMId, 0, newTable, 0, istringIdToKenLMId.length);
     for (int i = istringIdToKenLMId.length; i < newTable.length; ++i) {
@@ -82,15 +98,22 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     istringIdToKenLMId = newTable;
   }
-  
-  private int toKenLMId(IString token) {
+
+  /**
+   * This must be a synchronized call for the case in which the IString
+   * vocabulary changes and we need to extend the lookup table.
+   * 
+   * @param token
+   * @return
+   */
+  private synchronized int toKenLMId(IString token) {
     if (token.id >= istringIdToKenLMId.length) {
       updateIdTable();
     }
     return istringIdToKenLMId[token.id];
   }
   
-  static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
+  private static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
     int sequenceSz = sequence.size();
     int maxOrder = (order < sequenceSz ? order : sequenceSz);
     return sequenceSz == maxOrder ? sequence :
@@ -114,6 +137,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
     int[] ngramIds = toKenLMIds(ngram);
+    final int bufferIdx = numThreads > 1 ? bufferPtr.getAndIncrement() % numThreads : 0;
+    ByteBuffer stateBuffer = stateBuffers[bufferIdx];
     double score = scoreNGram(kenLMPtr, ngramIds, stateBuffer);
     IntBuffer contextBuffer = stateBuffer.order(NATIVE_ORDER).asIntBuffer();
     int[] context = new int[contextBuffer.limit()];

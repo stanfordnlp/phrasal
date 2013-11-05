@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.lm;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
-import java.util.WeakHashMap;
 
 import edu.stanford.nlp.mt.base.FixedLengthIntegerArrayRawIndex;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -58,12 +57,6 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   protected static final int MAX_GRAM = 10; // highest order ngram possible
   protected static final float LOAD_MULTIPLIER = (float) 1.7;
-
-  protected static final WeakHashMap<String, ARPALanguageModel> lmStore = new WeakHashMap<String, ARPALanguageModel>();
-
-  public static LanguageModel<IString> load(String filename) throws IOException {
-    return LanguageModels.load(filename, null);
-  }
 
   public ARPALanguageModel(String filename) throws IOException {
     name = String.format("APRA(%s)", filename);

@@ -5,6 +5,7 @@ import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.lm.ARPALanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModels;
 
 import java.io.*;
 
@@ -22,11 +23,10 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
 
   static {
     try {
-      lm = (ARPALanguageModel) ARPALanguageModel
+      lm = (ARPALanguageModel) LanguageModels
           .load("projects/mt/test/inputs/sampleLM.gz");
       featurizer = new NGramLanguageModelFeaturizer(
-          edu.stanford.nlp.mt.lm.ARPALanguageModel
-              .load("projects/mt/test/inputs/tinyLM.test"));
+          LanguageModels.load("projects/mt/test/inputs/tinyLM.test"));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -99,7 +99,7 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
   }
 
   public void testFromFile() throws IOException {
-    featurizer = NGramLanguageModelFeaturizer.fromFile(
+    featurizer = new NGramLanguageModelFeaturizer(
         "projects/mt/test/inputs/sampleLM.gz", "sampleLM");
     assertTrue(featurizer.order() == 3);
     assertTrue(featurizer.lmOrder == 3);
@@ -110,16 +110,4 @@ public class NGramLanguageModelFeaturizerTest extends TestCase {
     double score = featurizer.lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
-
-  public void testExceptionInConstructor4(String lmFile) throws IOException {
-    new NGramLanguageModelFeaturizer(
-        "projects/mt/test/inputs/sampleLM.gz");
-  }
-
-  public void testExceptionInFromFile(
-      NGramLanguageModelFeaturizer featurizer) throws IOException {
-    featurizer = NGramLanguageModelFeaturizer
-        .fromFile("projects/mt/test/inputs/sampleLM.gz");
-  }
-
 }
