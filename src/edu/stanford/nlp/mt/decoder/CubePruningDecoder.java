@@ -28,9 +28,9 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
-  // 800 gives roughly the same baseline performance as the default beam size
+  // 1200 gives roughly the same baseline performance as the default beam size
   // of MultiBeamDecoder
-  public static final int DEFAULT_BEAM_SIZE = 800;
+  public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
   private final int maxDistortion;
@@ -137,7 +137,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Populate beam i by popping items and generating successors
       BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, i);
-      while (newBeam.size() < beamCapacity && ! pq.isEmpty()) {
+      int numPoppedItems = 0;
+      while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
 
         // Derivations can be null if the output space is constrained. This means that the derivation for this
@@ -151,6 +152,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
             sourceInputId, outputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
+        ++numPoppedItems;
       }
       beams.add(newBeam);
     }
