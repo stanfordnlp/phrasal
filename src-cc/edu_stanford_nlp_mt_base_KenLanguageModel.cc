@@ -33,6 +33,11 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_base_KenLanguageModel_readKenLM
   (JNIEnv *env, jobject thisJObj, jstring jlm_filename) {
   try {
     JNIString filename(env, jlm_filename);
+#ifdef WITH_NPLM
+    if (lm::np::Model::Recognize(filename.get())) {
+      return reinterpret_cast<jlong>(new lm::np::Model(filename.get()));
+    }
+#endif
     lm::base::Model *kenLM;
     // Recognize with default probing for ARPA files.
     lm::ngram::ModelType model_type = lm::ngram::PROBING;

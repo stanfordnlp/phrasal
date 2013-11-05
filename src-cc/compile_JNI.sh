@@ -1,6 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
-export CXXFLAGS="$CXXFLAGS -fPIC -DHAVE_ZLIB -lz"
+export CXXFLAGS="$CXXFLAGS -O3 -fPIC -DHAVE_ZLIB -lz"
+
+if [ ${#NPLM} != 0 ]; then
+  extra_flags="kenlm/wrappers/*.o -DHAVE_NPLM -lneuralLM -L$NPLM/src -I$NPLM/src -fopenmp"
+fi
+
 (cd kenlm; ./compile_query_only.sh)
 
 javah edu.stanford.nlp.mt.base.KenLanguageModel
