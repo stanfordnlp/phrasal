@@ -7,6 +7,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef edu_stanford_nlp_mt_lm_KenLanguageModel_SIZEOF_INT
+#define edu_stanford_nlp_mt_lm_KenLanguageModel_SIZEOF_INT 4L
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    readKenLM
@@ -18,10 +20,10 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    scoreNGram
- * Signature: (J[I)Ledu/stanford/nlp/mt/lm/KenLMState;
+ * Signature: (J[ILjava/nio/ByteBuffer;)D
  */
-JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
-  (JNIEnv *, jobject, jlong, jintArray);
+JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
+  (JNIEnv *, jobject, jlong, jintArray, jobject);
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -37,6 +39,14 @@ JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getId
  * Signature: (J)I
  */
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
+  (JNIEnv *, jobject, jlong);
+
+/*
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
+ * Method:    getMaxOrder
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getMaxOrder
   (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus

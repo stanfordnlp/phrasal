@@ -1,5 +1,6 @@
 #include <math.h>
 #include "edu_stanford_nlp_mt_lm_KenLanguageModel.h"
+#include "lm/max_order.hh"
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
 
@@ -21,8 +22,6 @@ lm::ngram::ModelType model_types[MAX_MODELS];
 int last_model_id = -1;
 
 const double LOG_10 = log(10);
-jclass cls;
-jmethodID constructor;
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -122,8 +121,8 @@ void scoreNgram
  * Method:    scoreNGram
  * Signature: ([Ljava/lang/String;)D
  */
-JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
-  (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
+JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
+(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, jobject buf) {
   // Convert the input to a C array
   jint ngram_sz = env->GetArrayLength(jint_ngram);
   jint ngram_array[ngram_sz]; 
@@ -134,22 +133,13 @@ JNIEXPORT jobject JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGra
   lm::ngram::State out_state;
   scoreNgram(env, this_jobj, kenLM_ptr, ngram_array, ngram_sz, score, out_state);
 
-  // Phrasal expects natural log.
-  score *= LOG_10;
+  // Copy the state
+  jbyte *cBuf = (jbyte*) env->GetDirectBufferAddress(buf);
+  out_state.ZeroRemaining();
+  memcpy(cBuf, out_state.words, (KENLM_MAX_ORDER-1) * sizeof(int));
 
-  if (cls == NULL) {
-    jclass cls_local = env->FindClass("edu/stanford/nlp/mt/lm/KenLMState");
-    cls = (jclass)env->NewGlobalRef(cls_local);
-  }
-  if (constructor == NULL) {
-    constructor = env->GetMethodID(cls, "<init>", "(D[I)V");
-  }
-
-  // Create the state object to return
-  jintArray state = env->NewIntArray(out_state.length);
-  env->SetIntArrayRegion(state, 0, out_state.length, (jint*) out_state.words);
-  jobject result = env->NewObject(cls, constructor, score, state);
-  return result;
+  // Phrasal expects natural log. Change base.
+  return score*LOG_10;
 }
 
 /*
@@ -163,4 +153,12 @@ JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   return kenLM->Order();
 }
 
-
+/*
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
+ * Method:    getMaxOrder
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getMaxOrder
+  (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {
+  return KENLM_MAX_ORDER;
+}

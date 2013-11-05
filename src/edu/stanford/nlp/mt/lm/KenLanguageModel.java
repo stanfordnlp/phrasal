@@ -1,6 +1,9 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -10,6 +13,7 @@ import edu.stanford.nlp.mt.base.TokenUtils;
  * KenLanguageModel - KenLM language model support via JNI.
  * 
  * @author daniel cer (danielcer@stanford.edu)
+ * @author Spence Green
  *
  */
 public class KenLanguageModel implements LanguageModel<IString> {
@@ -18,17 +22,21 @@ public class KenLanguageModel implements LanguageModel<IString> {
     System.load(System.getProperty("java.library.path") + "/libPhrasalKenLM.so");
   }
   
-  final String name;
-  final int order;
-  private long kenLMPtr;
+  private static final int SIZEOF_INT = Integer.SIZE / Byte.SIZE;
+  private static final ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
   
+  private final String name;
+  private final int order;
+  private long kenLMPtr;
+  private final ByteBuffer stateBuffer;
   private int[] istringIdToKenLMId;
   
   // JNI methods
   private native long readKenLM(String filename);
-  private native KenLMState scoreNGram(long kenLMPtr, int[] ngram);
+  private native double scoreNGram(long kenLMPtr, int[] ngram, ByteBuffer stateBuf);
   private native int getId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
+  private native int getMaxOrder(long kenLMPtr);
   
   public KenLanguageModel(String filename) {
     name = String.format("KenLM(%s)", filename);
@@ -44,6 +52,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
       } 
     }
     order = getOrder(kenLMPtr);
+    int maxOrder = getMaxOrder(kenLMPtr);
+    stateBuffer = ByteBuffer.allocateDirect((maxOrder-1)*SIZEOF_INT);
     initializeIdTable();
   }
   
@@ -60,7 +70,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
   
   // TODO(spenceg): This should not happen unless we start adding
   // target-side vocabulary on the fly (i.e., after the bitext has
-  // been loaded).
+  // been loaded). Or this could happen if an unknown source word
+  // is passed through to the target.
   private synchronized void updateIdTable() {
     int[] newTable = new int[IString.index.size()];
     System.arraycopy(istringIdToKenLMId, 0, newTable, 0, istringIdToKenLMId.length);
@@ -101,7 +112,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
     int[] ngramIds = toKenLMIds(ngram);
-    KenLMState state = scoreNGram(kenLMPtr, ngramIds);
+    double score = scoreNGram(kenLMPtr, ngramIds, stateBuffer);
+    IntBuffer contextBuffer = stateBuffer.order(NATIVE_ORDER).asIntBuffer();
+    int[] context = new int[contextBuffer.limit()];
+    contextBuffer.get(context);
+    KenLMState state = new KenLMState(score, context);
     return state;
   }
   
