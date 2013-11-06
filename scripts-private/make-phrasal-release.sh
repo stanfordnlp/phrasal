@@ -118,8 +118,6 @@ cd -
 # TODO: if these dependencies start getting more complicated, find an
 # automatic way to solve them (would need to make gen-dependencies
 # work across multiple directories)
-mkdir -p phrasal.$version/src/edu/stanford/nlp/lm
-cp ../more/src/edu/stanford/nlp/lm/* phrasal.$version/src/edu/stanford/nlp/lm || exit
 
 mkdir -p phrasal.$version/src/edu/stanford/nlp/stats
 cp ../more/src/edu/stanford/nlp/stats/OpenAddressCounter.java phrasal.$version/src/edu/stanford/nlp/stats/OpenAddressCounter.java || exit
