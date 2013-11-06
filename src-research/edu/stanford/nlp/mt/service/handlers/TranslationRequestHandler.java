@@ -148,12 +148,14 @@ public class TranslationRequestHandler implements RequestHandler {
           targets = Generics.newLinkedList();
           targets.add(t2t.e());
         }
-
+        
         // Decode
         final long decodeStart = System.nanoTime();
         List<RichTranslation<IString,String>> translations = 
             decoder.decode(source, input.inputId, threadId, input.n, targets, targets != null); 
-
+        logger.info(String.format("Input %d decoder: #translations: %d",
+            input.inputId, translations.size()));
+        
         // Result extraction and post-processing
         final long postprocStart = System.nanoTime();
         List<Sequence<IString>> translationList = Generics.newArrayList(translations.size());
@@ -306,7 +308,7 @@ public class TranslationRequestHandler implements RequestHandler {
   private void restartThreadpool(int sourceId) {
     logger.severe("Restarting threadpool for input id: " + String.valueOf(sourceId));
     wrapper.join();
-    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
+    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(Phrasal.getNumThreads(), 
         new DecoderService(0, decoder), false);
     logger.info("Restarted threadpool");
   }

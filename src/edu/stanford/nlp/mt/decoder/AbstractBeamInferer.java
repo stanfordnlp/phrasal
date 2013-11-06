@@ -83,8 +83,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         new RecombinationHistory<Derivation<TK, FV>>();
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         recombinationHistory, outputSpace, targets, size);
-    if (beam == null)
+    if (beam == null) {
+      // Decoder failure
       return null;
+    }
     List<Derivation<TK, FV>> goalStates = Generics.newArrayList(beam.size());
     for (Derivation<TK, FV> hyp : beam) {
       goalStates.add(hyp);
@@ -184,6 +186,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     });
 
     assert (!translations.isEmpty());
+    System.err.printf("source id %d: n-best list size: %d%n", sourceInputId, translations.size());
     Iterator<RichTranslation<TK, FV>> listIterator = translations.iterator();
     Featurizable<TK, FV> featurizable = listIterator.next().featurizable;
     if (featurizable != null && featurizable.done && featurizer != null)

@@ -130,7 +130,8 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
 
   private boolean exactMatch(Sequence<TK> prefix, Sequence<TK> rule) {
     if (prefix == null) {
-      return allowablePrefix.startsWith(rule);
+      return allowablePrefix.size() > rule.size() ? allowablePrefix.startsWith(rule) :
+        rule.startsWith(allowablePrefix);
 
     } else {
       int prefixLength = prefix.size();
