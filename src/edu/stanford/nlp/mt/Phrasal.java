@@ -183,6 +183,9 @@ public class Phrasal {
    * Number of decoding threads. Setting this parameter to 0 enables
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
+   * 
+   * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
+   * 
    */
   private static int numThreads = 1;
 
@@ -193,6 +196,8 @@ public class Phrasal {
 
   /**
    * DTU options
+   * 
+   * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
    */
   private static List<String> gapOpts = null;
   public static boolean withGaps = false;
@@ -248,7 +253,7 @@ public class Phrasal {
   /**
    * Recombination configuration.
    */
-  private static String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
+  private String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 
   /**
    * Pre/post processing filters.
@@ -284,6 +289,7 @@ public class Phrasal {
    */
   public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
   
+  // TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
   public static void initStaticMembers(Map<String, List<String>> config) {
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
@@ -303,8 +309,9 @@ public class Phrasal {
           .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
 
-    if (withGaps)
-      recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
+    numThreads = config.containsKey(NUM_THREADS) ? Integer.parseInt(config.get(NUM_THREADS).get(0)) : 1;
+    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    System.err.printf("Number of threads: %d%n", numThreads);
   }
 
   @SuppressWarnings("unchecked")
@@ -327,15 +334,12 @@ public class Phrasal {
           "The following fields are unrecognized: %s%n", extraFields));
     }
 
-    if (config.containsKey(RECOMBINATION_HEURISTIC)) {
+    if (withGaps) {
+      recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
+    } else if (config.containsKey(RECOMBINATION_HEURISTIC)) {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
     
-    if (config.containsKey(NUM_THREADS))
-      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
-    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
-    System.err.printf("Number of threads: %d%n", numThreads);
-
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
