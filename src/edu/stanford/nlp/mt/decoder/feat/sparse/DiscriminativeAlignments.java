@@ -112,23 +112,34 @@ RuleFeaturizer<IString,String> {
         }
         
       } else {
-        List<String> alignedWords = Generics.newArrayList(srcLength+tgtLength);
-        alignedWords.add(sourceRepresentation(srcWord));
+        List<String> alignedTargetWords = Generics.newArrayList(tgtLength);
+        List<String> alignedSourceWords = Generics.newArrayList(srcLength);
+        alignedSourceWords.add(sourceRepresentation(srcWord));
         for (int tgtIndex : alignments) {
-          alignedWords.add(targetRepresentation(f.targetPhrase.get(tgtIndex)));
+          alignedTargetWords.add(targetRepresentation(f.targetPhrase.get(tgtIndex)));
           if (hasMultipleAlignments.get(tgtIndex)) {
             int[] srcIndices = alignment.t2s(tgtIndex);
             for (int sIndex : srcIndices) {
               IString srcToken = f.sourcePhrase.get(sIndex);
-              alignedWords.add(sourceRepresentation(srcToken));
+              alignedSourceWords.add(sourceRepresentation(srcToken));
             }
           }
         }
+        
+        // Construct the feature string
         StringBuilder sb = new StringBuilder();
-        Collections.sort(alignedWords);
-        for (String token : alignedWords) {
+        Collections.sort(alignedSourceWords);
+        for (String token : alignedSourceWords) {
           if (sb.length() > 0) sb.append("-");
           sb.append(token);
+        }
+        sb.append(">");
+        Collections.sort(alignedTargetWords);
+        boolean seenFirst = false;
+        for (String token : alignedTargetWords) {
+          if (seenFirst) sb.append("-");
+          sb.append(token);
+          seenFirst = true;
         }
         features.add(new FeatureValue<String>(FEATURE_NAME + ":" + sb.toString(), 1.0));
       }
@@ -137,10 +148,10 @@ RuleFeaturizer<IString,String> {
   }
   
   private String sourceRepresentation(IString token) {
-    return "||" + (sourceClasses ? SourceClassMap.get(token).toString() : token.toString());
+    return sourceClasses ? SourceClassMap.get(token).toString() : token.toString();
   }
   
   private String targetRepresentation(IString token) {
-    return (targetClasses ? TargetClassMap.get(token).toString() : token.toString()) + "||";
+    return targetClasses ? TargetClassMap.get(token).toString() : token.toString();
   }
 }
