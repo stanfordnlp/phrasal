@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tools;
+package edu.stanford.nlp.mt.service.tools;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
