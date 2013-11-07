@@ -46,6 +46,9 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class TranslationRequestHandler implements RequestHandler {
 
+  private static final int DIVERSITY_WINDOW = 3;
+  private static final int NBEST_MULTIPLIER = 10;
+  
   private MulticoreWrapper<DecoderInput,DecoderOutput> wrapper;
   private final Phrasal decoder;
   
@@ -151,21 +154,41 @@ public class TranslationRequestHandler implements RequestHandler {
         
         // Decode
         final long decodeStart = System.nanoTime();
+        final int numRequestedTranslations = input.n;
+        final int numTranslationsToGenerate = input.n * NBEST_MULTIPLIER;
         List<RichTranslation<IString,String>> translations = 
-            decoder.decode(source, input.inputId, threadId, input.n, targets, targets != null); 
+            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, targets != null); 
         logger.info(String.format("Input %d decoder: #translations: %d",
             input.inputId, translations.size()));
         
         // Result extraction and post-processing
         final long postprocStart = System.nanoTime();
-        List<Sequence<IString>> translationList = Generics.newArrayList(translations.size());
-        List<List<String>> alignments = Generics.newArrayList(translations.size());
-        List<Double> scoreList = Generics.newArrayList(translations.size());
+        List<Sequence<IString>> translationList = Generics.newArrayList(numRequestedTranslations);
+        List<List<String>> alignments = Generics.newArrayList(numRequestedTranslations);
+        List<Double> scoreList = Generics.newArrayList(numRequestedTranslations);
+        
+        // Introduce additional diversity
+        Set<Sequence<IString>> diversityPool = Generics.newHashSet(translations.size());
+        final int startIndex = targets == null ? 0 : targets.get(0).size();
         for (RichTranslation<IString,String> translation : translations) {
+          if (translationList.size() == numRequestedTranslations) {
+            break;
+          }
           if (translation.translation.size() == 0) {
             // Input was simply deleted by the OOV model
             continue;
           }
+          
+          // Encourage diversity off the end of the prefix
+          final int maxIndex = Math.min(startIndex+DIVERSITY_WINDOW, translation.translation.size());
+          if (startIndex < maxIndex) {
+            Sequence<IString> window = translation.translation.subsequence(startIndex, maxIndex);
+            if (diversityPool.contains(window)) {
+              continue;
+            }
+            diversityPool.add(window);
+          }
+          
           SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
           SymmetricalWordAlignment tPrime2t = postprocessor == null ?
               identityAlignment(translation.translation) :
