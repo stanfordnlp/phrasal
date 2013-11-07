@@ -30,13 +30,11 @@ public final class LanguageModelFactory {
     if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
       languageModel = new KenLanguageModel(realFilename, numThreads);
-    
+
     } else {
       // Default Java LM data structure
       languageModel = new ARPALanguageModel(filename);
     }
     return languageModel;
   }
-
-
 }
