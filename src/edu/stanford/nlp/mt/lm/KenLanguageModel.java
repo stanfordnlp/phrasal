@@ -20,7 +20,7 @@ import edu.stanford.nlp.mt.base.TokenUtils;
 public class KenLanguageModel implements LanguageModel<IString> {
   
   static {
-    System.load(System.getProperty("java.library.path") + "/libPhrasalKenLM.so");
+    System.loadLibrary("PhrasalKenLM");
   }
   
   private static final ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
