@@ -10,10 +10,10 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.KenLanguageModel;
 import edu.stanford.nlp.mt.base.LineIndexedCorpus;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.lm.KenLanguageModel;
 
 /**
  * Moore-Lewis's "Intelligent Selection of Language Model Training Data" (ACL2010).
@@ -97,7 +97,7 @@ public class MooreLewisCorpusSelection {
 
     // compute entropy diff = -1/N*log p_in - (-1/N*log p_out) 
     int numNgrams = (istrings.length<order)?1 : (istrings.length-order+1); // N
-    return -inKenLM.score(sequence)/numNgrams + outKenLM.score(sequence)/numNgrams;
+    return -inKenLM.score(sequence).getScore()/numNgrams + outKenLM.score(sequence).getScore()/numNgrams;
   }
   
   

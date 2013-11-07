@@ -9,7 +9,6 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.LanguageModel;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.RichTranslation;
@@ -30,6 +29,7 @@ import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
@@ -83,8 +83,8 @@ public class LanguageModelTrueCaser implements TrueCaser {
 
     // Read in LM & create LM featurizer
     try {
-      NGramLanguageModelFeaturizer lmFeaturizer = NGramLanguageModelFeaturizer
-          .fromFile(lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
+      NGramLanguageModelFeaturizer lmFeaturizer = new NGramLanguageModelFeaturizer
+          (lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
       List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
       listFeaturizers.add(lmFeaturizer);
       CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
@@ -104,8 +104,8 @@ public class LanguageModelTrueCaser implements TrueCaser {
       lgModels.add(lmFeaturizer.lm);
 
       // misc. decoder configuration
-      RecombinationFilter<Derivation<IString, String>> recombinationFilter = new TranslationNgramRecombinationFilter<IString, String>(
-          lgModels, Integer.MAX_VALUE);
+      RecombinationFilter<Derivation<IString, String>> recombinationFilter = 
+          new TranslationNgramRecombinationFilter(listFeaturizers);
       infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
       infererBuilder.setBeamCapacity(BEAM_SIZE);

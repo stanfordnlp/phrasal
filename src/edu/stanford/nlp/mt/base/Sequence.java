@@ -40,11 +40,6 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>> {
   /**
    *
    */
-  public long longHashCode();
-
-  /**
-   *
-   */
   public boolean startsWith(Sequence<T> prefix);
 
   /**

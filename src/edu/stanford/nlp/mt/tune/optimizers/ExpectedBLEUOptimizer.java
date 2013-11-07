@@ -15,7 +15,7 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
- * Smooth MERT (Och 2003, Cherry and Foster 2012)
+ * Expected BLEU (Och 2003, Cherry and Foster 2012)
  * 
  * Optimizes: E_p_w(y|x) Loss(y) latex: \mathbb{E}_{p_\theta(y|x)} \ell (y)
  * 
@@ -33,20 +33,13 @@ import edu.stanford.nlp.stats.OpenAddressCounter;
  * @author Daniel Cer 
  *
  */
-public class SmoothMERT extends AbstractOnlineOptimizer {
+public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
 
    static public boolean VERBOSE = false;
    
-	public SmoothMERT(int tuneSetSize, int expectedNumFeatures, String[] args) {
+	public ExpectedBLEUOptimizer(int tuneSetSize, int expectedNumFeatures, String[] args) {
 		super(tuneSetSize, expectedNumFeatures, args);
 	}	
-
-	public SmoothMERT(int tuneSetSize, int expectedNumFeatures,
-		   int gamma, int xi, double nThreshold,
-			double sigma, double rate, String updaterType, double L1lambda,
-			String regconfig) {
-		super(tuneSetSize, expectedNumFeatures, sigma, rate, updaterType, L1lambda, regconfig);
-	}
 
    private double logZ(
          List<RichTranslation<IString, String>> translations,

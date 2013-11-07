@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.ARPALanguageModel;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -10,6 +9,7 @@ import edu.stanford.nlp.mt.base.LexicalReorderingTable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
  * 
@@ -25,7 +25,7 @@ public class LexicalReorderingFeaturizer implements
   final boolean DETAILED_DEBUG = false;
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
   public static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
-      ARPALanguageModel.START_TOKEN);
+      TokenUtils.START_TOKEN);
   final boolean useAlignmentConstellations;
 
   private static final double DEFAULT_DISCRIMINATIVE_FEATURE_VALUE = 1.0;

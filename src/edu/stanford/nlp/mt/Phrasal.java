@@ -99,7 +99,7 @@ public class Phrasal {
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
       .append("  -").append(RECOMBINATION_HEURISTIC).append(" name : See RecombinationFilterFactory javadocs.").append(nl)
-      .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: true)").append(nl)
+      .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
       .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
       .append("  -").append(PREPROCESSOR_FILTER).append(" language [opts] : Pre-processor to apply to source input.").append(nl)
@@ -184,7 +184,7 @@ public class Phrasal {
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
    */
-  private int numThreads = 1;
+  private static int numThreads = 1;
 
   /**
    * Hard distortion limit for phrase-based decoder
@@ -215,7 +215,7 @@ public class Phrasal {
   /**
    * Whether to filter unknown words in the output
    */
-  private boolean dropUnknownWords = true;
+  private boolean dropUnknownWords = false;
 
   /**
    * n-best list options
@@ -275,7 +275,7 @@ public class Phrasal {
   /**
    * @return the number of threads specified in the ini file.
    */
-  public int getNumThreads() { return numThreads; }
+  public static int getNumThreads() { return numThreads; }
   
   /**
    * Access the decoder's phrase table.
@@ -330,6 +330,11 @@ public class Phrasal {
     if (config.containsKey(RECOMBINATION_HEURISTIC)) {
       recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
     }
+    
+    if (config.containsKey(NUM_THREADS))
+      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
+    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    System.err.printf("Number of threads: %d%n", numThreads);
 
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
@@ -355,11 +360,23 @@ public class Phrasal {
       List<String> parameters = config.get(SOURCE_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Source class map requires a file argument");
       SourceClassMap.load(parameters.get(0));
+      if (parameters.size() == 2) {
+        SourceClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
+      }
+      if (parameters.size() == 3) {
+        SourceClassMap.setUnknownClass(parameters.get(2));
+      }
     }
     if (config.containsKey(TARGET_CLASS_MAP)) {
       List<String> parameters = config.get(TARGET_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Target class map requires a file argument");
       TargetClassMap.load(parameters.get(0));
+      if (parameters.size() == 2) {
+        TargetClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
+      }
+      if (parameters.size() == 3) {
+        TargetClassMap.setUnknownClass(parameters.get(2));
+      }
     }
     
     if (config.containsKey(FORCE_DECODE)) {
@@ -679,31 +696,15 @@ public class Phrasal {
     }
 
     // Create Featurizer
-    String lgModel = null, lgModelVoc = "";
+    String lgModel = null;
     if (config.containsKey(LANGUAGE_MODEL_OPT)) {
-      if (config.get(LANGUAGE_MODEL_OPT).size() == 1) {
-        lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-      } else if (config.get(LANGUAGE_MODEL_OPT).size() == 2) {
-        lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-        lgModelVoc = config.get(LANGUAGE_MODEL_OPT).get(1);
-      } else if (config.get(LANGUAGE_MODEL_OPT).size() == 4) {
-        List<String> lmOpts = config.get(LANGUAGE_MODEL_OPT);
-        System.err.printf(
-            "Ignoring Moses factor & model order information: %s, %s, %s%n",
-            lmOpts.get(0), lmOpts.get(1), lmOpts.get(2));
-        lgModel = lmOpts.get(3);
-      } else {
-        throw new RuntimeException("Unsupported configuration "
-            + config.get(LANGUAGE_MODEL_OPT));
-      }
+      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
       System.err.printf("Language model: %s%n", lgModel);
     }
 
+    final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
+        : LinearFutureCostFeaturizer.class.getName();
     CombinedFeaturizer<IString, String> featurizer;
-
-    String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class
-        .getName() : LinearFutureCostFeaturizer.class.getName();
-
     if (lgModel != null) {
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
@@ -711,7 +712,7 @@ public class Phrasal {
             linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
         makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
-        makePair(FeaturizerFactory.ARPA_LM_VOC_PARAMETER, lgModelVoc));
+        makePair(FeaturizerFactory.NUM_THREADS, String.valueOf(numThreads)));
     } else {
       featurizer = FeaturizerFactory.factory(
           FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
@@ -849,11 +850,6 @@ public class Phrasal {
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
     // Create Inferers and scorers
-    if (config.containsKey(NUM_THREADS))
-      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
-    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
-    System.err.printf("Number of threads: %d%n", numThreads);
-
     inferers = new ArrayList<Inferer<IString, String>>(numThreads);
     scorers = new ArrayList<Scorer<String>>(numThreads);
 

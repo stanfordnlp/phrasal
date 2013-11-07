@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 import edu.stanford.nlp.util.Index;
 

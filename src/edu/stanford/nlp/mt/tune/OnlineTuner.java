@@ -49,7 +49,7 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
-import edu.stanford.nlp.mt.tune.optimizers.SmoothMERT;
+import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -741,13 +741,14 @@ public class OnlineTuner {
       Counters.normalize(wtsAccumulator);
       return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
-    } else if (optimizerAlg.equals("smoothedMERT")) {
-       assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
-       assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
+    } else if (optimizerAlg.equals("expectedBLEU")) {
+       assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
+       assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
        Counters.normalize(wtsAccumulator);
-       return new SmoothMERT(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-     } else {
-      throw new UnsupportedOperationException("Unsupported optimizer: " + optimizerAlg);
+       return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+     
+    } else {
+      throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
   }
 

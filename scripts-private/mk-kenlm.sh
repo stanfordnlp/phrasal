@@ -20,7 +20,7 @@ if [ $# -le 3 ]; then
     exit
 fi
 
-KENLM_BIN=/u/nlp/packages/mosesdecoder/bin
+KENLM_BIN=/u/nlp/packages/kenlm/bin
 MAKELM=${KENLM_BIN}/lmplz
 MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp

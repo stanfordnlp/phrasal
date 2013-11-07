@@ -17,13 +17,13 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.log.PhrasalLogger;
 import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
-import edu.stanford.nlp.util.Characters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -44,9 +44,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class MakeWordClasses {
 
-  private static final IString START_TOKEN = new IString("<s>");
-  public static final IString NUMBER_TOKEN = new IString("#NUM#");
-  
   private final int numIterations;
   private final int numClasses;
   private final int numThreads;
@@ -105,7 +102,7 @@ public class MakeWordClasses {
     logger.info("#classes: " + String.valueOf(numClasses));
     logger.info("order: " + String.valueOf(order));
     if (mapNumbersToToken) {
-      logger.info("Mapping all numbers to " + NUMBER_TOKEN.toString());
+      logger.info("Mapping all numbers to " + TokenUtils.NUMBER_TOKEN.toString());
     }
     
     // Internal data structures
@@ -116,20 +113,10 @@ public class MakeWordClasses {
     classHistoryCount = new TwoDimensionalCounter<Integer,NgramHistory>();
   }
   
-  public static boolean isNumbersAndPunctuation(String token) {
-    for (int i = 0; i < token.length(); ++i) {
-      char c = token.charAt(i);
-      if ( ! (Character.isDigit(c) || Characters.isPunctuation(c))) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   private void initialize(String[] filenames) throws IOException {
     List<IString> defaultHistory = Generics.newLinkedList();
     for (int i = 0; i < order-1; ++i) {
-      defaultHistory.add(START_TOKEN);
+      defaultHistory.add(TokenUtils.START_TOKEN);
     }
     // Read the vocabulary and histories
     final long startTime = System.nanoTime();
@@ -140,8 +127,8 @@ public class MakeWordClasses {
         Sequence<IString> tokens = IStrings.tokenize(line.trim());
         List<IString> history = Generics.newLinkedList(defaultHistory);
         for (IString token : tokens) {
-          if (mapNumbersToToken && isNumbersAndPunctuation(token.toString())) {
-            token = NUMBER_TOKEN;
+          if (mapNumbersToToken && TokenUtils.isNumbersOrPunctuation(token.toString())) {
+            token = TokenUtils.NUMBER_TOKEN;
           }
           wordCount.incrementCount(token);
           historyCount.incrementCount(token, new NgramHistory(history));

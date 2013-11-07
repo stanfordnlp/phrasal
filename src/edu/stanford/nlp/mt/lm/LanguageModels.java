@@ -1,8 +1,14 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InsertedStartEndToken;
+import edu.stanford.nlp.mt.base.Sequence;
 
 /**
  * Factory for loading n-gram language models. Also includes a main method for scoring
@@ -12,11 +18,10 @@ import java.io.LineNumberReader;
  * @author Spence Green
  *
  */
-public class LanguageModels {
+public final class LanguageModels {
 
   // Supported language models
   public static final String KEN_LM_TAG = "kenlm:";
-  public static final String SRI_LM_TAG = "srilm:";
 
   public static final int MAX_NGRAM_ORDER = 10;
 
@@ -28,10 +33,8 @@ public class LanguageModels {
         lm.getEndToken());
     int sz = s.size();
     for (int i = 1; i < sz; i++) {
-
       Sequence<T> ngram = s.subsequence(0, i + 1);
-      double ngramScore = lm.score(ngram);
-      
+      double ngramScore = lm.score(ngram).getScore();
       if (ngramScore == Double.NEGATIVE_INFINITY) {
         // like sri lm's n-gram utility w.r.t. closed vocab models,
         // right now we silently ignore unknown words.
@@ -43,32 +46,15 @@ public class LanguageModels {
   }
 
   public static LanguageModel<IString> load(String filename) throws IOException {
-    return load(filename, null);
+    return load(filename, 1);
   }
 
-  public static LanguageModel<IString> load(String filename,
-      String vocabFilename) throws IOException {
-    
-    if (ARPALanguageModel.lmStore.containsKey(filename))
-      return ARPALanguageModel.lmStore.get(filename);
-
+  public static LanguageModel<IString> load(String filename, int numThreads) throws IOException {
     LanguageModel<IString> languageModel;
-
-    if (filename.endsWith(".disklm")) {
-      languageModel = new DiskLM(filename);
-    
-    } else if (filename.startsWith(KEN_LM_TAG)) {
+    if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
-      languageModel = new KenLanguageModel(realFilename);
+      languageModel = new KenLanguageModel(realFilename, numThreads);
     
-    } else if (filename.startsWith(SRI_LM_TAG)) {
-      String realFilename = filename.substring(SRI_LM_TAG.length());
-      try {
-        languageModel = new SRILanguageModel(realFilename, vocabFilename);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-
     } else {
       // Default Java LM data structure
       languageModel = new ARPALanguageModel(filename);
@@ -98,7 +84,6 @@ public class LanguageModels {
     double logSum = 0;
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
-      sent = sent.toLowerCase();
       Sequence<IString> seq = IStrings.tokenize(sent);
       double score = scoreSequence(lm, seq);
       logSum += Math.log(score);

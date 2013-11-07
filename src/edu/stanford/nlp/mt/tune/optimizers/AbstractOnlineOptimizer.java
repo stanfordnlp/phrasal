@@ -49,7 +49,7 @@ abstract public class AbstractOnlineOptimizer implements
    final Random random;
 
    public AbstractOnlineOptimizer(int tuneSetSize, int expectedNumFeatures,
-         String... args) {
+         String...args) {
       this(tuneSetSize, expectedNumFeatures,
             args != null && args.length > 0 ? Double.parseDouble(args[0]) : DEFAULT_SIGMA, 
             args != null && args.length > 1 ? Double.parseDouble(args[1]) : DEFAULT_RATE, 

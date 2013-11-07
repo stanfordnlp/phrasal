@@ -1,26 +1,31 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+
+import edu.stanford.nlp.mt.base.FixedLengthIntegerArrayRawIndex;
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IntegerArrayRawIndex;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
+ * A pure Java implementation of an n-gram language model loaded from
+ * an ARPA-format file.
  * 
  * @author Daniel Cer
  */
 public class ARPALanguageModel implements LanguageModel<IString> {
 
-  // public static final String USE_SRILM_PROPERTY = "SRILM";
-  // public static final boolean USE_SRILM =
-  // Boolean.parseBoolean(System.getProperty(USE_SRILM_PROPERTY, "false"));
-
   static boolean verbose = false;
 
   protected final String name;
-  public static final IString START_TOKEN = new IString("<s>");
-  public static final IString END_TOKEN = new IString("</s>");
-  public static final IString UNK_TOKEN = new IString("<unk>");
+  
+  private static final RawSequence<IString> EMPTY_SEQUENCE = new RawSequence<IString>();
   
   @Override
   public String getName() {
@@ -29,12 +34,12 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   @Override
   public IString getStartToken() {
-    return START_TOKEN;
+    return TokenUtils.START_TOKEN;
   }
 
   @Override
   public IString getEndToken() {
-    return END_TOKEN;
+    return TokenUtils.END_TOKEN;
   }
 
   protected static String readLineNonNull(LineNumberReader reader)
@@ -52,12 +57,6 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   protected static final int MAX_GRAM = 10; // highest order ngram possible
   protected static final float LOAD_MULTIPLIER = (float) 1.7;
-
-  protected static final WeakHashMap<String, ARPALanguageModel> lmStore = new WeakHashMap<String, ARPALanguageModel>();
-
-  public static LanguageModel<IString> load(String filename) throws IOException {
-    return LanguageModels.load(filename, null);
-  }
 
   public ARPALanguageModel(String filename) throws IOException {
     name = String.format("APRA(%s)", filename);
@@ -175,7 +174,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
    * p(wd2|wd1)= if(bigram exists) p_2(wd1,wd2) else bo_wt_1(wd1)*p_1(wd2)
    * 
    */
-  protected double scoreR(Sequence<IString> sequence) {
+  protected LMState scoreR(Sequence<IString> sequence) {
     int[] ngramInts = Sequences.toIntArray(sequence);
     int index;
 
@@ -183,25 +182,33 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     if (index >= 0) { // found a match
       double p = probs[ngramInts.length - 1][index];
       if (verbose)
-        System.err.printf("EM: scoreR: seq: %s logp: %f\n", sequence.toString(), p);
-      return p;
+        System.err.printf("EM: scoreR: seq: %s logp: %f%n", sequence.toString(), p);
+      return new ARPALMState(p, sequence.subsequence(0, sequence.size()-1));
     }
+    
+    // OOV
     if (ngramInts.length == 1) {
-      return Double.NEGATIVE_INFINITY; // OOV
+      return new ARPALMState(Double.NEGATIVE_INFINITY, EMPTY_SEQUENCE);
     }
+    
+    // Backoff recursively
     Sequence<IString> prefix = sequence.subsequence(0, ngramInts.length - 1);
     int[] prefixInts = Sequences.toIntArray(prefix);
     index = tables[prefixInts.length - 1].getIndex(prefixInts);
     double bow = 0;
-    if (index >= 0)
+    if (index >= 0) {
       bow = bows[prefixInts.length - 1][index];
-    if (Double.isNaN(bow))
+    }
+    if (Double.isNaN(bow)) {
       bow = 0.0; // treat NaNs as bow that are not found at all
-    double p = bow + scoreR(sequence.subsequence(1, ngramInts.length));
-    if (verbose)
+    }
+    LMState state = scoreR(sequence.subsequence(1, ngramInts.length));
+    double p = bow + state.getScore();
+    if (verbose) {
       System.err.printf("scoreR: seq: %s logp: %f [%f] bow: %f\n",
           sequence.toString(), p, p / Math.log(10), bow);
-    return p;
+    }
+    return new ARPALMState(p, (ARPALMState) state);
   }
 
   /**
@@ -210,57 +217,44 @@ public class ARPALanguageModel implements LanguageModel<IString> {
    * only useful if the translation hypothesis contains explicit <s> and </s>,
    * and always returns false otherwise.
    */
-  static boolean isBoundaryWord(Sequence<IString> sequence) {
-    if (sequence.size() == 2 && sequence.get(0).equals(START_TOKEN)
-        && sequence.get(1).equals(START_TOKEN)) {
-      return true;
+  static Sequence<IString> isBoundaryWord(Sequence<IString> sequence) {
+    if (sequence.size() == 2 && sequence.get(0).equals(TokenUtils.START_TOKEN)
+        && sequence.get(1).equals(TokenUtils.START_TOKEN)) {
+      return sequence.subsequence(0, 1);
     }
     if (sequence.size() > 1) {
       int last = sequence.size() - 1;
-      IString endTok = END_TOKEN;
+      IString endTok = TokenUtils.END_TOKEN;
       if (sequence.get(last).equals(endTok)
           && sequence.get(last - 1).equals(endTok)) {
-        return true;
+        return sequence.subsequence(last-1, last);
       }
     }
-    return false;
+    return null;
   }
 
   @Override
-  public double score(Sequence<IString> sequence) {
-    if (isBoundaryWord(sequence))
-      return 0.0;
-    Sequence<IString> ngram;
+  public LMState score(Sequence<IString> sequence) {
+    Sequence<IString> boundaryState = isBoundaryWord(sequence);
+    if (boundaryState != null) {
+      return new ARPALMState(0.0, boundaryState);
+    }
+    
+    // Query the LM
     int sequenceSz = sequence.size();
     int maxOrder = (probs.length < sequenceSz ? probs.length : sequenceSz);
-
-    if (sequenceSz == maxOrder) {
-      ngram = sequence;
-    } else {
-      ngram = sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
-    }
-
-    double score = scoreR(ngram);
-    if (verbose)
+    Sequence<IString> ngram = sequenceSz == maxOrder ? sequence :
+      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
+    LMState state = scoreR(ngram);
+    if (verbose) {
       System.err.printf("score: seq: %s logp: %f [%f]\n", sequence.toString(),
-          score, score / Math.log(10));
-    return score;
+          state.getScore(), state.getScore() / Math.log(10));
+    }
+    return state;
   }
 
   @Override
   public int order() {
     return probs.length;
-  }
-
-  @Override
-  public boolean releventPrefix(Sequence<IString> prefix) {
-    if (prefix.size() > probs.length - 1)
-      return false;
-    int[] prefixInts = Sequences.toIntArray(prefix);
-    int index = tables[prefixInts.length - 1].getIndex(prefixInts);
-    if (index < 0)
-      return false;
-    double bow = bows[prefixInts.length - 1][index];
-    return !Double.isNaN(bow);
   }
 }

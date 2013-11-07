@@ -1,10 +1,12 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <T>
  */
@@ -122,67 +124,43 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
     public int size() {
       return size;
     }
-
   }
 
-  private long hashCode = Long.MAX_VALUE;
-
-  @Override
-  public long longHashCode() {
-    if (hashCode != Long.MAX_VALUE) {
-      return hashCode;
-    }
-
-    hashCode = 0;
-    long mul = 0x5DEECE66DL;
-    long offset = 0xBL;
-    int sz = size();
-
-    // okay, this is slightly evil
-    // but, previously we were spend alot of time in IString#hashCode()
-    if (sz != 0 && get(0) instanceof IString) {
-      for (int i = 0; i < sz; i++) {
-        T token = get(i);
-        hashCode = mul * hashCode + offset;
-        hashCode += mul * ((IString) token).id + offset;
-      }
-    } else {
-      for (int i = 0; i < sz; i++) {
-        T token = get(i);
-        hashCode = mul * hashCode + offset;
-        hashCode += mul * token.hashCode() + offset;
-      }
-    }
-
-    return hashCode;
-  }
+  private int hashCode = Integer.MAX_VALUE;
 
   @Override
   public int hashCode() {
-    return (int) (longHashCode());
+    if (hashCode == Integer.MAX_VALUE) {
+      int sz = size();
+      int[] codes = new int[sz];
+      for (int i = 0; i < sz; ++i) {
+        codes[i] = get(i).hashCode();
+      }
+      hashCode = Arrays.hashCode(codes);
+    }
+    return hashCode;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean equals(Object o) {
-    if (!(o instanceof Sequence))
+    if (this == o) {
+      return true;
+    } else if ( ! (o instanceof Sequence)) {
       return false;
-    @SuppressWarnings("unchecked")
-    Sequence<T> seq = (Sequence<T>) o;
-    int size = this.size();
-    if (size != seq.size())
-      return false;
-    if (size != 0 && get(0) instanceof IString) {
-      for (int i = 0; i < size; i++) {
-        if (((IString) get(i)).id != ((IString) seq.get(i)).id)
-          return false;
-      }
     } else {
-      for (int i = 0; i < size; i++) {
-        if (!this.get(i).equals(seq.get(i)))
-          return false;
+      Sequence<T> other = (Sequence<T>) o;
+      final int sz = size();
+      if (sz != other.size()) {
+        return false;
       }
+      for (int i = 0; i < sz; ++i) {
+        if ( ! this.get(i).equals(other.get(i))) {
+          return false;
+        }
+      }
+      return true;
     }
-    return true;
   }
 
   @Override
@@ -208,43 +186,13 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 
   @Override
   public boolean startsWith(Sequence<T> prefix) {
-    int prefixSize = prefix.size();
-    if (prefixSize > this.size())
+    final int prefixSize = prefix.size();
+    if (prefixSize > this.size()) {
       return false;
-    if (prefixSize != 0 && get(0) instanceof IString) {
-      for (int i = 0; i < prefixSize; i++) {
-        if (((IString) get(i)).id != ((IString) prefix.get(i)).id)
-          return false;
-      }
-    } else {
-      for (int i = 0; i < prefixSize; i++) {
-        if (!this.get(i).equals(prefix.get(i)))
-          return false;
-      }
     }
-    return true;
-  }
-
-  public boolean noisyEquals(Object o) {
-    if (!(o instanceof Sequence))
-      return false;
-    @SuppressWarnings("unchecked")
-    Sequence<IString> seq = (Sequence<IString>) o;
-    int size = this.size();
-    System.err.printf("sizes: %d %d\n", size, seq.size());
-    if (size != seq.size())
-      return false;
-    if (size != 0 && get(0) instanceof IString) {
-      for (int i = 0; i < size; i++) {
-        System.err.printf("%s: %s vs. %s\n", i, ((IString) get(i)).id,
-            seq.get(i).id);
-        if (((IString) get(i)).id != (seq.get(i)).id)
-          return false;
-      }
-    } else {
-      for (int i = 0; i < size; i++) {
-        if (!this.get(i).equals(seq.get(i)))
-          return false;
+    for (int i = 0; i < prefixSize; i++) {
+      if ( ! this.get(i).equals(prefix.get(i))) {
+        return false;
       }
     }
     return true;

@@ -1,11 +1,15 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.lm;
 
-import java.io.*;
+import java.io.IOException;
 
 import junit.framework.TestCase;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.lm.ARPALanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModels;
 
 /**
  * @author Karthik Raghunathan
@@ -18,7 +22,7 @@ public class ARPALanguageModelTest extends TestCase {
 
   static {
     try {
-      lm = (ARPALanguageModel) ARPALanguageModel
+      lm = (ARPALanguageModel) LanguageModels
           .load("projects/mt/test/inputs/sampleLM.gz");
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -38,7 +42,7 @@ public class ARPALanguageModelTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = lm.score(seq);
+    double score = lm.score(seq).getScore();
     assertTrue(score == (double) -8.227797508239746);
   }
 
@@ -48,7 +52,7 @@ public class ARPALanguageModelTest extends TestCase {
     for (String lmFile : lmFiles) {
       boolean goodLM = false;
       try {
-        ARPALanguageModel.load(lmFile);
+        LanguageModels.load(lmFile);
         goodLM = true;
       } catch (Exception e) {
       }
