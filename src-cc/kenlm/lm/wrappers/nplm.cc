@@ -7,6 +7,9 @@
 
 #include "neuralLM.h"
 
+// TODO make configurable.
+const std::size_t kCacheSize = 1000000;
+
 namespace lm {
 namespace np {
 
@@ -47,6 +50,7 @@ FullScoreReturn Model::FullScore(const State &from, const WordIndex new_word, St
   nplm::neuralLM *lm = backend_.get();
   if (!lm) {
     lm = new nplm::neuralLM(*base_instance_);
+    lm->set_cache(kCacheSize);
     backend_.reset(lm);
   }
   // State is in natural word order.
