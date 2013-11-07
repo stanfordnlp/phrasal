@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.lm;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,24 +9,19 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.lm.LanguageModel;
+import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 
 /**
- * Factory for loading n-gram language models. Also includes a main method for scoring
- * sequences with a language model.
- *
+ * Evaluate the perplexity of an input file under a language model.
+ * 
  * @author danielcer
- * @author Spence Green
  *
  */
-public final class LanguageModels {
-
-  // Supported language models
-  public static final String KEN_LM_TAG = "kenlm:";
-
-  public static final int MAX_NGRAM_ORDER = 10;
-
-  private LanguageModels() {}
-
+public final class LanguageModelPerplexity {
+  
+  private LanguageModelPerplexity() {}
+  
   public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
     double logP = 0;
     Sequence<T> s = new InsertedStartEndToken<T>(s2, lm.getStartToken(),
@@ -44,24 +39,7 @@ public final class LanguageModels {
     }
     return logP;
   }
-
-  public static LanguageModel<IString> load(String filename) throws IOException {
-    return load(filename, 1);
-  }
-
-  public static LanguageModel<IString> load(String filename, int numThreads) throws IOException {
-    LanguageModel<IString> languageModel;
-    if (filename.startsWith(KEN_LM_TAG)) {
-      String realFilename = filename.substring(KEN_LM_TAG.length());
-      languageModel = new KenLanguageModel(realFilename, numThreads);
-    
-    } else {
-      // Default Java LM data structure
-      languageModel = new ARPALanguageModel(filename);
-    }
-    return languageModel;
-  }
-
+  
   /**
    * 
    * @param args
@@ -69,13 +47,13 @@ public final class LanguageModels {
   public static void main(String[] args) throws IOException {
     if (args.length == 0) {
       System.err
-          .printf("Usage: java %s type:path [input_file] < input_file%n", LanguageModels.class.getName());
+          .printf("Usage: java %s type:path [input_file] < input_file%n", LanguageModelPerplexity.class.getName());
       System.exit(-1);
     }
 
     String model = args[0];
     System.out.printf("Loading lm: %s...%n", model);
-    LanguageModel<IString> lm = load(model);
+    LanguageModel<IString> lm = LanguageModelFactory.load(model);
 
     LineNumberReader reader = (args.length == 1) ? 
         new LineNumberReader(new InputStreamReader(System.in)) :
