@@ -207,10 +207,10 @@ public final class Messages {
     }
     @Override
     public String toString() {
-      String nl = System.getProperty("line.separator");
       StringBuilder sb = new StringBuilder();
       for (RuleQuery query : result) {
-        sb.append("[ ").append(query.toString()).append(" ]").append(nl);
+        if (sb.length() > 0) sb.append(" ");
+        sb.append("[ ").append(query.toString()).append(" ]");
       }
       return sb.toString();
     }
