@@ -4,6 +4,10 @@
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
 
+#ifdef HAVE_NPLM
+#include "lm/wrappers/nplm.hh"
+#endif
+
 #include <iostream>
 
 // Verify that jint and lm::ngram::WordIndex are the same size.
@@ -50,6 +54,7 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
     JNIString filename(env, jlm_filename);
 #ifdef HAVE_NPLM
     if (lm::np::Model::Recognize(filename.get())) {
+      std::cerr << "WITH_NPLM " << filename.get() << std::endl; 
       return reinterpret_cast<jlong>(new lm::np::Model(filename.get()));
     }
 #endif
