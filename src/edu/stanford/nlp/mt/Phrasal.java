@@ -772,7 +772,7 @@ public class Phrasal {
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
       }
       if (config.containsKey(DISTORTION_WT_OPT)) {
-        weightVector.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
+        weightVector.setCount(LinearFutureCostFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
 
         if (config.get(DISTORTION_WT_OPT).size() > 1) {
