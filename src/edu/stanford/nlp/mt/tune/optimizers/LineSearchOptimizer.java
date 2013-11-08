@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
-import edu.stanford.nlp.mt.decoder.feat.WordPenaltyFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;

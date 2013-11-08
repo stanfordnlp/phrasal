@@ -4,8 +4,8 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
-import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.util.Generics;

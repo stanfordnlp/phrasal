@@ -7,6 +7,12 @@ import java.util.Map;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.PhraseTableScoresFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.SourceGapFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.TargetGapFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.util.Generics;
 
