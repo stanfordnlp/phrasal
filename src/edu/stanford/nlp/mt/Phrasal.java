@@ -50,7 +50,6 @@ import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
-import edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.*;
