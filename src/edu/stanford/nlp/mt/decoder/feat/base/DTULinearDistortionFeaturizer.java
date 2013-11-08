@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 
 /**
  * @author Michel Galley
@@ -50,6 +51,13 @@ public class DTULinearDistortionFeaturizer extends
     System.err.println("Future cost delay: " + futureCostDelay);
   }
 
+  private static int lastOptionForeignEdge(Derivation<IString, String> hyp) {
+    if (hyp.rule == null) {
+      return 0;
+    }
+    return hyp.rule.sourceCoverage.length();
+  }
+  
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
@@ -88,8 +96,9 @@ public class DTULinearDistortionFeaturizer extends
       futureCost = (1.0f - futureCostDelay)
           * LinearFutureCostFeaturizer.futureCost(f) + futureCostDelay
           * oldFutureCost;
-      f.setState(this, new FutureCostState(futureCost));
     }
+    int edge = lastOptionForeignEdge(f.derivation);
+    f.setState(this, new FutureCostState(edge, futureCost));
     float deltaCost = futureCost - oldFutureCost;
     int cost = LinearFutureCostFeaturizer.cost(f);
     list.add(new FeatureValue<String>(LD_FEATURE_NAME, -1.0
@@ -128,8 +137,10 @@ public class DTULinearDistortionFeaturizer extends
   private static class FutureCostState extends FeaturizerState {
 
     private final float f;
+    private final int edge;
 
-    public FutureCostState(float f) {
+    public FutureCostState(int edge, float f) {
+      this.edge = edge;
       this.f = f;
     }
     
@@ -141,13 +152,13 @@ public class DTULinearDistortionFeaturizer extends
         return false;
       } else {
         FutureCostState o = (FutureCostState) other;
-        return this.f == o.f;
+        return this.edge == o.edge;
       }
     }
 
     @Override
     public int hashCode() {
-      return (((int) (f * 100000.0f)) << 16) ^ (((int) (f* 10000.0f)) << 8 & 0xBEEF);
+      return this.edge;
     }
   }
 }

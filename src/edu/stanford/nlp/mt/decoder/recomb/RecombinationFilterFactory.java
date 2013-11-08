@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
@@ -8,6 +7,7 @@ import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * 
@@ -15,47 +15,36 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
  * 
  */
 public final class RecombinationFilterFactory {
-  static public final String CLASSICAL_TRANSLATION_MODEL = "classicaltranslationmodel";
-  static public final String CLASSICAL_TRANSLATION_MODEL_MSD = "msdtranslationmodel";
-  static public final String DTU_TRANSLATION_MODEL = "dtu";
-  static public final String DTU_TRANSLATION_MODEL_MSD = "dtumsd";
-
+  public static final String CLASSIC_RECOMBINATION = "classic";
+  public static final String DTU_RECOMBINATION = "dtu";
+  public static final String EXACT_RECOMBINATION = "exact";
+  
   private RecombinationFilterFactory() {}
 
   /**
-	 * 
-	 */
-  static public RecombinationFilter<Derivation<IString, String>> factory(
-      List<Featurizer<IString, String>> featurizers, String rfName) {
+   * Create a recombination filter.
+   * 
+   * @param recombinationMode one of the modes specified in <code>RecombinationFilterFactory</code>.
+   * @param featurizers the list of featurizers to consider
+   * @return
+   */
+  public static RecombinationFilter<Derivation<IString, String>> factory(
+      String recombinationMode, List<Featurizer<IString, String>> featurizers) {
 
-    // TODO(spenceg) Migrate this code
+    // TODO(spenceg) Migrate this code inside the featurizers
     boolean msdRecombination = false;
     for (Featurizer<IString, String> featurizer : featurizers) {
       if (featurizer instanceof HierarchicalReorderingFeaturizer ||
           featurizer instanceof LexicalReorderingFeaturizer)
         msdRecombination = true;
     }
-    if (msdRecombination) {
-      if (rfName.equals(CLASSICAL_TRANSLATION_MODEL)
-          || rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD)) {
-        rfName = CLASSICAL_TRANSLATION_MODEL_MSD;
-      } else if (rfName.equals(DTU_TRANSLATION_MODEL)
-          || rfName.equals(DTU_TRANSLATION_MODEL_MSD)) {
-        rfName = DTU_TRANSLATION_MODEL_MSD;
-      } else {
-        throw new UnsupportedOperationException(
-            "Don't know how to handle recombination heuristic with MSD model: "
-                + rfName);
-      }
-    }
 
-    if (rfName.equals(CLASSICAL_TRANSLATION_MODEL)
-        || rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD)) {
-      List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<RecombinationFilter<Derivation<IString, String>>>();
+    if (recombinationMode.equals(CLASSIC_RECOMBINATION)) {
+      List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
       // maintain uniqueness of hypotheses that will result in different linear
       // distortion scores when extended
       // with future translation options.
-      filters.add(new LinearDistortionRecombinationFilter<IString, String>());
+      filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
 
       // maintain uniqueness of hypotheses that differ by the last N-tokens,
       // this being relevant to lg model scoring
@@ -65,25 +54,25 @@ public final class RecombinationFilterFactory {
       // sequence coverage
       filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
 
-      if (rfName.equals(CLASSICAL_TRANSLATION_MODEL_MSD))
+      if (msdRecombination) {
         filters.add(new MSDRecombinationFilter(featurizers));
-
+      }
       return new CombinedRecombinationFilter<Derivation<IString, String>>(
           filters);
 
-    } else if (rfName.equals(DTU_TRANSLATION_MODEL)
-        || rfName.equals(DTU_TRANSLATION_MODEL_MSD)) {
-      List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<RecombinationFilter<Derivation<IString, String>>>();
-      filters.add(new LinearDistortionRecombinationFilter<IString, String>());
+    } else if (recombinationMode.equals(DTU_RECOMBINATION)) {
+      List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
+      filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
       filters.add(new TranslationNgramRecombinationFilter(featurizers));
       filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
       filters.add(new DTURecombinationFilter<IString, String>());
-      if (rfName.equals(DTU_TRANSLATION_MODEL_MSD))
+      if (msdRecombination) {
         filters.add(new MSDRecombinationFilter(featurizers));
+      }
       return new CombinedRecombinationFilter<Derivation<IString, String>>(
           filters);
     }
     throw new RuntimeException(String.format(
-        "Unrecognized recombination filter: %s", rfName));
+        "Unrecognized recombination filter: %s", recombinationMode));
   }
 }

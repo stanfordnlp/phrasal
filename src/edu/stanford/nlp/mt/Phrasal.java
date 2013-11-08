@@ -265,7 +265,7 @@ public class Phrasal {
   /**
    * Recombination configuration.
    */
-  private String recombinationMode = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
+  private String recombinationMode = RecombinationFilterFactory.CLASSIC_RECOMBINATION;
 
   /**
    * Pre/post processing filters.
@@ -347,7 +347,7 @@ public class Phrasal {
     }
 
     if (withGaps) {
-      recombinationMode = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
+      recombinationMode = RecombinationFilterFactory.DTU_RECOMBINATION;
     } else if (config.containsKey(RECOMBINATION_MODE)) {
       recombinationMode = config.get(RECOMBINATION_MODE).get(0);
     }
@@ -853,7 +853,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(featurizer.getNestedFeaturizers(), recombinationMode);
+        .factory(recombinationMode, featurizer.getNestedFeaturizers());
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
