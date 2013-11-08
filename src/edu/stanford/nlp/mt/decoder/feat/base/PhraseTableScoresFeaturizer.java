@@ -98,4 +98,9 @@ RuleFeaturizer<T, String> {
   @Override
   public void initialize() {
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
 }

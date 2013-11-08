@@ -50,7 +50,6 @@ import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
-import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.*;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -704,8 +703,6 @@ public class Phrasal {
             args += " " + token;
           }
         }
-        if (featurizer instanceof NeedsInternalAlignments)
-          Featurizable.enableAlignments();
         if (featurizer instanceof HierarchicalReorderingFeaturizer ||
             featurizer instanceof LexicalReorderingFeaturizer)
           msdRecombination = true;
@@ -982,7 +979,7 @@ public class Phrasal {
     }
 
     // Should we enable word-internal alignments?
-    if (wordAlignmentsEnabled || alignmentWriter != null) {
+    if (wordAlignmentsEnabled || alignmentWriter != null || featurizer.constructInternalAlignments()) {
       Featurizable.enableAlignments();
     }
   }

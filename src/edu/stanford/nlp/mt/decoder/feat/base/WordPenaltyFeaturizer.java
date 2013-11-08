@@ -37,4 +37,9 @@ public class WordPenaltyFeaturizer<TK> implements
   @Override
   public void initialize() {
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
 }

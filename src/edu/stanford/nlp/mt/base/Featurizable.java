@@ -127,8 +127,8 @@ public class Featurizable<TK, FV> {
 
   /**
    * Partial translation to foreign sentence alignment index. By default, it is
-   * set to null. It is constructed only if any featurizer implements
-   * AlignmentFeaturizer.
+   * set to null. It is constructed only if any featurizer returns true for
+   * needsInternalAlignments.
    * 
    * Guarantees that ranges corresponding to the same phrase are represented
    * with the same int[] in order to allow '==' to be used over the ranges
@@ -140,8 +140,8 @@ public class Featurizable<TK, FV> {
 
   /**
    * Foreign sentence to partial translation alignment index. By default, it is
-   * set to null. It is constructed only if any featurizer implements
-   * AlignmentFeaturizer.
+   * set to null. It is constructed only if any featurizer returns true for
+   * needsInternalAlignments.
    * 
    * Same guarantees as t2sAlignmentIndex
    */

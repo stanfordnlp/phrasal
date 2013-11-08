@@ -29,4 +29,9 @@ public class RuleShape implements RuleFeaturizer<IString, String> {
         f.sourcePhrase.size(), f.targetPhrase.size()), 1.0));
     return features;
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
 }

@@ -31,4 +31,9 @@ public class PhrasePairAlignmentConstellation implements
         + f.rule.abstractRule.alignment, 1.0));
     return features;
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return true;
+  }
 }

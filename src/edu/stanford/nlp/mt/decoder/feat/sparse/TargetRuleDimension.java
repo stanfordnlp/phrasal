@@ -28,4 +28,9 @@ public class TargetRuleDimension implements RuleFeaturizer<IString, String> {
     features.add(new FeatureValue<String>(String.format("%s:%d",FEATURE_NAME, f.targetPhrase.size()), 1.0));
     return features;
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
 }

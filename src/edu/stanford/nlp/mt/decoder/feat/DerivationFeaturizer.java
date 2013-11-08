@@ -39,6 +39,15 @@ public abstract class DerivationFeaturizer<TK, FV> implements Featurizer<TK,FV> 
    */
   public abstract List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f);
   
+  /**
+   * Should return true if the featurizer needs internal word alignments, and
+   * false otherwise. By default, return false.
+   * 
+   * @return
+   */
+  public boolean constructInternalAlignments() {
+    return false;
+  }
   
   /**
    * DO NOT MODIFY OR OVERRIDE ANYTHING BELOW THIS LINE. PHRASAL USES THESE

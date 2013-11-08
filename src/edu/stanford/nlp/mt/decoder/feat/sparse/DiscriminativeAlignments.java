@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
-import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
@@ -23,8 +22,7 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public class DiscriminativeAlignments implements NeedsInternalAlignments,
-RuleFeaturizer<IString,String> {
+public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> {
 
   private static final String FEATURE_NAME = "ALN";
   private static final String FEATURE_NAME_TGT = "ALNT";
@@ -153,5 +151,10 @@ RuleFeaturizer<IString,String> {
   
   private String targetRepresentation(IString token) {
     return targetClasses ? TargetClassMap.get(token).toString() : token.toString();
+  }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return true;
   }
 }
