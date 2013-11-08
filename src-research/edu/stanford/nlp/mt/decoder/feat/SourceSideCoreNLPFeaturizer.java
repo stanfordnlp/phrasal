@@ -43,7 +43,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  * @author Spence Green
  * 
  */
-public class SourceSideCoreNLPFeaturizer implements DerivationFeaturizer<IString, String>, 
+public class SourceSideCoreNLPFeaturizer extends DerivationFeaturizer<IString, String> implements  
 NeedsInternalAlignments, NeedsCloneable<IString,String> {
 
   public static final String FEATURE_PREFIX = "CoreNLP:";

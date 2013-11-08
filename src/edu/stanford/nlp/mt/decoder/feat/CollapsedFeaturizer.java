@@ -14,8 +14,8 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  * @param <FV>
  */
-public class CollapsedFeaturizer<TK, FV> implements
-    DerivationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV> {
+public class CollapsedFeaturizer<TK, FV> extends 
+    DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV> {
   final public List<Featurizer<TK, FV>> featurizers;
   final double[] featurizerWts;
   final Map<FV, Double> weightMap;

@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
  * 
  * @author Michel Galley
  */
-public class SourceGapFeaturizer implements
+public class SourceGapFeaturizer extends
     DerivationFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugGapCountFeaturizer";

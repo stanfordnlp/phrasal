@@ -11,8 +11,8 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 
 /**
@@ -24,7 +24,7 @@ import edu.stanford.nlp.mt.train.AlignmentGrid;
  * @see LexicalReorderingFeaturizer
  */
 public class HierarchicalReorderingFeaturizer extends
-    NeedsState<IString, String> implements
+    DerivationFeaturizer<IString, String> implements
     NeedsCloneable<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";

@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  * 
  * @author danielcer
  */
-public class LexicalReorderingFeaturizer implements
+public class LexicalReorderingFeaturizer extends
     DerivationFeaturizer<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";

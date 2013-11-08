@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.InsertedStartToken;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleIsolationScoreFeaturizer;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @author danielcer
  */
-public class NGramLanguageModelFeaturizer extends NeedsState<IString, String> implements
+public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, String> implements
    RuleIsolationScoreFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LM:";
   public static final String FEATURE_NAME = "LM";

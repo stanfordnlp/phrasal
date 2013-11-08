@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public class PunctuationDifference implements DerivationFeaturizer<IString, String>, NeedsCloneable<IString,String> {
+public class PunctuationDifference extends DerivationFeaturizer<IString, String> implements NeedsCloneable<IString,String> {
 
   private static final String FEATURE_NAME = "PDIF";
   

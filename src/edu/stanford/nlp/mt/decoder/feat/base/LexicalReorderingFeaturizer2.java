@@ -21,7 +21,7 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @author danielcer
  */
-public class LexicalReorderingFeaturizer2 implements
+public class LexicalReorderingFeaturizer2 extends
     DerivationFeaturizer<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";

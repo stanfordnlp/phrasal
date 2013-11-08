@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer.HierBlock;
 import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 import java.util.Deque;
@@ -24,7 +24,7 @@ public class MSDRecombinationFilter implements
   // and hurts search)
   private static final boolean HIERARCHICAL_RECOMBINATION = false;
 
-  private final List<NeedsState<IString, String>> hierFeaturizers = new LinkedList<NeedsState<IString, String>>();
+  private final List<DerivationFeaturizer<IString, String>> hierFeaturizers = Generics.newLinkedList();
 
   public MSDRecombinationFilter(
       List<Featurizer<IString, String>> featurizers) {
@@ -45,7 +45,7 @@ public class MSDRecombinationFilter implements
               .addAll(((CollapsedFeaturizer<IString, String>) el).featurizers);
         } else {
           if (el instanceof HierarchicalReorderingFeaturizer) {
-            hierFeaturizers.add((NeedsState<IString, String>) el);
+            hierFeaturizers.add((DerivationFeaturizer<IString, String>) el);
             // System.err.println("ADD: "+el);
           }
         }
@@ -130,7 +130,7 @@ public class MSDRecombinationFilter implements
     }
 
     if (HIERARCHICAL_RECOMBINATION) {
-      for (NeedsState<IString, String> featurizer : hierFeaturizers) {
+      for (DerivationFeaturizer<IString, String> featurizer : hierFeaturizers) {
         HierBlock hbA = (HierBlock) hypA.featurizable.getState(featurizer);
         HierBlock hbB = (HierBlock) hypB.featurizable.getState(featurizer);
         // System.err.printf("CMP: %d<->%d %d<->%d\n", hbA.fStart(), hbA.fEnd(),

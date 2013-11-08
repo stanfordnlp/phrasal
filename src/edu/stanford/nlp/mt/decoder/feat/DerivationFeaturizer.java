@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public interface DerivationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
+public abstract class DerivationFeaturizer<TK, FV> implements Featurizer<TK,FV> {
   
   /**
    * This call is made *before* decoding a new input begins.
@@ -28,7 +28,7 @@ public interface DerivationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
    * @param ruleList
    * @param source
    */
-  void initialize(int sourceInputId,
+  public abstract void initialize(int sourceInputId,
       List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source);
 
   /**
@@ -37,5 +37,31 @@ public interface DerivationFeaturizer<TK, FV> extends Featurizer<TK,FV> {
    * 
    * @return a list of features or null.
    */
-  List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f);
+  public abstract List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f);
+  
+  
+  /**
+   * DO NOT MODIFY OR OVERRIDE ANYTHING BELOW THIS LINE. PHRASAL USES THESE
+   * METHODS AND FIELDS FOR INTERNAL BOOKKEEPING.
+   */
+  private static final int UNDEFINED_ID = -1;
+
+  private int id = UNDEFINED_ID;
+
+  public void setId(int id) {
+
+    if (this.id != UNDEFINED_ID && this.id != id)
+      throw new RuntimeException(
+          "Error: setting id twice with different values.");
+
+    this.id = id;
+  }
+
+  public int getId() {
+
+    if (this.id == UNDEFINED_ID)
+      throw new RuntimeException("Error: id not yet defined.");
+
+    return id;
+  }
 }

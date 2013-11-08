@@ -23,7 +23,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  *
  *@author John Bauer
  */
-public class SourceSideTaggerFeaturizer implements DerivationFeaturizer<IString, String>, NeedsInternalAlignments {
+public class SourceSideTaggerFeaturizer extends DerivationFeaturizer<IString, String> implements NeedsInternalAlignments {
   /**
    * Tagger to use on the source side
    */

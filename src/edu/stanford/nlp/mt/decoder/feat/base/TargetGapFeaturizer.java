@@ -25,7 +25,7 @@ import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>, NeedsCloneable<IString, String>,
+public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> implements NeedsCloneable<IString, String>,
     RuleIsolationScoreFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugTargetGapFeaturizer";

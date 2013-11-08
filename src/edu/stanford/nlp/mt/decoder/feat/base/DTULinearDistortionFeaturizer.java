@@ -10,14 +10,14 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleIsolationScoreFeaturizer;
 
 /**
  * @author Michel Galley
  */
 public class DTULinearDistortionFeaturizer extends
-    NeedsState<IString, String> implements
+    DerivationFeaturizer<IString, String> implements
     RuleIsolationScoreFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";

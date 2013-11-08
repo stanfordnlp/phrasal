@@ -19,8 +19,8 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  * @param <FV>
  */
-public class CombinedFeaturizer<TK, FV> implements
-    DerivationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV>,
+public class CombinedFeaturizer<TK, FV> extends 
+    DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV>,
     Cloneable {
   public List<Featurizer<TK, FV>> featurizers;
 
@@ -81,8 +81,8 @@ public class CombinedFeaturizer<TK, FV> implements
     this.featurizers = Generics.newArrayList(featurizers);
     int id = -1;
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof NeedsState) {
-        NeedsState<TK, FV> sfeaturizer = (NeedsState<TK, FV>) featurizer;
+      if (featurizer instanceof DerivationFeaturizer) {
+        DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
         sfeaturizer.setId(++id);
       }
     }

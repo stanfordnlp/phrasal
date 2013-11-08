@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public class DiscriminativeSignedDistortion implements DerivationFeaturizer<IString, String> {
+public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "DDIST";
   

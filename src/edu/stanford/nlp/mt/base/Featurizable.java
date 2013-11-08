@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.Phrasal;
 
 /**
@@ -257,11 +257,11 @@ public class Featurizable<TK, FV> {
       augmentAlignments(rule);
   }
 
-  public Object getState(NeedsState<TK, FV> f) {
+  public Object getState(DerivationFeaturizer<TK, FV> f) {
     return states[f.getId()];
   }
 
-  public void setState(NeedsState<TK, FV> f, Object s) {
+  public void setState(DerivationFeaturizer<TK, FV> f, Object s) {
     states[f.getId()] = s;
   }
 

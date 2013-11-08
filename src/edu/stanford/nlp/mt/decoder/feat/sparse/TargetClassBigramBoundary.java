@@ -19,7 +19,7 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public class TargetClassBigramBoundary implements DerivationFeaturizer<IString, String> {
+public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "TGTCBND";
   

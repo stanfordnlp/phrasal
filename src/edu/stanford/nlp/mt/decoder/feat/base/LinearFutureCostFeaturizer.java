@@ -7,14 +7,14 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
  * @author Michel Galley
  */
 public class LinearFutureCostFeaturizer extends
-    NeedsState<IString, String> {
+    DerivationFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
