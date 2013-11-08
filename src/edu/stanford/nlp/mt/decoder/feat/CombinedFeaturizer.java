@@ -20,7 +20,7 @@ import edu.stanford.nlp.util.Generics;
  * @param <FV>
  */
 public class CombinedFeaturizer<TK, FV> implements
-    RichCombinationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV>,
+    DerivationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV>,
     Cloneable {
   public List<Featurizer<TK, FV>> featurizers;
 
@@ -167,24 +167,6 @@ public class CombinedFeaturizer<TK, FV> implements
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
         ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign);
-      }
-    }
-  }
-
-  @Override
-  public void dump(Featurizable<TK, FV> f) {
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof RichCombinationFeaturizer) {
-        ((RichCombinationFeaturizer<TK, FV>) featurizer).dump(f);
-      }
-    }
-  }
-
-  @Override
-  public void rerankingMode(boolean r) {
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof RichCombinationFeaturizer) {
-        ((RichCombinationFeaturizer<TK, FV>) featurizer).rerankingMode(r);
       }
     }
   }

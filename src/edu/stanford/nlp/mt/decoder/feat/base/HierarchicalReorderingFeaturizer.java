@@ -14,7 +14,6 @@ import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.decoder.feat.NeedsReorderingRecombination;
 import edu.stanford.nlp.mt.decoder.feat.NeedsState;
-import edu.stanford.nlp.mt.decoder.feat.RichCombinationFeaturizer;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 
 /**
@@ -27,7 +26,7 @@ import edu.stanford.nlp.mt.train.AlignmentGrid;
  */
 public class HierarchicalReorderingFeaturizer extends
     NeedsState<IString, String> implements
-    RichCombinationFeaturizer<IString, String>, NeedsReorderingRecombination<IString, String>,
+    NeedsReorderingRecombination<IString, String>,
     NeedsCloneable<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";
@@ -556,7 +555,6 @@ public class HierarchicalReorderingFeaturizer extends
     return true;
   }
 
-  @Override
   public void dump(Featurizable<IString, String> f) {
     if (DEBUG) {
       assert (f.done);
@@ -595,10 +593,6 @@ public class HierarchicalReorderingFeaturizer extends
 
   private static boolean contiguous(BitSet bs) {
     return (bs.nextSetBit(bs.nextClearBit(bs.nextSetBit(0))) < 0);
-  }
-
-  @Override
-  public void rerankingMode(boolean reranking) {
   }
 
   @Override
