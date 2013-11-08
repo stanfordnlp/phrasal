@@ -48,7 +48,7 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
   (JNIEnv *env, jobject thisJObj, jstring jlm_filename) {
   try {
     JNIString filename(env, jlm_filename);
-#ifdef WITH_NPLM
+#ifdef HAVE_NPLM
     if (lm::np::Model::Recognize(filename.get())) {
       return reinterpret_cast<jlong>(new lm::np::Model(filename.get()));
     }

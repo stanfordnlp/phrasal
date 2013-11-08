@@ -1,6 +1,6 @@
 #include "lm/ngram_query.hh"
 
-#ifdef WITH_NPLM
+#ifdef HAVE_NPLM
 #include "lm/wrappers/nplm.hh"
 #endif
 
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
           std::cerr << "Unrecognized kenlm model type " << model_type << std::endl;
           abort();
       }
-#ifdef WITH_NPLM
+#ifdef HAVE_NPLM
     } else if (lm::np::Model::Recognize(argv[1])) {
       lm::np::Model model(argv[1]);
       Query(model, sentence_context, std::cin, std::cout);
