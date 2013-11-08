@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.Phrasal;
 
 /**
@@ -151,7 +152,7 @@ public class Featurizable<TK, FV> {
    * For stateful featurizers. If multiple featurizers require access to this
    * variable, 'state' should probably reference a map or a list.
    */
-  final private Object[] states;
+  final private FeaturizerState[] states;
 
   /**
 	 * 
@@ -187,7 +188,7 @@ public class Featurizable<TK, FV> {
       } else {
         t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
-      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
+      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
           : null;
     } else {
       if (constructAlignment) {
@@ -196,7 +197,7 @@ public class Featurizable<TK, FV> {
       } else {
         t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
-      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
+      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
           : null;
     }
     this.derivation = derivation;
@@ -240,7 +241,7 @@ public class Featurizable<TK, FV> {
       } else {
         t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
-      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
+      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
           : null;
     } else {
       if (constructAlignment) {
@@ -249,7 +250,7 @@ public class Featurizable<TK, FV> {
       } else {
         t2sAlignmentIndex = s2tAlignmentIndex = null;
       }
-      states = (nbStatefulFeaturizers > 0) ? new Object[nbStatefulFeaturizers]
+      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
           : null;
     }
     this.derivation = derivation;
@@ -257,11 +258,11 @@ public class Featurizable<TK, FV> {
       augmentAlignments(rule);
   }
 
-  public Object getState(DerivationFeaturizer<TK, FV> f) {
+  public FeaturizerState getState(DerivationFeaturizer<TK, FV> f) {
     return states[f.getId()];
   }
 
-  public void setState(DerivationFeaturizer<TK, FV> f, Object s) {
+  public void setState(DerivationFeaturizer<TK, FV> f, FeaturizerState s) {
     states[f.getId()] = s;
   }
 

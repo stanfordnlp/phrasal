@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.lm;
 
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+
 /**
  * State returned by a language model query.
  * 
@@ -7,13 +9,9 @@ package edu.stanford.nlp.mt.lm;
  *
  * @param <TK>
  */
-public abstract class LMState {
+public abstract class LMState extends FeaturizerState {
   
   protected double score;
-  
-  public abstract boolean equals(LMState other);
-  
-  public abstract int hashCode();
   
   public double getScore() { return score; };
   

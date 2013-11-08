@@ -32,7 +32,7 @@ public class ARPALMState extends LMState {
   }
 
   @Override
-  public boolean equals(LMState other) {
+  public boolean equals(Object other) {
     if (this == other) {
       return true;
     } else if ( ! (other instanceof ARPALMState)) {

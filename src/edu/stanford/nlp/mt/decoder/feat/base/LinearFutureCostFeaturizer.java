@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -50,7 +51,7 @@ public class LinearFutureCostFeaturizer extends
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this))
+    float oldFutureCost = f.prior != null ? ((FutureCostState) f.prior.getState(this)).f
         : 0.0f;
     float futureCost;
     if (f.done) {
@@ -58,7 +59,7 @@ public class LinearFutureCostFeaturizer extends
     } else {
       futureCost = (1.0f - futureCostDelay) * futureCost(f) + futureCostDelay
           * oldFutureCost;
-      f.setState(this, futureCost);
+      f.setState(this, new FutureCostState(futureCost));
     }
     float deltaCost = futureCost - oldFutureCost;
     List<FeatureValue<String>> features = Generics.newLinkedList();
@@ -112,5 +113,31 @@ public class LinearFutureCostFeaturizer extends
       return endGap;
     }
     return 0;
+  }
+  
+  private static class FutureCostState extends FeaturizerState {
+
+    private final float f;
+
+    public FutureCostState(float f) {
+      this.f = f;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      } else if ( ! (other instanceof FutureCostState)) {
+        return false;
+      } else {
+        FutureCostState o = (FutureCostState) other;
+        return this.f == o.f;
+      }
+    }
+
+    @Override
+    public int hashCode() {
+      return (((int) (f * 100000.0f)) << 16) ^ (((int) (f* 10000.0f)) << 8 & 0xBEEF);
+    }
   }
 }
