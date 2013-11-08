@@ -10,14 +10,14 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.mt.decoder.feat.NeedsReorderingRecombination;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 
 /**
  * 
  * @author danielcer
  */
 public class LexicalReorderingFeaturizer implements
-    NeedsReorderingRecombination<IString, String> {
+    DerivationFeaturizer<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";
   static final String FEATURE_PREFIX = "LexR:";

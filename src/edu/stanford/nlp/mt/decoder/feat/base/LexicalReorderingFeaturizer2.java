@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.mt.decoder.feat.NeedsReorderingRecombination;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -22,7 +22,7 @@ import edu.stanford.nlp.util.Generics;
  * @author danielcer
  */
 public class LexicalReorderingFeaturizer2 implements
-    NeedsReorderingRecombination<IString, String> {
+    DerivationFeaturizer<IString, String> {
 
   public static final String DISCRIMINATIVE_PREFIX = "Disc";
   static final String FEATURE_PREFIX = "LexR:";

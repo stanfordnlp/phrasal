@@ -47,11 +47,11 @@ import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.annotators.AnnotatorFactory;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
 import edu.stanford.nlp.mt.decoder.feat.LinearDistortionFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
-import edu.stanford.nlp.mt.decoder.feat.NeedsReorderingRecombination;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.*;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -532,7 +532,7 @@ public class Phrasal {
         ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Lexicalized reordering model
-    NeedsReorderingRecombination<IString, String> lexReorderFeaturizer = null;
+    DerivationFeaturizer<IString, String> lexReorderFeaturizer = null;
 
     boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
@@ -707,7 +707,8 @@ public class Phrasal {
         }
         if (featurizer instanceof NeedsInternalAlignments)
           Featurizable.enableAlignments();
-        if (featurizer instanceof NeedsReorderingRecombination)
+        if (featurizer instanceof HierarchicalReorderingFeaturizer ||
+            featurizer instanceof LexicalReorderingFeaturizer)
           msdRecombination = true;
       }
       if (featurizerName != null) {
