@@ -460,7 +460,7 @@ public class OnlineTuner {
       boolean doExpectedBleu, int weightWriteOutInterval) {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
-    final int numThreads = decoder.getNumThreads();
+    final int numThreads = Phrasal.getNumThreads();
     Counter<String> currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
     // Clear the accumulator, which we will use for parameter averaging.
     wtsAccumulator.clear();
