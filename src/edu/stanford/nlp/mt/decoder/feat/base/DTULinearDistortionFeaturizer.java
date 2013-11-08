@@ -11,14 +11,13 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.RuleIsolationScoreFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 
 /**
  * @author Michel Galley
  */
 public class DTULinearDistortionFeaturizer extends
-    DerivationFeaturizer<IString, String> implements
-    RuleIsolationScoreFeaturizer<IString, String> {
+    DerivationFeaturizer<IString, String> implements RuleFeaturizer<IString,String> {
 
   public static final String DEBUG_PROPERTY = "DebugDTULinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -118,5 +117,10 @@ public class DTULinearDistortionFeaturizer extends
 
   @Override
   public void initialize() {
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
   }
 }

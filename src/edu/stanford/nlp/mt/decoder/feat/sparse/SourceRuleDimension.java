@@ -33,4 +33,9 @@ public class SourceRuleDimension implements RuleFeaturizer<IString, String> {
   public boolean constructInternalAlignments() {
     return false;
   }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }

@@ -103,4 +103,9 @@ RuleFeaturizer<T, String> {
   public boolean constructInternalAlignments() {
     return false;
   }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }

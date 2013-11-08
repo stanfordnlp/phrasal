@@ -148,7 +148,7 @@ public class CombinedFeaturizer<TK, FV> extends
       List<FeatureValue<FV>> listFeatureValues = ruleFeaturizer
           .ruleFeaturize(f);
       if (listFeatureValues != null) {
-        boolean doNotCache = (ruleFeaturizer instanceof RuleIsolationScoreFeaturizer);
+        boolean doNotCache = ruleFeaturizer.isolationScoreOnly();
         // profiling reveals that addAll is slow due to a buried call to clone()
         for (FeatureValue<FV> fv : listFeatureValues) {
           if (fv.name != null) {
@@ -188,6 +188,11 @@ public class CombinedFeaturizer<TK, FV> extends
         return true;
       }
     }
+    return false;
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
     return false;
   }
 }

@@ -44,4 +44,9 @@ public class PhrasePenaltyFeaturizer<TK> implements
   public boolean constructInternalAlignments() {
     return false;
   }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }

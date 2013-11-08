@@ -157,4 +157,9 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
   public boolean constructInternalAlignments() {
     return true;
   }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }

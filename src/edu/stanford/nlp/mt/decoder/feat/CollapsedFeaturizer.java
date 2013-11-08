@@ -143,4 +143,9 @@ public class CollapsedFeaturizer<TK, FV> extends
     }
     return false;
   }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }
