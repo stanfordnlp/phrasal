@@ -105,7 +105,7 @@ public class Phrasal {
       .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
-      .append("  -").append(RECOMBINATION_HEURISTIC).append(" name : See RecombinationFilterFactory javadocs.").append(nl)
+      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [classic,exact,dtu] (default: classic).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
       .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
@@ -117,7 +117,8 @@ public class Phrasal {
       .append("  -").append(GAPS_OPT).append(" options : DTU: Enable Galley and Manning (2010) gappy decoding.").append(nl)
       .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
-      .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)");
+      .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
+      .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)");
     return sb.toString();
   }
 
@@ -148,7 +149,7 @@ public class Phrasal {
   private static final String DISABLED_FEATURIZERS = "disabled-featurizers";
   private static final String NUM_THREADS = "threads";
   private static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
-  private static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
+  private static final String RECOMBINATION_MODE = "recombination-mode";
   private static final String GAPS_OPT = "gaps";
   private static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
   private static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
@@ -161,6 +162,7 @@ public class Phrasal {
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String LOAD_ALIGNMENTS = "load-word-alignments";
+  private static final String PRINT_MODEL_SCORES = "print-model-scores";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -172,7 +174,7 @@ public class Phrasal {
         ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
-        RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
+        RECOMBINATION_MODE, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
@@ -181,7 +183,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS, PRINT_MODEL_SCORES));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -258,9 +260,14 @@ public class Phrasal {
   private int minSentenceSize = 0;
 
   /**
+   * Output model scores to console.
+   */
+  private boolean printModelScores = false;
+  
+  /**
    * Recombination configuration.
    */
-  private String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
+  private String recombinationMode = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
 
   /**
    * Pre/post processing filters.
@@ -342,9 +349,13 @@ public class Phrasal {
     }
 
     if (withGaps) {
-      recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
-    } else if (config.containsKey(RECOMBINATION_HEURISTIC)) {
-      recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
+      recombinationMode = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
+    } else if (config.containsKey(RECOMBINATION_MODE)) {
+      recombinationMode = config.get(RECOMBINATION_MODE).get(0);
+    }
+    
+    if (config.containsKey(PRINT_MODEL_SCORES)) {
+      printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
     }
     
     // Pre/post processor filters. These may be accessed programmatically, but they
@@ -851,7 +862,7 @@ public class Phrasal {
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
         .factory(featurizer.getNestedFeaturizers(), msdRecombination,
-            recombinationHeuristic);
+            recombinationMode);
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
@@ -1080,10 +1091,14 @@ public class Phrasal {
   private void processConsoleResult(List<RichTranslation<IString, String>> translations,
       Sequence<IString> bestTranslation, int sourceLength, int sourceInputId) {
     if (translations.size() > 0) {
-      System.out.println(bestTranslation.toString());
-
-      // log additional information to stderr
       RichTranslation<IString,String> bestTranslationInfo = translations.get(0);
+      if (printModelScores) {
+        System.out.printf("%e\t%s%n", bestTranslationInfo.score, bestTranslation.toString());
+      } else {
+        System.out.println(bestTranslation.toString());
+      }
+      
+      // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation);
       System.err.printf("Final score: %.3f%n", (float) bestTranslationInfo.score);
       if (bestTranslationInfo.sourceCoverage != null) {
