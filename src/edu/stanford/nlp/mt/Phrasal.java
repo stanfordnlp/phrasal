@@ -532,7 +532,6 @@ public class Phrasal {
     // Lexicalized reordering model
     DerivationFeaturizer<IString, String> lexReorderFeaturizer = null;
 
-    boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
         || config.containsKey(HIER_DISTORTION_FILE)) {
       if (config.containsKey(DISTORTION_FILE)
@@ -542,7 +541,6 @@ public class Phrasal {
                 + "To use more than one, please use " + ADDITIONAL_FEATURIZERS
                 + " field.");
       boolean stdDistFile = config.containsKey(DISTORTION_FILE);
-      msdRecombination = true;
       List<String> strDistortionFile = stdDistFile ? config
           .get(DISTORTION_FILE) : config.get(HIER_DISTORTION_FILE);
       String modelType;
@@ -703,9 +701,6 @@ public class Phrasal {
             args += " " + token;
           }
         }
-        if (featurizer instanceof HierarchicalReorderingFeaturizer ||
-            featurizer instanceof LexicalReorderingFeaturizer)
-          msdRecombination = true;
       }
       if (featurizerName != null) {
         System.err.printf("Error: no ')' found for featurizer %s%n",
@@ -858,8 +853,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(featurizer.getNestedFeaturizers(), msdRecombination,
-            recombinationMode);
+        .factory(featurizer.getNestedFeaturizers(), recombinationMode);
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
