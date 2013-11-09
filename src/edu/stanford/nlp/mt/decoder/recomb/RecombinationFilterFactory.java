@@ -31,7 +31,6 @@ public final class RecombinationFilterFactory {
   public static RecombinationFilter<Derivation<IString, String>> factory(
       String recombinationMode, List<Featurizer<IString, String>> featurizers) {
 
-    // TODO(spenceg) Migrate this code inside the featurizers
     boolean msdRecombination = false;
     for (Featurizer<IString, String> featurizer : featurizers) {
       if (featurizer instanceof HierarchicalReorderingFeaturizer ||
@@ -71,8 +70,11 @@ public final class RecombinationFilterFactory {
       }
       return new CombinedRecombinationFilter<Derivation<IString, String>>(
           filters);
+    
+    } else if (recombinationMode.equals(EXACT_RECOMBINATION)) {
+      return new ExactRecombinationFilter<Derivation<IString, String>>(featurizers);
     }
-    throw new RuntimeException(String.format(
-        "Unrecognized recombination filter: %s", recombinationMode));
+    
+    throw new RuntimeException("Unrecognized recombination filter: " + recombinationMode);
   }
 }

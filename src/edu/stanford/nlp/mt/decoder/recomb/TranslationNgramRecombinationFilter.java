@@ -5,6 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.lm.LMState;
@@ -47,8 +48,8 @@ public class TranslationNgramRecombinationFilter
     }
 
     for (DerivationFeaturizer<IString,String> lmFeaturizer : lmFeaturizers) {
-      LMState stateA = (LMState) hypA.featurizable.getState(lmFeaturizer);
-      LMState stateB = (LMState) hypB.featurizable.getState(lmFeaturizer);
+      FeaturizerState stateA = (FeaturizerState) hypA.featurizable.getState(lmFeaturizer);
+      FeaturizerState stateB = (FeaturizerState) hypB.featurizable.getState(lmFeaturizer);
 
       // Do the two states hash to the same bucket?
       if ( ! (stateA.hashCode() == stateB.hashCode() &&

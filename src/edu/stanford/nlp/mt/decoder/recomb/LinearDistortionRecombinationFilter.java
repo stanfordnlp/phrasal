@@ -31,7 +31,7 @@ RecombinationFilter<Derivation<TK, FV>> {
       }
     }
     if (distortionFeaturizers.size() > 1) {
-      throw new RuntimeException("Recombination only supports one distortion cost estimate!");
+      throw new RuntimeException("Classic recombination only supports one distortion cost estimate!");
     }
     distortionFeaturizer = distortionFeaturizers.get(0);
   }
