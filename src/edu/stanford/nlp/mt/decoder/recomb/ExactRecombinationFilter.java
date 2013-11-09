@@ -1,0 +1,90 @@
+package edu.stanford.nlp.mt.decoder.recomb;
+
+import java.util.Arrays;
+import java.util.List;
+
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.util.Generics;
+
+/**
+ * Recombination filter that considers all featurizer states.
+ * 
+ * @author Spence Green
+ *
+ * @param <T>
+ */
+public class ExactRecombinationFilter<T> implements
+RecombinationFilter<Derivation<IString, String>> {
+
+  private final List<DerivationFeaturizer<IString, String>> featurizers;
+  private final RecombinationFilter<Derivation<IString, String>> sourceCoverageFilter;
+
+  public ExactRecombinationFilter(List<Featurizer<IString, String>> featurizers) {
+    this.featurizers = Generics.newLinkedList();
+    for (Featurizer<IString, String> featurizer : featurizers) {
+      if (featurizer instanceof DerivationFeaturizer) {
+        this.featurizers.add((DerivationFeaturizer<IString, String>) featurizer);
+      }
+    }
+    sourceCoverageFilter = new ForeignCoverageRecombinationFilter<IString, String>();
+  }
+
+  @Override
+  public boolean combinable(Derivation<IString, String> hypA,
+      Derivation<IString, String> hypB) {
+    if (hypA.featurizable == null && hypB.featurizable == null) {
+      // null hypothesis
+      return true;
+    } else if (hypA.featurizable == null || hypB.featurizable == null) {
+      // one or the other is the null hypothesis
+      return false;
+    }
+
+    // Check coverage
+    if ( ! sourceCoverageFilter.combinable(hypA, hypB)) {
+      return false; 
+    }
+
+    // Check other stateful featurizers
+    for (DerivationFeaturizer<IString, String> featurizer : featurizers) {
+      FeaturizerState stateA = (FeaturizerState) hypA.featurizable.getState(featurizer);
+      FeaturizerState stateB = (FeaturizerState) hypB.featurizable.getState(featurizer);
+
+      // Do the two states hash to the same bucket?
+      if ( ! (stateA.hashCode() == stateB.hashCode() &&
+          stateA.equals(stateB))) {
+        return false;
+      }
+    }
+
+    // All states match.
+    return true;
+  }
+
+  @Override
+  public long recombinationHashCode(Derivation<IString, String> hyp) {
+    if (hyp.featurizable == null) {
+      // null hypothesis. This hashCode doesn't actually matter because of the checks
+      // in the combinable() function above.
+      return hyp.sourceSequence.hashCode();
+    }
+
+    // Generate a hash code from individual hash codes
+    int[] stateHashCodes = new int[featurizers.size()];
+    int i = 0;
+    for (DerivationFeaturizer<IString, String> featurizer : featurizers) {
+      FeaturizerState state = (FeaturizerState) hyp.featurizable.getState(featurizer);
+      stateHashCodes[i++] = state.hashCode();
+    }
+    return Arrays.hashCode(stateHashCodes);
+  }
+
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
+}
