@@ -4,6 +4,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteRule;
+import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.LexicalReorderingTable;
@@ -15,6 +16,8 @@ import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -182,6 +185,11 @@ public class LexicalReorderingFeaturizer extends
       for (FeatureValue<String> value : values)
         System.err.printf("\t%s: %f\n", value.name, value.value);
     }
+    
+    // Create the state
+    int rightEdge = lastOptionRightEdge(f.derivation);
+    int leftEdge = lastOptionLeftEdge(f.derivation);
+    f.setState(this, new MSDState(leftEdge, rightEdge, f.derivation.sourceCoverage));
 
     return values;
   }
@@ -255,5 +263,105 @@ public class LexicalReorderingFeaturizer extends
       return !monotone;
     }
     return false;
+  }
+  
+  private static int lastOptionLeftEdge(Derivation<IString, String> hyp) {
+    if (hyp.rule == null)
+      return -1;
+    return hyp.rule.sourcePosition - 1;
+  }
+
+  private static int lastOptionRightEdge(Derivation<IString, String> hyp) {
+    if (hyp.rule == null)
+      return 0;
+    return hyp.rule.sourceCoverage.length();
+  }
+  
+  private static class MSDState extends FeaturizerState {
+
+    private final int leftEdge;
+    private final int rightEdge;
+    private final CoverageSet sourceCoverage;
+
+    public MSDState(int leftEdge, int rightEdge, CoverageSet sourceCoverage) {
+      this.leftEdge = leftEdge;
+      this.rightEdge = rightEdge;
+      this.sourceCoverage = sourceCoverage;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      } else if ( ! (other instanceof MSDState)) {
+        return false;
+      } else {
+        MSDState o = (MSDState) other;
+        return equals(this, o);
+      }
+    }
+    
+    private boolean equals(MSDState stateA, MSDState stateB) {
+      if (stateA.rightEdge != stateB.rightEdge)
+        // same as LinearDistortionRecombinationFilter:
+        return false;
+      int leftA = stateA.leftEdge;
+      int leftB = stateB.leftEdge;
+      if (leftA == leftB)
+        return true;
+
+      // Now hypA and hypB may look like this:
+      // hypA: y y . . . . x x . . . z z
+      // hypB: y y y . . x x x . . . z z
+      // where y,z stand for coverage set of previous options (the number of y and
+      // z may be zero),
+      // and x stands for coverage set of the current option.
+      // If the next option (represented with n's) is generated to the right of
+      // x's,
+      // hypA and hypB will always receive the same orientation, i.e.:
+      // (A) Both monotone:
+      // hypA: y y . . . . x x n n . z z
+      // hypB: y y y . . x x x n n . z z
+      // (B) Both discontinuous:
+      // hypA: y y . . . . x x . n n z z
+      // hypB: y y y . . x x x . n n z z
+      // If the next option is generated to the left, we have two cases:
+      // (C) Both discontinuous:
+      // hypA: y y . n . . x x . . . z z
+      // hypB: y y y n . x x x . . . z z
+      // (D) One discontinuous, one swap:
+      // hypA: y y . . n . x x . . . z z
+      // hypB: y y y . n x x x . . . z z
+      // So we only need to worry about case (D). The function should return false
+      // if case (D) is possible. The condition that makes (D) impossible is:
+      // the number of words between the last y and the first x is zero for either
+      // hypA or hypB. In this condition is true, (D) is impossible, thus
+      // the next option will always receive the same orientation (no matter where
+      // it appears), thus hypA and hypB are combinable, thus return true.
+
+      if (leftA < 0 || leftB < 0)
+        // Nothing to the left of either hypA or hypB, so (D) is impossible:
+        return true;
+
+      if (!stateA.sourceCoverage.get(leftA) && !stateB.sourceCoverage.get(leftA)) {
+        // (D) is possible as shown here:
+        // hypA: y y . . n x x x . . . z z
+        // hypB: y y y . n . x x . . . z z
+        return false;
+      }
+
+      if (!stateA.sourceCoverage.get(leftB) && !stateB.sourceCoverage.get(leftB)) {
+        // (D) is possible as shown here:
+        // hypA: y y . . n . x x . . . z z
+        // hypB: y y y . n x x x . . . z z
+        return false;
+      }
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return rightEdge;
+    }
   }
 }

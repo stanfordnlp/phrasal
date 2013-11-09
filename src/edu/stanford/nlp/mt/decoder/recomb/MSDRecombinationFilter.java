@@ -1,5 +1,8 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.Deque;
+import java.util.List;
+
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -9,10 +12,6 @@ import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.util.Generics;
-
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * @author Michel Galley
