@@ -21,15 +21,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
   }
   
   /**
-   * The efficiency of the LM queries is dependent on the speed with which
-   * the LM contexts can be returned from JNI. Presently, we create a fixed-size
-   * pool of byte arrays that are re-used across queries. allocateDirect() is extremely
-   * slow, so the pool is created at initialization. However, this means that buffers
-   * are subject to race conditions in the multi-threaded case. Therefore, we create
-   * a ring-buffer of size POOL_MULTIPLIER * numThreads with the assumption that no
-   * particular process is fast enough to occupy the whole ring-buffer. This is empirically
-   * true, but means that the possibility of a race condition still exists.
-   * 
    * Don't change the JNI query interface (scoreNGram) without profiling. The obvious stuff is
    * slow. Trust me.
    */
