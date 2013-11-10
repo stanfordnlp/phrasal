@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.lm;
 
-import java.util.Arrays;
-
 /**
  * Result of a KenLM query.
  * 
@@ -11,12 +9,20 @@ import java.util.Arrays;
 public class KenLMState extends LMState {
 
   private final int[] state;
+  private final int stateLength;
   private final int hashCode;
 
-  public KenLMState(double score, int[] state) {
+  public KenLMState(double score, int[] state, int stateLength) {
     this.score = score;
     this.state = state;
-    this.hashCode = Arrays.hashCode(state);
+    this.stateLength = stateLength;
+    
+    // Unwrapped call to Arrays.hashCode
+    int result = 1;
+    for (int i = 0; i < stateLength; ++i) {
+        result = 31 * result + state[i];
+    }
+    this.hashCode = result;
   }
   
   @Override
@@ -27,7 +33,15 @@ public class KenLMState extends LMState {
       return false;
     } else {
       KenLMState otherState = (KenLMState) other;
-      return Arrays.equals(this.state, otherState.state);
+      if (this.stateLength != otherState.stateLength) {
+        return false;
+      }
+      for (int i = 0; i < stateLength; ++i) {
+        if (state[i] != otherState.state[i]) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 
@@ -38,6 +52,6 @@ public class KenLMState extends LMState {
 
   @Override
   public int length() {
-    return state.length;
+    return stateLength;
   }
 }

@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.mt.base.IString;
@@ -137,15 +136,15 @@ public class KenLanguageModel implements LanguageModel<IString> {
   public LMState score(Sequence<IString> sequence) {
     Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
     if (boundaryState != null) {
-      return new KenLMState(0.0, toKenLMIds(boundaryState));
+      return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
     int[] ngramIds = toKenLMIds(ngram);
     // got is (state_length << 32) | prob where prob is a float.
     long got = scoreNGram(kenLMPtr, ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
-    int state_length = (int)(got >> 32);
-    return new KenLMState(score, Arrays.copyOfRange(ngramIds, 0, state_length));
+    int stateLength = (int)(got >> 32);
+    return new KenLMState(score, ngramIds, stateLength);
   }
   
   @Override
