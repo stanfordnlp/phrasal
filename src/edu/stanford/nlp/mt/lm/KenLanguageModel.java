@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -20,10 +21,15 @@ public class KenLanguageModel implements LanguageModel<IString> {
     System.loadLibrary("PhrasalKenLM");
   }
   
+  // See vocab.cc. <unk> is always first in the vocabulary. If this assumption
+  // changes, then this value needs to be updated.
+  private static final int UNK_KENLM_ID = 0;
+  
   private final String name;
   private final int order;
   private final long kenLMPtr;
   private int[] istringIdToKenLMId;
+  private final ReentrantLock indexLock;
  
   // JNI methods
   private native long readKenLM(String filename);
@@ -59,6 +65,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     order = getOrder(kenLMPtr);
     initializeIdTable();
+    indexLock = new ReentrantLock();
   }
   
   private void initializeIdTable() {
@@ -72,6 +79,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
   }
   
+  /**
+   * Extend the IString --> KenLM mapping. This method is *not*
+   * threadsafe and is thus called only when <code>indexLock</code>
+   * has been acquired.
+   */
   private void updateIdTable() {
     int[] newTable = new int[IString.index.size()];
     System.arraycopy(istringIdToKenLMId, 0, newTable, 0, istringIdToKenLMId.length);
@@ -82,17 +94,27 @@ public class KenLanguageModel implements LanguageModel<IString> {
   }
 
   /**
-   * This must be a synchronized call for the case in which the IString
-   * vocabulary changes and we need to extend the lookup table.
+   * Maps the IString id to a kenLM id. If the IString
+   * index is extended, this call tries to acquire a lock on
+   * <code>istringIdToKenLMId</code> and extend it. If it cannot,
+   * then another thread is updating the table and this method
+   * return <code>UNK_KENLM_ID</code>.
    * 
    * @param token
    * @return
    */
-  private synchronized int toKenLMId(IString token) {
-    if (token.id >= istringIdToKenLMId.length) {
+  private int toKenLMId(IString token) {
+    if (token.id < istringIdToKenLMId.length) {
+      return istringIdToKenLMId[token.id];
+
+    } else if (indexLock.tryLock()) {
       updateIdTable();
+      indexLock.unlock();
+      return istringIdToKenLMId[token.id];
+
+    } else {
+      return UNK_KENLM_ID;
     }
-    return istringIdToKenLMId[token.id];
   }
   
   private static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
