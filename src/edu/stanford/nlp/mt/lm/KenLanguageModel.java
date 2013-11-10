@@ -1,10 +1,7 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -22,8 +19,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
   static {
     System.loadLibrary("PhrasalKenLM");
   }
-  
-  private static final ByteOrder NATIVE_ORDER = ByteOrder.nativeOrder();
   
   /**
    * The efficiency of the LM queries is dependent on the speed with which
@@ -43,17 +38,13 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private final String name;
   private final int order;
   private final long kenLMPtr;
-  private final ByteBuffer[] stateBuffers;
   private int[] istringIdToKenLMId;
  
-  private final AtomicInteger bufferPtr;
-  
   // JNI methods
   private native long readKenLM(String filename);
-  private native double scoreNGram(long kenLMPtr, int[] ngram, ByteBuffer stateBuf);
+  private native long scoreNGram(long kenLMPtr, int[] ngram);
   private native int getId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
-  private native int getMaxOrder(long kenLMPtr);
 
   /**
    * Constructor for single-threaded usage.
@@ -82,13 +73,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
       } 
     }
     order = getOrder(kenLMPtr);
-    int maxOrder = getMaxOrder(kenLMPtr);
-    int sizeofInt = Integer.SIZE / Byte.SIZE;
-    stateBuffers = new ByteBuffer[numThreads * POOL_MULTIPLIER];
-    for (int i = 0; i < stateBuffers.length; ++i) {
-      stateBuffers[i] = ByteBuffer.allocateDirect((maxOrder-1)*sizeofInt);
-    }
-    bufferPtr = new AtomicInteger();
     initializeIdTable();
   }
   
@@ -150,14 +134,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     Sequence<IString> ngram = clipNgram(sequence, order);
     int[] ngramIds = toKenLMIds(ngram);
-    final int bufferIdx = stateBuffers.length > 1 ? bufferPtr.getAndIncrement() % stateBuffers.length : 0;
-    ByteBuffer stateBuffer = stateBuffers[bufferIdx];
-    double score = scoreNGram(kenLMPtr, ngramIds, stateBuffer);
-    IntBuffer contextBuffer = stateBuffer.order(NATIVE_ORDER).asIntBuffer();
-    int[] context = new int[contextBuffer.limit()];
-    contextBuffer.get(context);
-    KenLMState state = new KenLMState(score, context);
-    return state;
+    // got is (state_length << 32) | prob where prob is a float.
+    long got = scoreNGram(kenLMPtr, ngramIds);
+    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
+    int state_length = (int)(got >> 32);
+    return new KenLMState(score, Arrays.copyOfRange(ngramIds, 0, state_length));
   }
   
   @Override
