@@ -62,9 +62,9 @@ public final class CoreNLPToPTMJson {
       CoreMap sentence = sentences.get(i);
       Tree tree = sentence.get(TreeAnnotation.class);
       tree.indexLeaves();
-      String[] chunkVector = getChunkVector(tree);
-      AnnotationContainer container = new AnnotationContainer();
+      int[] chunkVector = getChunkVector(tree);
       List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
+      AnnotationContainer container = new AnnotationContainer(tokens.size());
       for (int j = 0; j < tokens.size(); ++j) {
         CoreLabel token = tokens.get(j);
         String word = token.get(TextAnnotation.class);
@@ -73,7 +73,7 @@ public final class CoreNLPToPTMJson {
         container.pos.add(pos);
         String ne = token.get(NamedEntityTagAnnotation.class);
         container.ner.add(ne);
-        container.chunkIOB.add(chunkVector[j]);
+        container.chunkVector[j] = chunkVector[j];
       }
       annotations.put(i, container);
     }
@@ -139,18 +139,18 @@ public final class CoreNLPToPTMJson {
    * @param tree
    * @return
    */
-  private static String[] getChunkVector(Tree tree) {
-    String[] vector = new String[tree.yield().size()];
-    Arrays.fill(vector, "O");
+  private static int[] getChunkVector(Tree tree) {
+    String[] iobVector = new String[tree.yield().size()];
+    Arrays.fill(iobVector, "O");
     
     // Yield patterns
 //    TregexPattern baseNPPattern = TregexPattern.compile("@NP < (/NN/ < (__ !< __)) !< @NP");
     TregexPattern baseXPPattern = TregexPattern.compile("__ < (__ < (__ !< __)) !< (__ < (__ < __))");
     TregexPattern basePPPattern = TregexPattern.compile("@PP <, @IN !<< @NP >! @PP");
     TregexMatcher tregexMatcher = baseXPPattern.matcher(tree);
-    fillVectorWithYield(vector, tregexMatcher);
+    fillVectorWithYield(iobVector, tregexMatcher);
     tregexMatcher = basePPPattern.matcher(tree);
-    fillVectorWithYield(vector, tregexMatcher);
+    fillVectorWithYield(iobVector, tregexMatcher);
     
     // Edge patterns
     TregexPattern vpPattern = TregexPattern.compile("@VP >! @VP");
@@ -169,15 +169,29 @@ public final class CoreNLPToPTMJson {
       for (Tree leaf : leaves) {
         int index = ((HasIndex) leaf.label()).index() - 1;
         if (lastIndex > 0 && index - lastIndex != 1) break;
-        if ( ! vector[index].equals("O")) break;
-        vector[index] = seenStart ? "I" : "B";
+        if ( ! iobVector[index].equals("O")) break;
+        iobVector[index] = seenStart ? "I" : "B";
         seenStart = true;
         lastIndex = index;
       }
     }
-    return vector;
+    int[] indexVector = iobToIndices(iobVector);
+    return indexVector;
   }
   
+  private static int[] iobToIndices(String[] vector) {
+    int[] indexVector = new int[vector.length];
+    int chunkId = -1;
+    for (int i = 0; i < indexVector.length; ++i) {
+      String label = vector[i];
+      if (label.equals("B") || label.equals("O")) {
+        ++chunkId;
+      }
+      indexVector[i] = chunkId;
+    }
+    return indexVector;
+  }
+
   private static class Document {
     // Name of this document
     public final String docId;
@@ -193,12 +207,12 @@ public final class CoreNLPToPTMJson {
     public final List<String> tokens;
     public final List<String> pos;
     public final List<String> ner;
-    public final List<String> chunkIOB; 
-    public AnnotationContainer() {
-      this.tokens = Generics.newLinkedList();
-      this.pos = Generics.newLinkedList();
-      this.ner = Generics.newLinkedList();
-      this.chunkIOB = Generics.newLinkedList();
+    public final int[] chunkVector; 
+    public AnnotationContainer(int numTokens) {
+      this.tokens = Generics.newArrayList(numTokens);
+      this.pos = Generics.newArrayList(numTokens);
+      this.ner = Generics.newArrayList(numTokens);
+      this.chunkVector = new int[numTokens];
     }
   }
 }

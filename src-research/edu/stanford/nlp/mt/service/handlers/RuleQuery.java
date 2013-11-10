@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.service.handlers;
 
 import java.util.List;
 
+import edu.stanford.nlp.ling.Sentence;
+
 /**
  * A result of a query for a rule.
  * 
@@ -24,5 +26,10 @@ public class RuleQuery extends ScoredQuery {
     super(score);
     this.tgt = target;
     this.align = alignment;
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("%s (%s) %.5f", Sentence.listToString(tgt), Sentence.listToString(align), score);
   }
 }

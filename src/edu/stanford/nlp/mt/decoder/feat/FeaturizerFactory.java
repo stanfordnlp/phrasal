@@ -7,7 +7,7 @@ import java.util.Map;
 
 import edu.stanford.nlp.mt.base.FactoryUtil;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.lm.LanguageModels;
+import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -86,7 +86,7 @@ public final class FeaturizerFactory {
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       if (lm != null && ! lm.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModels.load(lm, numThreads));
+            LanguageModelFactory.load(lm, numThreads));
         baselineFeaturizers.add(arpaLmFeaturizer);
       }
 
@@ -109,7 +109,7 @@ public final class FeaturizerFactory {
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       if (lm != null) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModels.load(lm, numThreads));
+            LanguageModelFactory.load(lm, numThreads));
         pharaohFeaturizers.add(arpaLmFeaturizer);
       }
 

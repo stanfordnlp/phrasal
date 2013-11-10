@@ -78,8 +78,8 @@ function tune-setup {
     fi
     
     # Setup the ini file and run online tuning
-    update_ini -n $TUNE_NBEST SETID $TUNE_SET_NAME \
-	< $INI_FILE > $TUNE_INI_FILE   
+    execute "update_ini -n $TUNE_NBEST SETID $TUNE_SET_NAME \
+	< $INI_FILE > $TUNE_INI_FILE"   
 }
 
 #

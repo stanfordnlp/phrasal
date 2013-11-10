@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.base.InsertedStartToken;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
-import edu.stanford.nlp.mt.lm.LanguageModels;
+import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -100,7 +100,7 @@ public class NGramLanguageModelFeaturizer extends NeedsState<IString, String> im
       throw new RuntimeException(
           "Two arguments are needed: LM file name and LM ID");
     featureName = args[1];
-    this.lm = LanguageModels.load(args[0], Phrasal.getNumThreads());
+    this.lm = LanguageModelFactory.load(args[0], Phrasal.getNumThreads());
     this.lmOrder = lm.order();
     featureNames = new String[2][];
     featureNames[0] = new String[lmOrder];

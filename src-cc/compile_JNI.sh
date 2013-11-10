@@ -3,7 +3,7 @@
 export CXXFLAGS="$CXXFLAGS -O3 -fPIC -DHAVE_ZLIB -lz"
 
 if [ ${#NPLM} != 0 ]; then
-  extra_flags="kenlm/lm/wrappers/*.o -DHAVE_NPLM -lneuralLM -L$NPLM/src -I$NPLM/src -fopenmp"
+  extra_flags="kenlm/lm/wrappers/*.o -DHAVE_NPLM -lneuralLM -lboost_thread-mt -L$NPLM/src -I$NPLM/src -fopenmp"
 fi
 
 (cd kenlm; ./compile_query_only.sh)
