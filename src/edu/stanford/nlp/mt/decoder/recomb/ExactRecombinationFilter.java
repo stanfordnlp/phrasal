@@ -20,6 +20,19 @@ import edu.stanford.nlp.util.Generics;
 public class ExactRecombinationFilter<T> implements
 RecombinationFilter<Derivation<IString, String>> {
 
+  private static final FeaturizerState IDENTITY_STATE = new FeaturizerState() {
+    @Override
+    public boolean equals(Object other) {
+      // equality by reference
+      return this == other;
+    }
+
+    @Override
+    public int hashCode() {
+      return 0;
+    }
+  };
+  
   private final List<DerivationFeaturizer<IString, String>> featurizers;
   private final RecombinationFilter<Derivation<IString, String>> sourceCoverageFilter;
 
@@ -52,15 +65,16 @@ RecombinationFilter<Derivation<IString, String>> {
     // Check other stateful featurizers
     for (DerivationFeaturizer<IString, String> featurizer : featurizers) {
       FeaturizerState stateA = (FeaturizerState) hypA.featurizable.getState(featurizer);
+      stateA = stateA == null ? IDENTITY_STATE : stateA;
       FeaturizerState stateB = (FeaturizerState) hypB.featurizable.getState(featurizer);
-
+      stateB = stateB == null ? IDENTITY_STATE : stateB;
+      
       // Do the two states hash to the same bucket?
       if ( ! (stateA.hashCode() == stateB.hashCode() &&
-          stateA.equals(stateB))) {
+              stateA.equals(stateB))) {
         return false;
       }
     }
-
     // All states match.
     return true;
   }
@@ -78,7 +92,7 @@ RecombinationFilter<Derivation<IString, String>> {
     int i = 0;
     for (DerivationFeaturizer<IString, String> featurizer : featurizers) {
       FeaturizerState state = (FeaturizerState) hyp.featurizable.getState(featurizer);
-      stateHashCodes[i++] = state.hashCode();
+      stateHashCodes[i++] = state == null ? 0 : state.hashCode();
     }
     return Arrays.hashCode(stateHashCodes);
   }
