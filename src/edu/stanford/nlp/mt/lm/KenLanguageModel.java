@@ -20,12 +20,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
     System.loadLibrary("PhrasalKenLM");
   }
   
-  /**
-   * Don't change the JNI query interface (scoreNGram) without profiling. The obvious stuff is
-   * slow. Trust me.
-   */
-  private static final int POOL_MULTIPLIER = 3;
-  
   private final String name;
   private final int order;
   private final long kenLMPtr;
