@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
 import java.util.List;
@@ -11,9 +11,11 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.InsertedStartToken;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
-import edu.stanford.nlp.mt.lm.LanguageModels;
+import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -21,8 +23,8 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @author danielcer
  */
-public class NGramLanguageModelFeaturizer extends NeedsState<IString, String> implements
-   RuleIsolationScoreFeaturizer<IString, String> {
+public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, String> implements
+   RuleFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LM:";
   public static final String FEATURE_NAME = "LM";
   public static final String DEBUG_PROPERTY = "ngramLMFeaturizerDebug";
@@ -100,7 +102,7 @@ public class NGramLanguageModelFeaturizer extends NeedsState<IString, String> im
       throw new RuntimeException(
           "Two arguments are needed: LM file name and LM ID");
     featureName = args[1];
-    this.lm = LanguageModels.load(args[0], Phrasal.getNumThreads());
+    this.lm = LanguageModelFactory.load(args[0], Phrasal.getNumThreads());
     this.lmOrder = lm.order();
     featureNames = new String[2][];
     featureNames[0] = new String[lmOrder];
@@ -202,4 +204,9 @@ public class NGramLanguageModelFeaturizer extends NeedsState<IString, String> im
 
   @Override
   public void initialize() {}
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return true;
+  }
 }

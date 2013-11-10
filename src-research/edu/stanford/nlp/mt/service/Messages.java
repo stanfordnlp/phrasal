@@ -193,6 +193,9 @@ public final class Messages {
       for (TranslationQuery query : result) {
         sb.append(String.format("%.5f\t%s\t%s%n", query.score(), query.tgt, query.align));
       }
+      if (sb.length() == 0) {
+        sb.append("<< DECODER FAILURE >>");
+      }
       return sb.toString();
     }
   }
@@ -201,6 +204,15 @@ public final class Messages {
     public final List<RuleQuery> result;
     public RuleQueryReply(List<RuleQuery> ruleList) {
       this.result = ruleList;
+    }
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      for (RuleQuery query : result) {
+        if (sb.length() > 0) sb.append(" ");
+        sb.append("[ ").append(query.toString()).append(" ]");
+      }
+      return sb.toString();
     }
   }
 }

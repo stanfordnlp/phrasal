@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +12,9 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
@@ -22,8 +25,8 @@ import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
  * @author Michel Galley
  */
 @SuppressWarnings("unused")
-public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>, NeedsCloneable<IString, String>,
-    RuleIsolationScoreFeaturizer<IString, String> {
+public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> implements NeedsCloneable<IString, String>,
+    RuleFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugTargetGapFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -247,5 +250,10 @@ public class TargetGapFeaturizer implements DerivationFeaturizer<IString,String>
 
   @Override
   public void initialize() {
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
   }
 }

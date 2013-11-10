@@ -28,7 +28,7 @@ import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 
 import edu.stanford.nlp.util.Generics;

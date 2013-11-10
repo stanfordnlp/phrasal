@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  * @author danielcer
  * 
  */
-public class LexicalLinearDistortionFeaturizer implements
+public class LexicalLinearDistortionFeaturizer extends
     DerivationFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "LLD";
   public static final String ABSOLUTE = ":a";

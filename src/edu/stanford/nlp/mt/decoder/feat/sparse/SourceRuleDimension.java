@@ -28,4 +28,14 @@ public class SourceRuleDimension implements RuleFeaturizer<IString, String> {
     features.add(new FeatureValue<String>(String.format("%s:%d",FEATURE_NAME, f.sourcePhrase.size()), 1.0));
     return features;
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }

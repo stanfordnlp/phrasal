@@ -9,7 +9,8 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.lm.ARPALanguageModel;
-import edu.stanford.nlp.mt.lm.LanguageModels;
+import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.tools.LanguageModelPerplexity;
 
 /**
  * @author Karthik Raghunathan
@@ -22,7 +23,7 @@ public class ARPALanguageModelTest extends TestCase {
 
   static {
     try {
-      lm = (ARPALanguageModel) LanguageModels
+      lm = (ARPALanguageModel) LanguageModelFactory
           .load("projects/mt/test/inputs/sampleLM.gz");
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -34,7 +35,7 @@ public class ARPALanguageModelTest extends TestCase {
     String sent = "This is a test sentence to be scored by the language model";
     Sequence<IString> seq = new SimpleSequence<IString>(
         IStrings.toIStringArray(sent.split("\\s")));
-    double score = LanguageModels.scoreSequence(lm, seq);
+    double score = LanguageModelPerplexity.scoreSequence(lm, seq);
     assertTrue(score == (double) -81.74873375892639);
   }
 
@@ -52,7 +53,7 @@ public class ARPALanguageModelTest extends TestCase {
     for (String lmFile : lmFiles) {
       boolean goodLM = false;
       try {
-        LanguageModels.load(lmFile);
+        LanguageModelFactory.load(lmFile);
         goodLM = true;
       } catch (Exception e) {
       }

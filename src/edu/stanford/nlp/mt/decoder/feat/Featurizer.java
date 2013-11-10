@@ -15,4 +15,11 @@ package edu.stanford.nlp.mt.decoder.feat;
  */
 public interface Featurizer<TK,FV> {
 
+  /**
+   * Should return true if the featurizer wants the decoder to construct word alignments for
+   * each <code>Derivation</code> (stored in <code>Featurizable</code>). Otherwise, return false.
+   * 
+   * @return
+   */
+  boolean constructInternalAlignments();
 }

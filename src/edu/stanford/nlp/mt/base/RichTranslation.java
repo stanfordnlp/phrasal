@@ -112,7 +112,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(delim);
 
-    if (nbestWordInternalAlignments && Featurizable.alignmentsEnabled()) {
+    if (nbestWordInternalAlignments) {
       // Internal alignments
       String alignmentString = alignmentString();
       sbuf.append(" ").append(alignmentString);

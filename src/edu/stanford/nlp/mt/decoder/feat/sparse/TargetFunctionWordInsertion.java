@@ -83,4 +83,14 @@ public class TargetFunctionWordInsertion implements RuleFeaturizer<IString, Stri
     features.add(new FeatureValue<String>(FEATURE_NAME, numTargetFunctionWords));
     return features;
   }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
+  }
 }

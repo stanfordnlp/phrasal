@@ -19,8 +19,8 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  * @param <FV>
  */
-public class CombinedFeaturizer<TK, FV> implements
-    RichCombinationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV>,
+public class CombinedFeaturizer<TK, FV> extends 
+    DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV>,
     Cloneable {
   public List<Featurizer<TK, FV>> featurizers;
 
@@ -81,8 +81,8 @@ public class CombinedFeaturizer<TK, FV> implements
     this.featurizers = Generics.newArrayList(featurizers);
     int id = -1;
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof NeedsState) {
-        NeedsState<TK, FV> sfeaturizer = (NeedsState<TK, FV>) featurizer;
+      if (featurizer instanceof DerivationFeaturizer) {
+        DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
         sfeaturizer.setId(++id);
       }
     }
@@ -148,7 +148,7 @@ public class CombinedFeaturizer<TK, FV> implements
       List<FeatureValue<FV>> listFeatureValues = ruleFeaturizer
           .ruleFeaturize(f);
       if (listFeatureValues != null) {
-        boolean doNotCache = (ruleFeaturizer instanceof RuleIsolationScoreFeaturizer);
+        boolean doNotCache = ruleFeaturizer.isolationScoreOnly();
         // profiling reveals that addAll is slow due to a buried call to clone()
         for (FeatureValue<FV> fv : listFeatureValues) {
           if (fv.name != null) {
@@ -172,24 +172,6 @@ public class CombinedFeaturizer<TK, FV> implements
   }
 
   @Override
-  public void dump(Featurizable<TK, FV> f) {
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof RichCombinationFeaturizer) {
-        ((RichCombinationFeaturizer<TK, FV>) featurizer).dump(f);
-      }
-    }
-  }
-
-  @Override
-  public void rerankingMode(boolean r) {
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof RichCombinationFeaturizer) {
-        ((RichCombinationFeaturizer<TK, FV>) featurizer).rerankingMode(r);
-      }
-    }
-  }
-
-  @Override
   public void initialize() {
     // Initialize the IsolatedPhraseFeaturizers
     for (Featurizer<TK,FV> featurizer : featurizers) {
@@ -197,5 +179,20 @@ public class CombinedFeaturizer<TK, FV> implements
         ((RuleFeaturizer<TK,FV>) featurizer).initialize();
       }
     }
+  }
+  
+  @Override
+  public boolean constructInternalAlignments() {
+    for (Featurizer<TK,FV> featurizer : featurizers) {
+      if (featurizer.constructInternalAlignments()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
   }
 }

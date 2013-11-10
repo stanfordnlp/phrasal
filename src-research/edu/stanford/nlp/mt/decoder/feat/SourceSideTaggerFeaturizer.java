@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 
 /**
@@ -23,7 +22,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  *
  *@author John Bauer
  */
-public class SourceSideTaggerFeaturizer implements DerivationFeaturizer<IString, String>, NeedsInternalAlignments {
+public class SourceSideTaggerFeaturizer extends DerivationFeaturizer<IString, String> {
   /**
    * Tagger to use on the source side
    */
@@ -89,4 +88,7 @@ public class SourceSideTaggerFeaturizer implements DerivationFeaturizer<IString,
 
     return features;
   }
+  
+  @Override
+  public boolean constructInternalAlignments() { return true; }
 }

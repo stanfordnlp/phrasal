@@ -46,7 +46,12 @@ import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.annotators.AnnotatorFactory;
-import edu.stanford.nlp.mt.decoder.feat.*;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.Featurizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.*;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -98,7 +103,7 @@ public class Phrasal {
       .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
-      .append("  -").append(RECOMBINATION_HEURISTIC).append(" name : See RecombinationFilterFactory javadocs.").append(nl)
+      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [classic,exact,dtu] (default: classic).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
       .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
@@ -110,7 +115,8 @@ public class Phrasal {
       .append("  -").append(GAPS_OPT).append(" options : DTU: Enable Galley and Manning (2010) gappy decoding.").append(nl)
       .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
-      .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)");
+      .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
+      .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)");
     return sb.toString();
   }
 
@@ -141,7 +147,7 @@ public class Phrasal {
   private static final String DISABLED_FEATURIZERS = "disabled-featurizers";
   private static final String NUM_THREADS = "threads";
   private static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
-  private static final String RECOMBINATION_HEURISTIC = "recombination-heuristic";
+  private static final String RECOMBINATION_MODE = "recombination-mode";
   private static final String GAPS_OPT = "gaps";
   private static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
   private static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
@@ -154,6 +160,7 @@ public class Phrasal {
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String LOAD_ALIGNMENTS = "load-word-alignments";
+  private static final String PRINT_MODEL_SCORES = "print-model-scores";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -165,7 +172,7 @@ public class Phrasal {
         ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
-        RECOMBINATION_HEURISTIC, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
+        RECOMBINATION_MODE, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
@@ -174,7 +181,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS, PRINT_MODEL_SCORES));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -183,6 +190,9 @@ public class Phrasal {
    * Number of decoding threads. Setting this parameter to 0 enables
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
+   * 
+   * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
+   * 
    */
   private static int numThreads = 1;
 
@@ -193,6 +203,8 @@ public class Phrasal {
 
   /**
    * DTU options
+   * 
+   * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
    */
   private static List<String> gapOpts = null;
   public static boolean withGaps = false;
@@ -246,9 +258,14 @@ public class Phrasal {
   private int minSentenceSize = 0;
 
   /**
+   * Output model scores to console.
+   */
+  private boolean printModelScores = false;
+  
+  /**
    * Recombination configuration.
    */
-  private static String recombinationHeuristic = RecombinationFilterFactory.CLASSICAL_TRANSLATION_MODEL;
+  private String recombinationMode = RecombinationFilterFactory.CLASSIC_RECOMBINATION;
 
   /**
    * Pre/post processing filters.
@@ -284,6 +301,7 @@ public class Phrasal {
    */
   public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
   
+  // TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
   public static void initStaticMembers(Map<String, List<String>> config) {
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
@@ -303,8 +321,9 @@ public class Phrasal {
           .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
 
-    if (withGaps)
-      recombinationHeuristic = RecombinationFilterFactory.DTU_TRANSLATION_MODEL;
+    numThreads = config.containsKey(NUM_THREADS) ? Integer.parseInt(config.get(NUM_THREADS).get(0)) : 1;
+    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    System.err.printf("Number of threads: %d%n", numThreads);
   }
 
   @SuppressWarnings("unchecked")
@@ -327,15 +346,16 @@ public class Phrasal {
           "The following fields are unrecognized: %s%n", extraFields));
     }
 
-    if (config.containsKey(RECOMBINATION_HEURISTIC)) {
-      recombinationHeuristic = config.get(RECOMBINATION_HEURISTIC).get(0);
+    if (withGaps) {
+      recombinationMode = RecombinationFilterFactory.DTU_RECOMBINATION;
+    } else if (config.containsKey(RECOMBINATION_MODE)) {
+      recombinationMode = config.get(RECOMBINATION_MODE).get(0);
     }
     
-    if (config.containsKey(NUM_THREADS))
-      numThreads = Integer.parseInt(config.get(NUM_THREADS).get(0));
-    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
-    System.err.printf("Number of threads: %d%n", numThreads);
-
+    if (config.containsKey(PRINT_MODEL_SCORES)) {
+      printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
+    }
+    
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
@@ -510,9 +530,8 @@ public class Phrasal {
         ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
 
     // Lexicalized reordering model
-    NeedsReorderingRecombination<IString, String> lexReorderFeaturizer = null;
+    DerivationFeaturizer<IString, String> lexReorderFeaturizer = null;
 
-    boolean msdRecombination = false;
     if (config.containsKey(DISTORTION_FILE)
         || config.containsKey(HIER_DISTORTION_FILE)) {
       if (config.containsKey(DISTORTION_FILE)
@@ -522,7 +541,6 @@ public class Phrasal {
                 + "To use more than one, please use " + ADDITIONAL_FEATURIZERS
                 + " field.");
       boolean stdDistFile = config.containsKey(DISTORTION_FILE);
-      msdRecombination = true;
       List<String> strDistortionFile = stdDistFile ? config
           .get(DISTORTION_FILE) : config.get(HIER_DISTORTION_FILE);
       String modelType;
@@ -683,10 +701,6 @@ public class Phrasal {
             args += " " + token;
           }
         }
-        if (featurizer instanceof NeedsInternalAlignments)
-          Featurizable.enableAlignments();
-        if (featurizer instanceof NeedsReorderingRecombination)
-          msdRecombination = true;
       }
       if (featurizerName != null) {
         System.err.printf("Error: no ')' found for featurizer %s%n",
@@ -768,7 +782,7 @@ public class Phrasal {
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
       }
       if (config.containsKey(DISTORTION_WT_OPT)) {
-        weightVector.setCount(LinearDistortionFeaturizer.FEATURE_NAME,
+        weightVector.setCount(LinearFutureCostFeaturizer.FEATURE_NAME,
           Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
 
         if (config.get(DISTORTION_WT_OPT).size() > 1) {
@@ -839,8 +853,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(featurizer.getNestedFeaturizers(), msdRecombination,
-            recombinationHeuristic);
+        .factory(recombinationMode, featurizer.getNestedFeaturizers());
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
@@ -960,7 +973,7 @@ public class Phrasal {
     }
 
     // Should we enable word-internal alignments?
-    if (wordAlignmentsEnabled || alignmentWriter != null) {
+    if (wordAlignmentsEnabled || alignmentWriter != null || featurizer.constructInternalAlignments()) {
       Featurizable.enableAlignments();
     }
   }
@@ -1069,10 +1082,14 @@ public class Phrasal {
   private void processConsoleResult(List<RichTranslation<IString, String>> translations,
       Sequence<IString> bestTranslation, int sourceLength, int sourceInputId) {
     if (translations.size() > 0) {
-      System.out.println(bestTranslation.toString());
-
-      // log additional information to stderr
       RichTranslation<IString,String> bestTranslationInfo = translations.get(0);
+      if (printModelScores) {
+        System.out.printf("%e\t%s%n", bestTranslationInfo.score, bestTranslation.toString());
+      } else {
+        System.out.println(bestTranslation.toString());
+      }
+      
+      // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation);
       System.err.printf("Final score: %.3f%n", (float) bestTranslationInfo.score);
       if (bestTranslationInfo.sourceCoverage != null) {

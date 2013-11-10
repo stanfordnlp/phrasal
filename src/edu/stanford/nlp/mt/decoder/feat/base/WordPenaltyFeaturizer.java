@@ -1,9 +1,10 @@
-package edu.stanford.nlp.mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -35,5 +36,15 @@ public class WordPenaltyFeaturizer<TK> implements
 
   @Override
   public void initialize() {
+  }
+
+  @Override
+  public boolean constructInternalAlignments() {
+    return false;
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
   }
 }

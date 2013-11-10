@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * 
@@ -26,37 +26,10 @@ public class CombinedRecombinationFilter<S> implements RecombinationFilter<S> {
   /**
 	 * 
 	 */
-  public CombinedRecombinationFilter(RecombinationFilter<S>... filters) {
-    this.filters = Arrays.copyOf(filters, filters.length);
-    combinationRule = DEFAULT_COMBINATION_RULE;
-  }
-
-  /**
-	 * 
-	 */
   @SuppressWarnings("unchecked")
   public CombinedRecombinationFilter(List<RecombinationFilter<S>> filters) {
     this.filters = filters.toArray(new RecombinationFilter[filters.size()]);
     combinationRule = DEFAULT_COMBINATION_RULE;
-  }
-
-  /**
-	 * 
-	 */
-  public CombinedRecombinationFilter(CombinationRule combinationRule,
-      RecombinationFilter<S>... filters) {
-    this.filters = Arrays.copyOf(filters, filters.length);
-    this.combinationRule = combinationRule;
-  }
-
-  /**
-	 * 
-	 */
-  @SuppressWarnings("unchecked")
-  public CombinedRecombinationFilter(CombinationRule combinationRule,
-      List<RecombinationFilter<S>> filters) {
-    this.filters = filters.toArray(new RecombinationFilter[filters.size()]);
-    this.combinationRule = combinationRule;
   }
 
   @Override

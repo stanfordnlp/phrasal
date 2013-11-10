@@ -94,10 +94,6 @@ public class RecombinationHash<S extends State<S>> {
 	 */
   @SuppressWarnings("rawtypes")
   public Status update(S hypothesis) {
-    if (filter instanceof NoRecombination) {
-      return Status.NOVEL;
-    }
-
     FilterWrappedHypothesis wrappedHyp = new FilterWrappedHypothesis(
         hypothesis, filter);
     FilterWrappedHypothesis filterEquivWrappedHyp = recombinationHash
@@ -151,9 +147,6 @@ public class RecombinationHash<S extends State<S>> {
 	 * 
 	 */
   public void put(S hypothesis) {
-    if (filter instanceof NoRecombination) {
-      return;
-    }
     FilterWrappedHypothesis wrappedHyp = new FilterWrappedHypothesis(
         hypothesis, filter);
     recombinationHash.put(wrappedHyp, wrappedHyp);
@@ -164,9 +157,6 @@ public class RecombinationHash<S extends State<S>> {
   }
 
   public void remove(S hypothesis, boolean missingOkay) {
-    if (filter instanceof NoRecombination) {
-      return;
-    }
     FilterWrappedHypothesis wrappedHyp = new FilterWrappedHypothesis(
         hypothesis, filter);
     FilterWrappedHypothesis filterEquivWrappedHyp = recombinationHash

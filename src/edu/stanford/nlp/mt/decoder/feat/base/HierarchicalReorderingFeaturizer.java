@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.*;
 import java.io.*;
@@ -11,6 +11,9 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.base.ExtendedLexicalReorderingTable.ReorderingTypes;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 
 /**
@@ -22,8 +25,7 @@ import edu.stanford.nlp.mt.train.AlignmentGrid;
  * @see LexicalReorderingFeaturizer
  */
 public class HierarchicalReorderingFeaturizer extends
-    NeedsState<IString, String> implements
-    RichCombinationFeaturizer<IString, String>, NeedsReorderingRecombination<IString, String>,
+    DerivationFeaturizer<IString, String> implements
     NeedsCloneable<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugHierarchicalReorderingFeaturizer";
@@ -34,33 +36,53 @@ public class HierarchicalReorderingFeaturizer extends
   public static final boolean DETAILED_DEBUG = Boolean.parseBoolean(System
       .getProperty(DETAILED_DEBUG_PROPERTY, "false"));
 
-  public static class HierBlock {
+  public static class HierBlock extends FeaturizerState {
 
     final int stackSz;
     final CoverageSet cs;
     final Featurizable<IString, String> previousF;
 
+    final int fStart;
+    final int fEnd;
+    
     HierBlock(CoverageSet cs, Featurizable<IString, String> previousF,
         int stackSz) {
       this.cs = cs;
       this.previousF = previousF;
       this.stackSz = stackSz;
+      this.fStart = cs.nextSetBit(0);
+      assert (fStart >= 0);
+      this.fEnd = cs.length() - 1;
+      assert (fEnd >= 0);
     }
 
     public int fStart() {
-      int i = cs.nextSetBit(0);
-      assert (i >= 0);
-      return i;
+      return fStart;
     }
 
     public int fEnd() {
-      int i = cs.length() - 1;
-      assert (i >= 0);
-      return i;
+      return fEnd;
     }
 
     public boolean isPrefix() {
       return cs.cardinality() == cs.length();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      } else if ( ! (other instanceof HierBlock)) {
+        return false;
+      } else {
+        HierBlock o = (HierBlock) other;
+        return this.fStart == o.fStart && this.fEnd == o.fEnd;
+      }
+    }
+
+    @Override
+    public int hashCode() {
+      return ((fStart * fEnd) << 16) ^ (fStart * fStart * (fEnd + fStart));
     }
   }
 
@@ -552,7 +574,6 @@ public class HierarchicalReorderingFeaturizer extends
     return true;
   }
 
-  @Override
   public void dump(Featurizable<IString, String> f) {
     if (DEBUG) {
       assert (f.done);
@@ -591,10 +612,6 @@ public class HierarchicalReorderingFeaturizer extends
 
   private static boolean contiguous(BitSet bs) {
     return (bs.nextSetBit(bs.nextClearBit(bs.nextSetBit(0))) < 0);
-  }
-
-  @Override
-  public void rerankingMode(boolean reranking) {
   }
 
   @Override

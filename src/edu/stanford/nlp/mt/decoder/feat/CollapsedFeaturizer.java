@@ -14,8 +14,8 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  * @param <FV>
  */
-public class CollapsedFeaturizer<TK, FV> implements
-    DerivationFeaturizer<TK, FV>, RuleFeaturizer<TK, FV> {
+public class CollapsedFeaturizer<TK, FV> extends 
+    DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV> {
   final public List<Featurizer<TK, FV>> featurizers;
   final double[] featurizerWts;
   final Map<FV, Double> weightMap;
@@ -132,5 +132,20 @@ public class CollapsedFeaturizer<TK, FV> implements
         ((RuleFeaturizer<TK,FV>) featurizer).initialize();
       }
     }
+  }
+  
+  @Override
+  public boolean constructInternalAlignments() {
+    for (Featurizer<TK,FV> featurizer : featurizers) {
+      if (featurizer.constructInternalAlignments()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isolationScoreOnly() {
+    return false;
   }
 }

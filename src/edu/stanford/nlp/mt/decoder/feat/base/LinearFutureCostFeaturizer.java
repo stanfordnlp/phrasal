@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.List;
 
@@ -7,13 +7,16 @@ import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
 
 /**
  * @author Michel Galley
  */
 public class LinearFutureCostFeaturizer extends
-    NeedsState<IString, String> {
+    DerivationFeaturizer<IString, String> {
 
   public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
@@ -46,10 +49,17 @@ public class LinearFutureCostFeaturizer extends
     System.err.println("Future cost delay: " + futureCostDelay);
   }
 
+  private static int lastOptionForeignEdge(Derivation<IString, String> hyp) {
+    if (hyp.rule == null) {
+      return 0;
+    }
+    return hyp.rule.sourceCoverage.length();
+  }
+  
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    float oldFutureCost = f.prior != null ? ((Float) f.prior.getState(this))
+    float oldFutureCost = f.prior != null ? ((FutureCostState) f.prior.getState(this)).f
         : 0.0f;
     float futureCost;
     if (f.done) {
@@ -57,8 +67,9 @@ public class LinearFutureCostFeaturizer extends
     } else {
       futureCost = (1.0f - futureCostDelay) * futureCost(f) + futureCostDelay
           * oldFutureCost;
-      f.setState(this, futureCost);
     }
+    int edge = lastOptionForeignEdge(f.derivation);
+    f.setState(this, new FutureCostState(edge, futureCost));
     float deltaCost = futureCost - oldFutureCost;
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost)));
@@ -111,5 +122,33 @@ public class LinearFutureCostFeaturizer extends
       return endGap;
     }
     return 0;
+  }
+  
+  private static class FutureCostState extends FeaturizerState {
+
+    private final float f;
+    private final int edge;
+
+    public FutureCostState(int edge, float f) {
+      this.edge = edge;
+      this.f = f;
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      } else if ( ! (other instanceof FutureCostState)) {
+        return false;
+      } else {
+        FutureCostState o = (FutureCostState) other;
+        return this.edge == o.edge;
+      }
+    }
+
+    @Override
+    public int hashCode() {
+      return this.edge;
+    }
   }
 }

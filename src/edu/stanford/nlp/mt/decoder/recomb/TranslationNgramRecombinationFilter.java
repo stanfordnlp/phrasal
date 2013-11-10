@@ -3,9 +3,10 @@ package edu.stanford.nlp.mt.decoder.recomb;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
-import edu.stanford.nlp.mt.decoder.feat.NGramLanguageModelFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.NeedsState;
+import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.util.Generics;
@@ -19,7 +20,7 @@ import edu.stanford.nlp.util.Generics;
 public class TranslationNgramRecombinationFilter
         implements RecombinationFilter<Derivation<IString, String>> {
 
-  private final List<NeedsState<IString,String>> lmFeaturizers;
+  private final List<DerivationFeaturizer<IString,String>> lmFeaturizers;
 
   /**
    * Constructor.
@@ -46,9 +47,9 @@ public class TranslationNgramRecombinationFilter
       return false;
     }
 
-    for (NeedsState<IString,String> lmFeaturizer : lmFeaturizers) {
-      LMState stateA = (LMState) hypA.featurizable.getState(lmFeaturizer);
-      LMState stateB = (LMState) hypB.featurizable.getState(lmFeaturizer);
+    for (DerivationFeaturizer<IString,String> lmFeaturizer : lmFeaturizers) {
+      FeaturizerState stateA = (FeaturizerState) hypA.featurizable.getState(lmFeaturizer);
+      FeaturizerState stateB = (FeaturizerState) hypB.featurizable.getState(lmFeaturizer);
 
       // Do the two states hash to the same bucket?
       if ( ! (stateA.hashCode() == stateB.hashCode() &&
@@ -68,7 +69,7 @@ public class TranslationNgramRecombinationFilter
     }
     int maxLength = -1;
     int hashCode = 0;
-    for (NeedsState<IString,String> lmFeaturizer : lmFeaturizers) {
+    for (DerivationFeaturizer<IString,String> lmFeaturizer : lmFeaturizers) {
       LMState state = (LMState) hyp.featurizable.getState(lmFeaturizer);
       if (state.length() > maxLength) {
         maxLength = state.length();

@@ -28,7 +28,6 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.NeedsInternalAlignments;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 
@@ -43,8 +42,8 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  * @author Spence Green
  * 
  */
-public class SourceSideCoreNLPFeaturizer implements DerivationFeaturizer<IString, String>, 
-NeedsInternalAlignments, NeedsCloneable<IString,String> {
+public class SourceSideCoreNLPFeaturizer extends DerivationFeaturizer<IString, String> implements  
+NeedsCloneable<IString,String> {
 
   public static final String FEATURE_PREFIX = "CoreNLP:";
 
@@ -293,4 +292,6 @@ NeedsInternalAlignments, NeedsCloneable<IString,String> {
     return sb.toString();
   }
 
+  @Override
+  public boolean constructInternalAlignments() { return true; }
 }
