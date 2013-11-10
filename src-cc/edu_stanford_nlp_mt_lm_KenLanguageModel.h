@@ -20,10 +20,10 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    scoreNGram
- * Signature: (J[ILjava/nio/ByteBuffer;)D
+ * Signature: (J[I)J
  */
-JNIEXPORT jdouble JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
-  (JNIEnv *, jobject, jlong, jintArray, jobject);
+JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
+  (JNIEnv *, jobject, jlong, jintArray);
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -39,14 +39,6 @@ JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getId
  * Signature: (J)I
  */
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
-  (JNIEnv *, jobject, jlong);
-
-/*
- * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
- * Method:    getMaxOrder
- * Signature: (J)I
- */
-JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getMaxOrder
   (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus
