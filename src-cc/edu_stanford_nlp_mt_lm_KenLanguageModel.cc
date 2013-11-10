@@ -54,10 +54,12 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
     JNIString filename(env, jlm_filename);
 #ifdef HAVE_NPLM
     if (lm::np::Model::Recognize(filename.get())) {
-      std::cerr << "WITH_NPLM " << filename.get() << std::endl; 
+      std::cerr << "NPLM " << filename.get() << std::endl; 
       return reinterpret_cast<jlong>(new lm::np::Model(filename.get()));
     }
 #endif
+    std::cerr << "Non-NPLM " << filename.get() << std::endl; 
+     
     lm::base::Model *kenLM;
     // Recognize with default probing for ARPA files.
     lm::ngram::ModelType model_type = lm::ngram::PROBING;
