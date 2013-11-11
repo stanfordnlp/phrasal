@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.objectbank.ObjectBank;
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 
 import java.io.Serializable;
@@ -24,7 +25,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   // TODO(spenceg): Make this private and keep identityIndex() or
   // keep this public and remove identityIndex()
-  public static final OAIndex<String> index = new OAIndex<String>();
+  public static final Index<String> index = new HashIndex<String>();
 
   public final int id;
 

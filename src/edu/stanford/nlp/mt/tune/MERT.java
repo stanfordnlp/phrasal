@@ -37,6 +37,8 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.util.ErasureUtils;
+import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
 import edu.stanford.nlp.mt.metrics.Metrics;
@@ -90,7 +92,7 @@ public class MERT extends Thread {
 
   private static Random globalRandom;
 
-  public final static OAIndex<String> featureIndex = new OAIndex<String>();
+  public final static Index<String> featureIndex = new HashIndex<String>();
 
   private static int nThreads = 4;
 

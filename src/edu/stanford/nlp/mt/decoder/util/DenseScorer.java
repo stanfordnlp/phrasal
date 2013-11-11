@@ -6,9 +6,9 @@ import java.util.Collection;
 import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.OAIndex;
 
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.math.ArrayMath;
 
@@ -27,7 +27,7 @@ public class DenseScorer implements Scorer<String> {
 
   public DenseScorer(String filename) {
     sharedFeatureIndex = false;
-    featureIndex = new OAIndex<String>();
+    featureIndex = new HashIndex<String>();
     try {
       Counter<String> wts = IOTools.readWeights(filename, featureIndex);
       updateWeights(wts);
@@ -44,7 +44,7 @@ public class DenseScorer implements Scorer<String> {
 
   public DenseScorer(Counter<String> featureWts, Index<String> featureIndex) {
     sharedFeatureIndex = (featureIndex != null);
-    this.featureIndex = featureIndex == null ? new OAIndex<String>() : featureIndex;
+    this.featureIndex = featureIndex == null ? new HashIndex<String>() : featureIndex;
     updateWeights(featureWts);
   }
 

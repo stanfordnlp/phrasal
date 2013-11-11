@@ -1,12 +1,12 @@
 package edu.stanford.nlp.rte.mtmetric;
 
-import edu.stanford.nlp.mt.base.OAIndex;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.rte.FeatureOccurrence;
 import edu.stanford.nlp.rte.Global;
 import edu.stanford.nlp.rte.MockProblem;
 import edu.stanford.nlp.rte.NoLearningExperiment;
 import edu.stanford.nlp.rte.RTEPipeline;
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -146,9 +146,8 @@ public class RTEFeaturizer {
       new BufferedReader(new InputStreamReader(System.in));
     List<Counter<String>> dataPts = new ArrayList<Counter<String>>();
     List<Double>  scores = new ArrayList<Double>();
-    Index<String> featureIndex = new OAIndex<String>();
+    Index<String> featureIndex = new HashIndex<String>();
     boolean interactive = System.console() != null;
-    int row = 0;
 
     if (interactive) System.out.print("\nRTE Eval>");
     for (String line = reader.readLine(); line != null;
@@ -169,7 +168,6 @@ public class RTEFeaturizer {
         String resultStr = results.toString();
         resultStr = resultStr.substring(1, resultStr.length()-1).replaceAll(", ", " ");
         System.out.printf("\nFeature List ||| %s ||| %s\n", id, resultStr);
-        row++;
       } catch (Exception e) {
         if (interactive) {
           e.printStackTrace();

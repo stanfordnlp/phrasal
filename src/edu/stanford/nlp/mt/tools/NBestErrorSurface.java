@@ -5,11 +5,12 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.FlatNBestList;
-import edu.stanford.nlp.mt.base.OAIndex;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricFactory;
@@ -38,7 +39,7 @@ public class NBestErrorSurface {
     String feature2Field = args[5];
     String outPrefix = args[6];
 
-    OAIndex<String> featureIndex = new OAIndex<String>();
+    Index<String> featureIndex = new HashIndex<String>();
 
     EvaluationMetric<IString, String> eval = MetricFactory.metric(evalMetricFn,
         refsFn);
