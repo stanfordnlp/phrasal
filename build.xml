@@ -111,7 +111,7 @@ includeantruntime="false">
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
       <batchtest fork="yes">
-        <fileset dir="${tests.path}">
+        <fileset dir="${itests.path}">
           <include name="**/*ITest.java"/>
         </fileset>
       </batchtest>
