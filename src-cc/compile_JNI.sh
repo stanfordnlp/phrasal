@@ -12,8 +12,10 @@ javah edu.stanford.nlp.mt.lm.KenLanguageModel
 
 if [ "$(uname)" == Darwin ]; then
   SUFFIX=.dylib
+  RT=""
 else
+  RT=-lrt
   SUFFIX=.so
 fi
 
-g++ -I. -O3 -DNDEBUG -DHAVE_ZLIB -DKENLM_MAX_ORDER=6 -fPIC -lrt -I$JAVA_HOME/include -Ikenlm/ -I$JAVA_HOME/include/linux edu_stanford_nlp_mt_lm_KenLanguageModel.cc kenlm/lm/*.o kenlm/util/*.o kenlm/util/double-conversion/*.o -shared -o libPhrasalKenLM$SUFFIX -lz $extra_flags
+g++ -I. -O3 -DNDEBUG -DHAVE_ZLIB -DKENLM_MAX_ORDER=6 -fPIC $RT -I$JAVA_HOME/include -Ikenlm/ -I$JAVA_HOME/include/linux edu_stanford_nlp_mt_lm_KenLanguageModel.cc kenlm/lm/*.o kenlm/util/*.o kenlm/util/double-conversion/*.o -shared -o libPhrasalKenLM$SUFFIX -lz $extra_flags
