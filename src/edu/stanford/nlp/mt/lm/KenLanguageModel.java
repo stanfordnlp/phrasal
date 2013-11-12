@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReference;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -20,20 +20,16 @@ public class KenLanguageModel implements LanguageModel<IString> {
     System.loadLibrary("PhrasalKenLM");
   }
   
-  // See vocab.cc. <unk> is always first in the vocabulary. If this assumption
-  // changes, then this value needs to be updated.
-  private static final int UNK_KENLM_ID = 0;
-  
   private final String name;
   private final int order;
   private final long kenLMPtr;
-  private int[] istringIdToKenLMId;
-  private final ReentrantLock indexLock;
- 
+
+  private AtomicReference<int[]> istringIdToKenLMId;
+
   // JNI methods
   private native long readKenLM(String filename);
   private native long scoreNGram(long kenLMPtr, int[] ngram);
-  private native int getId(long kenLMPtr, String token);
+  private native int getLMId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
 
   /**
@@ -64,7 +60,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     order = getOrder(kenLMPtr);
     initializeIdTable();
-    indexLock = new ReentrantLock();
   }
   
   private void initializeIdTable() {
@@ -72,57 +67,47 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // building the index.
     System.err.printf("Special tokens: start: %s  end: %s%n", TokenUtils.START_TOKEN.toString(),
         TokenUtils.END_TOKEN.toString());
-    istringIdToKenLMId = new int[IString.index.size()];
-    for (int i = 0; i < istringIdToKenLMId.length; ++i) {
-      istringIdToKenLMId[i] = getId(kenLMPtr, IString.index.get(i));
+    int[] table = new int[IString.index.size()];
+    for (int i = 0; i < table.length; ++i) {
+      table[i] = getLMId(kenLMPtr, IString.index.get(i));
     }
+    istringIdToKenLMId = new AtomicReference<int[]>(table);
   }
   
-  /**
-   * Extend the IString --> KenLM mapping. This method is *not*
-   * threadsafe and is thus called only when <code>indexLock</code>
-   * has been acquired.
-   */
-  private void updateIdTable() {
-    int[] newTable = new int[IString.index.size()];
-    System.arraycopy(istringIdToKenLMId, 0, newTable, 0, istringIdToKenLMId.length);
-    for (int i = istringIdToKenLMId.length; i < newTable.length; ++i) {
-      newTable[i] = getId(kenLMPtr, IString.index.get(i));
-    }
-    istringIdToKenLMId = newTable;
-  }
-
   /**
    * Maps the IString id to a kenLM id. If the IString
-   * index is extended, this call tries to acquire a lock on
-   * <code>istringIdToKenLMId</code> and extend it. If it cannot,
-   * then another thread is updating the table and this method
-   * return <code>UNK_KENLM_ID</code>.
-   * 
+   * id is out of range, update the vocab mapping.
    * @param token
-   * @return
+   * @return kenlm id of the string
    */
   private int toKenLMId(IString token) {
-    if (token.id < istringIdToKenLMId.length) {
-      return istringIdToKenLMId[token.id];
+    {
+      int[] map = istringIdToKenLMId.get();
+      if (token.id < map.length) {
+        return map[token.id];
+      }
+    }
+    // Rare event: we have to expand the vocabulary.
+    // In principle, this doesn't need to be synchronized, but it does
+    // prevent unnecessary work duplication.
+    synchronized(this) {
+      // Maybe another thread did the work for us?
+      int[] map = istringIdToKenLMId.get();
+      if (token.id < map.length) {
+        return map[token.id];
+      }
 
-    } else if (indexLock.tryLock()) {
-      updateIdTable();
-      indexLock.unlock();
-      return istringIdToKenLMId[token.id];
-
-    } else {
-      return UNK_KENLM_ID;
+      int[] oldTable = istringIdToKenLMId.get();
+      int[] newTable = new int[IString.index.size()];
+      System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
+      for (int i = oldTable.length; i < newTable.length; ++i) {
+        newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
+      }
+      istringIdToKenLMId.set(newTable);
+      return newTable[token.id];
     }
   }
-  
-  private static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
-    int sequenceSz = sequence.size();
-    int maxOrder = (order < sequenceSz ? order : sequenceSz);
-    return sequenceSz == maxOrder ? sequence :
-      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
-  }
-  
+    
   private int[] toKenLMIds(Sequence<IString> ngram) {
     int[] ngramIds = new int[ngram.size()];
     for (int i = 0; i < ngramIds.length; i++) {
@@ -130,6 +115,13 @@ public class KenLanguageModel implements LanguageModel<IString> {
       ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(i));
     }
     return ngramIds;
+  }
+
+  private static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
+    int sequenceSz = sequence.size();
+    int maxOrder = (order < sequenceSz ? order : sequenceSz);
+    return sequenceSz == maxOrder ? sequence :
+      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
   }
 
   @Override

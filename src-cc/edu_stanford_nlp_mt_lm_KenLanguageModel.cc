@@ -93,10 +93,10 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_readKenLM
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
- * Method:    getId
+ * Method:    getLMId
  * Signature: (Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getId
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getLMId
   (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jstring jstr_token) {
   JNIString token(env, jstr_token);
   return reinterpret_cast<lm::base::Model*>(kenLM_ptr)->BaseVocabulary().Index(token.get());
