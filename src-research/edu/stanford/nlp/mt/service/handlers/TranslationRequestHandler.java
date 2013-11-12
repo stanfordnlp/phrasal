@@ -64,7 +64,7 @@ public class TranslationRequestHandler implements RequestHandler {
     this.decoder = decoder;
     // Setup a threadpool for phrasal that wraps the servlet internals
     // needed to restart the request after processing.
-    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(Phrasal.getNumThreads(), 
+    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
         new DecoderService(0, decoder), false);
     
     logger = Logger.getLogger(TranslationRequestHandler.class.getName());
@@ -331,7 +331,7 @@ public class TranslationRequestHandler implements RequestHandler {
   private void restartThreadpool(int sourceId) {
     logger.severe("Restarting threadpool for input id: " + String.valueOf(sourceId));
     wrapper.join();
-    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(Phrasal.getNumThreads(), 
+    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
         new DecoderService(0, decoder), false);
     logger.info("Restarted threadpool");
   }

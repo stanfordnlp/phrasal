@@ -28,7 +28,6 @@ public final class FeaturizerFactory {
   public static final String BASELINE_FEATURIZERS = "baseline";
   public static final String DEFAULT_FEATURIZERS = PSEUDO_PHARAOH_GENERATOR;
   public static final String ARPA_LM_PARAMETER = "arpalm";
-  public static final String NUM_THREADS = "nthreads";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
   public static final String GAP_PARAMETER = "gap";
 
@@ -52,7 +51,6 @@ public final class FeaturizerFactory {
     final String featurizerName = featurizerSpecs.length == 0 ? DEFAULT_FEATURIZERS :
       featurizerSpecs[0].toLowerCase();
     final Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
-    final int numThreads = paramPairs.containsKey(NUM_THREADS) ? Integer.valueOf(paramPairs.get(NUM_THREADS)) : 1;
 
     // Linear distortion
     final DerivationFeaturizer<IString, String> linearDistortionFeaturizer;
@@ -92,7 +90,7 @@ public final class FeaturizerFactory {
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       if (lm != null && ! lm.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModelFactory.load(lm, numThreads));
+            LanguageModelFactory.load(lm));
         baselineFeaturizers.add(arpaLmFeaturizer);
       }
 
@@ -115,7 +113,7 @@ public final class FeaturizerFactory {
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       if (lm != null) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModelFactory.load(lm, numThreads));
+            LanguageModelFactory.load(lm));
         pharaohFeaturizers.add(arpaLmFeaturizer);
       }
 
