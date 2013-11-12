@@ -1,5 +1,5 @@
 #include <math.h>
-#include "edu_stanford_nlp_mt_lm_KenLanguageModel.h"
+#include <jni.h>
 #include "lm/max_order.hh"
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
