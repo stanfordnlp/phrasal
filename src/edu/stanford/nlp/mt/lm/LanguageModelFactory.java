@@ -22,14 +22,10 @@ public final class LanguageModelFactory {
   private LanguageModelFactory() {}
 
   public static LanguageModel<IString> load(String filename) throws IOException {
-    return load(filename, 1);
-  }
-
-  public static LanguageModel<IString> load(String filename, int numThreads) throws IOException {
     LanguageModel<IString> languageModel;
     if (filename.startsWith(KEN_LM_TAG)) {
       String realFilename = filename.substring(KEN_LM_TAG.length());
-      languageModel = new KenLanguageModel(realFilename, numThreads);
+      languageModel = new KenLanguageModel(realFilename);
 
     } else {
       // Default Java LM data structure

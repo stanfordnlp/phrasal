@@ -33,23 +33,14 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private native int getOrder(long kenLMPtr);
 
   /**
-   * Constructor for single-threaded usage.
-   * 
-   * @param filename
-   */
-  public KenLanguageModel(String filename) {
-    this(filename,1);
-  }
-  
-  /**
    * Constructor for multi-threaded queries.
    * 
    * @param filename
    * @param numThreads
    */
-  public KenLanguageModel(String filename, int numThreads) {
+  public KenLanguageModel(String filename) {
     name = String.format("KenLM(%s)", filename);
-    System.err.printf("KenLM: Reading %s (%d threads)%n", filename, numThreads);
+    System.err.printf("KenLM: Reading %s%n", filename);
     if (0 == (kenLMPtr = readKenLM(filename))) {
       File f = new File(filename);
       if (!f.exists()) {
