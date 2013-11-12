@@ -92,12 +92,10 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // prevent unnecessary work duplication.
     synchronized(this) {
       // Maybe another thread did the work for us?
-      int[] map = istringIdToKenLMId.get();
-      if (token.id < map.length) {
-        return map[token.id];
-      }
-
       int[] oldTable = istringIdToKenLMId.get();
+      if (token.id < oldTable.length) {
+        return oldTable[token.id];
+      }
       int[] newTable = new int[IString.index.size()];
       System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
       for (int i = oldTable.length; i < newTable.length; ++i) {
