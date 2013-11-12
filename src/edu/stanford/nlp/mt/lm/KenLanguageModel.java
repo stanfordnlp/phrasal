@@ -8,18 +8,19 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
- * KenLanguageModel - KenLM language model support via JNI.
+ * KenLM language model support via JNI.
  * 
  * @author daniel cer (danielcer@stanford.edu)
  * @author Spence Green
+ * @author Kenneth Heafield
  *
  */
 public class KenLanguageModel implements LanguageModel<IString> {
-  
+
   static {
     System.loadLibrary("PhrasalKenLM");
   }
-  
+
   private final String name;
   private final int order;
   private final long kenLMPtr;
@@ -52,7 +53,10 @@ public class KenLanguageModel implements LanguageModel<IString> {
     order = getOrder(kenLMPtr);
     initializeIdTable();
   }
-  
+
+  /**
+   * Create the mapping between IString word ids and KenLM word ids.
+   */
   private void initializeIdTable() {
     // Don't remove this line!! Sanity check to make sure that start and end load before
     // building the index.
@@ -64,7 +68,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     istringIdToKenLMId = new AtomicReference<int[]>(table);
   }
-  
+
   /**
    * Maps the IString id to a kenLM id. If the IString
    * id is out of range, update the vocab mapping.
@@ -96,21 +100,23 @@ public class KenLanguageModel implements LanguageModel<IString> {
       return newTable[token.id];
     }
   }
-    
+
+  /**
+   * Truncate and reverse the input sequence.
+   * 
+   * @param ngram
+   * @return
+   */
   private int[] toKenLMIds(Sequence<IString> ngram) {
-    int[] ngramIds = new int[ngram.size()];
+    final int ngramSize = ngram.size();
+    final int maxOrder = order < ngramSize ? order : ngramSize;
+    final int offset = ngramSize - maxOrder;
+    int[] ngramIds = new int[maxOrder];
     for (int i = 0; i < ngramIds.length; i++) {
       // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(i));
+      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(offset+i));
     }
     return ngramIds;
-  }
-
-  private static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
-    int sequenceSz = sequence.size();
-    int maxOrder = (order < sequenceSz ? order : sequenceSz);
-    return sequenceSz == maxOrder ? sequence :
-      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
   }
 
   @Override
@@ -119,15 +125,14 @@ public class KenLanguageModel implements LanguageModel<IString> {
     if (boundaryState != null) {
       return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
     }
-    Sequence<IString> ngram = clipNgram(sequence, order);
-    int[] ngramIds = toKenLMIds(ngram);
+    int[] ngramIds = toKenLMIds(sequence);
     // got is (state_length << 32) | prob where prob is a float.
     long got = scoreNGram(kenLMPtr, ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
     return new KenLMState(score, ngramIds, stateLength);
   }
-  
+
   @Override
   public IString getStartToken() {
     return TokenUtils.START_TOKEN;
