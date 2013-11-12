@@ -7,8 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef edu_stanford_nlp_mt_lm_KenLanguageModel_POOL_MULTIPLIER
-#define edu_stanford_nlp_mt_lm_KenLanguageModel_POOL_MULTIPLIER 3L
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    readKenLM
@@ -27,10 +25,10 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
- * Method:    getId
+ * Method:    getLMId
  * Signature: (JLjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getId
+JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getLMId
   (JNIEnv *, jobject, jlong, jstring);
 
 /*
