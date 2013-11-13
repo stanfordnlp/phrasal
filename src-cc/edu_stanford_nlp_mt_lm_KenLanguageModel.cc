@@ -1,5 +1,5 @@
 #include <math.h>
-#include <jni.h>
+#include  <jni.h>
 #include "lm/max_order.hh"
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
@@ -40,6 +40,7 @@ class JNIString {
     const char *local_;
 };
 
+extern "C" {
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -138,4 +139,6 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {
   return reinterpret_cast<lm::base::Model*>(kenLM_ptr)->Order();
+}
+
 }
