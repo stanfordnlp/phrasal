@@ -118,7 +118,7 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
   union {
     lm::ngram::State gram;
 #ifdef HAVE_NPLM
-    lm::neural::State neural;
+    lm::np::State neural;
 #endif
   } out_state;
   lm::base::Model* kenLM = reinterpret_cast<lm::base::Model*>(kenLM_ptr);
