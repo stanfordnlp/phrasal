@@ -102,7 +102,7 @@ public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, 
       throw new RuntimeException(
           "Two arguments are needed: LM file name and LM ID");
     featureName = args[1];
-    this.lm = LanguageModelFactory.load(args[0], Phrasal.getNumThreads());
+    this.lm = LanguageModelFactory.load(args[0]);
     this.lmOrder = lm.order();
     featureNames = new String[2][];
     featureNames[0] = new String[lmOrder];

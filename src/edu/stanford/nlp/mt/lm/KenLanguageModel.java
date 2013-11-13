@@ -1,6 +1,9 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.mt.base.IString;
@@ -8,52 +11,56 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 
 /**
- * KenLanguageModel - KenLM language model support via JNI.
+ * KenLM language model support via JNI.
  * 
  * @author daniel cer (danielcer@stanford.edu)
  * @author Spence Green
+ * @author Kenneth Heafield
  *
  */
 public class KenLanguageModel implements LanguageModel<IString> {
-  
+
   static {
+    try {
+      /**
+       * Voodoo to get path to this class, then go up and find the src-cc
+       * directory where the library lives.  Then voodoo to override
+       * java.library.path from teh intarwebs.
+       */
+      String path = KenLanguageModel.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "../src-cc/";
+      System.setProperty("java.library.path", path + ":" + System.getProperty("java.library.path"));
+      Field sysPath = ClassLoader.class.getDeclaredField("sys_paths");
+      sysPath.setAccessible(true);
+      sysPath.set(null, null);
+    } catch (URISyntaxException|NoSuchFieldException|IllegalAccessException e) {
+      System.err.println("Warning: failed to automatically find the path to libPhrasalKenLM.so.  You should set LD_LIBRARY_PATH.");
+    }
     System.loadLibrary("PhrasalKenLM");
   }
-  
-  // See vocab.cc. <unk> is always first in the vocabulary. If this assumption
-  // changes, then this value needs to be updated.
-  private static final int UNK_KENLM_ID = 0;
-  
+
   private final String name;
   private final int order;
   private final long kenLMPtr;
-  private int[] istringIdToKenLMId;
-  private final ReentrantLock indexLock;
- 
+
+  private AtomicReference<int[]> istringIdToKenLMId;
+
+  private final ReentrantLock preventDuplicateWork = new ReentrantLock();
+
   // JNI methods
   private native long readKenLM(String filename);
   private native long scoreNGram(long kenLMPtr, int[] ngram);
-  private native int getId(long kenLMPtr, String token);
+  private native int getLMId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
 
-  /**
-   * Constructor for single-threaded usage.
-   * 
-   * @param filename
-   */
-  public KenLanguageModel(String filename) {
-    this(filename,1);
-  }
-  
   /**
    * Constructor for multi-threaded queries.
    * 
    * @param filename
    * @param numThreads
    */
-  public KenLanguageModel(String filename, int numThreads) {
+  public KenLanguageModel(String filename) {
     name = String.format("KenLM(%s)", filename);
-    System.err.printf("KenLM: Reading %s (%d threads)%n", filename, numThreads);
+    System.err.printf("KenLM: Reading %s%n", filename);
     if (0 == (kenLMPtr = readKenLM(filename))) {
       File f = new File(filename);
       if (!f.exists()) {
@@ -64,70 +71,76 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     order = getOrder(kenLMPtr);
     initializeIdTable();
-    indexLock = new ReentrantLock();
   }
-  
+
+  /**
+   * Create the mapping between IString word ids and KenLM word ids.
+   */
   private void initializeIdTable() {
     // Don't remove this line!! Sanity check to make sure that start and end load before
     // building the index.
     System.err.printf("Special tokens: start: %s  end: %s%n", TokenUtils.START_TOKEN.toString(),
         TokenUtils.END_TOKEN.toString());
-    istringIdToKenLMId = new int[IString.index.size()];
-    for (int i = 0; i < istringIdToKenLMId.length; ++i) {
-      istringIdToKenLMId[i] = getId(kenLMPtr, IString.index.get(i));
+    int[] table = new int[IString.index.size()];
+    for (int i = 0; i < table.length; ++i) {
+      table[i] = getLMId(kenLMPtr, IString.index.get(i));
     }
-  }
-  
-  /**
-   * Extend the IString --> KenLM mapping. This method is *not*
-   * threadsafe and is thus called only when <code>indexLock</code>
-   * has been acquired.
-   */
-  private void updateIdTable() {
-    int[] newTable = new int[IString.index.size()];
-    System.arraycopy(istringIdToKenLMId, 0, newTable, 0, istringIdToKenLMId.length);
-    for (int i = istringIdToKenLMId.length; i < newTable.length; ++i) {
-      newTable[i] = getId(kenLMPtr, IString.index.get(i));
-    }
-    istringIdToKenLMId = newTable;
+    istringIdToKenLMId = new AtomicReference<int[]>(table);
   }
 
   /**
    * Maps the IString id to a kenLM id. If the IString
-   * index is extended, this call tries to acquire a lock on
-   * <code>istringIdToKenLMId</code> and extend it. If it cannot,
-   * then another thread is updating the table and this method
-   * return <code>UNK_KENLM_ID</code>.
-   * 
+   * id is out of range, update the vocab mapping.
    * @param token
-   * @return
+   * @return kenlm id of the string
    */
   private int toKenLMId(IString token) {
-    if (token.id < istringIdToKenLMId.length) {
-      return istringIdToKenLMId[token.id];
-
-    } else if (indexLock.tryLock()) {
-      updateIdTable();
-      indexLock.unlock();
-      return istringIdToKenLMId[token.id];
-
-    } else {
-      return UNK_KENLM_ID;
+    {
+      int[] map = istringIdToKenLMId.get();
+      if (token.id < map.length) {
+        return map[token.id];
+      }
     }
+    // Rare event: we have to expand the vocabulary.
+    // In principle, this doesn't need to be a lock, but it does
+    // prevent unnecessary work duplication.
+    if (preventDuplicateWork.tryLock()) {
+      // This thread is responsible for updating the mapping.
+      try {
+        // Maybe another thread did the work for us?
+        int[] oldTable = istringIdToKenLMId.get();
+        if (token.id < oldTable.length) {
+          return oldTable[token.id];
+        }
+        int[] newTable = new int[IString.index.size()];
+        System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
+        for (int i = oldTable.length; i < newTable.length; ++i) {
+          newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
+        }
+        istringIdToKenLMId.set(newTable);
+        return newTable[token.id];
+      } finally {
+        preventDuplicateWork.unlock();
+      }
+    }
+    // Another thread is working.  Lookup directly.
+    return getLMId(kenLMPtr, token.toString());
   }
-  
-  private static <T> Sequence<T> clipNgram(Sequence<T> sequence, int order) {
-    int sequenceSz = sequence.size();
-    int maxOrder = (order < sequenceSz ? order : sequenceSz);
-    return sequenceSz == maxOrder ? sequence :
-      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
-  }
-  
+
+  /**
+   * Truncate and reverse the input sequence.
+   * 
+   * @param ngram
+   * @return
+   */
   private int[] toKenLMIds(Sequence<IString> ngram) {
-    int[] ngramIds = new int[ngram.size()];
+    final int ngramSize = ngram.size();
+    final int maxOrder = order < ngramSize ? order : ngramSize;
+    final int offset = ngramSize - maxOrder;
+    int[] ngramIds = new int[maxOrder];
     for (int i = 0; i < ngramIds.length; i++) {
       // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(i));
+      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(offset+i));
     }
     return ngramIds;
   }
@@ -138,15 +151,14 @@ public class KenLanguageModel implements LanguageModel<IString> {
     if (boundaryState != null) {
       return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
     }
-    Sequence<IString> ngram = clipNgram(sequence, order);
-    int[] ngramIds = toKenLMIds(ngram);
+    int[] ngramIds = toKenLMIds(sequence);
     // got is (state_length << 32) | prob where prob is a float.
     long got = scoreNGram(kenLMPtr, ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
     return new KenLMState(score, ngramIds, stateLength);
   }
-  
+
   @Override
   public IString getStartToken() {
     return TokenUtils.START_TOKEN;

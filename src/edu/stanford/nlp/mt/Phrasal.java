@@ -190,11 +190,8 @@ public class Phrasal {
    * Number of decoding threads. Setting this parameter to 0 enables
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
-   * 
-   * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
-   * 
    */
-  private static int numThreads = 1;
+  private int numThreads = 1;
 
   /**
    * Hard distortion limit for phrase-based decoder
@@ -292,7 +289,7 @@ public class Phrasal {
   /**
    * @return the number of threads specified in the ini file.
    */
-  public static int getNumThreads() { return numThreads; }
+  public int getNumThreads() { return numThreads; }
   
   /**
    * Access the decoder's phrase table.
@@ -320,10 +317,6 @@ public class Phrasal {
       ConcreteRule
           .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
-
-    numThreads = config.containsKey(NUM_THREADS) ? Integer.parseInt(config.get(NUM_THREADS).get(0)) : 1;
-    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
-    System.err.printf("Number of threads: %d%n", numThreads);
   }
 
   @SuppressWarnings("unchecked")
@@ -345,6 +338,10 @@ public class Phrasal {
       throw new RuntimeException(String.format(
           "The following fields are unrecognized: %s%n", extraFields));
     }
+
+    numThreads = config.containsKey(NUM_THREADS) ? Integer.parseInt(config.get(NUM_THREADS).get(0)) : 1;
+    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    System.err.printf("Number of threads: %d%n", numThreads);
 
     if (withGaps) {
       recombinationMode = RecombinationFilterFactory.DTU_RECOMBINATION;
@@ -725,8 +722,7 @@ public class Phrasal {
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
             linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
-        makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
-        makePair(FeaturizerFactory.NUM_THREADS, String.valueOf(numThreads)));
+        makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel));
     } else {
       featurizer = FeaturizerFactory.factory(
           FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
