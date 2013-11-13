@@ -20,7 +20,7 @@ do
 done
 
 if [ "$version" == "" ]; then
-  echo "FAIL: must specify a version name"
+  echo "FAIL: must specify a version name with -v"
   exit 2
 fi
 
