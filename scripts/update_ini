@@ -103,7 +103,5 @@ if ($seen_wfile==0){
   if($opts{w}) {
     print "\n[weights-file]\n";
     print "$opts{w}\n";
-  } else {
-    die "-w option needs to be specified";
   }
 }

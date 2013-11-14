@@ -27,6 +27,8 @@ struct FullScoreReturn {
    */
   unsigned char ngram_length;
 
+  unsigned char right_state_length;
+
   /* Left extension information.  If independent_left is set, then prob is
    * independent of words to the left (up to additional backoff).  Otherwise,
    * extend_left indicates how to efficiently extend further to the left.  

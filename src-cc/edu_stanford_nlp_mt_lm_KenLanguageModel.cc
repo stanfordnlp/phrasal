@@ -1,5 +1,5 @@
 #include <math.h>
-#include <jni.h>
+#include  <jni.h>
 #include "lm/max_order.hh"
 #include "lm/model.hh"
 #include "lm/virtual_interface.hh"
@@ -40,6 +40,7 @@ class JNIString {
     const char *local_;
 };
 
+extern "C" {
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
@@ -115,13 +116,18 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
   env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
 
   // LM query
-  lm::ngram::State out_state;
+  union {
+    lm::ngram::State gram;
+#ifdef HAVE_NPLM
+    lm::np::State neural;
+#endif
+  } out_state;
   lm::base::Model* kenLM = reinterpret_cast<lm::base::Model*>(kenLM_ptr);
   union {float f; unsigned int i; } convert;
-  convert.f = kenLM->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], &out_state).prob * M_LN10;
+  lm::FullScoreReturn got = kenLM->FullScoreForgotState((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0], &out_state);
+  convert.f = got.prob * M_LN10;
   // Return a jlong whose top bits are state length and bottom bits are floating-point probability.
-  jlong ret = convert.i;
-  ret |= (static_cast<jlong>(out_state.length) << 32);
+  jlong ret = convert.i | (static_cast<jlong>(got.right_state_length) << 32);
   return ret;
 }
 
@@ -133,4 +139,6 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {
   return reinterpret_cast<lm::base::Model*>(kenLM_ptr)->Order();
+}
+
 }
