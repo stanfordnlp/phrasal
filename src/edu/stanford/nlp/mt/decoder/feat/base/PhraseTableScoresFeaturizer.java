@@ -100,11 +100,6 @@ RuleFeaturizer<T, String> {
   }
 
   @Override
-  public boolean constructInternalAlignments() {
-    return false;
-  }
-
-  @Override
   public boolean isolationScoreOnly() {
     return false;
   }

@@ -85,11 +85,6 @@ public class TargetFunctionWordInsertion implements RuleFeaturizer<IString, Stri
   }
 
   @Override
-  public boolean constructInternalAlignments() {
-    return false;
-  }
-
-  @Override
   public boolean isolationScoreOnly() {
     return false;
   }
