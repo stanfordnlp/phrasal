@@ -429,7 +429,7 @@ public class OnlineTuner {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int sourceId = result.translationIds[i];
           if (createPseudoReferences && nbestListWriter != null) {
-            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter, false);
+            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter);
           }
           if (nbestLists != null) {
             assert ! nbestLists.containsKey(sourceId);

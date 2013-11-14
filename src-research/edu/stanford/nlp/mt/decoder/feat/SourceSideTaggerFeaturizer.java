@@ -67,24 +67,24 @@ public class SourceSideTaggerFeaturizer extends DerivationFeaturizer<IString, St
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newArrayList();
     
-    for (int i = 0; i < tagged.size(); ++i) {
-      if (f.s2tAlignmentIndex[i] == null) {
-        // this word is not aligned to anything yet
-        continue;
-      }
-
-      for (int j = 0; j < f.s2tAlignmentIndex[i].length; ++j) {
-        int sourceIndex = i;
-        int targetIndex = f.s2tAlignmentIndex[i][j];
-
-        String sourceTag = tagged.get(sourceIndex).tag();
-        String targetWord = f.targetPrefix.get(targetIndex).toString();
-        String feature = FEATURE_NAME + sourceTag + "-" + targetWord;
-        // no attempt to look for repeated features; 
-        // the system will find and sum those for us
-        features.add(new FeatureValue<String>(feature, 1.0));
-      }
-    }
+//    for (int i = 0; i < tagged.size(); ++i) {
+//      if (f.s2tAlignmentIndex[i] == null) {
+//        // this word is not aligned to anything yet
+//        continue;
+//      }
+//
+//      for (int j = 0; j < f.s2tAlignmentIndex[i].length; ++j) {
+//        int sourceIndex = i;
+//        int targetIndex = f.s2tAlignmentIndex[i][j];
+//
+//        String sourceTag = tagged.get(sourceIndex).tag();
+//        String targetWord = f.targetPrefix.get(targetIndex).toString();
+//        String feature = FEATURE_NAME + sourceTag + "-" + targetWord;
+//        // no attempt to look for repeated features; 
+//        // the system will find and sum those for us
+//        features.add(new FeatureValue<String>(feature, 1.0));
+//      }
+//    }
 
     return features;
   }

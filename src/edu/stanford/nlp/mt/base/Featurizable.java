@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.base;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
-import edu.stanford.nlp.mt.Phrasal;
 
 /**
  * Packages information about a newly constructed hypothesis for use in the 
@@ -113,42 +112,6 @@ public class Featurizable<TK, FV> {
   public final Featurizable<TK, FV> prior;
 
   /**
-   * For a given sequence position in t2fAlignmentIndex or f2tAlignment, the
-   * index PHRASE_START is used to retrieve the start position of the aligned
-   * phrase.
-   */
-  public static final int PHRASE_START = 0;
-
-  /**
-   * For a given sequence position in t2fAlignmentIndex or f2tAlignment, the
-   * index PHRASE_END is used to retrieve the end position of the aligned
-   * phrase.
-   */
-  public static final int PHRASE_END = 1;
-
-  /**
-   * Partial translation to foreign sentence alignment index. By default, it is
-   * set to null. It is constructed only if any featurizer returns true for
-   * needsInternalAlignments.
-   * 
-   * Guarantees that ranges corresponding to the same phrase are represented
-   * with the same int[] in order to allow '==' to be used over the ranges
-   * within a given index.
-   * 
-   * For positions where no alignment exists, null is used.
-   */
-  final public int[][] t2sAlignmentIndex;
-
-  /**
-   * Foreign sentence to partial translation alignment index. By default, it is
-   * set to null. It is constructed only if any featurizer returns true for
-   * needsInternalAlignments.
-   * 
-   * Same guarantees as t2sAlignmentIndex
-   */
-  final public int[][] s2tAlignmentIndex;
-
-  /**
    * For stateful featurizers. If multiple featurizers require access to this
    * variable, 'state' should probably reference a map or a list.
    */
@@ -179,30 +142,9 @@ public class Featurizable<TK, FV> {
     sourceSentence = derivation.sourceSequence;
     numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
-    if (prior != null) {
-      if (constructAlignment) {
-        t2sAlignmentIndex = copyOfIndex(prior.t2sAlignmentIndex,
-            derivation.length);
-        s2tAlignmentIndex = copyOfIndex(prior.s2tAlignmentIndex,
-            prior.s2tAlignmentIndex.length);
-      } else {
-        t2sAlignmentIndex = s2tAlignmentIndex = null;
-      }
-      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
-          : null;
-    } else {
-      if (constructAlignment) {
-        t2sAlignmentIndex = new int[derivation.length][];
-        s2tAlignmentIndex = new int[sourceSentence.size()][];
-      } else {
-        t2sAlignmentIndex = s2tAlignmentIndex = null;
-      }
-      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
-          : null;
-    }
+    states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
+        : null;
     this.derivation = derivation;
-    if (constructAlignment)
-      augmentAlignments(rule);
   }
 
   @SuppressWarnings("unchecked")
@@ -232,30 +174,9 @@ public class Featurizable<TK, FV> {
     sourceSentence = derivation.sourceSequence;
     numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
-    if (prior != null) {
-      if (constructAlignment) {
-        t2sAlignmentIndex = copyOfIndex(prior.t2sAlignmentIndex,
-            derivation.length);
-        s2tAlignmentIndex = copyOfIndex(prior.s2tAlignmentIndex,
-            prior.s2tAlignmentIndex.length);
-      } else {
-        t2sAlignmentIndex = s2tAlignmentIndex = null;
-      }
-      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
-          : null;
-    } else {
-      if (constructAlignment) {
-        t2sAlignmentIndex = new int[derivation.length][];
-        s2tAlignmentIndex = new int[sourceSentence.size()][];
-      } else {
-        t2sAlignmentIndex = s2tAlignmentIndex = null;
-      }
-      states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
-          : null;
-    }
+    states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
+        : null;
     this.derivation = derivation;
-    if (constructAlignment)
-      augmentAlignments(rule);
   }
 
   public FeaturizerState getState(DerivationFeaturizer<TK, FV> f) {
@@ -283,15 +204,6 @@ public class Featurizable<TK, FV> {
   }
 
   /**
-   * Avoid Arrays.copyOf and it's sluggish call to Class.getComponentType
-   */
-  private static int[][] copyOfIndex(int[][] index, int newLength) {
-    int[][] newIndex = new int[newLength][];
-    System.arraycopy(index, 0, newIndex, 0, Math.min(index.length, newLength));
-    return newIndex;
-  }
-
-  /**
 	 * 
 	 */
   public Featurizable(Sequence<TK> sourceSequence,
@@ -314,11 +226,6 @@ public class Featurizable<TK, FV> {
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;
-    t2sAlignmentIndex = new int[targetPhrase != null ? targetPhrase
-        .size() : 0][];
-    s2tAlignmentIndex = new int[sourceSentence.size()][];
-    if (constructAlignment)
-      augmentAlignments(rule);
     derivation = null;
   }
 
@@ -346,44 +253,7 @@ public class Featurizable<TK, FV> {
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;
-    t2sAlignmentIndex = new int[targetPhrase.size()][];
-    s2tAlignmentIndex = new int[sourceSentence.size()][];
-    if (constructAlignment)
-      augmentAlignments(rule);
     derivation = null;
-  }
-
-  /**
-	 * 
-	 */
-  protected void augmentAlignments(ConcreteRule<TK,FV> rule) {
-    if (rule.abstractRule.target == null)
-      return;
-    int targetSz = rule.abstractRule.target.elements.length;
-    int sourceSz = Phrasal.withGaps ?
-    // MG2009: these two lines should achieve the same result for phrases
-    // without gaps,
-    // though the first one is slower:
-    rule.sourceCoverage.length()
-        - rule.sourceCoverage.nextSetBit(0)
-        : rule.abstractRule.source.elements.length;
-    int limit;
-    int[] range = new int[2];
-    range[PHRASE_START] = sourcePosition;
-    range[PHRASE_END] = sourcePosition + sourceSz;
-    limit = targetPosition + targetSz;
-    for (int i = targetPosition; i < limit; i++) {
-      t2sAlignmentIndex[i] = range;
-    }
-
-    range = new int[2];
-    range[PHRASE_START] = targetPosition;
-    range[PHRASE_END] = targetPosition + targetSz;
-    limit = sourcePosition + sourceSz;
-    for (int i = sourcePosition; i < limit; i++) {
-      if (rule.sourceCoverage.get(i))
-        s2tAlignmentIndex[i] = range;
-    }
   }
 
   protected static <TK, FV> Object[] retrieveTokens(int sz, Derivation<TK, FV> h) {
@@ -404,11 +274,4 @@ public class Featurizable<TK, FV> {
 
   private static final float[] nullScores = new float[0];
   private static final String[] nullNames = new String[0];
-
-  private static boolean constructAlignment = false;
-
-  public static void enableAlignments() { constructAlignment = true; }
-  
-  public static boolean alignmentsEnabled() { return constructAlignment; }
-
 }

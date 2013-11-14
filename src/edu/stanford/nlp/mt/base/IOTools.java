@@ -212,7 +212,7 @@ public final class IOTools {
   public static void writeNbest(List<RichTranslation<IString, String>> translations, 
       int sourceInputId,
       boolean generateMosesNBestList,
-      PrintStream nbestListWriter, boolean nbestWordInternalAlignments) {
+      PrintStream nbestListWriter) {
     assert translations != null;
     assert nbestListWriter != null;
     
@@ -220,7 +220,7 @@ public final class IOTools {
     String nl = System.getProperty("line.separator");
     for (RichTranslation<IString, String> translation : translations) {
       if (generateMosesNBestList) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, nbestWordInternalAlignments);
+        translation.nbestToMosesStringBuilder(sourceInputId, sb);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());

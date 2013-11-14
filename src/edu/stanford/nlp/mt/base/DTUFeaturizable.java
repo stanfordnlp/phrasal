@@ -50,11 +50,6 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
   }
 
   @Override
-  protected void augmentAlignments(ConcreteRule<TK,FV> concreteOpt) {
-    /* effectively disable augmentAlignments */
-  }
-
-  @Override
   public int getSegmentIdx() {
     return segmentIdx;
   }

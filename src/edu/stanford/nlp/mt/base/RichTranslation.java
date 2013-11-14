@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
 import java.text.DecimalFormat;
-import java.util.List;
 
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
@@ -17,57 +16,27 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  * @param <FV>
  */
 public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV> {
-  public final Sequence<TK> source;
-  public final CoverageSet sourceCoverage;
-  public final List<String> alignmentIndex;
-  public final Featurizable<TK, FV> featurizable;
-  
-  /**
-	 *
-	 */
-  public RichTranslation(Featurizable<TK, FV> f, double score,
-      FeatureValueCollection<FV> features) {
-    super((f == null ? new EmptySequence<TK>() : f.targetPrefix),
-        features, score);
-    this.featurizable = f;
-    this.alignmentIndex = null;
-    if (f == null) {
-      this.source = new EmptySequence<TK>();
-      this.sourceCoverage = null;
-      return;
-    }
-    this.source = f.sourceSentence;
-    this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
-        : null;
-  }
+  private final Sequence<TK> source;
+  private final Featurizable<TK, FV> featurizable;
 
   /**
-	 *
-	 */
+   * Constructor.
+   * 
+   * @param f
+   * @param score
+   * @param features
+   * @param latticeSourceId
+   */
   public RichTranslation(Featurizable<TK, FV> f, double score,
-      FeatureValueCollection<FV> features, List<String> alignmentIndex,
-      long latticeSourceId) {
+      FeatureValueCollection<FV> features, long latticeSourceId) {
     super((f == null ? new EmptySequence<TK>() : f.targetPrefix),
         features, score, latticeSourceId);
     this.featurizable = f;
-    this.alignmentIndex = alignmentIndex;
     if (f == null) {
       this.source = new EmptySequence<TK>();
-      this.sourceCoverage = null;
       return;
     }
     this.source = f.sourceSentence;
-    this.sourceCoverage = (f.t2sAlignmentIndex != null) ? constructCoverageSet(f.t2sAlignmentIndex)
-        : null;
-  }
-
-  private static CoverageSet constructCoverageSet(int[][] t2fAlignmentIndex) {
-    CoverageSet coverage = new CoverageSet();
-    for (int[] range : t2fAlignmentIndex) {
-      if (range != null)
-        coverage.set(range[0], range[1]);
-    }
-    return coverage;
   }
 
   /**
@@ -92,7 +61,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
    *          Where to append the output to
    * @param nbestWordInternalAlignments 
    */
-  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean nbestWordInternalAlignments) {
+  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf) {
     final String delim = FlatPhraseTable.FIELD_DELIM;
     sbuf.append(id);
     sbuf.append(' ').append(delim).append(' ');
@@ -112,15 +81,9 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(delim);
 
-    if (nbestWordInternalAlignments) {
-      // Internal alignments
-      String alignmentString = alignmentString();
-      sbuf.append(" ").append(alignmentString);
-    } else {
-      // Phrase segmentation
-      for (String el : alignmentIndex)
-        sbuf.append(" ").append(el);
-    }
+    // Internal alignments
+    String alignmentString = alignmentString();
+    sbuf.append(" ").append(alignmentString);
   }
 
   /**
