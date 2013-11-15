@@ -35,8 +35,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   protected String name;
   public final List<List<IntArrayTranslationOption>> translations;
   
-  private int longestSourcePhrase = -1;
-  private int longestTargetPhrase = -1;
+  protected int longestSourcePhrase = -1;
+  protected int longestTargetPhrase = -1;
 
   // Originally, PharaohPhraseTables were backed by a nice simple
   // HashMap from a foreign sequence to a list of translations.
