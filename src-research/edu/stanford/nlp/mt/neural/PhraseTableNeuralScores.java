@@ -9,16 +9,11 @@ import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.ejml.simple.SimpleMatrix;
-
 import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.neural.Embedding;
-import edu.stanford.nlp.neural.Utils;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -29,15 +24,17 @@ import edu.stanford.nlp.util.StringUtils;
  */
 public class PhraseTableNeuralScores {
   /**
-   * Load the phrase table from file. 
+   * Add a neural score to a phrase table
    * 
-   * @param f
-   * @param reverse
-   * @return
+   * @param inPhraseTableFile
+   * @param biEmbedding
+   * @param outPhraseTableFile
+   * @param option: 0 --- sum phrase vector, 1 --- use alignment info
+   * @param operator: 0 --- cosine, 1 --- dot product
    * @throws IOException
    */
-  public static void score(String inPhraseTableFile, Embedding srcEmbedding, Embedding tgtEmbedding, 
-      String outPhraseTableFile, int option) throws IOException {
+  public static void score(String inPhraseTableFile, BilingualEmbedding biEmbedding, 
+      String outPhraseTableFile, int option, int operator) throws IOException {
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     final long startTime = System.nanoTime();
@@ -45,8 +42,6 @@ public class PhraseTableNeuralScores {
     LineNumberReader reader = IOTools.getReaderFromFile(new File(inPhraseTableFile));
     PrintStream writer = IOTools.getWriterFromFile(new File(outPhraseTableFile));
     int numScores = -1;
-    int srcEmbeddingSize = srcEmbedding.getEmbeddingSize();
-    int tgtEmbeddingSize = tgtEmbedding.getEmbeddingSize();
     
     int count = 0;
     for (String line; (line = reader.readLine()) != null;) {
@@ -58,6 +53,7 @@ public class PhraseTableNeuralScores {
       Sequence<IString> source = IStrings.toIStringSequence(fields.get(0));
       Sequence<IString> target = IStrings.toIStringSequence(fields.get(1));
 //      String sourceConstellation = fields[2];
+      String targetConstellation = StringUtils.join(fields.get(3));
       List<String> scoreList = fields.get(4);
 
       // Ensure that all rules in the phrase table have the same number of scores
@@ -72,42 +68,7 @@ public class PhraseTableNeuralScores {
       }
 
       
-      double score = Double.NaN;
-      if (option==0){ // average word vectors on each side and compute a similarity scores
-        SimpleMatrix srcVector = new SimpleMatrix(srcEmbeddingSize, 1);
-        for(IString src : source){
-          srcVector = srcVector.plus(srcEmbedding.get(src.word()));
-//          System.err.println(src.word() + "\t" + srcEmbedding.get(src.word()).transpose());
-        }
-        
-        SimpleMatrix tgtVector = new SimpleMatrix(tgtEmbeddingSize, 1);
-        for(IString tgt : target){
-          tgtVector = tgtVector.plus(tgtEmbedding.get(tgt.word()));
-//          System.err.println(tgt.word() + "\t" + tgtEmbedding.get(tgt.word()).transpose());
-        }
-
-        score = Utils.cosine(srcVector, tgtVector);
-      } else if (option==1) {
-        String targetConstellation = StringUtils.join(fields.get(3));
-        score = 0;
-//        System.err.println(source + "\t" + target + "\t" + targetConstellation + "\t" + scoreList);
-        if (!targetConstellation.equals("")) {
-          PhraseAlignment tgtAlignment = PhraseAlignment.getPhraseAlignment(targetConstellation);
-          for(int i=0; i<target.size(); i++){
-            int[] alignments = tgtAlignment.t2s(i);
-            
-            // sum cosine scores of aligned words
-            if (alignments!=null && alignments.length>0){
-              SimpleMatrix tgtVector = tgtEmbedding.get(target.get(i).word());
-//              System.err.println(target.get(i).word() + "\t" + tgtVector.transpose());
-              for (int alignment : alignments){ // sum cosine(srcVector, tgtVector)
-//                System.err.println(source.get(alignment).word() + "\t" + srcEmbedding.get(source.get(alignment).word()).transpose());
-                score += Utils.cosine(srcEmbedding.get(source.get(alignment).word()), tgtVector);
-              }
-            }
-          }
-        }
-      }
+      double score = biEmbedding.scorePhraseEntry(source, target, targetConstellation, option, operator);
       writer.println(line + " " + score);
       
       count++;
@@ -131,11 +92,12 @@ public class PhraseTableNeuralScores {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    if (args.length != 7) {
+    if (args.length != 8) {
       System.err.println("Usage:\n\tjava ...PhraseTableWithNLMScores (inPhraseTableFile) "
-              + "(srcWordFile) (srcVectorFile) (tgtWordFile) (tgtVectorFile) (outPhraseTableFile) (scoreOption)");
-      System.err.println("\t\tscoreOption: 0 sum vectors on each side and compute cosine similarity (default)"
+              + "(srcWordFile) (srcVectorFile) (tgtWordFile) (tgtVectorFile) (outPhraseTableFile) (scoreOption) (operatorOption)");
+      System.err.println("\t\tscoreOption: 0 -- sum vectors on each side and compute cosine similarity (default)"
           + ", 1 -- sum cosine scores of aligned words");
+      System.err.println("\t\toperatorOption: 0 -- cosine, 1 -- dot product");
       
       System.exit(-1);
     }
@@ -147,14 +109,13 @@ public class PhraseTableNeuralScores {
     String tgtVectorFile = args[4];
     String outPhraseTableFile = args[5];
     int option = Integer.parseInt(args[6]);
+    int operator = Integer.parseInt(args[7]);
     
-    Embedding srcEmbedding = new Embedding(srcWordFile, srcVectorFile);
-    Embedding tgtEmbedding = new Embedding(tgtWordFile, tgtVectorFile);
-    
+    BilingualEmbedding biEmbedding = new BilingualEmbedding(srcWordFile, srcVectorFile, tgtWordFile, tgtVectorFile);
     long startTimeMillis = System.currentTimeMillis();
     
     System.err.printf("# Loading phrase table ...\n  phrase table file = %s\n", inPhraseTableFile);
-    PhraseTableNeuralScores.score(inPhraseTableFile, srcEmbedding, tgtEmbedding, outPhraseTableFile, option);
+    PhraseTableNeuralScores.score(inPhraseTableFile, biEmbedding, outPhraseTableFile, option, operator);
     
     long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
     long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
