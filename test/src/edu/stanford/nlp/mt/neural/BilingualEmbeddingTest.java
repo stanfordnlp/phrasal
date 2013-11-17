@@ -15,7 +15,7 @@ import org.junit.Test;
  *
  */
 public class BilingualEmbeddingTest {
-  public static final String PREFIX = "";
+  public static final String PREFIX = "projects/mt/"; //"";
   public static final String phraseTableFile = PREFIX + "test/inputs/embedding.table.zh-en";
   public static final String srcWordFile = PREFIX + "test/inputs/embedding.zh.words";
   public static final String srcVectorFile = PREFIX + "test/inputs/embedding.zh.We";
