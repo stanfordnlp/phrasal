@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.ejml.simple.SimpleMatrix;
 
@@ -20,6 +21,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.neural.Embedding;
 import edu.stanford.nlp.neural.Utils;
 import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * @author Minh-Thang Luong <lmthang@stanford.edu>, created on Nov 15, 2013
@@ -30,16 +32,25 @@ public class BilingualEmbedding {
   private Embedding tgtEmbedding;
   private int embeddingSize;
 
+  public BilingualEmbedding(Map<String, SimpleMatrix> srcWordVectors, Map<String, SimpleMatrix> tgtWordVectors){
+    srcEmbedding = new Embedding(srcWordVectors);
+    tgtEmbedding = new Embedding(tgtWordVectors);
+    setSize();
+  }
+
   public BilingualEmbedding(String srcWordFile, String srcVectorFile, String tgtWordFile, String tgtVectorFile) {
     srcEmbedding = new Embedding(srcWordFile, srcVectorFile);
     tgtEmbedding = new Embedding(tgtWordFile, tgtVectorFile);
+    setSize();
+  }
+
+  private void setSize(){
     if(srcEmbedding.getEmbeddingSize()!=tgtEmbedding.getEmbeddingSize()){
       System.err.println("! src and tgt embeddings have different sizes: " + srcEmbedding.getEmbeddingSize()
           + " vs. " + tgtEmbedding.getEmbeddingSize());
     } else {
       embeddingSize = srcEmbedding.getEmbeddingSize();
-    }
-  }
+    }}
 
   public double scorePhraseEntry(Sequence<IString> source, Sequence<IString> target, String targetConstellation, 
       int option, int operator){

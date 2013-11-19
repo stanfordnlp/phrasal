@@ -29,8 +29,8 @@ public class PhraseTableNeuralScores {
    * @param inPhraseTableFile
    * @param biEmbedding
    * @param outPhraseTableFile
-   * @param option: 0 --- sum phrase vector, 1 --- use alignment info
-   * @param operator: 0 --- cosine, 1 --- dot product
+   * @param option: 0 -- sum phrase vector, 1 -- use alignment info
+   * @param operator: 0 -- cosine, 1 -- dot product
    * @throws IOException
    */
   public static void score(String inPhraseTableFile, BilingualEmbedding biEmbedding, 
@@ -92,12 +92,12 @@ public class PhraseTableNeuralScores {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    if (args.length != 8) {
-      System.err.println("Usage:\n\tjava ...PhraseTableWithNLMScores (inPhraseTableFile) "
-              + "(srcWordFile) (srcVectorFile) (tgtWordFile) (tgtVectorFile) (outPhraseTableFile) (scoreOption) (operatorOption)");
-      System.err.println("\t\tscoreOption: 0 -- sum vectors on each side and compute cosine similarity (default)"
-          + ", 1 -- sum cosine scores of aligned words");
-      System.err.println("\t\toperatorOption: 0 -- cosine, 1 -- dot product");
+    if (args.length != 6) {
+      System.err.println("Usage:\n\tjava ...PhraseTableWithNeuralScores (inPhraseTableFile) "
+              + "(srcWordFile) (srcVectorFile) (tgtWordFile) (tgtVectorFile) (outPhraseTableFile)"); // (scoreOption) (operatorOption)");
+      //System.err.println("\t\tscoreOption: 'all' -- sum vectors on each side and compute cosine similarity (default)"
+      //    + ", 'align' -- sum scores of aligned word pairs");
+      //System.err.println("\t\toperatorOption: 0 -- cosine, 1 -- dot product");
       
       System.exit(-1);
     }
@@ -108,8 +108,8 @@ public class PhraseTableNeuralScores {
     String tgtWordFile = args[3];
     String tgtVectorFile = args[4];
     String outPhraseTableFile = args[5];
-    int option = Integer.parseInt(args[6]);
-    int operator = Integer.parseInt(args[7]);
+    int option = 0; //Integer.parseInt(args[6]);
+    int operator = 0; //Integer.parseInt(args[7]);
     
     BilingualEmbedding biEmbedding = new BilingualEmbedding(srcWordFile, srcVectorFile, tgtWordFile, tgtVectorFile);
     long startTimeMillis = System.currentTimeMillis();
