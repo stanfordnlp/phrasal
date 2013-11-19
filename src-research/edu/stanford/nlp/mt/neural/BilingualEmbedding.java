@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.neural.Embedding;
-import edu.stanford.nlp.neural.Utils;
+import edu.stanford.nlp.neural.NeuralUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Generics;
 
@@ -67,9 +67,9 @@ public class BilingualEmbedding {
       }
 
       if (operator==0){
-        score = Utils.cosine(srcVector, tgtVector);
+        score = NeuralUtils.cosine(srcVector, tgtVector);
       } else {
-        score = Utils.dot(srcVector, tgtVector);
+        score = NeuralUtils.dot(srcVector, tgtVector);
       }
     } else if (option==1) { // consider only target alignment
       score = 0;
@@ -126,13 +126,13 @@ public class BilingualEmbedding {
   public double cosine(String srcWord, String tgtWord){
     SimpleMatrix srcVector = srcEmbedding.get(srcWord);
     SimpleMatrix tgtVector = tgtEmbedding.get(tgtWord);
-    return Utils.cosine(srcVector, tgtVector);
+    return NeuralUtils.cosine(srcVector, tgtVector);
   }
   
   public double dot(String srcWord, String tgtWord){
     SimpleMatrix srcVector = srcEmbedding.get(srcWord);
     SimpleMatrix tgtVector = tgtEmbedding.get(tgtWord);
-    return Utils.dot(srcVector, tgtVector);
+    return NeuralUtils.dot(srcVector, tgtVector);
   }
   
   public SimpleMatrix getSrcVector(String word){
