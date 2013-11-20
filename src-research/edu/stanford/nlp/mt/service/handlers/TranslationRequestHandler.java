@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.service.handlers;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
@@ -106,6 +107,7 @@ public class TranslationRequestHandler implements RequestHandler {
     private final int threadId;
     private int childThreadId;
     private final Phrasal decoder;
+    private final boolean dropUnknownWords;
     private final Preprocessor sourcePreprocessor;
     private final Postprocessor postprocessor;
 
@@ -113,6 +115,7 @@ public class TranslationRequestHandler implements RequestHandler {
       this.threadId = threadId;
       this.childThreadId = threadId+1;
       this.decoder = decoder;
+      this.dropUnknownWords = decoder.isDropUnknownWords();
       this.sourcePreprocessor = decoder.getPreprocessor();
       this.postprocessor = decoder.getPostprocessor();
     }
@@ -258,16 +261,41 @@ public class TranslationRequestHandler implements RequestHandler {
      * @param tPrime2t
      * @return
      */
-    private static List<String> mapAlignments(SymmetricalWordAlignment s2sPrime,
+    private List<String> mapAlignments(SymmetricalWordAlignment s2sPrime,
         SymmetricalWordAlignment sPrime2tPrime,
         SymmetricalWordAlignment tPrime2t) {
-      assert s2sPrime.e().size() == sPrime2tPrime.f().size();
-      assert sPrime2tPrime.e().size() == tPrime2t.f().size();
+      
+      // If the decoder drops unknown words, then we need to create a monotonic
+      // alignment.
+      int[] sPrime2sPrimePrime = null;
+      if (dropUnknownWords && s2sPrime.e().size() != sPrime2tPrime.f().size()) {
+        Sequence<IString> sPrime = s2sPrime.e();
+        int srcSize = sPrime.size();
+        sPrime2sPrimePrime = new int[srcSize];
+        Arrays.fill(sPrime2sPrimePrime, -1);
+        // Decoder filtered some words from this string
+        Sequence<IString> sPrimePrime = sPrime2tPrime.f();
+        assert sPrimePrime.size() < sPrime.size();
+        int tgtSize = sPrimePrime.size();
+        for (int i = 0; i < tgtSize; ++i) {
+          IString tgtToken = sPrimePrime.get(i);
+          for (int j = i; j < srcSize; ++j) {
+            if (tgtToken == sPrime.get(j)) {
+              sPrime2sPrimePrime[j] = i;
+              break;
+            }
+          }
+        }
+      }
       
       List<String> alignmentList = Generics.newLinkedList();
       for (int i = 0; i < s2sPrime.fSize(); ++i) {
         Set<Integer> alignments = s2sPrime.f2e(i);
         for (int j : alignments) {
+          if (sPrime2sPrimePrime != null) {
+            j = sPrime2sPrimePrime[j];
+            if (j < 0) continue;
+          }
           Set<Integer> alignments2 = sPrime2tPrime.f2e(j);
           for (int k : alignments2) {
             Set<Integer> alignments3 = tPrime2t.f2e(k);
