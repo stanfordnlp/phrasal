@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.base;
 
 /**
+ * A sequence of length 0.
  * 
  * @author danielcer
  * 
@@ -21,6 +22,6 @@ public class EmptySequence<TK> extends AbstractSequence<TK> {
 
   @Override
   public String toString() {
-    return "<Empty Sequence>";
+    return "";
   }
 }

@@ -95,13 +95,6 @@ public class Featurizable<TK, FV> {
   public final Derivation<TK, FV> derivation;
 
   /**
-   * While, internally, I want to be able to take advantage of the fact that
-   * partial translations are represented using RawSequence, I don't want to
-   * make that part of the API for people involved with writing features.
-   */
-  protected final RawSequence<TK> targetPrefixRaw;
-
-  /**
    * Featurizable associated with the partial hypothesis that was used to
    * generate the current hypothesis.
    * 
@@ -118,9 +111,12 @@ public class Featurizable<TK, FV> {
   final private FeaturizerState[] states;
 
   /**
-	 * 
-	 */
-  @SuppressWarnings("unchecked")
+   * Constructor.
+   * 
+   * @param derivation
+   * @param sourceInputId
+   * @param nbStatefulFeaturizers
+   */
   public Featurizable(Derivation<TK, FV> derivation, int sourceInputId,
       int nbStatefulFeaturizers) {
     this.sourceInputId = sourceInputId;
@@ -135,10 +131,7 @@ public class Featurizable<TK, FV> {
     targetPosition = derivation.insertionPosition;
     sourcePosition = rule.sourcePosition;
     linearDistortion = derivation.linearDistortion;
-
-    Object[] tokens = retrieveTokens(derivation.length, derivation);
-    targetPrefix = targetPrefixRaw = new RawSequence<TK>(
-        (TK[]) tokens);
+    targetPrefix = derivation.targetSequence;
     sourceSentence = derivation.sourceSequence;
     numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
@@ -147,10 +140,20 @@ public class Featurizable<TK, FV> {
     this.derivation = derivation;
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * DTU constructor.
+   * 
+   * @param derivation
+   * @param sourceInputId
+   * @param nbStatefulFeaturizers
+   * @param targetPhrase
+   * @param tokens
+   * @param hasPendingPhrases
+   * @param targetOnly
+   */
   protected Featurizable(Derivation<TK, FV> derivation, int sourceInputId,
       int nbStatefulFeaturizers, Sequence<TK> targetPhrase,
-      Object[] tokens, boolean hasPendingPhrases, boolean targetOnly) {
+      boolean hasPendingPhrases, boolean targetOnly) {
     this.sourceInputId = sourceInputId;
     done = derivation.isDone() && !hasPendingPhrases;
     this.rule = derivation.rule;
@@ -169,8 +172,7 @@ public class Featurizable<TK, FV> {
     sourcePosition = rule.sourcePosition;
     linearDistortion = derivation.linearDistortion;
 
-    targetPrefix = targetPrefixRaw = new RawSequence<TK>(
-        (TK[]) tokens);
+    targetPrefix = derivation.targetSequence;
     sourceSentence = derivation.sourceSequence;
     numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
@@ -204,8 +206,12 @@ public class Featurizable<TK, FV> {
   }
 
   /**
-	 * 
-	 */
+   * Constructor for rule scoring. Not used for derivation building.
+   * 
+   * @param sourceSequence
+   * @param rule
+   * @param sourceInputId
+   */
   public Featurizable(Sequence<TK> sourceSequence,
       ConcreteRule<TK,FV> rule, int sourceInputId) {
     this.sourceInputId = sourceInputId;
@@ -220,7 +226,6 @@ public class Featurizable<TK, FV> {
     targetPosition = 0;
     sourcePosition = rule.sourcePosition;
     targetPrefix = targetPhrase;
-    targetPrefixRaw = null;
     sourceSentence = sourceSequence;
     numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
@@ -229,6 +234,14 @@ public class Featurizable<TK, FV> {
     derivation = null;
   }
 
+  /**
+   * DTU constructor.
+   * 
+   * @param sourceSequence
+   * @param rule
+   * @param sourceInputId
+   * @param targetPhrase
+   */
   protected Featurizable(Sequence<TK> sourceSequence,
       ConcreteRule<TK,FV> rule, int sourceInputId,
       Sequence<TK> targetPhrase) {
@@ -247,7 +260,6 @@ public class Featurizable<TK, FV> {
     targetPosition = 0;
     sourcePosition = rule.sourcePosition;
     targetPrefix = targetPhrase;
-    targetPrefixRaw = null;
     sourceSentence = sourceSequence;
     numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
@@ -256,21 +268,21 @@ public class Featurizable<TK, FV> {
     derivation = null;
   }
 
-  protected static <TK, FV> Object[] retrieveTokens(int sz, Derivation<TK, FV> h) {
-    Object[] tokens = new Object[sz];
-    int pos = 0;
-    Featurizable<TK, FV> preceedingF = h.preceedingDerivation.featurizable;
-    if (preceedingF != null) {
-      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
-      System.arraycopy(preceedingTokens, 0, tokens, 0,
-          pos = preceedingTokens.length);
-    }
-
-    ConcreteRule<TK,FV> concreteOpt = h.rule;
-    Object[] newTokens = concreteOpt.abstractRule.target.elements;
-    System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
-    return tokens;
-  }
+//  protected static <TK, FV> Object[] retrieveTokens(int sz, Derivation<TK, FV> h) {
+//    Object[] tokens = new Object[sz];
+//    int pos = 0;
+//    Featurizable<TK, FV> preceedingF = h.preceedingDerivation.featurizable;
+//    if (preceedingF != null) {
+//      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
+//      System.arraycopy(preceedingTokens, 0, tokens, 0,
+//          pos = preceedingTokens.length);
+//    }
+//
+//    ConcreteRule<TK,FV> concreteOpt = h.rule;
+//    Object[] newTokens = concreteOpt.abstractRule.target.elements;
+//    System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
+//    return tokens;
+//  }
 
   private static final float[] nullScores = new float[0];
   private static final String[] nullNames = new String[0];

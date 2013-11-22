@@ -81,6 +81,12 @@ public final class Sequences {
    */
   @SuppressWarnings("unchecked")
   public static <T> Sequence<T> concatenate(Sequence<T> a, Sequence<T> b) {
+    if (a instanceof RawSequence && b instanceof RawSequence) {
+      // Fast concatenate for raw sequence, which is exposes an array of
+      // elements
+      return concatenateRaw((RawSequence<T>) a, (RawSequence<T>) b);
+    }
+    // For general case
     Object[] abArr = new Object[a.size() + b.size()];
     for (int i = 0; i < a.size(); i++) {
       abArr[i] = a.get(i);
@@ -90,6 +96,18 @@ public final class Sequences {
     }
     RawSequence<T> ab = new RawSequence<T>((T[])abArr);
     return ab;
+  }
+  
+  @SuppressWarnings("unchecked")
+  private static <T> Sequence<T> concatenateRaw(RawSequence<T> a, RawSequence<T> b) {
+    Object[] elements = new Object[a.size() + b.size()];
+    if (a.size() > 0) {
+      System.arraycopy(a.elements, 0, elements, 0, a.elements.length);
+    }
+    if (b.size() > 0) {
+      System.arraycopy(b.elements, 0, elements, a.elements.length, b.elements.length);
+    }
+    return new RawSequence<T>((T[]) elements);
   }
 
   /**

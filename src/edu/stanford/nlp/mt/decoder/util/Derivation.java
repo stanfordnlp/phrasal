@@ -1,18 +1,19 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
+import edu.stanford.nlp.mt.base.EmptySequence;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
@@ -47,6 +48,8 @@ State<Derivation<TK, FV>> {
   public final ConcreteRule<TK,FV> rule;
   public final Sequence<TK> sourceSequence;
 
+  public final Sequence<TK> targetSequence;
+  
   // right now, translations are built up strictly in sequence.
   // however, we don't want to encourage people writing feature
   // functions to be dependent upon this fact.
@@ -110,6 +113,7 @@ State<Derivation<TK, FV>> {
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
+    targetSequence = new EmptySequence<TK>();
     this.annotators = new ArrayList<Annotator<TK,FV>>(annotators.size());
     for (Annotator<TK,FV> annotator : annotators) {
       this.annotators.add(annotator.initialize(sourceSequence));
@@ -142,13 +146,15 @@ State<Derivation<TK, FV>> {
       insertionPosition + rule.abstractRule.target.size()); // edge
     // insertion
     sourceSequence = base.sourceSequence;
+    targetSequence = Sequences.concatenate(base.targetSequence, rule.abstractRule.target);
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
         : base.rule.linearDistortion(rule));
+    
     featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumberStatefulFeaturizers());
-
+    
     annotators = new ArrayList<Annotator<TK,FV>>(base.annotators.size());
     for (Annotator<TK,FV> annotator : base.annotators) {
       /*if (baseHyp.featurizable != null) {
@@ -207,10 +213,12 @@ State<Derivation<TK, FV>> {
     this.length = (insertionPosition < base.length) ? base.length
         : insertionPosition + targetPhrase.size();
     sourceSequence = base.sourceSequence;
+    targetSequence = Sequences.concatenate(base.targetSequence, targetPhrase);
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
         : base.rule.linearDistortion(rule));
+
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractRule,
         sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
@@ -236,44 +244,10 @@ State<Derivation<TK, FV>> {
     assert (!Double.isNaN(h));
   }
 
-
-  /**
-   * 
-   */
-  private void injectSegmentationBuffer(StringBuffer sbuf,
-      Derivation<TK, FV> derivation) {
-    if (derivation.preceedingDerivation != null)
-      injectSegmentationBuffer(sbuf, derivation.preceedingDerivation);
-    sbuf.append("\t").append(derivation.rule.abstractRule.target)
-    .append(" ");
-    sbuf.append(derivation.rule.sourceCoverage).append(" ");
-    sbuf.append(Arrays.toString(derivation.rule.abstractRule.scores));
-    sbuf.append("\n");
-  }
-
-
-  /**
-   * 
-   */
-  public String toString(int verbosity) {
-    StringBuffer sbuf = new StringBuffer();
-    if (featurizable != null) {
-      sbuf.append(featurizable.targetPrefix);
-    } else {
-      sbuf.append("<NONE>");
-    }
-    sbuf.append("  ").append(sourceCoverage);
-    sbuf.append(String.format(" [%.3f h: %.3f]", score + h, h));
-    if (verbosity > 0) {
-      sbuf.append("\nSegmentation:\n");
-      injectSegmentationBuffer(sbuf, this);
-    }
-    return sbuf.toString();
-  }
-
   @Override
   public String toString() {
-    return toString(0);
+    return String.format("%s %s [%.3f h: %.3f]", targetSequence.toString(), 
+        sourceCoverage.toString(), score + h, h);
   }
 
   @Override

@@ -102,7 +102,8 @@ public class HyperedgeBundle<TK,FV> {
 
     @Override
     public String toString() {
-      return String.format("itemId: %d  ruleId: %d", itemId, ruleId);
+      return String.format("itemId: %d  ruleId: %d (%s || %s)", itemId, ruleId, 
+          antecedent.toString(), rule.abstractRule.target.toString());
     }
   }
 }
