@@ -137,6 +137,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Populate beam i by popping items and generating successors
       BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, i);
+      boolean outputConstraintsEnabled = false;
       int numPoppedItems = 0;
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
@@ -147,12 +148,20 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         if (item.derivation != null) {
           newBeam.put(item.derivation);
         }
+        outputConstraintsEnabled = outputConstraintsEnabled || item.derivation == null;
         
         List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
-        ++numPoppedItems;
+        
+        if (outputConstraintsEnabled && numPoppedItems == beamCapacity-1 && newBeam.size() < sourceLength - i) {
+          // Search until we build at least one derivation or the priority queue
+          // is exhausted
+          continue;
+        } else {
+          ++numPoppedItems;
+        }
       }
       beams.add(newBeam);
     }
@@ -181,12 +190,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   }
 
   /**
-   * Expands a hyperedge bundle. Returns [0,2] successors.
-   * @param consequent 
+   * Searches for consequents, always returning at least one and at most two.
    * 
+   * @param antecedent
    * @param bundle
    * @param sourceInputId
-   * @param outputSpace 
+   * @param outputSpace
    * @return
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
@@ -235,7 +244,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     @Override
     public String toString() {
-      return derivation.toString();
+      return derivation == null ? "<<NULL>>" : derivation.toString();
     }
   }
 

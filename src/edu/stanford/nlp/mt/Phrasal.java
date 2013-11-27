@@ -225,6 +225,11 @@ public class Phrasal {
   private boolean dropUnknownWords = false;
 
   /**
+   * @return true if unknown words are dropped, and false otherwise.
+   */
+  public boolean isDropUnknownWords() { return dropUnknownWords; }
+  
+  /**
    * n-best list options
    */
   private boolean generateMosesNBestList = true;
