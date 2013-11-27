@@ -29,6 +29,7 @@ public final class PhrasalService {
 
   private static String DEBUG_URL = "127.0.0.1";
   private static int DEFAULT_HTTP_PORT = 8017;
+  private static String SERVLET_ROOT = "/x";
 
   private PhrasalService() {}
 
@@ -105,7 +106,7 @@ public final class PhrasalService {
  
     // Add Phrasal servlet
     PhrasalServlet servlet = loadMockServlet ? new PhrasalServlet() : new PhrasalServlet(phrasalIniFile);
-    context.addServlet(new ServletHolder(servlet), "/t");
+    context.addServlet(new ServletHolder(servlet), SERVLET_ROOT);
 
     // TODO(spenceg): gzip compression causes an encoding problem for unicode characters
     // on the client. Not sure if the compression or decompression is the problem.
