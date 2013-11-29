@@ -14,7 +14,11 @@ import edu.stanford.nlp.util.Generics;
  */
 public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
 
-  private static final double EXP_M1 = Math.exp(-1);
+  /**
+   * A log transformation will be applied when the phrase table is
+   * written to disk.
+   */
+  private static final double EXP_INDICATOR = Math.exp(1);
 
   private final Set<Integer> inDomainSet;
   private final Set<Integer> inDomainKeys;
@@ -52,7 +56,7 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
 
   @Override
   public Object score(AlignmentTemplate alTemp) {
-    return new double[] { inDomainKeys.contains(alTemp.getKey()) ? EXP_M1 : 1.0 };
+    return new double[] { inDomainKeys.contains(alTemp.getKey()) ? EXP_INDICATOR : 1.0 };
   }
 
   @Override
