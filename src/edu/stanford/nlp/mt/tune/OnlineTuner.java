@@ -766,6 +766,10 @@ public class OnlineTuner {
       // Lin and Och smoothed BLEU (BLEU+1)
       return new BLEUSmoothGain<IString,String>();
 
+    } else if (scoreMetricStr.equals("bleu-smooth-noise")) {
+      // Lin and Och smoothed BLEU (BLEU+1)
+      return new BLEUSmoothGain<IString,String>(true);
+
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
       return new NakovBLEUGain<IString,String>();

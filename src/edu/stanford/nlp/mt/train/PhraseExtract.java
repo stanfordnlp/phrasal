@@ -408,11 +408,17 @@ public class PhraseExtract {
     for (String featureExtractorSpec : featureExtractorList) {
       AbstractFeatureExtractor featureExtractor;
       String[] extractorAndFileName = featureExtractorSpec.trim().split(FILE_DELIM);
-      if (extractorAndFileName.length != 2) {
+      if (extractorAndFileName.length < 2) {
         throw new RuntimeException("Invalid extractor specification: " + featureExtractorSpec);
       }
       String className = extractorAndFileName[0].trim();
       String outFile = extractorAndFileName[1].trim();
+      String args[] = null;
+      if (extractorAndFileName.length > 2) {
+        args = new String[extractorAndFileName.length-2];
+        System.arraycopy(extractorAndFileName, 2, args, 0, args.length);
+      }
+      
       if (outputDir != null) {
         outFile = outputDir + "/" + outFile;
       }
@@ -421,7 +427,10 @@ public class PhraseExtract {
       try {
         Class<AbstractFeatureExtractor> extractorClass = (Class<AbstractFeatureExtractor>) ClassLoader
             .getSystemClassLoader().loadClass(className);
-        featureExtractor = (AbstractFeatureExtractor) extractorClass.newInstance();
+        featureExtractor = args == null ? 
+            (AbstractFeatureExtractor) extractorClass.newInstance() :
+              (AbstractFeatureExtractor) extractorClass.getConstructor(args.getClass()).newInstance(
+                  new Object[] { args });
         featureExtractor.init(prop, featureIndex, alTemps);
         extractors.add(featureExtractor);
 

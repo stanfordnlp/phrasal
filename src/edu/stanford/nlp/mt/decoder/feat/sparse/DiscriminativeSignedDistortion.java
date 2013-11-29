@@ -49,7 +49,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
    * @return
    */
   private static int getSignedBin(int distortion) {
-    int sign = distortion == 0 ? 0 : distortion / distortion;
+    int sign = (int) Math.signum(distortion);
     if (distortion < 4 || distortion > -4) {
       return distortion; 
     } else if (distortion < 7 || distortion > -7) {
