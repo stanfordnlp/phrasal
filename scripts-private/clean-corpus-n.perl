@@ -8,10 +8,10 @@
 # AND so that all paired source and target segment
 # lengths are within a multiple of 9 of each other.
 #
-# For BOLT P2 we used a length range of 1-125, 
-# thus dropping only dropping sentence pairs thare 
-# are contain a sentence that is longer than 125
-# tokens.
+# For BOLT P2 we used a length range of 1-125 
+# (i.e., only filtering sentence pairs that
+# contain a sentence which is longer than 125 
+# tokens, with no minimum length).
 ##################################################
 
 # $Id$
