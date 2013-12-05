@@ -87,7 +87,7 @@ public class AlignmentTemplateInstance extends AlignmentTemplate {
     assert (eEndPos() < sent.e().size());
   }
 
-  public WordAlignment getSentencePair() {
+  public WordAlignment getWordAlignment() {
     return sent;
   }
 

@@ -201,7 +201,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp,
       AlignmentGrid alGrid, boolean forward) {
 
-    WordAlignment sent = alTemp.getSentencePair();
+    WordAlignment sent = alTemp.getWordAlignment();
     int f1 = alTemp.fStartPos() - 1, f2 = alTemp.fEndPos() + 1, e1 = alTemp
         .eStartPos() - 1, e2 = alTemp.eEndPos() + 1;
 
@@ -351,7 +351,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     assert (alGrid != null);
     System.err.printf("Model %s has orientation %s according to the grid:\n",
         id, type.toString());
-    alGrid.setWordAlignment(alTemp.getSentencePair());
+    alGrid.setWordAlignment(alTemp.getWordAlignment());
     alGrid.printAlTempInGrid(null, alTemp, System.err);
   }
 

@@ -187,9 +187,9 @@ function create-learn-curve {
 	$TUNERUNNAME.online.*.binwts > $RUNNAME.learn-curve.tmp \
 	2>logs/learningCurve.log"
 
-  execute "cat $RUNNAME.learn-curve.tmp | tr '.' ' ' | awk '{ print $4 }' \
+  cat $RUNNAME.learn-curve.tmp | tr '.' ' ' | awk '{ print $4 }' \
 	| paste - $RUNNAME.learn-curve.tmp | grep -v final | sort -n \
-	>  $RUNNAME.learn-curve"
+	>  $RUNNAME.learn-curve
     
   rm -f $RUNNAME.learn-curve.tmp
 }
