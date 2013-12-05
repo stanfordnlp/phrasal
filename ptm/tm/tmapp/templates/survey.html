@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}
+ -- {{ page_name }}
+{% endblock %}
+
+{% block user_static %}
+{% load static from staticfiles %}
+    <link rel="stylesheet" type="text/css" href="{% static "form.css" %}" />
+{% endblock %}
+
+{% block header %}
+<h1>{{ form_title }}</h1>
+{% endblock%}
+
+{% block content %}
+{{ form_instructions }}
+
+<div id="form-wrapper">
+<form action="{{ form_action }}" method="post" name="form-survey" id="form-survey">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Submit" name="form-submit" id="form-submit" />
+</form>
+</div>
+{% endblock %}

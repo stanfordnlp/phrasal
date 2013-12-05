@@ -1,0 +1,25 @@
+/* Django generated ids and classes */
+#form-wrapper {
+   clear:both;
+   text-align:left;
+}
+
+#form-wrapper p {
+   margin-bottom:3em;
+}
+
+#form-wrapper ul {
+   list-style-type:none;
+}
+
+#form-wrapper textarea {
+   width:100%;
+   height:150px;
+}
+
+.errorlist {
+   color:red;
+   font-size:x-small;
+   font-style:italic;
+   list-style-type:none;
+}
