@@ -17,7 +17,7 @@ TEMPLATE_DEBUG = True
 #
 # TODO: Point to server checkout of the UI repo
 #
-UI_DIR = '/home/rayder441/sandbox/translate/client_src'
+UI_DIR = '/home/rayder441/sandbox/translate/'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -94,10 +94,8 @@ STATIC_ROOT = os.path.join(BASE_DIR,'static_root')
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR,'static'),
-    os.path.join(UI_DIR,'css'),
-    os.path.join(UI_DIR,'js'),
-    os.path.join(UI_DIR,'data'),
     os.path.join(UI_DIR,'static'),
+    os.path.join(UI_DIR,'client_src/js'),
 )
 
 STATICFILES_FINDERS = (
