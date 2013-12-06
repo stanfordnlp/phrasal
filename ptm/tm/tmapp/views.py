@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response,redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
+from django.utils.translation import ugettext as _
 
 from tmapp.forms import TranslationInputForm
 
@@ -65,6 +66,10 @@ def translate(request):
 @login_required
 def form_demographic(request):
     form = None
+    form_instructions = _('Please complete this demographic survey. This information will remain confidential and will not be linked in any way with your real identity.')
+    form_title = _('Demographic Survey')
+    page_name = _('Demographic Survey')
+    
     if request.method == 'GET':
         form = controller.get_demographic_form(request.user)
 
@@ -78,13 +83,20 @@ def form_demographic(request):
         raise Http404
 
     return render_to_response('survey.html',
-                              {'form':form },
+                              {'form':form,
+                               'form_instructions' : form_instructions,
+                               'form_title' : form_title,
+                               'page_name' : page_name},
                               context_instance=RequestContext(request))        
 
 
 @login_required
 def form_exit(request):
     form = None
+    form_instructions = _('Please fill out this survey about your experience with the different CAT interfaces and modes of assistance.')
+    form_title = _('Exit Questionnaire')
+    page_name = _('Exit Questionnaire')
+    
     if request.method == 'GET':
         form = controller.get_exit_form(request.user)
 
@@ -98,5 +110,8 @@ def form_exit(request):
         raise Http404
 
     return render_to_response('survey.html',
-                              {'form':form },
-                              context_instance=RequestContext(request))
+                              {'form':form,
+                               'form_instructions' : form_instructions,
+                               'form_title' : form_title,
+                               'page_name' : page_name},
+                              context_instance=RequestContext(request))   

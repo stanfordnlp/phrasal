@@ -1,11 +1,9 @@
-/* Inspired by: http://www.manisheriar.com/holygrail/fixed.htm */
-
 body {
-   background:#999999;
+   background:LightGray;
    text-align:center;
    margin:20px;
    padding:0;
-   font:normal 90% Verdana,sans-serif;
+   font-family: Helvetica Neue, sans-serif;
    color:#000;
 }
 
@@ -23,7 +21,7 @@ a:hover {
    text-align:left;
    width:960px;
    margin:0 auto;
-   background:#FFF url("/static/background.png") repeat-y top right;
+   background:White url("/static/background.png") repeat-y top right;
 }
 
 #wrapper2 {
@@ -35,7 +33,7 @@ a:hover {
 }
 
 #header {
-   background:#dbe8fe;
+   background:#DEEBF7;
    padding:10px;
    margin:0;
    text-align:center;
@@ -62,10 +60,9 @@ a:hover {
    top:-10px;
    left:-10px;
    float:left;
-   width:220px;  /* for IE5/WIN */
    voice-family: "\"}\"";
    voice-family:inherit;
-   width:200px; /* actual value */
+   width:20px; /* actual value */
    margin:0 0 -10px 0;
    padding:10px;
    background:White;
@@ -77,10 +74,9 @@ a:hover {
    top:-10px;
    right:-10px;
    float:right;
-   width:220px;  /* for IE5/WIN */
    voice-family: "\"}\"";
    voice-family:inherit;
-   width:200px; /* actual value */
+   width:20px; /* actual value */
    margin:0 0 -10px 0;
    padding:10px;
    background:White;
@@ -90,29 +86,18 @@ a:hover {
 #centercol {
    background:White;
    position:relative;
-   padding:0 240px;
+   padding:0 40px;
 }
-
-/* 
-#centercol a {
-   color:#666;
-}
-
-#centercol a:hover {
-   border-bottom:1px solid;
-   color:#9343B9;
-}
-*/
 
 #footer {
    font-size:120%;
    position:relative;
    top:1px;
-   background:#dbe8fe;
+   background:#DEEBF7;
    width:100%;
    clear:both;
    margin:0;
    padding:1% 0;
    text-align:center;
-   color:#000;
+   color:Black;
 }

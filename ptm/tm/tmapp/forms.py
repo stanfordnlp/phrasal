@@ -101,27 +101,19 @@ class ExitSurveyForm(ModelForm):
         }
     
 class DemographicForm(ModelForm):
+
     def __init__(self, *args, **kwargs):
         """
         Hack for custom formatting of specific fields.
         """
         super(DemographicForm, self).__init__(*args, **kwargs)
         self.fields['is_pro_translator'] = forms.TypedChoiceField(widget=forms.RadioSelect,
-                                               choices=choices.BOOLEAN_CHOICES,
-                                               coerce=bool,
-                                               label='Do you consider yourself a professional translator?',
-                                               error_messages={'required': 'Required field'})
-        self.fields['cat_tool_opinion'] = forms.TypedChoiceField(widget=forms.RadioSelect,
-                                              choices=choices.LIKERT_CHOICES,
-                                               coerce=int,
-                                               label='To what degree do you agree with the following statement: I am satisfied with my current CAT tool. (Select Neutral if you do not use CAT)',
-                                               error_messages={'required': 'Required field'})
-
-        self.fields['mt_opinion'] = forms.TypedChoiceField(widget=forms.RadioSelect,
-                                        choices=choices.LIKERT_CHOICES,
-                                        coerce=int,
-                                        label='To what degree do you agree with the following statement: Machine translation output is generally useful in my translation work.',
-                                        error_messages={'required': 'Required field'})
+                                                                  choices=choices.BOOLEAN_CHOICES,
+                                                                  coerce=bool,
+                                                                  label='Do you consider yourself a professional translator?',
+                                                                  error_messages={'required': 'Required field'})
+        self.fields['cat_tool_opinion'].empty_label = None
+        self.fields['mt_opinion'].empty_label = None
         
     class Meta:
         model=DemographicData
@@ -138,7 +130,9 @@ class DemographicForm(ModelForm):
             'hours_per_week': ('On average, how many hours per week do you work as a translator?'),
             'src_proficiency': mark_safe('Please rate your proficiency in the source language (according to the <a href="http://en.wikipedia.org/wiki/ILR_scale" target="_blank">ILR Scale</a>)'),
             'tgt_proficiency': mark_safe('Please rate your proficiency in the target language (according to the <a href="http://en.wikipedia.org/wiki/ILR_scale" target="_blank">ILR Scale</a>)'),
+            'mt_opinion' : 'To what degree do you agree with the following statement: Machine translation output is generally useful in my translation work.',
             'cat_tool': ('What is your primary CAT tool? (Select NONE if you do not use a CAT tool)'),
+            'cat_tool_opinion' : 'To what degree do you agree with the following statement: Machine translation output is generally useful in my translation work.',
         }
         error_messages = {
             'language_native': {
@@ -160,6 +154,12 @@ class DemographicForm(ModelForm):
                 'required': ("Required field."),
                 },
             'cat_tool': {
+                'required': ("Required field."),
+                },
+            'cat_tool_opinion': {
+                'required': ("Required field."),
+                },
+            'mt_opinion': {
                 'required': ("Required field."),
                 },
         }
