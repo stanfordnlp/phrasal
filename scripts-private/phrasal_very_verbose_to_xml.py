@@ -50,14 +50,18 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
         rank = 0
         print >>ofh, "<seg id=\"%s\">" % id
         print >>ofh, "<src>"
-        src_toks = tokens[5].split(" ")
+        src_toks = tokens[-2].split(" ")
         for tok_id in xrange(0, len(src_toks)):
           print >>ofh, " <tok id=\"%d\">%s</tok>" % \
             (tok_id, xml.sax.saxutils.escape(src_toks[tok_id]))
         print >>ofh, "</src>"
         print >>ofh, "<nbest count=\"%d\">" % entries[tokens[0]]
       print >>ofh, "<hyp rank=\"%d\" score=\"%s\">" % (rank, tokens[3])
-      phrase_toks = tokens[6].split(" |")
+      #print "tokens: ", tokens
+      #for i in xrange(0, len(tokens)):
+      #  print "%d:%s\n" % (i, tokens[i])
+      #print "phrase_toks: ", tokens[-1] 
+      phrase_toks = tokens[-1].split(" |")
       for ptok in phrase_toks[1:]:
         sub_ptoks = ptok.split(" ")
         sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")
