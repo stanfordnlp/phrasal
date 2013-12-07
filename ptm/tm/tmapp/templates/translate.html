@@ -35,17 +35,26 @@
 				ptm.load( dm.get( "datasetURL" ) );
 			});
 		});
+		var prepareSubmission = function() {
+			var userResponses = ptm.getUserResponses();
+			var interactionLog = ptm.getInteractionLog();
+			d3.select("#id_text").node().value = JSON.stringify(userResponses);
+			d3.select("#id_log").node().value = JSON.stringify(interactionLog);
+			return true;
+		};
 	</script>
 </head>
 <body style="padding: 0; margin: 0; background: #eee;">
 <div class="UI" style="padding: 10px 20px 15px 20px; background: #888; border-bottom: 1px solid #666; box-shadow: 0 0 10px #333;">Dataset: <select id="DatasetManager"></select></div>
 <div class="PAGE" style="margin: 20px 20px 200px 20px">
   <div id="PTM"></div>
-  <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Submit" name="form-tgt-submit" id="form-tgt-submit" />
-  </form>
+  <div id="form-wrapper">
+    <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input" onsubmit="return prepareSubmission()">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <input type="submit" value="Submit" name="form-tgt-submit" id="form-tgt-submit" />
+    </form>
+  <div>
 </div>
 </body>
 </html>

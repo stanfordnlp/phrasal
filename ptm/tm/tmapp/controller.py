@@ -78,17 +78,18 @@ def save_translation_session(user, post_data):
     """
     try:
         session = TranslationSession.objects.filter(user=user).exclude(complete=True).order_by('order')[0]
-        
     except IndexError:
-        # Someone else submitted the last translation
-        # TODO(logging)
+        logger.error('Final translation already submitted: %s || %s' % (user.username, str(post_data)))
         raise RuntimeError
 
     # TODO(spenceg): Kind of a bootleg integrity check
     # Make this more secure.
     if int(post_data['order']) != session.order:
+        logger.error('Submission does not match current session: %s || %s ||%s' % (user.username, str(post_data), str(session)))
         raise RuntimeError
-    
+
+    logger.debug(post_data)
+
     form = TranslationInputForm(post_data, instance=session)
     
     if form.is_valid():
@@ -96,15 +97,9 @@ def save_translation_session(user, post_data):
         form_model.user = user
         form_model.end_time = datetime.now()
         form_model.complete = True
-
-        # WSGDEBUG
-        #form_model.text = "Test input"
-        #form_model.log = "Test log"
-        
         form_model.save()
     else:
-        # TODO logging
-        # Couldn't validate
+        logger.error('Form validation failed: %s || %s ||%s' % (user.username, str(post_data), str(session)))
         raise RuntimeError
     
 def get_demographic_form(user, post_data=None):
@@ -199,7 +194,6 @@ def service_redirect(request):
     except KeyError:
         logger.error('No service URL: ' + req)
         raise Http404
-    logger.debug(service_url)
     
     # Construct the query
     url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req))
