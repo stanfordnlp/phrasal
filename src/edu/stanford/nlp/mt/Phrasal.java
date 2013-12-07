@@ -111,7 +111,6 @@ public class Phrasal {
       .append("  -").append(POSTPROCESSOR_FILTER).append(" language [opts] : Post-processor to apply to target output.").append(nl)
       .append("  -").append(SOURCE_CLASS_MAP).append(" filename : Feature API: Line-delimited source word->class mapping (TSV format).").append(nl)
       .append("  -").append(TARGET_CLASS_MAP).append(" filename : Feature API: Line-delimited target word->class mapping (TSV format).").append(nl)
-      .append("  -").append(LOAD_ALIGNMENTS).append(" boolean : Feature API: Load word-word alignments (default: false)").append(nl)
       .append("  -").append(GAPS_OPT).append(" options : DTU: Enable Galley and Manning (2010) gappy decoding.").append(nl)
       .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
@@ -159,7 +158,6 @@ public class Phrasal {
   private static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
-  private static final String LOAD_ALIGNMENTS = "load-word-alignments";
   private static final String PRINT_MODEL_SCORES = "print-model-scores";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
@@ -181,7 +179,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP,LOAD_ALIGNMENTS, PRINT_MODEL_SCORES));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -227,16 +225,16 @@ public class Phrasal {
   private boolean dropUnknownWords = false;
 
   /**
+   * @return true if unknown words are dropped, and false otherwise.
+   */
+  public boolean isDropUnknownWords() { return dropUnknownWords; }
+  
+  /**
    * n-best list options
    */
   private boolean generateMosesNBestList = true;
   private PrintStream nbestListWriter;
   private int nbestListSize;
-  
-  /**
-   * Load phrase-internal alignments from phrase table.
-   */
-  private boolean wordAlignmentsEnabled = false;
   
   /**
    * Internal alignment options
@@ -963,15 +961,6 @@ public class Phrasal {
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
       alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
     }
-
-    if (config.containsKey(LOAD_ALIGNMENTS)) {
-      wordAlignmentsEnabled = true;
-    }
-
-    // Should we enable word-internal alignments?
-    if (wordAlignmentsEnabled || alignmentWriter != null || featurizer.constructInternalAlignments()) {
-      Featurizable.enableAlignments();
-    }
   }
 
   private static String makePair(String label, String value) {
@@ -1088,21 +1077,10 @@ public class Phrasal {
       // log additional information to stderr
       System.err.printf("Best Translation: %s%n", bestTranslation);
       System.err.printf("Final score: %.3f%n", (float) bestTranslationInfo.score);
-      if (bestTranslationInfo.sourceCoverage != null) {
-        System.err.printf("Coverage: %s%n", bestTranslationInfo.sourceCoverage);
-        System.err.printf(
-            "Foreign words covered: %d (/%d) - %.3f %%%n",
-            bestTranslationInfo.sourceCoverage.cardinality(),
-            sourceLength,
-            bestTranslationInfo.sourceCoverage.cardinality() * 100.0
-            / sourceLength);
-      } else {
-        System.err.println("Coverage: {}");
-      }
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter, wordAlignmentsEnabled);
+        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter);
       }
       
       // Output the alignments if necessary

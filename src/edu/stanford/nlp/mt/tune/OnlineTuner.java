@@ -429,7 +429,7 @@ public class OnlineTuner {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int sourceId = result.translationIds[i];
           if (createPseudoReferences && nbestListWriter != null) {
-            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter, false);
+            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter);
           }
           if (nbestLists != null) {
             assert ! nbestLists.containsKey(sourceId);
@@ -765,6 +765,10 @@ public class OnlineTuner {
     if (scoreMetricStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU (BLEU+1)
       return new BLEUSmoothGain<IString,String>();
+
+    } else if (scoreMetricStr.equals("bleu-smooth-noise")) {
+      // Lin and Och smoothed BLEU (BLEU+1)
+      return new BLEUSmoothGain<IString,String>(true);
 
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1

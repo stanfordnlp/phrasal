@@ -81,7 +81,10 @@ FullScoreReturn Model::FullScoreForgotState(const WordIndex *context_rbegin, con
   }
   // Put new words at the end.
   std::reverse_copy(context_rbegin, context_rbegin + state_length, state.words + Order() - 1 - state_length);
-  return FullScore(state, new_word, out_state);
+  FullScoreReturn ret = FullScore(state, new_word, out_state);
+  // HACK!
+  ret.right_state_length = std::min<unsigned int>(Order() - 1, context_rend - context_rbegin + 1);
+  return ret;
 }
 
 } // namespace np

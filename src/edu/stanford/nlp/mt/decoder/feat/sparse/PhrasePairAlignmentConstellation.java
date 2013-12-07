@@ -33,11 +33,6 @@ public class PhrasePairAlignmentConstellation implements
   }
 
   @Override
-  public boolean constructInternalAlignments() {
-    return true;
-  }
-
-  @Override
   public boolean isolationScoreOnly() {
     return false;
   }

@@ -38,14 +38,14 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (numSourcePunctuationTokens == 0) return null;
-    int numTargetPuncuationTokens = 0;
+    int numTargetPunctuationTokens = 0;
     for (IString token : f.targetPhrase) {
       if (TokenUtils.isPunctuation(token.toString())) {
-        ++numTargetPuncuationTokens;
+        ++numTargetPunctuationTokens;
       }
     }
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(FEATURE_NAME, (double) numTargetPuncuationTokens / (double) numSourcePunctuationTokens));
+    features.add(new FeatureValue<String>(FEATURE_NAME, (double) numTargetPunctuationTokens / (double) numSourcePunctuationTokens));
     return features;
   }
   

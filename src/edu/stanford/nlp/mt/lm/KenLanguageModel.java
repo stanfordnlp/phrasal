@@ -1,7 +1,10 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -18,6 +21,20 @@ import edu.stanford.nlp.mt.base.TokenUtils;
 public class KenLanguageModel implements LanguageModel<IString> {
 
   static {
+//    try {
+      /**
+       * Voodoo to get path to this class, then go up and find the src-cc
+       * directory where the library lives.  Then voodoo to override
+       * java.library.path from teh intarwebs.
+       */
+/*      String path = KenLanguageModel.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "../src-cc/";
+      System.setProperty("java.library.path", path + ":" + System.getProperty("java.library.path"));
+      Field sysPath = ClassLoader.class.getDeclaredField("sys_paths");
+      sysPath.setAccessible(true);
+      sysPath.set(null, null);
+    } catch (URISyntaxException|NoSuchFieldException|IllegalAccessException e) {
+      System.err.println("Warning: failed to automatically find the path to libPhrasalKenLM.so.  You should set LD_LIBRARY_PATH.");
+    }*/
     System.loadLibrary("PhrasalKenLM");
   }
 
@@ -26,6 +43,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private final long kenLMPtr;
 
   private AtomicReference<int[]> istringIdToKenLMId;
+
+  private final ReentrantLock preventDuplicateWork = new ReentrantLock();
 
   // JNI methods
   private native long readKenLM(String filename);
@@ -83,22 +102,29 @@ public class KenLanguageModel implements LanguageModel<IString> {
       }
     }
     // Rare event: we have to expand the vocabulary.
-    // In principle, this doesn't need to be synchronized, but it does
+    // In principle, this doesn't need to be a lock, but it does
     // prevent unnecessary work duplication.
-    synchronized(this) {
-      // Maybe another thread did the work for us?
-      int[] oldTable = istringIdToKenLMId.get();
-      if (token.id < oldTable.length) {
-        return oldTable[token.id];
+    if (preventDuplicateWork.tryLock()) {
+      // This thread is responsible for updating the mapping.
+      try {
+        // Maybe another thread did the work for us?
+        int[] oldTable = istringIdToKenLMId.get();
+        if (token.id < oldTable.length) {
+          return oldTable[token.id];
+        }
+        int[] newTable = new int[IString.index.size()];
+        System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
+        for (int i = oldTable.length; i < newTable.length; ++i) {
+          newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
+        }
+        istringIdToKenLMId.set(newTable);
+        return newTable[token.id];
+      } finally {
+        preventDuplicateWork.unlock();
       }
-      int[] newTable = new int[IString.index.size()];
-      System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
-      for (int i = oldTable.length; i < newTable.length; ++i) {
-        newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
-      }
-      istringIdToKenLMId.set(newTable);
-      return newTable[token.id];
     }
+    // Another thread is working.  Lookup directly.
+    return getLMId(kenLMPtr, token.toString());
   }
 
   /**

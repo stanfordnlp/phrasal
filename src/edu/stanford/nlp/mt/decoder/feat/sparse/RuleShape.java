@@ -31,11 +31,6 @@ public class RuleShape implements RuleFeaturizer<IString, String> {
   }
 
   @Override
-  public boolean constructInternalAlignments() {
-    return false;
-  }
-
-  @Override
   public boolean isolationScoreOnly() {
     return false;
   }

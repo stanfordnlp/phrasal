@@ -9,7 +9,7 @@ fi
 
 (cd kenlm; ./compile_query_only.sh)
 
-javah edu.stanford.nlp.mt.lm.KenLanguageModel
+#javah edu.stanford.nlp.mt.lm.KenLanguageModel
 
 if [ "$(uname)" == Darwin ]; then
   SUFFIX=.dylib

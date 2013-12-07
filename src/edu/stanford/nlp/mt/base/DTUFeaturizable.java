@@ -12,10 +12,10 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
 
   public DTUFeaturizable(Derivation<TK, FV> hypothesis,
       Rule<TK> abstractOption, int sourceInputId,
-      int nbStatefulFeaturizers, RawSequence<TK> toks,
+      int nbStatefulFeaturizers, RawSequence<TK> targetPhrase,
       boolean hasPendingPhrases, int segmentIdx) {
-    super(hypothesis, sourceInputId, nbStatefulFeaturizers, toks,
-        retrieveDTUTokens(hypothesis, toks), hasPendingPhrases, segmentIdx > 0);
+    super(hypothesis, sourceInputId, nbStatefulFeaturizers, targetPhrase,
+        hasPendingPhrases, segmentIdx > 0);
     this.segmentIdx = segmentIdx;
     this.abstractOption = abstractOption;
     assert (targetPhrase.size() > 0);
@@ -28,30 +28,6 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
     this.abstractOption = null;
     this.segmentIdx = 0;
     assert (targetPhrase.size() > 0);
-  }
-
-  protected static <TK, FV> Object[] retrieveDTUTokens(Derivation<TK, FV> h,
-      RawSequence<TK> newTokens) {
-    int pos = 0;
-    Featurizable<TK, FV> preceedingF = h.preceedingDerivation.featurizable;
-    int sz = newTokens.size();
-    if (preceedingF != null)
-      sz += preceedingF.targetPrefixRaw.elements.length;
-    Object[] tokens = new Object[sz];
-    if (preceedingF != null) {
-      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
-      System.arraycopy(preceedingTokens, 0, tokens, 0,
-          pos = preceedingTokens.length);
-    }
-
-    System.arraycopy(newTokens.elements, 0, tokens, pos,
-        newTokens.elements.length);
-    return tokens;
-  }
-
-  @Override
-  protected void augmentAlignments(ConcreteRule<TK,FV> concreteOpt) {
-    /* effectively disable augmentAlignments */
   }
 
   @Override

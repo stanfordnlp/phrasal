@@ -152,13 +152,8 @@ public class ConcreteRule<TK,FV> implements
 
   @Override
   public String toString() {
-    StringBuilder sbuf = new StringBuilder();
-    sbuf.append("ConcreteRule:\n");
-    sbuf.append(String.format("\tAbstractOption: %s\n", abstractRule
-        .toString().replaceAll("\n", "\n\t")));
-    sbuf.append(String.format("\tSourceCoverage: %s\n", sourceCoverage));
-    sbuf.append(String.format("\tPhraseTable: %s\n", phraseTableName));
-    return sbuf.toString();
+    return String.format("%s ==> %s %s %s", abstractRule.source,
+        abstractRule.target, sourceCoverage, phraseTableName);
   }
 
   public int linearDistortion(ConcreteRule<TK,FV> rule) {

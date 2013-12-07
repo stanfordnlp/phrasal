@@ -31,16 +31,36 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
     int distortion = f.prior == null ? f.sourcePosition :
       f.prior.sourcePosition + f.prior.sourcePhrase.size() - f.sourcePosition;
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(String.format("%s:%d", FEATURE_NAME, distortion), 1.0));
     if (distortion < 0) {
       features.add(new FeatureValue<String>(FEATURE_NAME + ":neg", 1.0));
     } else if (distortion > 0) {
       features.add(new FeatureValue<String>(FEATURE_NAME + ":pos", 1.0));
     }
+    distortion = getSignedBin(distortion);
+    features.add(new FeatureValue<String>(String.format("%s:%d", FEATURE_NAME, distortion), 1.0));
     f.setState(this, new DistortionState(distortion));
     return features;
   }
   
+  /**
+   * Bins: 0, 1, 2, 3, 4-6, 6-10, 10+
+   * 
+   * @param distortion
+   * @return
+   */
+  private static int getSignedBin(int distortion) {
+    int sign = (int) Math.signum(distortion);
+    if (distortion < 4 || distortion > -4) {
+      return distortion; 
+    } else if (distortion < 7 || distortion > -7) {
+      return sign * 4;
+    } else if (distortion < 11 || distortion > -11) {
+      return sign * 5;
+    } else {
+      return sign * 6;
+    }
+  }
+
   private static class DistortionState extends FeaturizerState {
 
     private final int distortion;

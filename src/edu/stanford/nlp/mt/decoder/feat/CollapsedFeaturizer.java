@@ -133,16 +133,6 @@ public class CollapsedFeaturizer<TK, FV> extends
       }
     }
   }
-  
-  @Override
-  public boolean constructInternalAlignments() {
-    for (Featurizer<TK,FV> featurizer : featurizers) {
-      if (featurizer.constructInternalAlignments()) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   @Override
   public boolean isolationScoreOnly() {

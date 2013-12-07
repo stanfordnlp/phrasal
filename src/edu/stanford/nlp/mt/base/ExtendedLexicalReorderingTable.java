@@ -262,7 +262,7 @@ public class ExtendedLexicalReorderingTable {
         tgtTokens = fields.get(1);
         scoreList = fields.get(2);
         
-      } else if (fields.size() == 5) {
+      } else if (fields.size() >= 5) {
         // Standard phrase table format with alignments
         srcTokens = fields.get(0);
         tgtTokens = fields.get(1);

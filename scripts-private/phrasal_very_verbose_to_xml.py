@@ -1,13 +1,29 @@
 #!/u/nlp/bin/python2.7
-# phrasal_very_verbose_to_xml.py
+#
+# This script takes Moses formatted n-best lists augmented with the additional
+# "very verbose" derivational column as input and then generates the XML 
+# formatted n-best lists IBM wants subcontracting sites to submit for the 
+# DARPA BOLT program. 
+#
+# If you generated n-best lists that don't include the "very verbose"
+# derviational column, you can still generate IBM XML n-best lists using 
+# make_IBM_XML_no_pp_scores.pl. However, the resulting n-best lists
+# will have dummy values for the derivational scores
+#
 # Daniel Cer (danielcer@stanford.edu)
+#
+######################################################################
 
 import sys
 import codecs
+import os
 
 import xml.sax.saxutils
 
-
+if len(sys.argv) < 4:
+  print >>sys.stderr, "Usage:\n\t%s [unzipped n-best list] [system name] [section name]" % os.path.basename(sys.argv[0])
+  sys.exit(-1)
+ 
 entries = {}
 system_name = sys.argv[2]
 set_name = sys.argv[3]
@@ -34,14 +50,18 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
         rank = 0
         print >>ofh, "<seg id=\"%s\">" % id
         print >>ofh, "<src>"
-        src_toks = tokens[5].split(" ")
+        src_toks = tokens[-2].split(" ")
         for tok_id in xrange(0, len(src_toks)):
           print >>ofh, " <tok id=\"%d\">%s</tok>" % \
             (tok_id, xml.sax.saxutils.escape(src_toks[tok_id]))
         print >>ofh, "</src>"
         print >>ofh, "<nbest count=\"%d\">" % entries[tokens[0]]
       print >>ofh, "<hyp rank=\"%d\" score=\"%s\">" % (rank, tokens[3])
-      phrase_toks = tokens[6].split(" |")
+      #print "tokens: ", tokens
+      #for i in xrange(0, len(tokens)):
+      #  print "%d:%s\n" % (i, tokens[i])
+      #print "phrase_toks: ", tokens[-1] 
+      phrase_toks = tokens[-1].split(" |")
       for ptok in phrase_toks[1:]:
         sub_ptoks = ptok.split(" ")
         sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")

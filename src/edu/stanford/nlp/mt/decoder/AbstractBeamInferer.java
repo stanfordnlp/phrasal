@@ -154,8 +154,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         // Add current hypothesis to nbest list and set of uniq strings:
         Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
-            hyp.score, FeatureValues.combine(hyp), collectAlignments(hyp),
-            beamGoalHyp.id));
+            hyp.score, FeatureValues.combine(hyp), beamGoalHyp.id));
         distinctSurfaceTranslations.add(seq);
         if (distinctSurfaceTranslations.size() >= size
             || hypCount >= maxDuplicateCount)
@@ -164,8 +163,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       } else {
         Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
         translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
-            hyp.score, FeatureValues.combine(hyp), collectAlignments(hyp),
-            beamGoalHyp.id));
+            hyp.score, FeatureValues.combine(hyp), beamGoalHyp.id));
         if (translations.size() >= size) {
           break;
         }
@@ -232,7 +230,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       return null;
     Derivation<TK, FV> hyp = beam.iterator().next();
     return new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
-        FeatureValues.combine(hyp));
+        FeatureValues.combine(hyp), 0);
   }
 
   /**

@@ -95,11 +95,6 @@ public class DenseIDFFeature implements
   }
 
   @Override
-  public boolean constructInternalAlignments() {
-    return false;
-  }
-
-  @Override
   public boolean isolationScoreOnly() {
     return false;
   }
