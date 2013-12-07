@@ -13,14 +13,21 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 
-public class SentenceMetricVariance {
+/**
+ * Computes the variance in BLEU+1 scores over various numbers
+ * of references.
+ * 
+ * @author Spence Green
+ *
+ */
+public class SentencelevelMetricVariance {
 
   private static final boolean NAKOV_EXTENSION = false;
   private static final int ORDER = 4;
   
   public static void main(String[] args) throws IOException {
     if (args.length < 3) {
-      System.err.printf("Usage: java %s name source ref [ref] < translations%n", SentenceMetricVariance.class.getName());
+      System.err.printf("Usage: java %s name source ref [ref] < translations%n", SentencelevelMetricVariance.class.getName());
       System.exit(-1);
     }
     
