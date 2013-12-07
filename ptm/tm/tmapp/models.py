@@ -121,18 +121,20 @@ class DemographicData(models.Model):
     # a translator each week
     hours_per_week = models.PositiveIntegerField()
 
-    is_pro_translator = models.BooleanField(default=False)
+    is_pro_translator = models.BooleanField(choices=choices.BOOLEAN_CHOICES,
+                                            default=False)
 
     src_proficiency = models.PositiveSmallIntegerField(choices=choices.ILR_CHOICES)
 
     tgt_proficiency = models.PositiveSmallIntegerField(choices=choices.ILR_CHOICES)
 
     cat_tool = models.CharField(max_length=20,
-                                choices=choices.CAT_CHOICES)
+                                choices=choices.CAT_CHOICES,
+                                default='none')
 
-    cat_tool_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES)
+    cat_tool_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
     
-    mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES)
+    mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
     
     def __unicode__(self):
         return '%s: native:%s' % (self.user.username,
@@ -163,7 +165,7 @@ class ExitSurveyData(models.Model):
     hardest_tgt = models.TextField()
     
     # Likert: the MT suggestions were useful
-    stanford_mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES)
+    stanford_mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
     
     # When translating, what part of the UI do you usually focus on?
     gaze_location = models.CharField(max_length=5,
@@ -179,7 +181,7 @@ class ExitSurveyData(models.Model):
                                         choices=choices.IMT_AID_CHOICES)
     
     # Likert: I became more efficient with practice
-    imt_improvement = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES)
+    imt_improvement = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
      
     # Text: Was there an aid not present in the current interface that would have been helpful?
     imt_aid_suggestions = models.TextField()
@@ -191,7 +193,7 @@ class ExitSurveyData(models.Model):
     
     # UI-imt relative to other CAT tools
     # Likert: I would use an tool like this instead of my existing CAT tool
-    imt_would_use = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES)
+    imt_would_use = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
     
     # Text: Please describe major strengths and weaknesses of your current CAT tool.
     cat_response = models.TextField()

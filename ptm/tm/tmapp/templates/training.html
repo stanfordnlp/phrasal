@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}
+ -- {{ page_name }}
+{% endblock %}
+
+{% block user_static %}
+{% endblock %}
+
+{% block header %}
+<h1>{{ page_title }}</h1>
+{% endblock%}
+
+{% block content %}
+TODO:Browser check
+<br>
+
+TODO: List of interactions
+<br>
+
+TODO: Youtube screencast of how to user interface
+<br>
+
+TODO: Demo with sample documents.
+<br>
+
+<div id="form-wrapper">
+<form action="{{ form_action }}" method="post" name="form-training" id="form-training">
+{% csrf_token %}
+<input type="submit" value="I have completed training" name="form-submit" id="form-submit" />
+</form>
+</div>
+
+{% endblock %}

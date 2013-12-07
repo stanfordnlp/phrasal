@@ -22,9 +22,9 @@ GAZE_CHOICES = (('src', 'Source text'),
                 ('other', 'Other'))
 
 IMT_AID_CHOICES = (('srclookup', 'Source text lookup with mouse'),
-               ('tgtdropdown','Target text drop-down with autocomplete'),
-               ('tgt1best', 'Target best full translation'),
-               ('reordering', 'Reordering of target spans'))
+                   ('tgtdropdown','Target text drop-down with autocomplete'),
+                   ('tgt1best', 'Target best full translation'),
+                   ('reordering', 'Reordering of target spans'))
 
 # Basic POS categories that may be difficult to translate
 POS_CHOICES = (('N','Nouns'),

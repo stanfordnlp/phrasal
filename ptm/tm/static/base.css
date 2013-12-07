@@ -8,12 +8,37 @@ body {
 }
 
 a {
-   color:#537bbd;
+   color:#4292C6;
    text-decoration:none;
 }
 
 a:hover {
    border-bottom:1px solid;
+}
+
+input[type="submit"] {
+   text-align:center;
+   text-decoration: none;
+   -webkit-font-smoothing: antialiased;
+   font-size: 120%;
+   color: #FFF;
+   background: #4292C6;
+   padding: 0.25em 2em;
+   display: inline-block;
+   white-space: nowrap;
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+   margin: 10px 0;
+   -webkit-transition: all 0.2s ease-in-out;
+   -ms-transition: all 0.2s ease-in-out;
+   -moz-transition: all 0.2s ease-in-out;
+   -o-transition: all 0.2s ease-in-out;
+   transition: all 0.2s ease-in-out;
+}
+
+input[type="submit"]:hover {
+   background: #ff7f0e;
 }
 
 #wrapper1 {

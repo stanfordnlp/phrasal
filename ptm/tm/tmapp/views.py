@@ -34,9 +34,18 @@ def index(request):
 
 @login_required
 def training(request):
-    # TODO(spenceg): Should include a screencast demo, and a version of the UI with training documents
-    # loaded.
-    return HttpResponse("Training interface")
+    page_title = _('CAT Training')
+    page_name = _('Training')
+    if request.method == 'GET':
+        return render_to_response('training.html',
+                              {'page_title' : page_title,
+                               'page_name' : page_name,
+                               'form_action' : '/tm/training/'},
+                              context_instance=RequestContext(request))
+    elif request.method == 'POST':
+        # TODO Save the user's training status
+        return redirect('/tm/')
+    raise Http404
 
 @login_required
 def translate(request):
