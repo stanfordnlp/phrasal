@@ -30,7 +30,7 @@ import edu.stanford.nlp.util.Generics;
 public class LexicalReorderingFeaturizer extends
     DerivationFeaturizer<IString, String> {
 
-  private static final int LEXICAL_FEATURE_CUTOFF = 20;
+  private static final int LEXICAL_FEATURE_CUTOFF = 50;
   private static final boolean DETAILED_DEBUG = false;
   private static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
       TokenUtils.START_TOKEN);
@@ -81,7 +81,7 @@ public class LexicalReorderingFeaturizer extends
       } else if (argument.equals("useClasses")) {
         useClasses = true;
       } else if (argument.startsWith("countFeatureIndex")) {
-        String[] toks = argument.trim().split("\\s+");
+        String[] toks = argument.trim().split(":");
         assert toks.length == 2;
         countFeatureIndex = Integer.parseInt(toks[1]);
       }

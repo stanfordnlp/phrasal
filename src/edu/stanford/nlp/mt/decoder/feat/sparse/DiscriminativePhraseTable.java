@@ -23,7 +23,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
 
   private static final String FEATURE_NAME = "DPT";
 
-  private static final int LEXICAL_FEATURE_CUTOFF = 20;
+  private static final int LEXICAL_FEATURE_CUTOFF = 50;
   
   private final boolean addLexicalizedRule;
   private final boolean addClassBasedRule;
