@@ -2,17 +2,11 @@ package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.Arrays;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-
-import com.bbn.mt.terp.TERalignment;
-import com.bbn.mt.terp.TERcost;
-import com.bbn.mt.terp.TERcalc;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -81,7 +75,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
   public static void main(String[] args) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    SentenceLevelMetric metric = edu.stanford.nlp.mt.tune.OnlineTuner.loadGoldScoreMetric(args[0], null);
+    SentenceLevelMetric metric = SentenceLevelMetricFactory.getMetric(args[0], null);
 
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       String[] fields = line.split("\\|\\|\\|");

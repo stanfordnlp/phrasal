@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
+import java.util.Random;
 
 import edu.stanford.nlp.mt.base.Sequence;
 
@@ -12,25 +13,34 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public class BLEUSmoothGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
+public class BLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   private static final int DEFAULT_ORDER = 4;
   
   private final int order;
   private final boolean addNoise;
+  private final boolean doNakov;
+  private Random random;
   
-  public BLEUSmoothGain() {
-    this(DEFAULT_ORDER);
+  public BLEUGain() {
+    this(DEFAULT_ORDER, false);
   }
   
-  public BLEUSmoothGain(int order) {
-    this.order = order;
-    this.addNoise = false;
+  public BLEUGain(boolean doNakov) {
+    this(DEFAULT_ORDER, doNakov);
   }
   
-  public BLEUSmoothGain(boolean addNoise) {
+  public BLEUGain(int order, boolean doNakov) {
+    this(order, doNakov, false);
+  }
+  
+  public BLEUGain(int order, boolean doNakov, boolean addNoise) {
     this.order = DEFAULT_ORDER;
+    this.doNakov = doNakov;
     this.addNoise = addNoise;
+    if (addNoise) {
+      random = new Random();
+    }
   }
 
   @Override
@@ -44,9 +54,15 @@ public class BLEUSmoothGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
       }
     }
     
-    double score = BLEUMetric.computeLocalSmoothScore(translation, references, referenceWeights, order, false);
+    double score = BLEUMetric.computeLocalSmoothScore(translation, references, referenceWeights, order, doNakov);
     if (addNoise) {
-      score = score + (Math.random() * (1.0-score));
+      // One-sided zero-mean Gaussian noise model
+      // Empirical variance from looking at data.
+      score += Math.abs(random.nextGaussian() * 0.013);
+      score = Math.min(1.0, score);
+      
+      // Uniform noise model (too aggressive)
+      // score = score + (Math.random() * (1.0-score));
     }
     
     // Scale the score by the min reference length

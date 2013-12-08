@@ -23,18 +23,18 @@ import edu.stanford.nlp.mt.metrics.Metrics;
 public class SentencelevelMetricVariance {
 
   private static final boolean NAKOV_EXTENSION = false;
-  private static final int ORDER = 4;
   
   public static void main(String[] args) throws IOException {
-    if (args.length < 3) {
-      System.err.printf("Usage: java %s name source ref [ref] < translations%n", SentencelevelMetricVariance.class.getName());
+    if (args.length < 4) {
+      System.err.printf("Usage: java %s name source order ref [ref] < translations%n", SentencelevelMetricVariance.class.getName());
       System.exit(-1);
     }
     
     String name = args[0];
     String srcFile = args[1];
-    String[] refFileNames = new String[args.length-2];
-    System.arraycopy(args, 2, refFileNames, 0, refFileNames.length);
+    int order = Integer.parseInt(args[2]);
+    String[] refFileNames = new String[args.length-3];
+    System.arraycopy(args, 3, refFileNames, 0, refFileNames.length);
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refFileNames);
     List<Sequence<IString>> sourceList = IStrings.tokenizeFile(srcFile);
     
@@ -66,13 +66,13 @@ public class SentencelevelMetricVariance {
         assert ref.size() == 1;
         final int refLength = ref.get(0).size();
         scoreArray[i] = 
-            BLEUMetric.computeLocalSmoothScore(translation, ref, ORDER, NAKOV_EXTENSION);
+            BLEUMetric.computeLocalSmoothScore(translation, ref, order, NAKOV_EXTENSION);
         shortFile.printf("\t%.4f\t%d", scoreArray[i], refLength);
         longFile.printf("%d\t%d\t%d\t%d\t%d\t%.4f%n", sourceId, srcLen, tgtLen, i, refLength, scoreArray[i]);
       }
       final int allLength = bestMatchLength(references, tgtLen);
       double scoreAllRefs = 
-          BLEUMetric.computeLocalSmoothScore(translation, references, ORDER, NAKOV_EXTENSION);
+          BLEUMetric.computeLocalSmoothScore(translation, references, order, NAKOV_EXTENSION);
       shortFile.printf("\t%.4f\t%d%n", scoreAllRefs, allLength);
       longFile.printf("%d\t%d\t%d\tall\t%d\t%.4f%n", sourceId, srcLen, tgtLen, allLength, scoreAllRefs);
     }
