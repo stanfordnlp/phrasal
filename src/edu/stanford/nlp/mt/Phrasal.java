@@ -64,6 +64,11 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  * Phrasal: a phrase-based machine translation system from the Stanford University
  *          NLP group.
  *
+ * NOTE: This object is not threadsafe. To enable programmatic multithreading with Phrasal,
+ * specify the number of threads in the *.ini as usual, then use the threadId arguments
+ * in the decode() functions to submit to the underlying threadpool. This design permits
+ * storage of the LM and phrase table---among other large data structures---in shared memory.
+ *
  * @author danielcer
  * @author Michel Galley
  * @author Spence Green
@@ -115,7 +120,8 @@ public class Phrasal {
       .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
       .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
-      .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)");
+      .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)").append(nl)
+      .append("  -").append(LOAD_SOURCE_CORENLP).append(" filename : Load source-side serialized CoreNLP annotations");
     return sb.toString();
   }
 
@@ -159,6 +165,7 @@ public class Phrasal {
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String PRINT_MODEL_SCORES = "print-model-scores";
+  public static final String LOAD_SOURCE_CORENLP = "source-corenlp";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -179,7 +186,8 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
+        LOAD_SOURCE_CORENLP));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -392,6 +400,13 @@ public class Phrasal {
       if (parameters.size() == 3) {
         TargetClassMap.setUnknownClass(parameters.get(2));
       }
+    }
+    
+    // Source CoreNLP annotations
+    if (config.containsKey(LOAD_SOURCE_CORENLP)) {
+      List<String> parameters = config.get(LOAD_SOURCE_CORENLP);
+      if (parameters.size() == 0) throw new RuntimeException("Source CoreNLP requires a file argument");
+      CoreNLPCache.loadSerialized(parameters.get(0));
     }
     
     if (config.containsKey(FORCE_DECODE)) {

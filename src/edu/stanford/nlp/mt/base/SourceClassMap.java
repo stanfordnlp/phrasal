@@ -8,7 +8,7 @@ import java.util.Map;
  * @author Spence Green
  *
  */
-public class SourceClassMap extends AbstractWordClassMap {
+public final class SourceClassMap extends AbstractWordClassMap {
 
   private static Map<IString,IString> wordToClass;
   public static boolean MAP_NUMBERS = false;
