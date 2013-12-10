@@ -44,8 +44,8 @@ public class BLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
   }
 
   @Override
-  public double score(int sourceId, List<Sequence<TK>> references,
-      double[] referenceWeights, Sequence<TK> translation) {
+  public double score(int sourceId, Sequence<TK> source,
+      List<Sequence<TK>> references, Sequence<TK> translation) {
     // Take the min reference length
     int minLength = Integer.MAX_VALUE;
     for (Sequence<TK> sentence : references) {
@@ -54,7 +54,7 @@ public class BLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
       }
     }
     
-    double score = BLEUMetric.computeLocalSmoothScore(translation, references, referenceWeights, order, doNakov);
+    double score = BLEUMetric.computeLocalSmoothScore(translation, references, order, doNakov);
     if (addNoise) {
       // One-sided zero-mean Gaussian noise model
       // Empirical variance from looking at data.

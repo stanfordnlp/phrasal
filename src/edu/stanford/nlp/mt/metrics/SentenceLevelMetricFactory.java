@@ -25,22 +25,17 @@ public final class SentenceLevelMetricFactory {
    */
   public static SentenceLevelMetric<IString, String> getMetric(
       String scoreMetricStr, String[] scoreMetricOpts) {
-
+    
     if (scoreMetricStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU (BLEU+1)
       return new BLEUGain<IString,String>();
 
-    } else if (scoreMetricStr.equals("bleu-smooth-noise")) {
-      // Lin and Och smoothed BLEU (BLEU+1)
-      return new BLEUGain<IString,String>(DEFAULT_ORDER, false, true);
+    } else if (scoreMetricStr.equals("bleu-noise-prec")) {
+      return new BLEUGainNoise<IString,String>();
 
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
       return new BLEUGain<IString,String>(true);
-    
-    } else if (scoreMetricStr.equals("bleu-nakov-noise")) {
-      // Nakov's extensions to BLEU+1 with noise
-      return new BLEUGain<IString,String>(DEFAULT_ORDER, true, true);
     
     } else if (scoreMetricStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
