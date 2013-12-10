@@ -45,7 +45,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
   public static final String DEFAULT_REGCONFIG="";
-  public static final boolean VERBOSE = true;
+  public static final boolean VERBOSE = false;
   
   // Logistic classifier labels
   private static enum Label {POSITIVE, NEGATIVE}
