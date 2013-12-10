@@ -90,18 +90,18 @@ public class BLEUGainNoise<TK,FV> implements SentenceLevelMetric<TK, FV> {
             / (localPossibleMatchCounts[i] + 1.0);
       }
     }
-    double localNgramPrecisionScore = 0;
+    double logNgramPrecisionScore = 0;
     for (int i = 0; i < order; i++) {
-      localNgramPrecisionScore += (1.0 / order)
+      logNgramPrecisionScore += (1.0 / order)
           * Math.log(localPrecisions[i]);
     }
     
     // Add noise
-    double prec = Math.exp(localNgramPrecisionScore);
+    double prec = Math.exp(logNgramPrecisionScore);
     prec += Math.abs(random.nextGaussian() * noiseVariance);
-    localNgramPrecisionScore = Math.min(1.0, prec);
+    logNgramPrecisionScore = Math.log(Math.min(1.0, prec));
 
-    final double localScore = Math.exp(localLogBP + localNgramPrecisionScore);
+    final double localScore = Math.exp(localLogBP + logNgramPrecisionScore);
     return localScore;
   }
   
