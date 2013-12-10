@@ -185,7 +185,7 @@ function create-learn-curve {
 	$DECODE_FILE \
 	$REFS \
 	$TUNERUNNAME.online.*.binwts > $RUNNAME.learn-curve.tmp \
-	2>logs/learningCurve.log"
+	2>logs/$RUNNAME.learn-curve.log"
 
   cat $RUNNAME.learn-curve.tmp | tr '.' ' ' | awk '{ print $4 }' \
 	| paste - $RUNNAME.learn-curve.tmp | grep -v final | sort -n \
