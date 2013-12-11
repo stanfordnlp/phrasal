@@ -18,9 +18,9 @@ public class BLEUGainNoise<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   private static final int DEFAULT_ORDER = 4;
   
-  private static final double SHORT_VARIANCE = 0.025;
-  private static final double MEDIUM_VARIANCE = 0.015;
-  private static final double LONG_VARIANCE = 0.01;
+  private static final double SHORT_VARIANCE = Math.sqrt(0.025);
+  private static final double MEDIUM_VARIANCE = Math.sqrt(0.015);
+  private static final double LONG_VARIANCE = Math.sqrt(0.01);
   
   private final Random random = new Random();
   
