@@ -386,7 +386,9 @@ public class MakeWordClasses {
     // Update assignments
     int numUpdates = 0;
     for (Map.Entry<IString, Integer> assignment : result.wordToClass.entrySet()) {
-      if (wordToClass.get(assignment.getKey()) != assignment.getValue()) {
+      int oldAssignment = wordToClass.get(assignment.getKey());
+      int newAssignment = assignment.getValue();
+      if (oldAssignment != newAssignment) {
         ++numUpdates;
         wordToClass.put(assignment.getKey(), assignment.getValue());
       }

@@ -49,8 +49,8 @@ public class OneSidedObjectiveFunction {
   public PartialStateUpdate cluster() {
     // Iterate over vocabulary
     for (IString word : inputState.vocabularySubset) {
-      final Integer currentClass = localWordToClass.get(word);
-      Integer argMaxClass = currentClass;
+      final int currentClass = localWordToClass.get(word);
+      int argMaxClass = currentClass;
       double maxObjectiveValue = objValue;
 
       // Compute objective value under tentative moves
