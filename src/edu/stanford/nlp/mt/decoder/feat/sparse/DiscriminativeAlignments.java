@@ -1,10 +1,10 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -106,8 +106,9 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         }
         
       } else {
-        List<String> alignedTargetWords = Generics.newArrayList(tgtLength);
-        List<String> alignedSourceWords = Generics.newArrayList(srcLength);
+        // Use sets so that multiple alignments aren't counted twice
+        Set<String> alignedTargetWords = new TreeSet<String>();
+        Set<String> alignedSourceWords = new TreeSet<String>();
         alignedSourceWords.add(sourceRepresentation(srcWord));
         for (int tgtIndex : alignments) {
           alignedTargetWords.add(targetRepresentation(f.targetPhrase.get(tgtIndex)));
@@ -122,13 +123,11 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         
         // Construct the feature string
         StringBuilder sb = new StringBuilder();
-        Collections.sort(alignedSourceWords);
         for (String token : alignedSourceWords) {
           if (sb.length() > 0) sb.append("-");
           sb.append(token);
         }
         sb.append(">");
-        Collections.sort(alignedTargetWords);
         boolean seenFirst = false;
         for (String token : alignedTargetWords) {
           if (seenFirst) sb.append("-");
