@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -43,6 +43,8 @@ public class LexicalReorderingFeaturizer extends
   private final boolean useAlignmentConstellations;
   private boolean useClasses;
   private int countFeatureIndex = -1;
+  private SourceClassMap sourceMap;
+  private TargetClassMap targetMap;
 
   /**
    * Constructor for discriminative lexicalized reordering.
@@ -80,18 +82,13 @@ public class LexicalReorderingFeaturizer extends
         }
       } else if (argument.equals("useClasses")) {
         useClasses = true;
+        sourceMap = SourceClassMap.getInstance();
+        targetMap = TargetClassMap.getInstance();
+        
       } else if (argument.startsWith("countFeatureIndex")) {
         String[] toks = argument.trim().split(":");
         assert toks.length == 2;
         countFeatureIndex = Integer.parseInt(toks[1]);
-      }
-    }
-    if (useClasses) {
-      if (! SourceClassMap.isLoaded()) {
-        throw new RuntimeException("You must enable the " + Phrasal.SOURCE_CLASS_MAP + " decoder option");
-      }
-      if (! TargetClassMap.isLoaded()) {
-        throw new RuntimeException("You must enable the " + Phrasal.TARGET_CLASS_MAP + " decoder option");
       }
     }
     this.useAlignmentConstellations = useAlignmentConstellations;
@@ -230,14 +227,14 @@ public class LexicalReorderingFeaturizer extends
       StringBuilder sb = new StringBuilder();
       for (IString token : rule.source) {
         if (sb.length() > 0) sb.append("-");
-        String tokenClass = SourceClassMap.get(token).toString();
+        String tokenClass = Sentence.listToString(sourceMap.get(token), true, "-");
         sb.append(tokenClass);
       }
       sb.append(">");
       boolean seenFirst = false;
       for (IString token : rule.target) {
         if (seenFirst) sb.append("-");
-        String tokenClass = TargetClassMap.get(token).toString();
+        String tokenClass = Sentence.listToString(targetMap.get(token), true, "-");
         sb.append(tokenClass);
         seenFirst = true;
       }

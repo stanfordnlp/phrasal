@@ -1,6 +1,9 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.List;
 import java.util.Map;
+
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Maps target words to a word class.
@@ -10,20 +13,28 @@ import java.util.Map;
  */
 public final class TargetClassMap extends AbstractWordClassMap {
   
-  private static Map<IString,IString> wordToClass;
-  public static boolean MAP_NUMBERS;
+  private Map<IString,List<IString>> wordToClass;
   
-  private static IString UNK_CLASS = new IString("##UnK##");
+  private static TargetClassMap instance;
   
-  private TargetClassMap() {}
+  private TargetClassMap() {
+    wordToClass = Generics.newHashMap();
+  }
+  
+  public static TargetClassMap getInstance() {
+    if (instance == null) {
+      instance = new TargetClassMap();
+    }
+    return instance;
+  }
   
   /**
    * Load the class map from file.
    * 
    * @param filename
    */
-  public static void load(String filename) {
-    wordToClass = loadClassFile(filename);
+  public void load(String filename) {
+    loadClassFile(wordToClass, filename);
   }
   
   /**
@@ -32,14 +43,17 @@ public final class TargetClassMap extends AbstractWordClassMap {
    * @param word
    * @return
    */
-  public static IString get(IString word) {
-    if (MAP_NUMBERS && TokenUtils.isNumbersOrPunctuation(word.toString())) {
+  public List<IString> get(IString word) {
+    if (TokenUtils.isNumbersWithPunctuation(word.toString())) {
       word = TokenUtils.NUMBER_TOKEN;
+    } 
+    if (wordToClass.containsKey(word)) {
+      return wordToClass.get(word);
+    } else if (wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
+      return wordToClass.get(TokenUtils.UNK_TOKEN);
+    } else {
+      System.err.printf("%s: WARNING Class map does not specify an <unk> encoding (%s)%n", word.toString());
+      return DEFAULT_UNK_MAPPING;
     }
-    return wordToClass.containsKey(word) ? wordToClass.get(word) : UNK_CLASS;
   }
-  
-  public static void setUnknownClass(String className) { UNK_CLASS = new IString(className); }
-  
-  public static boolean isLoaded() { return wordToClass != null; }
 }

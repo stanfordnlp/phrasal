@@ -162,8 +162,8 @@ public class Phrasal {
   private static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
   private static final String PREPROCESSOR_FILTER = "preprocessor-filter";
   private static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
-  public static final String SOURCE_CLASS_MAP = "source-class-map";
-  public static final String TARGET_CLASS_MAP = "target-class-map";
+  private static final String SOURCE_CLASS_MAP = "source-class-map";
+  private static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String PRINT_MODEL_SCORES = "print-model-scores";
   public static final String LOAD_SOURCE_CORENLP = "source-corenlp";
 
@@ -378,27 +378,23 @@ public class Phrasal {
       System.err.printf("Postprocessor filter: %s%n", postprocessor.getClass().getName());
     }
     
-    // Word class maps
+    // Word->class maps
     if (config.containsKey(SOURCE_CLASS_MAP)) {
       List<String> parameters = config.get(SOURCE_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Source class map requires a file argument");
-      SourceClassMap.load(parameters.get(0));
-      if (parameters.size() == 2) {
-        SourceClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
-      }
-      if (parameters.size() == 3) {
-        SourceClassMap.setUnknownClass(parameters.get(2));
+      SourceClassMap map = SourceClassMap.getInstance();
+      for (String filename : parameters) {
+        map.load(filename);
+        System.err.println("Loaded source class map: " + filename);
       }
     }
     if (config.containsKey(TARGET_CLASS_MAP)) {
       List<String> parameters = config.get(TARGET_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Target class map requires a file argument");
-      TargetClassMap.load(parameters.get(0));
-      if (parameters.size() == 2) {
-        TargetClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
-      }
-      if (parameters.size() == 3) {
-        TargetClassMap.setUnknownClass(parameters.get(2));
+      TargetClassMap map = TargetClassMap.getInstance();
+      for (String filename : parameters) {
+        map.load(filename);
+        System.err.println("Loaded source class map: " + filename);
       }
     }
     

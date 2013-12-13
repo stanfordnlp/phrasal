@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -32,6 +32,9 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
   private final boolean addTargetInsertions;
   private final boolean useClasses;
   
+  private SourceClassMap sourceMap;
+  private TargetClassMap targetMap;
+  
   /**
    * Constructor.
    * 
@@ -51,12 +54,9 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
     this.addSourceDeletions = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
     this.addTargetInsertions = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     this.useClasses = args.length > 2 ? Boolean.parseBoolean(args[2]) : false;
-    
-    if (useClasses && ! SourceClassMap.isLoaded()) {
-      throw new RuntimeException("You must enable the " + Phrasal.SOURCE_CLASS_MAP + " decoder option");
-    }
-    if (useClasses && ! TargetClassMap.isLoaded()) {
-      throw new RuntimeException("You must enable the " + Phrasal.TARGET_CLASS_MAP + " decoder option");
+    if (useClasses) {
+      sourceMap = SourceClassMap.getInstance();
+      targetMap = TargetClassMap.getInstance();
     }
   }
 
@@ -143,11 +143,11 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
   }
   
   private String sourceRepresentation(IString token) {
-    return useClasses ? SourceClassMap.get(token).toString() : token.toString();
+    return useClasses ? Sentence.listToString(sourceMap.get(token), true, "-") : token.toString();
   }
   
   private String targetRepresentation(IString token) {
-    return useClasses ? TargetClassMap.get(token).toString() : token.toString();
+    return useClasses ? Sentence.listToString(targetMap.get(token), true, "-") : token.toString();
   }
 
   @Override

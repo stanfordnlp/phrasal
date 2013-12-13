@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -29,6 +29,9 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   private final boolean addClassBasedRule;
   private final int countFeatureIndex;
 
+  private SourceClassMap sourceMap;
+  private TargetClassMap targetMap;
+  
   /**
    * Constructor.
    */
@@ -47,14 +50,9 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
     this.addLexicalizedRule = args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
     this.addClassBasedRule = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
     this.countFeatureIndex = args.length > 2 ? Integer.parseInt(args[2]) : -1;
-    
     if (addClassBasedRule) {
-      if (! SourceClassMap.isLoaded()) {
-        throw new RuntimeException("You must enable the " + Phrasal.SOURCE_CLASS_MAP + " decoder option");
-      }
-      if (! TargetClassMap.isLoaded()) {
-        throw new RuntimeException("You must enable the " + Phrasal.TARGET_CLASS_MAP + " decoder option");
-      }
+      sourceMap = SourceClassMap.getInstance();
+      targetMap = TargetClassMap.getInstance();
     }
   }
 
@@ -74,14 +72,14 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       StringBuilder sb = new StringBuilder();
       for (IString token : f.sourcePhrase) {
         if (sb.length() > 0) sb.append("-");
-        String tokenClass = SourceClassMap.get(token).toString();
+        String tokenClass = Sentence.listToString(sourceMap.get(token), true, "-");
         sb.append(tokenClass);
       }
       sb.append(">");
       boolean seenFirst = false;
       for (IString token : f.targetPhrase) {
         if (seenFirst) sb.append("-");
-        String tokenClass = TargetClassMap.get(token).toString();
+        String tokenClass = Sentence.listToString(targetMap.get(token), true, "-");
         sb.append(tokenClass);
         seenFirst = true;
       }
