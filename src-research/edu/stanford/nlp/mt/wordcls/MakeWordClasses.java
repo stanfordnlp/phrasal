@@ -5,11 +5,13 @@ import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +27,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
@@ -37,7 +40,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  * TODO Add encoding parameter
  * TODO Extract out objective function as an interface to support
  * other clustering algorithms if needed.
- * TODO Option for mapping numbers to a single token?
  * 
  * @author Spence Green
  *
@@ -49,11 +51,11 @@ public class MakeWordClasses {
   private final int numThreads;
   private final int vparts;
   private final int order;
-  
+
   private final Logger logger;
-  
+
   private static enum OutputFormat {SRILM, TSV};
-  
+
   private static final int INITIAL_CAPACITY = 100000;
   private final Map<IString,Integer> wordToClass;
   private final Counter<IString> wordCount;
@@ -64,34 +66,34 @@ public class MakeWordClasses {
   private final int vocabThreshold;
   private List<IString> effectiveVocabulary;
   private final boolean mapNumbersToToken;
-  
+
   private double currentObjectiveValue = 0.0;
   
   public MakeWordClasses(Properties properties) {
     // User options
     this.numIterations = PropertiesUtils.getInt(properties, "niters", 20);
     assert this.numIterations > 0;
-    
+
     this.numClasses = PropertiesUtils.getInt(properties, "nclasses", 512);
     assert this.numClasses > 0;
-    
+
     this.numThreads = PropertiesUtils.getInt(properties, "nthreads", 1);
     assert this.numThreads > 0;
-    
+
     this.vparts = PropertiesUtils.getInt(properties, "vparts", 3);
     assert this.vparts > 0;
-    
+
     this.order = PropertiesUtils.getInt(properties, "order", 2);
     assert this.order > 1;
-    
-    this.vocabThreshold = PropertiesUtils.getInt(properties, "vclip", 0);
+
+    this.vocabThreshold = PropertiesUtils.getInt(properties, "vclip", 5);
     assert this.vocabThreshold >=0;
-    
-    this.mapNumbersToToken = PropertiesUtils.getBool(properties, "numtok", false);
-    
+
+    this.mapNumbersToToken = PropertiesUtils.getBool(properties, "numtok", true);
+
     this.outputFormat = OutputFormat.valueOf(
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
-    
+
     logger = Logger.getLogger(this.getClass().getName());
     PhrasalLogger.logLevel = Level.FINE;
     SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
@@ -102,9 +104,9 @@ public class MakeWordClasses {
     logger.info("#classes: " + String.valueOf(numClasses));
     logger.info("order: " + String.valueOf(order));
     if (mapNumbersToToken) {
-      logger.info("Mapping all numbers to " + TokenUtils.NUMBER_TOKEN.toString());
+      logger.info("Mapping all number tokens to " + TokenUtils.NUMBER_TOKEN.toString());
     }
-    
+
     // Internal data structures
     wordToClass = Generics.newHashMap(INITIAL_CAPACITY);
     wordCount = new ClassicCounter<IString>(INITIAL_CAPACITY);
@@ -112,12 +114,19 @@ public class MakeWordClasses {
     historyCount = new TwoDimensionalCounter<IString,NgramHistory>();
     classHistoryCount = new TwoDimensionalCounter<Integer,NgramHistory>();
   }
-  
+
+  /**
+   * Read the input and create the initial clustering.
+   * 
+   * @param filenames
+   * @throws IOException
+   */
   private void initialize(String[] filenames) throws IOException {
     List<IString> defaultHistory = Generics.newLinkedList();
     for (int i = 0; i < order-1; ++i) {
       defaultHistory.add(TokenUtils.START_TOKEN);
     }
+    
     // Read the vocabulary and histories
     final long startTime = System.nanoTime();
     for (String filename : filenames) {
@@ -127,12 +136,13 @@ public class MakeWordClasses {
         Sequence<IString> tokens = IStrings.tokenize(line.trim());
         List<IString> history = Generics.newLinkedList(defaultHistory);
         for (IString token : tokens) {
-          if (mapNumbersToToken && TokenUtils.isNumbersOrPunctuation(token.toString())) {
+          if (mapNumbersToToken && TokenUtils.isNumbersWithPunctuation(token.toString())) {
+            // Words that have at least one digit and >=0 punctuation characters
             token = TokenUtils.NUMBER_TOKEN;
           }
           wordCount.incrementCount(token);
           historyCount.incrementCount(token, new NgramHistory(history));
-          
+
           // Update the ngram history
           history.add(token);
           history.remove(0);
@@ -145,40 +155,47 @@ public class MakeWordClasses {
     logger.info(String.format("Done reading input files (%.3fsec)", elapsedTime));
     logger.info(String.format("Input gross statistics: %d words  %d tokens  %d histories", 
         wordCount.keySet().size(), (int) wordCount.totalCount(), (int) historyCount.totalCount()));
-    
-    // Initialize clustering
-    effectiveVocabulary = Generics.newArrayList(wordCount.keySet());
-    Collections.sort(effectiveVocabulary, Counters.toComparator(wordCount, false, true));
-    Set<IString> filteredWords = Generics.newHashSet();
-    int numEffectiveClasses = vocabThreshold > 0 ? numClasses-1 : numClasses;
-    for (int i = 0; i < effectiveVocabulary.size(); ++i) {
-      IString word = effectiveVocabulary.get(i);
-      int wCount = (int) wordCount.getCount(word);
-      int classId = i % numEffectiveClasses;
-      if (vocabThreshold > 0 && wCount < vocabThreshold) {
-        // Deterministic class assignment
-        classId =  numClasses-1;
+
+    // Collapse vocabulary by mapping rare words to <unk>
+    Set<IString> fullVocabulary = Generics.newHashSet(wordCount.keySet());
+    Set<IString> filteredWords = Generics.newHashSet(fullVocabulary.size());
+    for (IString word : fullVocabulary) {
+      int count = (int) wordCount.getCount(word);
+      if (vocabThreshold > 0 && count < vocabThreshold) {
         filteredWords.add(word);
-      }
-      classCount.incrementCount(classId, wordCount.getCount(word));
-      wordToClass.put(word, classId);
-      Counter<NgramHistory> historiesForWord = historyCount.getCounter(word);
-      for (NgramHistory h : historiesForWord.keySet()) {
-        double count = historiesForWord.getCount(h);
-        classHistoryCount.incrementCount(classId, h, count);
+        wordCount.incrementCount(TokenUtils.UNK_TOKEN, count);
+        wordCount.remove(word);
+        Counter<NgramHistory> histories = historyCount.getCounter(word);
+        Counter<NgramHistory> unkHistories = historyCount.getCounter(TokenUtils.UNK_TOKEN);
+        Counters.addInPlace(unkHistories, histories);
+        historyCount.remove(word);
       }
     }
 
     // Setup the vocabulary that will be clustered (i.e., the
     // effective vocabulary)
     if (filteredWords.size() > 0) {
-      logger.info(String.format("Deterministically assigning %d words to class %d", 
-          filteredWords.size(), numClasses-1));
-      Set<IString> vocab = Generics.newHashSet(effectiveVocabulary);
-      vocab.removeAll(filteredWords);
-      effectiveVocabulary = Generics.newArrayList(vocab);
+      logger.info(String.format("Mapping %d / %d words to unk token %s", 
+          filteredWords.size(), fullVocabulary.size(), TokenUtils.UNK_TOKEN.toString()));
+      fullVocabulary.add(TokenUtils.UNK_TOKEN);
+    }
+    fullVocabulary.removeAll(filteredWords);
+    effectiveVocabulary = Generics.newArrayList(fullVocabulary);
+
+    // Initialize clustering
+    Collections.sort(effectiveVocabulary, Counters.toComparator(wordCount, false, true));
+    for (int i = 0; i < effectiveVocabulary.size(); ++i) {
+      IString word = effectiveVocabulary.get(i);
+      int classId = i % numClasses;
+      classCount.incrementCount(classId, wordCount.getCount(word));
+      wordToClass.put(word, classId);
+      Counter<NgramHistory> historiesForWord = historyCount.getCounter(word);
+      Counter<NgramHistory> historiesForClass = classHistoryCount.getCounter(classId);
+      Counters.addInPlace(historiesForClass, historiesForWord);
     }
     Collections.shuffle(effectiveVocabulary);
+
+    // Debug output
     logger.info("Effective vocabulary size: " + String.valueOf(effectiveVocabulary.size()));
     currentObjectiveValue = objectiveFunctionValue();
     logger.info("Finished generating initial cluster assignment");
@@ -197,29 +214,40 @@ public class MakeWordClasses {
     } catch (IOException e1) {
       throw new RuntimeException(e1);
     }
-    
+
     logger.info(String.format("Starting clustering with %d threads", numThreads));
     for (int e = 0; e < numIterations; ++e) {
       MulticoreWrapper<ClustererState,PartialStateUpdate> threadpool = 
           new MulticoreWrapper<ClustererState,PartialStateUpdate>(numThreads, 
               new ThreadsafeProcessor<ClustererState,PartialStateUpdate>() {
-                @Override
-                public PartialStateUpdate process(ClustererState input) {
-                  OneSidedObjectiveFunction algorithm = new OneSidedObjectiveFunction(input);
-                  return algorithm.cluster();
-                }
-                @Override
-                public ThreadsafeProcessor<ClustererState, PartialStateUpdate> newInstance() {
-                  return this;
-                }
+            @Override
+            public PartialStateUpdate process(ClustererState input) {
+              OneSidedObjectiveFunction algorithm = new OneSidedObjectiveFunction(input);
+              return algorithm.cluster();
+            }
+            @Override
+            public ThreadsafeProcessor<ClustererState, PartialStateUpdate> newInstance() {
+              return this;
+            }
           });
-      // Select partition and dispatch workers
+      
+      // Select vocabulary partition number
       final int partitionNumber = e % vparts;
+
+      if (e > 0 && partitionNumber == 0) {
+        logger.info("Sorting vocabulary according to the current class assignments");
+        sortVocabulary();
+      }
+
       logger.info(String.format("Iteration %d: partition %d start", e, partitionNumber));
       final long iterationStartTime = System.nanoTime();
+      int startIndex = 0;
       for (int t = 0; t < numThreads; ++t) {
-        ClustererState input = createInput(effectiveVocabulary, partitionNumber, t);
-        threadpool.put(input);
+        Pair<ClustererState,Integer> input = createInput(partitionNumber, t, startIndex);
+        if (input != null) {
+          threadpool.put(input.first());
+          startIndex = input.second();
+        }
       }
 
       // Wait for shutdown and process results
@@ -229,19 +257,50 @@ public class MakeWordClasses {
         PartialStateUpdate result = threadpool.poll();
         numUpdates += updateCountsWith(result);
       }
-      
+
       // Clean out zeros from counters after updating
       classHistoryCount.clean();
       Counters.retainNonZeros(classCount);
-      
+
       double elapsedTime = ((double) System.nanoTime() - iterationStartTime) / 1e9;
       logger.info(String.format("Iteration %d: elapsed time %.3fsec", e, elapsedTime));
       logger.info(String.format("Iteration %d: #updates %d", e, numUpdates));
       logger.info(String.format("Iteration %d: objective: %.4f", e, objectiveFunctionValue()));
     }
-    
+
     double elapsedTime = ((double) System.nanoTime() - runStartTime) / 1e9;
     logger.info(String.format("Total runtime: %.3fsec", elapsedTime));
+  }
+
+  /**
+   * Heuristic of Brants and Uzskoreit for aiding convergence
+   * Sort the vocabulary according to current class assignments
+   */
+  private void sortVocabulary() {
+    Map<IString,Integer> sortMap = new TreeMap<IString,Integer>(new ValueComparator(wordToClass));
+    sortMap.putAll(wordToClass);
+    List<IString> sortedVocabulary = Generics.newArrayList(effectiveVocabulary.size());
+    for (IString word : sortMap.keySet()) {
+      // Sort according to the natural ordering of the class assignments
+//      System.err.printf("%s\t%d%n", word.toString(), wordToClass.get(word));
+      sortedVocabulary.add(word);
+    }
+    assert sortedVocabulary.size() == effectiveVocabulary.size();
+    effectiveVocabulary = sortedVocabulary;
+  }
+  
+  private static class ValueComparator implements Comparator<IString> {
+    Map<IString, Integer> base;
+    public ValueComparator(Map<IString, Integer> base) {
+      this.base = base;
+    }
+    public int compare(IString a, IString b) {
+      if (base.get(a) >= base.get(b)) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
   }
   
   /**
@@ -268,22 +327,50 @@ public class MakeWordClasses {
     return objValue;
   }
 
-  private ClustererState createInput(List<IString> fullVocabulary, int partitionNumber, int threadId) {
-    int partitionSize = fullVocabulary.size() / vparts;
+  /**
+   * Create the input to a clustering iteration.
+   * 
+   * @param fullVocabulary
+   * @param partitionNumber
+   * @param threadId
+   * @return
+   */
+  private Pair<ClustererState,Integer> createInput(int partitionNumber, int threadId, int inputStart) {
+    int partitionSize = effectiveVocabulary.size() / vparts;
     int partitionStart = partitionNumber*partitionSize;
-    int partitionEnd = partitionNumber == vparts-1 ? fullVocabulary.size() : (partitionNumber+1)*partitionSize;
+    int partitionEnd = partitionNumber == vparts-1 ? effectiveVocabulary.size() : (partitionNumber+1)*partitionSize;
     partitionSize = partitionEnd-partitionStart;
+
+    int targetInputSize = partitionSize / numThreads;
+    int startIndex = inputStart == 0 ? partitionStart + inputStart : inputStart;
+    int endIndex = Math.min(partitionEnd, startIndex + targetInputSize);
+    if (endIndex - startIndex <= 0) return null;
     
-    int inputSize = partitionSize / numThreads;
-    int inputStart = threadId * inputSize;
-    int inputEnd = threadId == numThreads-1 ? partitionEnd : partitionStart + ((threadId+1)*inputSize);
+    // Brants and Uszkoreit heuristic: make sure that all words from a given class
+    // end up in the same worker.
+    int i = endIndex-1;
+    for (; i < partitionEnd-1; ++i) {
+      IString iWord = effectiveVocabulary.get(i);
+      IString nextWord = effectiveVocabulary.get(i+1);
+      Integer iClass= wordToClass.get(iWord);
+      Integer nextClass= wordToClass.get(nextWord);
+      if (iClass != nextClass) {
+        break;
+      }
+    }
+    logger.info(String.format("endIndex: %d -> %d", endIndex, i+1));
+    endIndex = i+1;
+
+    List<IString> inputVocab = effectiveVocabulary.subList(startIndex, endIndex);
+    
     logger.info(String.format("Partition %d thread %d size %d: input %d-%d", partitionNumber,
-        threadId, partitionSize, partitionStart+inputStart, inputEnd-1));
-    List<IString> inputVocab = fullVocabulary.subList(partitionStart + inputStart, inputEnd);
-    int numEffectiveClasses = vocabThreshold > 0 ? numClasses-1 : numClasses;
-    return new ClustererState(inputVocab, this.wordCount, 
+        threadId, inputVocab.size(), startIndex, endIndex-1));
+    
+    // Create the state
+    ClustererState state =  new ClustererState(inputVocab, this.wordCount, 
         this.historyCount, this.wordToClass, this.classCount, this.classHistoryCount,
-        numEffectiveClasses, this.currentObjectiveValue);
+        numClasses, this.currentObjectiveValue);
+    return new Pair<ClustererState,Integer>(state, endIndex);
   }
 
   private int updateCountsWith(PartialStateUpdate result) {
@@ -295,7 +382,7 @@ public class MakeWordClasses {
       Counter<NgramHistory> delta = result.deltaClassHistoryCount.getCounter(classId);
       Counters.addInPlace(counter, delta);
     }
-    
+
     // Update assignments
     int numUpdates = 0;
     for (Map.Entry<IString, Integer> assignment : result.wordToClass.entrySet()) {
@@ -306,7 +393,7 @@ public class MakeWordClasses {
     }
     return numUpdates;
   }
-
+  
   /**
    * Write the final cluster assignments to the specified output stream.
    * 
@@ -318,7 +405,7 @@ public class MakeWordClasses {
     for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
       if (outputFormat == OutputFormat.TSV) {
         out.printf("%s\t%d%n", assignment.getKey().toString(), assignment.getValue());
-      
+
       } else if (outputFormat == OutputFormat.SRILM) {
         out.printf("%d 1.0 %s%n", assignment.getValue(), assignment.getKey().toString());
       }
@@ -338,7 +425,7 @@ public class MakeWordClasses {
     argDefs.put("numtok", 0);
     return argDefs;
   }
-  
+
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     final String nl = System.getProperty("line.separator");
@@ -350,12 +437,12 @@ public class MakeWordClasses {
     .append(" -vparts num    : Number of vocabulary partitions (default: 3)").append(nl)
     .append(" -format type   : Output format [srilm|tsv] (default: tsv)").append(nl)
     .append(" -name str      : Run name for log file.").append(nl)
-    .append(" -vclip num     : Deterministically assign words that occur less than num to a single class").append(nl)
-    .append(" -numtok        : Map numbers to a single token");
+    .append(" -vclip num     : Map rare words to <unk> (default: 5)").append(nl)
+    .append(" -numtok        : Map numbers to a single token (default: true)");
 
     return sb.toString();
   }
-  
+
   /**
    * @param args
    */

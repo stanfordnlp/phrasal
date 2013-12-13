@@ -13,11 +13,11 @@ public final class TokenUtils {
   /**
    * Various special tokens.
    */
-  public static final IString NUMBER_TOKEN = new IString("#NUM#");
+  public static final IString NUMBER_TOKEN = new IString("#num#");
   public static final IString START_TOKEN = new IString("<s>");
   public static final IString END_TOKEN = new IString("</s>");
   public static final IString UNK_TOKEN = new IString("<unk>");
-  public static final IString NULL_TOKEN = new IString("<<<NULL>>>");
+  public static final IString NULL_TOKEN = new IString("<<<null>>>");
 
   /**
    * Returns true if the token consists entirely of punctuation, and false
@@ -51,6 +51,25 @@ public final class TokenUtils {
       }
     }
     return true;
+  }
+  
+  /**
+   * True if the input string contains at least one digit and 0 or more
+   * punctuation characters. False otherwise.
+   * 
+   * @param token
+   * @return
+   */
+  public static boolean isNumbersWithPunctuation(String token) {
+    boolean hasDigit = false;
+    for (int i = 0; i < token.length(); ++i) {
+      char c = token.charAt(i);
+      hasDigit = hasDigit || Character.isDigit(c);
+      if ( ! (Character.isDigit(c) || Characters.isPunctuation(c))) {
+        return false;
+      }
+    }
+    return hasDigit;
   }
 
   /**
