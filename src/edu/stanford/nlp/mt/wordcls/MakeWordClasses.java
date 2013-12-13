@@ -396,12 +396,14 @@ public class MakeWordClasses {
   public void writeResults(PrintStream out) {
     logger.info(String.format("Writing final class assignments in %s format",
         outputFormat.toString()));
-    for (Map.Entry<IString, Integer> assignment : wordToClass.entrySet()) {
+    Collections.sort(effectiveVocabulary, new WordClassComparator(wordToClass));
+    for (IString word : effectiveVocabulary) {
+      int assignment = wordToClass.get(word);
       if (outputFormat == OutputFormat.TSV) {
-        out.printf("%s\t%d%n", assignment.getKey().toString(), assignment.getValue());
+        out.printf("%s\t%d%n", word.toString(), assignment);
 
       } else if (outputFormat == OutputFormat.SRILM) {
-        out.printf("%d 1.0 %s%n", assignment.getValue(), assignment.getKey().toString());
+        out.printf("%d 1.0 %s%n", assignment, word.toString());
       }
     }
   }

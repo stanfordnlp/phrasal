@@ -17,6 +17,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public abstract class AbstractWordClassMap {
   
+  private static final String DELIMITER = "~";
   protected static IString DEFAULT_UNK_CLASS = new IString("<<unk>>");
   protected static List<IString> DEFAULT_UNK_MAPPING = Generics.newArrayList(1);
   static {
@@ -77,6 +78,6 @@ public abstract class AbstractWordClassMap {
           this.getClass().getName(), word.toString());
       classVector = DEFAULT_UNK_MAPPING;
     }
-    return new IString(Sentence.listToString(classVector, true, "-"));
+    return new IString(Sentence.listToString(classVector, true, DELIMITER));
   }
 }
