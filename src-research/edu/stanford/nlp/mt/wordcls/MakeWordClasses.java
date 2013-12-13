@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,7 +36,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  * Various algorithms for learning a mapping function from an input
  * word to an output equivalence class.
  * 
- * TODO Add encoding parameter
  * TODO Extract out objective function as an interface to support
  * other clustering algorithms if needed.
  * 
@@ -51,6 +49,7 @@ public class MakeWordClasses {
   private final int numThreads;
   private final int vparts;
   private final int order;
+  private final String inputEncoding;
 
   private final Logger logger;
 
@@ -71,7 +70,7 @@ public class MakeWordClasses {
   
   public MakeWordClasses(Properties properties) {
     // User options
-    this.numIterations = PropertiesUtils.getInt(properties, "niters", 20);
+    this.numIterations = PropertiesUtils.getInt(properties, "niters", 30);
     assert this.numIterations > 0;
 
     this.numClasses = PropertiesUtils.getInt(properties, "nclasses", 512);
@@ -88,6 +87,8 @@ public class MakeWordClasses {
 
     this.vocabThreshold = PropertiesUtils.getInt(properties, "vclip", 5);
     assert this.vocabThreshold >=0;
+    
+    this.inputEncoding = properties.getProperty("encoding", "UTF-8");
 
     this.mapNumbersToToken = PropertiesUtils.getBool(properties, "numtok", true);
 
@@ -100,11 +101,15 @@ public class MakeWordClasses {
     PhrasalLogger.prefix = properties.getProperty("name", 
         String.format("%d-classes.%s", numClasses, sdf.format(new Date())));
     PhrasalLogger.attach(logger, LogName.WORD_CLASS);
+    
     logger.info("#iterations: " + String.valueOf(numIterations));
     logger.info("#classes: " + String.valueOf(numClasses));
     logger.info("order: " + String.valueOf(order));
+    logger.info("#vocabulary partitions: " + String.valueOf(vparts));
+    logger.info("Rare word threshold: " + String.valueOf(vocabThreshold));
+    logger.info("Input file encoding: " + inputEncoding);
     if (mapNumbersToToken) {
-      logger.info("Mapping all number tokens to " + TokenUtils.NUMBER_TOKEN.toString());
+      logger.info("Mapping all number tokens to: " + TokenUtils.NUMBER_TOKEN.toString());
     }
 
     // Internal data structures
@@ -131,7 +136,7 @@ public class MakeWordClasses {
     final long startTime = System.nanoTime();
     for (String filename : filenames) {
       logger.info("Reading: " + filename);
-      LineNumberReader reader = IOTools.getReaderFromFile(filename);
+      LineNumberReader reader = IOTools.getReaderFromFile(filename, inputEncoding);
       for (String line; (line = reader.readLine()) != null;) {
         Sequence<IString> tokens = IStrings.tokenize(line.trim());
         List<IString> history = Generics.newLinkedList(defaultHistory);
@@ -236,7 +241,7 @@ public class MakeWordClasses {
 
       if (e > 0 && partitionNumber == 0) {
         logger.info("Sorting vocabulary according to the current class assignments");
-        sortVocabulary();
+        Collections.sort(effectiveVocabulary, new WordClassComparator(wordToClass));
       }
 
       logger.info(String.format("Iteration %d: partition %d start", e, partitionNumber));
@@ -272,33 +277,20 @@ public class MakeWordClasses {
     logger.info(String.format("Total runtime: %.3fsec", elapsedTime));
   }
 
-  /**
-   * Heuristic of Brants and Uzskoreit for aiding convergence
-   * Sort the vocabulary according to current class assignments
-   */
-  private void sortVocabulary() {
-    Map<IString,Integer> sortMap = new TreeMap<IString,Integer>(new ValueComparator(wordToClass));
-    sortMap.putAll(wordToClass);
-    List<IString> sortedVocabulary = Generics.newArrayList(effectiveVocabulary.size());
-    for (IString word : sortMap.keySet()) {
-      // Sort according to the natural ordering of the class assignments
-//      System.err.printf("%s\t%d%n", word.toString(), wordToClass.get(word));
-      sortedVocabulary.add(word);
-    }
-    assert sortedVocabulary.size() == effectiveVocabulary.size();
-    effectiveVocabulary = sortedVocabulary;
-  }
-  
-  private static class ValueComparator implements Comparator<IString> {
-    Map<IString, Integer> base;
-    public ValueComparator(Map<IString, Integer> base) {
-      this.base = base;
+  private static class WordClassComparator implements Comparator<IString> {
+    Map<IString, Integer> map;
+    public WordClassComparator(Map<IString, Integer> map) {
+      this.map = map;
     }
     public int compare(IString a, IString b) {
-      if (base.get(a) >= base.get(b)) {
+      int classA = map.get(a);
+      int classB = map.get(b);
+      if (classA < classB) {
         return -1;
-      } else {
+      } else if (classA > classB) {
         return 1;
+      } else {
+        return 0;
       }
     }
   }
@@ -425,6 +417,7 @@ public class MakeWordClasses {
     argDefs.put("name", 1);
     argDefs.put("vclip", 1);
     argDefs.put("numtok", 0);
+    argDefs.put("encoding", 1);
     return argDefs;
   }
 
@@ -435,12 +428,13 @@ public class MakeWordClasses {
     .append(" -order num     : Model order (default: 2)").append(nl)
     .append(" -nthreads num  : Number of threads (default: 1)").append(nl)
     .append(" -nclasses num  : Number of classes (default: 512)").append(nl)
-    .append(" -niters num    : Number of iterations (default: 20)").append(nl)
+    .append(" -niters num    : Number of iterations (default: 30)").append(nl)
     .append(" -vparts num    : Number of vocabulary partitions (default: 3)").append(nl)
     .append(" -format type   : Output format [srilm|tsv] (default: tsv)").append(nl)
     .append(" -name str      : Run name for log file.").append(nl)
     .append(" -vclip num     : Map rare words to <unk> (default: 5)").append(nl)
-    .append(" -numtok        : Map numbers to a single token (default: true)");
+    .append(" -numtok        : Map numbers to a single token (default: true)").append(nl)
+    .append(" -encoding str  : Input file encoding (default: UTF-8)");
 
     return sb.toString();
   }

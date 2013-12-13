@@ -3,8 +3,8 @@ package edu.stanford.nlp.mt.tools;
 import java.util.List;
 import java.util.Random;
 
-import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
@@ -50,10 +50,8 @@ public class SignificanceTest {
     // Load everything we need
     EvaluationMetric<IString, String> eval = MetricFactory.metric(
         evalMetricName, referencePrefix);
-    List<Sequence<IString>> system1Trans = IOTools
-        .slurpIStringSequences(system1TransFilename);
-    List<Sequence<IString>> system2Trans = IOTools
-        .slurpIStringSequences(system2TransFilename);
+    List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename);
+    List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename);
 
     if (system1Trans.size() != system2Trans.size()) {
       System.err

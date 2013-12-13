@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.base;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,7 +13,6 @@ import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -63,35 +61,25 @@ public final class IOTools {
     }
     return scores;
   }
-  
-  public static List<Sequence<IString>> slurpIStringSequences(String filename)
-      throws IOException {
-    BufferedReader reader = new BufferedReader(new FileReader(filename));
-    List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
-
-    for (String inline; (inline = reader.readLine()) != null;) {
-      Sequence<IString> seq = new RawSequence<IString>(
-          IStrings.toIStringArray(inline.trim().split("\\s+")));
-      sequences.add(seq);
-    }
-    reader.close();
-    return sequences;
-  }
 
   public static LineNumberReader getReaderFromFile(File fileName) {
     return getReaderFromFile(fileName.getPath());
   }
 
   public static LineNumberReader getReaderFromFile(String fileName) {
+    return getReaderFromFile(fileName, DEFAULT_ENCODING);
+  }
+
+  public static LineNumberReader getReaderFromFile(String fileName, String encoding) {
     LineNumberReader reader; // = null;
     File f = new File(fileName);
     try {
       if (f.getAbsolutePath().endsWith(".gz")) {
         reader = new LineNumberReader(new InputStreamReader(
-            new GZIPInputStream(new FileInputStream(f), 8192), DEFAULT_ENCODING));
+            new GZIPInputStream(new FileInputStream(f), 8192), encoding));
       } else {
         reader = new LineNumberReader(new InputStreamReader(
-            new BufferedInputStream(new FileInputStream(f)), DEFAULT_ENCODING));
+            new BufferedInputStream(new FileInputStream(f)), encoding));
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -105,16 +93,20 @@ public final class IOTools {
   }
 
   public static PrintStream getWriterFromFile(String fileName) {
+    return getWriterFromFile(fileName, DEFAULT_ENCODING);
+  }
+
+  public static PrintStream getWriterFromFile(String fileName, String encoding) {
     PrintStream output = null;
     try {
       if (fileName != null) {
         System.err.println("output file: " + fileName);
         if (fileName.endsWith(".gz")) {
           output = new PrintStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
-              fileName))), false, DEFAULT_ENCODING);
+              fileName))), false, encoding);
         } else {
           output = new PrintStream(new BufferedOutputStream(new FileOutputStream(fileName)), false,
-              DEFAULT_ENCODING);
+              encoding);
         }
       }
     } catch (IOException e) {
