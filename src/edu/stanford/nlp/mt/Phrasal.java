@@ -414,7 +414,7 @@ public class Phrasal {
       TargetClassMap map = TargetClassMap.getInstance();
       for (String filename : parameters) {
         map.load(filename);
-        System.err.println("Loaded source class map: " + filename);
+        System.err.println("Loaded target class map: " + filename);
       }
     }
     
