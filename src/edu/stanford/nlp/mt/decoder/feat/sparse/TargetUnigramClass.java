@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -31,7 +30,7 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     for (IString token : f.targetPhrase) {
-      String tokenClass = Sentence.listToString(targetMap.get(token), true, "-");
+      String tokenClass = targetMap.get(token).toString();
       features.add(new FeatureValue<String>(String.format("%s:%s",FEATURE_NAME,tokenClass), 1.0));
     }
     return features;

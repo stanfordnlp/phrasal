@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -47,7 +46,7 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
     
     // Detect this phrase
     if (f.targetPhrase != null && f.targetPhrase.size() > 0) {
-      IString rightEdge = new IString(Sentence.listToString(targetMap.get(f.targetPhrase.get(0)), true, "-"));
+      IString rightEdge = targetMap.get(f.targetPhrase.get(0));
       features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));      
       f.setState(this, new BoundaryState(rightEdge));
     } else {
@@ -57,7 +56,7 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
     
     // Detect done
     if (f.done && f.targetPhrase != null && f.targetPhrase.size() > 0) {
-      leftEdge = new IString(Sentence.listToString(targetMap.get(f.targetPhrase.get(f.targetPhrase.size()-1)), true, "-"));
+      leftEdge = targetMap.get(f.targetPhrase.get(f.targetPhrase.size()-1));
       IString rightEdge = TokenUtils.END_TOKEN;
       features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));
       f.setState(this, new BoundaryState(rightEdge));

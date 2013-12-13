@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -72,14 +71,14 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       StringBuilder sb = new StringBuilder();
       for (IString token : f.sourcePhrase) {
         if (sb.length() > 0) sb.append("-");
-        String tokenClass = Sentence.listToString(sourceMap.get(token), true, "-");
+        String tokenClass = sourceMap.get(token).toString();
         sb.append(tokenClass);
       }
       sb.append(">");
       boolean seenFirst = false;
       for (IString token : f.targetPhrase) {
         if (seenFirst) sb.append("-");
-        String tokenClass = Sentence.listToString(targetMap.get(token), true, "-");
+        String tokenClass = targetMap.get(token).toString();
         sb.append(tokenClass);
         seenFirst = true;
       }

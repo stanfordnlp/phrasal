@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -62,18 +63,20 @@ public abstract class AbstractWordClassMap {
    * @param word
    * @return
    */
-  public List<IString> get(IString word) {
+  public IString get(IString word) {
     if (TokenUtils.isNumbersWithPunctuation(word.toString())) {
       word = TokenUtils.NUMBER_TOKEN;
-    } 
-    if (wordToClass.containsKey(word)) {
-      return wordToClass.get(word);
-    } else if (wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
-      return wordToClass.get(TokenUtils.UNK_TOKEN);
-    } else {
-      System.err.printf("%s: WARNING Class map does not specify an <unk> encoding (%s)%n", 
-          this.getClass().getName(), word.toString());
-      return DEFAULT_UNK_MAPPING;
     }
+    List<IString> classVector = null;
+    if (wordToClass.containsKey(word)) {
+      classVector = wordToClass.get(word);
+    } else if (wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
+      classVector = wordToClass.get(TokenUtils.UNK_TOKEN);
+    } else {
+      System.err.printf("%s: WARNING Class map does not specify an <unk> encoding for unknown word (%s)%n", 
+          this.getClass().getName(), word.toString());
+      classVector = DEFAULT_UNK_MAPPING;
+    }
+    return new IString(Sentence.listToString(classVector, true, "-"));
   }
 }
