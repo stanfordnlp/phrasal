@@ -352,8 +352,8 @@ public class MakeWordClasses {
     for (; i < partitionEnd-1; ++i) {
       IString iWord = effectiveVocabulary.get(i);
       IString nextWord = effectiveVocabulary.get(i+1);
-      Integer iClass= wordToClass.get(iWord);
-      Integer nextClass= wordToClass.get(nextWord);
+      int iClass= wordToClass.get(iWord);
+      int nextClass= wordToClass.get(nextWord);
       if (iClass != nextClass) {
         break;
       }
