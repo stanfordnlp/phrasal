@@ -21,6 +21,7 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
    */
   private static final double EXP_INDICATOR = Math.exp(1);
 
+  // Threadsafe sets that marks both the indomain sets and indomain rules.
   private final Set<Integer> inDomainSet;
   private final Set<Integer> inDomainKeys;
 
