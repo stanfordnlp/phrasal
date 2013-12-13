@@ -18,9 +18,9 @@ public class BLEUGainNoise<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   private static final int DEFAULT_ORDER = 4;
   
-  private static final double SHORT_VARIANCE = Math.sqrt(0.025);
-  private static final double MEDIUM_VARIANCE = Math.sqrt(0.015);
-  private static final double LONG_VARIANCE = Math.sqrt(0.01);
+  private static final double SHORT_STDEV = 0.025;
+  private static final double MEDIUM_STDEV = 0.015;
+  private static final double LONG_STDEV = 0.01;
   
   private final Random random = new Random();
   
@@ -35,15 +35,15 @@ public class BLEUGainNoise<TK,FV> implements SentenceLevelMetric<TK, FV> {
     }
     
     // Set variance
-    double variance = SHORT_VARIANCE;
+    double stdev = SHORT_STDEV;
     int srcLength = source.size();
     if (srcLength > 25 && srcLength < 35) {
-      variance = MEDIUM_VARIANCE;
+      stdev = MEDIUM_STDEV;
     } else if (srcLength > 35) {
-      variance = LONG_VARIANCE;
+      stdev = LONG_STDEV;
     }
     
-    double score = computeLocalSmoothScore(translation, references, DEFAULT_ORDER, true, variance);
+    double score = computeLocalSmoothScore(translation, references, DEFAULT_ORDER, true, stdev);
     
     // Scale BLEU score by length per Chiang's recommendation
     return score * (double) minLength;
@@ -51,7 +51,7 @@ public class BLEUGainNoise<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   
   private double computeLocalSmoothScore(Sequence<TK> seq,
-      List<Sequence<TK>> refs, int order, boolean doNakovExtension, double noiseVariance) {
+      List<Sequence<TK>> refs, int order, boolean doNakovExtension, double noiseStdev) {
 
     Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(seq,
         order);
@@ -98,7 +98,7 @@ public class BLEUGainNoise<TK,FV> implements SentenceLevelMetric<TK, FV> {
     
     // Add noise
     double prec = Math.exp(logNgramPrecisionScore);
-    prec += Math.abs(random.nextGaussian() * noiseVariance);
+    prec += Math.abs(random.nextGaussian() * noiseStdev);
     logNgramPrecisionScore = Math.log(Math.min(1.0, prec));
 
     final double localScore = Math.exp(localLogBP + logNgramPrecisionScore);
