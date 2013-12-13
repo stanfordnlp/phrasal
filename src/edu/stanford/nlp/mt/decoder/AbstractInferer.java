@@ -5,7 +5,6 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.FeatureValueCollection;
-import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -13,13 +12,20 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
+/**
+ * An abstract inference algorithm.
+ * 
+ * @author Spence Green
+ *
+ * @param <TK>
+ * @param <FV>
+ */
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final CombinedFeaturizer<TK, FV> featurizer;
   protected final PhraseGenerator<TK,FV> phraseGenerator;
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Derivation<TK, FV>> filter;
-  protected final List<Annotator<TK,FV>> annotators;
   protected final boolean filterUnknownWords;
 
   protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
@@ -28,7 +34,6 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     scorer = builder.scorer;
     heuristic = builder.heuristic;
     filter = builder.filter;
-    annotators = builder.annotators;
     filterUnknownWords = builder.filterUnknownWords;
   }
 
@@ -38,7 +43,6 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     scorer = inferer.scorer;
     heuristic = inferer.heuristic;
     filter = inferer.filter;
-    annotators = inferer.annotators;
     filterUnknownWords = inferer.filterUnknownWords;
   }
 
