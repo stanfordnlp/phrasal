@@ -6,7 +6,7 @@ package edu.stanford.nlp.mt.stats;
  * @author Spence Green
  *
  */
-public interface Distribution {
+public interface ProbabilityDistribution {
 
   public double[] draw(double[] params, double[] hyperParams);
 

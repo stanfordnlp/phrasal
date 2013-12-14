@@ -33,6 +33,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleu-noise-prec")) {
       return new BLEUGainNoise<IString,String>();
 
+    } else if (scoreMetricStr.equals("bleu-noise-beta")) {
+      return new BLEUGainNoiseBeta<IString,String>();
+
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
       return new BLEUGain<IString,String>(true);

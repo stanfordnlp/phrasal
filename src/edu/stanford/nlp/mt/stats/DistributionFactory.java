@@ -14,7 +14,7 @@ public final class DistributionFactory {
   // As of Java7, this call is threadsafe.
   protected static double uniformDraw() { return Math.random(); }
 
-  public static class Bernoulli implements Distribution {
+  public static class Bernoulli implements ProbabilityDistribution {
 
     //params[0] contains the probability of a success
     //Returns 0.0 for tails
@@ -43,7 +43,7 @@ public final class DistributionFactory {
     }
   }
 
-  public static class Beta implements Distribution {
+  public static class Beta implements ProbabilityDistribution {
 
     //params[0] = alpha
     //params[1] = beta
@@ -76,7 +76,7 @@ public final class DistributionFactory {
     }
   }
 
-  public static class Gamma implements Distribution {
+  public static class Gamma implements ProbabilityDistribution {
 
     //params[0] == shape parameter
     //params[1] == scale parameter
@@ -156,7 +156,7 @@ public final class DistributionFactory {
    */
   public static void main(String[] args) {
     double[] betaParams = {1.0,2.0};
-    Distribution dist = new DistributionFactory.Beta();
+    ProbabilityDistribution dist = new DistributionFactory.Beta();
 
     for(int i = 0; i < 10; i++) {
       System.out.printf("Beta Draw: %.5f%n", dist.draw(betaParams, null)[0]);
