@@ -25,6 +25,7 @@ public abstract class AbstractWordClassMap {
   }
   
   protected Map<IString,List<IString>> wordToClass;
+  protected int numMappings = 0;
   
   protected void loadClassFile(String filename) {
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
@@ -35,7 +36,7 @@ public abstract class AbstractWordClassMap {
           IString word = new IString(fields[0]);
           IString wordClass = new IString(fields[1]);
           if ( ! wordToClass.containsKey(word)) {
-            wordToClass.put(word, new ArrayList<IString>());
+            wordToClass.put(word, newMappingList());
           } 
           wordToClass.get(word).add(wordClass);
         } else {
@@ -49,6 +50,11 @@ public abstract class AbstractWordClassMap {
     }
   }
   
+  private List<IString> newMappingList() {
+    return numMappings == 0 ? new ArrayList<IString>() : 
+      new ArrayList<IString>(wordToClass.get(TokenUtils.UNK_TOKEN).subList(0, numMappings));
+  }
+
   /**
    * Load the class map from file.
    * 
@@ -56,6 +62,7 @@ public abstract class AbstractWordClassMap {
    */
   public void load(String filename) {
     loadClassFile(filename);
+    ++numMappings;
   }
   
   /**
