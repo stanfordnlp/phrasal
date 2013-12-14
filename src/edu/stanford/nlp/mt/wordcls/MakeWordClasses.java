@@ -64,7 +64,7 @@ public class MakeWordClasses {
   private final OutputFormat outputFormat;
   private final int vocabThreshold;
   private List<IString> effectiveVocabulary;
-  private final boolean mapNumbersToToken;
+  private final boolean normalizeDigits;
 
   private double currentObjectiveValue = 0.0;
   
@@ -90,7 +90,7 @@ public class MakeWordClasses {
     
     this.inputEncoding = properties.getProperty("encoding", "UTF-8");
 
-    this.mapNumbersToToken = PropertiesUtils.getBool(properties, "numtok", true);
+    this.normalizeDigits = PropertiesUtils.getBool(properties, "normdigits", true);
 
     this.outputFormat = OutputFormat.valueOf(
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
@@ -108,8 +108,8 @@ public class MakeWordClasses {
     logger.info("#vocabulary partitions: " + String.valueOf(vparts));
     logger.info("Rare word threshold: " + String.valueOf(vocabThreshold));
     logger.info("Input file encoding: " + inputEncoding);
-    if (mapNumbersToToken) {
-      logger.info("Mapping all number tokens to: " + TokenUtils.NUMBER_TOKEN.toString());
+    if (normalizeDigits) {
+      logger.info("Mapping all ASCII digit characters to 0");
     }
 
     // Internal data structures
@@ -141,9 +141,8 @@ public class MakeWordClasses {
         Sequence<IString> tokens = IStrings.tokenize(line.trim());
         List<IString> history = Generics.newLinkedList(defaultHistory);
         for (IString token : tokens) {
-          if (mapNumbersToToken && TokenUtils.isNumbersWithPunctuation(token.toString())) {
-            // Words that have at least one digit and >=0 punctuation characters
-            token = TokenUtils.NUMBER_TOKEN;
+          if (normalizeDigits && TokenUtils.hasDigit(token.toString())) {
+            token = new IString(TokenUtils.normalizeDigits(token.toString()));
           }
           wordCount.incrementCount(token);
           historyCount.incrementCount(token, new NgramHistory(history));
@@ -418,7 +417,7 @@ public class MakeWordClasses {
     argDefs.put("format", 1);
     argDefs.put("name", 1);
     argDefs.put("vclip", 1);
-    argDefs.put("numtok", 0);
+    argDefs.put("normdigits", 0);
     argDefs.put("encoding", 1);
     return argDefs;
   }
@@ -435,7 +434,7 @@ public class MakeWordClasses {
     .append(" -format type   : Output format [srilm|tsv] (default: tsv)").append(nl)
     .append(" -name str      : Run name for log file.").append(nl)
     .append(" -vclip num     : Map rare words to <unk> (default: 5)").append(nl)
-    .append(" -numtok        : Map numbers to a single token (default: true)").append(nl)
+    .append(" -normdigits    : Map ASCII digits to 0 (default: true)").append(nl)
     .append(" -encoding str  : Input file encoding (default: UTF-8)");
 
     return sb.toString();

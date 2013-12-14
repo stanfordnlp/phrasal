@@ -19,7 +19,7 @@ public class BLEUGainNoiseBeta<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   private static final int DEFAULT_ORDER = 4;
   
-  private static double[] BETA_PARAMS = {2.0, 6.0};
+  private static double[] BETA_PARAMS = {2.0, 7.0};
   private final ProbabilityDistribution beta = new DistributionFactory.Beta();
   
   @Override

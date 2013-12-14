@@ -72,19 +72,20 @@ public abstract class AbstractWordClassMap {
    * @return
    */
   public IString get(IString word) {
-    if (TokenUtils.isNumbersWithPunctuation(word.toString())) {
-      word = TokenUtils.NUMBER_TOKEN;
+    String wordStr = word.toString();
+    if (TokenUtils.hasDigit(wordStr)) {
+      word = new IString(TokenUtils.normalizeDigits(wordStr));
     }
-    List<IString> classVector = null;
+    List<IString> classList = null;
     if (wordToClass.containsKey(word)) {
-      classVector = wordToClass.get(word);
+      classList = wordToClass.get(word);
     } else if (wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
-      classVector = wordToClass.get(TokenUtils.UNK_TOKEN);
+      classList = wordToClass.get(TokenUtils.UNK_TOKEN);
     } else {
       System.err.printf("%s: WARNING Class map does not specify an <unk> encoding for unknown word (%s)%n", 
           this.getClass().getName(), word.toString());
-      classVector = DEFAULT_UNK_MAPPING;
+      classList = DEFAULT_UNK_MAPPING;
     }
-    return new IString(Sentence.listToString(classVector, true, DELIMITER));
+    return new IString(Sentence.listToString(classList, true, DELIMITER));
   }
 }
