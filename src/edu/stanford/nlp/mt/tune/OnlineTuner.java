@@ -45,9 +45,10 @@ import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
 import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer;
+import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Triple;
@@ -102,6 +103,30 @@ public class OnlineTuner {
 
   private final Logger logger;
 
+  // Baseline dense configuration from edu.stanford.nlp.mt.decoder.feat.base
+  // Extended phrase table, hierarchical reordering, one language model 
+  private static final Set<String> BASELINE_DENSE_FEATURES = Generics.newHashSet();
+  static {
+    BASELINE_DENSE_FEATURES.add("LM");
+    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithNext"); 
+    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithPrevious");
+    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithNext");
+    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithPrevious");
+    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithNext");
+    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithPrevious");
+    BASELINE_DENSE_FEATURES.add("LexR:swapWithNext");
+    BASELINE_DENSE_FEATURES.add("LexR:swapWithPrevious");
+    BASELINE_DENSE_FEATURES.add("LinearDistortion");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.0");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.1");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.2");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.3");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.4");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.5");
+    BASELINE_DENSE_FEATURES.add("TM:FPT.6");
+    BASELINE_DENSE_FEATURES.add("WordPenalty");
+  }
+  
   // Tuning set
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
@@ -276,7 +301,7 @@ public class OnlineTuner {
       this.inputId = inputId;
       // Copy here for thread safety. DO NOT change this unless you know
       // what you're doing....
-      this.weights = new OpenAddressCounter<String>(weights);
+      this.weights = new ClassicCounter<String>(weights);
     }
   }
 
@@ -456,7 +481,7 @@ public class OnlineTuner {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
-    Counter<String> currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
+    Counter<String> currentWts = new ClassicCounter<String>(wtsAccumulator);
     // Clear the accumulator, which we will use for parameter averaging.
     wtsAccumulator.clear();
     
@@ -512,7 +537,7 @@ public class OnlineTuner {
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
-        currentWts = new OpenAddressCounter<String>(wtsAccumulator, 1.0f);
+        currentWts = new ClassicCounter<String>(wtsAccumulator);
         Counters.divideInPlace(currentWts, (epoch+1)*numBatches);
       }
       
@@ -528,7 +553,7 @@ public class OnlineTuner {
       }
       // Purge history if we're not picking the best weight vector
       if ( ! returnBestDev) epochWeights.clear();
-      epochWeights.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new OpenAddressCounter<String>(currentWts, 1.0f)));
+      epochWeights.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new ClassicCounter<String>(currentWts)));
     }
     
     saveFinalWeights(epochWeights);
@@ -690,7 +715,6 @@ public class OnlineTuner {
     Counter<String> weights;
     try {
       weights = IOTools.readWeights(wtsInitialFile);
-      weights = new OpenAddressCounter<String>(weights, 1.0f);
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException("Could not load weight vector!");
@@ -700,6 +724,8 @@ public class OnlineTuner {
     }
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
+      Set<String> featureNames = Generics.newHashSet(weights.keySet());
+      featureNames.addAll(BASELINE_DENSE_FEATURES);
       for (String key : weights.keySet()) {
         if (key.startsWith("LM")) {
           weights.setCount(key, 0.5);
@@ -711,6 +737,7 @@ public class OnlineTuner {
       }
     }
     if (randomizeStartWeights) {
+      // Add some random noise
       double scale = 1e-4;
       OptimizerUtils.randomizeWeightsInPlace(weights, scale);
     }
