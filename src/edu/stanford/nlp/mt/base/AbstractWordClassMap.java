@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.ling.Sentence;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Converts words to word classes. Backed by a map.
@@ -16,20 +15,17 @@ import edu.stanford.nlp.util.Generics;
  *
  */
 public abstract class AbstractWordClassMap {
-  
+
   private static final String DELIMITER = "~";
   protected static IString DEFAULT_UNK_CLASS = new IString("<<unk>>");
-  protected static List<IString> DEFAULT_UNK_MAPPING = Generics.newArrayList(1);
-  static {
-    DEFAULT_UNK_MAPPING.add(DEFAULT_UNK_CLASS);
-  }
-  
+
   protected Map<IString,List<IString>> wordToClass;
   protected int numMappings = 0;
-  
+
   protected void loadClassFile(String filename) {
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
+      // Load the mapping from file
       for (String line; (line = reader.readLine()) != null;) {
         String[] fields = line.trim().split("\\s+");
         if (fields.length == 2) {
@@ -44,12 +40,21 @@ public abstract class AbstractWordClassMap {
         }
       }
       reader.close();
-      
+
+      // Setup the unknown word class
+      if (! (wordToClass.containsKey(TokenUtils.UNK_TOKEN) && wordToClass.get(TokenUtils.UNK_TOKEN).size() == numMappings+1)) {
+        System.err.printf("%s: WARNING Class map does not specify an <unk> encoding: %s%n",
+            this.getClass().getName(), filename);
+        if ( ! wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
+          wordToClass.put(TokenUtils.UNK_TOKEN, new ArrayList<IString>());
+        }
+        wordToClass.get(TokenUtils.UNK_TOKEN).add(DEFAULT_UNK_CLASS);
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
-  
+
   private List<IString> newMappingList() {
     return numMappings == 0 ? new ArrayList<IString>() : 
       new ArrayList<IString>(wordToClass.get(TokenUtils.UNK_TOKEN).subList(0, numMappings));
@@ -64,7 +69,7 @@ public abstract class AbstractWordClassMap {
     loadClassFile(filename);
     ++numMappings;
   }
-  
+
   /**
    * Map the input word to a word class.
    * 
@@ -76,16 +81,8 @@ public abstract class AbstractWordClassMap {
     if (TokenUtils.hasDigit(wordStr)) {
       word = new IString(TokenUtils.normalizeDigits(wordStr));
     }
-    List<IString> classList = null;
-    if (wordToClass.containsKey(word)) {
-      classList = wordToClass.get(word);
-    } else if (wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
-      classList = wordToClass.get(TokenUtils.UNK_TOKEN);
-    } else {
-      System.err.printf("%s: WARNING Class map does not specify an <unk> encoding for unknown word (%s)%n", 
-          this.getClass().getName(), word.toString());
-      classList = DEFAULT_UNK_MAPPING;
-    }
+    List<IString> classList = wordToClass.containsKey(word) ? wordToClass.get(word) 
+        : wordToClass.get(TokenUtils.UNK_TOKEN);
     return new IString(Sentence.listToString(classList, true, DELIMITER));
   }
 }
