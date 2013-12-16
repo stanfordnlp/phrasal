@@ -18,9 +18,9 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.mt.log.PhrasalLogger;
-import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -96,11 +96,11 @@ public class MakeWordClasses {
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
 
     logger = Logger.getLogger(this.getClass().getName());
-    PhrasalLogger.logLevel = Level.FINE;
+    SystemLogger.logLevel = Level.FINE;
     SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
-    PhrasalLogger.prefix = properties.getProperty("name", 
+    SystemLogger.prefix = properties.getProperty("name", 
         String.format("%d-classes.%s", numClasses, sdf.format(new Date())));
-    PhrasalLogger.attach(logger, LogName.WORD_CLASS);
+    SystemLogger.attach(logger, LogName.WORD_CLASS);
     
     logger.info("#iterations: " + String.valueOf(numIterations));
     logger.info("#classes: " + String.valueOf(numClasses));

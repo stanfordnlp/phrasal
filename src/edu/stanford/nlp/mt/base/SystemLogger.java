@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.log;
+package edu.stanford.nlp.mt.base;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -20,12 +20,12 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public final class PhrasalLogger {
+public final class SystemLogger {
 
   // TODO(spenceg): Add more logs, at least "Online" and "General"
   public static enum LogName {SERVICE, WORD_CLASS};
   
-  private PhrasalLogger() {}
+  private SystemLogger() {}
   
   // Static methods for setting up a global logger
   private static Map<LogName,Handler> handlers = Generics.newHashMap(LogName.values().length);
@@ -38,7 +38,7 @@ public final class PhrasalLogger {
   
   // Default prefix of the logger filename. Changing this has no
   // effect after a call to attach().
-  public static String prefix = PhrasalLogger.now();
+  public static String prefix = SystemLogger.now();
   
   public static String now() {
     DateFormat df = new SimpleDateFormat("MM-dd-yyyy-HH:mm:ss");

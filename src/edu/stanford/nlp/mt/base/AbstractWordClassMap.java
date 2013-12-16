@@ -83,6 +83,6 @@ public abstract class AbstractWordClassMap {
     }
     List<IString> classList = wordToClass.containsKey(word) ? wordToClass.get(word) 
         : wordToClass.get(TokenUtils.UNK_TOKEN);
-    return new IString(Sentence.listToString(classList, true, DELIMITER));
+    return numMappings == 1 ? classList.get(0) : new IString(Sentence.listToString(classList, true, DELIMITER));
   }
 }

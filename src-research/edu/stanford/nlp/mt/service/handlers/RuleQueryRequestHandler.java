@@ -17,11 +17,11 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.log.PhrasalLogger;
-import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
@@ -54,7 +54,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
     this.preprocessor = preprocessor;
     this.postprocessor = postprocessor;
     this.logger = Logger.getLogger(RuleQueryRequestHandler.class.getName());
-    PhrasalLogger.attach(logger, LogName.SERVICE);
+    SystemLogger.attach(logger, LogName.SERVICE);
   }
 
   @Override
