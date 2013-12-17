@@ -15,6 +15,8 @@ from os.path import basename
 
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
+GENRE_MAP = {'newsgroup' : 'ng', 'newswire': 'nw', 'broadcast_news' : 'bn'}
+
 args = sys.argv[1:]
 if len(args) != 1:
     sys.stderr.write('Usage: python %s file%s' % (basename(sys.argv[0]), os.linesep))
@@ -26,6 +28,8 @@ n_segments = 0
 genre_dict = {}
 for doc in soup.find_all('doc'):
     genre = doc['genre']
+    if genre in GENRE_MAP:
+        genre = GENRE_MAP[genre]
     genre_dict[genre] = 1
     segment_list = doc.find_all('seg')
     for line in segment_list:
