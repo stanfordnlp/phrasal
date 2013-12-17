@@ -18,12 +18,12 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 GENRE_MAP = {'newsgroup' : 'ng', 'newswire': 'nw', 'broadcast_news' : 'bn'}
 
 args = sys.argv[1:]
-if len(args) != 1:
-    sys.stderr.write('Usage: python %s file%s' % (basename(sys.argv[0]), os.linesep))
+if len(args) < 1:
+    sys.stderr.write('Usage: python %s in_file [out_file] > genres%s' % (basename(sys.argv[0]), os.linesep))
     sys.exit(-1)
 
 soup = BeautifulSoup(codecs.open(args[0],encoding='utf-8'))
-
+out_file = codecs.open(args[1], 'w', encoding='utf-8') if len(args) == 2 else None
 n_segments = 0
 genre_dict = {}
 for doc in soup.find_all('doc'):
@@ -35,7 +35,10 @@ for doc in soup.find_all('doc'):
     for line in segment_list:
         n_segments += 1
         print genre
-
+        if out_file:
+            out_file.write(line.get_text().strip() + os.linesep)
+if out_file:
+    out_file.close()
 sys.stderr.write('#segments: %d%s' % (n_segments, os.linesep))
 sys.stderr.write('genres: %s%s' % (','.join(genre_dict.keys()),
                                    os.linesep))
