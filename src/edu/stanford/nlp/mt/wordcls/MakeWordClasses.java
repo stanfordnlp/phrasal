@@ -284,13 +284,7 @@ public class MakeWordClasses {
     public int compare(IString a, IString b) {
       int classA = map.get(a);
       int classB = map.get(b);
-      if (classA < classB) {
-        return -1;
-      } else if (classA > classB) {
-        return 1;
-      } else {
-        return 0;
-      }
+      return (int) Math.signum(classA - classB);
     }
   }
   
