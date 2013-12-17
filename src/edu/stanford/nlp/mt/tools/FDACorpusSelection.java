@@ -28,6 +28,8 @@ public class FDACorpusSelection {
    static final int NGRAM_ORDER = 5; // Bicici and Yuret found that 
                                      // using bi-grams was sufficient   
    static final int VERBOSE = 1; // Thang Aug13: change from boolean to int, more debugging messages.
+   
+   // Length normalization extension from the WMT13 FDA paper.
    static final boolean LENGTH_NORM = true;
 
    final Set<String> F;
