@@ -44,9 +44,7 @@ public class FDACorpusSelection {
    private boolean isMono = false; // Thang Aug13: handle monolingual data
    
    static public void usage() {
-      System.err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
-          "(bitext.tgt) (bitext.src) (test.src) (selected.tgt) (selected.src) " +
-          "[selected.ln]");
+      System.err.printf("Usage: java %s selection_size bitext_tgt bitext_src test_src selected_tgt selected_src [selected_lines]%n", FDACorpusSelection.class.getName());
    }
    
    class SentenceScoreComparator implements Comparator<Integer> {
