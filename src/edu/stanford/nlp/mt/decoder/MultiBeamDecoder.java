@@ -33,7 +33,6 @@ import java.util.List;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
@@ -178,7 +177,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
     allOptions.add(ruleList);
     Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source,
-        heuristic, scorer, annotators, allOptions);
+        heuristic, scorer, allOptions);
     beams[0].put(nullHyp);
     int totalHypothesesGenerated = 1;
     if (DEBUG) {
@@ -237,11 +236,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       if (beams[i].size() != 0
           && outputSpace.allowableFinal(beams[i].iterator().next().featurizable)) {
         Derivation<TK, FV> bestHyp = beams[i].iterator().next();
-        System.err.printf("Annotator output for best hypothesis (%d vs %d)\n", bestHyp.annotators.size(), annotators.size());
-        System.err.println("===========================================");
-        for (Annotator<TK,FV> annotator: bestHyp.annotators) {
-        	System.err.println(annotator);
-        }
         if (DEBUG)
           System.err.println("Returning beam of size: " + beams[i].size());
         return beams[i];

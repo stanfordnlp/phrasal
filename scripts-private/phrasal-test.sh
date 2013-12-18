@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 #
+# Convenience script (around phrasal.sh) for decoding multiple
+# test sets given a weight vector.
 #
-# Author: sidaw
+# Author: Sida Wang, Spence Green
 #
 if [ $# -lt 5 ]; then
     echo Usage: `basename $0` tuneset name iteration oldtestset newtestset:filepath "[newtestset:filepath]"
@@ -34,7 +36,7 @@ function decodetest {
 	echo "DECODE_SET_NAME=$testset" >> $varfile
     fi
 
-    phrasal-train-tune.sh $varfile 6-7 $tuneset.$name.ini $name
+    phrasal.sh $varfile 4-5 $tuneset.$name.ini $name
     mv $testset.$tuneset.$name.bleu $testset.$tuneset.$name.$iter.bleu
 }
 

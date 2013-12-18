@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -19,12 +18,11 @@ import edu.stanford.nlp.util.Generics;
 public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "TGTCLS";
+
+  private final TargetClassMap targetMap = TargetClassMap.getInstance();
   
   @Override
   public void initialize() {
-    if (! TargetClassMap.isLoaded()) {
-      throw new RuntimeException("You must enable the " + Phrasal.TARGET_CLASS_MAP + " decoder option");
-    }
   }
 
   @Override
@@ -32,8 +30,8 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     for (IString token : f.targetPhrase) {
-      IString tokenClass = TargetClassMap.get(token);
-      features.add(new FeatureValue<String>(String.format("%s:%s",FEATURE_NAME,tokenClass.toString()), 1.0));
+      String tokenClass = targetMap.get(token).toString();
+      features.add(new FeatureValue<String>(String.format("%s:%s",FEATURE_NAME,tokenClass), 1.0));
     }
     return features;
   }

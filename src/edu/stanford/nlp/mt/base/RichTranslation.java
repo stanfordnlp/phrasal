@@ -1,5 +1,8 @@
 package edu.stanford.nlp.mt.base;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.text.DecimalFormat;
 
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -81,13 +84,44 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(delim);
 
-    // Internal alignments
-    String alignmentString = alignmentString();
-    sbuf.append(" ").append(alignmentString);
+    // Internal Alignments
+    String veryVerboseNbest = System.getProperty("VERY_VERBOSE_NBEST");
+    if (veryVerboseNbest == null || !Boolean.parseBoolean(veryVerboseNbest)) {
+      // Simple Alignments
+      String alignmentString = alignmentString();
+      sbuf.append(" ").append(alignmentString);
+    } else {
+      // Very Verbose Alignments 
+      sbuf.append(' ').append(this.featurizable.sourceSentence.toString());
+      sbuf.append(' ').append(delim).append(' ');
+      List<Featurizable<TK,FV>> featurizables = featurizables();
+      for (Featurizable<TK,FV> f : featurizables) {
+        sbuf.append(' ');
+        double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
+        sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
+        sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
+        sbuf.append(f.derivation.rule.abstractRule.target.toString());
+      }
+    }
+  }
+
+  List<Featurizable<TK,FV>> featurizables() {
+    List<Featurizable<TK,FV>> listFeaturizables = new ArrayList<Featurizable<TK,FV>>();
+    featurizables(this.featurizable, listFeaturizables);
+    Collections.reverse(listFeaturizables);
+    return listFeaturizables;
+  }
+
+  private void featurizables(Featurizable<TK,FV> f, List<Featurizable<TK,FV>> l) {
+    if (f == null) {
+      return;
+    }
+    l.add(f);
+    featurizables(f.prior, l);
   }
 
   /**
-   * Pull out word-to-word source->target alignments.
+   * Pull out word-to-word source-&gt;target alignments.
    * 
    * @return
    */

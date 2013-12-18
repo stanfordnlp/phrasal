@@ -108,7 +108,7 @@ public class Metrics {
     return ngramInfo;
   }
 
-  static <TK> void clipCounts(Counter<Sequence<TK>> counts,
+  public static <TK> void clipCounts(Counter<Sequence<TK>> counts,
       Counter<Sequence<TK>> maxRefCount) {
     Counters.minInPlace(counts, maxRefCount);
   }

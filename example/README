@@ -1,0 +1,7 @@
+This directory accompanies the Phrasal User Guide tutorial. It contains example files for building an end-to-end MT system. The files are:
+
+  example.binwts -- A weights file
+  example.ini    -- Phrasal decoder configuration file
+  example.vars   -- Parameters for phrasal.sh
+  ucb-align.conf -- Example configuration for Berkeley Aligner
+

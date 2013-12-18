@@ -62,11 +62,11 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     Derivation dHope, dFear;
     synchronized(scoreMetric) {
       // The "correct" derivation (Crammer et al. (2006) fig.2)
-      dHope = getBestHopeDerivation(scoreMetric, translations, references, referenceWeights, sourceId);
+      dHope = getBestHopeDerivation(scoreMetric, translations, references, referenceWeights, sourceId, source);
       logger.fine("Hope derivation: " + dHope.toString());
 
       // The "max-loss" derivation (Crammer et al. (2006) fig.2)
-      dFear = getBestFearDerivation(scoreMetric, translations, references, referenceWeights, dHope, sourceId);
+      dFear = getBestFearDerivation(scoreMetric, translations, references, referenceWeights, dHope, sourceId, source);
       logger.fine("Fear derivation: " + dFear.toString());
 
       // Update the loss function with the hope derivation a la
@@ -116,13 +116,14 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
    * 
    * @param translations
    * @param references 
+   * @param source 
    * @return
    */
   private static Derivation getBestHopeDerivation(SentenceLevelMetric<IString, String> scoreMetric, 
       List<RichTranslation<IString,String>> translations,
       List<Sequence<IString>> references, 
       double[] referenceWeights,
-      int translationId) {
+      int translationId, Sequence<IString> source) {
 
     RichTranslation<IString,String> d = null;
     double dCost = 0.0;
@@ -130,7 +131,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
     for (RichTranslation<IString,String> hypothesis : translations) {
-      double gain = scoreMetric.score(translationId, references, referenceWeights, hypothesis.translation);
+      double gain = scoreMetric.score(translationId, source, references, hypothesis.translation);
       double modelScore = hypothesis.score;
       double score = modelScore + gain;
       
@@ -154,6 +155,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
    * 
    * @param translations
    * @param references 
+   * @param source 
    * @return
    */
   private Derivation getBestFearDerivation(SentenceLevelMetric<IString, String> scoreMetric, 
@@ -161,7 +163,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       List<Sequence<IString>> references, 
       double[] referenceWeights,
       Derivation dHope,
-      int translationId) {
+      int translationId, Sequence<IString> source) {
     RichTranslation<IString,String> d = null;
 //    final double hopeCost = lossFunction.score(translationId, references, dHope.hypothesis.translation);
     double dScore = 0.0;
@@ -170,7 +172,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     double maxScore = Double.NEGATIVE_INFINITY;
     int nbestId = 0;
     for (RichTranslation<IString,String> hypothesis : translations) {
-      double gain = scoreMetric.score(translationId, references, referenceWeights, hypothesis.translation);
+      double gain = scoreMetric.score(translationId, source, references, hypothesis.translation);
       double modelScore = hypothesis.score;
       double score = modelScore - gain;
       

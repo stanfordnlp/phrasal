@@ -27,9 +27,18 @@
 
 package edu.stanford.nlp.mt;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
@@ -37,21 +46,35 @@ import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
-import edu.stanford.nlp.mt.decoder.h.*;
-import edu.stanford.nlp.mt.decoder.recomb.*;
-import edu.stanford.nlp.mt.decoder.util.*;
-import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilterFactory;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.OutputSpace;
+import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
+import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
+import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
+import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
-import edu.stanford.nlp.mt.decoder.annotators.Annotator;
-import edu.stanford.nlp.mt.decoder.annotators.AnnotatorFactory;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.*;
+import edu.stanford.nlp.mt.decoder.feat.base.DTULinearDistortionFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
+import edu.stanford.nlp.mt.decoder.h.HeuristicFactory;
+import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -63,6 +86,11 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 /**
  * Phrasal: a phrase-based machine translation system from the Stanford University
  *          NLP group.
+ *
+ * NOTE: This object is not threadsafe. To enable programmatic multithreading with Phrasal,
+ * specify the number of threads in the *.ini as usual, then use the threadId arguments
+ * in the decode() functions to submit to the underlying threadpool. This design permits
+ * storage of the LM and phrase table---among other large data structures---in shared memory.
  *
  * @author danielcer
  * @author Michel Galley
@@ -115,12 +143,11 @@ public class Phrasal {
       .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
       .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
-      .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)");
+      .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)").append(nl)
+      .append("  -").append(LOAD_SOURCE_CORENLP).append(" filename : Load source-side serialized CoreNLP annotations");
     return sb.toString();
   }
 
-  // TODO(spenceg): Document or deprecate the Annotator API. The same functionality can be achieved
-  //                with the Featurizer API.
   private static final String TRANSLATION_TABLE_OPT = "ttable-file";
   private static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   private static final String OPTION_LIMIT_OPT = "ttable-limit";
@@ -142,7 +169,6 @@ public class Phrasal {
   private static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
   private static final String DISTORTION_LIMIT = "distortion-limit";
   private static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
-  private static final String ADDITIONAL_ANNOTATORS = "additional-annotators";
   private static final String DISABLED_FEATURIZERS = "disabled-featurizers";
   private static final String NUM_THREADS = "threads";
   private static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
@@ -156,9 +182,10 @@ public class Phrasal {
   private static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
   private static final String PREPROCESSOR_FILTER = "preprocessor-filter";
   private static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
-  public static final String SOURCE_CLASS_MAP = "source-class-map";
-  public static final String TARGET_CLASS_MAP = "target-class-map";
+  private static final String SOURCE_CLASS_MAP = "source-class-map";
+  private static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String PRINT_MODEL_SCORES = "print-model-scores";
+  public static final String LOAD_SOURCE_CORENLP = "source-corenlp";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -175,11 +202,12 @@ public class Phrasal {
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT,
-        ADDITIONAL_ANNOTATORS, DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
+        DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
         LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
-        SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES));
+        SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
+        LOAD_SOURCE_CORENLP));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -324,14 +352,14 @@ public class Phrasal {
       ClassNotFoundException {
     // Check for required parameters
     if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
-      Set<String> missingFields = new HashSet<String>(REQUIRED_FIELDS);
+      Set<String> missingFields = Generics.newHashSet(REQUIRED_FIELDS);
       missingFields.removeAll(config.keySet());
       throw new RuntimeException(String.format(
           "The following required fields are missing: %s%n", missingFields));
     }
     // Check for unrecognized parameters
     if (!ALL_RECOGNIZED_FIELDS.containsAll(config.keySet())) {
-      Set<String> extraFields = new HashSet<String>(config.keySet());
+      Set<String> extraFields = Generics.newHashSet(config.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_FIELDS);
       throw new RuntimeException(String.format(
           "The following fields are unrecognized: %s%n", extraFields));
@@ -370,28 +398,31 @@ public class Phrasal {
       System.err.printf("Postprocessor filter: %s%n", postprocessor.getClass().getName());
     }
     
-    // Word class maps
+    // Word->class maps
     if (config.containsKey(SOURCE_CLASS_MAP)) {
       List<String> parameters = config.get(SOURCE_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Source class map requires a file argument");
-      SourceClassMap.load(parameters.get(0));
-      if (parameters.size() == 2) {
-        SourceClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
-      }
-      if (parameters.size() == 3) {
-        SourceClassMap.setUnknownClass(parameters.get(2));
+      SourceClassMap map = SourceClassMap.getInstance();
+      for (String filename : parameters) {
+        map.load(filename);
+        System.err.println("Loaded source class map: " + filename);
       }
     }
     if (config.containsKey(TARGET_CLASS_MAP)) {
       List<String> parameters = config.get(TARGET_CLASS_MAP);
       if (parameters.size() == 0) throw new RuntimeException("Target class map requires a file argument");
-      TargetClassMap.load(parameters.get(0));
-      if (parameters.size() == 2) {
-        TargetClassMap.MAP_NUMBERS = Boolean.parseBoolean(parameters.get(1));
+      TargetClassMap map = TargetClassMap.getInstance();
+      for (String filename : parameters) {
+        map.load(filename);
+        System.err.println("Loaded target class map: " + filename);
       }
-      if (parameters.size() == 3) {
-        TargetClassMap.setUnknownClass(parameters.get(2));
-      }
+    }
+    
+    // Source CoreNLP annotations
+    if (config.containsKey(LOAD_SOURCE_CORENLP)) {
+      List<String> parameters = config.get(LOAD_SOURCE_CORENLP);
+      if (parameters.size() == 0) throw new RuntimeException("Source CoreNLP requires a file argument");
+      CoreNLPCache.loadSerialized(parameters.get(0));
     }
     
     if (config.containsKey(FORCE_DECODE)) {
@@ -556,81 +587,6 @@ public class Phrasal {
           : new HierarchicalReorderingFeaturizer(modelFilename, modelType);
     }
 
-    // TODO(spenceg) This functionality is not used. Deprecate.
-    List<Annotator<IString,String>> additionalAnnotators = new ArrayList<Annotator<IString,String>>();
-    if (config.containsKey(ADDITIONAL_ANNOTATORS)) {
-    	List<String> tokens = config.get(ADDITIONAL_ANNOTATORS);
-        String annotatorName = null;
-        String args = null;
-        for (String token : tokens) {
-          Annotator<IString,String> annotator = null;
-          if (annotatorName == null) {
-            if (token.endsWith("()")) {
-              String name = token.replaceFirst("\\(\\)$", "");
-              Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
-                  .loadAnnotator(name);
-              annotator = (Annotator<IString,String>) annotatorClass
-                  .newInstance();
-              additionalAnnotators.add(annotator);
-            } else if (token.contains("(")) {
-              if (token.endsWith(")")) {
-                annotatorName = token.replaceFirst("\\(.*", "");
-                args = token.replaceFirst("^.*\\(", "");
-                args = args.substring(0, args.length() - 1);
-                args = args.replaceAll("\\s*,\\s*", ",");
-                args = args.replaceAll("^\\s+", "");
-                args = args.replaceAll("\\s+$", "");
-                String[] argsList = args.split(",");
-                System.err.printf("Additional annotators: %s.%nArgs: %s%n",
-                    annotatorName, Arrays.toString(argsList));
-                Class<Annotator<IString, String>> annotatorClass = AnnotatorFactory
-                    .loadAnnotator(annotatorName);
-                annotator = (Annotator<IString,String>) annotatorClass
-                    .getConstructor(argsList.getClass()).newInstance(
-                        new Object[] { argsList });
-                additionalAnnotators.add(annotator);
-                annotatorName = null;
-                args = null;
-              } else {
-                annotatorName = token.replaceFirst("\\(.*", "");
-                args = token.replaceFirst(".*\\(", "");
-              }
-            } else {
-              System.err.printf(
-                  "Error: '(' expected immediately after annotator name %s", token);
-              System.err
-                  .printf("Note that no whitespace between '(' and the associated annotator name is allowed%n");
-              System.exit(-1);
-            }
-          } else {
-            if (token.endsWith(")")) {
-              args += " " + token.substring(0, token.length() - 1);
-              args = args.replaceAll("\\s*,\\s*", ",");
-              args = args.replaceAll("^\\s+", "");
-              args = args.replaceAll("\\s+$", "");
-              String[] argsList = args.split(",");
-              System.err.printf("args: %s%n", Arrays.toString(argsList));
-              Class<Annotator<IString,String>> annotatorClass = AnnotatorFactory
-                  .loadAnnotator(annotatorName);
-              annotator = (Annotator<IString,String>) annotatorClass
-                  .getConstructor(argsList.getClass()).newInstance(
-                      (Object) argsList);
-              additionalAnnotators.add(annotator);
-              annotatorName = null;
-              args = null;
-            } else {
-              args += " " + token;
-            }
-          }
-        }
-        if (annotatorName != null) {
-          System.err.printf("Error: no ')' found for annotator %s%n",
-              annotatorName);
-          System.exit(-1);
-        }
-    }
-    System.err.printf("Number of additional annotators loaded: %d%n", additionalAnnotators.size());
-
     List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
@@ -730,7 +686,7 @@ public class Phrasal {
     }
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
-      Set<String> disabledFeaturizers = new HashSet<String>();
+      Set<String> disabledFeaturizers = Generics.newHashSet();
       for (String f : config.get(DISABLED_FEATURIZERS))
         disabledFeaturizers.add(f);
       featurizer.deleteFeaturizers(disabledFeaturizers);
@@ -857,8 +813,8 @@ public class Phrasal {
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
     // Create Inferers and scorers
-    inferers = new ArrayList<Inferer<IString, String>>(numThreads);
-    scorers = new ArrayList<Scorer<String>>(numThreads);
+    inferers = Generics.newArrayList(numThreads);
+    scorers = Generics.newArrayList(numThreads);
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
 
@@ -875,7 +831,6 @@ public class Phrasal {
           InfererBuilderFactory.factory(searchAlgorithm);
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder.setAnnotators(additionalAnnotators);
         infererBuilder
             .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
                 .clone());

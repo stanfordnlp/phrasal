@@ -21,6 +21,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Triple;
 
 /**
@@ -44,7 +45,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
   public static final String DEFAULT_REGCONFIG="";
-  public static final boolean VERBOSE = true;
+  public static final boolean VERBOSE = false;
   
   // Logistic classifier labels
   private static enum Label {POSITIVE, NEGATIVE}
@@ -122,37 +123,39 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    * Select PRO samples from a single instance.
    *
    * @param sourceId
+   * @param source 
    * @param scoreMetric
    * @param translations
    * @param references
-   * @param referenceWeights TODO
    * @return
    */
   private List<Datum> sampleNbestList(int sourceId,
-      SentenceLevelMetric<IString, String> scoreMetric,
+      Sequence<IString> source, SentenceLevelMetric<IString, String> scoreMetric,
       List<RichTranslation<IString, String>> translations,
-      List<Sequence<IString>> references, double[] referenceWeights) {
+      List<Sequence<IString>> references) {
     int[] sourceIds = new int[1];
     sourceIds[0] = sourceId;
+    List<Sequence<IString>> sources = Generics.newArrayList(1);
+    sources.add(source);
     List<List<RichTranslation<IString, String>>> translationList = new ArrayList<List<RichTranslation<IString, String>>>(1);
     translationList.add(translations);
     List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(1);
     referenceList.add(references);
-    return sampleNbestLists(sourceIds, scoreMetric, translationList, referenceList, referenceWeights);
+    return sampleNbestLists(sourceIds, sources, scoreMetric, translationList, referenceList);
   }
 
   /**
    * Select PRO samples from a batch.
    *
    * @param sourceIds
+   * @param sources
    * @param scoreMetric
    * @param translationList
    * @param referenceList
-   * @param referenceWeights
    * @return
    */
-  private List<Datum> sampleNbestLists(int[] sourceIds, SentenceLevelMetric<IString, String> scoreMetric,
-      List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList, double[] referenceWeights) {
+  private List<Datum> sampleNbestLists(int[] sourceIds, List<Sequence<IString>> sources,
+      SentenceLevelMetric<IString, String> scoreMetric, List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList) {
     assert sourceIds != null;
     assert scoreMetric != null;
     assert sourceIds.length == translationList.size();
@@ -164,17 +167,18 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       int sourceId = sourceIds[i];
       List<RichTranslation<IString, String>> translations = translationList.get(i);
       List<Sequence<IString>> references = referenceList.get(i);
-
+      Sequence<IString> source = sources.get(i);
+      
       // Sample from this n-best list
       // Loss function is not threadsafe
       List<Triple<Double, Integer, Integer>> v;
       if (scoreMetric.isThreadsafe()) {
-        v = sample(translations, references, referenceWeights, sourceId, scoreMetric);
+        v = sample(translations, references, sourceId, source, scoreMetric);
         scoreMetric.update(sourceId, references, translations.get(0).translation);
 
       } else {
         synchronized(scoreMetric) {
-          v = sample(translations, references, referenceWeights, sourceId, scoreMetric);
+          v = sample(translations, references, sourceId, source, scoreMetric);
           scoreMetric.update(sourceId, references, translations.get(0).translation);
         }
       }
@@ -217,21 +221,21 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    *
    * @param translations
    * @param references
-   * @param referenceWeights TODO
    * @param sourceId
+   * @param source 
    * @param scoreMetric
    * @return
    */
   private List<Triple<Double, Integer, Integer>> sample(List<RichTranslation<IString, String>> translations,
-      List<Sequence<IString>> references, double[] referenceWeights, int sourceId, SentenceLevelMetric<IString, String> scoreMetric) {
+      List<Sequence<IString>> references, int sourceId, Sequence<IString> source, SentenceLevelMetric<IString, String> scoreMetric) {
     List<Triple<Double, Integer, Integer>> v =
         new ArrayList<Triple<Double, Integer, Integer>>(gamma);
     int jMax   = translations.size();
     for (int g = 0; g < gamma; g++) {
       int j      = random.nextInt(jMax);
       int jPrime = random.nextInt(jMax);
-      double gJ = scoreMetric.score(sourceId, references, referenceWeights, translations.get(j).translation);
-      double gJPrime = scoreMetric.score(sourceId,  references, referenceWeights, translations.get(jPrime).translation);
+      double gJ = scoreMetric.score(sourceId, source, references, translations.get(j).translation);
+      double gJPrime = scoreMetric.score(sourceId, source, references, translations.get(jPrime).translation);
       double absDiff = Math.abs(gJ-gJPrime);
       if (absDiff >= nThreshold) {
         if (gJ > gJPrime) {
@@ -259,7 +263,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     assert scoreMetric != null;
 
     // Sample from the n-best list
-    List<Datum> dataset = sampleNbestList(sourceId, scoreMetric, translations, references, referenceWeights);
+    List<Datum> dataset = sampleNbestList(sourceId, source, scoreMetric, translations, references);
     Counter<String> gradient = computeGradient(dataset, weights, 1);
     if (dataset.size() == 0) {
       logger.warning("Null gradient for sourceId: " + sourceId);
@@ -289,7 +293,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     assert references.size() > 0;
     assert scoreMetric != null;
 
-    List<Datum> dataset = sampleNbestLists(sourceIds, scoreMetric, translations, references, referenceWeights);
+    List<Datum> dataset = sampleNbestLists(sourceIds, sources, scoreMetric, translations, references);
     Counter<String> gradient = computeGradient(dataset, weights, sourceIds.length);
     if (dataset.isEmpty()) {
       logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));

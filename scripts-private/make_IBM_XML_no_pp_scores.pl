@@ -1,4 +1,15 @@
 #!/usr/bin/perl
+# 
+# This script takes Moses formatted n-best lists as input and then generates
+# the XML formatted n-best lists IBM wants subcontracting sites submit for 
+# the DARPA BOLT program. 
+#
+# Note that this script *does not* include meaningful scores for the 
+# individual transfer rules used in a derivation. 
+# 
+# author: danielcer@stnaford.edu
+#
+############################################################################
 
 if ($#ARGV != 3) {
    print stderr "Usage:\n\t$0 [unzipped nbest list] [chinese source file] [system name] [section name]\n";
