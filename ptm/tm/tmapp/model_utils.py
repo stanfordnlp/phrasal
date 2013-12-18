@@ -1,50 +1,64 @@
 #
 # Wrappers around common queries
 #
+import logging
+from models import Language,DemographicData,ExitSurveyData,TrainingRecord,UserConfiguration
 
-from models import Language,DemographicData,ExitSurveyData,TrainingRecord
+logger = logging.getLogger(__name__)
 
 def get_language(code_str):
     """
     """
     try:
-        language_object = Language.objects.get(code=code_str)
-        return language_object
+        return Language.objects.get(code=code_str)
     except Language.MultipleObjectsReturned,Language.DoesNotExist:
-        # Log error
+        logger.error('Language code not found in database: ' + code_str)
         raise RuntimeError
 
 def get_demographic_data(user):
     """
+
+    Raises: RuntimeError
     """
     try:
-        dd_object = DemographicData.objects.get(user=user)
-        return dd_object
+        return DemographicData.objects.get(user=user)
     except DemographicData.MultipleObjectsReturned:
         raise RuntimeError
     except DemographicData.DoesNotExist:
-        # User has not submitted demographic data
         return None
 
 def get_exit_data(user):
     """
+
+    Raises: RuntimeError
     """
     try:
-        exit_object = ExitSurveyData.objects.get(user=user)
-        return exit_object
+        return ExitSurveyData.objects.get(user=user)
     except ExitSurveyData.MultipleObjectsReturned:
         raise RuntimeError
     except ExitSurveyData.DoesNotExist:
-        # User has not submitted demographic data
         return None
 
 def get_training_record(user):
     """
+
+    Raises: RuntimeError
     """
     try:
-        training_object = TrainingRecord.objects.get(user=user)
-        return training_object
+        return TrainingRecord.objects.get(user=user)
     except TrainingRecord.MultipleObjectsReturned:
         raise RuntimeError
     except TrainingRecord.DoesNotExist:
         return None
+
+def get_configuration(user):
+    """
+    Return the configuration for the user
+
+    Raises: RuntimeError
+    """
+    try:
+        return UserConfiguration.objects.get(user=user)
+    except UserConfiguration.MultipleObjectsReturned,UserConfiguration.DoesNotExist:
+        logger.error('User not configured properly: ' + str(user))
+        raise RuntimeError

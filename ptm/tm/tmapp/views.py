@@ -26,7 +26,7 @@ def index(request):
     """
     Return the main index template.
     """
-    status = controller.get_user_status(request.user)
+    status = controller.get_user_app_status(request.user)
     return render_to_response('index.html',
                               {'page_title' : 'Overview',
                                'status' : status},
@@ -34,18 +34,45 @@ def index(request):
 
 @login_required
 def training(request):
-    page_title = _('CAT Training')
-    page_name = _('Training')
+    page_title = _('Experiment Overview and CAT Training')
+    page_name = _('Experiment Overview and Training')
     if request.method == 'GET':
+        done_training = controller.user_training_status(request.user)
+        src_lang,tgt_lang = controller.get_user_translation_direction(request.user)
         return render_to_response('training.html',
                               {'page_title' : page_title,
                                'page_name' : page_name,
-                               'form_action' : '/tm/training/'},
+                               'src_lang' : src_lang,
+                               'tgt_lang' : tgt_lang,
+                               'form_action' : '/tm/training/',
+                               'show_ui_link' : not done_training,
+                               'ui_link' : '/tm/training/ui/',
+                               'form_button_text' : 'I feel proficient with the UI and am ready to translate'},
                               context_instance=RequestContext(request))
     elif request.method == 'POST':
-        # TODO Save the user's training status
         return redirect('/tm/')
     raise Http404
+
+@login_required
+def training_ui(request):
+    is_training = True
+    if request.method == 'GET':
+        conf,form = controller.get_translate_configuration_for_user(request.user,is_training)
+        if conf:
+            return render_to_response('translate.html',
+                                      {'conf' : conf,
+                                       'form_action' : '/tm/training/ui/',
+                                       'form' : form,
+                                       'form_button_text' : 'Go to next training document'},
+                                      context_instance=RequestContext(request))
+        else:
+            controller.user_training_status(request.user, True)
+            return redirect('/tm/training/')
+        
+    elif request.method == 'POST':
+        # Redirect to the experiment overview
+        controller.save_translation_session(request.user, request.POST, is_training)
+        return redirect('/tm/training/ui/')
 
 @login_required
 def translate(request):
@@ -60,7 +87,8 @@ def translate(request):
             return render_to_response('translate.html',
                                       {'conf' : conf,
                                        'form_action' : '/tm/translate/',
-                                       'form' : form},
+                                       'form' : form,
+                                       'form_button_text' : 'Submit translations'},
                                       context_instance=RequestContext(request))
         else:
             # No more translation sessions
@@ -70,7 +98,7 @@ def translate(request):
         # Then what do we do?
         controller.save_translation_session(request.user, request.POST)
         # Go to next document
-        return redirect('/tm/translate')
+        return redirect('/tm/translate/')
 
 @login_required
 def form_demographic(request):
@@ -97,8 +125,6 @@ def form_demographic(request):
                                'form_title' : form_title,
                                'page_name' : page_name},
                               context_instance=RequestContext(request))        
-
-
 @login_required
 def form_exit(request):
     form = None

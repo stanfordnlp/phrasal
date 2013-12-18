@@ -52,7 +52,7 @@
     <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input" onsubmit="return prepareSubmission()">
       {% csrf_token %}
       {{ form.as_p }}
-      <input type="submit" value="Submit" name="form-tgt-submit" id="form-tgt-submit" />
+      <input type="submit" value="{{ form_button_text }}" name="form-tgt-submit" id="form-tgt-submit" />
     </form>
   <div>
 </div>

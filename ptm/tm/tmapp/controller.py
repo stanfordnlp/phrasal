@@ -8,12 +8,13 @@ import urllib2
 from django.http import HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 
+import choices
 from models import UserConfiguration,TrainingRecord,TranslationSession,DemographicData
 from forms import DemographicForm,ExitSurveyForm,DivErrorList,TranslationInputForm
 
 logger = logging.getLogger(__name__)
 
-def get_user_status(user):
+def get_user_app_status(user):
     """
     Returns the status of the app for the current user.
     The status determines which functions are active.
@@ -22,10 +23,6 @@ def get_user_status(user):
     Returns:
     Raises:
     """
-    if not user:
-        # TODO Logging
-        raise RuntimeError
-
     user_status = {}
     
     # Filled out demographic info
@@ -43,13 +40,30 @@ def get_user_status(user):
         
     return user_status
 
-def get_translate_configuration_for_user(user):
+def user_training_status(user, complete=False):
+    """
+    Query and optionally update the user's training status.
+
+    Args:
+    Returns:
+    Raises: RuntimeError
+    """
+    training_record = model_utils.get_training_record(user)
+    if training_record:
+        return True
+    elif complete:
+        training_record = TrainingRecord.objects.create(user=user)
+        training_record.save()
+    else:
+        return False
+
+def get_translate_configuration_for_user(user,training=False):
     """
     Configures the translation session for the user.
     
     """
     try:
-        session = TranslationSession.objects.filter(user=user).exclude(complete=True).order_by('order')[0]
+        session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
         
     except IndexError:
         # TODO Logging
@@ -72,12 +86,29 @@ def get_translate_configuration_for_user(user):
 
     return (session_object,form)
 
-def save_translation_session(user, post_data):
+def get_user_translation_direction(user):
+    """
+    Get a tuple identifying the translation direction for the user.
+
+    Returns: (src_lang,tgt_lang)
+    Raises: RuntimeError
+    """
+    user_conf = model_utils.get_configuration(user)
+    code_to_language = dict(choices.LANGUAGES)
+    try:
+        src_lang = code_to_language[user_conf.source_language.code]
+        tgt_lang = code_to_language[user_conf.target_language.code]
+        return src_lang,tgt_lang
+    except KeyError:
+        logger.error('Unknown languages for user: ' + str(user))
+        raise RuntimeError
+
+def save_translation_session(user, post_data, training=False):
     """
     Save the result of a translation session
     """
     try:
-        session = TranslationSession.objects.filter(user=user).exclude(complete=True).order_by('order')[0]
+        session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
     except IndexError:
         logger.error('Final translation already submitted: %s || %s' % (user.username, str(post_data)))
         raise RuntimeError
@@ -134,7 +165,9 @@ def save_modelform(user, model_form):
     """
     Save a ModelForm that takes a User as a ForeignKey.
 
-    
+    Args:
+    Returns:
+    Raises:
     """
     model = model_form.save(commit=False)
     model.user = user
@@ -143,8 +176,8 @@ def save_modelform(user, model_form):
 #
 # Service stuff--This is hard-coded for speed. We don't want
 # to do a database query for every request
-# to lookup the redirect URL. Maybe there's a more MVC-like
-# way to do this later.
+# to lookup the redirect URL.
+# TODO(spenceg) Maybe there's a more MVC-like way to do this.
 #
 SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
