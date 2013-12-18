@@ -1,15 +1,18 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Indicator feature for rules that were extracted from selected sentences in
@@ -17,21 +20,27 @@ import edu.stanford.nlp.util.Generics;
  * 
  * The line id file format is zero-indexed, newline delimited line numbers.
  * 
+ * TODO: Maybe partition
+ * 
  * @author Spence Green
  *
  */
-public class AdjacentInDomainRules extends DerivationFeaturizer<IString, String> {
+public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
 
-  private static final String FEATURE_PREFIX = "IDOM";
-  private final String featureName;
-  private final int featureIndex;
-
-  public AdjacentInDomainRules(String...args) {
-    if (args.length != 1) {
+  private static final String FEATURE_PREFIX = "DOM";
+  private final Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
+  private final boolean addTargetClassFeature;
+  private final boolean addAdjacentRuleFeature;
+  private final TargetClassMap targetMap;
+  
+  public DomainAdaptation(String...args) {
+    if (args.length < 1) {
       throw new RuntimeException("Specify the phrase table feature index of the in-domain indicator feature");
     }
-    featureIndex = Integer.parseInt(args[0]);
-    featureName = String.format("%s%d", FEATURE_PREFIX, featureIndex);
+    sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[0]);
+    addAdjacentRuleFeature = args.length > 1 ? Boolean.valueOf(args[1]) : false;
+    addTargetClassFeature = args.length > 2 ? Boolean.valueOf(args[2]) : false;
+    targetMap = addTargetClassFeature ? TargetClassMap.getInstance() : null;
   }
 
   @Override
@@ -41,14 +50,27 @@ public class AdjacentInDomainRules extends DerivationFeaturizer<IString, String>
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
+    Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
+    String genre = genreInfo.first();
+    int featureIndex = genreInfo.second();
     BoundaryState priorState = f.prior == null ? null : (BoundaryState) f.prior.getState(this);
-    List<FeatureValue<String>> features = Generics.newArrayList(1);
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    
     boolean inDomain = false;
     if (featureIndex < f.rule.abstractRule.scores.length) {
       // Don't fire for synthetic rules
-      inDomain = ((int) f.rule.abstractRule.scores[featureIndex]) != 0;
-      if (priorState != null && priorState.inDomain && inDomain) {
-        features.add(new FeatureValue<String>(featureName, 1.0));
+      inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
+      if (inDomain) {
+        features.add(new FeatureValue<String>(String.format("%s:inrule", FEATURE_PREFIX), 1.0));
+      }
+      if (addAdjacentRuleFeature && priorState != null && priorState.inDomain && inDomain) {
+        features.add(new FeatureValue<String>(String.format("%s:adjrule", FEATURE_PREFIX), 1.0));
+      }
+    }
+    if (addTargetClassFeature) {
+      for (IString token : f.targetPhrase) {
+        String tokenClass = targetMap.get(token).toString();
+        features.add(new FeatureValue<String>(String.format("%s:%s%s",FEATURE_PREFIX,tokenClass, genre), 1.0));
       }
     }
     f.setState(this, new BoundaryState(inDomain));
