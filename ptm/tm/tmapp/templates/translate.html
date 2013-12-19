@@ -29,7 +29,12 @@
 	<script type="text/javascript" src="{% static "PTM.js" %}"></script>
 	<script type="text/javascript">
 		$(document).ready( function() {
-		ptm = new PTM({ "postEditMode" : false });
+			ptm = new PTM({
+				"postEditMode" : {{ conf.disable_interactive }},
+				"docURL" : "{{ conf.src_document_url }}",
+				"sourceLang" : "{{ conf.src_language }}",
+				"targetLang" : "{{ conf.tgt_language }}"
+			});
 			dm = new DatasetManager();
 			dm.on( "change:datasetURL", function() {
 				ptm.load( dm.get( "datasetURL" ) );

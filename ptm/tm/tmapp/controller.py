@@ -80,9 +80,14 @@ def get_translate_configuration_for_user(user,training=False):
     
     session_object = {}
     session_object['src_document_url'] = source_doc.url
-    session_object['src_language'] = source_doc.language.code
-    session_object['tgt_language'] = session.tgt_language.code
-    session_object['interface'] = session.interface
+    # UI expects uppercase language codes
+    session_object['src_language'] = source_doc.language.code.upper()
+    session_object['tgt_language'] = session.tgt_language.code.upper()
+    # Convert to string and lowercase since this will be used as a boolean
+    # in javascript UI code
+    session_object['disable_interactive'] = str(choices.is_postedit(session.interface)).lower()
+    logger.debug(session.interface)
+    logger.debug(str(session_object))
 
     return (session_object,form)
 
@@ -229,7 +234,11 @@ def service_redirect(request):
         raise Http404
     
     # Construct the query
-    url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req))
+    try:
+        url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req))
+    except KeyError:
+        logger.error('URL encoding error')
+        raise Http404
     logger.debug(url)
         
     #Execute the query

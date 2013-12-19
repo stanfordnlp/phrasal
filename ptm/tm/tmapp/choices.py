@@ -15,6 +15,10 @@ LAYOUT = (('rtl','Right-to-left'),
 # UI conditions
 INTERFACES = (('pe','Postedit'),
               ('imt','Interactive'))
+def is_postedit(ui_string):
+    """
+    """
+    return ui_string == 'pe'
 
 GAZE_CHOICES = (('src', 'Source text'),
                 ('tgt', 'Target text'),
