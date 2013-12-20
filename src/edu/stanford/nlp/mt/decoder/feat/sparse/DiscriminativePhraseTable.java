@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -10,6 +11,7 @@ import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Indicator features for each rule in a derivation.
@@ -27,7 +29,9 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   private final boolean addLexicalizedRule;
   private final boolean addClassBasedRule;
   private final int countFeatureIndex;
+  private final boolean addDomainFeatures;
 
+  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
@@ -38,6 +42,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
     this.addLexicalizedRule = true;
     this.addClassBasedRule = false;
     this.countFeatureIndex = -1;
+    this.addDomainFeatures = false;
   }
 
   /**
@@ -53,6 +58,8 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
+    this.sourceIdInfoMap = args.length > 3 ? SparseFeatureUtils.loadGenreFile(args[3]) : null;
+    this.addDomainFeatures = this.sourceIdInfoMap != null;
   }
 
   @Override
@@ -61,11 +68,25 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    Pair<String,Integer> genreInfo = addDomainFeatures ? 
+        sourceIdInfoMap.get(f.sourceInputId) : null;
+    
     if (addLexicalizedRule && aboveThreshold(f.rule)) {
       String sourcePhrase = f.sourcePhrase.toString("-");
       String targetPhrase = f.targetPhrase.toString("-");
-      String ruleString = String.format("%s>%s", sourcePhrase, targetPhrase);
-      features.add(new FeatureValue<String>(FEATURE_NAME + ":" + ruleString, 1.0));        
+      String featureString = FEATURE_NAME + ":" + String.format("%s>%s", sourcePhrase, targetPhrase);
+      features.add(new FeatureValue<String>(featureString, 1.0));
+      if (addDomainFeatures) {
+        String genre = genreInfo.first();
+        int featureIndex = genreInfo.second();
+        if (featureIndex < f.rule.abstractRule.scores.length) {
+          // Don't fire for synthetic rules
+          boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
+          if (inDomain) {
+            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+          }
+        }
+      }
     }
     if (addClassBasedRule) {
       StringBuilder sb = new StringBuilder();
@@ -82,7 +103,19 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
         sb.append(tokenClass);
         seenFirst = true;
       }
-      features.add(new FeatureValue<String>(FEATURE_NAME + ":" + sb.toString(), 1.0));
+      String featureString = FEATURE_NAME + ":" + sb.toString();
+      features.add(new FeatureValue<String>(featureString, 1.0));
+      if (addDomainFeatures) {
+        String genre = genreInfo.first();
+        int featureIndex = genreInfo.second();
+        if (featureIndex < f.rule.abstractRule.scores.length) {
+          // Don't fire for synthetic rules.
+          boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
+          if (inDomain) {
+            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+          }
+        }
+      }
     }
     return features;
   }

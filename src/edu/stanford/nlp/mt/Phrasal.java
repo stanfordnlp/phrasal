@@ -225,6 +225,11 @@ public class Phrasal {
   private int distortionLimit = 5;
 
   /**
+   * Maximum phrase table query size per span.
+   */
+  private int translationOptionLimit = 20;
+  
+  /**
    * DTU options
    * 
    * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
@@ -500,13 +505,18 @@ public class Phrasal {
       }
     }
 
-
+    // Unknown word policy
     if (config.containsKey(DROP_UNKNOWN_WORDS)) {
       dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
     }
-
-    String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
     System.err.printf("Phrase table: %s Unknown words policy: %s%n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
+
+    // Phrase table query size limit
+    if (config.containsKey(OPTION_LIMIT_OPT)) { 
+        this.translationOptionLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
+    }
+    String optionLimit = String.valueOf(this.translationOptionLimit);
+    System.err.println("Phrase table option limit: " + optionLimit);
 
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(

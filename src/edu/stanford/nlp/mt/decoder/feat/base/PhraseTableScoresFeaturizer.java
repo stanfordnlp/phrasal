@@ -27,8 +27,7 @@ public class PhraseTableScoresFeaturizer<T> implements RuleFeaturizer<T, String>
   private final int numFeatures;
 
   private String[] createAndCacheFeatureNames(String phraseTableName, String[] phraseScoreNames) {
-    final int numEffectiveFeatures = Math.min(this.numFeatures, phraseScoreNames.length);
-    String[] featureNames = new String[numEffectiveFeatures];
+    String[] featureNames = new String[phraseScoreNames.length];
     for (int i = 0; i < featureNames.length; i++) {
       if (phraseScoreNames[i] != null) {
         featureNames[i] = String.format("%s:%s", PREFIX, phraseScoreNames[i]);
@@ -66,7 +65,8 @@ public class PhraseTableScoresFeaturizer<T> implements RuleFeaturizer<T, String>
 
     // construct array of FeatureValue objects
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    for (int i = 0; i < featureNames.length; i++) {
+    final int numEffectiveFeatures = Math.min(this.numFeatures, featureNames.length);
+    for (int i = 0; i < numEffectiveFeatures; i++) {
       features.add((i < featurizable.translationScores.length) ? new FeatureValue<String>(
           featureNames[i], featurizable.translationScores[i]) : emptyFV);
     }
