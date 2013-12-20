@@ -6,8 +6,8 @@
 {% endblock %}
 
 {% block user_static %}
-{% load static from staticfiles %}
-    <link rel="stylesheet" type="text/css" href="{% static "form.css" %}" />
+{% load compressed %}
+{% compressed_css 'tmapp_css' %}
 {% endblock %}
 
 {% block header %}

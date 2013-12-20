@@ -46,7 +46,7 @@ input[type="submit"]:hover {
    text-align:left;
    width:960px;
    margin:0 auto;
-   background:White url("/static/background.png") repeat-y top right;
+   background:White url("/static/tm/img/background.png") repeat-y top right;
 }
 
 #wrapper2 {
@@ -54,7 +54,7 @@ input[type="submit"]:hover {
    text-align:left;
    width:960px;
    margin:0 auto;
-   background:url("/static/background.png") repeat-y top left;
+   background:url("/static/tm/img/background.png") repeat-y top left;
 }
 
 #header {

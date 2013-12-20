@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
 
-# Old package removal
-sudo apt-get remove apache2
-
-# New package installation
-sudo apt-get install python-pip nginx nginx-doc postresql sqlite3 postgresql-server-dev-9.1
+# Web stack dependencies
+sudo apt-get install nginx nginx-doc postresql sqlite3 postgresql-server-dev-9.1 yui-compressor
 
 # Python middleware dependencies
+sudo apt-get install python-pip
 sudo pip install Django==1.6
 sudo pip install uwsgi
 sudo pip install psycopg2
-
+sudo pip install django-pipeline
 
 # PostgreSQL setup
-# Setup using user postgres permissions
+# TODO: Setup using user postgres permissions
 
-# Code checkout
+# Middleware Code checkout
 #git clone username@jacob.stanford.edu:/u/nlp/git/javanlp.git
 # Edit the uwsgi and nginx parameters in tm
 # python manage.py syncdb

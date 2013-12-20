@@ -2,31 +2,10 @@
 <html>
 <head>
 	<title>Translation User Interface</title>
-	{% load static from staticfiles %}
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" href="{% static "css/font-awesome.css" %}" />
-	<link rel="stylesheet" href="{% static "css/PTM.css" %}"/>
-	<script type="text/javascript" src="{% static "d3.js" %}"></script>
-	<script type="text/javascript" src="{% static "jquery.js" %}"></script>
-	<script type="text/javascript" src="{% static "underscore.js" %}"></script>
-	<script type="text/javascript" src="{% static "backbone.js" %}"></script>
-	<script type="text/javascript" src="{% static "DatasetManager.js" %}"></script>
-	<script type="text/javascript" src="{% static "QueryString.js" %}"></script>
-	<script type="text/javascript" src="{% static "TranslateServer.js" %}"></script>
-	<script type="text/javascript" src="{% static "SourceBoxState.js" %}"></script>
-	<script type="text/javascript" src="{% static "SourceBoxView.js" %}"></script>
-	<script type="text/javascript" src="{% static "SourceSuggestionState.js" %}"></script>
-	<script type="text/javascript" src="{% static "SourceSuggestionView.js" %}"></script>
-	<script type="text/javascript" src="{% static "TargetBoxState.js" %}"></script>
-	<script type="text/javascript" src="{% static "TargetBoxView.js" %}"></script>
-	<script type="text/javascript" src="{% static "TargetTextareaView.js" %}"></script>
-	<script type="text/javascript" src="{% static "TargetOverlayView.js" %}"></script>
-	<script type="text/javascript" src="{% static "TargetSuggestionState.js" %}"></script>
-	<script type="text/javascript" src="{% static "TargetSuggestionView.js" %}"></script>
-	<script type="text/javascript" src="{% static "OptionPanelState.js" %}"></script>
-	<script type="text/javascript" src="{% static "OptionPanelView.js" %}"></script>
-	<script type="text/javascript" src="{% static "DocumentView.js" %}"></script>
-	<script type="text/javascript" src="{% static "PTM.js" %}"></script>
+	{% load compressed %}
+	{% compressed_css 'ui_css' %}
+	{% compressed_js 'ui_js' %}
 	<script type="text/javascript">
 		$(document).ready( function() {
 			ptm = new PTM({
