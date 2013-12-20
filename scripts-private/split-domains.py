@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 #
 # Partition a file according to per-segment
-# domain information.
+# domain information, which is usually generated
+# from NIST files via nist-domains.py.
 #
 # Author: Spence Green
 #
