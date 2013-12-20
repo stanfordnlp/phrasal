@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Web stack dependencies
-sudo apt-get install nginx nginx-doc postresql sqlite3 postgresql-server-dev-9.1 yui-compressor
+sudo apt-get install nginx nginx-doc postresql sqlite3 postgresql-server-dev-9.1
 
 # Python middleware dependencies
 sudo apt-get install python-pip

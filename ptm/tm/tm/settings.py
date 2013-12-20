@@ -112,7 +112,7 @@ PIPELINE_ENABLED=True
 PIPELINE_DISABLE_WRAPPER=True
 STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
 PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
-PIPELINE_YUI_BINARY = 'yui-compressor'
+PIPELINE_YUI_BINARY = os.path.join(BASE_DIR,'bin','compress')
 PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
 PIPELINE_CSS = {
     'ui_css': {
