@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
@@ -17,8 +18,10 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Generative and discriminative lexicalized reordering models.
@@ -44,6 +47,9 @@ public class LexicalReorderingFeaturizer extends
   private int countFeatureIndex = -1;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
+  
+  private final boolean addDomainFeatures;
+  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
 
   /**
    * Constructor for discriminative lexicalized reordering.
@@ -55,6 +61,7 @@ public class LexicalReorderingFeaturizer extends
     featureTags = null;
     useAlignmentConstellations = false;
     useClasses = false;
+    addDomainFeatures = false;
   }
 
   /**
@@ -65,6 +72,7 @@ public class LexicalReorderingFeaturizer extends
   public LexicalReorderingFeaturizer(String...args) {
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     boolean useAlignmentConstellations = false;
+    boolean addDomainFeatures = false;
     for (String argument : args) {
       // Condition the classes on constellations
       if (argument.equals("conditionOnConstellations")) {
@@ -72,25 +80,33 @@ public class LexicalReorderingFeaturizer extends
         System.err.printf("using constellations%n");
       
       } else if (argument.startsWith("classes")) {
-        String[] toks = argument.trim().split(":");
-        assert toks.length == 2;
-        String[] typeStrings = toks[1].split("-");
+        String[] fields = argument.trim().split(":");
+        assert fields.length == 2;
+        String[] typeStrings = fields[1].split("-");
         discriminativeSet = Generics.newArrayList();
         for (String type : typeStrings) {
           discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
         }
+      
       } else if (argument.equals("useClasses")) {
         useClasses = true;
         sourceMap = SourceClassMap.getInstance();
         targetMap = TargetClassMap.getInstance();
         
       } else if (argument.startsWith("countFeatureIndex")) {
-        String[] toks = argument.trim().split(":");
-        assert toks.length == 2;
-        countFeatureIndex = Integer.parseInt(toks[1]);
+        String[] fields = argument.trim().split(":");
+        assert fields.length == 2;
+        countFeatureIndex = Integer.parseInt(fields[1]);
+      
+      } else if (argument.startsWith("domainFile")) {
+        String[] fields = argument.trim().split(":");
+        assert fields.length == 2;
+        addDomainFeatures = true;
+        sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(fields[1]);
       }
     }
     this.useAlignmentConstellations = useAlignmentConstellations;
+    this.addDomainFeatures = addDomainFeatures;
     mlrt = null;
     featureTags = null;
   }
@@ -104,10 +120,12 @@ public class LexicalReorderingFeaturizer extends
     this.mlrt = mlrt;
     useAlignmentConstellations = false;
     featureTags = new String[mlrt.positionalMapping.length];
-    for (int i = 0; i < mlrt.positionalMapping.length; i++)
+    for (int i = 0; i < mlrt.positionalMapping.length; i++) {
       featureTags[i] = String.format("%s:%s", FEATURE_PREFIX,
           mlrt.positionalMapping[i]);
+    }
     discriminativeSet = null;
+    addDomainFeatures = false;
   }
   
   @Override
@@ -139,15 +157,43 @@ public class LexicalReorderingFeaturizer extends
           } else {
             ruleRep = getDiscriminativeRepresentation(f.prior);
           }
-          values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
-              + ruleRep, 1.0));
-        
+          String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
+              + ruleRep;
+          values.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainFeatures) {
+            Pair<String,Integer> genreInfo = addDomainFeatures ? 
+                sourceIdInfoMap.get(f.sourceInputId) : null;
+            String genre = genreInfo.first();
+            int featureIndex = genreInfo.second();
+            if (featureIndex < f.rule.abstractRule.scores.length) {
+              // Don't fire for synthetic rules
+              boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
+              if (inDomain) {
+                values.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+              }
+            }
+          }
         } else {
           String ruleRep = useAlignmentConstellations ? 
               f.rule.abstractRule.alignment.toString() :
                 getDiscriminativeRepresentation(f);
-          values.add(new FeatureValue<String>(DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
-              + ruleRep, 1.0));
+          String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
+              + ruleRep;
+          values.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainFeatures) {
+            Pair<String,Integer> genreInfo = addDomainFeatures ? 
+                sourceIdInfoMap.get(f.sourceInputId) : null;
+            String genre = genreInfo.first();
+            int featureIndex = genreInfo.second();
+            if (featureIndex < f.rule.abstractRule.scores.length) {
+              // Don't fire for synthetic rules
+              boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
+              if (inDomain) {
+                values.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+              }
+            }
+          }
+
         }
       }
     }
