@@ -20,8 +20,6 @@ import edu.stanford.nlp.util.Pair;
  * 
  * The line id file format is zero-indexed, newline delimited line numbers.
  * 
- * TODO: Maybe partition
- * 
  * @author Spence Green
  *
  */
@@ -31,6 +29,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
   private final Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   private final boolean addTargetClassFeature;
   private final boolean addAdjacentRuleFeature;
+  private final boolean addDomainSpecificFeatures;
   private final TargetClassMap targetMap;
   
   public DomainAdaptation(String...args) {
@@ -40,6 +39,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
     sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[0]);
     addAdjacentRuleFeature = args.length > 1 ? Boolean.valueOf(args[1]) : false;
     addTargetClassFeature = args.length > 2 ? Boolean.valueOf(args[2]) : false;
+    addDomainSpecificFeatures = args.length > 3 ? Boolean.valueOf(args[3]) : false;
     targetMap = addTargetClassFeature ? TargetClassMap.getInstance() : null;
   }
 
@@ -61,10 +61,18 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
       // Don't fire for synthetic rules
       inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
       if (inDomain) {
-        features.add(new FeatureValue<String>(String.format("%s:inrule", FEATURE_PREFIX), 1.0));
+        String featureString = String.format("%s:inrule", FEATURE_PREFIX);
+        features.add(new FeatureValue<String>(featureString, 1.0));
+        if (addDomainSpecificFeatures) {
+          features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+        }
       }
       if (addAdjacentRuleFeature && priorState != null && priorState.inDomain && inDomain) {
-        features.add(new FeatureValue<String>(String.format("%s:adjrule", FEATURE_PREFIX), 1.0));
+        String featureString = String.format("%s:adjrule", FEATURE_PREFIX);
+        features.add(new FeatureValue<String>(featureString, 1.0));
+        if (addDomainSpecificFeatures) {
+          features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+        }
       }
     }
     if (addTargetClassFeature) {
