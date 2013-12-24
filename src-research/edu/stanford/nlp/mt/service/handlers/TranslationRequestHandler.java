@@ -24,8 +24,8 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.log.PhrasalLogger;
-import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
@@ -69,7 +69,7 @@ public class TranslationRequestHandler implements RequestHandler {
         new DecoderService(0, decoder), false);
     
     logger = Logger.getLogger(TranslationRequestHandler.class.getName());
-    PhrasalLogger.attach(logger, LogName.SERVICE);
+    SystemLogger.attach(logger, LogName.SERVICE);
   }
 
   private static class DecoderInput {

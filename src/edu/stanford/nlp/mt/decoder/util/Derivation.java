@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -14,7 +13,6 @@ import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 
@@ -60,7 +58,6 @@ State<Derivation<TK, FV>> {
   public final Featurizable<TK, FV> featurizable;
 
   public final List<FeatureValue<FV>> localFeatures;
-  public final List<Annotator<TK,FV>> annotators;
 
   /**
    * 
@@ -91,13 +88,11 @@ State<Derivation<TK, FV>> {
    * @param sourceSequence
    * @param heuristic
    * @param scorer
-   * @param annotators
    * @param ruleList
    */
   public Derivation(int sourceInputId, Sequence<TK> sourceSequence,
       SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
-      List<Annotator<TK,FV>> annotators,
       List<List<ConcreteRule<TK,FV>>> ruleList) {
     this.id = nextId.incrementAndGet();
     score = 0;
@@ -114,10 +109,6 @@ State<Derivation<TK, FV>> {
     depth = 0;
     linearDistortion = 0;
     targetSequence = new EmptySequence<TK>();
-    this.annotators = new ArrayList<Annotator<TK,FV>>(annotators.size());
-    for (Annotator<TK,FV> annotator : annotators) {
-      this.annotators.add(annotator.initialize(sourceSequence));
-    }
   }
 
   /**
@@ -155,22 +146,6 @@ State<Derivation<TK, FV>> {
     featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumberStatefulFeaturizers());
     
-    annotators = new ArrayList<Annotator<TK,FV>>(base.annotators.size());
-    for (Annotator<TK,FV> annotator : base.annotators) {
-      /*if (baseHyp.featurizable != null) {
-    	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
-    	} else {
-    		System.out.println("Extend null hypothesis");
-    	}
-    	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-      Annotator<TK,FV> extendedAnnotator = annotator.extend(rule);
-      annotators.add(extendedAnnotator);
-//      if(untranslatedTokens==0 && annotator.getClass().getName().endsWith("TargetDependencyAnnotator")) {
-//        ((TargetDependencyAnnotator<TK,FV>) extendedAnnotator).addRoot();
-//      }
-      // System.out.println("done with extension "+translationOpt.abstractOption.translation);
-    }
-
     localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);
     score = base.score + scorer.getIncrementalScore(localFeatures);
@@ -222,18 +197,6 @@ State<Derivation<TK, FV>> {
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractRule,
         sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
-
-    annotators = new ArrayList<Annotator<TK,FV>>(base.annotators.size());
-    for (Annotator<TK,FV> annotator : base.annotators) {
-      /*if (baseHyp.featurizable != null) {
-      	   System.out.println("Extending: "+baseHyp.featurizable.partialTranslation);
-      	} else {
-      		System.out.println("Extend null hypothesis");
-      	}
-      	System.out.println("with: "+translationOpt.abstractOption.translation)	; */
-      annotators.add(annotator.extend(rule));
-      // System.out.println("done with extension "+translationOpt.abstractOption.translation);
-    }
 
     localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);

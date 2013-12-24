@@ -82,7 +82,7 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
          double score =  OptimizerUtils.scoreTranslation(weights, trans);
          double logP = score - logZ;
          double p = Math.exp(logP);
-         double eval = scoreMetric.score(sourceId, references, referenceWeights, trans.translation);
+         double eval = scoreMetric.score(sourceId, source, references, trans.translation);
          // System.err.printf("score: %.3f p: %.3f eval %.3f\n", score, p, eval);
          double Eeval = p*eval;
          expectedLoss += Eeval;

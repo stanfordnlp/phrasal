@@ -2,10 +2,11 @@ package edu.stanford.nlp.mt.train;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Extractor for marking in-domain rules given a zero-indexed file of lineids.
@@ -20,20 +21,32 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
    */
   private static final double EXP_INDICATOR = Math.exp(1);
 
+  // Threadsafe sets that marks both the indomain sets and indomain rules.
   private final Set<Integer> inDomainSet;
   private final Set<Integer> inDomainKeys;
 
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public InDomainFeatureExtractor(String...args) {
     if (args.length != 1) {
       throw new RuntimeException("Format: zero-indexed line id file");
     }
     inDomainSet = load(args[0]);
-    inDomainKeys = Generics.newHashSet(inDomainSet.size()*5);
+    inDomainKeys = Collections.synchronizedSet(new HashSet<Integer>(inDomainSet.size()*10));
   }
 
+  /**
+   * Load the zero-indexed list of in-domain bitext lines.
+   * 
+   * @param filename
+   * @return
+   */
   private static Set<Integer> load(String filename) {
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
-    Set<Integer> set = Generics.newHashSet();
+    Set<Integer> set = Collections.synchronizedSet(new HashSet<Integer>(20000));
     try {
       for (String line; (line = reader.readLine()) != null;) {
         set.add(Integer.parseInt(line.trim()));

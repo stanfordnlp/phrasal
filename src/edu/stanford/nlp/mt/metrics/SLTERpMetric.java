@@ -54,8 +54,7 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     * Warning refWeights[] is ignored since this has no obvious interpretation for TER
     */
   @Override
-  public double score(int sourceId, List<Sequence<TK>> references, double refWeights[],
-      Sequence<TK> translation) {
+  public double score(int sourceId, Sequence<TK> source, List<Sequence<TK>> references, Sequence<TK> translation) {
     TERcalc terCalc = new TERcalc(terCost);
     terCalc.BEAM_WIDTH = beamSize;
     Set<String> refs = new TreeSet<String>();
@@ -127,7 +126,7 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
       }
       double[] rWeights = new double[refs.size()];
       Arrays.fill(rWeights, 1); 
-      System.out.printf("ter: %.3f\n", slTERp.score(0, refs, rWeights, hyp)*100);
+      System.out.printf("ter: %.3f\n", slTERp.score(0, null, refs, hyp)*100);
     }
   }
 }

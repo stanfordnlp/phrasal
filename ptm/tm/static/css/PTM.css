@@ -1,0 +1,13 @@
+div.CONTENT {
+	display: inline-block;
+	width: 800px;
+	background: #fff;
+	border: 1px solid #bbb;
+	border-top-right-radius: 30px;
+	border-bottom-left-radius: 50px;
+	box-shadow: 1px 1px 5px #bbb;
+
+	font-family: PT_Serif, serif;
+	font-size: 10pt;
+	color: #333;
+}

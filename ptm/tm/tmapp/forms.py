@@ -163,6 +163,7 @@ class TranslationInputForm(ModelForm):
             'tgt_language' : forms.HiddenInput,
             'interface' : forms.HiddenInput,
             'order' : forms.HiddenInput,
+            'training' : forms.HiddenInput,
             'text' : forms.HiddenInput,
             'log' : forms.HiddenInput
         }

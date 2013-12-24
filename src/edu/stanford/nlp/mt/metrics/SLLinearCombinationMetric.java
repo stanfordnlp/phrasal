@@ -2,17 +2,11 @@ package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.Arrays;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-
-import com.bbn.mt.terp.TERalignment;
-import com.bbn.mt.terp.TERcost;
-import com.bbn.mt.terp.TERcalc;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
@@ -41,8 +35,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
   } 
 
   @Override
-  public double score(int sourceId, List<Sequence<TK>> references, double[] referenceWeights,
-      Sequence<TK> translation) {
+  public double score(int sourceId, Sequence<TK> source, List<Sequence<TK>> references, Sequence<TK> translation) {
 
     int minLength = Integer.MAX_VALUE;
     for (Sequence<TK> sentence : references) {
@@ -53,7 +46,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
     double score = 0; 
     for (int i = 0; i < wts.length; i++) {
-       double mscore = metrics.get(i).score(sourceId, references, referenceWeights, translation);
+       double mscore = metrics.get(i).score(sourceId, null, references, translation);
        if (VERBOSE) {
          System.err.printf("+= %.2f * %.3f (/%d = %.3f)\n", wts[i], mscore*100,
            minLength, (mscore/minLength)*100);
@@ -81,7 +74,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
   public static void main(String[] args) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    SentenceLevelMetric metric = edu.stanford.nlp.mt.tune.OnlineTuner.loadGoldScoreMetric(args[0], null);
+    SentenceLevelMetric metric = SentenceLevelMetricFactory.getMetric(args[0], null);
 
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       String[] fields = line.split("\\|\\|\\|");
@@ -101,7 +94,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
       double[] rWeights = new double[refs.size()];
       Arrays.fill(rWeights, 1); 
-      double mscore = metric.score(0, refs, rWeights, hyp);
+      double mscore = metric.score(0, null, refs, hyp);
       System.out.printf("isThreadsafe: %s\n", metric.isThreadsafe());
       System.out.printf("%s: %.3f (/%d = %.3f)\n", args[0], mscore*100, minLength, (mscore/minLength)*100);
     }

@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.log.PhrasalLogger;
-import edu.stanford.nlp.mt.log.PhrasalLogger.LogName;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
@@ -43,14 +43,14 @@ public class OneSidedObjectiveFunction {
     this.objValue = input.currentObjectiveValue;
     
     logger = Logger.getLogger(this.getClass().getName());
-    PhrasalLogger.attach(logger, LogName.WORD_CLASS);
+    SystemLogger.attach(logger, LogName.WORD_CLASS);
   }
 
   public PartialStateUpdate cluster() {
     // Iterate over vocabulary
     for (IString word : inputState.vocabularySubset) {
-      final Integer currentClass = localWordToClass.get(word);
-      Integer argMaxClass = currentClass;
+      final int currentClass = localWordToClass.get(word);
+      int argMaxClass = currentClass;
       double maxObjectiveValue = objValue;
 
       // Compute objective value under tentative moves

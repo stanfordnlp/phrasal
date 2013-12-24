@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -23,13 +22,12 @@ import edu.stanford.nlp.util.Generics;
 public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "TGTCBND";
+
+  private final TargetClassMap targetMap = TargetClassMap.getInstance();
   
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
-    if (! TargetClassMap.isLoaded()) {
-      throw new RuntimeException("You must enable the " + Phrasal.TARGET_CLASS_MAP + " decoder option");
-    }
   }
 
   @Override
@@ -48,7 +46,7 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
     
     // Detect this phrase
     if (f.targetPhrase != null && f.targetPhrase.size() > 0) {
-      IString rightEdge = TargetClassMap.get(f.targetPhrase.get(0));
+      IString rightEdge = targetMap.get(f.targetPhrase.get(0));
       features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));      
       f.setState(this, new BoundaryState(rightEdge));
     } else {
@@ -58,7 +56,7 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
     
     // Detect done
     if (f.done && f.targetPhrase != null && f.targetPhrase.size() > 0) {
-      leftEdge = TargetClassMap.get(f.targetPhrase.get(f.targetPhrase.size()-1));
+      leftEdge = targetMap.get(f.targetPhrase.get(f.targetPhrase.size()-1));
       IString rightEdge = TokenUtils.END_TOKEN;
       features.add(new FeatureValue<String>(String.format("%s:%s-%s", FEATURE_NAME, leftEdge, rightEdge), 1.0));
       f.setState(this, new BoundaryState(rightEdge));

@@ -28,6 +28,8 @@ public class FDACorpusSelection {
    static final int NGRAM_ORDER = 5; // Bicici and Yuret found that 
                                      // using bi-grams was sufficient   
    static final int VERBOSE = 1; // Thang Aug13: change from boolean to int, more debugging messages.
+   
+   // Length normalization extension from the WMT13 FDA paper.
    static final boolean LENGTH_NORM = true;
 
    final Set<String> F;
@@ -44,9 +46,7 @@ public class FDACorpusSelection {
    private boolean isMono = false; // Thang Aug13: handle monolingual data
    
    static public void usage() {
-      System.err.println("Usage:\n\tjava ...FDACorpusSelection (selection size) " +
-          "(bitext.tgt) (bitext.src) (test.src) (selected.tgt) (selected.src) " +
-          "[selected.ln]");
+      System.err.printf("Usage: java %s selection_size bitext_tgt bitext_src test_src selected_tgt selected_src [selected_lines]%n", FDACorpusSelection.class.getName());
    }
    
    class SentenceScoreComparator implements Comparator<Integer> {

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 """
 
 #
-# TODO: Disable debug for deployment
+# TODO: Set all of these to false for deployment
 #
 DEBUG = True
 TEMPLATE_DEBUG = True
@@ -18,6 +18,7 @@ TEMPLATE_DEBUG = True
 # TODO: Point to server checkout of the UI repo
 #
 UI_DIR = '/home/rayder441/sandbox/translate/'
+#UI_DIR = '/u/jcchuang/workspace/TranslateOnGithub/'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -41,6 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'pipeline',
     'tmapp',
 )
 
@@ -51,6 +53,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'pipeline.middleware.MinifyHTMLMiddleware',
 )
 
 ROOT_URLCONF = 'tm.urls'
@@ -92,23 +95,84 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR,'static_root')
 
+# Used by FileSystemFinder
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR,'static'),
+    ('tm', os.path.join(BASE_DIR,'static')),
     os.path.join(UI_DIR,'static'),
-    os.path.join(UI_DIR,'client_src/js'),
+    os.path.join(UI_DIR,'client_src'),
 )
 
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'pipeline.finders.PipelineFinder',
 )
+
+# django-pipeline minify support
+PIPELINE_ENABLED=True
+PIPELINE_DISABLE_WRAPPER=True
+STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
+PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
+PIPELINE_YUI_BINARY = os.path.join(BASE_DIR,'bin','compress')
+PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.yui.YUICompressor'
+PIPELINE_CSS = {
+    'ui_css': {
+        'source_filenames': (
+            'css/font-awesome.css',
+            'css/PTM.css',
+        ),
+        'output_filename': 'ptm_min.css',
+        'variant': 'datauri',
+    },
+    'tm_css': {
+        'source_filenames': (
+			'tm/css/PTM.css',
+        ),
+        'output_filename': 'tm/tm_min.css',
+        'variant': 'datauri',
+    },
+    'tmapp_css': {
+        'source_filenames': (
+            'tmapp/css/form.css',
+        ),
+        'output_filename': 'tmapp/tmapp_min.css',
+        'variant': 'datauri',
+    },
+}
+PIPELINE_JS = {
+    'ui_js': {
+        'source_filenames': (
+            'js/d3.js',
+            'js/jquery.js',
+            'js/underscore.js',
+            'js/backbone.js',
+            'js/DatasetManager.js',
+            'js/QueryString.js',
+            'js/TranslateServer.js',
+            'js/SourceBoxState.js',
+            'js/SourceBoxView.js',
+            'js/SourceSuggestionState.js',
+            'js/SourceSuggestionView.js',
+            'js/TargetBoxState.js',
+            'js/TargetBoxView.js',
+            'js/TargetTextareaView.js',
+            'js/TargetOverlayView.js',
+            'js/TargetSuggestionState.js',
+            'js/TargetSuggestionView.js',
+            'js/OptionPanelState.js',
+            'js/OptionPanelView.js',
+            'js/DocumentView.js',
+            'js/PTM.js',
+        ),
+        'output_filename': 'ptm_min.js',
+    }
+}
 
 #
 # Templates setup
 #
 TEMPLATE_DIRS = (
     os.path.join(BASE_DIR,'templates'),
-    os.path.join(BASE_DIR,'tmapp/templates'),
 )
 
 # List of callables that know how to import templates from various sources.

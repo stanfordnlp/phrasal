@@ -108,7 +108,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
     allOptions.add(ruleList);
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source,
-        heuristic, scorer, annotators, allOptions);
+        heuristic, scorer, allOptions);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
 

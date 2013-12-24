@@ -1,9 +1,5 @@
 package edu.stanford.nlp.mt.decoder;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import edu.stanford.nlp.mt.decoder.annotators.Annotator;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -12,13 +8,13 @@ import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 /**
+ * An abstract factory for an inference algorithm.
  * 
  * @author danielcer
  * 
  */
 abstract public class AbstractInfererBuilder<TK, FV> implements
     InfererBuilder<TK, FV> {
-  public List<Annotator<TK,FV>> annotators = new ArrayList<Annotator<TK,FV>>();  
   CombinedFeaturizer<TK, FV> incrementalFeaturizer;
   PhraseGenerator<TK,FV> phraseGenerator;
   Scorer<FV> scorer;
@@ -29,12 +25,6 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
   @Override
   abstract public Inferer<TK, FV> build();
 
-  @Override
-  public InfererBuilder<TK, FV> setAnnotators(List<Annotator<TK,FV>> annotators) {
-	 this.annotators = new ArrayList<Annotator<TK,FV>>(annotators);
-     return this;
-  }
-  
   @Override
   public InfererBuilder<TK, FV> setIncrementalFeaturizer(
       CombinedFeaturizer<TK, FV> featurizer) {

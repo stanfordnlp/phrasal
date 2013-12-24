@@ -2,8 +2,8 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    {% load static from staticfiles %}
-    <link rel="stylesheet" type="text/css" href="{% static "css/PTM.css" %}" />
+    {% load compressed %}
+    {% compressed_css 'tm_css' %}
     {% block user_static %}
     {% endblock %}
     <title>Stanford Translation Study{% block title %}{% endblock %}</title>
