@@ -1,3 +1,50 @@
+@font-face {
+    font-family: 'PT_Serif';
+    src: url('/static/font/pt_serif-web-regular-webfont.eot');
+    src: url('/static/font/pt_serif-web-regular-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/static/font/pt_serif-web-regular-webfont.woff') format('woff'),
+         url('/static/font/pt_serif-web-regular-webfont.ttf') format('truetype'),
+         url('/static/font/pt_serif-web-regular-webfont.svg#PT_Serif') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PT_Serif';
+    src: url('/static/font/pt_serif-web-bold-webfont.eot');
+    src: url('/static/font/pt_serif-web-bold-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/static/font/pt_serif-web-bold-webfont.woff') format('woff'),
+         url('/static/font/pt_serif-web-bold-webfont.ttf') format('truetype'),
+         url('/static/font/pt_serif-web-bold-webfont.svg#PT_Serif') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PT_Serif';
+    src: url('/static/font/pt_serif-web-italic-webfont.eot');
+    src: url('/static/font/pt_serif-web-italic-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/static/font/pt_serif-web-italic-webfont.woff') format('woff'),
+         url('/static/font/pt_serif-web-italic-webfont.ttf') format('truetype'),
+         url('/static/font/pt_serif-web-italic-webfont.svg#PT_Serif') format('svg');
+    font-weight: normal;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'PT_Serif';
+    src: url('/static/font/pt_serif-web-bolditalic-webfont.eot');
+    src: url('/static/font/pt_serif-web-bolditalic-webfont.eot?#iefix') format('embedded-opentype'),
+         url('/static/font/pt_serif-web-bolditalic-webfont.woff') format('woff'),
+         url('/static/font/pt_serif-web-bolditalic-webfont.ttf') format('truetype'),
+         url('/static/font/pt_serif-web-bolditalic-webfont.svg#PT_Serif') format('svg');
+    font-weight: bold;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'PT_Mono';
+    src: url('/static/font/PT_Mono.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+}
+
 div.CONTENT {
 	display: inline-block;
 	width: 800px;
@@ -10,4 +57,13 @@ div.CONTENT {
 	font-family: PT_Serif, serif;
 	font-size: 10pt;
 	color: #333;
+}
+
+a {
+	text-decoration: none;
+	color: #66c;
+}
+a:hover {
+	text-decoration: underline;
+	color: #66c;
 }
