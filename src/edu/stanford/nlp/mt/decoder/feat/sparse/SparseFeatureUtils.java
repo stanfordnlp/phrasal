@@ -19,7 +19,8 @@ public final class SparseFeatureUtils {
   private SparseFeatureUtils() {}
   
   /**
-   * Load a genre file.
+   * Load a genre file. Mapping is zero-indexed source line number
+   * to (genre,index) tuple.
    * 
    * @param filename
    * @return
