@@ -140,6 +140,14 @@ PIPELINE_CSS = {
     },
 }
 PIPELINE_JS = {
+	'browser_js': {
+	    'source_filenames': (
+	        'js/jquery.js',
+			'tm/js/modernizr.js',
+	        'tm/js/BrowserCheck.js',
+	    ),
+	    'output_filename': 'browser_min.js',
+	},
     'ui_js': {
         'source_filenames': (
             'js/d3.js',

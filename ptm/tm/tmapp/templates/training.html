@@ -8,6 +8,7 @@
 {% block user_static %}
 {% load compressed %}
 {% compressed_css 'tmapp_css' %}
+{% compressed_js 'browser_js' %}
 {% endblock %}
 
 {% block header %}
@@ -15,7 +16,8 @@
 {% endblock%}
 
 {% block content %}
-<div id="main-content">
+<div id="main-content"><form action="{{ form_action }}" method="post" name="form-training" id="form-training">
+	
 <p>Thank you for agreeing to help us with this experiment! We are a group of researchers in the <a href="http://cs.stanford.edu/" target="_blank">Computer Science Department at Stanford University</a> working on new translation interfaces. Our goal is to create interfaces that will improve both translator productivity and translation quality. To that end, your keystrokes and mouse actions will be recorded while you work. <b>No personal information will be recorded except for the anonymous survey data.</b> We will study the method that you and other translators like you used to translate sentences.</p>
 
 <p>You will be asked to translate two sets of documents from <span style="font-weight:bold">{{ src_lang }}</span> to <span style="font-weight:bold">{{ tgt_lang }}</span>. Translate the documents as quickly and as accurately as you can. Once you start a translation, you may pause for no longer than 3 minutes during the session. If you pause for longer than 3 minutes, then your current translation will be automatically submitted. For each sentence that you exceed the "idle timer," we will deduct that many words from the final price that you are paid.</p>
@@ -23,9 +25,6 @@
 <p>Once you submit a document translation, you will not have another opportunity to edit or proofread it. Make sure that your translation is in good shape before you press the submit button!</p>
 
 <p>This job is the first in a series of translation studies that we are running over the next few months. If you submit good translations, then we will ask you to join us for future studies.</p>
-
-<h3>Browser Test</h3>
-TODO (Jason)
 
 <h3>Job Description and Requirements</h3>
 <p>Our website will administer the translation job, which is organized into two modules separated by a break:</p>
@@ -72,6 +71,22 @@ You <b>may</b> use dictionaries, either online (for example, <a href="http://www
 
 <strong>TODO: Screencast + YouTube link</strong>
 
+<h3>Browser Information</h3>
+<p>The following data about your web browser will be recorded, as part of your participation in this experiment.</p>
+<input type="hidden" name="BrowserLog" id="BrowserLog"></input>
+<div id="BrowserReport" style="padding: 0 10px; border: 1px solid #ccc; font-family: PT_Mono, monospace; font-size: 8pt; color: #333">
+	<p style="margin-bottom: 0"><b>Your browser is:</b></p>
+	<p style="margin-top: 0" id="BrowserUserAgent"></p>
+	<p style="margin-bottom: 0"><b>Your browser supports:</b></p>
+	<p style="margin-top: 0" id="BrowserSupport"></p>
+	<p style="margin-bottom: 0"><b>Your browser does not support:</b></p>
+	<p style="margin-top: 0" id="BrowserNoSupport"></p>
+	<p style="margin-bottom: 0"><b>Your browser passed the following tests:</b></p>
+	<p style="margin-top: 0" id="BrowserPass"></p>
+	<p style="margin-bottom: 0"><b>Your browser did not pass the following tests:</b></p>
+	<p style="margin-top: 0" id="BrowserNoPass"></p>
+</div>
+
 {% if show_ui_link %}
 <p>Once you have watched the tutorial, please translate a few documents using the new interface. Take your time. You will be paid for these translations, but the idle timer will not be present. We want you to develop some proficiency with the interface prior to starting the experiment. When you have translated a few documents, please click the link at the bottom of the interface to return to this page. Then you can start the experiment.</p>
 
@@ -79,13 +94,11 @@ You <b>may</b> use dictionaries, either online (for example, <a href="http://www
 
 {% else %}
 <div id="form-wrapper">
-<form action="{{ form_action }}" method="post" name="form-training" id="form-training">
 {% csrf_token %}
-<input type="submit" value="{{ form_button_text }}" name="form-submit" id="form-submit" />
-</form>
+<p><input type="submit" value="{{ form_button_text }}" name="form-submit" id="form-submit" /></p>
 </div>
 {% endif %}
 
-</div>
+</form></div>
 
 {% endblock %}
