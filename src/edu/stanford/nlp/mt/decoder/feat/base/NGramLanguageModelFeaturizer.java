@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 import java.io.IOException;
 import java.util.List;
 
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -58,39 +57,6 @@ public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, 
    */
   public int order() {
     return lm.order();
-  }
-
-  public NGramLanguageModelFeaturizer(LanguageModel<IString> lm, String featureName) {
-    this.lm = lm;
-    this.featureName = featureName;
-    this.lmOrder = lm.order();
-    featureNames = new String[2][];
-    featureNames[0] = new String[lmOrder];
-    featureNames[1] = new String[lmOrder];
-    for (int i = 0; i < lmOrder; i++) {
-      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
-      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
-    }
-  }
-
-  /**
-   *
-   */
-  public NGramLanguageModelFeaturizer(LanguageModel<IString> lm, boolean lmLabeled) {
-    this.lm = lm;
-    this.lmOrder = lm.order();
-    if (lmLabeled) {
-      featureName = String.format("%s%s", FEATURE_PREFIX, lm.getName());
-    } else {
-      featureName = FEATURE_NAME;
-    }
-    featureNames = new String[2][];
-    featureNames[0] = new String[lmOrder];
-    featureNames[1] = new String[lmOrder];
-    for (int i = 0; i < lmOrder; i++) {
-      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
-      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
-    }
   }
 
   /**
