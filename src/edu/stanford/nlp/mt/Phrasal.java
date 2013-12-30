@@ -740,7 +740,7 @@ public class Phrasal {
         }
       }
       if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
-        weightVector.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
+        weightVector.setCount(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
       }
       if (config.containsKey(DISTORTION_WT_OPT)) {
