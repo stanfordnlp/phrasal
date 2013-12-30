@@ -136,10 +136,9 @@ public class LexicalReorderingFeaturizer extends
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    List<FeatureValue<String>> values = Generics.newLinkedList();
-
-    boolean monotone = f.linearDistortion == 0;
-    boolean swap = (f.prior != null && f.sourcePosition
+    final List<FeatureValue<String>> features = Generics.newLinkedList();
+    final boolean monotone = f.linearDistortion == 0;
+    final boolean swap = (f.prior != null && f.sourcePosition
         + f.sourcePhrase.size() == f.prior.sourcePosition);
 
     // Discriminative model
@@ -159,41 +158,25 @@ public class LexicalReorderingFeaturizer extends
           }
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
-          values.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures) {
-            Pair<String,Integer> genreInfo = addDomainFeatures ? 
-                sourceIdInfoMap.get(f.sourceInputId) : null;
+          features.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId)) {
+            Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
             String genre = genreInfo.first();
-            int featureIndex = genreInfo.second();
-            if (featureIndex < f.rule.abstractRule.scores.length) {
-              // Don't fire for synthetic rules
-              boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
-              if (inDomain) {
-                values.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-              }
-            }
+            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
           }
+        
         } else {
           String ruleRep = useAlignmentConstellations ? 
               f.rule.abstractRule.alignment.toString() :
                 getDiscriminativeRepresentation(f);
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
-          values.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures) {
-            Pair<String,Integer> genreInfo = addDomainFeatures ? 
-                sourceIdInfoMap.get(f.sourceInputId) : null;
+          features.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId)) {
+            Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
             String genre = genreInfo.first();
-            int featureIndex = genreInfo.second();
-            if (featureIndex < f.rule.abstractRule.scores.length) {
-              // Don't fire for synthetic rules
-              boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
-              if (inDomain) {
-                values.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-              }
-            }
+            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
           }
-
         }
       }
     }
@@ -223,17 +206,17 @@ public class LexicalReorderingFeaturizer extends
         boolean ff = featureFunction(monotone, swap, mlrt.positionalMapping[i]);
         if (!usePrior(mlrt.positionalMapping[i])) {
           if (scores != null && ff)
-            values.add(new FeatureValue<String>(featureTags[i], scores[i]));
+            features.add(new FeatureValue<String>(featureTags[i], scores[i]));
         } else {
           if (priorScores != null && ff)
-            values
+            features
                 .add(new FeatureValue<String>(featureTags[i], priorScores[i]));
         }
       }
     }
     if (DETAILED_DEBUG) {
       System.err.printf("Feature values:\n");
-      for (FeatureValue<String> value : values)
+      for (FeatureValue<String> value : features)
         System.err.printf("\t%s: %f\n", value.name, value.value);
     }
     
@@ -242,7 +225,7 @@ public class LexicalReorderingFeaturizer extends
     int leftEdge = lastOptionLeftEdge(f.derivation);
     f.setState(this, new MSDState(leftEdge, rightEdge, f.derivation.sourceCoverage));
 
-    return values;
+    return features;
   }
 
   private boolean aboveThreshold(ConcreteRule<IString, String> rule) {

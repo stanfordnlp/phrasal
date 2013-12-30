@@ -68,7 +68,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    Pair<String,Integer> genreInfo = addDomainFeatures ? 
+    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
         sourceIdInfoMap.get(f.sourceInputId) : null;
     
     if (addLexicalizedRule && aboveThreshold(f.rule)) {
@@ -76,16 +76,9 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       String targetPhrase = f.targetPhrase.toString("-");
       String featureString = FEATURE_NAME + ":" + String.format("%s>%s", sourcePhrase, targetPhrase);
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (addDomainFeatures) {
+      if (addDomainFeatures && genreInfo != null) {
         String genre = genreInfo.first();
-        int featureIndex = genreInfo.second();
-        if (featureIndex < f.rule.abstractRule.scores.length) {
-          // Don't fire for synthetic rules
-          boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
-          if (inDomain) {
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
-        }
+        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
     if (addClassBasedRule) {
@@ -105,16 +98,9 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       }
       String featureString = FEATURE_NAME + ":" + sb.toString();
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (addDomainFeatures) {
+      if (addDomainFeatures && genreInfo != null) {
         String genre = genreInfo.first();
-        int featureIndex = genreInfo.second();
-        if (featureIndex < f.rule.abstractRule.scores.length) {
-          // Don't fire for synthetic rules.
-          boolean inDomain = Math.round(f.rule.abstractRule.scores[featureIndex]) != 0;
-          if (inDomain) {
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
-        }
+        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
     return features;

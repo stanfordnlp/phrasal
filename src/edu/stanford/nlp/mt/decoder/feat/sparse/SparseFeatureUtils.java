@@ -34,9 +34,9 @@ public final class SparseFeatureUtils {
       reader.close();
       
       Map<String,Pair<String,Integer>> genreToPair = Generics.newHashMap();
-      String[] pairs = genreMapping.split(",");
+      String[] pairs = genreMapping.trim().split(",");
       for (String pair: pairs) {
-        String[] fields = pair.split(":");
+        String[] fields = pair.trim().split(":");
         if (fields.length != 2) throw new RuntimeException("Invalid genre specification: " + genreMapping);
         String genre = fields[0];
         int featureIndex = Integer.valueOf(fields[1]);
@@ -45,8 +45,10 @@ public final class SparseFeatureUtils {
       
       LineNumberReader sourceIdReader = IOTools.getReaderFromFile(genreFile);
       for (String genre; (genre = sourceIdReader.readLine()) != null; ) {
+        genre = genre.trim();
+        if (genre.length() == 0) continue;
         int lineId = sourceIdReader.getLineNumber()-1;
-        genreMap.put(lineId, genreToPair.get(genre.trim()));
+        genreMap.put(lineId, genreToPair.get(genre));
       }
       sourceIdReader.close();
 
