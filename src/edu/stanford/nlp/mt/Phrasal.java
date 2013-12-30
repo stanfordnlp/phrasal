@@ -698,9 +698,7 @@ public class Phrasal {
     }
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
-      Set<String> disabledFeaturizers = Generics.newHashSet();
-      for (String f : config.get(DISABLED_FEATURIZERS))
-        disabledFeaturizers.add(f);
+      Set<String> disabledFeaturizers = Generics.newHashSet(config.get(DISABLED_FEATURIZERS));
       featurizer.deleteFeaturizers(disabledFeaturizers);
     }
 

@@ -58,11 +58,10 @@ public abstract class DerivationFeaturizer<TK, FV> implements Featurizer<TK,FV> 
   private int id = UNDEFINED_ID;
 
   public void setId(int id) {
-
-    if (this.id != UNDEFINED_ID && this.id != id)
+    if (this.id != UNDEFINED_ID && this.id != id) {
       throw new RuntimeException(
-          "Error: setting id twice with different values.");
-
+          this.getClass().getName() + ": ERROR setting id twice with different values.");
+    }
     this.id = id;
   }
 
