@@ -48,7 +48,12 @@ public final class SparseFeatureUtils {
         genre = genre.trim();
         if (genre.length() == 0) continue;
         int lineId = sourceIdReader.getLineNumber()-1;
-        genreMap.put(lineId, genreToPair.get(genre));
+        if (genreToPair.containsKey(genre)) {
+          genreMap.put(lineId, genreToPair.get(genre));
+        } else {
+          throw new RuntimeException(String.format("%s: %s does not contain genre %s", SparseFeatureUtils.class.getName(),
+              filename, genre));
+        }
       }
       sourceIdReader.close();
 
