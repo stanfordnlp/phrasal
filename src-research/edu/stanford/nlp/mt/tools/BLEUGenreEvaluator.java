@@ -26,6 +26,8 @@ import edu.stanford.nlp.util.StringUtils;
 
 public class BLEUGenreEvaluator {
 
+  private static final String DEFAULT_GENRE = "default";
+  
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
@@ -77,8 +79,8 @@ public class BLEUGenreEvaluator {
     List<Integer> sourceIdList = Generics.newArrayList(genreSpec.keySet());
     Collections.sort(sourceIdList);
     for (int sourceId : sourceIdList) {
-      Pair<String,Integer> entry = genreSpec.get(sourceId);
-      String genre = entry.first();
+      String genre = genreSpec.containsKey(sourceId) ? genreSpec.get(sourceId).first()
+          : DEFAULT_GENRE;
       genreList.add(genre);
       if ( ! refsByGenre.containsKey(genre)) {
         refsByGenre.put(genre, new ArrayList<List<Sequence<IString>>>());
@@ -101,8 +103,8 @@ public class BLEUGenreEvaluator {
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       int sourceId = reader.getLineNumber()-1;
-      Pair<String,Integer> genrePair = genreSpec.get(sourceId);
-      String genre = genrePair.first();
+      String genre = genreSpec.containsKey(sourceId) ? genreSpec.get(sourceId).first()
+          : DEFAULT_GENRE;
       metrics.get(genre).add(tran);
     }
     reader.close();
