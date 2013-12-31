@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,9 +75,7 @@ public class BLEUGenreEvaluator {
 
     Set<String> genreList = Generics.newHashSet();
     Map<String,List<List<Sequence<IString>>>> refsByGenre = Generics.newHashMap();
-    List<Integer> sourceIdList = Generics.newArrayList(genreSpec.keySet());
-    Collections.sort(sourceIdList);
-    for (int sourceId : sourceIdList) {
+    for (int sourceId = 0; sourceId < referencesList.size(); ++sourceId) {
       String genre = genreSpec.containsKey(sourceId) ? genreSpec.get(sourceId).first()
           : DEFAULT_GENRE;
       genreList.add(genre);
