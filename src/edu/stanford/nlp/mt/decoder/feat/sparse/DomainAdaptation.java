@@ -28,6 +28,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
   private final Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   private final boolean addAdjacentRuleFeature;
   private final boolean addDomainSpecificFeatures;
+  private final boolean addDomainLengthRatio;
   
   public DomainAdaptation(String...args) {
     if (args.length < 1) {
@@ -36,6 +37,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
     sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[0]);
     addAdjacentRuleFeature = args.length > 1 ? Boolean.valueOf(args[1]) : false;
     addDomainSpecificFeatures = args.length > 2 ? Boolean.valueOf(args[2]) : false;
+    addDomainLengthRatio = args.length > 3 ? Boolean.valueOf(args[3]) : false;
   }
 
   @Override
@@ -72,6 +74,16 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
       }
       f.setState(this, new BoundaryState(inDomain));
     }
+    if (addDomainLengthRatio) {
+      String featureString = String.format("%s:len", FEATURE_PREFIX);
+      double value = (double) f.targetPhrase.size() / (double) f.sourceSentence.size();
+      features.add(new FeatureValue<String>(featureString, value));
+      if (genreInfo != null) {
+        String genre = genreInfo.first();
+        features.add(new FeatureValue<String>(featureString + "-" + genre, value));
+      }
+    }
+    
     return features;
   }
 
