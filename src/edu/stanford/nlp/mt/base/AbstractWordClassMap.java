@@ -16,7 +16,7 @@ import edu.stanford.nlp.ling.Sentence;
  */
 public abstract class AbstractWordClassMap {
 
-  private static final String DELIMITER = "~";
+  public static final String DELIMITER = "~";
   protected static IString DEFAULT_UNK_CLASS = new IString("<<unk>>");
 
   protected Map<IString,List<IString>> wordToClass;
