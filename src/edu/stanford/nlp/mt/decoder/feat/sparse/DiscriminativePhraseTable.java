@@ -70,14 +70,14 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
     List<FeatureValue<String>> features = Generics.newLinkedList();
     Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
         sourceIdInfoMap.get(f.sourceInputId) : null;
+    final String genre = genreInfo == null ? null : genreInfo.first();
     
     if (addLexicalizedRule && aboveThreshold(f.rule)) {
       String sourcePhrase = f.sourcePhrase.toString("-");
       String targetPhrase = f.targetPhrase.toString("-");
       String featureString = FEATURE_NAME + ":" + String.format("%s>%s", sourcePhrase, targetPhrase);
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (addDomainFeatures && genreInfo != null) {
-        String genre = genreInfo.first();
+      if (genre != null) {
         features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
@@ -98,8 +98,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       }
       String featureString = FEATURE_NAME + ":" + sb.toString();
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (addDomainFeatures && genreInfo != null) {
-        String genre = genreInfo.first();
+      if (genre != null) {
         features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }

@@ -76,6 +76,8 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) 
         ? sourceIdInfoMap.get(f.sourceInputId) : null;
+    final String genre = genreInfo == null ? null : genreInfo.first();
+
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int tgtLength = f.targetPhrase.size();
     final int srcLength = f.sourcePhrase.size();
@@ -94,8 +96,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
           IString tgtWord = f.targetPhrase.get(i);
           String featureString = FEATURE_NAME_TGT + ":" + targetRepresentation(tgtWord);
           features.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures && genreInfo != null) {
-            String genre = genreInfo.first();
+          if (genre != null) {
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
           }
         }
@@ -118,8 +119,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         if (addSourceDeletions) {
           String featureString = FEATURE_NAME_SRC + ":" + sourceRepresentation(srcWord);
           features.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures && genreInfo != null) {
-            String genre = genreInfo.first();
+          if (genre != null) {
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
           }
         }
@@ -155,8 +155,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         }
         String featureString = FEATURE_NAME + ":" + sb.toString();
         features.add(new FeatureValue<String>(featureString, 1.0));
-        if (addDomainFeatures && genreInfo != null) {
-          String genre = genreInfo.first();
+        if (genre != null) {
           features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
         }
       }

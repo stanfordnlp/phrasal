@@ -25,18 +25,18 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
   private final boolean addDomainFeatures;
   private Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
   
-  public TargetUnigramClass() {
-    addDomainFeatures = false;
-  }
-  
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public TargetUnigramClass(String...args) {
-    sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[0]);
-    addDomainFeatures = true;
+    addDomainFeatures = args.length > 0;
+    sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
   }
   
   @Override
-  public void initialize() {
-  }
+  public void initialize() {}
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
@@ -44,12 +44,12 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
         sourceIdInfoMap.get(f.sourceInputId) : null;
+    final String genre = genreInfo == null ? null : genreInfo.first();
     for (IString token : f.targetPhrase) {
       String tokenClass = targetMap.get(token).toString();
       String featureString = String.format("%s:%s",FEATURE_NAME,tokenClass);
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (addDomainFeatures && genreInfo != null) {
-        String genre = genreInfo.first();
+      if (genre != null) {
         features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
