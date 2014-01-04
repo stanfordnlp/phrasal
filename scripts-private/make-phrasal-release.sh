@@ -106,9 +106,9 @@ perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ..
     edu.stanford.nlp.classify.LogisticClassifierFactory \
     edu.stanford.nlp.trees.DependencyScoring \
     
-mkdir -p phrasal.$version/src
-cd phrasal.$version/src
-jar xf ../../src.jar edu
+mkdir -p phrasal.$version/src || exit
+cd phrasal.$version/src || exit
+jar xf ../../src.jar edu || exit
 cd -
 
 # TODO: if these dependencies start getting more complicated, find an
@@ -147,7 +147,7 @@ else
    exit -1
 fi
 
-jar -cf phrasal.$version/phrasal.$version.jar -C phrasal.$version/classes edu
+jar -cf phrasal.$version/phrasal.$version.jar -C phrasal.$version/classes edu || exit
 
 rm -rf phrasal.$1/classes/
 rm -rf phrasal.$1/lib-nodistrib/
