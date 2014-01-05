@@ -23,6 +23,10 @@ public class RuleShape implements RuleFeaturizer<IString, String> {
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
+  public RuleShape() {
+    this.addDomainFeatures = false;
+  }
+  
   public RuleShape(String...args) {
     this.addDomainFeatures = args.length > 0;
     this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;

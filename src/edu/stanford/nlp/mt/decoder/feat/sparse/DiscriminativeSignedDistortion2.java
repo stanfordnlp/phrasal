@@ -26,6 +26,10 @@ public class DiscriminativeSignedDistortion2 extends DerivationFeaturizer<IStrin
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
+  public DiscriminativeSignedDistortion2() {
+    this.addDomainFeatures = false;
+  }
+  
   public DiscriminativeSignedDistortion2(String...args) {
     this.addDomainFeatures = args.length > 0;
     this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;

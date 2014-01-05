@@ -23,6 +23,10 @@ public class SourceRuleDimension implements RuleFeaturizer<IString, String> {
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
+  public SourceRuleDimension() { 
+    this.addDomainFeatures = false;
+  }
+  
   public SourceRuleDimension(String...args) {
     this.addDomainFeatures = args.length > 0;
     this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;

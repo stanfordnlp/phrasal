@@ -25,6 +25,10 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
   private final boolean addDomainFeatures;
   private Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
   
+  public TargetUnigramClass() {
+    this.addDomainFeatures = false;
+  }
+  
   /**
    * Constructor.
    * 

@@ -29,6 +29,10 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
   private final boolean addDomainFeatures;
   private Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
   
+  public TargetClassBigramBoundary() {
+    this.addDomainFeatures = false;
+  }
+  
   /**
    * Constructor.
    * 

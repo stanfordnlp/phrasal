@@ -30,6 +30,10 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
+  public PunctuationDifference() {
+    this.addDomainFeatures = false;
+  }
+  
   public PunctuationDifference(String...args) {
     this.addDomainFeatures = args.length > 0;
     this.sourceIdInfoMap = addDomainFeatures ? 
