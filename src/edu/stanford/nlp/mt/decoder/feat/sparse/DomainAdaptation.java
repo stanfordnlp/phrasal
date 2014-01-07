@@ -67,59 +67,59 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
       if (inDomain) {
         // In-domain rule
         String featureStringDefault = String.format("%s:inrule", FEATURE_PREFIX);
-//        features.add(new FeatureValue<String>(featureStringDefault, 1.0));
-//        if (addDomainSpecificFeatures) {
+        features.add(new FeatureValue<String>(featureStringDefault, 1.0));
+        if (addDomainSpecificFeatures) {
           features.add(new FeatureValue<String>(featureStringDefault + "-" + genre, 1.0));
-//        }
+        }
         
         if (addAdjacentRuleFeature && priorState != null && priorState.inDomain) {
           String featureString = String.format("%s:adjrule", FEATURE_PREFIX);
-//          features.add(new FeatureValue<String>(featureString, 1.0));
-//          if (addDomainSpecificFeatures) {
+          features.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainSpecificFeatures) {
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-//          }
+          }
         }
         
         if (addDomainLengthRatio) {
           String featureString = String.format("%s:lnratio", FEATURE_PREFIX);
           double featureValue = (double) f.sourcePhrase.size() / (double) f.sourceSentence.size();
-//          features.add(new FeatureValue<String>(featureString, featureValue));
-//          if (addDomainSpecificFeatures) {
+          features.add(new FeatureValue<String>(featureString, featureValue));
+          if (addDomainSpecificFeatures) {
             features.add(new FeatureValue<String>(featureString + "-" + genre, featureValue));
-//          }
+          }
         }
         
         if (addDomainRuleShape) {
           String featureString = String.format("%s:srcd%d", FEATURE_PREFIX, f.sourcePhrase.size());
-//          features.add(new FeatureValue<String>(featureString, 1.0));
-//          if (addDomainSpecificFeatures) {
+          features.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainSpecificFeatures) {
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-//          }
+          }
 
           featureString = String.format("%s:rshp%d-%d", FEATURE_PREFIX, f.sourcePhrase.size(), f.targetPhrase.size());
-//          features.add(new FeatureValue<String>(featureString, 1.0));
-//          if (addDomainSpecificFeatures) {
+          features.add(new FeatureValue<String>(featureString, 1.0));
+          if (addDomainSpecificFeatures) {
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-//          }
+          }
         }
       } else if (outOfDomainFeatures){
         String featureString = String.format("%s:OUTlnratio", FEATURE_PREFIX);
         double featureValue = (double) f.sourcePhrase.size() / (double) f.sourceSentence.size();
-//        features.add(new FeatureValue<String>(featureString, featureValue));
-//        if (addDomainSpecificFeatures) {
+        features.add(new FeatureValue<String>(featureString, featureValue));
+        if (addDomainSpecificFeatures) {
           features.add(new FeatureValue<String>(featureString + "-" + genre, featureValue));
-//        }
+        }
         featureString = String.format("%s:OUTsrcd%d", FEATURE_PREFIX, f.sourcePhrase.size());
-//        features.add(new FeatureValue<String>(featureString, 1.0));
-//        if (addDomainSpecificFeatures) {
+        features.add(new FeatureValue<String>(featureString, 1.0));
+        if (addDomainSpecificFeatures) {
           features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-//        }
+        }
 
         featureString = String.format("%s:OUTrshp%d-%d", FEATURE_PREFIX, f.sourcePhrase.size(), f.targetPhrase.size());
-//        features.add(new FeatureValue<String>(featureString, 1.0));
-//        if (addDomainSpecificFeatures) {
+        features.add(new FeatureValue<String>(featureString, 1.0));
+        if (addDomainSpecificFeatures) {
           features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-//        }  
+        }  
       }
       f.setState(this, new BoundaryState(inDomain));
     }
