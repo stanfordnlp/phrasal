@@ -235,7 +235,7 @@ def service_redirect(request):
     
     # Construct the query
     try:
-        url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req))
+        url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req.encode('ISO-8859-1', 'ignore')))
     except KeyError:
         logger.error('URL encoding error')
         raise Http404
