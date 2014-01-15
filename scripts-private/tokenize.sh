@@ -4,7 +4,6 @@
 # and segmenters. Can also apply various helpful normalizations
 # (heuristic cleaning, lowercasing, etc.)
 #
-# TODO(spenceg) Add Chinese
 #
 # Author: Spence Green
 #
@@ -14,7 +13,7 @@ if [ $# -lt 2 ]; then
     echo
     echo "  clean    : Heuristic data cleaning"
     echo "  tolower  : Convert to lowercase" 
-    echo "  language : Arabic, English, German, French"
+    echo "  language : Arabic, Chinese, English, German, French"
     exit -1
 fi
 
@@ -58,6 +57,11 @@ DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -op
 DE_SEG="${CDEC_PATH}/compound-split/compound-split.pl"
 DE_PP="java $JAVA_OPTS edu.stanford.nlp.util.Lattice"
 
+# Chinese segmenter path, where segment.sh is located
+# Should point to latest distribution of the Chinese segmenter
+ZH_SEG_PATH="/u/nlp/distrib/stanford-segmenter-2013-11-12"
+ZH_SEG="$ZH_SEG_PATH/segment.sh"
+
 #
 # Process command line options
 #
@@ -79,6 +83,9 @@ done
 if [ $lang == "Arabic" ]; then
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $AR_TOK | $tolower | gzip -c > ${outfile}.gz
 
+elif [ $lang == "Chinese" ]; then
+    $ZH_SEG ctb <($CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl) UTF-8 0 2> /dev/null | $tolower | gzip -c > ${outfile}.gz
+
 elif [ $lang == "French" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
@@ -99,4 +106,3 @@ elif [ $lang == "English" ]; then
     fi
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
 fi
-

@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
 /**
  * Naive data structure for storing n-best lists. This data structure is not memory-efficient.
@@ -64,7 +64,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       Map<Sequence<IString>, Sequence<IString>> sequenceSelfMap,
       Index<String> featureIndex, int initialCapacity) throws IOException {
     if (featureIndex == null)
-      featureIndex = new HashIndex<String>();
+      featureIndex = new ConcurrentHashIndex<String>();
     this.featureIndex = featureIndex;
     this.sequenceSelfMap = sequenceSelfMap;
     Runtime rt = Runtime.getRuntime();

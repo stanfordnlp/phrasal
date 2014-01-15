@@ -16,23 +16,21 @@ import edu.stanford.nlp.util.Pair;
 /**
  * Signed discriminative distortion bins. (see <code>ConcreteRule</code>)
  * 
- * TODO: getSignedBin() is incorrect. Replace with corrected DiscriminativeSignedDistortion2.
- * 
  * @author Spence Green
  *
  */
-public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString, String> {
+public class DiscriminativeSignedDistortion2 extends DerivationFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "DDIST";
   
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
-  public DiscriminativeSignedDistortion() {
+  public DiscriminativeSignedDistortion2() {
     this.addDomainFeatures = false;
   }
   
-  public DiscriminativeSignedDistortion(String...args) {
+  public DiscriminativeSignedDistortion2(String...args) {
     this.addDomainFeatures = args.length > 0;
     this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
   }
@@ -83,11 +81,12 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
    */
   private static int getSignedBin(int distortion) {
     int sign = (int) Math.signum(distortion);
-    if (distortion < 4 || distortion > -4) {
+    int absDistortion = Math.abs(distortion);
+    if (absDistortion < 4) {
       return distortion; 
-    } else if (distortion < 7 || distortion > -7) {
+    } else if (absDistortion < 7) {
       return sign * 4;
-    } else if (distortion < 11 || distortion > -11) {
+    } else if (absDistortion < 11) {
       return sign * 5;
     } else {
       return sign * 6;

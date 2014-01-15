@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Extractor for marking in-domain rules given a zero-indexed file of lineids.
@@ -22,8 +24,9 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
   private static final double EXP_INDICATOR = Math.exp(1);
 
   // Threadsafe sets that marks both the indomain sets and indomain rules.
-  private final Set<Integer> inDomainSet;
-  private final Set<Integer> inDomainKeys;
+  private final List<Set<Integer>> inDomainSetList;
+  private final List<Set<Integer>> inDomainKeyList;
+  private final int numDomains;
 
   /**
    * Constructor.
@@ -31,11 +34,18 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
    * @param args
    */
   public InDomainFeatureExtractor(String...args) {
-    if (args.length != 1) {
+    if (args.length == 0) {
       throw new RuntimeException("Format: zero-indexed line id file");
     }
-    inDomainSet = load(args[0]);
-    inDomainKeys = Collections.synchronizedSet(new HashSet<Integer>(inDomainSet.size()*10));
+    inDomainSetList = Generics.newArrayList(args.length);
+    inDomainKeyList = Generics.newArrayList(args.length);
+    for (String filename : args) {
+      Set<Integer> inDomainSet = load(filename);
+      inDomainSetList.add(inDomainSet);
+      inDomainKeyList.add(Collections.synchronizedSet(new HashSet<Integer>(inDomainSet.size()*10)));
+      System.err.printf("%s: Loaded domain list %s%n", this.getClass().getName(), filename);
+    }
+    numDomains = args.length;
   }
 
   /**
@@ -62,14 +72,21 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
   public void featurizePhrase(AlignmentTemplateInstance alTemp,
       AlignmentGrid alGrid) {
     int lineId = alTemp.getWordAlignment().getId();
-    if (inDomainSet.contains(lineId)) {
-      inDomainKeys.add(alTemp.getKey());
+    for (int i = 0; i < numDomains; ++i) {
+      Set<Integer> domainSet = inDomainSetList.get(i);
+      if (domainSet.contains(lineId)) {
+        inDomainKeyList.get(i).add(alTemp.getKey());
+      }
     }
   }
 
   @Override
   public Object score(AlignmentTemplate alTemp) {
-    return new double[] { inDomainKeys.contains(alTemp.getKey()) ? EXP_INDICATOR : 1.0 };
+    double[] scores = new double[numDomains];
+    for (int i = 0; i < numDomains; ++i) {
+      scores[i] = inDomainKeyList.get(i).contains(alTemp.getKey()) ? EXP_INDICATOR : 1.0;
+    }
+    return scores;
   }
 
   @Override

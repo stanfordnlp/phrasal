@@ -47,7 +47,7 @@ public class OnlineLearningCurve {
 
     System.err.println("Loading Phrasal...");
     Phrasal p = null;
-    Map<String, List<String>> config = Phrasal.readConfig(iniFile);
+    Map<String, List<String>> config = IOTools.readConfigFile(iniFile);
     // Don't write an nbest list
     config.remove(Phrasal.NBEST_LIST_OPT);
     p = Phrasal.loadDecoder(config);
