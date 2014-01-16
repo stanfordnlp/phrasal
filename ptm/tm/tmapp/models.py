@@ -143,62 +143,86 @@ class DemographicData(models.Model):
                                   self.language_native.code)
 
 class ExitSurveyData(models.Model):
-    """
-    Exit survey entered by the user
-    """
-    user = models.OneToOneField(User)
+	"""
+	Exit survey entered by the user
+	"""
+	user = models.OneToOneField(User)
+
+	exit_hardest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
+	exit_easiest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
+	exit_hardest_source = models.TextField()
+	exit_hardest_target = models.TextField()
+	exit_focus_in_postedit = models.CharField( max_length = 5, choices = choices.POSTEDIT_GAZE, default = None )
+	exit_focus_in_imt = models.CharField( max_length = 5, choices = choices.ITM_GAZE, default = None )
+	exit_like_better = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
+	exit_more_efficient = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
+	exit_itm_most_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
+	exit_itm_least_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
+	exit_useful_src_lookup = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_useful_tgt_inlined = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_useful_tgt_suggestions = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_useful_tgt_completion = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_useful_tgt_chunking = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_useful_tgt_anywhere = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_cat_strength_weakness = models.TextField()
+	exit_itm_strength_weakness = models.TextField()
+	exit_itm_missing_aid = models.TextField()
+	exit_prefer_itm = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_got_better_at_itm = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+	exit_comments = models.TextField()
+
 
     # Experiment/condition questions
     # Which interface was most efficient?
-    preferred_ui = models.CharField(max_length=3,
-                                    choices=choices.INTERFACES)
+#    preferred_ui = models.CharField(max_length=3,
+#                                    choices=choices.INTERFACES)
     
     # Which POS categories was the hardest to translate?
-    hardest_pos = models.CharField(max_length=3,
-                                   choices=choices.POS_CHOICES)
+#    hardest_pos = models.CharField(max_length=3,
+#                                   choices=choices.POS_CHOICES)
 
-    easiest_pos = models.CharField(max_length=3,
-                                   choices=choices.POS_CHOICES)
+#    easiest_pos = models.CharField(max_length=3,
+#                                   choices=choices.POS_CHOICES)
     
     # Which source hardest to translate?
-    hardest_src = models.TextField()
+#    hardest_src = models.TextField()
     
     # Which target hardest to generate?
-    hardest_tgt = models.TextField()
+#    hardest_tgt = models.TextField()
     
     # Likert: the MT suggestions were useful
-    stanford_mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
+#    stanford_mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
     
     # When translating, what part of the UI do you usually focus on?
-    gaze_location = models.CharField(max_length=5,
-                                     choices=choices.GAZE_CHOICES)
+#    gaze_location = models.CharField(max_length=5,
+#                                     choices=choices.GAZE_CHOICES)
     
     # UI-imt questions
     # Which aid did you find most useful?
-    imt_most_useful = models.CharField(max_length=20,
-                                       choices=choices.IMT_AID_CHOICES)
+#    imt_most_useful = models.CharField(max_length=20,
+#                                       choices=choices.IMT_AID_CHOICES)
     
     # Which aid was least effective?
-    imt_least_useful = models.CharField(max_length=20,
-                                        choices=choices.IMT_AID_CHOICES)
+#    imt_least_useful = models.CharField(max_length=20,
+#                                        choices=choices.IMT_AID_CHOICES)
     
     # Likert: I became more efficient with practice
-    imt_improvement = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
+#    imt_improvement = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
      
     # Text: Was there an aid not present in the current interface that would have been helpful?
-    imt_aid_suggestions = models.TextField()
+#    imt_aid_suggestions = models.TextField()
     
     # Did you focus on a different part of the UI when using IMT?
     # When translating, what part of the UI do you usually focus on?
-    imt_gaze_location = models.CharField(max_length=5,
-                                         choices=choices.GAZE_CHOICES)
+#    imt_gaze_location = models.CharField(max_length=5,
+#                                         choices=choices.GAZE_CHOICES)
     
     # UI-imt relative to other CAT tools
     # Likert: I would use an tool like this instead of my existing CAT tool
-    imt_would_use = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
+#    imt_would_use = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
     
     # Text: Please describe major strengths and weaknesses of your current CAT tool.
-    cat_response = models.TextField()
+#    cat_response = models.TextField()
     
     # Text: Anything else
-    other_response = models.TextField(blank=True,null=True)
+#    other_response = models.TextField(blank=True,null=True)
