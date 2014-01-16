@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.train;
+package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.Counter;
@@ -15,6 +15,10 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.train.AbstractPhraseExtractor;
+import edu.stanford.nlp.mt.train.AbstractWordAlignment;
+import edu.stanford.nlp.mt.train.PhrasalSourceFilter;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /**

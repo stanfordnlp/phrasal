@@ -999,36 +999,6 @@ vspace{1.0em}
 
 \end_layout
 
-\begin_layout Standard
-Notice that 
-\family typewriter
-NGramLanguageModelFeaturizer
-\family default
- also implements the interface 
-\family typewriter
-RuleIsolationScoreFeaturizer
-\family default
-, which extends 
-\family typewriter
-RuleFeaturizer
-\family default
-.
- This is because the LM also provides rule scores that are used as part
- of the search heuristic.
- However, we want to discard these estimates when the derivation is actually
- created.
- 
-\family typewriter
-RuleIsolationScoreFeaturizer
-\family default
- prevents the decoder from caching the feature value.
- Typically this interface is implemented in conjunction with 
-\family typewriter
-DerivationFeaturizer
-\family default
-.
-\end_layout
-
 \begin_layout Subsection*
 Featurizer Concurrency Issues
 \end_layout
@@ -1044,262 +1014,13 @@ inferer
  Therefore, if the featurizer maintains any local state, then it will not
  be re-entrant.
  To instruct the decoder to clone one featurizer per inferer, implement
- the 
-\family typewriter
-NeedsCloneable
-\family default
- interface (Table 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:Interfaces-that-provide"
-
-\end_inset
-
-)
-\end_layout
-
-\begin_layout Section*
-Additional Interfaces
-\end_layout
-
-\begin_layout Standard
-The feature API provides additional functionality via companion interfaces.
- The interfaces may or may not specify required methods.
- These interfaces may only be implemented along with either 
-\family typewriter
-RuleFeaturizer
-\family default
- or 
-\family typewriter
-DerivationFeaturizer
-\family default
- (or both).
- Table 
-\begin_inset CommandInset ref
-LatexCommand ref
-reference "tab:Interfaces-that-provide"
-
-\end_inset
-
- describes the interfaces.
-\end_layout
-
-\begin_layout Standard
-\begin_inset Float table
-placement H
-wide false
-sideways false
-status open
-
-\begin_layout Plain Layout
-\align center
-\begin_inset Tabular
-<lyxtabular version="3" rows="5" columns="2">
-<features tabularvalignment="middle">
-<column alignment="left" valignment="top" width="0">
-<column alignment="left" valignment="top" width="0">
-<row>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Interface
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" topline="true" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Description
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\family typewriter
-NeedsInternalAlignments
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Loads phrase-internal alignments
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\family typewriter
-NeedsCloneable
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Required for re-entrancy
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\family typewriter
-NeedsState
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Permits the decoder to store additional state
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\family typewriter
-NeedsReorderingRecombination
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="left" valignment="top" bottomline="true" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-Enables reordering recombination history
-\end_layout
-
-\end_inset
-</cell>
-</row>
-</lyxtabular>
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-\begin_inset Caption
-
-\begin_layout Plain Layout
-\begin_inset CommandInset label
-LatexCommand label
-name "tab:Interfaces-that-provide"
-
-\end_inset
-
-Interfaces that provide additional featurizer functionality.
- These interfaces are located in the package 
-\family typewriter
-edu.stanford.nlp.mt.decoder.feat
-\family default
-.
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-Here are example feature types for each interface:
+ the interface: 
 \end_layout
 
 \begin_layout Itemize
 
 \family typewriter
-NeedsInternalAlignments
-\family default
----suppose that you want to penalize phrase-internal alignment errors such
- as 
-\shape italic
-maison
-\shape default
-
-\begin_inset Formula $\Rightarrow$
-\end_inset
-
-
-\shape italic
-the
-\shape default
-.
- Alignment to punctuation and function words---a phenomenon known as 
-\series bold
-garbage collection
-\series default
----is a common problem in MT.
-\end_layout
-
-\begin_layout Itemize
-
-\family typewriter
-NeedsCloneable
-\family default
----you want to write source-side features so you load CoreNLP.
- When initialize() is called, you annotate the source sentence and save
- it in the featurizer.
-\end_layout
-
-\begin_layout Itemize
-
-\family typewriter
-NeedsState
-\family default
----you want to implement a target-side syntactic feature that saves some
- syntactic information about the target prefix.
-\end_layout
-
-\begin_layout Itemize
-
-\family typewriter
-NeedsReorderingRecombination
-\family default
----you want to implement a new lexicalized reordering model.
+edu.stanford.nlp.mt.decoder.feat.NeedsCloneable
 \end_layout
 
 \begin_layout Section*
@@ -1310,25 +1031,6 @@ Practical Matters
 Phrasal loads featurizers by reflection.
  The featurizer should be specified in the *.ini file that configures the
  system.
-\begin_inset Foot
-status open
-
-\begin_layout Plain Layout
-The file 
-\family typewriter
-\size normal
-$JAVANLP_HOME/projects/mt/scripts-private/README.phrasal
-\family default
-\size default
- describes the *.ini file format.
- It also demonstrates how to build and run the system.
- Each featurizer change requires a full system tuning run, which may last
- several hours.
- Think carefully before committing yourself to that endeavor!
-\end_layout
-
-\end_inset
-
  Let's look at an example *.ini file:
 \end_layout
 
@@ -1390,13 +1092,13 @@ The example *.ini file also specifies a few other parameters germane to learning
 \end_layout
 
 \begin_layout Itemize
-localprocs---the number of decoding threads.
+threads---the number of decoding threads.
  We usually set this parameter to the number of 
 \shape italic
 physical
 \shape default
  cores on the machine.
- Hyperthreading offers not performance benefit for Phrasal.
+ NOTE: Hyperthreading offers not performance benefit for Phrasal.
 \end_layout
 
 \begin_layout Itemize

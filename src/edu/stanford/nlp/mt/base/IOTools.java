@@ -13,7 +13,10 @@ import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +26,7 @@ import java.util.zip.GZIPOutputStream;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.ErasureUtils;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -135,6 +139,55 @@ public final class IOTools {
     reader.close();
   }
 
+  /**
+   * Parse a Phrasal ini file.
+   *
+   * @param filename
+   * @throws IOException
+   */
+  public static Map<String, List<String>> readConfigFile(String filename)
+      throws IOException {
+    Map<String, List<String>> config = Generics.newHashMap();
+    LineNumberReader reader = getReaderFromFile(filename);
+    for (String line; (line = reader.readLine()) != null;) {
+      line = line.trim().replaceAll("#.*$", "");
+      if (line.length() == 0)
+        continue;
+      if (line.charAt(0) != '[' || line.charAt(line.length() - 1) != ']') {
+        reader.close();
+        throw new RuntimeException(
+            String
+                .format(
+                    "Expected bracketing of option name by '[',']', line: %d label: %s",
+                    reader.getLineNumber(), line));
+      }
+      String nextArgLine = line;
+
+      while (nextArgLine != null) {
+        String key = line.substring(1, nextArgLine.length() - 1);
+        nextArgLine = null;
+        List<String> entries = new ArrayList<String>();
+        while ((line = reader.readLine()) != null) {
+          if (line.matches("^\\s*$"))
+            break;
+          if (line.startsWith("[")) {
+            nextArgLine = line;
+            break;
+          }
+          if (line.charAt(0) == '#')
+            break;
+          line = line.replaceAll("#.*$", "");
+          String[] fields = line.split("\\s+");
+          entries.addAll(Arrays.asList(fields));
+        }
+        if (!entries.isEmpty())
+          config.put(key, entries);
+      }
+    }
+    reader.close();
+    return config;
+  }
+  
   /**
    * Read weights from a file. Supports both binary and text formats.
    * 

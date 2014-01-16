@@ -12,5 +12,5 @@ public class WordPenaltyFeaturizer implements
   }
 
   @Override
-  public void initialize(Index<String> featureIndex) {}
+  public void initialize() {}
 }

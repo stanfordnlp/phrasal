@@ -88,7 +88,4 @@ public class SourceSideTaggerFeaturizer extends DerivationFeaturizer<IString, St
 
     return features;
   }
-  
-  @Override
-  public boolean constructInternalAlignments() { return true; }
 }

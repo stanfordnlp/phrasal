@@ -411,7 +411,7 @@ public class MakeWordClasses {
     argDefs.put("format", 1);
     argDefs.put("name", 1);
     argDefs.put("vclip", 1);
-    argDefs.put("normdigits", 0);
+    argDefs.put("normdigits", 1);
     argDefs.put("encoding", 1);
     return argDefs;
   }
@@ -420,16 +420,16 @@ public class MakeWordClasses {
     StringBuilder sb = new StringBuilder();
     final String nl = System.getProperty("line.separator");
     sb.append("Usage: java ").append(MakeWordClasses.class.getName()).append(" OPTS file [file] > output").append(nl)
-    .append(" -order num     : Model order (default: 2)").append(nl)
-    .append(" -nthreads num  : Number of threads (default: 1)").append(nl)
-    .append(" -nclasses num  : Number of classes (default: 512)").append(nl)
-    .append(" -niters num    : Number of iterations (default: 30)").append(nl)
-    .append(" -vparts num    : Number of vocabulary partitions (default: 3)").append(nl)
-    .append(" -format type   : Output format [srilm|tsv] (default: tsv)").append(nl)
-    .append(" -name str      : Run name for log file.").append(nl)
-    .append(" -vclip num     : Map rare words to <unk> (default: 5)").append(nl)
-    .append(" -normdigits    : Map ASCII digits to 0 (default: true)").append(nl)
-    .append(" -encoding str  : Input file encoding (default: UTF-8)");
+    .append(" -order num       : Model order (default: 2)").append(nl)
+    .append(" -nthreads num    : Number of threads (default: 1)").append(nl)
+    .append(" -nclasses num    : Number of classes (default: 512)").append(nl)
+    .append(" -niters num      : Number of iterations (default: 30)").append(nl)
+    .append(" -vparts num      : Number of vocabulary partitions (default: 3)").append(nl)
+    .append(" -format type     : Output format [srilm|tsv] (default: tsv)").append(nl)
+    .append(" -name str        : Run name for log file.").append(nl)
+    .append(" -vclip num       : Map rare words to <unk> (default: 5)").append(nl)
+    .append(" -normdigits bool : Map ASCII digits to 0 (default: true)").append(nl)
+    .append(" -encoding str    : Input file encoding (default: UTF-8)");
 
     return sb.toString();
   }

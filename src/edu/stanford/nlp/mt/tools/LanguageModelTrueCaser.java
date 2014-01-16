@@ -84,7 +84,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
     // Read in LM & create LM featurizer
     try {
       NGramLanguageModelFeaturizer lmFeaturizer = new NGramLanguageModelFeaturizer
-          (lmFilename, NGramLanguageModelFeaturizer.FEATURE_NAME);
+          (lmFilename, NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
       List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
       listFeaturizers.add(lmFeaturizer);
       CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
@@ -101,7 +101,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
           .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
               combinedFeaturizer));
       List<LanguageModel<IString>> lgModels = new LinkedList<LanguageModel<IString>>();
-      lgModels.add(lmFeaturizer.lm);
+      lgModels.add(lmFeaturizer.getLM());
 
       // misc. decoder configuration
       RecombinationFilter<Derivation<IString, String>> recombinationFilter = 

@@ -35,7 +35,7 @@ public class DecodePrefixFile {
     String sourceFile = args[1];
     String prefixFile = args[2];
     
-    Map<String, List<String>> config = Phrasal.readConfig(phrasalIni);
+    Map<String, List<String>> config = IOTools.readConfigFile(phrasalIni);
     Phrasal p = Phrasal.loadDecoder(config);
 
     LineNumberReader sourceReader = IOTools.getReaderFromFile(sourceFile);
