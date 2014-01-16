@@ -1,21 +1,17 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.FlatPhraseTable;
+import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.PhraseTableScoresFeaturizer;
 
 /**
  * Constrained output space for prefix decoding. Uses the phrase table
@@ -24,111 +20,95 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @author Spence Green
  *
- * @param <TK>
- * @param <FV>
+ * @param <IString>
+ * @param <String>
  */
-public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
+public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
 
-  // Hyperparameters
-  private static final int MAX_OPTIONS_PER_TOKEN = 3;
-  
-  private final Sequence<TK> sourceSequence;
+  // Hyperparameters for constructing synthetic rules
+  private static final String PHRASE_TABLE_NAME = "SoftTargetGenerator";
+  private static final double SYNTHETIC_ISOLATION_SCORE = -199.0;
+  private static final PhraseAlignment ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
+  private static final int NUM_SYNTHETIC_SCORES = 4;
+  private static String[] PHRASE_SCORE_NAMES;
+  private static float[] PHRASE_SCORES;
+  static {
+    PHRASE_SCORE_NAMES = new String[NUM_SYNTHETIC_SCORES];
+    PHRASE_SCORES = new float[NUM_SYNTHETIC_SCORES];
+    for (int i = 0; i < NUM_SYNTHETIC_SCORES; ++i) {
+      // Emulate the FlatPhraseTable feature naming convention
+      PHRASE_SCORE_NAMES[i] = String.format("%s.%d", FlatPhraseTable.FEATURE_PREFIX, i);
+      PHRASE_SCORES[i] = -99.0f;
+    }
+  }
+  private static final RuleFeaturizer<IString,String> featurizer = 
+      new PhraseTableScoresFeaturizer(NUM_SYNTHETIC_SCORES);
+
+  private final Sequence<IString> sourceSequence;
   private final int sourceLength;
-  private final Sequence<TK> allowablePrefix;
+  private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
-  
-  private final List<Set<TK>> sourceOptions;
   private final int sourceInputId;
-  
-  public SoftPrefixOutputSpace(Sequence<TK> sourceSequence, Sequence<TK> allowablePrefix, int sourceInputId) {
+    
+  public SoftPrefixOutputSpace(Sequence<IString> sourceSequence, Sequence<IString> allowablePrefix, int sourceInputId) {
     this.sourceSequence = sourceSequence;
     this.sourceLength = sourceSequence.size();
     this.allowablePrefix = allowablePrefix;
     this.allowablePrefixLength = allowablePrefix.size();
     this.sourceInputId = sourceInputId;
-    
-    sourceOptions = Generics.newArrayList(sourceLength);
-    for (int i = 0; i < sourceLength; ++i) {
-      sourceOptions.add(new HashSet<TK>(MAX_OPTIONS_PER_TOKEN));
-    }
   }
 
   @Override
-  public List<ConcreteRule<TK, FV>> filter(List<ConcreteRule<TK, FV>> ruleList) {
-    List<List<ConcreteRule<TK,FV>>> sortedUnigramRules = 
-        new ArrayList<List<ConcreteRule<TK,FV>>>(sourceLength);
+  public List<ConcreteRule<IString, String>> filter(List<ConcreteRule<IString, String>> ruleList) {
+    // Allow any target word to map anywhere into the source, but with high
+    // cost so that only OOVs and words outside the distortion limit will
+    // be used.
     for (int i = 0; i < sourceLength; ++i) {
-      sortedUnigramRules.add(new LinkedList<ConcreteRule<TK,FV>>());
-    }
-    
-    // Extract statistics from the rule list
-    Set<TK> targetVocabulary = Generics.newHashSet(sourceLength * 10);
-    double minScore = Double.POSITIVE_INFINITY;
-    List<FeatureValue<FV>> cachedFeatureList = null;
-    for (ConcreteRule<TK,FV> rule : ruleList) {
-//      Sequence<TK> source = rule.abstractRule.source;
-      Sequence<TK> target = rule.abstractRule.target;
-//      if (source.size() == 1 && target.size() == 1) {
-//        int sourceIndex = rule.sourcePosition;
-//        sortedUnigramRules.get(sourceIndex).add(rule);
-//      }
-      for (TK token : target) {
-        targetVocabulary.add(token);
-      }
-      if (rule.isolationScore < minScore) {
-        minScore = rule.isolationScore;
-        cachedFeatureList = rule.cachedFeatureList;
-      }
-    }
-
-    // Iterate over target prefix
-    // Insert synthetic rules for OOVs in target prefix
-    Set<Sequence<TK>> targetOOVs = Generics.newHashSet();
-    for (int i = 0; i < allowablePrefixLength; ++i) {
-      if ( ! targetVocabulary.contains(allowablePrefix.get(i))) {
-        targetOOVs.add(allowablePrefix.subsequence(i,i+1));
-      }
-    }
-    
-    // Iterate over source
-    for (int i = 0; i < sourceLength; ++i) {
-      // Insert synthetic target rules
-      for (Sequence<TK> targetOOV : targetOOVs) {
-        ConcreteRule<TK,FV> syntheticRule = makeSyntheticRule(sourceSequence.subsequence(i,i+1), targetOOV, 
-            i, minScore - 1e-2, cachedFeatureList, ruleList.get(0));
+      final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
+      for (int j = 0, size = allowablePrefix.size(); j < size; ++j) {
+        ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, 
+            allowablePrefix.subsequence(j, j+1), i);
         ruleList.add(syntheticRule);
       }
     }
     return ruleList;
   }
 
-  private ConcreteRule<TK, FV> makeSyntheticRule(Sequence<TK> source, Sequence<TK> target, int sourceIndex, 
-      double ruleScore, List<FeatureValue<FV>> cachedFeatureList, ConcreteRule<TK, FV> rulePrototype) {
-    String[] phraseScoreNames = rulePrototype.abstractRule.phraseScoreNames;
-    float[] scores = new float[phraseScoreNames.length];
-    Arrays.fill(scores, -99.0f);
-    Rule<TK> abstractRule = new Rule<TK>(scores, phraseScoreNames,
-        new RawSequence<TK>(target), new RawSequence<TK>(source),
-        PhraseAlignment.getPhraseAlignment("(0)"));
+  /**
+   * Create a synthetic translation rule.
+   * 
+   * @param source
+   * @param target
+   * @param sourceIndex
+   * @param phraseScoreNames
+   * @return
+   */
+  private ConcreteRule<IString, String> makeSyntheticRule(Sequence<IString> source, Sequence<IString> target, 
+      int sourceIndex) {
+    // Downweight the TM features
+    Rule<IString> abstractRule = new Rule<IString>(PHRASE_SCORES, PHRASE_SCORE_NAMES,
+        target, source, ALIGNMENT);
 
     CoverageSet sourceCoverage = new CoverageSet();
     sourceCoverage.set(sourceIndex);
-    ConcreteRule<TK,FV> rule = new ConcreteRule<TK,FV>(abstractRule,
-        sourceCoverage, null, null, sourceSequence, 
-        rulePrototype.phraseTableName, sourceInputId);
-    rule.isolationScore = ruleScore;
-    rule.cachedFeatureList = Generics.newLinkedList(cachedFeatureList);
+    ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
+        sourceCoverage, featurizer, null, sourceSequence, 
+        PHRASE_TABLE_NAME, sourceInputId);
+    
+    // Deterministically set the isolation score since we didn't provide a scorer to the
+    // ConcreteRule constructor.
+    rule.isolationScore = SYNTHETIC_ISOLATION_SCORE;
     return rule;
   }
 
   @Override
-  public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
-      ConcreteRule<TK, FV> rule) {
-    final Sequence<TK> prefix = featurizable == null ? null : featurizable.targetPrefix;
+  public boolean allowableContinuation(Featurizable<IString, String> featurizable,
+      ConcreteRule<IString, String> rule) {
+    final Sequence<IString> prefix = featurizable == null ? null : featurizable.targetPrefix;
     return exactMatch(prefix, rule.abstractRule.target);
   }
 
-  private boolean exactMatch(Sequence<TK> prefix, Sequence<TK> rule) {
+  private boolean exactMatch(Sequence<IString> prefix, Sequence<IString> rule) {
     if (prefix == null) {
       return allowablePrefix.size() > rule.size() ? allowablePrefix.startsWith(rule) :
         rule.startsWith(allowablePrefix);
@@ -137,7 +117,7 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
       int prefixLength = prefix.size();
       int upperBound = Math.min(prefixLength + rule.size(), allowablePrefixLength);
       for (int i = 0; i < upperBound; i++) {
-        TK next = i >= prefixLength ? rule.get(i-prefixLength) : prefix.get(i);
+        IString next = i >= prefixLength ? rule.get(i-prefixLength) : prefix.get(i);
         if ( ! allowablePrefix.get(i).equals(next)) {
           return false;
         }
@@ -147,13 +127,13 @@ public class SoftPrefixOutputSpace<TK,FV> implements OutputSpace<TK, FV> {
   }
 
   @Override
-  public boolean allowableFinal(Featurizable<TK, FV> featurizable) {
+  public boolean allowableFinal(Featurizable<IString, String> featurizable) {
     // Allow everything except for the NULL hypothesis
     return featurizable != null;
   }
 
   @Override
-  public List<Sequence<TK>> getAllowableSequences() {
+  public List<Sequence<IString>> getAllowableSequences() {
     // null has the semantics of the full (unconstrained) target output space.
     // This is what we want for prefix decoding because we don't pruning to happen
     // at the point of the phrase table query.
