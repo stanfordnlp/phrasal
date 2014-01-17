@@ -85,4 +85,24 @@ public abstract class AbstractWordClassMap {
         : wordToClass.get(TokenUtils.UNK_TOKEN);
     return numMappings == 1 ? classList.get(0) : new IString(Sentence.listToString(classList, true, DELIMITER));
   }
+  
+  // Thang Jan14
+  public int getNumMappings() {
+    return numMappings;
+  }
+  
+  /**
+   * Map the input word to a list of word classes.
+   * @param word
+   * @param mapId
+   * @return
+   */
+  public List<IString> getList(IString word) {
+    String wordStr = word.toString();
+    if (TokenUtils.hasDigit(wordStr)) {
+      word = new IString(TokenUtils.normalizeDigits(wordStr));
+    }
+    return wordToClass.containsKey(word) ? wordToClass.get(word) 
+        : wordToClass.get(TokenUtils.UNK_TOKEN);
+  }
 }
