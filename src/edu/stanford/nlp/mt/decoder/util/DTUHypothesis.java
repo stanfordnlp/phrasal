@@ -509,7 +509,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       }
     }
 
-    return hyp.rule.abstractRule.target;
+    return new RawSequence<TK>(hyp.rule.abstractRule.target);
   }
 
   private static <TK, FV> Rule<TK> getAbstractOption(
@@ -522,7 +522,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       int idx) {
     if (option instanceof DTURule)
       return ((DTURule<TK>) option).dtus[idx];
-    return option.target;
+    return new RawSequence<TK>(option.target);
   }
 
   private static <TK> int getNumberSegments(Rule<TK> option) {

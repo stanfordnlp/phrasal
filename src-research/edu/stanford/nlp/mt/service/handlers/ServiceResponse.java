@@ -37,8 +37,9 @@ public class ServiceResponse {
   public static boolean intoHttpResponse(ServiceResponse serviceResponse, HttpServletResponse response) {
     String responseString = serviceResponse.toString();
     try {
-      response.getWriter().println(responseString);
       response.setContentType("application/x-javascript;charset=utf-8");     
+      response.setCharacterEncoding("UTF-8");
+      response.getWriter().println(responseString);
       response.setStatus(HttpServletResponse.SC_OK);
 
     } catch (IOException e) {

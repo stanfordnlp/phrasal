@@ -32,12 +32,12 @@ public class Rule<T> implements Comparable<Rule<T>>{
   /**
    * The target side of the rule.
    */
-  public final RawSequence<T> target;
+  public final Sequence<T> target;
   
   /**
    * The source side of the rule.
    */
-  public final RawSequence<T> source;
+  public final Sequence<T> source;
   
   /**
    * The source/target word-word alignments.
@@ -62,7 +62,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
    * @param alignment
    */
   public Rule(float[] scores, String[] phraseScoreNames,
-      RawSequence<T> target, RawSequence<T> source,
+      Sequence<T> target, Sequence<T> source,
       PhraseAlignment alignment) {
     this(SYNTHETIC_RULE_ID, scores, phraseScoreNames, target, source, alignment);
   }
@@ -78,7 +78,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
    * @param alignment
    */
   public Rule(int id, float[] scores, String[] phraseScoreNames,
-      RawSequence<T> target, RawSequence<T> source,
+      Sequence<T> target, Sequence<T> source,
       PhraseAlignment alignment) {
     this(id, scores, phraseScoreNames, target, source, alignment, false);
   }
@@ -95,7 +95,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
    * @param forceAdd
    */
   public Rule(int id, float[] scores, String[] phraseScoreNames,
-      RawSequence<T> target, RawSequence<T> source,
+      Sequence<T> target, Sequence<T> source,
       PhraseAlignment alignment, boolean forceAdd) {
     this.id = id;
     this.alignment = alignment;
