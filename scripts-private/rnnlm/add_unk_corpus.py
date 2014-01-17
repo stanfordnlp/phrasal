@@ -32,10 +32,10 @@ def process_command_line():
   parser = argparse.ArgumentParser(description=usage) # add description
   # positional arguments
   parser.add_argument('vocab_file', metavar='vocab_file', type=str, help='vocab file') 
+  parser.add_argument('-u', '--unk-token', dest='unk_token', type=str, default='<unk>', help='unk token (default=<unk>)')
   parser.add_argument('in_file', metavar='in_file', type=str, help='input file') 
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
 
-  parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='option (default=0)')
   
 	# version info
   parser.add_argument('-v', '--version', action='version', version=__version__ )
@@ -99,7 +99,7 @@ def load_vocab(vocab_file):
   return (word2id, freqs, words)
 
 
-def process_files(vocab_file, in_file, out_file):
+def process_files(vocab_file, in_file, out_file, unk_token):
   """
   Read data from vocab_file, in_file, and output to out_file
   """
@@ -118,7 +118,7 @@ def process_files(vocab_file, in_file, out_file):
     tokens = re.split('\s+', eachline)
     for index in range(len(tokens)):
       if tokens[index] not in word2id:
-        tokens[index] = '<UNK>'
+        tokens[index] = unk_token
     ouf.write('%s\n' % ' '.join(tokens))
 
     line_id = line_id + 1
@@ -136,4 +136,4 @@ if __name__ == '__main__':
   if args.debug == True:
     sys.stderr.write('Debug mode\n')
 
-  process_files(args.vocab_file, args.in_file, args.out_file)
+  process_files(args.vocab_file, args.in_file, args.out_file, args.unk_token)
