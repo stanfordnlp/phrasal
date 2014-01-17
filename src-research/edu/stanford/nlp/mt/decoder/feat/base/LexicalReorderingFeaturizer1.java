@@ -150,6 +150,9 @@ public class LexicalReorderingFeaturizer1 extends
           continue;
      
         // Thang Jan14: reorganize to use multi class files
+        if (DEBUG_OPT>0){
+          System.err.println("# lexical reordering");
+        }
         List<String> ruleReps = new ArrayList<String>();
         if (usePrior(mrt)) {
           if (useAlignmentConstellations) {
@@ -259,9 +262,12 @@ public class LexicalReorderingFeaturizer1 extends
         sbs.add(new StringBuilder());
       }
       // src
+      if (DEBUG_OPT>0){
+        System.err.print("  src:");
+      }
       for (IString token : f.rule.abstractRule.source) {
         if (DEBUG_OPT>0){
-          System.err.print(token.toString() + " ");
+          System.err.print(" " + token.toString());
         }
         
         List<IString> tokens = sourceMap.getList(token);
@@ -272,7 +278,7 @@ public class LexicalReorderingFeaturizer1 extends
         }
       }
       if (DEBUG_OPT>0){
-        System.err.println();
+        System.err.print("\n  tgt:");
       }
       
       // delimiter
@@ -283,7 +289,7 @@ public class LexicalReorderingFeaturizer1 extends
       boolean seenFirst = false;
       for (IString token : f.rule.abstractRule.target) {
         if (DEBUG_OPT>0){
-          System.err.print(token.toString() + " ");
+          System.err.print(" " + token.toString());
         }
         
         List<IString> tokens = targetMap.getList(token);
