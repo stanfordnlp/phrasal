@@ -36,6 +36,8 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
+  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
+  
   /**
    * Constructor.
    */
@@ -89,14 +91,24 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
       for (int i = 0; i < numClasses; i++) {
         sbs.add(new StringBuilder());
       }
+      if (DEBUG_OPT>0){
+        System.err.println("# phrase table");
+      }
       // src
       for (IString token : f.sourcePhrase) {
+        if (DEBUG_OPT>0){
+          System.err.print(token.toString() + " ");
+        }
+        
         List<IString> tokens = sourceMap.getList(token);
         for (int i = 0; i < numClasses; i++) {
           StringBuilder sb = sbs.get(i);
           if (sb.length() > 0) sb.append("-");
           sb.append(tokens.get(i).toString());
         }
+      }
+      if (DEBUG_OPT>0){
+        System.err.println();
       }
       // delimiter
       for (int i = 0; i < numClasses; i++) {
@@ -105,6 +117,10 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
       // tgt
       boolean seenFirst = false;
       for (IString token : f.targetPhrase) {
+        if (DEBUG_OPT>0){
+          System.err.print(token.toString() + " ");
+        }
+        
         List<IString> tokens = targetMap.getList(token);
         for (int i = 0; i < numClasses; i++) {
           StringBuilder sb = sbs.get(i);
@@ -115,11 +131,17 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
         
         seenFirst = true;
       }
+      if (DEBUG_OPT>0){
+        System.err.println();
+      }
       
       // feature strings
       for (int i = 0; i < numClasses; i++) {
         String featureString = FEATURE_NAME + i + ":" + sbs.get(i).toString();
         features.add(new FeatureValue<String>(featureString, 1.0));
+        if (DEBUG_OPT>0){
+          System.err.println("  " + featureString);
+        } 
         if (genre != null) {
           features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
         }  

@@ -20,6 +20,7 @@ public class TargetUnigramClass1 implements RuleFeaturizer<IString, String> {
   private static final String FEATURE_NAME = "TGTCLS";
 
   private final TargetClassMap targetMap = TargetClassMap.getInstance();
+  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
   
   @Override
   public void initialize() {
@@ -29,13 +30,23 @@ public class TargetUnigramClass1 implements RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    if (DEBUG_OPT>0){
+      System.err.print("# target unigram\n");
+    }
     for (IString token : f.targetPhrase) {
-      
       // Thang Jan14: add individual class features
       List<IString> tokenClasses = targetMap.getList(token);
+      if (DEBUG_OPT>0){
+        System.err.print(token + " " + tokenClasses);
+      }
+      
       for (int i = 0; i < tokenClasses.size(); i++) {
         features.add(new FeatureValue<String>(String.format("%s%d:%s",FEATURE_NAME,i,tokenClasses.get(i).toString()), 1.0));
       }
+    }
+    
+    if (DEBUG_OPT>0){
+      System.err.println();
     }
     return features;
   }

@@ -51,6 +51,8 @@ public class LexicalReorderingFeaturizer1 extends
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
 
+  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
+  
   /**
    * Constructor for discriminative lexicalized reordering.
    */
@@ -146,7 +148,8 @@ public class LexicalReorderingFeaturizer1 extends
       for (LexicalReorderingTable.ReorderingTypes mrt : discriminativeSet) {
         if (!featureFunction(monotone, swap, mrt))
           continue;
-     // Thang Jan14: reorganize to use multi class files
+     
+        // Thang Jan14: reorganize to use multi class files
         List<String> ruleReps = new ArrayList<String>();
         if (usePrior(mrt)) {
           if (useAlignmentConstellations) {
@@ -168,6 +171,9 @@ public class LexicalReorderingFeaturizer1 extends
         for (int i = 0; i < ruleReps.size(); i++) {
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + i + ":" + mrt + ":"
               + ruleReps.get(i);
+          if (DEBUG_OPT>0){
+            System.err.println("  " + featureString);
+          }
           features.add(new FeatureValue<String>(featureString, 1.0));
           if (addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId)) {
             Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
@@ -254,6 +260,10 @@ public class LexicalReorderingFeaturizer1 extends
       }
       // src
       for (IString token : f.rule.abstractRule.source) {
+        if (DEBUG_OPT>0){
+          System.err.print(token.toString() + " ");
+        }
+        
         List<IString> tokens = sourceMap.getList(token);
         for (int i = 0; i < numClasses; i++) {
           StringBuilder sb = sbs.get(i);
@@ -261,6 +271,10 @@ public class LexicalReorderingFeaturizer1 extends
           sb.append(tokens.get(i).toString());
         }
       }
+      if (DEBUG_OPT>0){
+        System.err.println();
+      }
+      
       // delimiter
       for (int i = 0; i < numClasses; i++) {
         sbs.get(i).append(">");
@@ -268,6 +282,10 @@ public class LexicalReorderingFeaturizer1 extends
       // tgt
       boolean seenFirst = false;
       for (IString token : f.rule.abstractRule.target) {
+        if (DEBUG_OPT>0){
+          System.err.print(token.toString() + " ");
+        }
+        
         List<IString> tokens = targetMap.getList(token);
         for (int i = 0; i < numClasses; i++) {
           StringBuilder sb = sbs.get(i);
@@ -277,6 +295,9 @@ public class LexicalReorderingFeaturizer1 extends
         }
         
         seenFirst = true;
+      }
+      if (DEBUG_OPT>0){
+        System.err.println();
       }
       
       // feature strings
