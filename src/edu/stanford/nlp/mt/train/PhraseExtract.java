@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -48,7 +47,8 @@ import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
+import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.base.IOTools;
@@ -207,9 +207,6 @@ public class PhraseExtract {
   protected AlignmentTemplateInstance alTemp;
   protected Index<String> featureIndex = new HashIndex<String>();
 
-  private final List<Thread> threads = Generics.newLinkedList();
-  private final LinkedBlockingQueue<Pair<Integer, String[]>> dataQueue = new LinkedBlockingQueue<Pair<Integer, String[]>>(
-      1000);
   boolean doneReadingData;
   boolean verbose;
 
@@ -486,37 +483,65 @@ public class PhraseExtract {
     setTotalPassNumber();
   }
 
-  class Extractor extends Thread {
+  /**
+   * Input to the extractor.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class ExtractorInput {
+    public final int lineNb;
+    public final String fLine;
+    public final String eLine;
+    public final String aLine;
+    public ExtractorInput(int lineNb, String fLine, String eLine, String aLine) {
+      this.lineNb = lineNb;
+      this.fLine = fLine;
+      this.eLine = eLine;
+      this.aLine = aLine;
+    }
+  }
+  
+  /**
+   * Extract and featurize a sentence pair.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class Extractor implements ThreadsafeProcessor<ExtractorInput,Boolean> {
+    private final AbstractPhraseExtractor phraseEx;
+    private final SymmetricalWordAlignment sent;
+    private final Properties properties;
+    private final List<AbstractFeatureExtractor> extractorList;
 
-    final PhraseExtract ex;
-    final AbstractPhraseExtractor phraseEx;
-    final LinkedBlockingQueue<Pair<Integer, String[]>> dataQueue;
-    final SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
-
-    Extractor(PhraseExtract ex, LinkedBlockingQueue<Pair<Integer, String[]>> q) {
-      this.ex = ex;
+    public Extractor(AbstractPhraseExtractor phraseEx, Properties properties, List<AbstractFeatureExtractor> extractorList) {
       try {
-        this.phraseEx = (AbstractPhraseExtractor) phraseExtractor.clone();
+        this.phraseEx = (AbstractPhraseExtractor) phraseEx.clone();
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
-      dataQueue = q;
+      sent = new SymmetricalWordAlignment(properties);
+      this.properties = properties;
+      this.extractorList = extractorList;
     }
 
     @Override
-    public void run() {
+    public Boolean process(ExtractorInput input) {
       try {
-        while (!dataQueue.isEmpty() || !ex.doneReadingData) {
-          Pair<Integer, String[]> p = dataQueue.poll();
-          if (p != null) {
-            String[] lines = p.second();
-            ex.processLine(phraseEx, p.first(), sent, lines[0], lines[1],
-                lines[2]);
-          }
-        }
+        sent.init(input.lineNb, input.fLine, input.eLine, input.aLine, false, false);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
+      phraseEx.extractPhrases(sent);
+      for (AbstractFeatureExtractor e : extractorList) {
+        e.featurizeSentence(sent, phraseEx.getAlGrid());
+      }
+      return true;
+    }
+
+    @Override
+    public ThreadsafeProcessor<ExtractorInput, Boolean> newInstance() {
+      return new Extractor(this.phraseEx, this.properties, this.extractorList);
     }
   }
 
@@ -528,8 +553,6 @@ public class PhraseExtract {
           .println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
 
-    SymmetricalWordAlignment sent = new SymmetricalWordAlignment(prop);
-    
     try {
       for (int passNumber = 0; passNumber < totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
@@ -540,14 +563,9 @@ public class PhraseExtract {
 
         doneReadingData = false;
 
-        assert (threads.isEmpty());
-        assert (dataQueue.isEmpty());
-        for (int i = 0; i < nThreads; ++i) {
-          // System.err.printf("Creating thread %d...\n", i);
-          Extractor thread = new Extractor(this, dataQueue);
-          thread.start();
-          threads.add(thread);
-        }
+        MulticoreWrapper<ExtractorInput,Boolean> wrapper = 
+            new MulticoreWrapper<ExtractorInput,Boolean>(nThreads, 
+                new Extractor(phraseExtractor, prop, extractors), false);
 
         boolean useGIZA = alignInvCorpus != null;
 
@@ -649,11 +667,13 @@ public class PhraseExtract {
             fLine = fLine.toLowerCase();
             eLine = eLine.toLowerCase();
           }
-          if (threads.isEmpty()) {
-            processLine(phraseExtractor, lineNb, sent, fLine, eLine, aLine);
-          } else {
-            dataQueue.put(new Pair<Integer, String[]>(lineNb, new String[] {
-                fLine, eLine, aLine }));
+          
+          wrapper.put(new ExtractorInput(lineNb,fLine, eLine, aLine));
+          while(wrapper.peek()) {
+            boolean success = wrapper.poll();
+            if ( ! success) {
+              throw new RuntimeException("Extractor failure");
+            }
           }
         }
 
@@ -667,12 +687,13 @@ public class PhraseExtract {
         aReader.close();
 
         doneReadingData = true;
-
-        for (int i = 0; i < nThreads; ++i)
-          threads.get(i).join();
-
-        assert (dataQueue.isEmpty());
-        threads.clear();
+        wrapper.join();
+        while(wrapper.peek()) {
+          boolean success = wrapper.poll();
+          if ( ! success) {
+            throw new RuntimeException("Extractor failure");
+          }
+        }
 
         double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
         System.err.printf("\nDone with pass %d. Seconds: %.3f.\n",
@@ -685,25 +706,7 @@ public class PhraseExtract {
 
     } catch (IOException e) {
       e.printStackTrace();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private void processLine(AbstractPhraseExtractor ex, int lineNb,
-      SymmetricalWordAlignment sent, String fLine, String eLine, String aLine) 
-          throws IOException {
-    sent.init(lineNb, fLine, eLine, aLine, false, false);
-    ex.extractPhrases(sent);
-    featurizeSentence(ex, sent);
-  }
-
-  private void featurizeSentence(AbstractPhraseExtractor ex,
-      SymmetricalWordAlignment sent) {
-    for (int i = 0; i < extractors.size(); i++) {
-      AbstractFeatureExtractor e = extractors.get(i);
-      e.featurizeSentence(sent, ex.getAlGrid());
-    }
+    } 
   }
 
   // Write combined features to a stream.

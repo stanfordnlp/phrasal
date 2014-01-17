@@ -3,10 +3,8 @@ public interface RuleFeaturizer<TK, FV> extends Featurizer<TK,FV> {
   /**
    * This call is made *before* decoding with a rule.
    * Do any setup here.
-   * 
-   * @param featureIndex
    */
-  void initialize(Index<String> featureIndex);
+  void initialize();
   
   /**
    * Extract and return features for <code>f.rule</code>.

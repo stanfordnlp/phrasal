@@ -53,7 +53,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
   public static final boolean NO_EMPTY_ALIGNMENT = Boolean.parseBoolean(System
       .getProperty(NO_EMPTY_ALIGNMENT_PROPERTY, "true"));
 
-  static int maxPhraseLenF = DEFAULT_MAX_LEN, maxPhraseLenE = DEFAULT_MAX_LEN;
+  public static int maxPhraseLenF = DEFAULT_MAX_LEN, maxPhraseLenE = DEFAULT_MAX_LEN;
   static int maxExtractedPhraseLenF = DEFAULT_MAX_E_LEN,
       maxExtractedPhraseLenE = DEFAULT_MAX_E_LEN;
 
@@ -156,7 +156,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     return true;
   }
 
-  static void setPhraseExtractionProperties(Properties prop) {
+  public static void setPhraseExtractionProperties(Properties prop) {
 
     if (Boolean.parseBoolean(prop.getProperty(
         PhraseExtract.LEX_REORDERING_HIER_OPT, "true"))) {

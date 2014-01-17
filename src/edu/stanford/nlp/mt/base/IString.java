@@ -2,8 +2,8 @@ package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
 import java.io.Serializable;
 import java.io.Writer;
@@ -23,9 +23,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     HasWord, Comparable<IString> {
   private static final long serialVersionUID = 2718L;
 
-  // TODO(spenceg): Make this private and keep identityIndex() or
-  // keep this public and remove identityIndex()
-  public static final Index<String> index = new HashIndex<String>();
+  public static final Index<String> index = new ConcurrentHashIndex<String>();
 
   public final int id;
 

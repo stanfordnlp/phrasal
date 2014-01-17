@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 import java.io.IOException;
 import java.util.List;
 
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -22,75 +21,41 @@ import edu.stanford.nlp.util.Generics;
  * Featurizer for n-gram language models.
  * 
  * @author danielcer
+ * @author Spence Green
  */
 public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, String> implements
    RuleFeaturizer<IString, String> {
-  public static final String FEATURE_PREFIX = "LM:";
-  public static final String FEATURE_NAME = "LM";
-  public static final String DEBUG_PROPERTY = "ngramLMFeaturizerDebug";
-  final String featureName;
-  final String[][] featureNames;
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "false"));
+  private static final boolean DEBUG = false;
+  public static final String DEFAULT_FEATURE_NAME = "LM";
+  
+  // in srilm -99 is -infinity
+  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
+ 
+  private final String featureName;
+  private final LanguageModel<IString> lm;
+  private final int lmOrder;
+  
+  private final boolean addContextFeatures;
+  private String[] contextFeatureNames;
 
-  public final LanguageModel<IString> lm;
-  final int lmOrder;
 
-  public static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100; // in sri lm
-                                                                 // -99 is
-                                                                 // -infinity
-
+  /**
+   * Constructor.
+   * 
+   * @param lm
+   */
   public NGramLanguageModelFeaturizer(LanguageModel<IString> lm) {
     this.lm = lm;
-    featureName = FEATURE_NAME;
+    featureName = DEFAULT_FEATURE_NAME;
     this.lmOrder = lm.order();
-    featureNames = new String[2][];
-    featureNames[0] = new String[lmOrder];
-    featureNames[1] = new String[lmOrder];
-    for (int i = 0; i < lmOrder; i++) {
-      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
-      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
-    }
+    this.addContextFeatures = false;
   }
 
   /**
    *
    */
-  public int order() {
-    return lm.order();
-  }
-
-  public NGramLanguageModelFeaturizer(LanguageModel<IString> lm, String featureName) {
-    this.lm = lm;
-    this.featureName = featureName;
-    this.lmOrder = lm.order();
-    featureNames = new String[2][];
-    featureNames[0] = new String[lmOrder];
-    featureNames[1] = new String[lmOrder];
-    for (int i = 0; i < lmOrder; i++) {
-      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
-      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
-    }
-  }
-
-  /**
-   *
-   */
-  public NGramLanguageModelFeaturizer(LanguageModel<IString> lm, boolean lmLabeled) {
-    this.lm = lm;
-    this.lmOrder = lm.order();
-    if (lmLabeled) {
-      featureName = String.format("%s%s", FEATURE_PREFIX, lm.getName());
-    } else {
-      featureName = FEATURE_NAME;
-    }
-    featureNames = new String[2][];
-    featureNames[0] = new String[lmOrder];
-    featureNames[1] = new String[lmOrder];
-    for (int i = 0; i < lmOrder; i++) {
-      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
-      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
-    }
+  public LanguageModel<IString> getLM() {
+    return lm;
   }
 
   /**
@@ -98,32 +63,27 @@ public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, 
    * [additional-featurizers].
    */
   public NGramLanguageModelFeaturizer(String...args) throws IOException {
-    if (args.length != 2)
+    if (args.length < 2)
       throw new RuntimeException(
-          "Two arguments are needed: LM file name and LM ID");
+          "At least two arguments are needed: LM file name and LM ID");
     featureName = args[1];
     this.lm = LanguageModelFactory.load(args[0]);
     this.lmOrder = lm.order();
-    featureNames = new String[2][];
-    featureNames[0] = new String[lmOrder];
-    featureNames[1] = new String[lmOrder];
-    for (int i = 0; i < lmOrder; i++) {
-      featureNames[0][i] = String.format("%s:%d:freq", featureName, i+1);
-      featureNames[1][i] = String.format("%s:%d:nomc", featureName, i+1);
-    }
+    this.addContextFeatures = args.length > 2 ? true : false;
+    contextFeatureNames = addContextFeatures ? new String[lmOrder] : null;
   }
 
   /**
    * @param f 
+   * @param features 
 	 *
 	 */
-  private double getScore(int startPos, int limit, Sequence<IString> translation, Featurizable<IString, String> f) {
+  private double getScore(int startPos, int limit, Sequence<IString> translation, 
+      Featurizable<IString, String> f, List<FeatureValue<String>> features) {
     double lmSumScore = 0;
-    int order = lmOrder;
-
     LMState state = null;
     for (int pos = startPos; pos < limit; pos++) {
-      int seqStart = pos - order + 1;
+      int seqStart = pos - lmOrder + 1;
       if (seqStart < 0)
         seqStart = 0;
       Sequence<IString> ngram = translation.subsequence(seqStart, pos + 1);
@@ -132,6 +92,14 @@ public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, 
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         lmSumScore += MOSES_LM_UNKNOWN_WORD_SCORE;
         continue;
+      }
+      if (addContextFeatures && features != null) {
+        int stateLength = state.length();
+        if (contextFeatureNames[stateLength] == null) {
+          contextFeatureNames[stateLength] = 
+              String.format("%sC%d", featureName, stateLength);
+        }
+        features.add(new FeatureValue<String>(contextFeatureNames[stateLength], 1.0));
       }
       lmSumScore += ngramScore;
       if (DEBUG) {
@@ -177,13 +145,13 @@ public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, 
     }
     int limit = partialTranslation.size();
 
-    double lmScore = getScore(startPos, limit, partialTranslation, f);
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    double lmScore = getScore(startPos, limit, partialTranslation, f, features);
+    features.add(new FeatureValue<String>(featureName, lmScore));
 
     if (DEBUG) {
       System.out.printf("Final score: %f\n", lmScore);
     }
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(featureName, lmScore));
     return features;
   }
 
@@ -191,7 +159,7 @@ public class NGramLanguageModelFeaturizer extends DerivationFeaturizer<IString, 
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
-    double lmScore = getScore(0, f.targetPhrase.size(), f.targetPhrase, null);
+    double lmScore = getScore(0, f.targetPhrase.size(), f.targetPhrase, null, null);
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(featureName, lmScore));
     return features;
