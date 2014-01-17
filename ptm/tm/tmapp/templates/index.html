@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}
+ -- {{ page_title }}
+{% endblock %}
+
+{% block user_static %}
+{% endblock %}
+
+{% block header %}
+Stanford Translation Study
+{% endblock%}
+
+{% block content %}
+
+<div><a href="/tm/demographic">Demographic Data Form</a></div>
+<div><a href="/tm/training">Training</a></div>
+<div><a href="/tm/translate">Translate</a></div>
+<div><a href="/tm/exit">Exit Questionnaire</a></div>
+
+<div><a href="/bye/">Logout</a></div>
+
+{% endblock %}

@@ -225,6 +225,11 @@ public class Phrasal {
   private int distortionLimit = 5;
 
   /**
+   * Maximum phrase table query size per span.
+   */
+  private int translationOptionLimit = 20;
+  
+  /**
    * DTU options
    * 
    * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
@@ -457,15 +462,15 @@ public class Phrasal {
 
     // Phrase table(s)
     String phraseTable;
-    if (config.get(TRANSLATION_TABLE_OPT).size() == 1) {
-      phraseTable = config.get(TRANSLATION_TABLE_OPT).get(0);
-    } else if (config.get(TRANSLATION_TABLE_OPT).size() == 4) {
+    int numPhraseFeatures = Integer.MAX_VALUE;
+    if (config.get(TRANSLATION_TABLE_OPT).size() <= 2) {
       List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
-      System.err
-          .printf(
-              "Ignoring Moses factor & phrase feature count information: %s, %s, %s%n",
-              ptOpts.get(0), ptOpts.get(1), ptOpts.get(2));
-      phraseTable = ptOpts.get(3);
+      phraseTable = ptOpts.get(0);
+      if (ptOpts.size() == 2) {
+        numPhraseFeatures = Integer.valueOf(ptOpts.get(1));
+        System.err.printf("Number of features for %s: %d%n", phraseTable, numPhraseFeatures);
+      }
+      
     } else {
       throw new RuntimeException("Unsupported configuration "
           + config.get(TRANSLATION_TABLE_OPT));
@@ -500,13 +505,18 @@ public class Phrasal {
       }
     }
 
-
+    // Unknown word policy
     if (config.containsKey(DROP_UNKNOWN_WORDS)) {
       dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
     }
-
-    String optionLimit = config.get(OPTION_LIMIT_OPT).get(0);
     System.err.printf("Phrase table: %s Unknown words policy: %s%n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
+
+    // Phrase table query size limit
+    if (config.containsKey(OPTION_LIMIT_OPT)) { 
+        this.translationOptionLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
+    }
+    String optionLimit = String.valueOf(this.translationOptionLimit);
+    System.err.println("Phrase table option limit: " + optionLimit);
 
     if (phraseTable.startsWith("bitext:")) {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
@@ -676,19 +686,19 @@ public class Phrasal {
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
             linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
-        makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel));
+        makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
+        makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
     } else {
       featurizer = FeaturizerFactory.factory(
           FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
           makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
               linearDistortion),
-          makePair(FeaturizerFactory.GAP_PARAMETER, gapType));
+          makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
+          makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
     }
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
-      Set<String> disabledFeaturizers = Generics.newHashSet();
-      for (String f : config.get(DISABLED_FEATURIZERS))
-        disabledFeaturizers.add(f);
+      Set<String> disabledFeaturizers = Generics.newHashSet(config.get(DISABLED_FEATURIZERS));
       featurizer.deleteFeaturizers(disabledFeaturizers);
     }
 
@@ -728,7 +738,7 @@ public class Phrasal {
         }
       }
       if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
-        weightVector.setCount(NGramLanguageModelFeaturizer.FEATURE_NAME,
+        weightVector.setCount(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME,
           Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
       }
       if (config.containsKey(DISTORTION_WT_OPT)) {
@@ -1199,56 +1209,8 @@ public class Phrasal {
   }
 
   /**
-   * Parse a Phrasal ini file.
-   *
-   * @param filename
-   * @throws IOException
-   */
-  public static Map<String, List<String>> readConfig(String filename)
-      throws IOException {
-    Map<String, List<String>> config = Generics.newHashMap();
-    LineNumberReader reader = IOTools.getReaderFromFile(filename);
-    for (String line; (line = reader.readLine()) != null;) {
-      line = line.trim().replaceAll("#.*$", "");
-      if (line.length() == 0)
-        continue;
-      if (line.charAt(0) != '[' || line.charAt(line.length() - 1) != ']') {
-        reader.close();
-        throw new RuntimeException(
-            String
-                .format(
-                    "Expected bracketing of option name by '[',']', line: %d label: %s",
-                    reader.getLineNumber(), line));
-      }
-      String nextArgLine = line;
-
-      while (nextArgLine != null) {
-        String key = line.substring(1, nextArgLine.length() - 1);
-        nextArgLine = null;
-        List<String> entries = new ArrayList<String>();
-        while ((line = reader.readLine()) != null) {
-          if (line.matches("^\\s*$"))
-            break;
-          if (line.startsWith("[")) {
-            nextArgLine = line;
-            break;
-          }
-          if (line.charAt(0) == '#')
-            break;
-          line = line.replaceAll("#.*$", "");
-          String[] fields = line.split("\\s+");
-          entries.addAll(Arrays.asList(fields));
-        }
-        if (!entries.isEmpty())
-          config.put(key, entries);
-      }
-    }
-    reader.close();
-    return config;
-  }
-
-  /**
    * Read a combination of config file and other command line arguments.
+   * Command-line arguments supercede those specified in the config file.
    *
    * @param options
    * @return
@@ -1261,11 +1223,12 @@ public class Phrasal {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
       if (CONFIG_FILE.equals(key)) {
-        configFile.putAll(readConfig(value));
+        configFile.putAll(IOTools.readConfigFile(value));
       } else {
         configArgs.put(key, Arrays.asList(value.split("\\s+")));
       }
     }
+    // Command-line args supercede the config file.
     Map<String, List<String>> configFinal = Generics.newHashMap();
     configFinal.putAll(configFile);
     configFinal.putAll(configArgs);
@@ -1279,7 +1242,7 @@ public class Phrasal {
    * @throws IOException
    */
   public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
-    Map<String, List<String>> config = Phrasal.readConfig(phrasalIniFile);
+    Map<String, List<String>> config = IOTools.readConfigFile(phrasalIniFile);
     return loadDecoder(config);
   }
 
@@ -1350,7 +1313,7 @@ public class Phrasal {
         });
 
     Map<String, List<String>> config = configFile == null ? readArgs(options) :
-      readConfig(configFile);
+      IOTools.readConfigFile(configFile);
     Phrasal p = Phrasal.loadDecoder(config);
     p.decode(System.in, true);
   }

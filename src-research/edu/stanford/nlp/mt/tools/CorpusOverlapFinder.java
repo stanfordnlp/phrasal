@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.train;
+package edu.stanford.nlp.mt.tools;
 
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.stats.OpenAddressCounter;

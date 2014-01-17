@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -10,9 +11,12 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Signed discriminative distortion bins. (see <code>ConcreteRule</code>)
+ * 
+ * TODO: getSignedBin() is incorrect. Replace with corrected DiscriminativeSignedDistortion2.
  * 
  * @author Spence Green
  *
@@ -20,6 +24,18 @@ import edu.stanford.nlp.util.Generics;
 public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "DDIST";
+  
+  private final boolean addDomainFeatures;
+  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
+  
+  public DiscriminativeSignedDistortion() {
+    this.addDomainFeatures = false;
+  }
+  
+  public DiscriminativeSignedDistortion(String...args) {
+    this.addDomainFeatures = args.length > 0;
+    this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+  }
   
   @Override
   public void initialize(int sourceInputId,
@@ -31,13 +47,30 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
     int distortion = f.prior == null ? f.sourcePosition :
       f.prior.sourcePosition + f.prior.sourcePhrase.size() - f.sourcePosition;
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
+        sourceIdInfoMap.get(f.sourceInputId) : null;
+    final String genre = genreInfo == null ? null : genreInfo.first();
+    
     if (distortion < 0) {
-      features.add(new FeatureValue<String>(FEATURE_NAME + ":neg", 1.0));
+      String featureString = FEATURE_NAME + ":neg";
+      features.add(new FeatureValue<String>(featureString, 1.0));
+      if (genre != null) {
+        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+      }
+
     } else if (distortion > 0) {
-      features.add(new FeatureValue<String>(FEATURE_NAME + ":pos", 1.0));
+      String featureString = FEATURE_NAME + ":pos";
+      features.add(new FeatureValue<String>(featureString, 1.0));
+      if (genre != null) {
+        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+      }
     }
     distortion = getSignedBin(distortion);
-    features.add(new FeatureValue<String>(String.format("%s:%d", FEATURE_NAME, distortion), 1.0));
+    String featureString = String.format("%s:%d", FEATURE_NAME, distortion);
+    features.add(new FeatureValue<String>(featureString, 1.0));
+    if (genre != null) {
+      features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+    }
     f.setState(this, new DistortionState(distortion));
     return features;
   }

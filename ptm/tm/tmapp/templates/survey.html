@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}
+ -- {{ page_name }}
+{% endblock %}
+
+{% block user_static %}
+{% load compressed %}
+{% compressed_css 'tmapp_css' %}
+{% endblock %}
+
+{% block header %}
+{{ form_title }}
+{% endblock%}
+
+{% block content %}
+<div id="form-instructions">
+{{ form_instructions }}
+</div>
+
+<div id="form-wrapper">
+<form action="{{ form_action }}" method="post" name="form-survey" id="form-survey">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Submit" name="form-submit" id="form-submit" />
+</form>
+</div>
+{% endblock %}

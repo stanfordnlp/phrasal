@@ -10,7 +10,6 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Pair;
@@ -22,14 +21,14 @@ import edu.stanford.nlp.util.Pair;
  * @author Spence Green
  *
  */
-public class SentencelevelMetricVariance {
+public class SentencelevelBLEUVariance {
 
-  private static final boolean NAKOV_EXTENSION = true;
+  private static final boolean NAKOV_EXTENSION = false;
   private static final int ORDER = 4;
   
   public static void main(String[] args) throws IOException {
     if (args.length < 3) {
-      System.err.printf("Usage: java %s name source ref [ref] < translations%n", SentencelevelMetricVariance.class.getName());
+      System.err.printf("Usage: java %s name source ref [ref] < translations%n", SentencelevelBLEUVariance.class.getName());
       System.exit(-1);
     }
     

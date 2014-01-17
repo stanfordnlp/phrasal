@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html class="no-js" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    {% load compressed %}
+    {% compressed_css 'tm_css' %}
+    {% block user_static %}
+    {% endblock %}
+    <title>Stanford Translation Study{% block title %}{% endblock %}</title>
+</head>
+
+<body style="padding: 0; margin: 0; background: #eee;">
+	<div class="CONTENT" style="margin: 20px 20px 200px 20px">
+		<div style="padding: 25px 30px; border-bottom: 1px solid #ccc">
+			<div class="HEADER" style="font-size: 16pt; font-weight: bold">
+			{% block header %}
+			{% endblock %}
+			</div>
+		</div>
+		<div style="padding: 20px 30px 75px 30px">
+			<div id="wrapper1">	
+				<div id="wrapper2">	
+					<div id="maincol">				
+						<div id="leftcol">
+						{% block leftcol %}
+						{% endblock %}
+						</div>
+						<div id="rightcol">
+						{% block rightcol %}
+						{% endblock %}
+						</div>
+						<div id="centercol">
+						{% block content %}
+						{% endblock %}
+						</div>
+					</div>				
+					<div id="footer">
+					{% block footer %}
+					{% endblock %}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

@@ -49,9 +49,6 @@ while(<STDIN>) {
     if(s/DEVID/$newid/g || s/$oldid/$newid/g) {
       if($field eq 'additional-featurizers') {
         /\((.*)\)/;
-        foreach my $el (split(/,/,$1)) {
-          warn "WARNING: not a file name or missing file: $el\n" if(! -f $el);
-        }
       } else {
         /(\S+)$/;
         warn "WARNING: missing file: $1\n" if(! -f $1);

@@ -1,6 +1,5 @@
-public class NGramLanguageModelFeaturizer implements
-    DerivationFeaturizer<IString, String>,
-    RuleIsolationScoreFeaturizer<IString, String> {
+public class NGramLanguageModelFeaturizer extends
+  DerivationFeaturizer<IString, String> {
 
   @Override
   public List<FeatureValue<String>> featurize(

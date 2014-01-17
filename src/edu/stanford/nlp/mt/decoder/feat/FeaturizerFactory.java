@@ -30,6 +30,7 @@ public final class FeaturizerFactory {
   public static final String ARPA_LM_PARAMETER = "arpalm";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
   public static final String GAP_PARAMETER = "gap";
+  public static final String NUM_PHRASE_FEATURES = "numphrasefeatures";
 
   public enum GapType {
     none, source, target, both
@@ -71,6 +72,9 @@ public final class FeaturizerFactory {
     if (gapType == GapType.target || gapType == GapType.both)
       gapFeaturizers.add(new TargetGapFeaturizer());
 
+    int numPhraseFeatures = paramPairs.containsKey(NUM_PHRASE_FEATURES) ?
+        Integer.valueOf(paramPairs.get(NUM_PHRASE_FEATURES)) : Integer.MAX_VALUE;
+    
     // Model features
     if (featurizerName.equals(BASELINE_FEATURIZERS)) {
       if (!paramPairs.containsKey(ARPA_LM_PARAMETER)) {
@@ -95,7 +99,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
+      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>(numPhraseFeatures);
       baselineFeaturizers.add(phraseTableScoresFeaturizer);
 
       // Linear distortion
@@ -118,7 +122,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>();
+      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>(numPhraseFeatures);
       pharaohFeaturizers.add(phraseTableScoresFeaturizer);
 
       // Linear distortion
