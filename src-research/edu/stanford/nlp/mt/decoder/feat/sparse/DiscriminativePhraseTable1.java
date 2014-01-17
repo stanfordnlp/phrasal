@@ -92,12 +92,12 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
         sbs.add(new StringBuilder());
       }
       if (DEBUG_OPT>0){
-        System.err.println("# phrase table");
+        System.err.print("# phrase table\n  src:");
       }
       // src
       for (IString token : f.sourcePhrase) {
         if (DEBUG_OPT>0){
-          System.err.print(token.toString() + " ");
+          System.err.print(" " + token.toString());
         }
         
         List<IString> tokens = sourceMap.getList(token);
@@ -108,7 +108,7 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
         }
       }
       if (DEBUG_OPT>0){
-        System.err.println();
+        System.err.print("\n  tgt:");
       }
       // delimiter
       for (int i = 0; i < numClasses; i++) {
@@ -118,7 +118,7 @@ public class DiscriminativePhraseTable1 implements RuleFeaturizer<IString, Strin
       boolean seenFirst = false;
       for (IString token : f.targetPhrase) {
         if (DEBUG_OPT>0){
-          System.err.print(token.toString() + " ");
+          System.err.print(" " + token.toString());
         }
         
         List<IString> tokens = targetMap.getList(token);

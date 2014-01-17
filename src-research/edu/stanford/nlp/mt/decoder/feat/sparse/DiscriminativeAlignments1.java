@@ -157,28 +157,16 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
         Set<IString> alignedSourceWords = new TreeSet<IString>();
         
         alignedSourceWords.add(srcWord);
-        if (DEBUG_OPT>0){
-          System.err.println("# alignment src " + srcWord + " : " + alignments);
-        }
         for (int tgtIndex : alignments) {
           alignedTargetWords.add(f.targetPhrase.get(tgtIndex));
-          if (DEBUG_OPT>0){
-            System.err.print("  " + tgtIndex + " " + f.targetPhrase.get(tgtIndex) + " :");
-          }
+          
           if (hasMultipleAlignments.get(tgtIndex)) {
             int[] srcIndices = alignment.t2s(tgtIndex);
             
             for (int sIndex : srcIndices) {
               IString srcToken = f.sourcePhrase.get(sIndex);
               alignedSourceWords.add(srcToken);
-              
-              if (DEBUG_OPT>0){
-                System.err.print(" " + sIndex + " " + srcToken.toString());
-              }
             }
-          }
-          if (DEBUG_OPT>0){
-            System.err.println();
           }
         }
         
@@ -190,9 +178,12 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
         }
         
         // src
+        if (DEBUG_OPT>0){
+          System.err.print("# alignment\n  src:");
+        }
         for (IString token : alignedSourceWords) {
           if (DEBUG_OPT>0){
-            System.err.print(token.toString() + " ");
+            System.err.print(" " + token.toString());
           }
           List<String> tokens = sourceRepresentation(token);
           for (int j = 0; j < numClasses; j++) {
@@ -202,7 +193,7 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
           }
         }
         if (DEBUG_OPT>0){
-          System.err.println();
+          System.err.print("\n  tgt:");
         }
         // delimiter
         for (int j = 0; j < numClasses; j++) {
@@ -212,7 +203,7 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
         boolean seenFirst = false;
         for (IString token : alignedTargetWords) {
           if (DEBUG_OPT>0){
-            System.err.print(token.toString() + " ");
+            System.err.print(" " + token.toString());
           }
           List<String> tokens = targetRepresentation(token);
           for (int j = 0; j < numClasses; j++) {

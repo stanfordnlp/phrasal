@@ -37,17 +37,17 @@ public class TargetUnigramClass1 implements RuleFeaturizer<IString, String> {
       // Thang Jan14: add individual class features
       List<IString> tokenClasses = targetMap.getList(token);
       if (DEBUG_OPT>0){
-        System.err.print(token + " " + tokenClasses);
+        System.err.println(token + " " + tokenClasses);
       }
       
       for (int i = 0; i < tokenClasses.size(); i++) {
         features.add(new FeatureValue<String>(String.format("%s%d:%s",FEATURE_NAME,i,tokenClasses.get(i).toString()), 1.0));
+        if (DEBUG_OPT>0){
+          System.err.println(String.format("%s%d:%s",FEATURE_NAME,i,tokenClasses.get(i).toString()));
+        }
       }
     }
     
-    if (DEBUG_OPT>0){
-      System.err.println();
-    }
     return features;
   }
 
