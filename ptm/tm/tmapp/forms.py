@@ -178,6 +178,7 @@ class TranslationInputForm(ModelForm):
             'order' : forms.HiddenInput,
             'training' : forms.HiddenInput,
             'text' : forms.HiddenInput,
-            'log' : forms.HiddenInput
+            'log' : forms.HiddenInput,
+            'valid' : forms.HiddenInput
         }
 

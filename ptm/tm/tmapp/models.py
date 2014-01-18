@@ -92,6 +92,8 @@ class TranslationSession(models.Model):
     complete = models.BooleanField(default=False,editable=False)
 
     training = models.BooleanField(default=False)
+
+    valid = models.BooleanField(default=True)
     
     # Target text (separated by a delimiter)
     text = models.TextField(null=True,blank=True)
