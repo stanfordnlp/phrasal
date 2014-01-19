@@ -93,7 +93,7 @@ public class PhraseTableNeuralScores {
    */
   public static void main(String[] args) throws Exception {
     if (args.length != 6) {
-      System.err.println("Usage:\n\tjava ...PhraseTableWithNeuralScores (inPhraseTableFile) "
+      System.err.println("Usage:\n\tjava ...PhraseTableNeuralScores (inPhraseTableFile) "
               + "(srcWordFile) (srcVectorFile) (tgtWordFile) (tgtVectorFile) (outPhraseTableFile)"); // (scoreOption) (operatorOption)");
       //System.err.println("\t\tscoreOption: 'all' -- sum vectors on each side and compute cosine similarity (default)"
       //    + ", 'align' -- sum scores of aligned word pairs");

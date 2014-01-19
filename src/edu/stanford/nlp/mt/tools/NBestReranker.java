@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.stats.Counter;
 
 /**
- * NBestListDecoder is a utility for finding the highest scoring 
+ * NBestReranker is a utility for finding the highest scoring 
  * hypotheses on a set of n-best lists given a different weight 
  * vector than what was used to produce the n-best lists.
  *  
