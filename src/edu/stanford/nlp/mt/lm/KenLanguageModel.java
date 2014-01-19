@@ -115,7 +115,11 @@ public class KenLanguageModel implements LanguageModel<IString> {
         int[] newTable = new int[IString.index.size()];
         System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
         for (int i = oldTable.length; i < newTable.length; ++i) {
-          newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
+          // Some ids can be skipped by ConcurrentHashIndex.
+          String str = IString.index.get(i);
+          if (str != null) {
+            newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
+          }
         }
         istringIdToKenLMId.set(newTable);
         return newTable[token.id];
