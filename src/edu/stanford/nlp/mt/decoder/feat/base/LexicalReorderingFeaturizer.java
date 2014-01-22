@@ -23,6 +23,7 @@ import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -46,7 +47,7 @@ public class LexicalReorderingFeaturizer extends
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
   private final boolean useAlignmentConstellations;
   private boolean useClasses;
-  private int countFeatureIndex = -1;
+  private final int countFeatureIndex;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
@@ -64,6 +65,7 @@ public class LexicalReorderingFeaturizer extends
     useAlignmentConstellations = false;
     useClasses = false;
     addDomainFeatures = false;
+    countFeatureIndex = -1;
   }
 
   /**
@@ -75,6 +77,7 @@ public class LexicalReorderingFeaturizer extends
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     Properties options = StringUtils.argsToProperties(args);
     this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
+    this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     // Which reordering classes to extract
     if (options.containsKey("classes")) {
       String[] typeStrings = options.getProperty("classes").split("-");
@@ -113,6 +116,7 @@ public class LexicalReorderingFeaturizer extends
     }
     discriminativeSet = null;
     addDomainFeatures = false;
+    countFeatureIndex = -1;
   }
   
   @Override
