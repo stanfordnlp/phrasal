@@ -13,6 +13,7 @@ mkdir $dir_name/corpora
 mkdir $dir_name/translate
 mkdir $dir_name/lm
 mkdir $dir_name/wordcls
+mkdir $dir_name/postproc
 mkdir $dir_name/corpora/bitext
 mkdir $dir_name/corpora/bitext_preproc
 mkdir $dir_name/corpora/mono
