@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -14,9 +15,10 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
- * Target boundary bigrams.
+ * Target rule boundary bigrams.
  * 
  * @author Spence Green
  *
@@ -28,7 +30,10 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
   private final TargetClassMap targetMap = TargetClassMap.getInstance();
   private final boolean addDomainFeatures;
   private Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
-  
+
+  /**
+   * Constructor.
+   */
   public TargetClassBigramBoundary() {
     this.addDomainFeatures = false;
   }
@@ -39,8 +44,11 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
    * @param args
    */
   public TargetClassBigramBoundary(String...args) {
-    addDomainFeatures = args.length > 0;
-    sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+    Properties options = StringUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
 
   @Override

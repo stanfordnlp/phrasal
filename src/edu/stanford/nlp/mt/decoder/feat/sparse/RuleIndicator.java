@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -12,6 +13,8 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.PropertiesUtils;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Indicator features for each rule in a derivation.
@@ -20,15 +23,16 @@ import edu.stanford.nlp.util.Pair;
  * @author Spence Green
  * 
  */
-public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String> {
+public class RuleIndicator implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "DPT";
 
-  private static final int LEXICAL_FEATURE_CUTOFF = 50;
+  private static final int DEFAULT_LEXICAL_CUTOFF = 50;
   
   private final boolean addLexicalizedRule;
   private final boolean addClassBasedRule;
   private final int countFeatureIndex;
+  private final int lexicalCutoff;
   private final boolean addDomainFeatures;
 
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
@@ -38,10 +42,11 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
   /**
    * Constructor.
    */
-  public DiscriminativePhraseTable() {
+  public RuleIndicator() {
     this.addLexicalizedRule = true;
     this.addClassBasedRule = false;
     this.countFeatureIndex = -1;
+    this.lexicalCutoff = DEFAULT_LEXICAL_CUTOFF;
     this.addDomainFeatures = false;
   }
 
@@ -50,16 +55,20 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
    * 
    * @param args
    */
-  public DiscriminativePhraseTable(String... args) {
-    this.addLexicalizedRule = args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
-    this.addClassBasedRule = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
-    this.countFeatureIndex = args.length > 2 ? Integer.parseInt(args[2]) : -1;
+  public RuleIndicator(String... args) {
+    Properties options = StringUtils.argsToProperties(args);
+    this.addLexicalizedRule = options.containsKey("addLexicalized");
+    this.addClassBasedRule = options.contains("addClassBased");
+    this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     if (addClassBasedRule) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.sourceIdInfoMap = args.length > 3 ? SparseFeatureUtils.loadGenreFile(args[3]) : null;
-    this.addDomainFeatures = this.sourceIdInfoMap != null;
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
+    this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
   }
 
   @Override
@@ -112,7 +121,7 @@ public class DiscriminativePhraseTable implements RuleFeaturizer<IString, String
       return false;
     }
     int count = (int) Math.round(Math.exp(rule.abstractRule.scores[countFeatureIndex]));
-    return count > LEXICAL_FEATURE_CUTOFF;
+    return count > lexicalCutoff;
   }
 
   @Override

@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -12,6 +13,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Signed discriminative distortion bins. (see <code>ConcreteRule</code>)
@@ -31,8 +33,11 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   }
   
   public DiscriminativeSignedDistortion(String...args) {
-    this.addDomainFeatures = args.length > 0;
-    this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+    Properties options = StringUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
   
   @Override

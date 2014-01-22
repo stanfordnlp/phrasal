@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -10,6 +11,7 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Target class unigram insertion.
@@ -35,8 +37,11 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public TargetUnigramClass(String...args) {
-    addDomainFeatures = args.length > 0;
-    sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+    Properties options = StringUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
   
   @Override
