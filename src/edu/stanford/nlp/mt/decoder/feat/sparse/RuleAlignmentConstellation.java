@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public class PhrasePairAlignmentConstellation implements
+public class RuleAlignmentConstellation implements
     RuleFeaturizer<IString, String> {
 
   public final String FEATURE_PREFIX = "ACON:";

@@ -18,18 +18,18 @@ import edu.stanford.nlp.util.StringUtils;
  * @author Spence Green
  *
  */
-public class TargetRuleDimension implements RuleFeaturizer<IString, String> {
+public class RuleTargetDimension implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "TGTD";
   
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
-  public TargetRuleDimension() {
+  public RuleTargetDimension() {
     this.addDomainFeatures = false;
   }
   
-  public TargetRuleDimension(String...args) {
+  public RuleTargetDimension(String...args) {
     Properties options = StringUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
     if (addDomainFeatures) {

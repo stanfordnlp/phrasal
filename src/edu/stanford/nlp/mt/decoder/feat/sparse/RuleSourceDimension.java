@@ -18,18 +18,18 @@ import edu.stanford.nlp.util.StringUtils;
  * @author Spence Green
  *
  */
-public class SourceRuleDimension implements RuleFeaturizer<IString, String> {
+public class RuleSourceDimension implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "SRCD";
   
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
-  public SourceRuleDimension() { 
+  public RuleSourceDimension() { 
     this.addDomainFeatures = false;
   }
   
-  public SourceRuleDimension(String...args) {
+  public RuleSourceDimension(String...args) {
     Properties options = StringUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
     if (addDomainFeatures) {
