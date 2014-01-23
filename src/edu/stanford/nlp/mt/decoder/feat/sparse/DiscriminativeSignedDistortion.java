@@ -67,7 +67,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
         features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
-    distortion = getSignedBin(distortion);
+//    distortion = getSignedBin(distortion);
     String featureString = String.format("%s:%d", FEATURE_NAME, distortion);
     features.add(new FeatureValue<String>(featureString, 1.0));
     if (genre != null) {
