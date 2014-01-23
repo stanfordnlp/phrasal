@@ -101,49 +101,49 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
-        sourceIdInfoMap.get(f.sourceInputId) : null;
-        final String genre = genreInfo == null ? null : genreInfo.first();
+    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) 
+        ? sourceIdInfoMap.get(f.sourceInputId) : null;
+    final String genre = genreInfo == null ? null : genreInfo.first();
 
-        // Retrieve context
-        RuleContextState priorState = f.prior == null ? null : (RuleContextState) f.prior.getState(this);
-        Sequence<IString> context = priorState == null ? START_SEQUENCE : priorState.state;
-        String contextStr = context.toString("-");
+    // Retrieve context
+    RuleContextState priorState = f.prior == null ? null : (RuleContextState) f.prior.getState(this);
+    Sequence<IString> context = priorState == null ? START_SEQUENCE : priorState.state;
+    String contextStr = context.toString("-");
 
-        if (addLexicalizedRule && aboveThreshold(f.rule)) {
-          String sourcePhrase = f.sourcePhrase.toString("-");
-          String targetPhrase = f.targetPhrase.toString("-");
-          String featureString = FEATURE_NAME + ":" + String.format("%s|%s>%s", contextStr, sourcePhrase, targetPhrase);
-          features.add(new FeatureValue<String>(featureString, 1.0));
-          if (genre != null) {
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
-        }
-        if (addClassBasedRule) {
-          StringBuilder sb = new StringBuilder();
-          for (IString token : f.sourcePhrase) {
-            if (sb.length() > 0) sb.append("-");
-            String tokenClass = sourceMap.get(token).toString();
-            sb.append(tokenClass);
-          }
-          sb.append(">");
-          boolean seenFirst = false;
-          for (IString token : f.targetPhrase) {
-            if (seenFirst) sb.append("-");
-            String tokenClass = targetMap.get(token).toString();
-            sb.append(tokenClass);
-            seenFirst = true;
-          }
-          String featureString = String.format("%s:%s|%s",FEATURE_NAME, contextStr, sb.toString());
-          features.add(new FeatureValue<String>(featureString, 1.0));
-          if (genre != null) {
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
-        }
+    if (addLexicalizedRule && aboveThreshold(f.rule)) {
+      String sourcePhrase = f.sourcePhrase.toString("-");
+      String targetPhrase = f.targetPhrase.toString("-");
+      String featureString = FEATURE_NAME + ":" + String.format("%s|%s>%s", contextStr, sourcePhrase, targetPhrase);
+      features.add(new FeatureValue<String>(featureString, 1.0));
+      if (genre != null) {
+        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+      }
+    }
+    if (addClassBasedRule) {
+      StringBuilder sb = new StringBuilder();
+      for (IString token : f.sourcePhrase) {
+        if (sb.length() > 0) sb.append("-");
+        String tokenClass = sourceMap.get(token).toString();
+        sb.append(tokenClass);
+      }
+      sb.append(">");
+      boolean seenFirst = false;
+      for (IString token : f.targetPhrase) {
+        if (seenFirst) sb.append("-");
+        String tokenClass = targetMap.get(token).toString();
+        sb.append(tokenClass);
+        seenFirst = true;
+      }
+      String featureString = String.format("%s:%s|%s",FEATURE_NAME, contextStr, sb.toString());
+      features.add(new FeatureValue<String>(featureString, 1.0));
+      if (genre != null) {
+        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
+      }
+    }
 
-        f.setState(this, new RuleContextState(makeContext(f)));
+    f.setState(this, new RuleContextState(makeContext(f)));
 
-        return features;
+    return features;
   }
 
   private Sequence<IString> makeContext(Featurizable<IString, String> f) {
@@ -152,9 +152,10 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
       return sourceClassSequence.subsequence(srcSize-CONTEXT_LENGTH, srcSize);
 
     } else {
+      // Walk backwards through the translation history
       CoverageSet coverage = new CoverageSet();
       for (; f != null; f = f.prior) {
-        for (int i = 0, limit = f.sourcePhrase.size(); i < limit; ++i) {
+        for (int i = f.sourcePhrase.size()-1; i >= 0; --i) {
           coverage.set(f.sourcePosition+i);
           if (coverage.cardinality() == CONTEXT_LENGTH) {
             return sourceClassSequence.subsequence(coverage);
