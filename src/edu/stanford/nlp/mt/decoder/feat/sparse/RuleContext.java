@@ -74,7 +74,7 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
   public RuleContext(String... args) {
     Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addLexicalizedRule = options.containsKey("addLexicalized");
-    this.addClassBasedRule = options.contains("addClassBased");
+    this.addClassBasedRule = options.containsKey("addClassBased");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     sourceMap = SourceClassMap.getInstance();
     targetMap = addClassBasedRule ? TargetClassMap.getInstance() : null;
