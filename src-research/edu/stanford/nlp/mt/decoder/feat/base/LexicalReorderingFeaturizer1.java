@@ -51,7 +51,7 @@ public class LexicalReorderingFeaturizer1 extends
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
 
-  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
   
   /**
    * Constructor for discriminative lexicalized reordering.

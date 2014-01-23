@@ -20,7 +20,7 @@ public class TargetUnigramClass1 implements RuleFeaturizer<IString, String> {
   private static final String FEATURE_NAME = "TGTCLS";
 
   private final TargetClassMap targetMap = TargetClassMap.getInstance();
-  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
   
   @Override
   public void initialize() {

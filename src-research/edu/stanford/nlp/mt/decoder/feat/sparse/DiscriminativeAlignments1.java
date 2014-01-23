@@ -39,7 +39,7 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
-  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
   
   /**
    * Constructor.

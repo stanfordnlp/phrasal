@@ -4,7 +4,9 @@
 # at the top of this script.
 # 
 # Author: Spence Green
-# Change: Thang Nov13 -- add verbose option.
+# Change: 
+#   Thang Luong: Nov13 -- support verbose option.
+#   Thang Luong: Jan14 -- add sanity check if all source sentences have been translated.
 #
 if [[ $# -ne 4 && $# -ne 5 ]]; then
     echo "Usage: `basename $0` var_file steps ini_file sys_name [verbose]"
@@ -159,15 +161,32 @@ function decode {
     fi
     
     execute "java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
-	"$RUNNAME".ini \
-	< $DECODE_FILE > "$RUNNAME".trans 2> logs/$RUNNAME.log"
+	$RUNNAME.ini \
+	< $DECODE_FILE > $RUNNAME.trans 2> logs/$RUNNAME.log"
 }
 
 #
 # Evaluate the target output
 #
 function evaluate {
-    cat "$RUNNAME".trans | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
+    # Thang Jan14: sanity check if we have completed translating all source sentences.
+    numTranslatedSents=`cat $RUNNAME.trans | wc -l`
+    if [ -f "$REFDIR/$DECODE_SET_NAME/ref" ]; then
+      numRefSents=`cat $REFDIR/$DECODE_SET_NAME/ref | wc -l`
+    else
+      numRefSents=`cat $REFDIR/$DECODE_SET_NAME/ref1 | wc -l`
+    fi
+    if [ $VERBOSE -eq 1 ]; then
+      echo "# numTranslatedSents $numTranslatedSents"
+      echo "# numRefSents $numRefSents"
+    fi
+    if [ $numTranslatedSents -ne $numRefSents ]; then
+      echo "Error: numTranslatedSents $numTranslatedSents != numRefSents $numRefSents" > $DECODE_SET_NAME.BLEU
+      echo "Error: numTranslatedSents $numTranslatedSents != numRefSents $numRefSents"
+      exit
+    fi
+    
+    execute "cat $RUNNAME.trans | bleu $REFDIR/$DECODE_SET_NAME/ref* > $RUNNAME.bleu"
 
     # Aggregate results from many decoding runs
     \grep -P "^BLEU" "$RUNNAME".bleu | awk '{ print $3 }' | tr -d ',' | echo $(cat -) "$TUNERUNNAME" >> "$DECODE_SET_NAME".BLEU

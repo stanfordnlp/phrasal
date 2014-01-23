@@ -34,7 +34,7 @@ public class TargetClassBigramBoundary1 extends DerivationFeaturizer<IString, St
   private final int numMappings = targetMap.getNumMappings();
   private final List<IString> startEdges;
   private final List<IString> endEdges;
-  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
   
   public TargetClassBigramBoundary1() {
     this.addDomainFeatures = false;
