@@ -21,7 +21,6 @@ import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Rule identity with appended source, class-based translation history.
@@ -73,7 +72,7 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
    * @param args
    */
   public RuleContext(String... args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addLexicalizedRule = options.containsKey("addLexicalized");
     this.addClassBasedRule = options.contains("addClassBased");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
