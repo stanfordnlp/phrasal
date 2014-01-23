@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Indicator features for aligned and unaligned tokens in phrase pairs.
@@ -57,7 +56,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
    * @param args
    */
   public DiscriminativeAlignments(String...args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addSourceDeletions = options.containsKey("sourceDeletionFeature");
     this.addTargetInsertions = options.containsKey("targetInsertionFeature");
     this.useClasses = options.containsKey("useClasses");

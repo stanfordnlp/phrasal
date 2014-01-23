@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Indicator feature for rules that were extracted from selected sentences in
@@ -41,7 +40,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
     if (args.length < 1) {
       throw new RuntimeException("Specify the phrase table feature index of the in-domain indicator feature");
     }
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
     this.addAdjacentRuleFeature = options.containsKey("adjacentRuleFeature");
     this.addDomainSpecificFeatures = options.containsKey("domainSpecificFeature");

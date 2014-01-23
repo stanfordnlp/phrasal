@@ -14,7 +14,6 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * A measure of how much punctuation should be translated.
@@ -36,7 +35,7 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
   }
   
   public PunctuationDifference(String...args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
     if (addDomainFeatures) {
       sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));

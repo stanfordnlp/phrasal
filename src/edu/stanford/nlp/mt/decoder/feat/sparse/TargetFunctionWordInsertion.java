@@ -20,7 +20,6 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Single dense feature count of target function words inserted
@@ -57,7 +56,7 @@ public class TargetFunctionWordInsertion extends DerivationFeaturizer<IString, S
    * @param args
    */
   public TargetFunctionWordInsertion(String...args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     if (args.length < 2) {
       throw new RuntimeException("Must specify source and target unigram counts files");
     }

@@ -14,7 +14,6 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Indicator features for each rule in a derivation.
@@ -56,7 +55,7 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public RuleIndicator(String... args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addLexicalizedRule = options.containsKey("addLexicalized");
     this.addClassBasedRule = options.contains("addClassBased");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);

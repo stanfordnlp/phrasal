@@ -11,7 +11,6 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Target class unigram insertion.
@@ -37,7 +36,7 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public TargetUnigramClass(String...args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
     if (addDomainFeatures) {
       sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));

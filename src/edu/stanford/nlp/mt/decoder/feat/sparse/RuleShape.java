@@ -10,7 +10,6 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Shape of the translation rule.
@@ -38,7 +37,7 @@ public class RuleShape implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public RuleShape(String...args) {
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
     if (addDomainFeatures) {
       sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
