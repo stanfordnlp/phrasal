@@ -23,7 +23,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     HasWord, Comparable<IString> {
   private static final long serialVersionUID = 2718L;
 
-  public static final Index<String> index = new ConcurrentHashIndex<String>();
+  public static final Index<String> index = new ConcurrentHashIndex<String>(100000);
 
   public final int id;
 
