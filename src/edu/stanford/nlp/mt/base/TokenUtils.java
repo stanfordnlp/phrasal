@@ -1,5 +1,8 @@
 package edu.stanford.nlp.mt.base;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import edu.stanford.nlp.util.Characters;
 
 /**
@@ -53,6 +56,22 @@ public final class TokenUtils {
     return sb.toString();
   }
 
+  /**
+   * Returns true if the input token is a URL, and false otherwise.
+   * 
+   * @param token
+   * @return
+   */
+  @SuppressWarnings("unused")
+  public static boolean isURL(String token) {
+    try {
+      URL url = new URL(token);
+      return true;
+    } catch (MalformedURLException e) {
+      return false;
+    }
+  }
+  
   /**
    * Returns true if the token consists entirely of punctuation, and false
    * otherwise.

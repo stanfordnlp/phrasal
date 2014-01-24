@@ -34,7 +34,13 @@
       {{ form.as_p }}
       <input type="submit" value="{{ form_button_text }}" name="form-tgt-submit" id="form-tgt-submit" />
     </form>
-  <div>
+    {% if training %}
+    <form action="/tm/" method="post" name="form-training" id="form-training">
+      {% csrf_token %}
+      <p><input type="submit" value="Quit training. I'm ready to start the experiment" name="form-train-submit" id="form-train-submit" /></p>
+    </form>
+    {% endif %}
+  </div>
 </div>
 <div class="ExperimentUI">Experiment will end in <span class="ExperimentTimeRemaining"></span> without continued translations.</div>
 </body>
