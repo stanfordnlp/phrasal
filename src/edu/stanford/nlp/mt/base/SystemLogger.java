@@ -22,8 +22,8 @@ import edu.stanford.nlp.util.Generics;
  */
 public final class SystemLogger {
 
-  // TODO(spenceg): Add more logs, at least "Online" and "General"
-  public static enum LogName {SERVICE, WORD_CLASS};
+  // Names of various logs
+  public static enum LogName {SERVICE, WORD_CLASS, ONLINE};
   
   private SystemLogger() {}
   
@@ -33,14 +33,17 @@ public final class SystemLogger {
   private static boolean isConsoleDisabled = false;
   private static boolean shutdownHookAdded = false;
   
-  // Should be set by a main() method
-  public static Level logLevel = Level.WARNING;
+  private static Level logLevel = Level.WARNING;
+  public static Level getLevel() { return SystemLogger.logLevel; }
+  public static synchronized void setLevel(Level level) { logLevel = level; }
   
   // Default prefix of the logger filename. Changing this has no
   // effect after a call to attach().
-  public static String prefix = SystemLogger.now();
+  private static String prefix = SystemLogger.now();
+  public static String getPrefix() { return SystemLogger.prefix; } 
+  public static synchronized void setPrefix(String prefix) { SystemLogger.prefix = prefix; }
   
-  public static String now() {
+  private static String now() {
     DateFormat df = new SimpleDateFormat("MM-dd-yyyy-HH:mm:ss");
     Date today = Calendar.getInstance().getTime();        
     return df.format(today);

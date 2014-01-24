@@ -42,22 +42,29 @@ public abstract class AbstractWordClassMap {
       reader.close();
 
       // Setup the unknown word class
-      if (! (wordToClass.containsKey(TokenUtils.UNK_TOKEN) && wordToClass.get(TokenUtils.UNK_TOKEN).size() == numMappings+1)) {
+      if (! wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
         System.err.printf("%s: WARNING Class map does not specify an <unk> encoding: %s%n",
             this.getClass().getName(), filename);
-        if ( ! wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
-          wordToClass.put(TokenUtils.UNK_TOKEN, new ArrayList<IString>());
-        }
+        wordToClass.put(TokenUtils.UNK_TOKEN, new ArrayList<IString>());
         wordToClass.get(TokenUtils.UNK_TOKEN).add(DEFAULT_UNK_CLASS);
       }
+      
+      // Pad the word-to-class mapping since the keyset is the union of
+      // all vocabularies
+      for (IString word : wordToClass.keySet()) {
+        if (wordToClass.get(word).size() != numMappings) {
+          wordToClass.get(word).add(TokenUtils.UNK_TOKEN);
+        }
+      }
+      
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   private List<IString> newMappingList() {
-    return numMappings == 0 ? new ArrayList<IString>() : 
-      new ArrayList<IString>(wordToClass.get(TokenUtils.UNK_TOKEN).subList(0, numMappings));
+    return numMappings == 1 ? new ArrayList<IString>() : 
+      new ArrayList<IString>(wordToClass.get(TokenUtils.UNK_TOKEN).subList(0, numMappings-1));
   }
 
   /**
@@ -66,8 +73,8 @@ public abstract class AbstractWordClassMap {
    * @param filename
    */
   public void load(String filename) {
-    loadClassFile(filename);
     ++numMappings;
+    loadClassFile(filename);
   }
 
   /**

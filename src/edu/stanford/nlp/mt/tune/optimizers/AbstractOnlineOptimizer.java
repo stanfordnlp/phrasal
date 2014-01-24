@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineTuner;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -79,7 +81,7 @@ abstract public class AbstractOnlineOptimizer implements
       // Setup the logger
       logger = Logger.getLogger(AbstractOnlineOptimizer.class
             .getCanonicalName());
-      OnlineTuner.attach(logger);
+      SystemLogger.attach(logger, LogName.ONLINE);
       System.err.printf("AbstractOnlineOptimizer\n");
       System.err.printf("\ttuneSetSize: %d\n", tuneSetSize);
       System.err.printf("\tlearningRate: %e\n", learningRate);

@@ -71,7 +71,7 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
       List<Sequence<IString>> references, double[] referenceWeights,
       SentenceLevelMetric<IString, String> scoreMetric) {
     assert weights != null;
-    assert translations.size() > 0;
+    assert translations.size() > 0 : "No translations for source id: " + String.valueOf(sourceId);
     assert references.size() > 0;
     assert scoreMetric != null;
     
