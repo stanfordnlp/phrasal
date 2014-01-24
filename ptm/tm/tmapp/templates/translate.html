@@ -14,10 +14,7 @@
 				"sourceLang" : "{{ conf.src_language }}",
 				"targetLang" : "{{ conf.tgt_language }}"
 			});
-			dm = new DatasetManager();
-			dm.on( "change:datasetURL", function() {
-				ptm.load( dm.get( "datasetURL" ) );
-			});
+			ptm.load();
 		});
 		var prepareSubmission = function() {
 			var userResponses = ptm.getUserResponses();

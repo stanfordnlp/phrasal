@@ -17,8 +17,8 @@ TEMPLATE_DEBUG = True
 #
 # TODO: Point to server checkout of the UI repo
 #
-UI_DIR = '/home/rayder441/sandbox/translate/'
-#UI_DIR = '/u/jcchuang/workspace/TranslateOnGithub/'
+#UI_DIR = '/home/rayder441/sandbox/translate/'
+UI_DIR = '/u/jcchuang/workspace/TranslateUI_Github/'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -154,7 +154,6 @@ PIPELINE_JS = {
             'js/jquery.js',
             'js/underscore.js',
             'js/backbone.js',
-            'js/DatasetManager.js',
             'js/QueryString.js',
             'js/ExperimentUI.js',
             'js/TranslateServer.js',
