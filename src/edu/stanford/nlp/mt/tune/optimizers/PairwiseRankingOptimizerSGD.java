@@ -259,7 +259,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
     assert weights != null;
     assert sourceId >= 0;
-    assert translations.size() > 0;
+    assert translations.size() > 0 : "No translations for source id: " + String.valueOf(sourceId);
     assert references.size() > 0;
     assert scoreMetric != null;
 
@@ -290,7 +290,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
     assert weights != null;
     assert sourceIds != null;
-    assert translations.size() > 0;
+    assert translations.size() > 0 : "No translations for source ids: " + Arrays.toString(sourceIds);
     assert references.size() > 0;
     assert scoreMetric != null;
 
