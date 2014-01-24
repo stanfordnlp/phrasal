@@ -15,8 +15,9 @@ import java.util.logging.Logger;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
-import edu.stanford.nlp.mt.tune.OnlineTuner;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -116,7 +117,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
     // Setup the logger
     logger = Logger.getLogger(PairwiseRankingOptimizerSGD.class.getCanonicalName());
-    OnlineTuner.attach(logger);
+    SystemLogger.attach(logger, LogName.ONLINE);
   }
 
   /**
