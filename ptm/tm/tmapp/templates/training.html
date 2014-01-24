@@ -16,49 +16,59 @@
 {% endblock%}
 
 {% block content %}
-<div id="main-content" style="font-size: 1.15em"><form action="{{ form_action }}" method="post" name="form-training" id="form-training">
-	
-<h3>Translation Interface Experiment</h3>
+<div id="main-content" style="font-size: 1.15em">
 
-<p>Thank you for helping us with this experiment! We are a group of researchers in the <a href="http://cs.stanford.edu/" target="_blank">Computer Science Department at Stanford University</a> working on translation interfaces. Our goal is to how study how translators, like you, use machine-assisted translation systems.</p>
+{% if step == 0 %}
+<p>This module will test your browser, describe the experiment, and present the translation workbench. Then you'll have the opportunity to practice by translating some sample documents before the experiment starts.</p>
 
-<p><b>Privacy</b>: During the study, we will record your responses (i.e., translations), keystrokes, mouse actions, and browser settings. We will also ask you to fill out two surveys on your demographic information and about your experience with this study. We will not collect any other personal information.</p>
+<div>
+<form action="/tm/training/{{ step }}/">
+    <input type="submit" value="{{ form_button_text }}">
+</form>
+</div>
 
-<p><b>Participation</b>: Your participation in this experiment is voluntary. You may stop at any time without any penalty. However, you will only be paid for a completed study. Full payment is contingent on finishing the translation tasks in continuous sessions.</p>
+{% elif step == 1 %}
+<h3>Browser Check</h3>
 
-<p>If you have any questions or feedback, please contact the investigators: <a href="mailto:spenceg@stanford.edu">Spence Green</a>, <a href="mailto:jcchuang@cs.washington.edu">Jason Chuang</a>, <a href="mailto:manning@stanford.edu">Christopher Manning</a>, or <a href="mailto:jheer@uw.edu">Jeffrey Heer</a></p>
-
-<p>By clicking below, you understand that your participation in this study is voluntary, and agree to the collection of your survey and study data.</p>
-
-<p>[I Agree]</p>
-
-<h3>Demographic Survey</h3>
-
-<p>(Insert survey after the user has already consented to the study.)</p>
-
-<p>(Let's stick the browser check into survey page)</p>
 <input type="hidden" name="BrowserLog" id="BrowserLog"></input>
 <div id="BrowserReport" style="padding: 0 10px; border: 1px solid #ccc; font-family: PT_Mono, monospace; font-size: 8pt; color: #333">
 	<p style="margin-bottom: 0"><b>Your browser is:</b></p>
 	<p style="margin-top: 0" id="BrowserUserAgent"></p>
+	<!--
 	<p style="margin-bottom: 0"><b>Your browser supports:</b></p>
 	<p style="margin-top: 0" id="BrowserSupport"></p>
 	<p style="margin-bottom: 0"><b>Your browser does not support:</b></p>
 	<p style="margin-top: 0" id="BrowserNoSupport"></p>
 	<p style="margin-bottom: 0"><b>Your browser passed the following tests:</b></p>
 	<p style="margin-top: 0" id="BrowserPass"></p>
+	-->
 	<p style="margin-bottom: 0"><b>Your browser did not pass the following tests:</b></p>
 	<p style="margin-top: 0" id="BrowserNoPass"></p>
 </div>
 
-<h3>Translation Speed &amp; Quality</h3>
+<p>If your browser fails any tests other than <b>touch</b>, then first ensure that your browser is the latest version of <a href="http://www.google.com/chrome/‎" target="_blank">Google Chrome</a>. If your browser still fails these checks, then contact the administrators before proceeding. <b>You will not be paid if your browser does not pass prior to starting the experiment.</b></p>
+<div>
+<form action="/tm/training/{{ step }}/">
+    <input type="submit" value="{{ form_button_text }}">
+</form>
+</div>
+
+{% elif step == 2 %}
+<h3>Experiment Goals: Translation Speed &amp; Quality</h3>
 
 <p>During the study, translate the documents as quickly and as accurately as you can.</p>
 
-<p><b>Speed</b>: Once you start working on a document, you <b>may not idle for longer than 3 minutes</b> within a single session. If you pause for 3 continuous minutes, your session will be automatically terminated. The payment for the equivalent number of words will be deducted from your final pay. Continuing to translate will reset the &ldquo;idel timer.&rdquo; Otherwise, you will not be penalized or rewarded for total amount of time you spend on a translation.</p> 
+<p><b>Speed</b>: Once you start working on a document, you <b>may not idle for longer than 3 minutes</b> within a single session. If you pause for 3 continuous minutes, your session will be automatically terminated. The payment for the equivalent number of words will be deducted from your final pay. Continuing to translate will reset the &ldquo;idle timer.&rdquo; Otherwise, you will not be penalized or rewarded for total amount of time you spend on a translation.</p> 
 
 <p><b>Quality</b>: Once you submit a translated document, you will not have another opportunity to edit it. Make sure that your translation is in good shape before you press the submit button! This job is the first in a series of studies that we are running over the next few months. You plan to invite good translators to join us for future studies.</p>
 
+<div>
+<form action="/tm/training/{{ step }}/">
+    <input type="submit" value="{{ form_button_text }}">
+</form>
+</div>
+
+{% elif step == 3 %}
 <h3>Overview of the Experiment</h3>
 
 <p>Our website will administer the translation job, which is organized into two modules separated by a break:</p>
@@ -73,6 +83,13 @@
 
 <p>We ask that you complete each translation module in a continuous session. Once you complete Module #1, the website will prompt you to take a break, and the idle timer will be disabled. Get up, go to the bathroom, get some coffee: whatever you need to stay productive. We expect that you'll take about 15 minutes, and no more than an hour. We require that you complete both modules on the same day.</p>
 
+<div>
+<form action="/tm/training/{{ step }}/">
+    <input type="submit" value="{{ form_button_text }}">
+</form>
+</div>
+
+{% elif step == 4 %}
 <h3>Job Description and Requirements</h3>
 
 <p>You will be asked to translate two sets of documents from <b>{{ src_lang }}</b> to <b>{{ tgt_lang }}</b>.</p>
@@ -102,6 +119,13 @@
 
 <p>We will check the translations you submit against those produced by various machine translation systems. We're curious to know how humans work (we already know a lot about machines!). Please help us by not using machine assistance.</p>
 
+<div>
+<form action="/tm/training/{{ step }}/">
+    <input type="submit" value="{{ form_button_text }}">
+</form>
+</div>
+
+{% elif step == 5 %}
 <h3>Translation Interface A (Post-edit)</h3>
 
 <p>The two translation modules have different interfaces. In this first module...</p>
@@ -117,20 +141,27 @@
 <h3>Interactive Interface Tutorial</h3>
 <p>The interactive interface offers both source and target aids. The suggestions update as you type. You may select suggestions via the keyboard and mouse. Please watch the following tutorial, which demonstrates the several translation aids.</p>
 
+<div>
+<form action="/tm/training/{{ step }}/">
+    <input type="submit" value="{{ form_button_text }}">
+</form>
+</div>
+
+{% elif step == 6 %}
 <strong>TODO: Screencast + YouTube link</strong>
 
-{% if show_ui_link %}
 <p>Once you have watched the tutorial, please translate a few documents using the new interface. Take your time. You will be paid for these translations, but the idle timer will not be present. We want you to develop some proficiency with the interface prior to starting the experiment. When you have translated a few documents, please click the link at the bottom of the interface to return to this page. Then you can start the experiment.</p>
 
-<p><a href="{{ ui_link }}">Go to training interface</a></p>
-
-{% else %}
-<div id="form-wrapper">
-{% csrf_token %}
-<p><input type="submit" value="{{ form_button_text }}" name="form-submit" id="form-submit" /></p>
+<div>
+<form action="{{ ui_link }}">
+  <input type="submit" value="{{ form_button_text }}">
+</form>
 </div>
+
 {% endif %}
 
-</form></div>
+</div>
 
 {% endblock %}
+
+
