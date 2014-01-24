@@ -138,7 +138,7 @@ abstract public class AbstractOnlineOptimizer implements
       Counter<String> batchGradient = new ClassicCounter<String>();
       
       for (int i = 0; i < sourceIds.length; i++) {
-         Counter<String> unregularizedGradient = getUnregularizedGradiant(weights, sources.get(i), sourceIds[i], translations.get(i), references.get(i), referenceWeights, scoreMetric);
+         Counter<String> unregularizedGradient = getUnregularizedGradient(weights, sources.get(i), sourceIds[i], translations.get(i), references.get(i), referenceWeights, scoreMetric);
          batchGradient.addAll(unregularizedGradient);      
       }
       
@@ -157,7 +157,7 @@ abstract public class AbstractOnlineOptimizer implements
       return batchGradient;
    }
 
-   abstract public Counter<String> getUnregularizedGradiant(Counter<String> weights,
+   abstract public Counter<String> getUnregularizedGradient(Counter<String> weights,
          Sequence<IString> source, int sourceId,
          List<RichTranslation<IString, String>> translations,
          List<Sequence<IString>> references, double[] referenceWeights,

@@ -59,8 +59,9 @@ public class FilterOOVByPhraseTable {
    * @param phraseGenerator
    * @return
    */
-  private static Sequence<IString> filterUnknownWords(Sequence<IString> source, 
+  private static Sequence<IString> filterUnknownWords(String input, 
       PhraseGenerator<IString,String> phraseGenerator) {
+    Sequence<IString> source = IStrings.tokenize(input);
     List<ConcreteRule<IString,String>> rules = phraseGenerator.getRules(source, null, -1, null);
 
     CoverageSet possibleCoverage = new CoverageSet();
@@ -102,10 +103,10 @@ public class FilterOOVByPhraseTable {
         new BufferedInputStream(System.in)));
     try {
       for (String line; (line = reader.readLine()) != null;) {
-        Sequence<IString> input = IStrings.tokenize(line.trim());
-        Sequence<IString> output = filterUnknownWords(input, phraseGenerator);
+        Sequence<IString> output = filterUnknownWords(line, phraseGenerator);
         if (output == null) {
-          System.out.println();
+          // Don't output blank lines
+          System.out.println(line.trim());
         } else {
           System.out.println(output.toString());
         }
