@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.Generics;
 public final class SystemLogger {
 
   // Names of various logs
-  public static enum LogName {SERVICE, WORD_CLASS, ONLINE};
+  public static enum LogName {SERVICE, WORD_CLASS, ONLINE, DECODE};
   
   private SystemLogger() {}
   

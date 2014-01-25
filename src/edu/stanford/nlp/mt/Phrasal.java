@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.logging.Level;
 
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
@@ -144,7 +145,9 @@ public class Phrasal {
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
       .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
       .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)").append(nl)
-      .append("  -").append(LOAD_SOURCE_CORENLP).append(" filename : Load source-side serialized CoreNLP annotations");
+      .append("  -").append(LOAD_SOURCE_CORENLP).append(" filename : Load source-side serialized CoreNLP annotations").append(nl)
+      .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
+      .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)");
     return sb.toString();
   }
 
@@ -186,6 +189,8 @@ public class Phrasal {
   private static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String PRINT_MODEL_SCORES = "print-model-scores";
   public static final String LOAD_SOURCE_CORENLP = "source-corenlp";
+  private static final String LOG_PREFIX = "log-prefix";
+  private static final String LOG_LEVEL = "log-level";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -207,7 +212,7 @@ public class Phrasal {
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOAD_SOURCE_CORENLP));
+        LOAD_SOURCE_CORENLP, LOG_PREFIX, LOG_LEVEL));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -331,6 +336,13 @@ public class Phrasal {
   
   // TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
   public static void initStaticMembers(Map<String, List<String>> config) {
+    SystemLogger.disableConsoleLogger();
+    if (config.containsKey(LOG_PREFIX)) {
+      SystemLogger.setPrefix(config.get(LOG_PREFIX).get(0));
+    }
+    if (config.containsKey(LOG_LEVEL)) {
+      SystemLogger.setLevel(Level.parse(config.get(LOG_LEVEL).get(0)));
+    }
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
     FlatPhraseTable.createIndex(withGaps);
@@ -834,11 +846,10 @@ public class Phrasal {
       searchAlgorithm = InfererBuilderFactory.DTU_DECODER;
     }
     System.err.printf("Search algorithm: %s%n", searchAlgorithm);
-    
+    // Configure InfererBuilder
+    AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
+        InfererBuilderFactory.factory(searchAlgorithm);
     for (int i = 0; i < numThreads; i++) {
-      // Configure InfererBuilder
-      AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
-          InfererBuilderFactory.factory(searchAlgorithm);
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
         infererBuilder

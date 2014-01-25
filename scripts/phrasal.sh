@@ -153,14 +153,9 @@ function make-ini-from-online-run {
 # Decode an input file given an ini file from a tuning run
 #
 function decode {
-    # Check to see if the user pre-processed the input file
-    if [ ! -e $DECODE_FILE ]; then
-	ln -s $DECODE_SET $DECODE_FILE
-    fi
-    
     execute "java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
-	"$RUNNAME".ini \
-	< $DECODE_FILE > "$RUNNAME".trans 2> logs/$RUNNAME.log"
+	-config-file $RUNNAME.ini -log-prefix $RUNNAME \
+	< $DECODE_FILE > $RUNNAME.trans 2> logs/$RUNNAME.log"
 }
 
 #

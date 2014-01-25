@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.stats.OpenAddressCounter;
 
 /**
  * Expected BLEU (Och 2003, Cherry and Foster 2012)
@@ -71,7 +70,6 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
       List<Sequence<IString>> references, double[] referenceWeights,
       SentenceLevelMetric<IString, String> scoreMetric) {
     assert weights != null;
-    assert translations.size() > 0 : "No translations for source id: " + String.valueOf(sourceId);
     assert references.size() > 0;
     assert scoreMetric != null;
     
@@ -106,7 +104,7 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
     }
     Counter<String> expectedLossExpectedF = new ClassicCounter<String>(expectedF);
     Counters.multiplyInPlace(expectedLossExpectedF, expectedLoss);
-    Counter<String> gradient = new OpenAddressCounter<String>(expectedLossF);
+    Counter<String> gradient = new ClassicCounter<String>(expectedLossF);
     Counters.subtractInPlace(gradient, expectedLossExpectedF);
 
     if (VERBOSE) {
