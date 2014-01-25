@@ -4,9 +4,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
+import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
@@ -34,6 +38,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
   private final int maxDistortion;
+  private final Logger logger;
 
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
     return new CubePruningDecoderBuilder<TK, FV>();
@@ -42,18 +47,21 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected CubePruningDecoder(CubePruningDecoderBuilder<TK, FV> builder) {
     super(builder);
     maxDistortion = builder.maxDistortion;
+    logger = Logger.getLogger(CubePruningDecoder.class.getSimpleName() + String.valueOf(builder.decoderId));
+    SystemLogger.attach(logger, LogName.DECODE);
 
     if (maxDistortion != -1) {
-      System.err.printf("Cube pruning decoder. Distortion limit: %d%n",
+      System.err.printf("Cube pruning decoder %d. Distortion limit: %d%n", builder.decoderId, 
           maxDistortion);
     } else {
-      System.err.println("Cube pruning decoder. No hard distortion limit.n");
+      System.err.printf("Cube pruning decoder %d. No hard distortion limit%n", builder.decoderId);
     }    
   }
 
   public static class CubePruningDecoderBuilder<TK, FV> extends
   AbstractBeamInfererBuilder<TK, FV> {
     int maxDistortion = DEFAULT_MAX_DISTORTION;
+    int decoderId = -1;
 
     @Override
     public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(int maxDistortion) {
@@ -67,6 +75,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     @Override
     public Inferer<TK, FV> build() {
+      decoderId++;
       return new CubePruningDecoder<TK, FV>(this);
     }
 
@@ -94,10 +103,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
+    final int originalLength = ruleList.size();
     ruleList = outputSpace.filter(ruleList);
-    System.err.printf(
-        "Translation options after reduction by output space constraint: %d%n",
-        ruleList.size());
+    logger.info(String.format("input %d: Rule list after pruning by output constraint: %d/%d",
+        sourceInputId, ruleList.size(), originalLength));
 
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
@@ -118,6 +127,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.longestSourcePhrase();
     int totalHypothesesGenerated = 1;
+    int numRecombined = 0;
+    int numPruned = 0;
     final long startTime = System.nanoTime();
     for (int i = 1; i <= sourceLength; i++) {
       // Prune old beams
@@ -145,7 +156,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         // Derivations can be null if the output space is constrained. This means that the derivation for this
         // item was not allowable and thus was not built. However, we need to maintain the consequent
         // so that we can generate successors.
-        if (item.derivation != null) {
+        if (item.derivation == null) {
+          ++numPruned;
+        } else {
           newBeam.put(item.derivation);
         }
         outputConstraintsEnabled = outputConstraintsEnabled || item.derivation == null;
@@ -164,28 +177,35 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
       beams.add(newBeam);
+      numRecombined += newBeam.recombined();
     }
-    System.err.printf("Decoding loop time: %.3f s%n", (System.nanoTime() - startTime) / 1e9);
-    System.err.printf("Total hypotheses generated: %d%n", totalHypothesesGenerated);
+    
+    // Debug statistics
+    final double elapsedTime = (System.nanoTime() - startTime) / 1e9;
+    logger.info(String.format("input %d: Decoding time: %.3fsec", sourceInputId, elapsedTime));
+    logger.info(String.format("input %d: #derivations generated: %d", sourceInputId, totalHypothesesGenerated));
+    logger.info(String.format("input %d: #recombined: %d", sourceInputId, numRecombined));
+    logger.info(String.format("input %d: #pruned by output constraint: %d", sourceInputId, numPruned));
 
     // Return the best beam, which should be the goal beam
     boolean isGoalBeam = true;
     Collections.reverse(beams);
     for (Beam<Derivation<TK,FV>> beam : beams) {
-      if (beam.size() != 0 && outputSpace
-          .allowableFinal(beam.iterator().next().featurizable)) {
-
-        // TODO(spenceg) This should be a more informative error message
-        if ( ! isGoalBeam) {
-          System.err.println("WARNING: Decoder failure for sourceId: " + Integer.toString(sourceInputId));
+      if (beam.size() != 0) {
+        Featurizable<TK,FV> bestHyp = beam.iterator().next().featurizable;
+        if (outputSpace.allowableFinal(bestHyp)) {
+          if ( ! isGoalBeam) {
+            final int coveredTokens = sourceLength - bestHyp.numUntranslatedSourceTokens;
+            logger.warning(String.format("input %d: DECODER FAILURE, but backed off to coverage %d/%d: ", sourceInputId,
+                coveredTokens, sourceLength));
+          }
+          return beam;
         }
-
-        return beam;
       }
       isGoalBeam = false;
     }
 
-    // Decoder failure
+    logger.warning(String.format("input %d: DECODER FAILURE", sourceInputId));
     return null;
   }
 

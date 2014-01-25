@@ -99,7 +99,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>(numPhraseFeatures);
+      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer(numPhraseFeatures);
       baselineFeaturizers.add(phraseTableScoresFeaturizer);
 
       // Linear distortion
@@ -122,7 +122,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer<IString>(numPhraseFeatures);
+      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer(numPhraseFeatures);
       pharaohFeaturizers.add(phraseTableScoresFeaturizer);
 
       // Linear distortion
