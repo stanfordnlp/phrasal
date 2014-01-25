@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -116,10 +114,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
         System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
         for (int i = oldTable.length; i < newTable.length; ++i) {
           // Some ids can be skipped by ConcurrentHashIndex.
-          String str = IString.index.get(i);
-          if (str != null) {
-            newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
-          }
+          newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
         }
         istringIdToKenLMId.set(newTable);
         return newTable[token.id];
