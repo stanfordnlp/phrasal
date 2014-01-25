@@ -62,7 +62,7 @@ template <class Model> class Wrap : public WrapAbstract {
     explicit Wrap(const char *name) : back_(name) {}
 
     lm::WordIndex Index(const char *word) const {
-      return back_.GetVocabulary().Index(word);
+      return back_.GetVocabulary().Index(StringPiece(word));
     }
 
     jlong Query(const lm::WordIndex *context_begin, const lm::WordIndex *context_end, lm::WordIndex predict) const {
