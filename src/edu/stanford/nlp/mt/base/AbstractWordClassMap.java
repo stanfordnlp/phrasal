@@ -76,6 +76,11 @@ public abstract class AbstractWordClassMap {
     ++numMappings;
     loadClassFile(filename);
   }
+  
+  /**
+   * Return the number of loaded mappings.
+   */
+  public int getNumMappings() { return numMappings; }
 
   /**
    * Map the input word to a word class.

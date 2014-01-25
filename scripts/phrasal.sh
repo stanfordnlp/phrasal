@@ -4,7 +4,6 @@
 # at the top of this script.
 # 
 # Author: Spence Green
-# Change: Thang Nov13 -- add verbose option.
 #
 if [[ $# -ne 4 && $# -ne 5 ]]; then
     echo "Usage: `basename $0` var_file steps ini_file sys_name [verbose]"
@@ -162,7 +161,7 @@ function decode {
 # Evaluate the target output
 #
 function evaluate {
-    cat "$RUNNAME".trans | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
+    execute "cat $RUNNAME.trans | bleu $REFDIR/$DECODE_SET_NAME/ref* > $RUNNAME.bleu"
 
     # Aggregate results from many decoding runs
     \grep -P "^BLEU" "$RUNNAME".bleu | awk '{ print $3 }' | tr -d ',' | echo $(cat -) "$TUNERUNNAME" >> "$DECODE_SET_NAME".BLEU
