@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -55,16 +56,17 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
    * @param args
    */
   public DiscriminativeAlignments(String...args) {
-    this.addSourceDeletions = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
-    this.addTargetInsertions = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
-    this.useClasses = args.length > 2 ? Boolean.parseBoolean(args[2]) : false;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addSourceDeletions = options.containsKey("sourceDeletionFeature");
+    this.addTargetInsertions = options.containsKey("targetInsertionFeature");
+    this.useClasses = options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = args.length > 3;
+    this.addDomainFeatures = options.containsKey("domainFile");
     if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[3]);
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
     }
   }
 

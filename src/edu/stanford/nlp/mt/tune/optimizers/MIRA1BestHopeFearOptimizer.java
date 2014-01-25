@@ -6,8 +6,9 @@ import java.util.logging.Logger;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
-import edu.stanford.nlp.mt.tune.OnlineTuner;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
@@ -33,13 +34,13 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
   public MIRA1BestHopeFearOptimizer(double C) {
     this.C = C;
     logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
-    OnlineTuner.attach(logger);
+    SystemLogger.attach(logger, LogName.ONLINE);
   }
 
   public MIRA1BestHopeFearOptimizer(String... args) {
     C = (args == null || args.length != 1) ? DEFAULT_C : Double.parseDouble(args[0]);
     logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
-    OnlineTuner.attach(logger);
+    SystemLogger.attach(logger, LogName.ONLINE);
   }
   
   @Override

@@ -132,7 +132,7 @@ public class PhraseGeneratorFactory {
       }
     }
 
-    throw new RuntimeException(String.format("Unknown phrase generator '%s'\n",
+    throw new RuntimeException(String.format("Unknown phrase generator '%s'%n",
         pgName));
   }
 }

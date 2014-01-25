@@ -220,7 +220,7 @@ def service_redirect(request):
         raise Http404
 
     try:
-        req_dict = json.loads(req)
+        req_dict = json.loads(req, encoding='utf-8')
         src_lang = req_dict['src']
         tgt_lang = req_dict['tgt']
     except Exception as e:
@@ -235,9 +235,9 @@ def service_redirect(request):
     
     # Construct the query
     try:
-        url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req.encode('ISO-8859-1', 'ignore')))
-    except KeyError:
-        logger.error('URL encoding error')
+        url = '%s?%s=%s' % (service_url, query_type, urllib.quote(req.encode('utf-8')))
+    except Exception as e:
+        logger.error(str(e) + req)
         raise Http404
     logger.debug(url)
         
@@ -246,5 +246,5 @@ def service_redirect(request):
     content = request.read()
 
     # Create the response
-    response_data = json.loads( content, encoding = 'ISO-8859-1' )
+    response_data = json.loads( content, encoding="utf-8" )
     return HttpResponse(json.dumps(response_data, encoding='utf-8'), content_type="application/json")

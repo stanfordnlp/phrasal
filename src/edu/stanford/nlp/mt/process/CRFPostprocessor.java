@@ -155,22 +155,55 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     Sequence<IString> target = IStrings.toIStringSequence(targetStrings);
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sequence, target);
     
-    // Try to reconstruct the alignment
-    int i = 0;
-    for (int j = 0; j < processedTokens.size(); ++j) {
+    // Reconstruct the alignment by iterating over the target
+    for (int j = 0, sourceIndex = 0, tgtMax = processedTokens.size(), seqMax = sequence.size(); 
+        j < tgtMax && sourceIndex < seqMax; ++j) {
       String originalToken = processedTokens.get(j).get(OriginalTextAnnotation.class);
-      if ( ! originalToken.equals(sequence.get(i).toString())) {
-        ++i;
-      }
-      if (i < alignment.fSize() && j < alignment.eSize()) {
-        alignment.addAlign(i, j);
+      String sourceCandidate = sequence.get(sourceIndex).toString();
+      if (originalToken.equals(sourceCandidate)) {
+        // Unigram alignment
+        alignment.addAlign(sourceIndex, j);
+        ++sourceIndex;
+        
       } else {
-        System.err.printf("%s: WARNING: Discarding bad alignment%n", this.getClass().getName());
+        // one-to-many alignment (target-to-source)
+        String[] originalTokens = originalToken.split("\\s+");
+        int newSourceIndex = findSubsequenceStart(originalTokens, sequence, sourceIndex);
+        if (newSourceIndex < 0) {
+          System.err.printf("Unable to find |%s| in |%s|", originalToken, sequence.toString());
+        } else {
+          for (int i = 0; i < originalTokens.length; ++i) {
+            sourceIndex = newSourceIndex + i;
+            alignment.addAlign(sourceIndex, j);
+          }
+        }
       }
     }
     return alignment;
   }
   
+  private int findSubsequenceStart(String[] originalTokens,
+      Sequence<IString> sequence, int startIndex) {
+    int startOfSubstring = -1;
+    for (int i = startIndex, srcMax = sequence.size(); i < srcMax; ++i) {
+      String sourceCandidate = sequence.get(i).toString();
+      if (originalTokens[0].equals(sourceCandidate)) {
+        // Found the start
+        boolean isContiguous = true;
+        for (int j = 1; j < originalTokens.length; ++j) {
+          int sourceIndex = i + j;
+          if (sourceIndex >= srcMax || ! originalTokens[j].equals(sequence.get(sourceIndex).toString())) {
+            isContiguous = false;
+            break;
+          }
+        }
+        startOfSubstring = isContiguous ? i : -1;
+        break;
+      }
+    }
+    return startOfSubstring;
+  }
+
   /**
    * Evaluate the postprocessor given an input file specified in the flags.
    * 

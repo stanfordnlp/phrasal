@@ -22,11 +22,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static final boolean TRIE_INDEX = Boolean.parseBoolean(System
       .getProperty(TRIE_INDEX_PROPERTY, "false"));
 
-  public static final String DISABLED_SCORES_PROPERTY = "disableScores";
-  public static final String DISABLED_SCORES = System
-      .getProperty(DISABLED_SCORES_PROPERTY);
-
   public static final String FIELD_DELIM = "|||";
+  public static final String FEATURE_PREFIX = "FPT";
 
   public static IntegerArrayIndex sourceIndex;
   public static IntegerArrayIndex ruleIndex;
@@ -139,7 +136,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     int countScores = init(f, reverse);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
-      scoreNames[i] = String.format("FPT.%d", i);
+      scoreNames[i] = String.format("%s.%d", FEATURE_PREFIX, i);
     }
   }
 

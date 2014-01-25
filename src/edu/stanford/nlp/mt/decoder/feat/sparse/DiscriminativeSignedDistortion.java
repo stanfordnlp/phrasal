@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -15,8 +16,6 @@ import edu.stanford.nlp.util.Pair;
 
 /**
  * Signed discriminative distortion bins. (see <code>ConcreteRule</code>)
- * 
- * TODO: getSignedBin() is incorrect. Replace with corrected DiscriminativeSignedDistortion2.
  * 
  * @author Spence Green
  *
@@ -33,8 +32,11 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   }
   
   public DiscriminativeSignedDistortion(String...args) {
-    this.addDomainFeatures = args.length > 0;
-    this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
   
   @Override
@@ -65,7 +67,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
         features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
-    distortion = getSignedBin(distortion);
+//    distortion = getSignedBin(distortion);
     String featureString = String.format("%s:%d", FEATURE_NAME, distortion);
     features.add(new FeatureValue<String>(featureString, 1.0));
     if (genre != null) {
@@ -83,11 +85,12 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
    */
   private static int getSignedBin(int distortion) {
     int sign = (int) Math.signum(distortion);
-    if (distortion < 4 || distortion > -4) {
+    int absDistortion = Math.abs(distortion);
+    if (absDistortion < 4) {
       return distortion; 
-    } else if (distortion < 7 || distortion > -7) {
+    } else if (absDistortion < 7) {
       return sign * 4;
-    } else if (distortion < 11 || distortion > -11) {
+    } else if (absDistortion < 11) {
       return sign * 5;
     } else {
       return sign * 6;

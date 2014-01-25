@@ -1,94 +1,16 @@
-#!/usr/bin/perl
-#
-# Load local Phrasal Perl modules from the scripts directory.
-#
-use Cwd 'abs_path';
-use File::Basename;
-BEGIN { push @INC, dirname(abs_path($0)) }
+#!/usr/bin/env bash
 
-###################################################
-# Remove all tokens that satisfy both requirements:
-# 1) are not covered in the phrase table
-# 2) are only made of ASCII letters
-#
-# Author: Michel Galley (mgalley@stanford.edu)
-###################################################
+if [ $# -ne 3 ]; then
+    echo "Usage: `basename $0` memory phrase_table file > output"
+    exit -1
+fi
 
-use utf8;
-binmode(STDIN,":utf8");
-binmode(STDOUT,":utf8");
-binmode(STDERR,":utf8");
+MEM=$1
+PTFILE=$2
+INPUT=$3
 
-use arg_utils qw(&get_args &get_opts);
+OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -Xmx$MEM -Xms$MEM -XX:MaxPermSize=256m"
 
-my %opts = get_opts(['v',0,'program will be more verbose']);
-my %args = get_args('len','pt','in','out');
+java $OPTS edu.stanford.nlp.mt.tools.FilterOOVByPhraseTable $PTFILE < $INPUT
 
-# Phrase table:
-my $pt = $args{pt};
-# Max phrase len:
-my $len = $args{len};
-
-# Load source-language phrases:
-open(T,"zcat $pt |");
-binmode(T,":utf8");
-my %f;
-print STDERR "reading: $pt\n";
-my $i=0;
-while(<T>) {
-	chomp;
-	#print STDERR "$i...\n" unless $i % 1000;
-	tr/A-Z/a-z/;
-	s/\s+\|\|\| .*//g;
-	#print STDERR "adding phrase: >",$_,"<\n";
-	$f{$_}=1;
-	++$i
-}
-close(T);
-print STDERR "phrases in table: ",scalar keys %f,"\n";
-
-# Find all words that cannot be translated:
-open(IN,$args{in});
-open(OUT,">$args{out}");
-binmode(IN,":utf8");
-binmode(OUT,":utf8");
-while(<IN>) {
-	chomp;
-	tr/A-Z/a-z/;
-	s/^\s+//;
-	s/\s+$//;
-	s/\s{2,}/ /g;
-	my @w = split /\s+/;
-	my @t; # what can be translated
-	# Start location:
-	foreach my $i (0..$#w) {
-		# Phrase size:
-		foreach my $j (0..$len) {
-			next if $i+$j>$#w;
-			my $phrase = join(' ',@w[$i..($i+$j)]);
-			#print STDERR "check phrase [$i $j]: >$phrase<\n";
-			if($f{$phrase}) {
-				foreach my $k ($i..($i+$j)) {
-					$t[$k] = 1;
-				}
-			}
-		}
-	}
-	# What words to keep:
-	my @good;
-	foreach my $i (0..$#w) {
-		if($t[$i] || keep($w[$i])) {
-			push @good, $w[$i];
-		} else {
-			print STDERR $w[$i],"\n";
-		}
-	}
-	print OUT join(' ',@good)."\n";
-}
-close(IN);
-close(OUT);
-
-sub keep {
-	my $w = shift;
-	return ($w =~/[\$\[\]\/0-9,.()'"%&;:+-A-Za-z]/);
-}	
+    

@@ -1,10 +1,11 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
@@ -17,23 +18,23 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @param <T>
  */
-public class PhraseTableScoresFeaturizer<T> implements RuleFeaturizer<T, String> {
-  private final static String PREFIX = "TM";
+public class PhraseTableScoresFeaturizer implements RuleFeaturizer<IString, String> {
+  private static final String FEATURE_PREFIX = "TM";
   private static final FeatureValue<String> emptyFV = new FeatureValue<String>(
       null, 0.0);
 
   // Only construct the feature strings once for each phrase table
-  private final Map<String, String[]> featureNamesHash;
+  private final ConcurrentHashMap<String, String[]> featureNamesHash;
   private final int numFeatures;
 
   private String[] createAndCacheFeatureNames(String phraseTableName, String[] phraseScoreNames) {
     String[] featureNames = new String[phraseScoreNames.length];
     for (int i = 0; i < featureNames.length; i++) {
       if (phraseScoreNames[i] != null) {
-        featureNames[i] = String.format("%s:%s", PREFIX, phraseScoreNames[i]);
+        featureNames[i] = String.format("%s:%s", FEATURE_PREFIX, phraseScoreNames[i]);
       }
     }
-    featureNamesHash.put(phraseTableName, featureNames);
+    featureNamesHash.putIfAbsent(phraseTableName, featureNames);
     return featureNames;
   }
 
@@ -44,12 +45,12 @@ public class PhraseTableScoresFeaturizer<T> implements RuleFeaturizer<T, String>
    * all features defined in the phrase table.
    */
   public PhraseTableScoresFeaturizer(int numFeatures) {
-    this.featureNamesHash = Generics.newHashMap();
+    this.featureNamesHash = new ConcurrentHashMap<String,String[]>();
     this.numFeatures = numFeatures;
   }
 
   @Override
-  public List<FeatureValue<String>> ruleFeaturize(Featurizable<T, String> featurizable) {
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> featurizable) {
     if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
       // Don't score synthetic rules from hte OOV model
       return null;
