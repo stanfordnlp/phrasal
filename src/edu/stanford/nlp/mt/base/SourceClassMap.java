@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.ArrayList;
-import java.util.Map;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Maps source words to a word class.
@@ -14,8 +13,7 @@ public final class SourceClassMap extends AbstractWordClassMap {
   private static SourceClassMap instance;
 
   private SourceClassMap() {
-    // wordToClass = Generics.newHashMap();
-    mapList = new ArrayList<Map<IString,IString>>(); // Thang Jan14
+    wordToClass = Generics.newHashMap();
   }
 
   public static SourceClassMap getInstance() {
