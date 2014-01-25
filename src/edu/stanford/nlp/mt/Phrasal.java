@@ -1051,8 +1051,7 @@ public class Phrasal {
       }
       
       // log additional information to stderr
-      System.err.printf("Best Translation: %s%n", bestTranslation);
-      System.err.printf("Final score: %.3f%n", (float) bestTranslationInfo.score);
+      System.err.printf("input %d: 1-best model score: %.3f%n", sourceInputId, bestTranslationInfo.score);
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
