@@ -867,7 +867,7 @@ public class OnlineTuner {
     boolean doParameterAveraging = PropertiesUtils.getBool(opts, "a", false);
     int batchSize = PropertiesUtils.getInt(opts, "b", 1);
     boolean randomizeStartingWeights = PropertiesUtils.getBool(opts, "rw", false);
-    SystemLogger.setLevel(Level.parse(opts.getProperty("l", "INFO")));
+    SystemLogger.setLevel(LogName.ONLINE, Level.parse(opts.getProperty("l", "INFO")));
     boolean doExpectedBleu = ! PropertiesUtils.getBool(opts, "ne", false);
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);

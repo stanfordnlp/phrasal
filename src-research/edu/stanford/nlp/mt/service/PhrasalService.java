@@ -93,7 +93,7 @@ public final class PhrasalService {
       connector.setHost(DEBUG_URL);
     }
     if (debugLogLevel) {    
-      SystemLogger.setLevel(Level.INFO);
+      SystemLogger.setLevel(LogName.SERVICE, Level.INFO);
     } else {
       SystemLogger.disableConsoleLogger();
     }

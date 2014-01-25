@@ -6,13 +6,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Top-level logging interface.
@@ -28,14 +27,20 @@ public final class SystemLogger {
   private SystemLogger() {}
   
   // Static methods for setting up a global logger
-  private static Map<LogName,Handler> handlers = Generics.newHashMap(LogName.values().length);
+  private static Map<LogName,Handler> handlers = new ConcurrentHashMap<LogName,Handler>(LogName.values().length);
   
   private static boolean isConsoleDisabled = false;
   private static boolean shutdownHookAdded = false;
   
-  private static Level logLevel = Level.WARNING;
-  public static Level getLevel() { return SystemLogger.logLevel; }
-  public static synchronized void setLevel(Level level) { logLevel = level; }
+  private static Map<LogName,Level> logLevel = new ConcurrentHashMap<LogName,Level>(LogName.values().length);
+  static {
+    // Initialize log levels
+    for (LogName logName : LogName.values()) {
+      logLevel.put(logName, Level.WARNING);
+    }
+  }
+  public static Level getLevel(LogName logName) { return SystemLogger.logLevel.get(logName); }
+  public static synchronized void setLevel(LogName logName, Level level) { SystemLogger.logLevel.put(logName, level); }
   
   // Default prefix of the logger filename. Changing this has no
   // effect after a call to attach().
@@ -100,6 +105,6 @@ public final class SystemLogger {
       initLogger(logName);
     }
     logger.addHandler(handlers.get(logName));    
-    logger.setLevel(logLevel);
+    logger.setLevel(logLevel.get(logName));
   }
 }

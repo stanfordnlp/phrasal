@@ -96,7 +96,7 @@ public class MakeWordClasses {
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
 
     logger = Logger.getLogger(this.getClass().getName());
-    SystemLogger.setLevel(Level.FINE);
+    SystemLogger.setLevel(LogName.WORD_CLASS, Level.FINE);
     SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
     SystemLogger.setPrefix(properties.getProperty("name", 
         String.format("%d-classes.%s", numClasses, sdf.format(new Date()))));

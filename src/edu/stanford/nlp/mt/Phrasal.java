@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.stanford.nlp.mt.base.*;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
@@ -341,7 +342,7 @@ public class Phrasal {
       SystemLogger.setPrefix(config.get(LOG_PREFIX).get(0));
     }
     if (config.containsKey(LOG_LEVEL)) {
-      SystemLogger.setLevel(Level.parse(config.get(LOG_LEVEL).get(0)));
+      SystemLogger.setLevel(LogName.DECODE, Level.parse(config.get(LOG_LEVEL).get(0)));
     }
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
