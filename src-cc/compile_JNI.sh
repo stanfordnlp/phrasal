@@ -7,7 +7,7 @@ if [ ${#NPLM} != 0 ]; then
   extra_flags="kenlm/lm/wrappers/*.o -DHAVE_NPLM -lneuralLM -lboost_thread-mt -L$NPLM/src -I$NPLM/src -fopenmp"
 fi
 
-(cd kenlm; if [ ! -e bin/lmplz ]; then ./compile_query_only.sh; fi )
+(cd kenlm; ./compile_query_only.sh)
 
 #javah edu.stanford.nlp.mt.lm.KenLanguageModel
 
