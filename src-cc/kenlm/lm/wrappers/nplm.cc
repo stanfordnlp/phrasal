@@ -1,4 +1,5 @@
 #include "lm/wrappers/nplm.hh"
+#include "util/exception.hh"
 #include "util/file.hh"
 
 #include <algorithm>
@@ -6,9 +7,6 @@
 #include <string.h>
 
 #include "neuralLM.h"
-
-// TODO make configurable.
-const std::size_t kCacheSize = 1000000;
 
 namespace lm {
 namespace np {
@@ -36,6 +34,7 @@ bool Model::Recognize(const std::string &name) {
 } 
 
 Model::Model(const std::string &file) : base_instance_(new nplm::neuralLM(file)), vocab_(base_instance_->get_vocabulary()) {
+  UTIL_THROW_IF(base_instance_->get_order() > NPLM_MAX_ORDER, util::Exception, "This NPLM has order " << (unsigned int)base_instance_->get_order() << " but the KenLM wrapper was compiled with " << NPLM_MAX_ORDER << ".  Change the defintion of NPLM_MAX_ORDER and recompile.");
   State begin_sentence, null_context;
   std::fill(begin_sentence.words, begin_sentence.words + NPLM_MAX_ORDER - 1, base_instance_->lookup_word("<s>"));
   null_word_ = base_instance_->lookup_word("<null>");
@@ -50,7 +49,6 @@ FullScoreReturn Model::FullScore(const State &from, const WordIndex new_word, St
   nplm::neuralLM *lm = backend_.get();
   if (!lm) {
     lm = new nplm::neuralLM(*base_instance_);
-    lm->set_cache(kCacheSize);
     backend_.reset(lm);
   }
   // State is in natural word order.
@@ -81,10 +79,7 @@ FullScoreReturn Model::FullScoreForgotState(const WordIndex *context_rbegin, con
   }
   // Put new words at the end.
   std::reverse_copy(context_rbegin, context_rbegin + state_length, state.words + Order() - 1 - state_length);
-  FullScoreReturn ret = FullScore(state, new_word, out_state);
-  // HACK!
-  ret.right_state_length = std::min<unsigned int>(Order() - 1, context_rend - context_rbegin + 1);
-  return ret;
+  return FullScore(state, new_word, out_state);
 }
 
 } // namespace np
