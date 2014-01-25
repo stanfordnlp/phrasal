@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.base.EmptySequence;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
@@ -434,8 +435,12 @@ public class OnlineTuner {
           if (nbestLists != null) {
             assert ! nbestLists.containsKey(sourceId);
             // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
-            Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
-            nbestLists.put(sourceId, bestHypothesis);
+            if (result.nbestLists.get(i).size() > 0) {
+              Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
+              nbestLists.put(sourceId, bestHypothesis);
+            } else {
+              nbestLists.put(sourceId, new EmptySequence<IString>());
+            }
           }
         }
       }
