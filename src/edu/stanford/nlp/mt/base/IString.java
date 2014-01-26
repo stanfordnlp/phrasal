@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
@@ -24,8 +23,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     HasWord, Comparable<IString> {
   private static final long serialVersionUID = 2718L;
 
-  // TODO(spenceg) HashIndex is not threadsafe. Need to fix ConcurrentHashIndex.
-  public static final Index<String> index = new HashIndex<String>(100000);
+  public static final Index<String> index = new ConcurrentHashIndex<String>(100000);
 
   public final int id;
 
