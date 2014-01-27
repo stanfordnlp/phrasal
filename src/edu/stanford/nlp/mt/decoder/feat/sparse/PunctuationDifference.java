@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -35,9 +35,11 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
   }
   
   public PunctuationDifference(String...args) {
-    this.addDomainFeatures = args.length > 0;
-    this.sourceIdInfoMap = addDomainFeatures ? 
-        Collections.synchronizedMap(SparseFeatureUtils.loadGenreFile(args[0])) : null;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
   
   @Override

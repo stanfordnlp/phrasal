@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -23,13 +24,24 @@ public class RuleShape implements RuleFeaturizer<IString, String> {
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
+  /**
+   * Constructor.
+   */
   public RuleShape() {
     this.addDomainFeatures = false;
   }
-  
+
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public RuleShape(String...args) {
-    this.addDomainFeatures = args.length > 0;
-    this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
   
   @Override

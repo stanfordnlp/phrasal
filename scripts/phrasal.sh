@@ -4,7 +4,6 @@
 # at the top of this script.
 # 
 # Author: Spence Green
-# Change: Thang Nov13 -- add verbose option.
 #
 if [[ $# -ne 4 && $# -ne 5 ]]; then
     echo "Usage: `basename $0` var_file steps ini_file sys_name [verbose]"
@@ -153,21 +152,16 @@ function make-ini-from-online-run {
 # Decode an input file given an ini file from a tuning run
 #
 function decode {
-    # Check to see if the user pre-processed the input file
-    if [ ! -e $DECODE_FILE ]; then
-	ln -s $DECODE_SET $DECODE_FILE
-    fi
-    
     execute "java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
-	"$RUNNAME".ini \
-	< $DECODE_FILE > "$RUNNAME".trans 2> logs/$RUNNAME.log"
+	-config-file $RUNNAME.ini -log-prefix $RUNNAME \
+	< $DECODE_FILE > $RUNNAME.trans 2> logs/$RUNNAME.log"
 }
 
 #
 # Evaluate the target output
 #
 function evaluate {
-    cat "$RUNNAME".trans | bleu "$REFDIR"/"$DECODE_SET_NAME"/ref* > "$RUNNAME".bleu
+    execute "cat $RUNNAME.trans | bleu $REFDIR/$DECODE_SET_NAME/ref* > $RUNNAME.bleu"
 
     # Aggregate results from many decoding runs
     \grep -P "^BLEU" "$RUNNAME".bleu | awk '{ print $3 }' | tr -d ',' | echo $(cat -) "$TUNERUNNAME" >> "$DECODE_SET_NAME".BLEU

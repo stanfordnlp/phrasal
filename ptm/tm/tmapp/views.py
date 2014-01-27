@@ -11,10 +11,15 @@ import controller
 
 logger = logging.getLogger(__name__)
 
-## TODO
-##  * Make the Http404 page more helpful
-##
-##
+TRAINING_BUTTON_TEXT = [_('Next: Browser Check'),
+                        _('Next: Experiment Goals'),
+                        _('Next: Experiment Description'),
+                        _('Next: Job Description'),
+                        _('Next: Interface Descriptions'),
+                        _('Next: Interface Tutorial'),
+                        _('Next: Open the practice UI'),
+                        _('Try another document')]
+                        
 
 ##
 ## Notes:
@@ -33,25 +38,29 @@ def index(request):
                               context_instance=RequestContext(request))
 
 @login_required
-def training(request):
+def training(request, step_id=None):
     page_title = _('Experiment Overview and CAT Training')
     page_name = _('Experiment Overview and Training')
+    
     if request.method == 'GET':
         done_training = controller.user_training_status(request.user)
         src_lang,tgt_lang = controller.get_user_translation_direction(request.user)
+        step_id = int(step_id) + 1 if step_id else 0
+        if step_id >= len(TRAINING_BUTTON_TEXT):
+            raise Http404
         return render_to_response('training.html',
-                              {'page_title' : page_title,
-                               'page_name' : page_name,
-                               'src_lang' : src_lang,
-                               'tgt_lang' : tgt_lang,
-                               'form_action' : '/tm/training/',
-                               'show_ui_link' : not done_training,
-                               'ui_link' : '/tm/training/ui/',
-                               'form_button_text' : 'I feel proficient with the UI and am ready to translate'},
-                              context_instance=RequestContext(request))
-    elif request.method == 'POST':
-        return redirect('/tm/')
-    raise Http404
+                                  {'step' : step_id,
+                                   'page_title' : page_title,
+                                   'page_name' : page_name,
+                                   'src_lang' : src_lang,
+                                   'tgt_lang' : tgt_lang,
+                                   'form_action' : '/tm/training/ui/',
+                                   'show_ui_link' : not done_training,
+                                   'ui_link' : '/tm/training/ui/',
+                                   'form_button_text' : TRAINING_BUTTON_TEXT[step_id]},
+                                  context_instance=RequestContext(request))
+    else:
+        raise Http404
 
 @login_required
 def training_ui(request):
@@ -63,14 +72,15 @@ def training_ui(request):
                                       {'conf' : conf,
                                        'form_action' : '/tm/training/ui/',
                                        'form' : form,
-                                       'form_button_text' : 'Go to next training document'},
+                                       'form_button_text' : 'Go to next training document',
+                                       'training' : True },
                                       context_instance=RequestContext(request))
         else:
             controller.user_training_status(request.user, True)
-            return redirect('/tm/training/')
+            return redirect('/tm/')
         
     elif request.method == 'POST':
-        # Redirect to the experiment overview
+        # Next document
         controller.save_translation_session(request.user, request.POST, is_training)
         return redirect('/tm/training/ui/')
 

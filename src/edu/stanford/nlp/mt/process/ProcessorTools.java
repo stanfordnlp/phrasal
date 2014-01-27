@@ -13,13 +13,13 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.CharAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.OriginalTextAnnotation;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.objectbank.IteratorFromReaderFactory;
 import edu.stanford.nlp.objectbank.LineIterator;
 import edu.stanford.nlp.process.SerializableFunction;
 import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
-import edu.stanford.nlp.util.Characters;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -166,7 +166,7 @@ public final class ProcessorTools {
         String sChar = String.valueOf(sourceToken.charAt(sIndex));
         assert sIndex < s2t.length;
         s2t[sIndex] = i;
-        if (tChar.equals(sChar) || isPunctuation(sChar)) {
+        if (tChar.equals(sChar) || TokenUtils.isPunctuation(sChar)) {
           // NoOp
           sequence.add(createDatum(tChar, Operation.None.toString(), i, parentToken, charIndex));
         } else if (tChar.equals(sChar.toLowerCase())) {
@@ -210,7 +210,7 @@ public final class ProcessorTools {
       if (pOperation != null && pOperation == Operation.None) {
         // Insert after
         String span = sourceToken.substring(i, j);
-        if ( ! isPunctuation(span)) {
+        if ( ! TokenUtils.isPunctuation(span)) {
           String label = Operation.InsertAfter.toString() + OP_DELIM + span;
           sequence.get(p).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
         }
@@ -218,7 +218,7 @@ public final class ProcessorTools {
       } else if (qOperation == Operation.None) {
         // Insert before
         String span = sourceToken.substring(i, j);
-        if ( ! isPunctuation(span)) {
+        if ( ! TokenUtils.isPunctuation(span)) {
           String label = Operation.InsertBefore.toString() + OP_DELIM + span;
           sequence.get(q).set(CoreAnnotations.GoldAnswerAnnotation.class, label);
         }
@@ -232,24 +232,6 @@ public final class ProcessorTools {
       }
     }
     return sequence;
-  }
-
-  /**
-   * Returns true if a strong consists entirely of digits and punctuation.
-   * False otherwise.
-   * 
-   * @param string
-   * @return
-   */
-  private static boolean isPunctuation(String string) {
-    int length = string.length();
-    for (int i = 0; i < length; ++i) {
-      char c = string.charAt(i);
-      if ( ! Characters.isPunctuation(c)) {
-        return false;
-      }
-    }
-    return true;
   }
   
   /**

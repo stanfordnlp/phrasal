@@ -242,16 +242,10 @@ template <class Search, class VocabularyT> FullScoreReturn GenericModel<Search, 
   out_state.length = HasExtension(out_state.backoff[0]) ? 1 : 0;
   // We'll write the word anyway since it will probably be used and does no harm being there.
   out_state.words[0] = new_word;
-  if (context_rbegin == context_rend) {
-    // HACK!
-    ret.right_state_length = out_state.length;
-    return ret;
-  }
+  if (context_rbegin == context_rend) return ret;
 
   ResumeScore(context_rbegin, context_rend, 0, node, out_state.backoff + 1, out_state.length, ret);
   CopyRemainingHistory(context_rbegin, out_state);
-  // HACK!
-  ret.right_state_length = out_state.length;
   return ret;
 }
 

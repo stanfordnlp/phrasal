@@ -33,7 +33,7 @@ public class OutputSpaceFactory {
       return new UnconstrainedOutputSpace<IString,String>();
     
     } else if (targetsArePrefixes) {
-      return new SoftPrefixOutputSpace<IString,String>(source, targets.get(0), sourceInputId);
+      return new SoftPrefixOutputSpace(source, targets.get(0), sourceInputId);
     
     } else {
       return new ConstrainedOutputSpace<IString,String>(targets, longestSourcePhrase, longestTargetPhrase);

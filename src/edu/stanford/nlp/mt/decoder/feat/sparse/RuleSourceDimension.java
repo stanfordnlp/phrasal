@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -11,27 +12,30 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 /**
- * The target dimension of the rule.
+ * Source dimension of the rule.
  * 
  * @author Spence Green
  *
  */
-public class TargetRuleDimension implements RuleFeaturizer<IString, String> {
+public class RuleSourceDimension implements RuleFeaturizer<IString, String> {
 
-  private static final String FEATURE_NAME = "TGTD";
+  private static final String FEATURE_NAME = "SRCD";
   
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
-  public TargetRuleDimension() {
+  public RuleSourceDimension() { 
     this.addDomainFeatures = false;
   }
   
-  public TargetRuleDimension(String...args) {
-    this.addDomainFeatures = args.length > 0;
-    this.sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+  public RuleSourceDimension(String...args) {
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+    if (addDomainFeatures) {
+      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+    }
   }
-
+  
   @Override
   public void initialize() {}
 
@@ -39,7 +43,7 @@ public class TargetRuleDimension implements RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    String featureString = String.format("%s:%d",FEATURE_NAME, f.targetPhrase.size());
+    String featureString = String.format("%s:%d",FEATURE_NAME, f.sourcePhrase.size());
     features.add(new FeatureValue<String>(featureString, 1.0));
     if (addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId)) {
       Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
