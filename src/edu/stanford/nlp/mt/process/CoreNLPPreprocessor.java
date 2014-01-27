@@ -32,6 +32,15 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
   }
   
   /**
+   * Pass options to the underlying tokenizer.
+   * 
+   * @param options
+   */
+  public void setOptions(String options) {
+    tf.setOptions(options);
+  }
+  
+  /**
    * Converts control characters to whitespace. The underlying CoreNLP tokenizers
    * typically delete these characters. In MT bitexts they usually function as
    * whitespace.

@@ -24,7 +24,6 @@ import edu.stanford.nlp.trees.tregex.TregexPattern;
 import edu.stanford.nlp.trees.tregex.tsurgeon.Tsurgeon;
 import edu.stanford.nlp.trees.tregex.tsurgeon.TsurgeonPattern;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Converts CoreNLP annotations to the PTM source side 
@@ -33,14 +32,14 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public final class CoreNLPToPTMJson {
+public final class CoreNLPToJSON {
 
   /**
    * @param args
    */
   public static void main(String[] args) {
     if (args.length != 1) {
-      System.err.printf("Usage: java %s corenlp_ser_gz > json_output%n", CoreNLPToPTMJson.class.getName());
+      System.err.printf("Usage: java %s corenlp_ser_gz > json_output%n", CoreNLPToJSON.class.getName());
       System.exit(-1);
     }
 
@@ -57,14 +56,14 @@ public final class CoreNLPToPTMJson {
 
     List<CoreMap> sentences = document.get(SentencesAnnotation.class);
     // Use a map with ordered keys so that the output is ordered by segmentId.
-    Map<Integer,AnnotationContainer> annotations = new TreeMap<Integer,AnnotationContainer>();
+    Map<Integer,SourceSegment> annotations = new TreeMap<Integer,SourceSegment>();
     for (int i = 0; i < sentences.size(); ++i) {
       CoreMap sentence = sentences.get(i);
       Tree tree = sentence.get(TreeAnnotation.class);
       tree.indexLeaves();
       int[] chunkVector = getChunkVector(tree);
       List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
-      AnnotationContainer container = new AnnotationContainer(tokens.size());
+      SourceSegment container = new SourceSegment(tokens.size());
       for (int j = 0; j < tokens.size(); ++j) {
         CoreLabel token = tokens.get(j);
         String word = token.get(TextAnnotation.class);
@@ -79,7 +78,7 @@ public final class CoreNLPToPTMJson {
     }
     System.err.printf("Processed %d sentences%n", sentences.size());
     
-    final Document jsonDocument = new Document(annotationFile, annotations);
+    final SourceDocument jsonDocument = new SourceDocument(annotationFile, annotations);
     
     // Convert to json
     Gson gson = new Gson();
@@ -87,7 +86,7 @@ public final class CoreNLPToPTMJson {
     System.out.println(json);
   }
 
-  private static String unescape(String word) {
+  static String unescape(String word) {
     if (word.equals("-LRB-")) {
       return "(";
     } else if (word.equals("-RRB-")) {
@@ -118,7 +117,7 @@ public final class CoreNLPToPTMJson {
     return "O";
   }
 
-  private static void fillVectorWithYield(String[] vector, TregexMatcher tregexMatcher) {
+  static void fillVectorWithYield(String[] vector, TregexMatcher tregexMatcher) {
     while (tregexMatcher.find()) {
       Tree match = tregexMatcher.getMatch();
       List<Tree> leaves = match.getLeaves();
@@ -179,7 +178,7 @@ public final class CoreNLPToPTMJson {
     return indexVector;
   }
   
-  private static int[] iobToIndices(String[] vector) {
+  static int[] iobToIndices(String[] vector) {
     int[] indexVector = new int[vector.length];
     int chunkId = -1;
     for (int i = 0; i < indexVector.length; ++i) {
@@ -190,29 +189,5 @@ public final class CoreNLPToPTMJson {
       indexVector[i] = chunkId;
     }
     return indexVector;
-  }
-
-  private static class Document {
-    // Name of this document
-    public final String docId;
-    // Annotated segments, indicated with a name
-    public final Map<Integer,AnnotationContainer> segments;
-    public Document(String docId, Map<Integer,AnnotationContainer> segments) {
-      this.docId = docId;
-      this.segments = segments;
-    }
-  }
-  
-  private static class AnnotationContainer {
-    public final List<String> tokens;
-    public final List<String> pos;
-    public final List<String> ner;
-    public final int[] chunkVector; 
-    public AnnotationContainer(int numTokens) {
-      this.tokens = Generics.newArrayList(numTokens);
-      this.pos = Generics.newArrayList(numTokens);
-      this.ner = Generics.newArrayList(numTokens);
-      this.chunkVector = new int[numTokens];
-    }
   }
 }
