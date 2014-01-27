@@ -138,15 +138,13 @@ public class OnlineTuner {
    * @param uniformStartWeights
    * @param randomizeStartWeights
    * @param expectedNumFeatures
-   * @param outputWeightPrefix 
    */
   public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
-      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, 
-      String outputWeightPrefix) {
+      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures) {
     logger = Logger.getLogger(OnlineTuner.class.getName());
     SystemLogger.attach(logger, LogName.ONLINE);
-    this.outputWeightPrefix = outputWeightPrefix;
+    this.outputWeightPrefix = SystemLogger.getPrefix() + "." + LogName.ONLINE.toString().toLowerCase();
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
@@ -902,7 +900,7 @@ public class OnlineTuner {
     final SentenceLevelMetric<IString,String> lossFunction = SentenceLevelMetricFactory.getMetric(scoreMetricStr, scoreMetricOpts);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
         optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-        expectedNumFeatures, experimentName);
+        expectedNumFeatures);
     if (refStr != null) {
       tuner.loadReferences(refStr);
     }

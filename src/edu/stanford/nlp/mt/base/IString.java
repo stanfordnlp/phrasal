@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
 import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
@@ -27,32 +26,12 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   public final int id;
 
-  private enum Classing {
-    BACKSLASH, IBM
-  }
-  private static final Classing CLASSING = Classing.IBM;
-
   /**
    * Constructor.
    * 
    * @param string
    */
   public IString(String string) {
-    if (CLASSING == Classing.BACKSLASH) { // e.g., on december 4\\num
-      int doubleBackSlashPos = string.indexOf("\\\\");
-      if (doubleBackSlashPos != -1) {
-        id = index.indexOf(string.substring(doubleBackSlashPos), true);
-        return;
-      }
-    } else if (CLASSING == Classing.IBM) { // e.g., on december $num_(4)
-      if (string.length() > 2 && string.startsWith("$")) {
-        int delim = string.indexOf("_(");
-        if (delim != -1 && string.endsWith(")")) {
-          id = index.indexOf(string.substring(0, delim), true);
-          return;
-        }
-      }
-    }
     id = index.indexOf(string, true);
   }
 
@@ -126,15 +105,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
       wrapperIndex = new WrapperIndex();
     }
     return wrapperIndex;
-  }
-
-  public static void load(String fileName) {
-    for (String line : ObjectBank.getLineIterator(fileName)) {
-      for (String word : line.split("\\s+")) {
-        // System.err.println("adding: " + word);
-        new IString(word);
-      }
-    }
   }
 
   private static class WrapperIndex implements Index<IString> {
