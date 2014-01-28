@@ -62,8 +62,6 @@ class Unigram {
       return unigram_;
     }
     
-    void LoadedBinary() {}
-
     UnigramPointer Find(WordIndex word, NodeRange &next) const {
       UnigramValue *val = unigram_ + word;
       next.begin = val->next;
@@ -108,8 +106,6 @@ template <class Bhiksha> class BitPackedMiddle : public BitPacked {
 
     void FinishedLoading(uint64_t next_end, const Config &config);
 
-    void LoadedBinary() { bhiksha_.LoadedBinary(); }
-
     util::BitAddress Find(WordIndex word, NodeRange &range, uint64_t &pointer) const;
 
     util::BitAddress ReadEntry(uint64_t pointer, NodeRange &range) {
@@ -137,8 +133,6 @@ class BitPackedLongest : public BitPacked {
     void Init(void *base, uint8_t quant_bits, uint64_t max_vocab) {
       BaseInit(base, max_vocab, quant_bits);
     }
-
-    void LoadedBinary() {}
 
     util::BitAddress Insert(WordIndex word);
 
