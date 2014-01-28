@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title>Translation User Interface</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" href="css/font-awesome.css" />
+	<script type="text/javascript" src="js/d3.js"></script>
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/underscore.js"></script>
+	<script type="text/javascript" src="js/backbone.js"></script>
+	
+	<link rel="stylesheet" href="css/PTM.css" />
+	<script type="text/javascript" src="js/DatasetManager.js"></script>
+	<script type="text/javascript" src="js/QueryString.js"></script>
+	<script type="text/javascript" src="js/ExperimentUI.js"></script>
+	<script type="text/javascript" src="js/TranslateServer.js"></script>
+	<script type="text/javascript" src="js/SourceBoxState.js"></script>
+	<script type="text/javascript" src="js/SourceBoxView.js"></script>
+	<script type="text/javascript" src="js/SourceSuggestionState.js"></script>
+	<script type="text/javascript" src="js/SourceSuggestionView.js"></script>
+	<script type="text/javascript" src="js/TargetBoxState.js"></script>
+	<script type="text/javascript" src="js/TargetBoxView.js"></script>
+	<script type="text/javascript" src="js/TargetTextareaView.js"></script>
+	<script type="text/javascript" src="js/TargetOverlayView.js"></script>
+	<script type="text/javascript" src="js/TargetSuggestionState.js"></script>
+	<script type="text/javascript" src="js/TargetSuggestionView.js"></script>
+	<script type="text/javascript" src="js/OptionPanelState.js"></script>
+	<script type="text/javascript" src="js/OptionPanelView.js"></script>
+	<script type="text/javascript" src="js/DocumentView.js"></script>
+	<script type="text/javascript" src="js/PTM.js"></script>
+	<script type="text/javascript">
+		$(document).ready( function() {
+			ptm = new PTM({
+				"postEditMode" : false,
+				"docURL" : "/static/data/en.1.txt.ser.gz.json",
+				"sourceLang" : "EN",
+				"targetLang" : "DE"
+			});
+			dm = new DatasetManager();
+			dm.on( "change:datasetURL", function() {
+				ptm.load( dm.get( "datasetURL" ) );
+			});
+		});
+		var prepareSubmission = function() {
+			var userResponses = ptm.getUserResponses();
+			var interactionLog = ptm.getInteractionLog();
+			d3.select("#id_text").node().value = JSON.stringify(userResponses);
+			d3.select("#id_log").node().value = JSON.stringify(interactionLog);
+			return true;
+		};
+	</script>
+</head>
+<body style="padding: 0; margin: 0; background: #eee;">
+<div class="UI" style="padding: 10px 20px 15px 20px; background: #888; border-bottom: 1px solid #666; box-shadow: 0 0 10px #333;">Dataset: <select id="DatasetManager"></select></div>
+<div>
+	User Responses
+    <textarea id="id_text"></textarea>
+	User-Interaction Log
+    <textarea id="id_log"></textarea>
+	<input type="button" value="Prepare Submission" onclick="prepareSubmission()"/>
+</div>
+<div class="PAGE" style="margin: 20px 20px 200px 20px"><div id="PTM"></div></div>
+<div class="ExperimentUI">Paused for <span></span></div>
+</body>
+</html>

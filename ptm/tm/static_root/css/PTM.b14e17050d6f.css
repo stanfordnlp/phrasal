@@ -1,0 +1,85 @@
+@font-face {
+    font-family: 'PT_Serif';
+    src: url("/static/font/pt_serif-web-regular-webfont.86e25bd60a95.eot");
+    src: url("/static/font/pt_serif-web-regular-webfont.86e25bd60a95.eot?#iefix") format('embedded-opentype'),
+         url("/static/font/pt_serif-web-regular-webfont.76f04213b1b6.woff") format('woff'),
+         url("/static/font/pt_serif-web-regular-webfont.b212ae3e9b13.ttf") format('truetype'),
+         url("/static/font/pt_serif-web-regular-webfont.9b0237864328.svg#PT_Serif") format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PT_Serif';
+    src: url("/static/font/pt_serif-web-bold-webfont.9666d3bfd35b.eot");
+    src: url("/static/font/pt_serif-web-bold-webfont.9666d3bfd35b.eot?#iefix") format('embedded-opentype'),
+         url("/static/font/pt_serif-web-bold-webfont.8134c287cf5a.woff") format('woff'),
+         url("/static/font/pt_serif-web-bold-webfont.05a27b546ff8.ttf") format('truetype'),
+         url("/static/font/pt_serif-web-bold-webfont.fd8d0536eb08.svg#PT_Serif") format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'PT_Serif';
+    src: url("/static/font/pt_serif-web-italic-webfont.5e467707dbf1.eot");
+    src: url("/static/font/pt_serif-web-italic-webfont.5e467707dbf1.eot?#iefix") format('embedded-opentype'),
+         url("/static/font/pt_serif-web-italic-webfont.6ac1c7b36757.woff") format('woff'),
+         url("/static/font/pt_serif-web-italic-webfont.4e0279fd2cd5.ttf") format('truetype'),
+         url("/static/font/pt_serif-web-italic-webfont.643ed3f6387c.svg#PT_Serif") format('svg');
+    font-weight: normal;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'PT_Serif';
+    src: url("/static/font/pt_serif-web-bolditalic-webfont.31ec8b39f908.eot");
+    src: url("/static/font/pt_serif-web-bolditalic-webfont.31ec8b39f908.eot?#iefix") format('embedded-opentype'),
+         url("/static/font/pt_serif-web-bolditalic-webfont.24f14f12c9a8.woff") format('woff'),
+         url("/static/font/pt_serif-web-bolditalic-webfont.fe387dab92d9.ttf") format('truetype'),
+         url("/static/font/pt_serif-web-bolditalic-webfont.e8dfb7aab768.svg#PT_Serif") format('svg');
+    font-weight: bold;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'PT_Mono';
+    src: url("/static/font/PT_Mono.75758927295d.ttf") format('truetype');
+    font-weight: bold;
+    font-style: italic;
+}
+
+.UI {
+	font-family: PT_Serif, serif;
+	font-size: 9.5pt;
+	color: #000;
+	word-spacing : 0.1em;
+}
+.SourceLang {
+	font-family: PT_Serif, serif;
+	font-size: 10pt;
+	color: #333;
+}
+.TargetLang {
+	font-family: PT_Mono, monospace;
+	font-size: 11pt;
+	color: #999;
+}
+.UserText {
+	font-family: PT_Mono, monospace;
+	font-size: 11pt;
+	color: #000;
+}
+.OptionPanel {
+	font-family: PT_Serif, serif;
+	font-size: 8pt;
+	color: #444;
+}
+
+.ExperimentUI {
+	position: fixed;
+	display: inline-block;
+	z-index: 1000;
+	left: 0;
+	top: 0;
+	width: 100%;
+	font-family: PT_Serif, serif;
+	font-size: 9.5pt;
+	padding: 10px 30px 30px 10px;
+}

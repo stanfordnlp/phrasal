@@ -1,0 +1,128 @@
+body {
+   background:#eee;
+   text-align:center;
+   margin:20px;
+   padding:0;
+   font-family: Helvetica Neue, sans-serif;
+   color:#000;
+}
+
+a {
+   color:#4292C6;
+   text-decoration:none;
+}
+
+a:hover {
+   border-bottom:1px solid;
+}
+
+input[type="submit"] {
+   text-align:center;
+   text-decoration: none;
+   -webkit-font-smoothing: antialiased;
+   font-size: 120%;
+   color: #FFF;
+   background: #4292C6;
+   padding: 0.25em 2em;
+   display: inline-block;
+   white-space: nowrap;
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+   margin: 10px 0;
+   -webkit-transition: all 0.2s ease-in-out;
+   -ms-transition: all 0.2s ease-in-out;
+   -moz-transition: all 0.2s ease-in-out;
+   -o-transition: all 0.2s ease-in-out;
+   transition: all 0.2s ease-in-out;
+}
+
+input[type="submit"]:hover {
+   background: #ff7f0e;
+}
+
+#wrapper1 {
+   position:relative;
+   text-align:left;
+   width:960px;
+   margin:0 auto;
+   background:White url("/static/tm/img/background.899754e21fdf.png") repeat-y top right;
+}
+
+#wrapper2 {
+   position:relative;
+   text-align:left;
+   width:960px;
+   margin:0 auto;
+   background:url("/static/tm/img/background.899754e21fdf.png") repeat-y top left;
+}
+
+#header {
+   background:#DEEBF7;
+   padding:10px;
+   margin:0;
+   text-align:center;
+   width:940px;
+   margin:0 auto;
+}
+
+#header h1 {
+   font-size:125%;
+}
+
+#header a:hover {
+   color:#7A2875;
+}
+
+#maincol {
+   position:relative;
+   margin:0;
+   padding:10px;
+}
+
+#leftcol { 
+   position:relative;
+   top:-10px;
+   left:-10px;
+   float:left;
+   voice-family: "\"}\"";
+   voice-family:inherit;
+   width:20px; /* actual value */
+   margin:0 0 -10px 0;
+   padding:10px;
+   background:White;
+   z-index:100;
+}
+
+#rightcol {
+   position:relative;
+   top:-10px;
+   right:-10px;
+   float:right;
+   voice-family: "\"}\"";
+   voice-family:inherit;
+   width:20px; /* actual value */
+   margin:0 0 -10px 0;
+   padding:10px;
+   background:White;
+   z-index:99;
+}
+
+#centercol {
+   background:White;
+   position:relative;
+   padding:0 40px;
+}
+
+#footer {
+   font-size:120%;
+   position:relative;
+   top:1px;
+   background:#DEEBF7;
+   width:100%;
+   clear:both;
+   margin:0;
+   padding:1% 0;
+   text-align:center;
+   color:Black;
+}

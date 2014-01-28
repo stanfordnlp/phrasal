@@ -1,0 +1,49 @@
+#form-wrapper {
+   clear:both;
+   text-align:left;
+}
+
+#form-instructions {
+   font-size:120%;
+   border-bottom-style:solid;
+   border-bottom-width:1px;
+   border-bottom-color:LightGray;
+   margin-top:1em;
+   margin-bottom:2em;
+   padding-bottom:0.75em;
+}
+
+#form-wrapper p {
+   margin-bottom:3em;
+}
+
+#form-wrapper ul {
+   list-style-type:none;
+   margin-top:-1.5em;
+}
+
+#form-wrapper select {
+   margin-top:1em;
+   display:block;
+   background: transparent;
+   padding: 5px;
+   line-height: 1;
+   }
+
+#form-wrapper input[type="number"] {
+   margin-top:1em;
+   display:block;
+   width:5em;
+}
+
+#form-wrapper textarea {
+   width:50em;
+   height:12em;
+}
+
+.errorlist {
+   color:red;
+   font-size:small;
+   font-style:italic;
+   list-style-type:none;
+}
