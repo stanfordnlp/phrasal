@@ -311,8 +311,6 @@ public class TranslationRequestHandler implements RequestHandler {
       
       // If the decoder drops unknown words, then we need to create a monotonic
       // alignment.
-      logger.info(s2sPrime.f().toString());
-      logger.info(s2sPrime.f().toString());
       int[] sPrime2sPrimePrime = null;
       if (dropUnknownWords && s2sPrime.e().size() != sPrime2tPrime.f().size()) {
         Sequence<IString> sPrime = s2sPrime.e();
