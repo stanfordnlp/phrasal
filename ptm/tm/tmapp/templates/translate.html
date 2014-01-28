@@ -13,7 +13,7 @@
 				"docURL" : "{{ conf.src_document_url }}",
 				"sourceLang" : "{{ conf.src_language }}",
 				"targetLang" : "{{ conf.tgt_language }}",
-				"maxIdleTime" : 180
+				"maxIdleTime" : "{{ idle_time }}"
 			});
 			ptm.load();
 		});
@@ -43,9 +43,8 @@
       <input type="submit" value="{{ form_button_text }}" name="form-tgt-submit" id="form-tgt-submit" />
     </form>
     {% if training %}
-    <form action="/tm/" method="post" name="form-training" id="form-training">
-      {% csrf_token %}
-      <p><input type="submit" value="Quit training. I'm ready to start the experiment" name="form-train-submit" id="form-train-submit" /></p>
+    <form action="/tm/">
+      <input type="submit" value="Quit training. I'm ready to start the experiment">
     </form>
     {% endif %}
   </div>

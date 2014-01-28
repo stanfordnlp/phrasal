@@ -60,7 +60,8 @@ def user_training_status(user, complete=False):
 def get_translate_configuration_for_user(user,training=False):
     """
     Configures the translation session for the user.
-    
+
+    Raises: IndexError
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]

@@ -20,6 +20,9 @@ TRAINING_BUTTON_TEXT = [_('Next: Browser Check'),
                         _('Next: Open the practice UI'),
                         _('Try another document')]
                         
+# UI Idle timout
+IDLE_TIME = 180
+TRAINING_IDLE_TIME = 9999
 
 ##
 ## Notes:
@@ -68,20 +71,27 @@ def training_ui(request):
     if request.method == 'GET':
         conf,form = controller.get_translate_configuration_for_user(request.user,is_training)
         if conf:
+            # User has seen the UI at least once
+            controller.user_training_status(request.user, True)
+            # Return the UI
             return render_to_response('translate.html',
                                       {'conf' : conf,
                                        'form_action' : '/tm/training/ui/',
                                        'form' : form,
+                                       'idle_time' : TRAINING_IDLE_TIME,
                                        'form_button_text' : 'Go to next training document',
                                        'training' : True },
                                       context_instance=RequestContext(request))
         else:
-            controller.user_training_status(request.user, True)
+            # Done with all training documents
             return redirect('/tm/')
         
     elif request.method == 'POST':
         # Next document
-        controller.save_translation_session(request.user, request.POST, is_training)
+        try:
+            controller.save_translation_session(request.user, request.POST, is_training)
+        except RuntimeError:
+            return redirect('/tm/')
         return redirect('/tm/training/ui/')
 
 @login_required
@@ -89,8 +99,6 @@ def translate(request):
     """
     Return the translation UI and static content.
     """
-    # TODO(spenceg): Need to change the form action per Jason's client
-    #                -side manipulation of the URL?
     if request.method == 'GET':
         conf,form = controller.get_translate_configuration_for_user(request.user)
         if conf:
@@ -98,14 +106,15 @@ def translate(request):
                                       {'conf' : conf,
                                        'form_action' : '/tm/translate/',
                                        'form' : form,
+                                       'idle_time' : IDLE_TIME,
                                        'form_button_text' : 'Submit translations'},
                                       context_instance=RequestContext(request))
         else:
             # No more translation sessions
             return redirect('/tm/')
     elif request.method == 'POST':
-        # Note: raises runtime error if the form doesn't validate
-        # Then what do we do?
+        # Will raise a runtime error in the event of
+        # a problem on the backend.
         controller.save_translation_session(request.user, request.POST)
         # Go to next document
         return redirect('/tm/translate/')

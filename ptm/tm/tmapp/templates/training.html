@@ -46,7 +46,7 @@
 	<p style="margin-top: 0" id="BrowserNoPass"></p>
 </div>
 
-<p>If your browser fails any tests other than <b>touch</b>, then first ensure that your browser is the latest version of <a href="http://www.google.com/chrome/‎" target="_blank">Google Chrome</a>. If your browser still fails these checks, then contact the administrators before proceeding. <b>You will not be paid if your browser does not pass prior to starting the experiment.</b></p>
+<p>If your browser fails any tests other than <b>touch</b>, then first ensure that your browser is the latest version of <a href="http://www.google.com/chrome/" target="_blank">Google Chrome</a>. If your browser still fails these checks, then contact the administrators before proceeding. <b>You will not be paid if your browser does not pass prior to starting the experiment.</b></p>
 <div>
 <form action="/tm/training/{{ step }}/">
     <input type="submit" value="{{ form_button_text }}">
@@ -126,15 +126,13 @@
 </div>
 
 {% elif step == 5 %}
-<h3>Translation Interface A (Post-edit)</h3>
+<p>The two translation modules have different interfaces.</p>
 
-<p>The two translation modules have different interfaces. In this first module...</p>
+<h3>Translation Interface A (Post-edit)</h3>
 
 <p>You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Each textbox will be pre-populated with a suggested {{ tgt_lang }} translation. You may accept, edit, or delete the suggested translation. Please work as quickly and as accurately as you can. The "idle timer," which limits your pauses to 3 minutes, is located at the bottom left of your browser window. If you do not complete the translation before the idle timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next document.</p>
 
 <h3>Translation Interface B (Interactive)</h3>
-
-<p>The two translation modules have different interfaces. In this second module...</p>
 
 <p>You will be presented with {{ src_lang }} documents in a sequence. The interface will provide several interactive aids to help you translate each document into {{ tgt_lang }}. The objective remains the same: translate each document as quickly and as accurately as you can. As before, the "idle timer" will appear at the bottom left of your browser window.</p>
 
