@@ -61,7 +61,6 @@ def get_translate_configuration_for_user(user,training=False):
     """
     Configures the translation session for the user.
 
-    Raises: IndexError
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
@@ -112,6 +111,8 @@ def get_user_translation_direction(user):
 def save_translation_session(user, post_data, training=False):
     """
     Save the result of a translation session
+
+    Raises: RuntimeError
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
