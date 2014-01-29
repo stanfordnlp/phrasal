@@ -5,7 +5,6 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import com.google.gson.Gson;
@@ -21,41 +20,17 @@ import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.tregex.TregexMatcher;
 import edu.stanford.nlp.trees.tregex.TregexPattern;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Takes a raw French document and converts it to a JSON file for the Phrasal 
  * service.
  * 
+ * TODO: Support languages other than French for which we do not have CoreNLP.
+ * 
  * @author Spence Green
  *
  */
 public class RawFrenchToJSON {
-
-  private static final String CLOSE_LEFT = "cl";
-  
-  private static class UncasedFrenchPreprocessor extends FrenchPreprocessor {
-    @Override
-    public String toUncased(String input) {
-      return input;
-    }
-  }
-  
-  private static List<String> makeFormatString(SymmetricalWordAlignment alignment) {
-    List<String> formatSpec = Generics.newArrayList(alignment.eSize());
-    int lastFIndex = -1;
-    for (int j = 0, size = alignment.eSize(); j < size; ++j) {
-      Set<Integer> e2fSet = alignment.e2f(j);
-      if (e2fSet.size() != 1) {
-        throw new RuntimeException();
-      }
-      int fIndex = e2fSet.iterator().next();
-      formatSpec.add(fIndex == lastFIndex ? CLOSE_LEFT : "");
-      lastFIndex = fIndex;
-    }
-    
-    return formatSpec;
-  }
   
   /**
    * Extract chunks. 
@@ -106,7 +81,7 @@ public class RawFrenchToJSON {
     LexicalizedParser parser = LexicalizedParser.loadModel(parserFile);
     
     // Configure tokenizer
-    FrenchPreprocessor preprocessor = new UncasedFrenchPreprocessor();
+    FrenchPreprocessor preprocessor = new FrenchPreprocessor(true);
     preprocessor.setOptions(FrenchTokenizer.FTB_OPTIONS);
     
     LineNumberReader reader = IOTools.getReaderFromFile(textFile);
@@ -121,7 +96,7 @@ public class RawFrenchToJSON {
         tree.indexLeaves();
         int[] chunkVector = getChunkVector(tree);
         SourceSegment container = new SourceSegment(tokenizedSequence.size());
-        container.layoutSpec.addAll(makeFormatString(alignment));
+        container.layoutSpec.addAll(CoreNLPToJSON.makeLayoutSpec(alignment));
         for (int j = 0, size = tokenizedSequence.size(); j < size; ++j) {
           String token = tokenizedSequence.get(j).toString();
           container.tokens.add(CoreNLPToJSON.unescape(token));

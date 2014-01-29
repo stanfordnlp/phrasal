@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -16,6 +15,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -33,8 +33,13 @@ public final class PhrasalService {
 
   private PhrasalService() {}
 
+  /**
+   * Specify the command-line arguments.
+   * 
+   * @return
+   */
   private static Map<String, Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = new HashMap<String,Integer>();
+    Map<String,Integer> optionArgDefs = Generics.newHashMap();
     optionArgDefs.put("p", 1);
     optionArgDefs.put("dl", 0);
     optionArgDefs.put("m", 0);
@@ -44,6 +49,11 @@ public final class PhrasalService {
     return optionArgDefs;
   }
 
+  /**
+   * Generate a usage message.
+   * 
+   * @return
+   */
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
@@ -128,7 +138,7 @@ public final class PhrasalService {
       server.start();
       server.join();
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.log(Level.SEVERE, "Servlet crashed. Service shutting down.", e);
     }
   }
 }

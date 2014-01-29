@@ -1,13 +1,13 @@
 package edu.stanford.nlp.mt.service.handlers;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +50,7 @@ public class TranslationRequestHandler implements RequestHandler {
 
   private static final int DIVERSITY_WINDOW = 3;
   private static final int NBEST_MULTIPLIER = 10;
+  private static final int MAX_RETRIES_PER_REQUEST = 2;
   
   private MulticoreWrapper<DecoderInput,DecoderOutput> wrapper;
   private final Phrasal decoder;
@@ -92,6 +93,10 @@ public class TranslationRequestHandler implements RequestHandler {
       this.request = request;
       this.continuation = continuation;
       this.submitTime = System.nanoTime();
+    }
+    @Override
+    public String toString() {
+      return String.format("id: %d n: %d tgt_lang: %s%nsrc: %s%ntgt: %s", inputId, n, targetLanguage.toString(), text, tgtPrefix);
     }
   }
   
@@ -146,9 +151,7 @@ public class TranslationRequestHandler implements RequestHandler {
             Preprocessor targetPreprocessor = ProcessorFactory.getPreprocessor(input.targetLanguage.name());
             t2t = targetPreprocessor.processAndAlign(input.tgtPrefix);
           } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            logger.warning("Prefix preprocessor threw an exception: " + sw.toString());
+            logger.log(Level.WARNING, "Prefix preprocessor threw an exception", e);
             Sequence<IString> prefix = IStrings.tokenize(input.tgtPrefix);
             t2t = identityAlignment(prefix);
           }
@@ -218,18 +221,17 @@ public class TranslationRequestHandler implements RequestHandler {
             input.inputId, querySeconds, preprocSeconds, decodeSeconds, postprocSeconds));
 
         // Create the service reply
-        Type t = new TypeToken<TranslationReply>() {}.getType();
-        List<TranslationQuery> queryList = toQuery(translationList, alignments, scoreList);
-        TranslationReply baseResponse = new TranslationReply(queryList);
-        ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
-        input.request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
+        TranslationRequestHandler.populateRequest(input.request, translationList, alignments, scoreList);
         input.continuation.resume(); // Re-dispatch/ resume to generate response
 
         return new DecoderOutput(input.inputId, true);
       
       } catch(Exception e) {
-        // Catch all exception handler
-        e.printStackTrace();
+        // Catch all exception handler. Generate an empty response.
+        logger.log(Level.SEVERE, "Decoding of request failed: " + input.toString(), e);
+        TranslationRequestHandler.populateRequest(input.request, new LinkedList<Sequence<IString>>(), 
+            new LinkedList<List<String>>(), new LinkedList<Double>());
+        input.continuation.resume(); // Re-dispatch/ resume to generate response
       }
       return new DecoderOutput(input.inputId, false);
     }
@@ -272,28 +274,6 @@ public class TranslationRequestHandler implements RequestHandler {
         }
       }
       return alignment;
-    }
-
-    /**
-     * Package the output of the decoder and post-processor for return by the service.
-     * 
-     * @param translationList
-     * @param alignments
-     * @param scoreList
-     * @return
-     */
-    private static List<TranslationQuery> toQuery(List<Sequence<IString>> translationList,
-        List<List<String>> alignments, List<Double> scoreList) {
-      final int nTranslations = translationList.size();
-      double normalizer = 0.0;
-      for (double d : scoreList) normalizer += d;
-      List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
-      for (int i = 0; i < nTranslations; ++i) {
-        TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
-            alignments.get(i), scoreList.get(i) / normalizer);
-        sortedList.add(query);
-      }
-      return sortedList;
     }
 
     /**
@@ -365,6 +345,45 @@ public class TranslationRequestHandler implements RequestHandler {
     }
   }
 
+  /**
+   * Package the output of the decoder and post-processor for return by the service.
+   * 
+   * @param translationList
+   * @param alignments
+   * @param scoreList
+   * @return
+   */
+  private static List<TranslationQuery> toQuery(List<Sequence<IString>> translationList,
+      List<List<String>> alignments, List<Double> scoreList) {
+    final int nTranslations = translationList.size();
+    double normalizer = 0.0;
+    for (double d : scoreList) normalizer += d;
+    List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
+    for (int i = 0; i < nTranslations; ++i) {
+      TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
+          alignments.get(i), scoreList.get(i) / normalizer);
+      sortedList.add(query);
+    }
+    return sortedList;
+  }
+
+  /**
+   * Populate a servlet request with the result of processing the input.
+   * 
+   * @param request
+   * @param translationList
+   * @param alignments
+   * @param scoreList
+   */
+  private static void populateRequest(HttpServletRequest request, List<Sequence<IString>> translationList,
+      List<List<String>> alignments, List<Double> scoreList) {
+    Type t = new TypeToken<TranslationReply>() {}.getType();
+    List<TranslationQuery> queryList = toQuery(translationList, alignments, scoreList);
+    TranslationReply baseResponse = new TranslationReply(queryList);
+    ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
+    request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
+  }
+  
   @Override
   public void handleAsynchronous(Request baseRequest,
       HttpServletRequest request, HttpServletResponse response) {
@@ -374,36 +393,47 @@ public class TranslationRequestHandler implements RequestHandler {
     Continuation continuation = ContinuationSupport.getContinuation(request);
     continuation.suspend(response);
 
-    // Submit to the decoder
+    // Create the input to the translation service
     TranslationRequest translationRequest = (TranslationRequest) baseRequest;
     int sourceId = inputId.incrementAndGet();
     DecoderInput input = new DecoderInput(sourceId, translationRequest.text, translationRequest.tgtPrefix, 
         translationRequest.n, translationRequest.tgt, request, continuation);
-    
-    try {
-      // Clear the wrapper of status messages of completed jobs
-      wrapper.put(input);
-      while(wrapper.peek()) {
-        DecoderOutput status = wrapper.poll();
-        sourceId = status.inputId;
-        if (status.success) {
-          logger.info(String.format("Input id %s: status %b", status.inputId, status.success));
-        } else {
-          logger.severe(String.format("Input id %s: status %b", status.inputId, status.success));
-        }
-      }
-    } catch (RejectedExecutionException e) {
-      e.printStackTrace();
-      restartThreadpool(sourceId);
-    }
-  }
 
-  private void restartThreadpool(int sourceId) {
-    logger.severe("Restarting threadpool for input id: " + String.valueOf(sourceId));
-    wrapper.join();
-    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
-        new DecoderService(0, decoder), false);
-    logger.info("Restarted threadpool");
+    // Try to submit the request to the service.
+    boolean requestSubmitted = false;
+    for (int numRetries = 0; numRetries < MAX_RETRIES_PER_REQUEST; ++numRetries) {
+      try {
+        // Clear the wrapper of status messages of completed jobs
+        wrapper.put(input);
+        requestSubmitted = true;
+        while(wrapper.peek()) {
+          DecoderOutput status = wrapper.poll();
+          sourceId = status.inputId;
+          if (status.success) {
+            logger.info(String.format("Input id %s: status %b", status.inputId, status.success));
+          } else {
+            logger.severe(String.format("Input id %s: status %b", status.inputId, status.success));
+          }
+        }
+        break;
+        
+      } catch (RejectedExecutionException e) {
+        logger.log(Level.SEVERE, "Threadpool corrupted by underlying exceptions. Restarting...", e);
+        wrapper.join();
+        wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
+            new DecoderService(0, decoder), false);
+        logger.info("Restarted threadpool");
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Exception while processing request", e);
+      }
+    }
+    
+    if ( ! requestSubmitted) {
+      logger.severe("Decoding of request failed: " + input.toString());
+      TranslationRequestHandler.populateRequest(input.request, new LinkedList<Sequence<IString>>(), 
+          new LinkedList<List<String>>(), new LinkedList<Double>());
+      input.continuation.resume(); // Re-dispatch/ resume to generate response
+    }
   }
 
   @Override
