@@ -13,6 +13,7 @@ admin.site.register(models.TranslationSession)
 admin.site.register(models.SourceDocument)
 admin.site.register(models.TrainingRecord)
 admin.site.register(models.UserConfiguration)
+admin.site.register(models.ExitSurveyData)
 
 #
 # User admin information

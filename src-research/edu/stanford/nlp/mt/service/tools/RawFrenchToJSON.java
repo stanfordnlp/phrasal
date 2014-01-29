@@ -138,6 +138,9 @@ public class RawFrenchToJSON {
       e.printStackTrace();
     }
     
+    System.err.printf("Read %d lines from %s%n", reader.getLineNumber(), textFile);
+    System.err.printf("Wrote %d lines to JSON output%n", annotations.size());
+    
     final SourceDocument jsonDocument = new SourceDocument(textFile, annotations);
     
     // Convert to json

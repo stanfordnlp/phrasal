@@ -55,11 +55,18 @@ class UserCreationForm2(UserCreationForm):
         return cleaned_data
 
     def save(self, commit=True):
+        cleaned_data = self.cleaned_data
         user = super(UserCreationForm, self).save(commit=False)
-        user.username = self.cleaned_data['username']
+        user.username = cleaned_data['username']
         user.set_password('password1')
         if commit:
             user.save()
+
+            # Created the user. Now configure the user session
+            json_str = cleaned_data['json_spec']
+            d = json.loads(json_str)
+            
+            
             # TODO(spenceg): If we get this far, then we should create the
             # other user data, including translation sessions and training records
 

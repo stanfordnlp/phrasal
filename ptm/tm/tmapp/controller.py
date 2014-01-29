@@ -26,17 +26,17 @@ def get_user_app_status(user):
     user_status = {}
     
     # Filled out demographic info
-    user_status['demographic_form'] = True if model_utils.get_demographic_data(user) else False
+    user_status['demographic_form_done'] = True if model_utils.get_demographic_data(user) else False
 
     # Completed training
-    user_status['training'] = True if model_utils.get_training_record(user) else False
+    user_status['training_done'] = True if model_utils.get_training_record(user) else False
 
     # Translation sessions remaining
-    sessions = TranslationSession.objects.filter(user=user).exclude(text__isnull=False).order_by('order')
-    user_status['translate'] = True if len(sessions) == 0 else False
+    sessions = TranslationSession.objects.filter(user=user,training=False).exclude(complete=True)
+    user_status['translate_done'] = True if len(sessions) == 0 else False
 
     # Filled out exit survey
-    user_status['exit_form'] = True if model_utils.get_exit_data(user) else False
+    user_status['exit_form_done'] = True if model_utils.get_exit_data(user) else False
         
     return user_status
 
@@ -188,7 +188,7 @@ def save_modelform(user, model_form):
 #
 SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
-SERVICE_URLS['fr']['en'] = 'http://127.0.0.1:8017/x'
+SERVICE_URLS['fr']['en'] = 'http://joan.stanford.edu:8017/x'
 SERVICE_URLS['en']['de'] = 'http://127.0.0.1:8017/x'
 
 # Request types

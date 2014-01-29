@@ -102,9 +102,10 @@ class TranslationSession(models.Model):
     log = models.TextField(null=True,blank=True)
 
     def __unicode__(self):
-        return '%s %s %s' % (self.user.username,
-                             self.src_document.url,
-                             self.tgt_language.code)
+        return '%s %s tgt_lang: %s complete: %s' % (self.user.username,
+                                                    self.src_document.url,
+                                                    self.tgt_language.code,
+                                                    str(self.complete))
     
 class DemographicData(models.Model):
     """

@@ -134,6 +134,7 @@ PIPELINE_CSS = {
     'tmapp_css': {
         'source_filenames': (
             'tmapp/css/form.css',
+            'tmapp/css/ui.css',
         ),
         'output_filename': 'tmapp/tmapp_min.css',
         'variant': 'datauri',
