@@ -84,9 +84,9 @@ template <class Model> class Wrap : public WrapAbstract {
 #ifdef HAVE_NPLM
     // State length depends on how many <null> and <s> words pad the beginning.
     unsigned char StateLength(const lm::np::State &state) const {
-      if (state.words[0] == back_.NullWord()) {
+      if (state.words[0] == back_.GetVocabulary().NullWord()) {
         unsigned char position;
-        for (position = 1; (position < Order() - 1) && state.words[position] == back_.NullWord(); ++position) {}
+        for (position = 1; (position < Order() - 1) && state.words[position] == back_.GetVocabulary().NullWord(); ++position) {}
         // Position is now the first non-null entry.  Do not include any <null> in state.
         return Order() - 1 - position;
       } else if (state.words[0] == back_.GetVocabulary().BeginSentence()) {
