@@ -196,12 +196,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // re-sort things here just in case.
     Collections.sort(translations, translationComparator);
 
-    if (DEBUG) {
-      System.err.printf("source id %d: n-best list size: %d%n", sourceInputId, translations.size());
-      long nBestConstructionTime = System.nanoTime() - nbestStartTime;
-      System.err.printf("N-best generation time: %.3f seconds%n",
-          nBestConstructionTime / 1e9);
-    }
+    System.err.printf("source id %d: n-best size: %d time: %.3fsec%n", sourceInputId, translations.size(),
+        (System.nanoTime() - nbestStartTime) / 1e9);
 
     return translations;
   }
