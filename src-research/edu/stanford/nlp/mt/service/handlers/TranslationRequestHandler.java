@@ -408,7 +408,7 @@ public class TranslationRequestHandler implements RequestHandler {
 
     // Try to submit the request to the service.
     boolean requestSubmitted = false;
-    for (int numRetries = 0; numRetries < MAX_RETRIES_PER_REQUEST; ++numRetries) {
+    for (int numRetries = 0; !requestSubmitted && numRetries < MAX_RETRIES_PER_REQUEST; ++numRetries) {
       try {
         // Clear the wrapper of status messages of completed jobs
         wrapper.put(input);
@@ -422,7 +422,6 @@ public class TranslationRequestHandler implements RequestHandler {
             logger.severe(String.format("Input id %s: status %b", status.inputId, status.success));
           }
         }
-        break;
         
       } catch (RejectedExecutionException e) {
         logger.log(Level.SEVERE, "Threadpool corrupted by underlying exceptions. Restarting...", e);
