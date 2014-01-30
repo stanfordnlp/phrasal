@@ -66,18 +66,32 @@ public class ConcreteRule<TK,FV> implements
           .println("warning: standard linear distortion with DTU phrases.");
   }
 
-  public ConcreteRule(Rule<TK> abstractRule,
-      CoverageSet sourceCoverage,
+  /**
+   * Constructor.
+   * 
+   * @param abstractRule
+   * @param sourceCoverage
+   * @param phraseFeaturizer
+   * @param scorer
+   * @param sourceSequence
+   * @param phraseTableName
+   * @param sourceInputId
+   */
+  public ConcreteRule(Rule<TK> abstractRule, CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
     this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
+    
+    // Extract rule features
     Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
         sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer == null ? 
         new ArrayList<FeatureValue<FV>>() : phraseFeaturizer.ruleFeaturize(f);
+    
+    // Cache selected features
     cachedFeatureList = Generics.newLinkedList();
     for (FeatureValue<FV> feature : features) {
       if ( ! feature.doNotCache) {

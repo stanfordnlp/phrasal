@@ -45,7 +45,6 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       new PhraseTableScoresFeaturizer(NUM_SYNTHETIC_SCORES);
 
   private final Sequence<IString> sourceSequence;
-  private final int sourceLength;
   private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
   private final int sourceInputId;
@@ -59,7 +58,6 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
    */
   public SoftPrefixOutputSpace(Sequence<IString> sourceSequence, Sequence<IString> allowablePrefix, int sourceInputId) {
     this.sourceSequence = sourceSequence;
-    this.sourceLength = sourceSequence.size();
     this.allowablePrefix = allowablePrefix;
     this.allowablePrefixLength = allowablePrefix.size();
     this.sourceInputId = sourceInputId;
@@ -70,7 +68,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     // Allow any target word to map anywhere into the source, but with high
     // cost so that only OOVs and words outside the distortion limit will
     // be used.
-    for (int i = 0; i < sourceLength; ++i) {
+    for (int i = 0, limit = sourceSequence.size(); i < limit; ++i) {
       final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
       for (int j = 0, size = allowablePrefix.size(); j < size; ++j) {
         ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, 
