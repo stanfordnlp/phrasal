@@ -1167,16 +1167,19 @@ public class Phrasal {
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       boolean targetsArePrefixes) {
-    assert threadId >= 0 && threadId < numThreads;
-    assert sourceInputId >= 0;
+    // Sanity checks
+    if (threadId < 0 || threadId >= numThreads) {
+      throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
+    }
+    if (sourceInputId < 0) {
+      throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
+    }
 
     // Output space of the decoder
-    OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(source, sourceInputId, 
+    OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, 
         targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase());
 
-    List<RichTranslation<IString, String>> translations =
-        new ArrayList<RichTranslation<IString, String>>(1);
-
+    List<RichTranslation<IString, String>> translations = Generics.newArrayList(1);
     if (numTranslations > 1) {
       translations = inferers
           .get(threadId).nbest(

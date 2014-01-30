@@ -44,7 +44,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   private static final RuleFeaturizer<IString,String> featurizer = 
       new PhraseTableScoresFeaturizer(NUM_SYNTHETIC_SCORES);
 
-  public final Sequence<IString> sourceSequence;
+  private Sequence<IString> sourceSequence;
   private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
   private final int sourceInputId;
@@ -56,13 +56,18 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
    * @param allowablePrefix
    * @param sourceInputId
    */
-  public SoftPrefixOutputSpace(Sequence<IString> sourceSequence, Sequence<IString> allowablePrefix, int sourceInputId) {
-    this.sourceSequence = sourceSequence;
+  public SoftPrefixOutputSpace(Sequence<IString> allowablePrefix, int sourceInputId) {
     this.allowablePrefix = allowablePrefix;
     this.allowablePrefixLength = allowablePrefix.size();
     this.sourceInputId = sourceInputId;
   }
 
+
+  @Override
+  public void setSourceSequence(Sequence<IString> sourceSequence) {
+    this.sourceSequence = sourceSequence;
+  }
+  
   @Override
   public List<ConcreteRule<IString, String>> filter(List<ConcreteRule<IString, String>> ruleList) {
     // Allow any target word to map anywhere into the source, but with high

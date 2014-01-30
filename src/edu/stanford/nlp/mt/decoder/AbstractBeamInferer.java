@@ -1,13 +1,33 @@
 package edu.stanford.nlp.mt.decoder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.recomb.*;
-import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.base.AbstractSequence;
+import edu.stanford.nlp.mt.base.ConcreteRule;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.DTURule;
+import edu.stanford.nlp.mt.base.FeatureValues;
+import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.Rule;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
+import edu.stanford.nlp.mt.decoder.util.Beam;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.OutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Abstract interfaces and algorithms that apply to all inference algorithms.
  * 
  * @author danielcer
  * 
@@ -48,6 +68,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @return
    */
   private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
+    if (source == null) return null;
     List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, -1, null);
 
     CoverageSet possibleCoverage = new CoverageSet();
@@ -75,6 +96,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // filter unknown words
     if (filterUnknownWords) {
        source = filterUnknownWords(source);
+       if (outputSpace != null) outputSpace.setSourceSequence(source);
     }
     if (source == null) return null;
     
@@ -219,11 +241,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets) {
-    // filter unknown words
+    
+    // filter unknown source words
     if (filterUnknownWords) {
       source = filterUnknownWords(source);
+      if (outputSpace != null) outputSpace.setSourceSequence(source);
     }
     if (source == null) return null;
+    
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
         null, outputSpace, targets, 1);
     if (beam == null)
@@ -276,7 +301,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @author danielcer
    */
   public class CoverageBeams {
-    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = new HashMap<CoverageSet, Beam<Derivation<TK, FV>>>();
+    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = Generics.newHashMap();
     final private Set<CoverageSet>[] coverageCountToCoverageSets;
     final private RecombinationHistory<Derivation<TK, FV>> recombinationHistory;
 
@@ -285,7 +310,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
       coverageCountToCoverageSets = new Set[sourceSize + 1];
       for (int i = 0; i < sourceSize + 1; i++) {
-        coverageCountToCoverageSets[i] = new HashSet<CoverageSet>();
+        coverageCountToCoverageSets[i] = Generics.newHashSet();
       }
       this.recombinationHistory = recombinationHistory;
     }
@@ -307,7 +332,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
 
     public List<Derivation<TK, FV>> getHypotheses(int coverageCount) {
-      List<Derivation<TK, FV>> hypothesisList = new LinkedList<Derivation<TK, FV>>();
+      List<Derivation<TK, FV>> hypothesisList = Generics.newLinkedList();
 
       for (CoverageSet coverage : coverageCountToCoverageSets[coverageCount]) {
         Beam<Derivation<TK, FV>> hypothesisBeam = get(coverage);
