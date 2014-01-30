@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.AbstractSequence;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTURule;
@@ -41,16 +40,21 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_OPT, "false"));
   static public boolean DISTINCT_SURFACE_TRANSLATIONS = false;
+  
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
+  private final Comparator<RichTranslation<TK,FV>> translationComparator;
 
-  public static final int MAX_DUPLICATE_FACTOR = 10;
-  public static final int SAFE_LIST = 500;
-
+  /**
+   * Constructor.
+   * 
+   * @param builder
+   */
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
+    this.translationComparator = new RichTranslationComparator<TK,FV>();
   }
 
   @Override
@@ -87,6 +91,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     return filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
   }
 
+  /**
+   * TODO(spenceg): This routine is *extremely* inefficient. Rewrite with e.g., Huang and Chiang's
+   * k-best extraction or something.
+   */
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
@@ -118,77 +126,66 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<Derivation<TK, FV>>(
         goalStates, recombinationHistory);
     Set<Sequence<TK>> distinctSurfaceTranslations = Generics.newHashSet();
-    if (DISTINCT_SURFACE_TRANSLATIONS) {
-      System.err.println("N-best list with distinct surface strings: " + DISTINCT_SURFACE_TRANSLATIONS);
-    }
 
     // Extract
-    int hypCount = 0;
-    final int maxDuplicateCount = size * MAX_DUPLICATE_FACTOR;
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
-    for (List<Derivation<TK, FV>> hypList : latticeDecoder) {
+    for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
       boolean withDTUs = false;
-      ++hypCount;
-      Derivation<TK, FV> hyp = null;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
 
-      for (Derivation<TK, FV> nextHyp : hypList) {
-        if (hyp == null) {
-          hyp = nextHyp;
+      // TODO(spenceg): This is very inefficient. Reconstruct the derivation
+      // from the lattice path since the current n-best list extractor
+      // does not set the parent references when it traverses the lattice. These
+      // references may be incorrect due to recombination.
+      // When we replace StateLatticeDecoder, this code should go away.
+      Derivation<TK, FV> goalHyp = null;
+      long goalHypId = -1;
+      for (Derivation<TK, FV> node : latticePath) {
+        if (goalHyp == null) {
+          goalHyp = node;
           continue;
         }
-        if (nextHyp.rule.abstractRule instanceof DTURule)
+        goalHypId = node.id;
+        if (node.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {
-          hyp = new DTUHypothesis<TK, FV>(sourceInputId,
-              nextHyp.rule, hyp.length, hyp, nextHyp, featurizer,
+          goalHyp = new DTUHypothesis<TK, FV>(sourceInputId,
+              node.rule, goalHyp.length, goalHyp, node, featurizer,
               scorer, heuristic, seenOptions);
         } else {
-          hyp = new Derivation<TK, FV>(sourceInputId, nextHyp.rule,
-              hyp.length, hyp, featurizer, scorer, heuristic);
+          goalHyp = new Derivation<TK, FV>(sourceInputId, node.rule,
+              goalHyp.length, goalHyp, featurizer, scorer, heuristic);
         }
       }
 
       if (withDTUs) {
-        DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) hyp;
+        DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) goalHyp;
         if (!dtuHyp.isDone() || dtuHyp.hasExpired())
           System.err.printf("Warning: option not complete(%d,%s): %s\n",
-              translations.size(), dtuHyp.hasExpired(), hyp);
+              translations.size(), dtuHyp.hasExpired(), goalHyp);
       }
 
       // Decoder failure in which the null hypothesis was returned.
-      if (hyp == null || hyp.featurizable == null) {
+      if (goalHyp == null || goalHyp.featurizable == null) {
         System.err.printf("%s: WARNING: null hypothesis encountered for input %d; decoder failed%n", 
             this.getClass().getName(), sourceInputId);
         return null;
       }
       
       if (DISTINCT_SURFACE_TRANSLATIONS) {
-        // Get surface string:
-        AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.targetPrefix;
-
-        // If seen this string before and not among the top-k, skip it:
-        if (hypCount > SAFE_LIST && distinctSurfaceTranslations.contains(seq)) {
+        if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
+          // Seen a higher-scoring derivation with this target string before
           continue;
+        } else {
+          distinctSurfaceTranslations.add(goalHyp.featurizable.targetPrefix);
         }
-
-        // Add current hypothesis to nbest list and set of uniq strings:
-        Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
-        translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
-            hyp.score, FeatureValues.combine(hyp), beamGoalHyp.id));
-        distinctSurfaceTranslations.add(seq);
-        if (distinctSurfaceTranslations.size() >= size
-            || hypCount >= maxDuplicateCount)
-          break;
-
-      } else {
-        Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
-        translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
-            hyp.score, FeatureValues.combine(hyp), beamGoalHyp.id));
-        if (translations.size() >= size) {
-          break;
-        }
+      }
+      
+      translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
+          goalHyp.score, FeatureValues.combine(goalHyp), goalHypId));
+      if (translations.size() >= size) {
+        break;
       }
     }
 
@@ -197,34 +194,22 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // scores.
     // Since the n-best list should be sorted according to the true scores, we
     // re-sort things here just in case.
-    Collections.sort(translations, new Comparator<RichTranslation<TK, FV>>() {
-      @Override
-      public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
-        return (int) Math.signum(o2.score - o1.score);
-      }
-    });
+    Collections.sort(translations, translationComparator);
 
-    assert (!translations.isEmpty());
-    System.err.printf("source id %d: n-best list size: %d%n", sourceInputId, translations.size());
     if (DEBUG) {
+      System.err.printf("source id %d: n-best list size: %d%n", sourceInputId, translations.size());
       long nBestConstructionTime = System.nanoTime() - nbestStartTime;
-      System.err.printf("N-best generation time: %.3f seconds\n",
+      System.err.printf("N-best generation time: %.3f seconds%n",
           nBestConstructionTime / 1e9);
     }
 
-    if (DISTINCT_SURFACE_TRANSLATIONS) {
-      List<RichTranslation<TK, FV>> dtranslations = Generics.newLinkedList();
-      distinctSurfaceTranslations.clear();
-      for (RichTranslation<TK, FV> rt : translations) {
-        if (distinctSurfaceTranslations.contains(rt.translation)) {
-          continue;
-        }
-        distinctSurfaceTranslations.add(rt.translation);
-        dtranslations.add(rt);
-      }
-      return dtranslations;
-    } else {
-      return translations;
+    return translations;
+  }
+  
+  private static class RichTranslationComparator<TK,FV> implements Comparator<RichTranslation<TK,FV>> {
+    @Override
+    public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+      return (int) Math.signum(o2.score - o1.score);
     }
   }
 
