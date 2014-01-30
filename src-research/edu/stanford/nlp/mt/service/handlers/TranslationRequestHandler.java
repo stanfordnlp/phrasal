@@ -4,7 +4,9 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -54,7 +56,10 @@ public class TranslationRequestHandler implements RequestHandler {
   
   private MulticoreWrapper<DecoderInput,DecoderOutput> wrapper;
   private final Phrasal decoder;
-  
+
+  // Threadsafe fields shared among decoding threads
+  private static final ConcurrentHashMap<Language,Preprocessor> targetPreprocessorCache =
+      new ConcurrentHashMap<Language,Preprocessor>();
   private static Logger logger;
   private static AtomicInteger inputId = new AtomicInteger();
 
@@ -69,7 +74,6 @@ public class TranslationRequestHandler implements RequestHandler {
     // needed to restart the request after processing.
     wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
         new DecoderService(0, decoder), false);
-    
     logger = Logger.getLogger(TranslationRequestHandler.class.getName());
     SystemLogger.attach(logger, LogName.SERVICE);
   }
@@ -101,8 +105,8 @@ public class TranslationRequestHandler implements RequestHandler {
   }
   
   private static class DecoderOutput {
-    public final int inputId;
-    public final boolean success;
+    private final int inputId;
+    private final boolean success;
     public DecoderOutput(int inputId, boolean status) {
       this.inputId = inputId;
       this.success = status;
@@ -128,10 +132,10 @@ public class TranslationRequestHandler implements RequestHandler {
 
     @Override
     public DecoderOutput process(DecoderInput input) {
-      // Source pre-processing
       logger.info(String.format("Input %d: %s", input.inputId, input.text));
       try {
-        long preprocStart = System.nanoTime();
+        // Source pre-processing
+        final long preprocStart = System.nanoTime();
         Sequence<IString> source;
         SymmetricalWordAlignment s2sPrime = null;
         if (sourcePreprocessor == null) {
@@ -148,8 +152,12 @@ public class TranslationRequestHandler implements RequestHandler {
         if (input.tgtPrefix != null && input.tgtPrefix.length() > 0) {
           SymmetricalWordAlignment t2t;
           try {
-            Preprocessor targetPreprocessor = ProcessorFactory.getPreprocessor(input.targetLanguage.name());
-            t2t = targetPreprocessor.processAndAlign(input.tgtPrefix);
+            Language targetLanguage = input.targetLanguage;
+            if ( ! targetPreprocessorCache.contains(targetLanguage)) {
+              targetPreprocessorCache.putIfAbsent(targetLanguage, ProcessorFactory.getPreprocessor(input.targetLanguage.name()));
+            }
+            t2t = targetPreprocessorCache.get(targetLanguage).processAndAlign(input.tgtPrefix);
+            
           } catch (Exception e) {
             logger.log(Level.WARNING, "Prefix preprocessor threw an exception", e);
             Sequence<IString> prefix = IStrings.tokenize(input.tgtPrefix);

@@ -49,7 +49,14 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
   private final int sourceInputId;
-    
+
+  /**
+   * Constructor.
+   * 
+   * @param sourceSequence
+   * @param allowablePrefix
+   * @param sourceInputId
+   */
   public SoftPrefixOutputSpace(Sequence<IString> sourceSequence, Sequence<IString> allowablePrefix, int sourceInputId) {
     this.sourceSequence = sourceSequence;
     this.sourceLength = sourceSequence.size();

@@ -49,7 +49,9 @@ public class RuleGrid<TK,FV> {
     grid = new List[sourceLength * sourceLength];
     for (ConcreteRule<TK,FV> rule : ruleList) {
       int startPos = rule.sourcePosition;
-      int endPos = rule.sourceCoverage.nextClearBit(rule.sourcePosition) - 1;
+      int endPos = startPos + rule.abstractRule.source.size() - 1;
+      assert startPos <= endPos : String.format("Illegal span: [%d,%d] %s", startPos, endPos, rule.toString());
+      assert endPos < sourceLength : String.format("End index out of bounds: %d >= %d %s", endPos, sourceLength, rule.toString());
       int offset = getIndex(startPos, endPos);
       if (grid[offset] == null) grid[offset] = Generics.newArrayList();
       grid[offset].add(rule);
