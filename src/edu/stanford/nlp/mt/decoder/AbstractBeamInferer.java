@@ -130,6 +130,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // Extract
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
+    int numExtracted = 0;
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
@@ -173,6 +174,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         return null;
       }
       
+      ++numExtracted;
+      
       if (DISTINCT_SURFACE_TRANSLATIONS) {
         if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
           // Seen a higher-scoring derivation with this target string before
@@ -196,7 +199,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // re-sort things here just in case.
     Collections.sort(translations, translationComparator);
 
-    System.err.printf("source id %d: n-best size: %d time: %.3fsec%n", sourceInputId, translations.size(),
+    System.err.printf("source id %d: #extracted: %d #final: %d time: %.3fsec%n", sourceInputId, numExtracted, translations.size(),
         (System.nanoTime() - nbestStartTime) / 1e9);
 
     return translations;
