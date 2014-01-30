@@ -41,7 +41,7 @@ public final class PhrasalService {
   private static Map<String, Integer> optionArgDefs() {
     Map<String,Integer> optionArgDefs = Generics.newHashMap();
     optionArgDefs.put("p", 1);
-    optionArgDefs.put("d", 0);
+    optionArgDefs.put("d", 1);
     optionArgDefs.put("m", 0);
     optionArgDefs.put("l", 0);
     optionArgDefs.put("u", 1);
