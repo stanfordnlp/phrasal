@@ -50,7 +50,7 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 public class TranslationRequestHandler implements RequestHandler {
 
   private static final int DIVERSITY_WINDOW = 3;
-  private static final int NBEST_MULTIPLIER = 10;
+  private static final int NBEST_MULTIPLIER = 5;
   private static final int MAX_RETRIES_PER_REQUEST = 2;
   
   private MulticoreWrapper<DecoderInput,DecoderOutput> wrapper;
