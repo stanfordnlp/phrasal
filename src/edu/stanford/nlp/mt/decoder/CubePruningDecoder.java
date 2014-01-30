@@ -20,6 +20,7 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.SoftPrefixOutputSpace;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -108,6 +109,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     logger.info(String.format("input %d: Rule list after pruning by output constraint: %d/%d",
         sourceInputId, ruleList.size(), originalLength));
 
+    // WSGDEBUG
+    if (outputSpace instanceof SoftPrefixOutputSpace) {
+      if ( ! ((SoftPrefixOutputSpace) outputSpace).sourceSequence.equals(source)) {
+        System.err.printf("WSGDEBUG: input %s || outputspace %s%n", source.toString(), ((SoftPrefixOutputSpace) outputSpace).sourceSequence.toString());
+      }
+    }
+    
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
 

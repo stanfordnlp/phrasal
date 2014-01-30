@@ -44,7 +44,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   private static final RuleFeaturizer<IString,String> featurizer = 
       new PhraseTableScoresFeaturizer(NUM_SYNTHETIC_SCORES);
 
-  private final Sequence<IString> sourceSequence;
+  public final Sequence<IString> sourceSequence;
   private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
   private final int sourceInputId;
