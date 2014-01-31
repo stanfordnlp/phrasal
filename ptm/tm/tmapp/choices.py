@@ -38,6 +38,24 @@ POS_CHOICES = (('N','Nouns'),
                ('ADV','Adverbs'),
                ('O','Other'))
 
+POSTEDIT_GAZE = (('src', 'Source text'),
+                 ('tgt', 'Target text'),
+                 ('other', 'Other'))
+
+ITM_GAZE = (('src', 'Source text'),
+            ('tgt', 'Target text'),
+            ('tgtmt', 'Drop-down target suggestions'),
+            ('other', 'Other'))
+
+POSTEDIT_UI_ELEMENTS = (('src', 'Source text'),
+                        ('tgt', 'Target text'),
+                        ('other', 'Other'))
+
+ITM_UI_ELEMENTS = (('src', 'Source text'),
+                   ('tgt', 'Target text'),
+                   ('tgtmt', 'Drop-down target suggestions'),
+                   ('other', 'Other'))
+
 # ILR language proficiency levels
 # http://en.wikipedia.org/wiki/ILR_scale
 ILR_CHOICES = ((1, 'Elementary proficiency'),

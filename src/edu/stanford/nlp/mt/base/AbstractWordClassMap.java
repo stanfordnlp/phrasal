@@ -42,22 +42,29 @@ public abstract class AbstractWordClassMap {
       reader.close();
 
       // Setup the unknown word class
-      if (! (wordToClass.containsKey(TokenUtils.UNK_TOKEN) && wordToClass.get(TokenUtils.UNK_TOKEN).size() == numMappings+1)) {
+      if (! wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
         System.err.printf("%s: WARNING Class map does not specify an <unk> encoding: %s%n",
             this.getClass().getName(), filename);
-        if ( ! wordToClass.containsKey(TokenUtils.UNK_TOKEN)) {
-          wordToClass.put(TokenUtils.UNK_TOKEN, new ArrayList<IString>());
-        }
+        wordToClass.put(TokenUtils.UNK_TOKEN, new ArrayList<IString>());
         wordToClass.get(TokenUtils.UNK_TOKEN).add(DEFAULT_UNK_CLASS);
       }
+      
+      // Pad the word-to-class mapping since the keyset is the union of
+      // all vocabularies
+      for (IString word : wordToClass.keySet()) {
+        if (wordToClass.get(word).size() != numMappings) {
+          wordToClass.get(word).add(TokenUtils.UNK_TOKEN);
+        }
+      }
+      
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
   private List<IString> newMappingList() {
-    return numMappings == 0 ? new ArrayList<IString>() : 
-      new ArrayList<IString>(wordToClass.get(TokenUtils.UNK_TOKEN).subList(0, numMappings));
+    return numMappings == 1 ? new ArrayList<IString>() : 
+      new ArrayList<IString>(wordToClass.get(TokenUtils.UNK_TOKEN).subList(0, numMappings-1));
   }
 
   /**
@@ -66,9 +73,14 @@ public abstract class AbstractWordClassMap {
    * @param filename
    */
   public void load(String filename) {
-    loadClassFile(filename);
     ++numMappings;
+    loadClassFile(filename);
   }
+  
+  /**
+   * Return the number of loaded mappings.
+   */
+  public int getNumMappings() { return numMappings; }
 
   /**
    * Map the input word to a word class.
@@ -77,12 +89,23 @@ public abstract class AbstractWordClassMap {
    * @return
    */
   public IString get(IString word) {
-    String wordStr = word.toString();
-    if (TokenUtils.hasDigit(wordStr)) {
-      word = new IString(TokenUtils.normalizeDigits(wordStr));
-    }
-    List<IString> classList = wordToClass.containsKey(word) ? wordToClass.get(word) 
-        : wordToClass.get(TokenUtils.UNK_TOKEN);
+    List<IString> classList = getList(word);
     return numMappings == 1 ? classList.get(0) : new IString(Sentence.listToString(classList, true, DELIMITER));
   }
+ 
+ /**
+  * Map the input word to a list of word classes.
+  * @param word
+  * @param mapId
+  * @return
+  */
+ public List<IString> getList(IString word) {
+   String wordStr = word.toString();
+   if (TokenUtils.hasDigit(wordStr)) {
+     word = new IString(TokenUtils.normalizeDigits(wordStr));
+   }
+   return wordToClass.containsKey(word) ? wordToClass.get(word) 
+       : wordToClass.get(TokenUtils.UNK_TOKEN);
+ }
+
 }

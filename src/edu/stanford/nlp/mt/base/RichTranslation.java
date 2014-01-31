@@ -1,8 +1,5 @@
 package edu.stanford.nlp.mt.base;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.text.DecimalFormat;
 
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -19,7 +16,6 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  * @param <FV>
  */
 public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV> {
-  private final Sequence<TK> source;
   private final Featurizable<TK, FV> featurizable;
 
   /**
@@ -35,12 +31,14 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     super((f == null ? new EmptySequence<TK>() : f.targetPrefix),
         features, score, latticeSourceId);
     this.featurizable = f;
-    if (f == null) {
-      this.source = new EmptySequence<TK>();
-      return;
-    }
-    this.source = f.sourceSentence;
   }
+  
+  /**
+   * Access the underlying featurizable.
+   * 
+   * @return
+   */
+  public Featurizable<TK, FV> getFeaturizable() { return featurizable; }
 
   /**
    * Prints untokenized Moses n-best list for a given input segment. The n-best
@@ -85,39 +83,8 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sbuf.append(df.format(this.score)).append(' ').append(delim);
 
     // Internal Alignments
-    String veryVerboseNbest = System.getProperty("VERY_VERBOSE_NBEST");
-    if (veryVerboseNbest == null || !Boolean.parseBoolean(veryVerboseNbest)) {
-      // Simple Alignments
-      String alignmentString = alignmentString();
-      sbuf.append(" ").append(alignmentString);
-    } else {
-      // Very Verbose Alignments 
-      sbuf.append(' ').append(this.featurizable.sourceSentence.toString());
-      sbuf.append(' ').append(delim).append(' ');
-      List<Featurizable<TK,FV>> featurizables = featurizables();
-      for (Featurizable<TK,FV> f : featurizables) {
-        sbuf.append(' ');
-        double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
-        sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
-        sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
-        sbuf.append(f.derivation.rule.abstractRule.target.toString());
-      }
-    }
-  }
-
-  List<Featurizable<TK,FV>> featurizables() {
-    List<Featurizable<TK,FV>> listFeaturizables = new ArrayList<Featurizable<TK,FV>>();
-    featurizables(this.featurizable, listFeaturizables);
-    Collections.reverse(listFeaturizables);
-    return listFeaturizables;
-  }
-
-  private void featurizables(Featurizable<TK,FV> f, List<Featurizable<TK,FV>> l) {
-    if (f == null) {
-      return;
-    }
-    l.add(f);
-    featurizables(f.prior, l);
+    String alignmentString = alignmentString();
+    sbuf.append(" ").append(alignmentString);
   }
 
   /**
@@ -137,8 +104,9 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
   @SuppressWarnings("unchecked")
   public SymmetricalWordAlignment alignmentGrid() {
     // TODO(spenceg): Remove these casts if we remove the templating throughout the code.
-    SymmetricalWordAlignment alignment = new SymmetricalWordAlignment((Sequence<IString>) this.source, 
-        (Sequence<IString>) this.translation);
+    Sequence<IString> source = (Sequence<IString>) (featurizable == null ? new EmptySequence<IString>() : featurizable.sourceSentence);
+    SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(
+        source, (Sequence<IString>) this.translation);
     
     for (Featurizable<TK,FV> f = this.featurizable; f != null; f = f.prior) {
       int srcPosition = f.sourcePosition;

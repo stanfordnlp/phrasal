@@ -4,33 +4,37 @@
 # Berkeley aligner 2.1 and the Phrasal implementation
 # of symmetrization heuristics.
 #
-# Thang Sep, 2013: add an optional is_write_posterior to output individual alignment probabilities
+# Thang Sep, 2013: add an optional write_posterior to output individual alignment probabilities
+# Julia Jan 2014: add a command line option for running locally
 #
 if [[ $# -ne 5 && $# -ne 6 ]]; then
-    echo "Usage: `basename $0` src_file src_lang tgt_file tgt_lang lines_per_split [is_write_posterior]"
+    echo "Usage: `basename $0` src_file src_lang tgt_file tgt_lang lines_per_split [local] [write_posterior]"
     echo
     echo src_lang/tgt_lang should be two-letter ISO 639-1 language codes.
-    echo "is_write_posterior (optional): set to 1 to output individual alignment probabilities (default=0)"
+    echo "local (optional): run locally rather than on PBS"
+    echo "write_posterior (optional): output individual alignment probabilities"
     exit -1
 fi
 
 MEM=15g
 EXEC="nlpsub -m${MEM} -c4"
 
-# Uncomment the line below to run locally 
-#EXEC=
-
 src_file=$1
 src_lang=$2
 tgt_file=$3
 tgt_lang=$4
 split_size=$5
-if [ $# -eq 6 ]; then
-  is_write_posterior=$6
-else
-  is_write_posterior=0
-fi
+shift 5
 
+write_posterior=false
+for arg in "$@"; do
+    if [ "$arg" == 'local' ]; then
+        EXEC=
+    elif [ "$arg" == 'write_posterior' ]; then
+        write_posterior=true
+    fi
+done
+ 
 src_name=$(basename "$src_file")
 src_ext="${src_name##*.}"
 CAT1=cat
@@ -52,7 +56,7 @@ fi
 
 scriptdir=${JAVANLP_HOME}/projects/mt/scripts-private
 mkconf=${scriptdir}/mkconf.py
-if [ $is_write_posterior -eq 1 ]; then
+if $write_posterior; then
   conf_template=${scriptdir}/ucb-align-posterior.conf
   echo "# Writing out individual alignment probabilities, use config template $conf_template instead"
 else

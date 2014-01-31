@@ -19,6 +19,7 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 import com.google.gson.reflect.TypeToken;
 
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.RichTranslation;
@@ -192,7 +193,10 @@ public class TranslationRequestHandler implements RequestHandler {
             diversityPool.add(window);
           }
           
-          SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
+          // Try phrase alignments instead of word alignments
+//          SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
+          SymmetricalWordAlignment sPrime2tPrime = phraseAlignmentToWordAlignmentGrid(translation);
+          
           SymmetricalWordAlignment tPrime2t = postprocessor == null ?
               identityAlignment(translation.translation) :
                 postprocessor.process(translation.translation);
@@ -228,6 +232,46 @@ public class TranslationRequestHandler implements RequestHandler {
         e.printStackTrace();
       }
       return new DecoderOutput(input.inputId, false);
+    }
+
+    /**
+     * Convert a phrase alignment to a dense word alignment.
+     * 
+     * @param translation
+     * @return
+     */
+    private SymmetricalWordAlignment phraseAlignmentToWordAlignmentGrid(
+        RichTranslation<IString, String> translation) {
+      final Featurizable<IString,String> featurizable = translation.getFeaturizable();
+      SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(featurizable.sourceSentence, 
+          translation.translation);
+      // Walk back through the featurizables.
+      for (Featurizable<IString,String> f = featurizable; f != null; f = f.prior) {
+        int srcPosition = f.sourcePosition;
+        int tgtPosition = f.targetPosition;
+        int tgtLength = f.targetPhrase.size();
+        int srcLength = f.sourcePhrase.size();
+        for (int i = 0, size = Math.min(srcLength, tgtLength); i < size; ++i) {
+          final int tgtIndex = tgtPosition + i;
+          int srcIndex = srcPosition + i;
+          alignment.addAlign(srcIndex, tgtIndex);
+        }
+        if (srcLength < tgtLength) {
+          final int srcIndex = srcPosition + srcLength - 1;
+          for (int i = srcLength; i < tgtLength; ++i) {
+            final int tgtIndex = tgtPosition + i;
+            alignment.addAlign(srcIndex, tgtIndex);
+          }
+          
+        } else {
+          final int tgtIndex = tgtPosition + tgtLength - 1;
+          for (int i = tgtLength; i < srcLength; ++i) {
+            final int srcIndex = srcPosition + i;
+            alignment.addAlign(srcIndex, tgtIndex);
+          }
+        }
+      }
+      return alignment;
     }
 
     /**
@@ -267,6 +311,8 @@ public class TranslationRequestHandler implements RequestHandler {
       
       // If the decoder drops unknown words, then we need to create a monotonic
       // alignment.
+      logger.info(s2sPrime.f().toString());
+      logger.info(s2sPrime.f().toString());
       int[] sPrime2sPrimePrime = null;
       if (dropUnknownWords && s2sPrime.e().size() != sPrime2tPrime.f().size()) {
         Sequence<IString> sPrime = s2sPrime.e();
@@ -276,8 +322,7 @@ public class TranslationRequestHandler implements RequestHandler {
         // Decoder filtered some words from this string
         Sequence<IString> sPrimePrime = sPrime2tPrime.f();
         assert sPrimePrime.size() < sPrime.size();
-        int tgtSize = sPrimePrime.size();
-        for (int i = 0; i < tgtSize; ++i) {
+        for (int i = 0, tgtSize = sPrimePrime.size(); i < tgtSize; ++i) {
           IString tgtToken = sPrimePrime.get(i);
           for (int j = i; j < srcSize; ++j) {
             if (tgtToken == sPrime.get(j)) {
@@ -289,7 +334,7 @@ public class TranslationRequestHandler implements RequestHandler {
       }
       
       List<String> alignmentList = Generics.newLinkedList();
-      for (int i = 0; i < s2sPrime.fSize(); ++i) {
+      for (int i = 0, size = s2sPrime.fSize(); i < size; ++i) {
         Set<Integer> alignments = s2sPrime.f2e(i);
         for (int j : alignments) {
           if (sPrime2sPrimePrime != null) {
@@ -310,8 +355,7 @@ public class TranslationRequestHandler implements RequestHandler {
 
     private static SymmetricalWordAlignment identityAlignment(Sequence<IString> sequence) {
       SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sequence,sequence);
-      int sequenceLength = sequence.size();
-      for (int i = 0; i < sequenceLength; ++i) {
+      for (int i = 0, sequenceLength = sequence.size(); i < sequenceLength; ++i) {
         alignment.addAlign(i, i);
       }
       return alignment;

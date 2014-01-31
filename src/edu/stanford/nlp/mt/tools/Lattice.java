@@ -260,17 +260,34 @@ public class Lattice<T> {
   }
   
   /**
+   * Takes a plf lattice file as input and outputs the best segmentations. 
+   * Segmented compound parts are marked with special symbols.
+   *
+   * @author Spence Green
+   * @author Julia Neidert (configurable segmentation marker and mark_except_last option)
+   *   
    * @param args
    */
   public static void main(String[] args) {
-    if (args.length > 0 && args[0].equals("-help")) {
-      System.err.printf("Usage: java %s [-help] < plf_file%n", Lattice.class.getName());
-      System.exit(-1);
+    boolean markExceptLast = false;
+    String segmentationMarker = "#";
+    for (String arg : args) {
+      if (arg.equals("-help")) {
+        System.err.printf("Usage: java %s [-help] [-mark_except_last] [-m###] < plf_file%n\n" +
+        "    -mark_except_last : Marks each segment except the last (headword) of the compound,\n" +
+        "                           instead of the default of marking each segment except the first\n" +
+        "    -m### :             Uses the marker given by the characters following the -m to mark\n"+
+        "                           segmented parts, instead of the default #\n",
+            Lattice.class.getName());
+        System.exit(-1);
+      } else if (arg.equals("-mark_except_last")) {
+        markExceptLast = true;
+      } else if (arg.startsWith("-m")) {
+        segmentationMarker = arg.substring(2);
+      }
     }
 
-    // TODO(spenceg): Make configurable
-    final String segmentationMarker = "#";
-    
+
     BufferedReader reader = new BufferedReader(new InputStreamReader(
         new BufferedInputStream(System.in)));
     try {
@@ -284,9 +301,14 @@ public class Lattice<T> {
         Lattice<String> lattice = Lattice.plfStringToLattice(line, true);
         List<Edge<String>> bestPath = lattice.viterbiPath();
         boolean printSpace = false;
-        for (Edge<String> edge : bestPath) {
+        for (int i = 0; i < bestPath.size(); i++) {
+          Edge<String> edge = bestPath.get(i);
           if (printSpace) System.out.print(" ");
-          if (! edge.start().isPinchPoint()) System.out.print(segmentationMarker);
+          if (markExceptLast) {
+            if (i < bestPath.size()-1 && !bestPath.get(i+1).start().isPinchPoint()) System.out.print(segmentationMarker);
+          } else {
+            if (! edge.start().isPinchPoint()) System.out.print(segmentationMarker);
+          }
           System.out.print(edge.item());
           printSpace = true;
         }

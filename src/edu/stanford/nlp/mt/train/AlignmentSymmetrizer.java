@@ -22,7 +22,7 @@ public class AlignmentSymmetrizer {
   private static final int[][] GROW_DIAG_NEIGHBORS = { { -1, 0 }, { 0, -1 },
       { 1, 0 }, { 0, 1 }, { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } };
 
-  enum SymmetrizationType {
+  public enum SymmetrizationType {
     none, intersection, grow, grow_diag, grow_diag_final, grow_diag_final_and, union, srctotgt, tgttosrc
   }
 

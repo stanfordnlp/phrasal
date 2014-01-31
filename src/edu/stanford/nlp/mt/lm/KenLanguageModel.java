@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -21,20 +19,6 @@ import edu.stanford.nlp.mt.base.TokenUtils;
 public class KenLanguageModel implements LanguageModel<IString> {
 
   static {
-//    try {
-      /**
-       * Voodoo to get path to this class, then go up and find the src-cc
-       * directory where the library lives.  Then voodoo to override
-       * java.library.path from teh intarwebs.
-       */
-/*      String path = KenLanguageModel.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath() + "../src-cc/";
-      System.setProperty("java.library.path", path + ":" + System.getProperty("java.library.path"));
-      Field sysPath = ClassLoader.class.getDeclaredField("sys_paths");
-      sysPath.setAccessible(true);
-      sysPath.set(null, null);
-    } catch (URISyntaxException|NoSuchFieldException|IllegalAccessException e) {
-      System.err.println("Warning: failed to automatically find the path to libPhrasalKenLM.so.  You should set LD_LIBRARY_PATH.");
-    }*/
     System.loadLibrary("PhrasalKenLM");
   }
 
