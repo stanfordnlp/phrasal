@@ -56,7 +56,9 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
 
   private static HashMap<Integer, LinearClassifier<String, String>> classifiers = new HashMap<Integer, LinearClassifier<String, String>>();
   private static HashMap<String, String> universalPOSMapping = new HashMap<String, String>();
-  
+  private static int parseFileIndex = 0;
+  private static int parseSentenceIndex = 0;
+
   /*
    * Mapping from Penn treebank tags to Universal POS Tags as described in
    * "A Universal Part-of-Speech Tagset" by Slav Petrov, Dipanjan Das and Ryan McDonald
@@ -142,7 +144,6 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     features.add(prefix + "-WORD:" + w.word());
     features.add(prefix + "-POS:" + w.tag());
     features.add(prefix + "-UPOS:" + universalPOSMapping.get(w.tag()));
-    System.out.println(prefix + "-UPOS:" + universalPOSMapping.get(w.tag()));
   }
   
   /**
@@ -282,7 +283,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   
  /**
   * Returns all dependency families, i.e. an ordered list of a head and its immediate children.
-  * If an alignment is passed then only families that fulfil the alignment constraints will
+  * If an alignment is passed then only families that fulfill the alignment constraints will
   * be added to the list.   
   */
  public static List<Family> extractFamilies(CoreMap currentSentence, SymmetricalWordAlignment alignment)  {
@@ -428,15 +429,47 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   private static Map<String,Integer> optionArgDefs() {
     Map<String,Integer> optionArgDefs = Generics.newHashMap();
     optionArgDefs.put("train", 0); 
+    optionArgDefs.put("trainAnnotationsSplit", 0); 
     optionArgDefs.put("trainSourceTokens", 1); 
     optionArgDefs.put("trainTargetTokens", 1); 
     optionArgDefs.put("trainAlignment", 1);
     optionArgDefs.put("trainAnnotations", 1);
     optionArgDefs.put("modelPath", 1);
-    optionArgDefs.put("annotations", 1);   
+    optionArgDefs.put("annotations", 1); 
+    optionArgDefs.put("annotationsSplit", 0); 
+
 
     return optionArgDefs;
   }
+  
+  public static CoreMap getParsedSentence(String filename, int index, boolean isSplit) {
+    if (!isSplit) {
+      if (!CoreNLPCache.isLoaded()) {
+        CoreNLPCache.loadSerialized(filename);
+      }
+      return CoreNLPCache.get(index);
+    } else {
+      if (!CoreNLPCache.isLoaded()) {
+        parseFileIndex = 0;
+        parseSentenceIndex = 0;
+        String composedFilename = filename + "." + parseFileIndex;
+        CoreNLPCache.loadSerialized(composedFilename);
+      }
+      CoreMap c = CoreNLPCache.get(index - parseSentenceIndex);
+      if (c == null) {
+        parseFileIndex++;
+        String composedFilename = filename + "." + parseFileIndex;
+        File file = new File(composedFilename);
+        if (file.exists()) {
+          parseSentenceIndex = index;
+          CoreNLPCache.loadSerialized(composedFilename);
+          c = CoreNLPCache.get(index - parseSentenceIndex);
+        }
+      }
+      return c;
+    }
+  }
+  
 
   public static void main(String[] args) throws ClassNotFoundException, IOException {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
@@ -447,7 +480,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       String trainTargetTokens = PropertiesUtils.get(options, "trainTargetTokens", null, String.class);
       String trainAlignment = PropertiesUtils.get(options, "trainAlignment", null, String.class);
       String trainAnnotations = PropertiesUtils.get(options, "trainAnnotations", null, String.class);
-      CoreNLPCache.loadSerialized(trainAnnotations);
+      boolean trainAnnotationsSplit = PropertiesUtils.getBool(options, "trainAnnotationsSplit", false);
       File sourceSentences = new File(trainSourceTokens);
       File targetSentences = new File(trainTargetTokens);
       File alignmentFile = new File(trainAlignment);
@@ -458,7 +491,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       String sourceSentence;
       int i = 0;
       while ((sourceSentence = sourceReader.readLine()) != null) {
-        CoreMap sentence = CoreNLPCache.get(i);
+        CoreMap sentence = getParsedSentence(trainAnnotations, i, trainAnnotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
@@ -472,16 +505,17 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       
       String modelPath = PropertiesUtils.get(options, "modelPath", null, String.class);
       if (modelPath != null)
-        saveModel(modelPath);    
+        saveModel(modelPath);  
+      CoreNLPCache.flush();
     } else {
       String modelPath = PropertiesUtils.get(options, "modelPath", null, String.class);
       loadModel(modelPath);
     }
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
-    CoreNLPCache.loadSerialized(annotations);
+    boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
     int i = 0;
     CoreMap sentence = null;
-    while ((sentence = CoreNLPCache.get(i)) != null) {         
+    while ((sentence = getParsedSentence(annotations, i, annotationsSplit)) != null) {         
       for (CoreLabel t: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
         System.out.print(t.word() + " ");
       }

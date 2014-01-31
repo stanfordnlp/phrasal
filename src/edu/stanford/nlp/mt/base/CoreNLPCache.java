@@ -65,4 +65,10 @@ public class CoreNLPCache {
    * @return
    */
   public static boolean isLoaded() { return annotationMap != null; }
+  
+  
+  /**
+   * Flushes the cache.
+   */
+  public static void flush() { annotationMap = null; }
 }
