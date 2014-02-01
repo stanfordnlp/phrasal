@@ -64,6 +64,8 @@ class Model : public lm::base::ModelFacade<Model, State, Vocabulary> {
     FullScoreReturn FullScore(const State &from, const WordIndex new_word, State &out_state) const;
 
     FullScoreReturn FullScoreForgotState(const WordIndex *context_rbegin, const WordIndex *context_rend, const WordIndex new_word, State &out_state) const;
+    
+    lm::WordIndex NullWord() const { return vocab_.NullWord(); }
 
   private:
     boost::scoped_ptr<nplm::neuralLM> base_instance_;
