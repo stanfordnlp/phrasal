@@ -512,10 +512,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
           System.err.println(alignmentString);
           SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
           extractTrainingExamples(datasets, sentence, alignment);
-          i++;
         } catch (Exception e) {
           e.printStackTrace();
         }
+        i++;
       }
       train(datasets);      
       sourceReader.close();
