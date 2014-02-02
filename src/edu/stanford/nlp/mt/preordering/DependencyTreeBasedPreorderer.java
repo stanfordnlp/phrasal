@@ -494,9 +494,17 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
         CoreMap sentence = getParsedSentence(trainAnnotations, i, trainAnnotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
-        SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
-        extractTrainingExamples(datasets, sentence, alignment);
-        i++;
+        try {
+          SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
+          extractTrainingExamples(datasets, sentence, alignment);
+          i++;
+        } catch (IOException e) {
+          e.printStackTrace();
+          System.err.println(sourceSentence);
+          System.err.println(targetSentence);
+          System.err.println(alignmentString);
+          throw e;
+        }
       }
       train(datasets);      
       sourceReader.close();
