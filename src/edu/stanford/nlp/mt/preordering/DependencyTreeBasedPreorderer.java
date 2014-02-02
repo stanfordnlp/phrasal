@@ -307,13 +307,15 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
        ArrayList<IndexedWord> sortedFamilyWords = (ArrayList<IndexedWord>) CollectionUtils.sort(familyWords);
        
        //Debug:
-       System.err.print("Family: ");
+       //System.err.print("Family: ");
 
-       for (IndexedWord w : sortedFamilyWords) {
-         System.err.print(w);
-         System.err.print(" ");
-       }
-       System.err.println();
+       //for (IndexedWord w : sortedFamilyWords) {
+       //  System.err.print(w);
+       //  System.err.print("-");
+       //  System.err.print(w.index());
+       //  System.err.print(" ");
+       //}
+       //System.err.println();
        
        boolean include = true;
        if (alignment != null) 
@@ -500,21 +502,19 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       String sourceSentence;
       int i = 0;
       while ((sourceSentence = sourceReader.readLine()) != null) {
-        CoreMap sentence = getParsedSentence(trainAnnotations, i, trainAnnotationsSplit);
-        String targetSentence = targetReader.readLine();
-        String alignmentString = alignmentReader.readLine();
-        System.err.println("---------------------------");
-        System.err.println(sourceSentence);
-        System.err.println(targetSentence);
-        System.err.println(alignmentString);
-        
         try {
+          CoreMap sentence = getParsedSentence(trainAnnotations, i, trainAnnotationsSplit);
+          String targetSentence = targetReader.readLine();
+          String alignmentString = alignmentReader.readLine();
+          System.err.println("---------------------------");
+          System.err.println(sourceSentence);
+          System.err.println(targetSentence);
+          System.err.println(alignmentString);
           SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
           extractTrainingExamples(datasets, sentence, alignment);
           i++;
-        } catch (IOException e) {
+        } catch (Exception e) {
           e.printStackTrace();
-          throw e;
         }
       }
       train(datasets);      
