@@ -379,6 +379,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       indexedTokens.add(new IndexedWord(t));
     List<Family> families = extractFamilies(currentSentence, null);
     for (Family f : families) {
+      System.err.println(f);
       List<String> features = extractFeatures(f, currentSentence);
       Datum<String, String> d = new BasicDatum<String, String>(features);
       if (classifiers.containsKey(f.getSize())) {
@@ -494,15 +495,17 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
         CoreMap sentence = getParsedSentence(trainAnnotations, i, trainAnnotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
+        System.err.println("---------------------------");
+        System.err.println(sourceSentence);
+        System.err.println(targetSentence);
+        System.err.println(alignmentString);
+        
         try {
           SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
           extractTrainingExamples(datasets, sentence, alignment);
           i++;
         } catch (IOException e) {
           e.printStackTrace();
-          System.err.println(sourceSentence);
-          System.err.println(targetSentence);
-          System.err.println(alignmentString);
           throw e;
         }
       }
@@ -571,6 +574,15 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     
     public int getSize() {
       return sortedWords.size() - 1;
+    }
+    
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Family: ");
+      for (IndexedWord w : getSortedWords()) {
+        sb.append(w).append(" ");
+      }
+      return sb.toString();
     }
   }
 
