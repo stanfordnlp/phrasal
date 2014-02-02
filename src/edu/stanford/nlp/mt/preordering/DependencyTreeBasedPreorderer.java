@@ -306,6 +306,15 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
        familyWords.add(currentHead);
        ArrayList<IndexedWord> sortedFamilyWords = (ArrayList<IndexedWord>) CollectionUtils.sort(familyWords);
        
+       //Debug:
+       System.err.print("Family: ");
+
+       for (IndexedWord w : sortedFamilyWords) {
+         System.err.print(w);
+         System.err.print(" ");
+       }
+       System.err.println();
+       
        boolean include = true;
        if (alignment != null) 
          include = alignmentConstraintsSatisfied(sortedFamilyWords, alignment);
@@ -379,7 +388,6 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       indexedTokens.add(new IndexedWord(t));
     List<Family> families = extractFamilies(currentSentence, null);
     for (Family f : families) {
-      System.err.println(f);
       List<String> features = extractFeatures(f, currentSentence);
       Datum<String, String> d = new BasicDatum<String, String>(features);
       if (classifiers.containsKey(f.getSize())) {
