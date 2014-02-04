@@ -400,6 +400,14 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
           reorderFamily(indexedTokens, f, permutationClass);
         }
       }
+      for (CoreLabel t : tokens) {
+        System.out.print(t.word() + "-" + t.index() + " ");
+      }
+      System.out.println("");
+      for (IndexedWord t : indexedTokens) {
+        System.out.print(t.word() + "-" + t.index() + " ");
+      }
+      System.out.println("");
       List<IndexedWord> reorderedTokens = CollectionUtils.sort(indexedTokens);
       StringBuilder sb = new StringBuilder();
       for (IndexedWord t : reorderedTokens) {
