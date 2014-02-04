@@ -399,20 +399,20 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
         List<String> features = extractFeatures(f, currentSentence);
         Datum<String, String> d = new BasicDatum<String, String>(features);
         if (classifiers.containsKey(f.getSize())) {
-          System.err.println("Family: " + f);
+          //System.err.println("Family: " + f);
           String permutationClass = classifiers.get(f.getSize()).classOf(d);
-          System.err.println("Permutation Class: " + permutationClass);
+          //System.err.println("Permutation Class: " + permutationClass);
           reorderFamily(indexedTokens, f, permutationClass);
         }
       }
-      for (CoreLabel t : tokens) {
-        System.out.print(t.word() + "-" + t.index() + " ");
-      }
-      System.out.println("");
-      for (IndexedWord t : indexedTokens) {
-        System.out.print(t.word() + "-" + t.index() + " ");
-      }
-      System.out.println("");
+      //for (CoreLabel t : tokens) {
+      //  System.out.print(t.word() + "-" + t.index() + " ");
+      //}
+      //System.out.println("");
+      //for (IndexedWord t : indexedTokens) {
+      //  System.out.print(t.word() + "-" + t.index() + " ");
+      //}
+      //System.out.println("");
       List<IndexedWord> reorderedTokens = CollectionUtils.sort(indexedTokens);
       StringBuilder sb = new StringBuilder();
       for (IndexedWord t : reorderedTokens) {
@@ -559,10 +559,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     int i = 0;
     CoreMap sentence = null;
     while ((sentence = getParsedSentence(annotations, i, annotationsSplit)) != null) {         
-      for (CoreLabel t: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-        System.out.print(t.word() + " ");
-      }
-      System.out.print("\n");
+      //for (CoreLabel t: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+      //  System.out.print(t.word() + " ");
+      //}
+      //System.out.print("\n");
       System.out.println(reorder(sentence));
       i++;
     }
