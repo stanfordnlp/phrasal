@@ -394,7 +394,9 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
         List<String> features = extractFeatures(f, currentSentence);
         Datum<String, String> d = new BasicDatum<String, String>(features);
         if (classifiers.containsKey(f.getSize())) {
+          System.err.println("Family: " + f);
           String permutationClass = classifiers.get(f.getSize()).classOf(d);
+          System.err.println("Permutation Class: " + permutationClass);
           reorderFamily(indexedTokens, f, permutationClass);
         }
       }
@@ -426,6 +428,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     if (obj instanceof HashMap<?,?>) {
       classifiers = (HashMap<Integer, LinearClassifier<String, String>>) obj;
     }
+    System.err.println("Loaded model!");
     ois.close();
     fis.close();
   }
