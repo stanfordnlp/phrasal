@@ -387,8 +387,13 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     List<CoreLabel> tokens = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
     try {
       List<IndexedWord> indexedTokens = new ArrayList<IndexedWord>();
-      for (CoreLabel t: tokens)
-        indexedTokens.add(new IndexedWord(t));
+      int idx = 1;
+      for (CoreLabel t: tokens) {
+        IndexedWord iw = new IndexedWord(t);
+        iw.setIndex(idx);
+        indexedTokens.add(iw);
+        idx++;
+      }
       List<Family> families = extractFamilies(currentSentence, null);
       for (Family f : families) {
         List<String> features = extractFeatures(f, currentSentence);
