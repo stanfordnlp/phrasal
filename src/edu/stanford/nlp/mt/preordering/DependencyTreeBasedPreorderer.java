@@ -385,25 +385,33 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
    */
   public static String reorder(CoreMap currentSentence) {
     List<CoreLabel> tokens = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
-    List<IndexedWord> indexedTokens = new ArrayList<IndexedWord>();
-    for (CoreLabel t: tokens)
-      indexedTokens.add(new IndexedWord(t));
-    List<Family> families = extractFamilies(currentSentence, null);
-    for (Family f : families) {
-      List<String> features = extractFeatures(f, currentSentence);
-      Datum<String, String> d = new BasicDatum<String, String>(features);
-      if (classifiers.containsKey(f.getSize())) {
-        String permutationClass = classifiers.get(f.getSize()).classOf(d);
-        reorderFamily(indexedTokens, f, permutationClass);
+    try {
+      List<IndexedWord> indexedTokens = new ArrayList<IndexedWord>();
+      for (CoreLabel t: tokens)
+        indexedTokens.add(new IndexedWord(t));
+      List<Family> families = extractFamilies(currentSentence, null);
+      for (Family f : families) {
+        List<String> features = extractFeatures(f, currentSentence);
+        Datum<String, String> d = new BasicDatum<String, String>(features);
+        if (classifiers.containsKey(f.getSize())) {
+          String permutationClass = classifiers.get(f.getSize()).classOf(d);
+          reorderFamily(indexedTokens, f, permutationClass);
+        }
       }
-    }
-    List<IndexedWord> reorderedTokens = CollectionUtils.sort(indexedTokens);
-    StringBuilder sb = new StringBuilder();
-    for (IndexedWord t : reorderedTokens) {
-      sb.append(t.word()).append(" ");
-    }
-    return sb.toString();
-    
+      List<IndexedWord> reorderedTokens = CollectionUtils.sort(indexedTokens);
+      StringBuilder sb = new StringBuilder();
+      for (IndexedWord t : reorderedTokens) {
+        sb.append(t.word()).append(" ");
+      }
+      return sb.toString();
+    } catch (Exception e) {
+      e.printStackTrace();
+      StringBuilder sb = new StringBuilder();
+      for (CoreLabel t : tokens) {
+        sb.append(t.word()).append(" ");
+      }
+      return sb.toString();
+    } 
   }
   
   /**
