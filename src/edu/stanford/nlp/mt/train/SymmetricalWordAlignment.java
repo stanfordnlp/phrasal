@@ -230,6 +230,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     return toString(f2e);
   }
 
+  public String toReverseString() {
+    return toString(e2f);
+  }
+  
   public String toReverseString1() {
     return toString(e2f, false);
   }
