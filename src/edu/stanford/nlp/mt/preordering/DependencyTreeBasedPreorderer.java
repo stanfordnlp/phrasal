@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,15 +26,24 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.ling.RVFDatum;
+import edu.stanford.nlp.movetrees.TreeUtils;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
+import edu.stanford.nlp.semgraph.SemanticGraphFactory;
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counters;
+import edu.stanford.nlp.trees.EnglishGrammaticalStructureFactory;
+import edu.stanford.nlp.trees.LabeledScoredTreeFactory;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.Filter;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
@@ -58,6 +68,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   private static HashMap<String, String> universalPOSMapping = new HashMap<String, String>();
   private static int parseFileIndex = 0;
   private static int parseSentenceIndex = 0;
+  private static LabeledScoredTreeFactory tf = new LabeledScoredTreeFactory();
+  
+  /* only the K most frequent permutation classes will be used to train the classifier*/
+  private static int K = 20;
 
   /*
    * Mapping from Penn treebank tags to Universal POS Tags as described in
@@ -74,6 +88,8 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     universalPOSMapping.put("-LRB-", ".");
     universalPOSMapping.put("-RRB-", ".");
     universalPOSMapping.put(".", ".");
+    universalPOSMapping.put(",", ".");
+    universalPOSMapping.put("\"", ".");
     universalPOSMapping.put(":", ".");
     universalPOSMapping.put("?", ".");
     universalPOSMapping.put("CC", "CONJ");
@@ -143,7 +159,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   public static void addWordFeature(List<String> features, CoreLabel w, String prefix) {
     features.add(prefix + "-WORD:" + w.word());
     features.add(prefix + "-POS:" + w.tag());
-    features.add(prefix + "-UPOS:" + universalPOSMapping.get(w.tag()));
+    String universalPOS = universalPOSMapping.get(w.tag());
+    if (universalPOS == null)
+      universalPOS = ".";
+    features.add(prefix + "-UPOS:" + universalPOS);
   }
   
   /**
@@ -290,7 +309,12 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
    LinkedList<IndexedWord> q = new LinkedList<IndexedWord>();
    ArrayList<Family> families = new ArrayList<Family>();
    
-   SemanticGraph basicDependencies = currentSentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
+   Tree parseTree = currentSentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+   String docID = currentSentence.get(CoreAnnotations.DocIDAnnotation.class);
+   Integer sentenceIndex = currentSentence.get(CoreAnnotations.SentenceIndexAnnotation.class);
+   EnglishGrammaticalStructureFactory gsf = new EnglishGrammaticalStructureFactory(new NoFilter());
+   SemanticGraph basicDependencies = SemanticGraphFactory.generateUncollapsedDependencies(gsf.newGrammaticalStructure(parseTree), docID, sentenceIndex);
+
    IndexedWord sentenceHead = basicDependencies.getRoots().iterator().next();
 
    q.add(sentenceHead);
@@ -349,6 +373,23 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     }
   }
   
+  public static Dataset<String, String> pruneDataset(Dataset<String, String> ds) {
+    if (ds.numClasses() <= K)
+      return ds;
+    System.err.println("PRUNED DS");
+    Dataset<String, String> prunedDs = new Dataset<String, String>();
+    ClassicCounter<String> numDatumsPerLabel = ds.numDatumsPerLabel();
+    Counters.retainTop(numDatumsPerLabel, K);
+    Iterator<RVFDatum<String, String>> it = ds.iterator();
+    while (it.hasNext()) {
+      RVFDatum<String, String> d = it.next();
+      if (numDatumsPerLabel.containsKey(d.label()))
+        prunedDs.add(d);
+    }
+    return prunedDs;
+  }
+  
+  
   /**
    * Trains the model
    */
@@ -356,7 +397,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   public static void train(HashMap<Integer, Dataset<String, String>> datasets) {
     for (Integer size : datasets.keySet()) {
       LinearClassifierFactory<String, String> lcf = new LinearClassifierFactory<String, String>();
-      LinearClassifier<String, String> lc = lcf.trainClassifier(datasets.get(size));
+      Dataset<String, String> ds = datasets.get(size);
+      Dataset<String, String> prunedDs = pruneDataset(ds);
+      ds = null;
+      LinearClassifier<String, String> lc = lcf.trainClassifier(prunedDs);
       classifiers.put(size, lc);
     }
   }
@@ -380,6 +424,18 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     }
   }
   
+  private static void reorderFamily(Tree headNode, Family f, String permutationClass) {
+    int familySize = f.getSize() ;
+    String[] indices = permutationClass.split("-");
+    List<Tree> currentChildren = headNode.getChildrenAsList();
+    ArrayList<Tree> reorderedChildren = new ArrayList<Tree>(currentChildren);
+    for (int i = 0; i < familySize + 1; i++) {
+      int idx = Integer.parseInt(indices[i]);
+      reorderedChildren.set(idx, currentChildren.get(i));
+    }
+    headNode.setChildren(reorderedChildren);
+  }
+  
   /**
    * Performs the preordering on an dependency annotated sentence
    */
@@ -394,15 +450,30 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
         indexedTokens.add(iw);
         idx++;
       }
+      
+      Tree preorderedTree = null;
+      HashMap<IndexedWord, Tree> treeNodes = new HashMap<IndexedWord, Tree>();
       List<Family> families = extractFamilies(currentSentence, null);
       for (Family f : families) {
+        if (preorderedTree == null) {
+          preorderedTree = tf.newLeaf(f.getHeadWord());
+          treeNodes.put(f.getHeadWord(), preorderedTree);
+        } 
+        Tree headNode = treeNodes.get(f.getHeadWord());
+
+        for (IndexedWord t : f.getSortedWords()) {
+          Tree childNode = tf.newLeaf(t);
+          headNode.addChild(childNode);
+          if (t != f.getHeadWord())
+            treeNodes.put(t, childNode);
+        }
         List<String> features = extractFeatures(f, currentSentence);
         Datum<String, String> d = new BasicDatum<String, String>(features);
         if (classifiers.containsKey(f.getSize())) {
           //System.err.println("Family: " + f);
           String permutationClass = classifiers.get(f.getSize()).classOf(d);
           //System.err.println("Permutation Class: " + permutationClass);
-          reorderFamily(indexedTokens, f, permutationClass);
+          reorderFamily(headNode, f, permutationClass);
         }
       }
       //for (CoreLabel t : tokens) {
@@ -413,10 +484,16 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       //  System.out.print(t.word() + "-" + t.index() + " ");
       //}
       //System.out.println("");
-      List<IndexedWord> reorderedTokens = CollectionUtils.sort(indexedTokens);
+      
+      //handle single word sentences
+      if (preorderedTree == null)
+        return tokens.get(0).word();
+      
+      List<Tree> reorderedTokens = preorderedTree.getLeaves();
+ 
       StringBuilder sb = new StringBuilder();
-      for (IndexedWord t : reorderedTokens) {
-        sb.append(t.word()).append(" ");
+      for (Tree t : reorderedTokens) {
+        sb.append(t.label().value()).append(" ");
       }
       return sb.toString();
     } catch (Exception e) {
@@ -429,6 +506,8 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     } 
   }
   
+
+
   /**
    * Loads the model from disk.
    */
@@ -530,10 +609,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
           CoreMap sentence = getParsedSentence(trainAnnotations, i, trainAnnotationsSplit);
           String targetSentence = targetReader.readLine();
           String alignmentString = alignmentReader.readLine();
-          System.err.println("---------------------------");
-          System.err.println(sourceSentence);
-          System.err.println(targetSentence);
-          System.err.println(alignmentString);
+          //System.err.println("---------------------------");
+          //System.err.println(sourceSentence);
+          //System.err.println(targetSentence);
+          //System.err.println(alignmentString);
           SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
           extractTrainingExamples(datasets, sentence, alignment);
         } catch (Exception e) {
@@ -618,4 +697,17 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     }
   }
 
+  
+  
+  private static class NoFilter implements Filter<String> {
+
+    private static final long serialVersionUID = 8052532728769677017L;
+
+    @Override
+    public boolean accept(String obj) {
+      return true;
+    }
+    
+  }
+  
 }
