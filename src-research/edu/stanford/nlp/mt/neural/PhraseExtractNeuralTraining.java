@@ -48,7 +48,6 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
-import edu.stanford.nlp.mt.train.AbstractPhraseExtractor;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
@@ -131,8 +130,6 @@ public class PhraseExtractNeuralTraining {
   
   private SymmetrizationType symmetrizationType = null;
 
-  private int totalPassNumber = 1;
-  
   public PhraseExtractNeuralTraining(Properties prop) throws IOException {
     processProperties(prop);
   }
@@ -313,36 +310,40 @@ public class PhraseExtractNeuralTraining {
         for (int i = 0; i < esize; ++i) { // English n-gram e_(i-ngram+1) : e_i
           // find alignments of e_i
           SortedSet<Integer> fIndices = new TreeSet<Integer>();
-          int curE = i+1;
-          do {
-            curE--;
-            fIndices = sent.e2f(curE);
-          } while(fIndices.isEmpty() && curE>0 && (curE>(i-ngram))); // backoff to the alignments of a previous word if no alignment
+          int distance = 0;
+          while (true){
+            int leftE = i-distance;
+            int rightE = i+distance;
+            
+            // search right (like Jacob did)
+            if (rightE<esize) fIndices = sent.e2f(rightE);
+            
+            // search left if no alignment
+            if (fIndices.isEmpty() && leftE!= rightE && leftE>0) fIndices = sent.e2f(leftE);  
+            
+            // either found or distance is too large now
+            if(!fIndices.isEmpty() || (leftE<0 && rightE>=esize)) break; 
+            else distance++;
+          }
           
           if(!fIndices.isEmpty()){
             // find avg fIndex
             int avgF = 0;
-            for (Integer integer : fIndices) {
-              avgF += integer;
-            }
+            for (Integer integer : fIndices) avgF += integer;
             avgF = avgF/fIndices.size();
             
             StringBuilder sb = new StringBuilder();
             // build target ngram e_(i-ngram+1) : e_i
             for (int j = (i-ngram+1); j <= i; j++) { 
               if(j<0) sb.append(tgtStartToken + " ");
-              else {
-                sb.append(sent.e().get(j) + " ");
-              }
+              else  sb.append(sent.e().get(j) + " ");
             }
             
             // build source ngram f_(avgF-srcWindow) : f_(avgF+srcWindow)
             for (int j = (avgF-srcWindow); j <= (avgF+srcWindow); j++) { 
               if(j<0) sb.append(srcStartToken + " ");
               else if (j>=fsize) sb.append(srcEndToken + " ");
-              else {
-                sb.append(sent.f().get(j) + " ");
-              }
+              else sb.append(sent.f().get(j) + " ");
             }
             
             outputStrs.add(sb.toString());
@@ -364,149 +365,142 @@ public class PhraseExtractNeuralTraining {
   // Make as many passes over training data as needed to extract features.
   void extractFromAlignedData() {
     long startTimeMillis = System.currentTimeMillis();
-
+    long numTotalExamples = 0;
     try {
-      for (int passNumber = 0; passNumber < totalPassNumber; ++passNumber) {
-        doneReadingData = false;
+      doneReadingData = false;
 
-        MulticoreWrapper<ExtractorInput,ExtractorOutput> wrapper = 
-            new MulticoreWrapper<ExtractorInput,ExtractorOutput>(nThreads, 
-                new Extractor(prop, ngram, srcWindow), false);
+      MulticoreWrapper<ExtractorInput,ExtractorOutput> wrapper = 
+          new MulticoreWrapper<ExtractorInput,ExtractorOutput>(nThreads, 
+              new Extractor(prop, ngram, srcWindow), false);
 
-        boolean useGIZA = alignInvCorpus != null;
+      boolean useGIZA = alignInvCorpus != null;
 
-        // Read data and process data:
-        if (passNumber > 0)
-          System.err
-              .println("Some feature extractor needs an additional pass over the data.");
-        System.err.printf(
-            "Pass %d on training data (max phrase len: %d,%d)...\nLine",
-            passNumber + 1, AbstractPhraseExtractor.maxPhraseLenF,
-            AbstractPhraseExtractor.maxPhraseLenE);
-        LineNumberReader aInvReader = null, fReader = IOTools
-            .getReaderFromFile(fCorpus), eReader = IOTools
-            .getReaderFromFile(eCorpus), aReader = IOTools
-            .getReaderFromFile(alignCorpus);
-        if (useGIZA)
-          aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
+      // Read data and process data:
+      LineNumberReader aInvReader = null, fReader = IOTools
+          .getReaderFromFile(fCorpus), eReader = IOTools
+          .getReaderFromFile(eCorpus), aReader = IOTools
+          .getReaderFromFile(alignCorpus);
+      if (useGIZA)
+        aInvReader = IOTools.getReaderFromFile(alignInvCorpus);
 
-        int lineNb = 0;
-        for (String fLine;; ++lineNb) {
-          fLine = fReader.readLine();
+      int lineNb = 0;
+      for (String fLine;; ++lineNb) {
+        fLine = fReader.readLine();
 
-          boolean done = (fLine == null || lineNb == endAtLine);
+        boolean done = (fLine == null || lineNb == endAtLine);
 
-          if (tripleFile && !done) {
-            fLine = fLine.split(" \\|\\|\\| ")[0];
-          }
-
-          if (lineNb % memUsageFreq == 0 || done) {
-            // long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
-            long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);
-            // double totalStepSecs = (System.currentTimeMillis() -
-            // startStepTimeMillis)/1000.0;
-            // startStepTimeMillis = System.currentTimeMillis();
-            System.err.printf(" %d (mem=%dm)...", lineNb, freeMemory);
-            // if (verbose)
-            // System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
-            // lineNb, totalStepSecs, totalMemory, freeMemory,
-            // alTemps.getSizeInfo());
-          }
-
-          if (done) {
-            if (startAtLine >= 0 || endAtLine >= 0)
-              System.err.printf("\nRange done: [%d-%d], current line is %d.\n",
-                  startAtLine, endAtLine - 1, lineNb);
-            break;
-          }
-
-          String eLine = eReader.readLine();
-          if (tripleFile) {
-            eLine = eLine.split(tripleDelim)[1].trim();
-          }
-          if (eLine == null)
-            throw new IOException("Target-language corpus is too short!");
-
-          boolean skipLine = (fLine.isEmpty() || eLine.isEmpty());
-
-          // Read alignment:
-          String aLine = null;
-          if (useGIZA) {
-            String ef1 = aReader.readLine();
-            String ef2 = aReader.readLine();
-            String ef3 = aReader.readLine();
-            String fe1 = aInvReader.readLine();
-            String fe2 = aInvReader.readLine();
-            String fe3 = aInvReader.readLine();
-            if (!skipLine) {
-              GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2,
-                  fe3, ef1, ef2, ef3);
-              SymmetricalWordAlignment symAlign = AlignmentSymmetrizer
-                  .symmetrize(gizaAlign, symmetrizationType);
-              symAlign.reverse();
-              aLine = symAlign.toString().trim();
-            }
-          } else {
-            aLine = aReader.readLine();
-            if (tripleFile) {
-              String[] toks = aLine.split(tripleDelim);
-              if (toks.length >= 3) {
-                aLine = aLine.split(tripleDelim)[2].trim();
-              } else {
-                aLine = "";
-              }
-            }
-            if (aLine == null)
-              throw new IOException("Alignment file is too short!");
-          }
-          if (skipLine || aLine.isEmpty())
-            continue;
-
-          if (lineNb < startAtLine)
-            continue;
-          if (DETAILED_DEBUG) {
-            System.err.printf("e(%d): %s\n", lineNb, eLine);
-            System.err.printf("f(%d): %s\n", lineNb, fLine);
-            System.err.printf("a(%d): %s\n", lineNb, aLine);
-          }
-          if (lowercase) {
-            fLine = fLine.toLowerCase();
-            eLine = eLine.toLowerCase();
-          }
-          
-          wrapper.put(new ExtractorInput(lineNb,fLine, eLine, aLine));
-          while(wrapper.peek()) {
-            // Thang Feb14
-            ExtractorOutput output = wrapper.poll();
-            for (String outputStr : output.outputStrs) {
-              writer.append(outputStr + "\n");
-            }
-          }
+        if (tripleFile && !done) {
+          fLine = fLine.split(" \\|\\|\\| ")[0];
         }
 
-        if (eReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
-          throw new IOException("Target-language corpus contains extra lines!");
-        if (aReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
-          throw new IOException("Alignment file contains extra lines!");
+        if (lineNb % memUsageFreq == 0 || done) {
+          // long totalMemory = Runtime.getRuntime().totalMemory()/(1<<20);
+          long freeMemory = Runtime.getRuntime().freeMemory() / (1 << 20);
+          // double totalStepSecs = (System.currentTimeMillis() -
+          // startStepTimeMillis)/1000.0;
+          // startStepTimeMillis = System.currentTimeMillis();
+          System.err.printf(" %d (mem=%dm)...", lineNb, freeMemory);
+          // if (verbose)
+          // System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
+          // lineNb, totalStepSecs, totalMemory, freeMemory,
+          // alTemps.getSizeInfo());
+        }
 
-        fReader.close();
-        eReader.close();
-        aReader.close();
+        if (done) {
+          if (startAtLine >= 0 || endAtLine >= 0)
+            System.err.printf("\nRange done: [%d-%d], current line is %d.\n",
+                startAtLine, endAtLine - 1, lineNb);
+          break;
+        }
 
-        doneReadingData = true;
-        wrapper.join();
+        String eLine = eReader.readLine();
+        if (tripleFile) {
+          eLine = eLine.split(tripleDelim)[1].trim();
+        }
+        if (eLine == null)
+          throw new IOException("Target-language corpus is too short!");
+
+        boolean skipLine = (fLine.isEmpty() || eLine.isEmpty());
+
+        // Read alignment:
+        String aLine = null;
+        if (useGIZA) {
+          String ef1 = aReader.readLine();
+          String ef2 = aReader.readLine();
+          String ef3 = aReader.readLine();
+          String fe1 = aInvReader.readLine();
+          String fe2 = aInvReader.readLine();
+          String fe3 = aInvReader.readLine();
+          if (!skipLine) {
+            GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2,
+                fe3, ef1, ef2, ef3);
+            SymmetricalWordAlignment symAlign = AlignmentSymmetrizer
+                .symmetrize(gizaAlign, symmetrizationType);
+            symAlign.reverse();
+            aLine = symAlign.toString().trim();
+          }
+        } else {
+          aLine = aReader.readLine();
+          if (tripleFile) {
+            String[] toks = aLine.split(tripleDelim);
+            if (toks.length >= 3) {
+              aLine = aLine.split(tripleDelim)[2].trim();
+            } else {
+              aLine = "";
+            }
+          }
+          if (aLine == null)
+            throw new IOException("Alignment file is too short!");
+        }
+        if (skipLine || aLine.isEmpty())
+          continue;
+
+        if (lineNb < startAtLine)
+          continue;
+        if (DETAILED_DEBUG) {
+          System.err.printf("e(%d): %s\n", lineNb, eLine);
+          System.err.printf("f(%d): %s\n", lineNb, fLine);
+          System.err.printf("a(%d): %s\n", lineNb, aLine);
+        }
+        if (lowercase) {
+          fLine = fLine.toLowerCase();
+          eLine = eLine.toLowerCase();
+        }
+        
+        wrapper.put(new ExtractorInput(lineNb,fLine, eLine, aLine));
         while(wrapper.peek()) {
           // Thang Feb14
           ExtractorOutput output = wrapper.poll();
           for (String outputStr : output.outputStrs) {
             writer.append(outputStr + "\n");
           }
+          numTotalExamples += output.outputStrs.size();
         }
-
-        double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-        System.err.printf("\nDone with pass %d. Seconds: %.3f.\n",
-            passNumber + 1, totalTimeSecs);
       }
+
+      if (eReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
+        throw new IOException("Target-language corpus contains extra lines!");
+      if (aReader.readLine() != null && startAtLine < 0 && endAtLine < 0)
+        throw new IOException("Alignment file contains extra lines!");
+
+      fReader.close();
+      eReader.close();
+      aReader.close();
+
+      doneReadingData = true;
+      wrapper.join();
+      while(wrapper.peek()) {
+        // Thang Feb14
+        ExtractorOutput output = wrapper.poll();
+        for (String outputStr : output.outputStrs) {
+          writer.append(outputStr + "\n");
+        }
+        numTotalExamples += output.outputStrs.size();
+      }
+
+      double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
+      System.err.printf("\nDone. Number of examples = %d. Seconds: %.3f.\n",
+          numTotalExamples, totalTimeSecs);
     } catch (IOException e) {
       e.printStackTrace();
     } 
