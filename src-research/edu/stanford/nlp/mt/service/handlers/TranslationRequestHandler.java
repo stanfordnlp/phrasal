@@ -23,6 +23,8 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
@@ -170,8 +172,10 @@ public class TranslationRequestHandler implements RequestHandler {
         final long decodeStart = System.nanoTime();
         final int numRequestedTranslations = input.n;
         final int numTranslationsToGenerate = input.n * NBEST_MULTIPLIER;
+        final InputProperties inputProperties = new InputProperties();
+        inputProperties.put(InputProperty.TargetPrefix, targets != null);
         List<RichTranslation<IString,String>> translations = 
-            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, targets != null); 
+            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, inputProperties); 
         logger.info(String.format("Input %d decoder: #translations: %d",
             input.inputId, translations.size()));
         

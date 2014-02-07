@@ -96,14 +96,14 @@ public class RuleQueryRequestHandler implements RequestHandler {
       ConcreteRule<IString,String> bestLeftContext = null;
       if (sourceContext == null) {
         List<ConcreteRule<IString,String>> ruleList = phraseTable
-            .getRules(source, null, qId.incrementAndGet(), scorer);
+            .getRules(source, null, null, qId.incrementAndGet(), scorer);
         RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, source, true);
         rulesForSpan = ruleGrid.get(0, source.size()-1);
 
       } else {
         Sequence<IString> queryString = Sequences.concatenate(sourceContext, source);
         List<ConcreteRule<IString,String>> ruleList = phraseTable
-            .getRules(queryString, null, qId.incrementAndGet(), scorer);
+            .getRules(queryString, null, null, qId.incrementAndGet(), scorer);
         RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, queryString, true);
         rulesForSpan = ruleGrid.get(sourceContext.size(), queryString.size()-1);
         List<ConcreteRule<IString,String>> rulesForContext = ruleGrid.get(0, sourceContext.size()-1);

@@ -10,6 +10,7 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.base.FeatureValues;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -59,10 +60,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
-      int sourceInputId, OutputSpace<TK, FV> outputSpace,
-      List<Sequence<TK>> targets, int size) {
-    return nbest(scorer, source, sourceInputId, outputSpace,
-        targets, size);
+      int sourceInputId, InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
+    return nbest(scorer, source, sourceInputId, null,
+        outputSpace, targets, size);
   }
 
   /**
@@ -73,7 +74,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    */
   private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
     if (source == null) return null;
-    List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, -1, null);
+    List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, null, -1, null);
 
     CoverageSet possibleCoverage = new CoverageSet();
     for (ConcreteRule<TK,FV> rule : rules) {
@@ -98,8 +99,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      OutputSpace<TK, FV> outputSpace,
-      List<Sequence<TK>> targets, int size) {
+      InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
 
     // filter unknown words
     if (filterUnknownWords) {
@@ -111,7 +112,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // Decoding
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
         new RecombinationHistory<Derivation<TK, FV>>();
-    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         recombinationHistory, outputSpace, targets, size);
     if (beam == null) {
       // Decoder failure
@@ -214,17 +215,17 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
-      int sourceInputId, OutputSpace<TK, FV> constrainedOutputSpace,
-      List<Sequence<TK>> targets) {
-    return translate(scorer, source, sourceInputId, constrainedOutputSpace,
-        targets);
+      int sourceInputId, InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
+    return translate(scorer, source, sourceInputId, null,
+        constrainedOutputSpace, targets);
   }
 
   @Override
   public RichTranslation<TK, FV> translate(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      OutputSpace<TK, FV> outputSpace,
-      List<Sequence<TK>> targets) {
+      InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
     
     // filter unknown source words
     if (filterUnknownWords) {
@@ -233,7 +234,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
     if (source == null) return null;
     
-    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         null, outputSpace, targets, 1);
     if (beam == null)
       return null;
@@ -247,6 +248,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 	 */
   abstract protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest);

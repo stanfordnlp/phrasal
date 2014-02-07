@@ -123,7 +123,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
     Sequence<IString> source = new SimpleSequence<IString>(true,
         IStrings.toIStringArray(tokens));
     RichTranslation<IString, String> translation = inferer.translate(source,
-        id - 1, null, null);
+        id - 1, null, null, null);
 
     // manual fix up(s)
     // capitalize the first letter

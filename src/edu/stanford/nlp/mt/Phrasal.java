@@ -146,9 +146,9 @@ public class Phrasal {
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
       .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
       .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)").append(nl)
-      .append("  -").append(LOAD_SOURCE_CORENLP).append(" filename : Load source-side serialized CoreNLP annotations").append(nl)
       .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
-      .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)");
+      .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
+      .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.");
     return sb.toString();
   }
 
@@ -189,9 +189,9 @@ public class Phrasal {
   private static final String SOURCE_CLASS_MAP = "source-class-map";
   private static final String TARGET_CLASS_MAP = "target-class-map";
   private static final String PRINT_MODEL_SCORES = "print-model-scores";
-  public static final String LOAD_SOURCE_CORENLP = "source-corenlp";
   private static final String LOG_PREFIX = "log-prefix";
   private static final String LOG_LEVEL = "log-level";
+  private static final String INPUT_PROPERTIES = "input-properties";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -213,7 +213,7 @@ public class Phrasal {
         TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOAD_SOURCE_CORENLP, LOG_PREFIX, LOG_LEVEL));
+        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -295,6 +295,11 @@ public class Phrasal {
    * Output model scores to console.
    */
   private boolean printModelScores = false;
+  
+  /**
+   * Properties of each input when Phrasal is run on a finite input file.
+   */
+  private final List<InputProperties> inputPropertiesList;
   
   /**
    * Recombination configuration.
@@ -397,6 +402,9 @@ public class Phrasal {
       printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
     }
     
+    inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
+        InputProperties.parse(config.get(INPUT_PROPERTIES).get(0)) : new ArrayList<InputProperties>(1);
+    
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
@@ -434,13 +442,6 @@ public class Phrasal {
         map.load(filename);
         System.err.println("Loaded target class map: " + filename);
       }
-    }
-    
-    // Source CoreNLP annotations
-    if (config.containsKey(LOAD_SOURCE_CORENLP)) {
-      List<String> parameters = config.get(LOAD_SOURCE_CORENLP);
-      if (parameters.size() == 0) throw new RuntimeException("Source CoreNLP requires a file argument");
-      CoreNLPCache.loadSerialized(parameters.get(0));
     }
     
     if (config.containsKey(FORCE_DECODE)) {
@@ -1004,8 +1005,10 @@ public class Phrasal {
     @Override
     public DecoderOutput process(DecoderInput input) {
       // Generate n-best list
+      final InputProperties inputProps = input.sourceInputId < inputPropertiesList.size() ? 
+          inputPropertiesList.get(input.sourceInputId) : new InputProperties();
       List<RichTranslation<IString, String>> translations = 
-          decode(input.source, input.sourceInputId, infererId);
+          decode(input.source, input.sourceInputId, infererId, nbestListSize, null, inputProps);
       
       // Select and process the best translation
       Sequence<IString> bestTranslation = null;
@@ -1149,7 +1152,7 @@ public class Phrasal {
       int sourceInputId, int threadId) {
     List<Sequence<IString>> targets = 
         forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
-    return decode(source, sourceInputId, threadId, nbestListSize, targets, false);
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, new InputProperties());
   }
   
   /**
@@ -1166,7 +1169,7 @@ public class Phrasal {
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
-      boolean targetsArePrefixes) {
+      InputProperties inputProperties) {
     // Sanity checks
     if (threadId < 0 || threadId >= numThreads) {
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
@@ -1176,30 +1179,26 @@ public class Phrasal {
     }
 
     // Output space of the decoder
+    final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix) ? 
+        (Boolean) inputProperties.get(InputProperty.TargetPrefix) : false;
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, 
         targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase());
 
     List<RichTranslation<IString, String>> translations = Generics.newArrayList(1);
     if (numTranslations > 1) {
-      translations = inferers
-          .get(threadId).nbest(
-              source,
-              sourceInputId,
-              outputSpace,
-              outputSpace.getAllowableSequences(), numTranslations);
+      translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 
+          outputSpace, outputSpace.getAllowableSequences(), numTranslations);
 
       // Return an empty n-best list
-      if (translations == null) translations = new ArrayList<RichTranslation<IString,String>>(1);
+      if (translations == null) translations = Generics.newArrayList(1);
 
     } else {
       // The 1-best translation in this case is potentially different from
       // calling nbest() with a list size of 1. Therefore, this call is *not* a special
       // case of the condition above.
-      RichTranslation<IString, String> translation = inferers.get(threadId).translate(
-          source,
-          sourceInputId,
-          outputSpace,
-          outputSpace.getAllowableSequences());
+      RichTranslation<IString, String> translation = 
+          inferers.get(threadId).translate(source, sourceInputId, inputProperties, outputSpace, 
+              outputSpace.getAllowableSequences());
       if (translation != null) {
         translations.add(translation);
       }

@@ -101,7 +101,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   @Override
   @SuppressWarnings("unchecked")
   public List<ConcreteRule<IString,FV>> getRules(
-      Sequence<IString> sequence, List<Sequence<IString>> targets,
+      Sequence<IString> sequence, InputProperties sourceInputProperties, List<Sequence<IString>> targets,
       int sourceInputId, Scorer<FV> scorer) {
 
     assert (targets == null);
@@ -157,11 +157,11 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
               if (abstractOpt instanceof DTURule)
                 opts.add(new ConcreteRule<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
-                        .getName(), sourceInputId, true));
+                        .getName(), sourceInputId, true, sourceInputProperties));
               else
                 opts.add(new ConcreteRule<IString,FV>(abstractOpt,
                     s.coverage, phraseFeaturizer, scorer, sequence, this
-                        .getName(), sourceInputId));
+                        .getName(), sourceInputId, sourceInputProperties));
             }
           }
         }

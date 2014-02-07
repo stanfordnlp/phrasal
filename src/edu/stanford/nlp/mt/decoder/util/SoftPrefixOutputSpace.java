@@ -103,7 +103,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     sourceCoverage.set(sourceIndex);
     ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
         sourceCoverage, featurizer, null, sourceSequence, 
-        PHRASE_TABLE_NAME, sourceInputId);
+        PHRASE_TABLE_NAME, sourceInputId, null);
     
     // Deterministically set the isolation score since we didn't provide a scorer to the
     // ConcreteRule constructor.

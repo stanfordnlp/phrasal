@@ -16,8 +16,7 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @param <TK>
  */
-public class ConcreteRule<TK,FV> implements
-    Comparable<ConcreteRule<TK,FV>> {
+public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
 
   /**
    * The underlying translation rule.
@@ -79,14 +78,15 @@ public class ConcreteRule<TK,FV> implements
    */
   public ConcreteRule(Rule<TK> abstractRule, CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId) {
+      Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
+      InputProperties sourceInputProperties) {
     this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     
     // Extract rule features
-    Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
+    Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, this,
         sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer == null ? 
         new ArrayList<FeatureValue<FV>>() : phraseFeaturizer.ruleFeaturize(f);
@@ -118,7 +118,7 @@ public class ConcreteRule<TK,FV> implements
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
       Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
-      boolean hasTargetGap) {
+      boolean hasTargetGap, InputProperties sourceInputProperties) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);
     assert (hasTargetGap);
     this.abstractRule = abstractRule;
@@ -131,7 +131,7 @@ public class ConcreteRule<TK,FV> implements
     // TM scores:
     double totalScore = 0.0;
     {
-      Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, this,
+      Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, this,
           sourceInputId);
       List<FeatureValue<FV>> features = phraseFeaturizer.ruleFeaturize(f);
       for (FeatureValue<FV> feature : features) {
@@ -147,7 +147,7 @@ public class ConcreteRule<TK,FV> implements
     if (abstractRule instanceof DTURule) {
       DTURule<TK> dtuOpt = (DTURule<TK>) abstractRule;
       for (int i = 0; i < dtuOpt.dtus.length; ++i) {
-        Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(sourceSequence,
+        Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(sourceSequence, sourceInputProperties,
             this, sourceInputId, i);
         assert (f.translationScores.length == 0);
         assert (f.phraseScoreNames.length == 0);
