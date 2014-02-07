@@ -8,7 +8,16 @@ package edu.stanford.nlp.mt.base;
  *
  */
 public enum InputProperty {
-  TargetPrefix,            // List of targets are prefixes
-  Domain,                  // Domain of the input
-  CoreNLPAnnotation        // CoreNLPAnnotation for the source input
+  //List of targets are prefixes
+  TargetPrefix,
+  
+  // Domain of the input
+  Domain,
+  
+  // CoreNLPAnnotation for the source input
+  CoreNLPAnnotation,
+  
+  // Indicator feature index from PhraseExtract to trigger
+  // various templates in the feature API.
+  RuleFeatureIndex
 }

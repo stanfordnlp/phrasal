@@ -1,18 +1,17 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Indicator feature for rules that were extracted from selected sentences in
@@ -29,19 +28,22 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
 
   private static final String FEATURE_PREFIX = "DOM";
   
-  private final Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   private final boolean addAdjacentRuleFeature;
   private final boolean addDomainSpecificFeatures;
   private final boolean addDomainLengthRatio;
   private final boolean addDomainRuleShape;
   private final boolean outOfDomainFeatures;
   
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public DomainAdaptation(String...args) {
     if (args.length < 1) {
       throw new RuntimeException("Specify the phrase table feature index of the in-domain indicator feature");
     }
     Properties options = SparseFeatureUtils.argsToProperties(args);
-    this.sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
     this.addAdjacentRuleFeature = options.containsKey("adjacentRuleFeature");
     this.addDomainSpecificFeatures = options.containsKey("domainSpecificFeature");
     this.addDomainLengthRatio = options.containsKey("domainLengthRatioFeature");
@@ -56,12 +58,16 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    Pair<String,Integer> genreInfo = sourceIdInfoMap.containsKey(f.sourceInputId) ?
-        sourceIdInfoMap.get(f.sourceInputId) : null;
+    final String genre = f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
+
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    if (genreInfo != null) {
-      final String genre = genreInfo.first();
-      final int featureIndex = genreInfo.second();
+    if (genre != null) {
+      final int featureIndex = f.sourceInputProperties.containsKey(InputProperty.RuleFeatureIndex) ?
+          (Integer) f.sourceInputProperties.get(InputProperty.RuleFeatureIndex) : -1;
+      if (featureIndex < 0) {
+        throw new RuntimeException("RuleFeatureIndex property not specified for input: " + String.valueOf(f.sourceInputId));
+      }
       BoundaryState priorState = f.prior == null ? null : (BoundaryState) f.prior.getState(this);
 
       // Synthetic rules are always in-domain

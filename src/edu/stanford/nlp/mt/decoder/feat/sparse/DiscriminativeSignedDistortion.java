@@ -1,18 +1,17 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Signed discriminative distortion bins. (see <code>ConcreteRule</code>)
@@ -25,7 +24,6 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   private static final String FEATURE_NAME = "DDIST";
   
   private final boolean addDomainFeatures;
-  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
   public DiscriminativeSignedDistortion() {
     this.addDomainFeatures = false;
@@ -33,10 +31,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   
   public DiscriminativeSignedDistortion(String...args) {
     Properties options = SparseFeatureUtils.argsToProperties(args);
-    this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+    this.addDomainFeatures = options.containsKey("domainFeature");
   }
   
   @Override
@@ -49,9 +44,8 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
     int distortion = f.prior == null ? f.sourcePosition :
       f.prior.sourcePosition + f.prior.sourcePhrase.size() - f.sourcePosition;
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
-        sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
     
     if (distortion < 0) {
       String featureString = FEATURE_NAME + ":neg";
