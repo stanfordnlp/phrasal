@@ -87,15 +87,15 @@ public final class Messages {
     public final Language src;
     public final Language tgt;
     public final String text;
-    public final String inputProps;
+    public final String inputProperties;
     // The id field *must* correspond to the ordinal()
     // method of the associate MessageType.
     protected transient int id;
-    public Request(Language sourceLang, Language targetLang, String source, String inputProps) {
+    public Request(Language sourceLang, Language targetLang, String source, String inputProperties) {
       this.src = sourceLang == null ? Language.UNK : sourceLang;
       this.tgt = targetLang == null ? Language.UNK : targetLang;
       this.text = source == null ? "" : source.trim();
-      this.inputProps = inputProps == null ? "" : inputProps;
+      this.inputProperties = inputProperties == null ? "" : inputProperties;
     
       // Sanity checking
       assert src != null;

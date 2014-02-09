@@ -409,7 +409,7 @@ public class TranslationRequestHandler implements RequestHandler {
     TranslationRequest translationRequest = (TranslationRequest) baseRequest;
     int sourceId = inputId.incrementAndGet();
     DecoderInput input = new DecoderInput(sourceId, translationRequest.text, translationRequest.tgtPrefix, 
-        translationRequest.n, translationRequest.tgt, translationRequest.inputProps, request, continuation);
+        translationRequest.n, translationRequest.tgt, translationRequest.inputProperties, request, continuation);
 
     // Try to submit the request to the service.
     boolean requestSubmitted = false;

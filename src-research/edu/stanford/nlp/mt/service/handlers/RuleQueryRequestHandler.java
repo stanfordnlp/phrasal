@@ -95,7 +95,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
       // Query the phrase table
       List<ConcreteRule<IString,String>> rulesForSpan;
       ConcreteRule<IString,String> bestLeftContext = null;
-      InputProperties inputProperties = InputProperties.fromString(request.inputProps);
+      InputProperties inputProperties = InputProperties.fromString(request.inputProperties);
       if (sourceContext == null) {
         List<ConcreteRule<IString,String>> ruleList = phraseTable
             .getRules(source, inputProperties, null, qId.incrementAndGet(), scorer);
