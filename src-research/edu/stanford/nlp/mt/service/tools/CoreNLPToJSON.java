@@ -19,6 +19,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.process.en.EnglishPreprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -59,12 +60,12 @@ public final class CoreNLPToJSON {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
-    if (args.length != 1) {
-      System.err.printf("Usage: java %s file > json_output%n", CoreNLPToJSON.class.getName());
+    if (args.length < 1) {
+      System.err.printf("Usage: java %s file [inputproperties_str] > json_output%n", CoreNLPToJSON.class.getName());
       System.exit(-1);
     }
-
     String textFile = args[0];
+    InputProperties inputProperties = args.length > 1 ? InputProperties.fromString(args[1]) : new InputProperties();
 
     StanfordCoreNLP coreNLP = new StanfordCoreNLP(properties);
     
@@ -90,19 +91,20 @@ public final class CoreNLPToJSON {
       if (alignment.e().size() != numTokens) {
         throw new RuntimeException(String.format("Tokenizer configurations differ: %d/%d", alignment.e().size(), numTokens));
       }
-      SourceSegment container = new SourceSegment(numTokens);
-      container.layoutSpec.addAll(makeLayoutSpec(alignment));
+      SourceSegment segment = new SourceSegment(numTokens);
+      segment.layoutSpec.addAll(makeLayoutSpec(alignment));
+      segment.inputProperties = inputProperties.toString();
       for (int j = 0; j < numTokens; ++j) {
         CoreLabel token = tokens.get(j);
         String word = token.get(TextAnnotation.class);
-        container.tokens.add(unescape(word));
+        segment.tokens.add(unescape(word));
         String pos = mapPOS(token.get(PartOfSpeechAnnotation.class));
-        container.pos.add(pos);
+        segment.pos.add(pos);
         String ne = token.get(NamedEntityTagAnnotation.class);
-        container.ner.add(ne);
-        container.chunkVector[j] = chunkVector[j];
+        segment.ner.add(ne);
+        segment.chunkVector[j] = chunkVector[j];
       }
-      annotations.put(reader.getLineNumber()-1, container);
+      annotations.put(reader.getLineNumber()-1, segment);
     }
     reader.close();
     System.err.printf("Processed %d sentences%n", reader.getLineNumber());

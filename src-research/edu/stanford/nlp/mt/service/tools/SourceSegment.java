@@ -16,7 +16,14 @@ public class SourceSegment {
   public final List<String> pos;
   public final List<String> ner;
   public final List<String> layoutSpec;
-  public final int[] chunkVector; 
+  public final int[] chunkVector;
+  public String inputProperties;
+  
+  /**
+   * Constructor.
+   * 
+   * @param numTokens
+   */
   public SourceSegment(int numTokens) {
     this.tokens = Generics.newArrayList(numTokens);
     this.pos = Generics.newArrayList(numTokens);

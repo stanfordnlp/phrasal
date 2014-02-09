@@ -16,6 +16,7 @@ import com.google.gson.reflect.TypeToken;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
@@ -94,16 +95,17 @@ public class RuleQueryRequestHandler implements RequestHandler {
       // Query the phrase table
       List<ConcreteRule<IString,String>> rulesForSpan;
       ConcreteRule<IString,String> bestLeftContext = null;
+      InputProperties inputProperties = InputProperties.fromString(request.inputProps);
       if (sourceContext == null) {
         List<ConcreteRule<IString,String>> ruleList = phraseTable
-            .getRules(source, null, null, qId.incrementAndGet(), scorer);
+            .getRules(source, inputProperties, null, qId.incrementAndGet(), scorer);
         RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, source, true);
         rulesForSpan = ruleGrid.get(0, source.size()-1);
 
       } else {
         Sequence<IString> queryString = Sequences.concatenate(sourceContext, source);
         List<ConcreteRule<IString,String>> ruleList = phraseTable
-            .getRules(queryString, null, null, qId.incrementAndGet(), scorer);
+            .getRules(queryString, inputProperties, null, qId.incrementAndGet(), scorer);
         RuleGrid<IString,String> ruleGrid = new RuleGrid<IString,String>(ruleList, queryString, true);
         rulesForSpan = ruleGrid.get(sourceContext.size(), queryString.size()-1);
         List<ConcreteRule<IString,String>> rulesForContext = ruleGrid.get(0, sourceContext.size()-1);

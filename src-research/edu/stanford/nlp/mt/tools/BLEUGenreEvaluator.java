@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -76,7 +77,7 @@ public class BLEUGenreEvaluator {
     String[] parameters = options.getProperty("").split("\\s+");
     String[] refs = new String[parameters.length - 1];
     System.arraycopy(parameters, 1, refs, 0, refs.length);
-    List<InputProperties> inputProperties = InputProperties.parse(parameters[0]);
+    List<InputProperties> inputProperties = InputProperties.parse(new File(parameters[0]));
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs);
 
     Set<String> genreList = Generics.newHashSet();

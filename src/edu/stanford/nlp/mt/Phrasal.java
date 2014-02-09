@@ -27,6 +27,7 @@
 
 package edu.stanford.nlp.mt;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -403,7 +404,7 @@ public class Phrasal {
     }
     
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
-        InputProperties.parse(config.get(INPUT_PROPERTIES).get(0)) : new ArrayList<InputProperties>(1);
+        InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
     
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.

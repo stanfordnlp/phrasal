@@ -13,6 +13,7 @@ import edu.stanford.nlp.international.french.process.FrenchTokenizer;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.process.fr.FrenchPreprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -70,13 +71,14 @@ public class RawFrenchToJSON {
    * @param args
    */
   public static void main(String[] args) {
-    if (args.length != 2) {
-      System.err.printf("Usage: java %s grammar file > json%n", RawFrenchToJSON.class.getName());
+    if (args.length < 2) {
+      System.err.printf("Usage: java %s grammar file [inputproperties_str] > json%n", RawFrenchToJSON.class.getName());
       System.exit(-1);
     }
     String parserFile = args[0];
     String textFile = args[1];
-    
+    InputProperties inputProperties = args.length > 2 ? InputProperties.fromString(args[2]) : new InputProperties();
+
     // Load parser
     LexicalizedParser parser = LexicalizedParser.loadModel(parserFile);
     
@@ -95,17 +97,18 @@ public class RawFrenchToJSON {
         List<Label> posSequence = tree.preTerminalYield();
         tree.indexLeaves();
         int[] chunkVector = getChunkVector(tree);
-        SourceSegment container = new SourceSegment(tokenizedSequence.size());
-        container.layoutSpec.addAll(CoreNLPToJSON.makeLayoutSpec(alignment));
+        SourceSegment segment = new SourceSegment(tokenizedSequence.size());
+        segment.layoutSpec.addAll(CoreNLPToJSON.makeLayoutSpec(alignment));
+        segment.inputProperties = inputProperties.toString();
         for (int j = 0, size = tokenizedSequence.size(); j < size; ++j) {
           String token = tokenizedSequence.get(j).toString();
-          container.tokens.add(CoreNLPToJSON.unescape(token));
+          segment.tokens.add(CoreNLPToJSON.unescape(token));
           String pos = posSequence.get(j).toString();
-          container.pos.add(pos);
-          container.ner.add("O");
-          container.chunkVector[j] = chunkVector[j];
+          segment.pos.add(pos);
+          segment.ner.add("O");
+          segment.chunkVector[j] = chunkVector[j];
         }
-        annotations.put(annotations.size(), container);
+        annotations.put(annotations.size(), segment);
       }
       reader.close();
       

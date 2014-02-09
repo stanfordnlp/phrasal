@@ -85,14 +85,16 @@ public class TranslationRequestHandler implements RequestHandler {
     private final Continuation continuation;
     private final String text;
     private final String tgtPrefix;
+    private final InputProperties properties;
     private final Language targetLanguage;
     private final int n;
     private final long submitTime;
-    public DecoderInput(int inputId, String text, String prefix, int n, Language targetLanguage, HttpServletRequest request,
+    public DecoderInput(int inputId, String text, String prefix, int n, Language targetLanguage, String inputProps, HttpServletRequest request,
         Continuation continuation) {
       this.inputId = inputId;
       this.text = text;
       this.tgtPrefix = prefix;
+      this.properties = InputProperties.fromString(inputProps);
       this.targetLanguage = targetLanguage;
       this.n = n;
       this.request = request;
@@ -167,15 +169,14 @@ public class TranslationRequestHandler implements RequestHandler {
           targets = Generics.newLinkedList();
           targets.add(t2t.e());
         }
+        input.properties.put(InputProperty.TargetPrefix, targets != null);
         
         // Decode
         final long decodeStart = System.nanoTime();
         final int numRequestedTranslations = input.n;
         final int numTranslationsToGenerate = input.n * NBEST_MULTIPLIER;
-        final InputProperties inputProperties = new InputProperties();
-        inputProperties.put(InputProperty.TargetPrefix, targets != null);
         List<RichTranslation<IString,String>> translations = 
-            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, inputProperties); 
+            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, input.properties); 
         logger.info(String.format("Input %d decoder: #translations: %d",
             input.inputId, translations.size()));
         
@@ -408,7 +409,7 @@ public class TranslationRequestHandler implements RequestHandler {
     TranslationRequest translationRequest = (TranslationRequest) baseRequest;
     int sourceId = inputId.incrementAndGet();
     DecoderInput input = new DecoderInput(sourceId, translationRequest.text, translationRequest.tgtPrefix, 
-        translationRequest.n, translationRequest.tgt, request, continuation);
+        translationRequest.n, translationRequest.tgt, translationRequest.inputProps, request, continuation);
 
     // Try to submit the request to the service.
     boolean requestSubmitted = false;
