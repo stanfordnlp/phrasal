@@ -105,9 +105,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // filter unknown words
     if (filterUnknownWords) {
        source = filterUnknownWords(source);
-       if (outputSpace != null) outputSpace.setSourceSequence(source);
     }
     if (source == null) return null;
+    if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     // Decoding
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
@@ -200,9 +200,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // re-sort things here just in case.
     Collections.sort(translations, translationComparator);
 
-    System.err.printf("source id %d: #extracted: %d #final: %d time: %.3fsec%n", sourceInputId, numExtracted, translations.size(),
-        (System.nanoTime() - nbestStartTime) / 1e9);
-
+    if (DEBUG) {
+      System.err.printf("source id %d: #extracted: %d #final: %d time: %.3fsec%n", sourceInputId, numExtracted, translations.size(),
+          (System.nanoTime() - nbestStartTime) / 1e9);
+    }
+    
     return translations;
   }
   
@@ -230,9 +232,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // filter unknown source words
     if (filterUnknownWords) {
       source = filterUnknownWords(source);
-      if (outputSpace != null) outputSpace.setSourceSequence(source);
     }
     if (source == null) return null;
+    if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         null, outputSpace, targets, 1);

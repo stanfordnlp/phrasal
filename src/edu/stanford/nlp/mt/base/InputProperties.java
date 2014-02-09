@@ -33,12 +33,14 @@ public class InputProperties extends HashMap<InputProperty, Object> {
    */
   public static InputProperties fromString(String propsString) {
     InputProperties inputProperties = new InputProperties();
-    for (String keyValue : propsString.trim().split(PAIR_DELIMITER)) {
-      String[] fields = keyValue.split(KEY_VALUE_DELIMITER);
-      if (fields.length != 2) {
-        throw new RuntimeException("File format error: " + keyValue + " " + String.valueOf(fields.length));
+    if (propsString != null) {
+      for (String keyValue : propsString.trim().split(PAIR_DELIMITER)) {
+        String[] fields = keyValue.split(KEY_VALUE_DELIMITER);
+        if (fields.length != 2) {
+          throw new RuntimeException("File format error: " + keyValue + " " + String.valueOf(fields.length));
+        }
+        inputProperties.put(InputProperty.valueOf(fields[0]), fields[1]);
       }
-      inputProperties.put(InputProperty.valueOf(fields[0]), fields[1]);
     }
     return inputProperties;
   }
