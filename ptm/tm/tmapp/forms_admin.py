@@ -1,5 +1,6 @@
 import logging
 import json
+from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
@@ -8,34 +9,15 @@ from tmapp.models import TranslationSession,UserConfiguration,SourceDocument,Lan
 
 logger = logging.getLogger(__name__)
 
-class UserCreationForm2(UserCreationForm):
+class ExperimentAdminForm(admin.ModelAdmin):
     """
     User authentication model based on a json specification.
     """
-    json_spec = forms.CharField(label='Json experiment specification',widget=forms.Textarea)
-
-    def __init__(self, *args, **kwargs):
-        super(UserCreationForm2, self).__init__(*args, **kwargs)
-
-        # Disable the other required fields from the User model
-        for key in self.fields:
-            self.fields[key].required = False
-        self.fields['json_spec'].required = True
-    
-    class Meta(UserCreationForm.Meta):
-        fields = ('json_spec',)
-
-    def clean(self):
-        cleaned_data = self.cleaned_data
-
-        return cleaned_data
-
-    def save(self, commit=True):
+    def save_model(self, request, obj, form, change):
         """
         Create and configure all Users and TranslationSessions
         """
-        cleaned_data = self.cleaned_data
-        spec = json.loads(cleaned_data['json_spec'])
+        spec = json.loads(obj.json_spec)
         user = None
         for username,spec in spec.iteritems():
             logger.debug(username)
@@ -83,4 +65,5 @@ class UserCreationForm2(UserCreationForm):
                                                             training=True,order=i)
                 session.save()
 
-        return user
+        # Save the experiment if everything above completes
+        obj.save()

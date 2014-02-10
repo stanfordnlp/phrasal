@@ -52,15 +52,15 @@ class UserConfiguration(models.Model):
                               self.source_language.code,
                               self.target_language.code)
 
-#class Experiment(models.Model):
-#    """
-#    Created when a full experiment configuration is loaded.
-#    """
-#    name = models.CharField(max_length=100)
-#    json_spec = models.TextField()
+class Experiment(models.Model):
+    """
+    Created when a full experiment configuration is loaded.
+    """
+    name = models.CharField(max_length=100)
+    json_spec = models.TextField()
 
-#    def __unicode__(self):
-#        return self.name
+    def __unicode__(self):
+        return self.name
     
 class TrainingRecord(models.Model):
     """
