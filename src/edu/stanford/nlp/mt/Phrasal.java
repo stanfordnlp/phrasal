@@ -73,9 +73,6 @@ import edu.stanford.nlp.mt.decoder.feat.base.DTULinearDistortionFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.HeuristicFactory;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -113,10 +110,6 @@ public class Phrasal {
       .append("  -").append(TRANSLATION_TABLE_OPT).append(" filename : Translation model file.").append(nl)
       .append("  -").append(LANGUAGE_MODEL_OPT).append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl)
       .append("  -").append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl)
-      .append("  -").append(DISTORTION_WT_OPT).append(" num : Linear distortion weight.").append(nl)
-      .append("  -").append(LANGUAGE_MODEL_WT_OPT).append(" num : Language model weight.").append(nl)
-      .append("  -").append(TRANSLATION_MODEL_WT_OPT).append(" num [num] : Translation model weights.").append(nl)
-      .append("  -").append(WORD_PENALTY_WT_OPT).append(" num : Word penalty weight.").append(nl)
       .append("  -").append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl)
       .append("  -").append(MOSES_NBEST_LIST_OPT).append(" filename : Generate Moses-format n-best lists.").append(nl)
       .append("  -").append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl)
@@ -156,10 +149,6 @@ public class Phrasal {
   private static final String TRANSLATION_TABLE_OPT = "ttable-file";
   private static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   private static final String OPTION_LIMIT_OPT = "ttable-limit";
-  private static final String DISTORTION_WT_OPT = "weight-d";
-  private static final String LANGUAGE_MODEL_WT_OPT = "weight-l";
-  private static final String TRANSLATION_MODEL_WT_OPT = "weight-t";
-  private static final String WORD_PENALTY_WT_OPT = "weight-w";
   public static final String NBEST_LIST_OPT = "n-best-list";
   private static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   private static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
@@ -210,8 +199,7 @@ public class Phrasal {
         NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
         LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT,
         DROP_UNKNOWN_WORDS, ADDITIONAL_PHRASE_GENERATOR,
-        LANGUAGE_MODEL_OPT, DISTORTION_WT_OPT, LANGUAGE_MODEL_WT_OPT,
-        TRANSLATION_MODEL_WT_OPT, WORD_PENALTY_WT_OPT, 
+        LANGUAGE_MODEL_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
         LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES));
@@ -737,66 +725,6 @@ public class Phrasal {
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s%n", config.get(WEIGHTS_FILE).get(0));
       weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
-
-    } else {
-      if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
-        List<String> inlineWts = config.get(TRANSLATION_MODEL_WT_OPT);
-        List<String> featureNames = phraseGenerator.getFeatureNames();
-        if (inlineWts.size() > featureNames.size()) {
-          throw new RuntimeException(String.format("%d weights specified by %s, but translation model has only %d features",
-              inlineWts.size(), TRANSLATION_MODEL_WT_OPT,
-              featureNames.size()));
-        }
-        int i = 0;
-        for (String wtValue : inlineWts) {
-          weightVector.setCount(featureNames.get(i++), Double.parseDouble(wtValue));
-        }
-      }
-      if (config.containsKey(LANGUAGE_MODEL_WT_OPT)) {
-        weightVector.setCount(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME,
-          Double.parseDouble(config.get(LANGUAGE_MODEL_WT_OPT).get(0)));
-      }
-      if (config.containsKey(DISTORTION_WT_OPT)) {
-        weightVector.setCount(LinearFutureCostFeaturizer.FEATURE_NAME,
-          Double.parseDouble(config.get(DISTORTION_WT_OPT).get(0)));
-
-        if (config.get(DISTORTION_WT_OPT).size() > 1) {
-          int numAdditionalWts = config.get(DISTORTION_WT_OPT).size() - 1;
-          if (lexReorderFeaturizer == null) {
-            throw new RuntimeException(
-                String
-                    .format(
-                        "Additional weights given for parameter %s but no lexical reordering file was specified",
-                        DISTORTION_WT_OPT));
-          }
-          if (lexReorderFeaturizer instanceof LexicalReorderingFeaturizer) {
-            LexicalReorderingFeaturizer mosesLexReorderFeaturizer = (LexicalReorderingFeaturizer) lexReorderFeaturizer;
-            if (numAdditionalWts != mosesLexReorderFeaturizer.mlrt.positionalMapping.length) {
-              throw new RuntimeException(
-                  String
-                      .format(
-                          "%d re-ordering weights given with parameter %s, but %d expected",
-                          numAdditionalWts, DISTORTION_WT_OPT,
-                          mosesLexReorderFeaturizer.mlrt.positionalMapping.length));
-            }
-            for (int i = 0; i < mosesLexReorderFeaturizer.mlrt.positionalMapping.length; i++) {
-              weightVector.setCount(mosesLexReorderFeaturizer.featureTags[i],
-                  Double.parseDouble(config.get(DISTORTION_WT_OPT).get(i + 1)));
-            }
-          }
-        }
-      }
-
-      if (config.containsKey(WORD_PENALTY_WT_OPT)) {
-        weightVector.setCount(WordPenaltyFeaturizer.FEATURE_NAME,
-            Double.parseDouble(config.get(WORD_PENALTY_WT_OPT).get(0)));
-      }
-
-      weightVector.setCount(UnknownWordFeaturizer.FEATURE_NAME, 1.0);
-
-      if (config.containsKey(TRANSLATION_MODEL_WT_OPT)) {
-        System.err.printf("Warning: Ignoring old translation model weights set with %s", TRANSLATION_MODEL_WT_OPT);
-      }
     }
 
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
