@@ -25,10 +25,18 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   
   private final boolean addDomainFeatures;
   
+  /**
+   * Constructor.
+   */
   public DiscriminativeSignedDistortion() {
     this.addDomainFeatures = false;
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public DiscriminativeSignedDistortion(String...args) {
     Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFeature");
@@ -61,7 +69,6 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
         features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
       }
     }
-//    distortion = getSignedBin(distortion);
     String featureString = String.format("%s:%d", FEATURE_NAME, distortion);
     features.add(new FeatureValue<String>(featureString, 1.0));
     if (genre != null) {
@@ -71,26 +78,6 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
     return features;
   }
   
-  /**
-   * Bins: 0, 1, 2, 3, 4-6, 6-10, 10+
-   * 
-   * @param distortion
-   * @return
-   */
-  private static int getSignedBin(int distortion) {
-    int sign = (int) Math.signum(distortion);
-    int absDistortion = Math.abs(distortion);
-    if (absDistortion < 4) {
-      return distortion; 
-    } else if (absDistortion < 7) {
-      return sign * 4;
-    } else if (absDistortion < 11) {
-      return sign * 5;
-    } else {
-      return sign * 6;
-    }
-  }
-
   private static class DistortionState extends FeaturizerState {
 
     private final int distortion;
