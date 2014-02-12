@@ -62,7 +62,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
-    return nbest(scorer, source, sourceInputId, null,
+    return nbest(scorer, source, sourceInputId, sourceInputProperties,
         outputSpace, targets, size);
   }
 
@@ -219,7 +219,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
       OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
-    return translate(scorer, source, sourceInputId, null,
+    return translate(scorer, source, sourceInputId, sourceInputProperties,
         constrainedOutputSpace, targets);
   }
 

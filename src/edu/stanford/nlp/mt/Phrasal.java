@@ -882,11 +882,13 @@ public class Phrasal {
    */
   private static class DecoderInput {
     public final Sequence<IString> source;
+    public final InputProperties inputProps;
     public final int sourceInputId;
 
-    public DecoderInput(Sequence<IString> seq, int sourceInputId) {
+    public DecoderInput(Sequence<IString> seq, int sourceInputId, InputProperties inputProps) {
       this.source = seq;
       this.sourceInputId = sourceInputId;
+      this.inputProps = inputProps;
     }
   }
 
@@ -934,10 +936,8 @@ public class Phrasal {
     @Override
     public DecoderOutput process(DecoderInput input) {
       // Generate n-best list
-      final InputProperties inputProps = input.sourceInputId < inputPropertiesList.size() ? 
-          inputPropertiesList.get(input.sourceInputId) : new InputProperties();
       List<RichTranslation<IString, String>> translations = 
-          decode(input.source, input.sourceInputId, infererId, nbestListSize, null, inputProps);
+          decode(input.source, input.sourceInputId, infererId, nbestListSize, null, input.inputProps);
       
       // Select and process the best translation
       Sequence<IString> bestTranslation = null;
@@ -1036,7 +1036,10 @@ public class Phrasal {
         continue;
       }
 
-      wrapper.put(new DecoderInput(source, sourceInputId));
+      final InputProperties inputProps = inputPropertiesList != null && sourceInputId < inputPropertiesList.size() ? 
+          inputPropertiesList.get(sourceInputId) : new InputProperties();
+      
+      wrapper.put(new DecoderInput(source, sourceInputId, inputProps));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
         if (outputToConsole) {
@@ -1079,9 +1082,11 @@ public class Phrasal {
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId) {
+    final InputProperties inputProps = inputPropertiesList != null && sourceInputId < inputPropertiesList.size() ? 
+        inputPropertiesList.get(sourceInputId) : new InputProperties();
     List<Sequence<IString>> targets = 
         forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
-    return decode(source, sourceInputId, threadId, nbestListSize, targets, new InputProperties());
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, inputProps);
   }
   
   /**
