@@ -19,10 +19,10 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Generative and discriminative lexicalized reordering models.
@@ -72,7 +72,7 @@ public class LexicalReorderingFeaturizer extends
    */
   public LexicalReorderingFeaturizer(String...args) {
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     // Which reordering classes to extract
