@@ -55,7 +55,7 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
   public RuleIndicator(String... args) {
     Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addLexicalizedRule = options.containsKey("addLexicalized");
-    this.addClassBasedRule = options.contains("addClassBased");
+    this.addClassBasedRule = options.containsKey("addClassBased");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     if (addClassBasedRule) {
       sourceMap = SourceClassMap.getInstance();
