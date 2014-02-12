@@ -26,6 +26,7 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.movetrees.TreeUtils;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
@@ -70,7 +71,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   private static int parseSentenceIndex = 0;
   private static LabeledScoredTreeFactory tf = new LabeledScoredTreeFactory();
   
-  /* only the K most frequent permutation classes will be used to train the classifier*/
+  /* only the K most frequent permutation classes will be used to train the classifier */
   private static int K = 20;
 
   /*
@@ -439,7 +440,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   /**
    * Performs the preordering on an dependency annotated sentence
    */
-  public static String reorder(CoreMap currentSentence) {
+  public static String reorder(CoreMap currentSentence, boolean outputPermutations) {
     List<CoreLabel> tokens = currentSentence.get(CoreAnnotations.TokensAnnotation.class);
     try {
       List<IndexedWord> indexedTokens = new ArrayList<IndexedWord>();
@@ -487,20 +488,29 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       
       //handle single word sentences
       if (preorderedTree == null)
-        return tokens.get(0).word();
+        return outputPermutations ? Integer.toString(tokens.get(0).index() - 1) : tokens.get(0).word();
+      
       
       List<Tree> reorderedTokens = preorderedTree.getLeaves();
  
       StringBuilder sb = new StringBuilder();
       for (Tree t : reorderedTokens) {
-        sb.append(t.label().value()).append(" ");
+        if (outputPermutations) {
+          CoreLabel iw =  (CoreLabel) t.label();
+          sb.append(iw.index() - 1).append(" ");
+        } else {
+          sb.append(t.label().value()).append(" ");
+        }
       }
       return sb.toString();
     } catch (Exception e) {
       e.printStackTrace();
       StringBuilder sb = new StringBuilder();
       for (CoreLabel t : tokens) {
-        sb.append(t.word()).append(" ");
+        if (outputPermutations)
+          sb.append(t.index()-1).append(" ");
+        else
+          sb.append(t.word()).append(" ");
       }
       return sb.toString();
     } 
@@ -551,6 +561,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     optionArgDefs.put("modelPath", 1);
     optionArgDefs.put("annotations", 1); 
     optionArgDefs.put("annotationsSplit", 0); 
+    optionArgDefs.put("permutations", 0); 
 
 
     return optionArgDefs;
@@ -635,6 +646,8 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     }
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
+    boolean outputPermutations = PropertiesUtils.getBool(options, "permutations", false);
+
     int i = 0;
     CoreMap sentence = null;
     while ((sentence = getParsedSentence(annotations, i, annotationsSplit)) != null) {         
@@ -642,7 +655,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       //  System.out.print(t.word() + " ");
       //}
       //System.out.print("\n");
-      System.out.println(reorder(sentence));
+      System.out.println(reorder(sentence, outputPermutations));
       i++;
     }
   }
