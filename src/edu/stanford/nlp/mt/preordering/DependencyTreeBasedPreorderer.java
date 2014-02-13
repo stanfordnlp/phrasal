@@ -645,6 +645,8 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       loadModel(modelPath);
     }
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
+    if (annotations == null)
+      return;
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
     boolean outputPermutations = PropertiesUtils.getBool(options, "permutations", false);
 
@@ -655,6 +657,8 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       //  System.out.print(t.word() + " ");
       //}
       //System.out.print("\n");
+      System.err.print("Reordered sentence #");
+      System.err.println(i);
       System.out.println(reorder(sentence, outputPermutations));
       i++;
     }
