@@ -64,7 +64,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     if (genre != null) {
       final int featureIndex = f.sourceInputProperties.containsKey(InputProperty.RuleFeatureIndex) ?
-          (Integer) f.sourceInputProperties.get(InputProperty.RuleFeatureIndex) : -1;
+          Integer.valueOf((String) f.sourceInputProperties.get(InputProperty.RuleFeatureIndex)) : -1;
       if (featureIndex < 0) {
         throw new RuntimeException("RuleFeatureIndex property not specified for input: " + String.valueOf(f.sourceInputId));
       }
