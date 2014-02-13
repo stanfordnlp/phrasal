@@ -653,14 +653,20 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     int i = 0;
     CoreMap sentence = null;
     while ((sentence = getParsedSentence(annotations, i, annotationsSplit)) != null 
-        || (sentence = getParsedSentence(annotations, ++i, annotationsSplit)) != null) {
+        || getParsedSentence(annotations, i+1, annotationsSplit) != null) {
+        
       //for (CoreLabel t: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
       //  System.out.print(t.word() + " ");
       //}
       //System.out.print("\n");
       //System.err.print("Reordered sentence #");
       //System.err.println(i);
-      System.out.println(reorder(sentence, outputPermutations));
+      
+      //In case of an empty line sentence will be null.
+      if (sentence != null)
+        System.out.println(reorder(sentence, outputPermutations));
+      else 
+        System.out.println("");
       i++;
     }
   }
