@@ -9,7 +9,7 @@
 	<script type="text/javascript">
 		$(document).ready( function() {
 			ptm = new PTM({
-				"postEditMode" : {{ conf.disable_interactive }},
+				"postEditMode" : {{ conf.is_postedit }},
 				"docURL" : "{{ conf.src_document_url }}",
 				"sourceLang" : "{{ conf.src_language }}",
 				"targetLang" : "{{ conf.tgt_language }}",

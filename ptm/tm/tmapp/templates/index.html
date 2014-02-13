@@ -37,6 +37,10 @@ Stanford Translation Study
 
 {% else %}
 
+{% if status.training_done and not status.translate_done %}
+<p>Take an untimed break before the next translation session begins! You will see a new CAT interface.</p>
+{% endif %}
+
 <h3> Experiment Steps </h3>
 <table id="table-main-steps">
   <tr>
@@ -47,10 +51,12 @@ Stanford Translation Study
     <td class="left-col"><a href="/tm/translate">Translate</a></td>
     <td class="right-col"><span {% if status.translate_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
   </tr>
+  {% if status.translate_done %}
   <tr>
     <td class="left-col"><a href="/tm/exit">Exit Questionnaire</a></td>
     <td class="right-col"><span {% if status.exit_form_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
   </tr>
+  {% endif %}
 </table>
 
 <div style="margin-top:2em">

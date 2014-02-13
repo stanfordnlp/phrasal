@@ -115,9 +115,14 @@ def translate(request):
     elif request.method == 'POST':
         # Will raise a runtime error in the event of
         # a problem on the backend.
-        controller.save_translation_session(request.user, request.POST)
-        # Go to next document
-        return redirect('/tm/translate/')
+        last_condition = controller.save_translation_session(request.user, request.POST)
+
+        # If the user is about to switch UI conditions, then allow a break.
+        conf,_ = controller.get_translate_configuration_for_user(request.user)
+        if conf and not last_condition == conf['interface']:
+            return redirect('/tm/')
+        else:
+            return redirect('/tm/translate/')
 
 @login_required
 def form_demographic(request):

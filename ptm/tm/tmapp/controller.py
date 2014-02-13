@@ -85,9 +85,10 @@ def get_translate_configuration_for_user(user,training=False):
     session_object['tgt_language'] = session.tgt_language.code.upper()
     # Convert to string and lowercase since this will be used as a boolean
     # in javascript UI code
-    session_object['disable_interactive'] = str(choices.is_postedit(session.interface)).lower()
-    logger.debug(session.interface)
-    logger.debug(str(session_object))
+    session_object['is_postedit'] = str(choices.is_postedit(session.interface)).lower()
+    session_object['interface'] = session.interface
+
+    logger.debug(str(user.username) + " : " + str(session_object))
 
     return (session_object,form)
 
@@ -113,6 +114,7 @@ def save_translation_session(user, post_data, training=False):
     Save the result of a translation session
 
     Raises: RuntimeError
+    Returns: The condition (usually the UI) of this session.
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
@@ -139,6 +141,8 @@ def save_translation_session(user, post_data, training=False):
     else:
         logger.error('Form validation failed: %s || %s ||%s' % (user.username, str(post_data), str(session)))
         raise RuntimeError
+
+    return session.interface
     
 def get_demographic_form(user, post_data=None):
     """
