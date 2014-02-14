@@ -164,14 +164,24 @@ class ExitSurveyData(models.Model):
 	"""
 	user = models.OneToOneField(User)
 
-	exit_hardest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
+        # Sanity check questions
+        exit_data_comparison = models.BooleanField(choices=choices.BOOLEAN_CHOICES, default = None)
+        exit_fatigue_comparison = models.BooleanField(choices=choices.BOOLEAN_CHOICES, default = None)
+        exit_technical_comparison = models.TextField()
+
+        # Linguistic difficulty questions
+        exit_hardest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
 	exit_easiest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
 	exit_hardest_source = models.TextField()
 	exit_hardest_target = models.TextField()
-	exit_focus_in_postedit = models.CharField( max_length = 5, choices = choices.POSTEDIT_GAZE, default = None )
+
+        # UI Comparison questions
+        exit_focus_in_postedit = models.CharField( max_length = 5, choices = choices.POSTEDIT_GAZE, default = None )
 	exit_focus_in_imt = models.CharField( max_length = 5, choices = choices.ITM_GAZE, default = None )
 	exit_like_better = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
 	exit_more_efficient = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
+
+        # Interactive MT questions
 	exit_itm_most_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
 	exit_itm_least_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
 	exit_useful_src_lookup = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
@@ -180,9 +190,13 @@ class ExitSurveyData(models.Model):
 	exit_useful_tgt_completion = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_chunking = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_anywhere = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+
+        # Verdict on interactive MT questions
 	exit_cat_strength_weakness = models.TextField()
 	exit_itm_strength_weakness = models.TextField()
 	exit_itm_missing_aid = models.TextField()
 	exit_prefer_itm = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_got_better_at_itm = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+
+        # Any other comments?
 	exit_comments = models.TextField()
