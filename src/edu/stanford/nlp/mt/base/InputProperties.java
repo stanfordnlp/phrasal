@@ -25,6 +25,30 @@ public class InputProperties extends HashMap<InputProperty, Object> {
 
   public static final String PAIR_DELIMITER = " ";
 
+  private final static Map<String,Integer> domainToRuleIndex = Generics.newHashMap();
+  
+  /**
+   * Set the phrase table indicator index associated with a domain.
+   * 
+   * @param domain
+   * @param index
+   */
+  public static void setDomainIndex(String domain, int index) {
+    domainToRuleIndex.put(domain, index);
+  }
+  
+  @Override
+  public Object put(InputProperty key, Object value) {
+    if (key == InputProperty.Domain) {
+      String domain = (String) value;
+      if (domainToRuleIndex.containsKey(domain)) {
+        int ruleIndex = domainToRuleIndex.get(domain);
+        super.put(InputProperty.RuleFeatureIndex, ruleIndex);
+      }
+    }
+    return super.put(key, value);
+  }
+  
   /**
    * Parse a string into an <code>InputProperties</code> object.
    * 

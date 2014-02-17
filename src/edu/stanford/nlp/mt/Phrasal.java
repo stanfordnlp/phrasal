@@ -142,7 +142,8 @@ public class Phrasal {
       .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)").append(nl)
       .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
-      .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.");
+      .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
+      .append("  -").append(DOMAIN_PROPERTIES).append(" prop [prop] : Set properties for each input domain.");
     return sb.toString();
   }
 
@@ -182,6 +183,7 @@ public class Phrasal {
   private static final String LOG_PREFIX = "log-prefix";
   private static final String LOG_LEVEL = "log-level";
   private static final String INPUT_PROPERTIES = "input-properties";
+  private static final String DOMAIN_PROPERTIES = "domain-properties";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -391,9 +393,22 @@ public class Phrasal {
       printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
     }
     
+    // InputProperties setup. The domain configuration must come before loading the
+    // INPUT_PROPERTIES file, if it exists.
+    if (config.containsKey(DOMAIN_PROPERTIES)) {
+      List<String> parameters = config.get(DOMAIN_PROPERTIES);
+      for (String parameter : parameters) {
+        String[] fields = parameter.split(":");
+        if (fields.length != 2) {
+          throw new RuntimeException("Invalid domain specification: " + parameter);
+        }
+        InputProperties.setDomainIndex(fields[0], Integer.valueOf(fields[1]));
+      }
+    }
+    
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
         InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
-    
+        
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
