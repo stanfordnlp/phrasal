@@ -4,6 +4,7 @@ from django.shortcuts import render_to_response,redirect
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
+from django.views.decorators.cache import never_cache
 
 from tmapp.forms import TranslationInputForm
 
@@ -65,6 +66,7 @@ def training(request, step_id=None):
     else:
         raise Http404
 
+@never_cache
 @login_required
 def training_ui(request):
     is_training = True
@@ -94,6 +96,7 @@ def training_ui(request):
             return redirect('/tm/')
         return redirect('/tm/training/ui/')
 
+@never_cache
 @login_required
 def translate(request):
     """
