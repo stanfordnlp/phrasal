@@ -47,11 +47,13 @@ Stanford Translation Study
     <td class="left-col"><a href="/tm/training">Training</a></td>
     <td class="right-col"><span {% if status.training_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
   </tr>
+  {% if status.training_done %}
   <tr>
     <td class="left-col"><a href="/tm/translate">Translate</a></td>
     <td class="right-col"><span {% if status.translate_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
   </tr>
-  {% if status.translate_done %}
+  {% endif %}
+  {% if status.training_done and status.translate_done %}
   <tr>
     <td class="left-col"><a href="/tm/exit">Exit Questionnaire</a></td>
     <td class="right-col"><span {% if status.exit_form_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
