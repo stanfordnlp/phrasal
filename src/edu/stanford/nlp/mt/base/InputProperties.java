@@ -25,7 +25,7 @@ public class InputProperties extends HashMap<InputProperty, Object> {
 
   public static final String PAIR_DELIMITER = " ";
 
-  private final static Map<String,Integer> domainToRuleIndex = Generics.newHashMap();
+  private final static Map<String,String> domainToRuleIndex = Generics.newHashMap();
   
   /**
    * Set the phrase table indicator index associated with a domain.
@@ -33,7 +33,7 @@ public class InputProperties extends HashMap<InputProperty, Object> {
    * @param domain
    * @param index
    */
-  public static void setDomainIndex(String domain, int index) {
+  public static void setDomainIndex(String domain, String index) {
     domainToRuleIndex.put(domain, index);
   }
   
@@ -42,7 +42,7 @@ public class InputProperties extends HashMap<InputProperty, Object> {
     if (key == InputProperty.Domain) {
       String domain = (String) value;
       if (domainToRuleIndex.containsKey(domain)) {
-        int ruleIndex = domainToRuleIndex.get(domain);
+        String ruleIndex = domainToRuleIndex.get(domain);
         super.put(InputProperty.RuleFeatureIndex, ruleIndex);
       }
     }

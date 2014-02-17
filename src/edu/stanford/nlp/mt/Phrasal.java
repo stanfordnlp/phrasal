@@ -402,7 +402,7 @@ public class Phrasal {
         if (fields.length != 2) {
           throw new RuntimeException("Invalid domain specification: " + parameter);
         }
-        InputProperties.setDomainIndex(fields[0], Integer.valueOf(fields[1]));
+        InputProperties.setDomainIndex(fields[0], fields[1]);
       }
     }
     
