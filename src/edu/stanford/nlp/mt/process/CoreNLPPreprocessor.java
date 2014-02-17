@@ -57,6 +57,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
 
     // Run through the tokenizer and convert to sequence
     String tokenizerInput = toUncased(input);
+    String[] uncasedInputTokens = tokenizerInput.split("\\s+");
     Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(tokenizerInput));
     List<CoreLabel> outputTokens = tokenizer.tokenize();
     IString[] outputSequence = new IString[outputTokens.size()];
@@ -67,6 +68,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     
     // Whitespace tokenization of input, create alignment
     Sequence<IString> inputSequence = IStrings.tokenize(input);
+    assert inputSequence.size() == uncasedInputTokens.length;
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, 
         new SimpleSequence<IString>(true, outputSequence));
     
@@ -78,11 +80,11 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
       alignment.addAlign(i, j);
 
       inputToken.append(inputTokenPart);
-      if (i >= inputSequence.size()) {
+      if (i >= uncasedInputTokens.length) {
         System.err.println("WARNING: Non-invertible input: " + input);
         break;
       }
-      if (inputSequence.get(i).toString().equals(inputToken.toString())) {
+      if (uncasedInputTokens[i].equals(inputToken.toString())) {
         ++i;
         inputToken = new StringBuilder();
       }
