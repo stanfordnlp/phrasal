@@ -65,8 +65,10 @@ def make_pilot_layout():
     return user_to_layout
 
     
-def make_experiment(user_prefix, num_users, num_splits, src_lang, tgt_lang, url_prefix, source_a_index,
-                    source_b_index, source_train_index):
+def make_experiment(user_prefix, num_users, num_splits, src_lang,
+                    tgt_lang, source_a_index, a_url_prefix,
+                    source_b_index, b_url_prefix,
+                    source_train_index, train_url_prefix):
     """
     Generate a simple 2x|docs| experiment. 
     """
@@ -99,6 +101,7 @@ def make_experiment(user_prefix, num_users, num_splits, src_lang, tgt_lang, url_
             source_id = layout[0]
             split_id = layout[1]
             condition_id = layout[2]
+            url_prefix = a_url_prefix if source_id == 0 else b_url_prefix
             for filename in source_dict[source_id][split_id]:
                 url = join(url_prefix, filename)
                 sessions.append((url,UI_CONDITIONS[condition_id]))
@@ -109,7 +112,7 @@ def make_experiment(user_prefix, num_users, num_splits, src_lang, tgt_lang, url_
         ui_id = 0
         training = []
         for filename in source_train:
-            url = join(url_prefix, filename)
+            url = join(train_url_prefix, filename)
             training.append((url,UI_CONDITIONS[ui_id]))
             ui_id = increment(ui_id, len(UI_CONDITIONS))
         spec[username]['training'] = training
@@ -138,14 +141,18 @@ def main():
                         help='Source language.')
     parser.add_argument('tgt_lang',
                         help='Target language.')
-    parser.add_argument('url_prefix',
-                        help='URL prefix to add to files.')
     parser.add_argument('source_a_index',
                         help='Index of files for source domain A.')
+    parser.add_argument('source_a_url_prefix',
+                        help='URL prefix to add to A files.')
     parser.add_argument('source_b_index',
                         help='Index of files for source domain B.')
+    parser.add_argument('source_b_url_prefix',
+                        help='URL prefix to add to B files.')
     parser.add_argument('source_train_index',
                         help='Index of files for training.')
+    parser.add_argument('train_url_prefix',
+                        help='URL prefix to add to train files.')
     args = parser.parse_args()
 
     make_experiment(args.user_prefix,
@@ -153,10 +160,12 @@ def main():
                     args.num_splits,
                     args.src_lang,
                     args.tgt_lang,
-                    args.url_prefix,
                     args.source_a_index,
+                    args.source_a_url_prefix,
                     args.source_b_index,
-                    args.source_train_index)
+                    args.source_b_url_prefix,
+                    args.source_train_index,
+                    args.train_url_prefix)
     
 if __name__ == '__main__':
     main()
