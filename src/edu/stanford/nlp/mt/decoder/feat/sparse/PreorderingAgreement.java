@@ -134,14 +134,16 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     for (int i = 0; i < remainingPrediction.size(); i++) {
       int diff = Math.abs(remainingPrediction.get(i) - sortedReference.get(i));
       int bucket;
-      if (diff < 3)
+      if (diff < 2)
         bucket = 0;
-      else if (diff < 6)
+      else if (diff < 4)
         bucket = 1;
-      else if (diff < 9)
+      else if (diff < 6)
         bucket = 2;
-      else
+      else if (diff < 9)
         bucket = 3;
+      else
+        bucket = 4;
       String fname = String.format("%s-DIFF.%d", FEATURE_NAME, bucket);
       features.add(new FeatureValue<String>(fname, 1.0));
     }
