@@ -108,6 +108,39 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     return numerator / denominator;
   }
   
+  private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference) {
+    int predLength = prediction.size();
+    int refLength = reference.size();
+    int predStart = prediction.get(0);
+    
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
+    List<Integer> remainingPrediction = new ArrayList<Integer>();
+    Collections.sort(sortedReference);
+    double iwc = 1.0 / refLength;
+    for (int i = 0; i < predLength; i++) {
+      boolean found = false;
+      for (int j = 0; j < sortedReference.size(); j++) {
+        if (prediction.get(i).equals(sortedReference.get(j))) {
+          String fname = String.format("%s-DIFF.0", FEATURE_NAME);
+          features.add(new FeatureValue<String>(fname, iwc));
+          sortedReference.remove(j);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        remainingPrediction.add(prediction.get(i));
+      }
+    }
+    
+    for (int i = 0; i < remainingPrediction.size(); i++) {
+      int diff = Math.abs(remainingPrediction.get(i) - sortedReference.get(i));
+      String fname = String.format("%s-DIFF.%d", FEATURE_NAME, diff);
+      features.add(new FeatureValue<String>(fname, iwc));
+    }
+  }
+  
+  
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
@@ -118,6 +151,9 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence);
     double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
     features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
+    
+    addDistanceCountFeatures(features, permutationSequence, this.preorderedPermutationSequence);
+    
     return features;
   }
   
