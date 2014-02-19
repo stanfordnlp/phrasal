@@ -112,11 +112,12 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
     List<Integer> permutationSequence = getPermutationSequence(f);
-    boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence);
-    double featVal = permIdentical ? 1.0 : 0.0;
-    features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
     double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence);
     features.add(new FeatureValue<String>(FEATURE_NAME + "-CORR", correlationCoeff));
+   
+    boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence);
+    double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
+    features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
     return features;
   }
   
