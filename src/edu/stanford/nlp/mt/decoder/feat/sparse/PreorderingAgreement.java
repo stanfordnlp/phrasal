@@ -2,8 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +15,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 
 /**
  * 
@@ -24,7 +23,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
  *
  */
 
-public class PreorderingAgreement extends DerivationFeaturizer<IString, String> {
+public class PreorderingAgreement extends DerivationFeaturizer<IString, String> implements NeedsCloneable<IString, String> {
 
   
   private static final String FEATURE_NAME = "POAGR";
@@ -35,7 +34,6 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   
   public PreorderingAgreement(String... args) throws IOException {
-    
     Properties options = SparseFeatureUtils.argsToProperties(args);
     if (!options.containsKey("permutationsFile")) {
       throw new RuntimeException(
@@ -72,23 +70,23 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   private List<Integer> getPermutationSequence(Featurizable<IString, String> f) {
     ArrayList<Integer> permutationSequence = new ArrayList<Integer>();
-    Featurizable<IString, String> prev = f;
-    while (prev != null) {
-      int last = f.sourcePosition + f.sourcePhrase.size() - 1;
-      int first = f.sourcePosition;
-      for (int i = last; i >= first; i--) {
+    int first = f.sourcePosition;
+    int last = f.sourcePosition + f.sourcePhrase.size() - 1;
+    for (int i = first; i <= last; i++) {
         permutationSequence.add(i);
-      }
-      prev = prev.prior;
     }
-    Collections.reverse(permutationSequence);
     return permutationSequence;
   }
+  
 
   private boolean isPermutationSequenceIdentical(List<Integer> prediction, List<Integer> reference) {
     int predLength = prediction.size();
+    int predStart = prediction.get(0);
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
+    Collections.sort(sortedReference);
+
     for (int i = 0; i < predLength; i++) {
-      if (!prediction.get(i).equals(reference.get(i)))
+      if (!prediction.get(i).equals(sortedReference.get(i)))
         return false;
     }
     return true;
@@ -96,25 +94,18 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   private double pearsonCorrelationCoeff(List<Integer> prediction, List<Integer> reference) {
     int predLength = prediction.size();
-    double predMean = 0.0;
-    double refMean = 0.0;
+    int refLength = reference.size();
+    int predStart = prediction.get(0);
+    
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
+    Collections.sort(sortedReference);
+    double numerator = 0;
+    double denominator = (Math.pow(refLength, 2) - 1) * refLength;
+    
     for (int i = 0; i < predLength; i++) {
-      predMean += prediction.get(i);
-      refMean += reference.get(i);
+      numerator += (Math.pow(refLength, 2) - 1) - 6 * Math.pow(prediction.get(i) - sortedReference.get(i), 2);
     }
-    predMean = predMean / predLength;
-    refMean = refMean / predLength;
-    double numerator = 0.0;
-    double predDenominator = 0.0;
-    double refDenominator = 0.0;
-    for (int i = 0; i < predLength; i++) {
-      int pred = prediction.get(i);
-      int ref = reference.get(i);
-      numerator += (pred - predMean) * (ref - refMean);
-      predDenominator += Math.pow(pred - predMean, 2);
-      refDenominator += Math.pow(ref - refMean, 2);
-    }
-    return numerator / Math.sqrt(refDenominator * predDenominator);
+    return numerator / denominator;
   }
   
   @Override
@@ -131,11 +122,24 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   public static void main(String args[]) throws IOException {
     PreorderingAgreement ag = new PreorderingAgreement();
-    List<Integer> p1 = ag.parsePermutation("0 3 4 5 1 2 6 7 8 9 10");
-    List<Integer> p2 = ag.parsePermutation("0 1 2 4 3 5 6 7 8 9 10 11 12");
+    List<Integer> p1 = ag.parsePermutation("0 1 2 3 4 5 6 7 8 9 10 11");
+    List<Integer> p2 = ag.parsePermutation("0 2 10 3 5 4 6 8 7 9 11 1");
     System.out.println("Identical? " + ag.isPermutationSequenceIdentical(p1, p2));
-    System.out.println("Spearman Correlation: " + ag.pearsonCorrelationCoeff(p1, p2));
+    double s = 0;
+    for (int i = 0; i < p1.size(); i = i + 2) {
+      double part = ag.pearsonCorrelationCoeff(p1.subList(i, i + 2), p2);
+      s += part;
+      System.out.println("Spearman Correlation: " + part);
+      System.out.println("Identical?: " + ag.isPermutationSequenceIdentical(p1.subList(i, i + 2), p2));
+
+    }
+    System.out.println("Sum: " + s);
+
     
   }
-
+ 
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
 }
