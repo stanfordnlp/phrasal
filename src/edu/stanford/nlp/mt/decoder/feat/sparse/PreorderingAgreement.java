@@ -110,7 +110,6 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference) {
     int predLength = prediction.size();
-    int refLength = reference.size();
     int predStart = prediction.get(0);
     
     List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
@@ -134,8 +133,10 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     
     for (int i = 0; i < remainingPrediction.size(); i++) {
       int diff = Math.abs(remainingPrediction.get(i) - sortedReference.get(i));
-      int bucket = 0;
-      if (diff > 2 && diff < 6)
+      int bucket;
+      if (diff < 3)
+        bucket = 0;
+      else if (diff < 6)
         bucket = 1;
       else if (diff < 9)
         bucket = 2;
