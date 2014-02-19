@@ -116,13 +116,12 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
     List<Integer> remainingPrediction = new ArrayList<Integer>();
     Collections.sort(sortedReference);
-    double iwc = 1.0 / refLength;
     for (int i = 0; i < predLength; i++) {
       boolean found = false;
       for (int j = 0; j < sortedReference.size(); j++) {
         if (prediction.get(i).equals(sortedReference.get(j))) {
           String fname = String.format("%s-DIFF.0", FEATURE_NAME);
-          features.add(new FeatureValue<String>(fname, iwc));
+          features.add(new FeatureValue<String>(fname, 1.0));
           sortedReference.remove(j);
           found = true;
           break;
@@ -135,8 +134,15 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     
     for (int i = 0; i < remainingPrediction.size(); i++) {
       int diff = Math.abs(remainingPrediction.get(i) - sortedReference.get(i));
-      String fname = String.format("%s-DIFF.%d", FEATURE_NAME, diff);
-      features.add(new FeatureValue<String>(fname, iwc));
+      int bucket = 0;
+      if (diff > 2 && diff < 6)
+        bucket = 1;
+      else if (diff < 9)
+        bucket = 2;
+      else
+        bucket = 3;
+      String fname = String.format("%s-DIFF.%d", FEATURE_NAME, bucket);
+      features.add(new FeatureValue<String>(fname, 1.0));
     }
   }
   
