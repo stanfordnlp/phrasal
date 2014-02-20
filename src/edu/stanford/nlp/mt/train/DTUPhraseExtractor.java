@@ -42,7 +42,7 @@ public class DTUPhraseExtractor extends AbstractPhraseExtractor {
   static int maxSizeF = maxSize, maxSizeE = maxSize;
 
   static int maxSpan = DEFAULT_MAX_SPAN;
-  static int maxSpanF = maxSpan, maxSpanE = maxSpan;
+  public static int maxSpanF = maxSpan, maxSpanE = maxSpan;
 
   static final int QUEUE_SZ = 1024;
 

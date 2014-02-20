@@ -234,7 +234,7 @@ public abstract class AbstractPhraseExtractor implements PhraseExtractor {
     }
   }
 
-  AlignmentGrid getAlGrid() {
+  public AlignmentGrid getAlGrid() {
     return alGrid;
   }
 
