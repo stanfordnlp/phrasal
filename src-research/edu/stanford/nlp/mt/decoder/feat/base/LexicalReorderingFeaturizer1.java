@@ -97,9 +97,9 @@ public class LexicalReorderingFeaturizer1 extends
     }
     // Add domain-specific features
     this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
 
     mlrt = null;
     featureTags = null;
