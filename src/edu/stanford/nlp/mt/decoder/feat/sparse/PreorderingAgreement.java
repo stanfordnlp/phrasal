@@ -97,6 +97,10 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     int refLength = reference.size();
     int predStart = prediction.get(0);
     
+    if (refLength == 1) {
+      return 1.0;
+    }
+    
     List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
     Collections.sort(sortedReference);
     double numerator = 0;
