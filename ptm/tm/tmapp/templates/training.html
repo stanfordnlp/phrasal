@@ -32,8 +32,7 @@
 
 <input type="hidden" name="BrowserLog" id="BrowserLog"></input>
 <div id="BrowserReport" style="padding: 0 10px; border: 1px solid #ccc; font-family: PT_Mono, monospace; font-size: 8pt; color: #333">
-	<p style="margin-bottom: 0"><b>Your browser is:</b></p>
-	<p style="margin-top: 0" id="BrowserUserAgent"></p>
+	<p style='font-weight:bold' id="BrowserUserAgent"></p>
 	<!--
 	<p style="margin-bottom: 0"><b>Your browser supports:</b></p>
 	<p style="margin-top: 0" id="BrowserSupport"></p>
@@ -42,11 +41,13 @@
 	<p style="margin-bottom: 0"><b>Your browser passed the following tests:</b></p>
 	<p style="margin-top: 0" id="BrowserPass"></p>
 	-->
-	<p style="margin-bottom: 0"><b>Your browser did not pass the following tests:</b></p>
-	<p style="margin-top: 0" id="BrowserNoPass"></p>
+	<p style='font-weight:bold' id="BrowserTestStatus"></p>
 </div>
 
 <p>If your browser fails any tests, then first ensure that your browser is the latest version of <a href="http://www.google.com/chrome/" target="_blank">Google Chrome</a>. If your browser still fails these checks, then contact the administrators before proceeding. <b>You will not be paid if your browser does not pass prior to starting the experiment.</b></p>
+
+<p><b>IMPORTANT</b>: Be sure to <a href="https://support.google.com/chrome/answer/95416?hl=en" target="_blank">set both the source and target languages in Chrome</a> so that it doesn't offer to translate the pages for you!</p>
+
 <div>
 <form action="/tm/training/{{ step }}/">
     <input type="submit" value="{{ form_button_text }}">
@@ -145,6 +146,8 @@
 </div>
 
 {% elif step == 6 %}
+<p>Please watch this tutorial, which explains the features of the CAT interfaces.</p>
+
 <iframe width="640" height="480" src="//www.youtube.com/embed/ktRebX9SA5Y" frameborder="0" allowfullscreen></iframe>
 
 <p>Once you have watched the tutorial, please translate a few documents using the two interfaces.</p>
