@@ -6,22 +6,23 @@
 #
 #
 # Author: Spence Green
+#   Julia Neidert added segment_de and out_dir command line options Jan 2014
 #
-#
-if [ $# -lt 2 ]; then
-    echo "Usage: `basename $0` language file [clean|tolower]"
+if [ $# -lt 3 ]; then
+    echo "Usage: `basename $0` language in_file out_dir [clean|tolower|segment_de]"
     echo
-    echo "  clean    : Heuristic data cleaning"
-    echo "  tolower  : Convert to lowercase" 
-    echo "  language : Arabic, Chinese, English, German, French"
+    echo "  clean      : Heuristic data cleaning"
+    echo "  tolower    : Convert to lowercase" 
+    echo "  segment_de : Segment compounds in German"
+    echo "  language   : Arabic, Chinese, English, German, French"
     exit -1
 fi
 
 lang=$1
 infile=$2
-shift 2
+outfile=${3}/`basename $infile`.tok
 
-outfile=`basename $infile`.tok
+shift 3
 
 # Detect file encoding
 ext="${infile##*.}"
@@ -51,12 +52,6 @@ FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchToke
 # German segmentation and tokenization setup
 DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false"
 
-# spenceg[aug.2013] Segmentation was used in WMT2013, but German people
-# at ACL suggested that compound splitting is only good for De-En, not
-# for En-De.
-DE_SEG="${CDEC_PATH}/compound-split/compound-split.pl"
-DE_PP="java $JAVA_OPTS edu.stanford.nlp.util.Lattice"
-
 # Chinese segmenter path, where segment.sh is located
 # Should point to latest distribution of the Chinese segmenter
 ZH_SEG_PATH="/u/nlp/distrib/stanford-segmenter-2013-11-12"
@@ -67,6 +62,8 @@ ZH_SEG="$ZH_SEG_PATH/segment.sh"
 #
 fixnl=tee
 tolower=tee
+DE_SEG=tee
+DE_PP=tee
 for op in $*; do
     if [ $op == "clean" ]; then
 	fixnl="python2.7 $JAVANLP_HOME/projects/mt/scripts-private/cleanup_txt.py --sgml --sql"
@@ -74,6 +71,15 @@ for op in $*; do
 	EN_TOK="$EN_TOK -lowerCase"
 	FR_TOK="$FR_TOK -lowerCase"
 	tolower=tolower-utf8.py
+    elif [ $op == "segment_de" ]; then
+        # spenceg[aug.2013] Segmentation was used in WMT2013, but German people
+        # at ACL suggested that compound splitting is only good for De-En, not
+        # for En-De.
+        DE_SEG="${CDEC_PATH}/compound-split/compound-split.pl"
+        # Use the line below to mark all segments that aren't the first in a compound with # 
+        DE_PP="java $JAVA_OPTS edu.stanford.nlp.mt.tools.Lattice"
+        # Use the line below to mark all segments that aren't the last (headword) in a compound with ^|
+        #DE_PP="java $JAVA_OPTS edu.stanford.nlp.mt.tools.Lattice -mark_except_last -m^|"
     fi
 done
 
@@ -96,9 +102,7 @@ elif [ $lang == "German" ]; then
     if [ "$fixnl" != "tee" ]; then
 	fixnl="$fixnl --latin"
     fi
-    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $tolower | gzip -c > ${outfile}.gz
-# WMT2013 command (with compound splitting)
-#$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower | gzip -c > ${outfile}.gz
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $DE_TOK | $DE_SEG | $DE_PP | $tolower | gzip -c > ${outfile}.gz
     
 elif [ $lang == "English" ]; then
     if [ "$fixnl" != "tee" ]; then

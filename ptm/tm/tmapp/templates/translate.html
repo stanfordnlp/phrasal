@@ -36,7 +36,7 @@
 </div>
 <div class="PAGE" style="margin: 20px 20px 200px 20px">
   <div id="PTM"></div>
-  <div id="form-wrapper">
+  <div id="form-wrapper" style="margin: 30px 0px">
     <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input" onsubmit="return prepareSubmission()">
       {% csrf_token %}
       {{ form.as_p }}
