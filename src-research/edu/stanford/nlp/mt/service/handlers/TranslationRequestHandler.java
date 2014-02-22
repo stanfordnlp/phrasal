@@ -1,13 +1,14 @@
 package edu.stanford.nlp.mt.service.handlers;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
@@ -19,8 +20,11 @@ import org.eclipse.jetty.continuation.ContinuationSupport;
 import com.google.gson.reflect.TypeToken;
 
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
@@ -48,11 +52,15 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 public class TranslationRequestHandler implements RequestHandler {
 
   private static final int DIVERSITY_WINDOW = 3;
-  private static final int NBEST_MULTIPLIER = 10;
+  private static final int NBEST_MULTIPLIER = 20;
+  private static final int MAX_RETRIES_PER_REQUEST = 2;
   
   private MulticoreWrapper<DecoderInput,DecoderOutput> wrapper;
   private final Phrasal decoder;
-  
+
+  // Threadsafe fields shared among decoding threads
+  private static final ConcurrentHashMap<Language,Preprocessor> targetPreprocessorCache =
+      new ConcurrentHashMap<Language,Preprocessor>();
   private static Logger logger;
   private static AtomicInteger inputId = new AtomicInteger();
 
@@ -67,7 +75,6 @@ public class TranslationRequestHandler implements RequestHandler {
     // needed to restart the request after processing.
     wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
         new DecoderService(0, decoder), false);
-    
     logger = Logger.getLogger(TranslationRequestHandler.class.getName());
     SystemLogger.attach(logger, LogName.SERVICE);
   }
@@ -78,25 +85,31 @@ public class TranslationRequestHandler implements RequestHandler {
     private final Continuation continuation;
     private final String text;
     private final String tgtPrefix;
+    private final InputProperties properties;
     private final Language targetLanguage;
     private final int n;
     private final long submitTime;
-    public DecoderInput(int inputId, String text, String prefix, int n, Language targetLanguage, HttpServletRequest request,
+    public DecoderInput(int inputId, String text, String prefix, int n, Language targetLanguage, String inputProps, HttpServletRequest request,
         Continuation continuation) {
       this.inputId = inputId;
       this.text = text;
       this.tgtPrefix = prefix;
+      this.properties = InputProperties.fromString(inputProps);
       this.targetLanguage = targetLanguage;
       this.n = n;
       this.request = request;
       this.continuation = continuation;
       this.submitTime = System.nanoTime();
     }
+    @Override
+    public String toString() {
+      return String.format("id: %d n: %d tgt_lang: %s%nsrc: %s%ntgt: %s", inputId, n, targetLanguage.toString(), text, tgtPrefix);
+    }
   }
   
   private static class DecoderOutput {
-    public final int inputId;
-    public final boolean success;
+    private final int inputId;
+    private final boolean success;
     public DecoderOutput(int inputId, boolean status) {
       this.inputId = inputId;
       this.success = status;
@@ -122,10 +135,10 @@ public class TranslationRequestHandler implements RequestHandler {
 
     @Override
     public DecoderOutput process(DecoderInput input) {
-      // Source pre-processing
       logger.info(String.format("Input %d: %s", input.inputId, input.text));
       try {
-        long preprocStart = System.nanoTime();
+        // Source pre-processing
+        final long preprocStart = System.nanoTime();
         Sequence<IString> source;
         SymmetricalWordAlignment s2sPrime = null;
         if (sourcePreprocessor == null) {
@@ -142,25 +155,28 @@ public class TranslationRequestHandler implements RequestHandler {
         if (input.tgtPrefix != null && input.tgtPrefix.length() > 0) {
           SymmetricalWordAlignment t2t;
           try {
-            Preprocessor targetPreprocessor = ProcessorFactory.getPreprocessor(input.targetLanguage.name());
-            t2t = targetPreprocessor.processAndAlign(input.tgtPrefix);
+            Language targetLanguage = input.targetLanguage;
+            if ( ! targetPreprocessorCache.contains(targetLanguage)) {
+              targetPreprocessorCache.putIfAbsent(targetLanguage, ProcessorFactory.getPreprocessor(input.targetLanguage.name()));
+            }
+            t2t = targetPreprocessorCache.get(targetLanguage).processAndAlign(input.tgtPrefix);
+            
           } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            logger.warning("Prefix preprocessor threw an exception: " + sw.toString());
+            logger.log(Level.WARNING, "Prefix preprocessor threw an exception", e);
             Sequence<IString> prefix = IStrings.tokenize(input.tgtPrefix);
             t2t = identityAlignment(prefix);
           }
           targets = Generics.newLinkedList();
           targets.add(t2t.e());
         }
+        input.properties.put(InputProperty.TargetPrefix, targets != null);
         
         // Decode
         final long decodeStart = System.nanoTime();
         final int numRequestedTranslations = input.n;
         final int numTranslationsToGenerate = input.n * NBEST_MULTIPLIER;
         List<RichTranslation<IString,String>> translations = 
-            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, targets != null); 
+            decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, input.properties); 
         logger.info(String.format("Input %d decoder: #translations: %d",
             input.inputId, translations.size()));
         
@@ -192,7 +208,10 @@ public class TranslationRequestHandler implements RequestHandler {
             diversityPool.add(window);
           }
           
-          SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
+          // Try phrase alignments instead of word alignments
+//          SymmetricalWordAlignment sPrime2tPrime = translation.alignmentGrid();
+          SymmetricalWordAlignment sPrime2tPrime = phraseAlignmentToWordAlignmentGrid(translation);
+          
           SymmetricalWordAlignment tPrime2t = postprocessor == null ?
               identityAlignment(translation.translation) :
                 postprocessor.process(translation.translation);
@@ -214,42 +233,59 @@ public class TranslationRequestHandler implements RequestHandler {
             input.inputId, querySeconds, preprocSeconds, decodeSeconds, postprocSeconds));
 
         // Create the service reply
-        Type t = new TypeToken<TranslationReply>() {}.getType();
-        List<TranslationQuery> queryList = toQuery(translationList, alignments, scoreList);
-        TranslationReply baseResponse = new TranslationReply(queryList);
-        ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
-        input.request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
+        TranslationRequestHandler.populateRequest(input.request, translationList, alignments, scoreList);
         input.continuation.resume(); // Re-dispatch/ resume to generate response
 
         return new DecoderOutput(input.inputId, true);
       
       } catch(Exception e) {
-        // Catch all exception handler
-        e.printStackTrace();
+        // Catch all exception handler. Generate an empty response.
+        logger.log(Level.SEVERE, "Decoding of request failed: " + input.toString(), e);
+        TranslationRequestHandler.populateRequest(input.request, new LinkedList<Sequence<IString>>(), 
+            new LinkedList<List<String>>(), new LinkedList<Double>());
+        input.continuation.resume(); // Re-dispatch/ resume to generate response
       }
       return new DecoderOutput(input.inputId, false);
     }
 
     /**
-     * Package the output of the decoder and post-processor for return by the service.
+     * Convert a phrase alignment to a dense word alignment.
      * 
-     * @param translationList
-     * @param alignments
-     * @param scoreList
+     * @param translation
      * @return
      */
-    private static List<TranslationQuery> toQuery(List<Sequence<IString>> translationList,
-        List<List<String>> alignments, List<Double> scoreList) {
-      final int nTranslations = translationList.size();
-      double normalizer = 0.0;
-      for (double d : scoreList) normalizer += d;
-      List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
-      for (int i = 0; i < nTranslations; ++i) {
-        TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
-            alignments.get(i), scoreList.get(i) / normalizer);
-        sortedList.add(query);
+    private SymmetricalWordAlignment phraseAlignmentToWordAlignmentGrid(
+        RichTranslation<IString, String> translation) {
+      final Featurizable<IString,String> featurizable = translation.getFeaturizable();
+      SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(featurizable.sourceSentence, 
+          translation.translation);
+      // Walk back through the featurizables.
+      for (Featurizable<IString,String> f = featurizable; f != null; f = f.prior) {
+        int srcPosition = f.sourcePosition;
+        int tgtPosition = f.targetPosition;
+        int tgtLength = f.targetPhrase.size();
+        int srcLength = f.sourcePhrase.size();
+        for (int i = 0, size = Math.min(srcLength, tgtLength); i < size; ++i) {
+          final int tgtIndex = tgtPosition + i;
+          int srcIndex = srcPosition + i;
+          alignment.addAlign(srcIndex, tgtIndex);
+        }
+        if (srcLength < tgtLength) {
+          final int srcIndex = srcPosition + srcLength - 1;
+          for (int i = srcLength; i < tgtLength; ++i) {
+            final int tgtIndex = tgtPosition + i;
+            alignment.addAlign(srcIndex, tgtIndex);
+          }
+          
+        } else {
+          final int tgtIndex = tgtPosition + tgtLength - 1;
+          for (int i = tgtLength; i < srcLength; ++i) {
+            final int srcIndex = srcPosition + i;
+            alignment.addAlign(srcIndex, tgtIndex);
+          }
+        }
       }
-      return sortedList;
+      return alignment;
     }
 
     /**
@@ -276,8 +312,7 @@ public class TranslationRequestHandler implements RequestHandler {
         // Decoder filtered some words from this string
         Sequence<IString> sPrimePrime = sPrime2tPrime.f();
         assert sPrimePrime.size() < sPrime.size();
-        int tgtSize = sPrimePrime.size();
-        for (int i = 0; i < tgtSize; ++i) {
+        for (int i = 0, tgtSize = sPrimePrime.size(); i < tgtSize; ++i) {
           IString tgtToken = sPrimePrime.get(i);
           for (int j = i; j < srcSize; ++j) {
             if (tgtToken == sPrime.get(j)) {
@@ -289,7 +324,7 @@ public class TranslationRequestHandler implements RequestHandler {
       }
       
       List<String> alignmentList = Generics.newLinkedList();
-      for (int i = 0; i < s2sPrime.fSize(); ++i) {
+      for (int i = 0, size = s2sPrime.fSize(); i < size; ++i) {
         Set<Integer> alignments = s2sPrime.f2e(i);
         for (int j : alignments) {
           if (sPrime2sPrimePrime != null) {
@@ -310,8 +345,7 @@ public class TranslationRequestHandler implements RequestHandler {
 
     private static SymmetricalWordAlignment identityAlignment(Sequence<IString> sequence) {
       SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sequence,sequence);
-      int sequenceLength = sequence.size();
-      for (int i = 0; i < sequenceLength; ++i) {
+      for (int i = 0, sequenceLength = sequence.size(); i < sequenceLength; ++i) {
         alignment.addAlign(i, i);
       }
       return alignment;
@@ -323,6 +357,45 @@ public class TranslationRequestHandler implements RequestHandler {
     }
   }
 
+  /**
+   * Package the output of the decoder and post-processor for return by the service.
+   * 
+   * @param translationList
+   * @param alignments
+   * @param scoreList
+   * @return
+   */
+  private static List<TranslationQuery> toQuery(List<Sequence<IString>> translationList,
+      List<List<String>> alignments, List<Double> scoreList) {
+    final int nTranslations = translationList.size();
+    double normalizer = 0.0;
+    for (double d : scoreList) normalizer += d;
+    List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
+    for (int i = 0; i < nTranslations; ++i) {
+      TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
+          alignments.get(i), scoreList.get(i) / normalizer);
+      sortedList.add(query);
+    }
+    return sortedList;
+  }
+
+  /**
+   * Populate a servlet request with the result of processing the input.
+   * 
+   * @param request
+   * @param translationList
+   * @param alignments
+   * @param scoreList
+   */
+  private static void populateRequest(HttpServletRequest request, List<Sequence<IString>> translationList,
+      List<List<String>> alignments, List<Double> scoreList) {
+    Type t = new TypeToken<TranslationReply>() {}.getType();
+    List<TranslationQuery> queryList = toQuery(translationList, alignments, scoreList);
+    TranslationReply baseResponse = new TranslationReply(queryList);
+    ServiceResponse serviceResponse = new ServiceResponse(baseResponse, t);
+    request.setAttribute(PhrasalServlet.ASYNC_KEY, serviceResponse);   
+  }
+  
   @Override
   public void handleAsynchronous(Request baseRequest,
       HttpServletRequest request, HttpServletResponse response) {
@@ -332,36 +405,46 @@ public class TranslationRequestHandler implements RequestHandler {
     Continuation continuation = ContinuationSupport.getContinuation(request);
     continuation.suspend(response);
 
-    // Submit to the decoder
+    // Create the input to the translation service
     TranslationRequest translationRequest = (TranslationRequest) baseRequest;
     int sourceId = inputId.incrementAndGet();
     DecoderInput input = new DecoderInput(sourceId, translationRequest.text, translationRequest.tgtPrefix, 
-        translationRequest.n, translationRequest.tgt, request, continuation);
-    
-    try {
-      // Clear the wrapper of status messages of completed jobs
-      wrapper.put(input);
-      while(wrapper.peek()) {
-        DecoderOutput status = wrapper.poll();
-        sourceId = status.inputId;
-        if (status.success) {
-          logger.info(String.format("Input id %s: status %b", status.inputId, status.success));
-        } else {
-          logger.severe(String.format("Input id %s: status %b", status.inputId, status.success));
-        }
-      }
-    } catch (RejectedExecutionException e) {
-      e.printStackTrace();
-      restartThreadpool(sourceId);
-    }
-  }
+        translationRequest.n, translationRequest.tgt, translationRequest.inputProperties, request, continuation);
 
-  private void restartThreadpool(int sourceId) {
-    logger.severe("Restarting threadpool for input id: " + String.valueOf(sourceId));
-    wrapper.join();
-    wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
-        new DecoderService(0, decoder), false);
-    logger.info("Restarted threadpool");
+    // Try to submit the request to the service.
+    boolean requestSubmitted = false;
+    for (int numRetries = 0; !requestSubmitted && numRetries < MAX_RETRIES_PER_REQUEST; ++numRetries) {
+      try {
+        // Clear the wrapper of status messages of completed jobs
+        wrapper.put(input);
+        requestSubmitted = true;
+        while(wrapper.peek()) {
+          DecoderOutput status = wrapper.poll();
+          sourceId = status.inputId;
+          if (status.success) {
+            logger.info(String.format("Input id %s: status %b", status.inputId, status.success));
+          } else {
+            logger.severe(String.format("Input id %s: status %b", status.inputId, status.success));
+          }
+        }
+        
+      } catch (RejectedExecutionException e) {
+        logger.log(Level.SEVERE, "Threadpool corrupted by underlying exceptions. Restarting...", e);
+        wrapper.join();
+        wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
+            new DecoderService(0, decoder), false);
+        logger.info("Restarted threadpool");
+      } catch (Exception e) {
+        logger.log(Level.SEVERE, "Exception while processing request", e);
+      }
+    }
+    
+    if ( ! requestSubmitted) {
+      logger.severe("Decoding of request failed: " + input.toString());
+      TranslationRequestHandler.populateRequest(input.request, new LinkedList<Sequence<IString>>(), 
+          new LinkedList<List<String>>(), new LinkedList<Double>());
+      input.continuation.resume(); // Re-dispatch/ resume to generate response
+    }
   }
 
   @Override

@@ -734,6 +734,11 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
           translation, null, 0);
       incMetric.add(tran);
     }
+    // Check for an incomplete set of translations
+    if (reader.getLineNumber() < referencesList.size()) {
+      System.err.printf("WARNING: Translation candidate file is shorter than references (%d/%d)%n", 
+          reader.getLineNumber(), referencesList.size());
+    }
     reader.close();
 
     double[] ngramPrecisions = incMetric.ngramPrecisions();

@@ -65,7 +65,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
       RawSequence<TK> raw = new RawSequence<TK>(sequence);
       final String word = sequence.get(0).toString();
 
-      if (dropUnknownWords && !TokenUtils.isNumericOrPunctuationOrSymbols(word)) {
+      if (dropUnknownWords && !isTranslateable(word)) {
         // Deletion rule
         list.add(new Rule<TK>(featureValues, featureNames, empty, raw,
             DEFAULT_ALIGNMENT));
@@ -77,6 +77,17 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
       }
     }
     return list;
+  }
+  
+  /**
+   * Returns true if an identity translation rule should be generated the input word.
+   * False otherwise.
+   * 
+   * @param sourceWord
+   * @return
+   */
+  private boolean isTranslateable(String sourceWord) {
+    return TokenUtils.isNumericOrPunctuationOrSymbols(sourceWord) || TokenUtils.isURL(sourceWord);
   }
 
   @Override

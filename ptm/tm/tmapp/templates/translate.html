@@ -9,17 +9,16 @@
 	<script type="text/javascript">
 		$(document).ready( function() {
 			ptm = new PTM({
-				"postEditMode" : {{ conf.disable_interactive }},
+				"postEditMode" : {{ conf.is_postedit }},
 				"docURL" : "{{ conf.src_document_url }}",
 				"sourceLang" : "{{ conf.src_language }}",
-				"targetLang" : "{{ conf.tgt_language }}"
+				"targetLang" : "{{ conf.tgt_language }}",
+				"maxIdleTime" : "{{ idle_time }}"
 			});
-			dm = new DatasetManager();
-			dm.on( "change:datasetURL", function() {
-				ptm.load( dm.get( "datasetURL" ) );
-			});
+			ptm.load();
 		});
 		var prepareSubmission = function() {
+			d3.select(".UPLOADING").transition().style("visibility", "visible");
 			var userResponses = ptm.getUserResponses();
 			var interactionLog = ptm.getInteractionLog();
 			d3.select("#id_text").node().value = JSON.stringify(userResponses);
@@ -29,15 +28,26 @@
 	</script>
 </head>
 <body style="padding: 0; margin: 0; background: #eee;">
+<div class="UPLOADING" style="position: fixed; display: inline-block; width: 100%; height: 100%; top: 0; left: 0; z-index: 95000; background: rgba(255,255,255,0.9); text-align: center; font-family: PT_Serif, serif; color: #333; line-height: 2em; visibility: hidden">
+	<div style="font-size: 24pt; color: #000; margin: 200px 0 50px 0">Please Wait.</div>
+	<div>We are uploading your responses and mouse/keyboard activities to the server.</div>
+	<div>This page will refresh itself when the upload finishes.</div>
+	<div>Do not close your browser.</div>
+</div>
 <div class="PAGE" style="margin: 20px 20px 200px 20px">
   <div id="PTM"></div>
-  <div id="form-wrapper">
+  <div id="form-wrapper" style="margin: 30px 0px">
     <form action="{{ form_action }}" method="post" name="form-tgt-input" id="form-tgt-input" onsubmit="return prepareSubmission()">
       {% csrf_token %}
       {{ form.as_p }}
       <input type="submit" value="{{ form_button_text }}" name="form-tgt-submit" id="form-tgt-submit" />
     </form>
-  <div>
+    {% if training %}
+    <form action="/tm/">
+      <input type="submit" value="Quit training. I'm ready to start the experiment">
+    </form>
+    {% endif %}
+  </div>
 </div>
 <div class="ExperimentUI">Experiment will end in <span class="ExperimentTimeRemaining"></span> without continued translations.</div>
 </body>

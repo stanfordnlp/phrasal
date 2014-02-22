@@ -21,10 +21,10 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
     assert (targetPhrase.size() > 0);
   }
 
-  public DTUFeaturizable(Sequence<TK> foreignSequence,
-      ConcreteRule<TK,FV> concreteOpt, int sourceInputId, int dtuId) {
-    super(foreignSequence, concreteOpt, sourceInputId,
-        ((DTURule<TK>) concreteOpt.abstractRule).dtus[dtuId]);
+  public DTUFeaturizable(Sequence<TK> sourceSequence,
+      InputProperties sourceInputProperties, ConcreteRule<TK,FV> concreteRule, int sourceInputId, int dtuId) {
+    super(sourceSequence, sourceInputProperties, concreteRule, sourceInputId,
+        ((DTURule<TK>) concreteRule.abstractRule).dtus[dtuId]);
     this.abstractOption = null;
     this.segmentIdx = 0;
     assert (targetPhrase.size() > 0);

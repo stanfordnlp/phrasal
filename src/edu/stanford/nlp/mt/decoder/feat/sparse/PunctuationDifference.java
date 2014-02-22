@@ -1,19 +1,18 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * A measure of how much punctuation should be translated.
@@ -28,16 +27,22 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
   private int numSourcePunctuationTokens;
   
   private final boolean addDomainFeatures;
-  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   
+  /**
+   * Constructor.
+   */
   public PunctuationDifference() {
     this.addDomainFeatures = false;
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public PunctuationDifference(String...args) {
-    this.addDomainFeatures = args.length > 0;
-    this.sourceIdInfoMap = addDomainFeatures ? 
-        Collections.synchronizedMap(SparseFeatureUtils.loadGenreFile(args[0])) : null;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFeature");
   }
   
   @Override
@@ -60,9 +65,8 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
         ++numTargetPunctuationTokens;
       }
     }
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
-        sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
 
     List<FeatureValue<String>> features = Generics.newLinkedList();
     double featureValue = (double) numTargetPunctuationTokens / (double) numSourcePunctuationTokens;

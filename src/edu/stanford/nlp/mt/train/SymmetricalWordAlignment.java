@@ -90,9 +90,9 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
     }
     f = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(escape(fStr.split("\\s+"))));
+        IStrings.toIStringArray(escape(fStr.split("\\s+"))));
     e = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(escape(eStr.split("\\s+"))));
+        IStrings.toIStringArray(escape(eStr.split("\\s+"))));
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse,
@@ -230,6 +230,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     return toString(f2e);
   }
 
+  public String toReverseString() {
+    return toString(e2f);
+  }
+  
   public String toReverseString1() {
     return toString(e2f, false);
   }

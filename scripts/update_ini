@@ -42,10 +42,9 @@ while(<STDIN>) {
     $newfield = 1;
   }
   if($field eq 'ttable-file' ||
-    $field eq 'distortion-file' ||
-    $field eq 'hierarchical-distortion-file' ||
     $field eq 'lmodel-file' ||
-    $field eq 'additional-featurizers') {
+    $field eq 'additional-featurizers' ||
+    $field eq 'input-properties') {
     if(s/DEVID/$newid/g || s/$oldid/$newid/g) {
       if($field eq 'additional-featurizers') {
         /\((.*)\)/;

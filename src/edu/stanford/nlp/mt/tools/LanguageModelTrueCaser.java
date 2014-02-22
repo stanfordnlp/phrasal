@@ -24,6 +24,7 @@ import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -123,7 +124,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
     Sequence<IString> source = new SimpleSequence<IString>(true,
         IStrings.toIStringArray(tokens));
     RichTranslation<IString, String> translation = inferer.translate(source,
-        id - 1, null, null);
+        id - 1, null, new UnconstrainedOutputSpace<IString,String>(), null);
 
     // manual fix up(s)
     // capitalize the first letter

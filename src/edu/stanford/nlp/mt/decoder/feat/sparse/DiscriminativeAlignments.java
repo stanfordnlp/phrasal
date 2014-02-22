@@ -3,19 +3,19 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Indicator features for aligned and unaligned tokens in phrase pairs.
@@ -34,7 +34,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
   private final boolean useClasses;
   private final boolean addDomainFeatures;
   
-  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
@@ -55,17 +54,15 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
    * @param args
    */
   public DiscriminativeAlignments(String...args) {
-    this.addSourceDeletions = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
-    this.addTargetInsertions = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
-    this.useClasses = args.length > 2 ? Boolean.parseBoolean(args[2]) : false;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addSourceDeletions = options.containsKey("sourceDeletionFeature");
+    this.addTargetInsertions = options.containsKey("targetInsertionFeature");
+    this.useClasses = options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = args.length > 3;
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[3]);
-    }
+    this.addDomainFeatures = options.containsKey("domainFeature");
   }
 
   @Override
@@ -74,9 +71,8 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) 
-        ? sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
 
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int tgtLength = f.targetPhrase.size();

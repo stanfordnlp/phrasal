@@ -34,8 +34,12 @@ class Vocabulary : public base::Vocabulary {
       return Index(std::string(str.data(), str.size()));
     }
 
+    lm::WordIndex NullWord() const { return null_word_; }
+
   private:
     const nplm::vocabulary &vocab_;
+
+    const lm::WordIndex null_word_;
 };
 
 // Sorry for imposing my limitations on your code.
@@ -60,6 +64,8 @@ class Model : public lm::base::ModelFacade<Model, State, Vocabulary> {
     FullScoreReturn FullScore(const State &from, const WordIndex new_word, State &out_state) const;
 
     FullScoreReturn FullScoreForgotState(const WordIndex *context_rbegin, const WordIndex *context_rend, const WordIndex new_word, State &out_state) const;
+    
+    lm::WordIndex NullWord() const { return vocab_.NullWord(); }
 
   private:
     boost::scoped_ptr<nplm::neuralLM> base_instance_;

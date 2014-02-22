@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -39,7 +40,7 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
-  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
   
   /**
    * Constructor.
@@ -58,17 +59,18 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
    * @param args
    */
   public DiscriminativeAlignments1(String...args) {
-    this.addSourceDeletions = args.length > 0 ? Boolean.parseBoolean(args[0]) : false;
-    this.addTargetInsertions = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
-    this.useClasses = args.length > 2 ? Boolean.parseBoolean(args[2]) : false;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addSourceDeletions = options.containsKey("sourceDeletionFeature");
+    this.addTargetInsertions = options.containsKey("targetInsertionFeature");
+    this.useClasses = options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = args.length > 3;
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(args[3]);
-    }
+    this.addDomainFeatures = options.containsKey("domainFile");
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
   }
 
   @Override
@@ -116,6 +118,7 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
           }
         }
 
+
       } else {
         if (alignments.length > 1) {
           hasMultipleAlignments.set(i);
@@ -149,6 +152,7 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
             }
           }
         }
+
         
       } else {
         // Thang Jan14: use IString instead of String to look up classes later

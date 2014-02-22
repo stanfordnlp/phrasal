@@ -15,10 +15,13 @@ $(document).ready( function() {
 		var pass = [];
 		var noPass = [];
 		stats.modernizrTests.forEach(function(d) {
-			if ( d.substr(0,3) === "no-" )
+      // Ignore the "touch" test, which does not apply to
+      // this experiment.
+			if ( d.substr(0,3) === "no-" && d.substr(3) !== "touch") {
 				noPass.push(d.substr(3));
-			else
+			} else {
 				pass.push(d);
+      }
 		})
 		$("#BrowserSupport").text(support.join(", "));
 		$("#BrowserNoSupport").text(noSupport.join(", "));

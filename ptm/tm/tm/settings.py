@@ -135,6 +135,7 @@ PIPELINE_CSS = {
     'tmapp_css': {
         'source_filenames': (
             'tmapp/css/form.css',
+            'tmapp/css/ui.css',
         ),
         'output_filename': 'tmapp/tmapp_min.css',
         'variant': 'datauri',
@@ -155,7 +156,6 @@ PIPELINE_JS = {
             'js/jquery.js',
             'js/underscore.js',
             'js/backbone.js',
-            'js/DatasetManager.js',
             'js/QueryString.js',
             'js/ExperimentUI.js',
             'js/TranslateServer.js',

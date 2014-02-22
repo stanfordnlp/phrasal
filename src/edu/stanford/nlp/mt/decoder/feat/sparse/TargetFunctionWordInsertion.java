@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
@@ -18,6 +19,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
  * Single dense feature count of target function words inserted
@@ -48,14 +50,21 @@ public class TargetFunctionWordInsertion extends DerivationFeaturizer<IString, S
 
   private int numSourceFunctionTokens;
   
+  /**
+   * Constructor.
+   * 
+   * @param args
+   */
   public TargetFunctionWordInsertion(String...args) {
+    Properties options = SparseFeatureUtils.argsToProperties(args);
     if (args.length < 2) {
       throw new RuntimeException("Must specify source and target unigram counts files");
     }
     System.err.println("Loading TargetFunctionWordInsertion template...");
-    String sourceFilename = args[0];
-    String targetFilename = args[1];
-    rankCutoff = args.length > 2 ? Integer.valueOf(args[2]) : DEFAULT_RANK_CUTOFF;
+    String sourceFilename = options.getProperty("sourceFile");
+    String targetFilename = options.getProperty("targetFile");
+    this.rankCutoff = PropertiesUtils.getInt(options, "rankCutoff", DEFAULT_RANK_CUTOFF);
+    
     System.err.println("Source words:");
     sourceFunctionWordSet = loadCountsFile(sourceFilename);
     System.err.println("Target words:");

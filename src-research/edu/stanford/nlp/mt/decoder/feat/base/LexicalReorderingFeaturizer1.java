@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
@@ -22,6 +23,8 @@ import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.PropertiesUtils;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Generative and discriminative lexicalized reordering models.
@@ -44,14 +47,14 @@ public class LexicalReorderingFeaturizer1 extends
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
   private final boolean useAlignmentConstellations;
   private boolean useClasses;
-  private int countFeatureIndex = -1;
+  private final int countFeatureIndex;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
   private final boolean addDomainFeatures;
   private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
 
-  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
   
   /**
    * Constructor for discriminative lexicalized reordering.
@@ -64,6 +67,7 @@ public class LexicalReorderingFeaturizer1 extends
     useAlignmentConstellations = false;
     useClasses = false;
     addDomainFeatures = false;
+    countFeatureIndex = -1;
   }
 
   /**
@@ -73,42 +77,30 @@ public class LexicalReorderingFeaturizer1 extends
    */
   public LexicalReorderingFeaturizer1(String...args) {
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
-    boolean useAlignmentConstellations = false;
-    boolean addDomainFeatures = false;
-    for (String argument : args) {
-      // Condition the classes on constellations
-      if (argument.equals("conditionOnConstellations")) {
-        useAlignmentConstellations = true;
-        System.err.printf("using constellations%n");
-      
-      } else if (argument.startsWith("classes")) {
-        String[] fields = argument.trim().split(":");
-        assert fields.length == 2;
-        String[] typeStrings = fields[1].split("-");
-        discriminativeSet = Generics.newArrayList();
-        for (String type : typeStrings) {
-          discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
-        }
-      
-      } else if (argument.equals("useClasses")) {
-        useClasses = true;
-        sourceMap = SourceClassMap.getInstance();
-        targetMap = TargetClassMap.getInstance();
-        
-      } else if (argument.startsWith("countFeatureIndex")) {
-        String[] fields = argument.trim().split(":");
-        assert fields.length == 2;
-        countFeatureIndex = Integer.parseInt(fields[1]);
-      
-      } else if (argument.startsWith("domainFile")) {
-        String[] fields = argument.trim().split(":");
-        assert fields.length == 2;
-        addDomainFeatures = true;
-        sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(fields[1]);
+    Properties options = StringUtils.argsToProperties(args);
+    this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
+    this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
+    // Which reordering classes to extract
+    if (options.containsKey("classes")) {
+      String[] typeStrings = options.getProperty("classes").split("-");
+      discriminativeSet = Generics.newArrayList();
+      for (String type : typeStrings) {
+        discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
       }
     }
-    this.useAlignmentConstellations = useAlignmentConstellations;
-    this.addDomainFeatures = addDomainFeatures;
+    // Use class-based feature representations
+    this.useClasses = options.containsKey("useClasses");
+    if (useClasses) {
+      sourceMap = SourceClassMap.getInstance();
+      targetMap = TargetClassMap.getInstance();
+
+    }
+    // Add domain-specific features
+    this.addDomainFeatures = options.containsKey("domainFile");
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
+
     mlrt = null;
     featureTags = null;
   }
@@ -128,6 +120,7 @@ public class LexicalReorderingFeaturizer1 extends
     }
     discriminativeSet = null;
     addDomainFeatures = false;
+    countFeatureIndex = -1;
   }
   
   @Override
@@ -155,6 +148,7 @@ public class LexicalReorderingFeaturizer1 extends
         }
         List<String> ruleReps = new ArrayList<String>();
         if (usePrior(mrt)) {
+
           if (useAlignmentConstellations) {
             IString priorAlignConst = (f.prior != null ? f.prior.rule.abstractRule.alignment
                 .toIString() : INITIAL_PHRASE.get(0));
@@ -169,6 +163,7 @@ public class LexicalReorderingFeaturizer1 extends
           } else {
             ruleReps = getDiscriminativeRepresentation(f);
           }
+
         }
         
         for (int i = 0; i < ruleReps.size(); i++) {

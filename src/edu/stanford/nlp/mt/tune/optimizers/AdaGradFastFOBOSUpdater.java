@@ -4,9 +4,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.tune.OnlineTuner;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -38,13 +39,13 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
     this.rate = initialRate;
     this.L1lambda = L1lambda;
-    sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
-    lastUpdated = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
+    sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
+    lastUpdated = new ClassicCounter<String>(expectedNumFeatures);
     this.customL1 = customL1;
     
     // Setup the logger
     logger = Logger.getLogger(AdaGradFastFOBOSUpdater.class.getCanonicalName());
-    OnlineTuner.attach(logger);
+    SystemLogger.attach(logger, LogName.ONLINE);
   }
 
   @Override

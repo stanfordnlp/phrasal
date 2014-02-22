@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -17,7 +18,7 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 /**
- * Target boundary bigrams.
+ * Target rule boundary bigrams.
  * 
  * @author Spence Green
  *
@@ -34,7 +35,7 @@ public class TargetClassBigramBoundary1 extends DerivationFeaturizer<IString, St
   private final int numMappings = targetMap.getNumMappings();
   private final List<IString> startEdges;
   private final List<IString> endEdges;
-  private final int DEBUG_OPT = 0; // Thang Jan14: >0 print debugging message
+  private final int DEBUG_OPT = 1; // Thang Jan14: >0 print debugging message
   
   public TargetClassBigramBoundary1() {
     this.addDomainFeatures = false;
@@ -54,8 +55,11 @@ public class TargetClassBigramBoundary1 extends DerivationFeaturizer<IString, St
    * @param args
    */
   public TargetClassBigramBoundary1(String...args) {
-    addDomainFeatures = args.length > 0;
-    sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(args[0]) : null;
+    Properties options = SparseFeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFile");
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
     
     // Thang Jan14
     startEdges = new ArrayList<IString>();

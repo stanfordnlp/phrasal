@@ -9,6 +9,7 @@ import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.EmptySequence;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Rule;
@@ -39,6 +40,8 @@ State<Derivation<TK, FV>> {
   public final int depth;
   public final int linearDistortion;
   public final int length;
+  
+  public final InputProperties sourceInputProperties;
 
   // non-primitives that already exist at the time of
   // hypothesis creation and just receive an additional
@@ -86,21 +89,23 @@ State<Derivation<TK, FV>> {
    * 
    * @param sourceInputId
    * @param sourceSequence
+   * @param sourceInputProperties 
    * @param heuristic
    * @param scorer
    * @param ruleList
    */
   public Derivation(int sourceInputId, Sequence<TK> sourceSequence,
-      SearchHeuristic<TK, FV> heuristic,
+      InputProperties sourceInputProperties, SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
       List<List<ConcreteRule<TK,FV>>> ruleList) {
     this.id = nextId.incrementAndGet();
     score = 0;
-    h = heuristic.getInitialHeuristic(sourceSequence, ruleList, scorer, sourceInputId);
+    h = heuristic.getInitialHeuristic(sourceSequence, sourceInputProperties, ruleList, scorer, sourceInputId);
     insertionPosition = 0;
     length = 0;
     rule = null;
     this.sourceSequence = sourceSequence;
+    this.sourceInputProperties = sourceInputProperties;
     preceedingDerivation = null;
     featurizable = null;
     untranslatedTokens = sourceSequence.size();
@@ -130,6 +135,7 @@ State<Derivation<TK, FV>> {
     this.insertionPosition = insertionPosition;
     this.rule = rule;
     this.preceedingDerivation = base;
+    this.sourceInputProperties = base.sourceInputProperties;
     this.sourceCoverage = base.sourceCoverage.clone();
     this.sourceCoverage.or(rule.sourceCoverage);
     this.length = (insertionPosition < base.length ? base.length : // internal
@@ -183,6 +189,7 @@ State<Derivation<TK, FV>> {
     this.insertionPosition = insertionPosition;
     this.rule = rule;
     this.preceedingDerivation = base;
+    this.sourceInputProperties = base.sourceInputProperties;
     this.sourceCoverage = base.sourceCoverage.clone();
     this.sourceCoverage.or(rule.sourceCoverage);
     this.length = (insertionPosition < base.length) ? base.length

@@ -17,14 +17,12 @@ import java.util.TreeMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
-import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.base.EmptySequence;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
@@ -34,11 +32,14 @@ import edu.stanford.nlp.mt.base.NBestListContainer;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SystemLogger;
+import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer2;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
@@ -63,45 +64,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  *
  */
 public class OnlineTuner {
-
-  // TODO(spenceg): Move this logging stuff elsewhere.
-
-  // Static methods for setting up a global logger
-  // Other classes should attach() to this log handler
-  private static Handler logHandler = null;
-  private static String logPrefix;
-  private static Level logLevel = Level.INFO;
-
-  private static void initLogger(String tag) {
-    // Disable default console logger
-    Logger globalLogger = Logger.getLogger("global");
-    Handler[] handlers = globalLogger.getHandlers();
-    for(Handler handler : handlers) {
-      globalLogger.removeHandler(handler);
-    }
-
-    // Setup the file logger
-    logPrefix = tag + ".online";
-    try {
-      logHandler = new FileHandler(logPrefix + ".log");
-      logHandler.setFormatter(new SimpleFormatter()); //Plain text
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  public static void attach(Logger logger) {
-    // Disable the console logger, then attach to the file logger.
-    logger.setUseParentHandlers(false);
-    if (logHandler != null) {
-      logger.addHandler(logHandler);
-    }
-    logger.setLevel(logLevel);
-  }
-
-  private final Logger logger;
 
   // Baseline dense configuration from edu.stanford.nlp.mt.decoder.feat.base
   // Extended phrase table, hierarchical reordering, one language model 
@@ -145,6 +107,8 @@ public class OnlineTuner {
   // Phrasal decoder instance.
   private Phrasal decoder;
   
+  private String outputWeightPrefix;
+  
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
   private int minFeatureCount;
@@ -160,12 +124,28 @@ public class OnlineTuner {
   private int pseudoReferenceBurnIn = -1;
   private List<List<Sequence<IString>>> pseudoReferences;
   private double[] referenceWeights;
+  
+  private final Logger logger;
 
+  /**
+   * Constructor.
+   * 
+   * @param srcFile
+   * @param tgtFile
+   * @param phrasalIniFile
+   * @param initialWtsFile
+   * @param optimizerAlg
+   * @param optimizerFlags
+   * @param uniformStartWeights
+   * @param randomizeStartWeights
+   * @param expectedNumFeatures
+   */
   public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
       boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures) {
     logger = Logger.getLogger(OnlineTuner.class.getName());
-    OnlineTuner.attach(logger);
+    SystemLogger.attach(logger, LogName.ONLINE);
+    this.outputWeightPrefix = SystemLogger.getPrefix() + "." + LogName.ONLINE.toString().toLowerCase();
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
@@ -454,8 +434,12 @@ public class OnlineTuner {
           if (nbestLists != null) {
             assert ! nbestLists.containsKey(sourceId);
             // For expected bleu evaluations, put the one best prediction as opposed to the n best list as before.
-            Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
-            nbestLists.put(sourceId, bestHypothesis);
+            if (result.nbestLists.get(i).size() > 0) {
+              Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
+              nbestLists.put(sourceId, bestHypothesis);
+            } else {
+              nbestLists.put(sourceId, new EmptySequence<IString>());
+            }
           }
         }
       }
@@ -527,7 +511,7 @@ public class OnlineTuner {
         updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false);
         
         if((t+1) % weightWriteOutInterval == 0) {
-        	IOTools.writeWeights(String.format("%s.%d.%d.binwts", logPrefix, epoch, t), currentWts);
+        	IOTools.writeWeights(String.format("%s.%d.%d.binwts", outputWeightPrefix, epoch, t), currentWts);
         }
       }
 
@@ -542,7 +526,7 @@ public class OnlineTuner {
       }
       
       // Write the intermediate weights for this epoch
-      IOTools.writeWeights(String.format("%s.%d.binwts", logPrefix, epoch), currentWts);
+      IOTools.writeWeights(String.format("%s.%d.binwts", outputWeightPrefix, epoch), currentWts);
 
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
@@ -769,7 +753,13 @@ public class OnlineTuner {
        Counters.normalize(wtsAccumulator);
        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
      
-    } else {
+    } else if (optimizerAlg.equals("expectedBLEU2")) {
+      assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
+      assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
+      Counters.normalize(wtsAccumulator);
+      return new ExpectedBLEUOptimizer2(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+    
+   } else {
       throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
   }
@@ -788,18 +778,11 @@ public class OnlineTuner {
     } 
     Triple<Double, Integer, Counter<String>> selectedEpoch = epochResults.get(epochResults.size()-1);
     Counter<String> finalWeights = selectedEpoch.third();
-    String filename = logPrefix + ".final.binwts";
+    String filename = outputWeightPrefix + ".final.binwts";
     IOTools.writeWeights(filename, finalWeights);
     logger.info("Wrote final weights to " + filename);
     logger.info(String.format("Final weights from epoch %d: BLEU: %.2f", selectedEpoch.second(), selectedEpoch.first()));
     logger.info(String.format("Non-zero final weights: %d", finalWeights.keySet().size()));
-  }
-
-  /**
-   * Perform any necessary cleanup.
-   */
-  public void shutdown() {
-    logHandler.close();
   }
 
   /********************************************
@@ -889,7 +872,7 @@ public class OnlineTuner {
     boolean doParameterAveraging = PropertiesUtils.getBool(opts, "a", false);
     int batchSize = PropertiesUtils.getInt(opts, "b", 1);
     boolean randomizeStartingWeights = PropertiesUtils.getBool(opts, "rw", false);
-    OnlineTuner.logLevel = Level.parse(opts.getProperty("l", "INFO"));
+    SystemLogger.setLevel(LogName.ONLINE, Level.parse(opts.getProperty("l", "INFO")));
     boolean doExpectedBleu = ! PropertiesUtils.getBool(opts, "ne", false);
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
@@ -909,7 +892,8 @@ public class OnlineTuner {
     String wtsInitialFile = parsedArgs[3];
 
     final long startTime = System.nanoTime();
-    OnlineTuner.initLogger(experimentName);
+    SystemLogger.setPrefix(experimentName);
+    SystemLogger.disableConsoleLogger();
     System.out.println("Phrasal Online Tuner");
     System.out.printf("Startup: %s%n", new Date());
     System.out.println("====================");
@@ -934,7 +918,6 @@ public class OnlineTuner {
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.minFeatureCount(minFeatureCount);
     tuner.run(numEpochs, batchSize, lossFunction, doExpectedBleu, weightWriteOutInterval);
-    tuner.shutdown();
 
     final long elapsedTime = System.nanoTime() - startTime;
     System.out.printf("Elapsed time: %.2f seconds%n", elapsedTime / 1e9);
