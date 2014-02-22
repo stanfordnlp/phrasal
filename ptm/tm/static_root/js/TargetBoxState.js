@@ -65,7 +65,7 @@ TargetBoxState.prototype.MAX_PRECOMPUTED_SUGGESTIONS = 100;
 TargetBoxState.prototype.MAX_VISIBLE_SUGGESTIONS = 4;
 
 TargetBoxState.prototype.initialize = function( options ) {
-	this.reset();
+        this.reset();
 	var segmentId = options.segmentId;
 	this.view = new TargetBoxView({ "model" : this, "el" : ".TargetBoxView" + segmentId, "segmentId" : segmentId });
 	this.viewTextarea = new TargetTextareaView({ "model" : this, "el" : ".TargetTextareaView" + segmentId });
@@ -133,35 +133,44 @@ TargetBoxState.prototype.__identifyContinugousSuggestion = function( translation
 	if ( sourceTokenIndexes && sourceTokenIndexes.length > 0 ) {
 
 		// Identify chunk index belonging to the left-most source token
-  		var leftMostSourceTokenIndex = Math.min.apply( Math, sourceTokenIndexes );
-  		var sourceChunkIndex = chunkVector[ leftMostSourceTokenIndex ];
-
+    var leftMostSourceTokenIndex = translation.length + 1;
+    var sourceChunks = {};
+    for (var i = 0; i < sourceTokenIndexes.length; ++i ) {
+      var sourceIndex = sourceTokenIndexes[ i ];
+      var sourceChunkIndex = chunkVector[ sourceIndex ];
+      sourceChunks[ sourceChunkIndex ] = true;
+      if ( sourceIndex < leftMostSourceTokenIndex ) {
+        leftMostSourceTokenIndex = sourceIndex;
+      }
+    }
 		// All chunks left of the above index are considered "matched" and not touched.
 		// Reverse look up: Identify corresponding chunk indexes
 		// Reverse look up: Identify all corresponding target tokens
- 		var targetTokenIndexes = [];
-  		for ( var i = leftMostSourceTokenIndex; i < chunkVector.length; i++ ) {
-    		if ( chunkVector[i] !== sourceChunkIndex ) {
-      			break;
-    		}
-    		if ( s2t.hasOwnProperty(i) ) {
-      			Array.prototype.push.apply( targetTokenIndexes, s2t[i] );
-    		}
-  		}
+    var targetTokenIndexes = [];
+    for ( var i = leftMostSourceTokenIndex; i < chunkVector.length; i++ ) {
+     	if ( !(chunkVector[i] in sourceChunks) ) {
+       	break;
+     	}
+     	if ( s2t.hasOwnProperty(i) ) {
+       	Array.prototype.push.apply( targetTokenIndexes, s2t[i] );
+     	}
+   	}
 
   		// Chunk in the target language
 		if ( targetTokenIndexes.length > 0 ) {
-			targetTokenIndexes = _.uniq( targetTokenIndexes );
+      targetTokenIndexes.sort(function (a, b) { return a - b; });
+			targetTokenIndexes = _.uniq( targetTokenIndexes, true );
 			var rightMostTargetTokenIndex = -1;
-			
 			// Construction a continuguos suggestion text in the target language
 			var suggestionTokens = [];
 			for ( var i = 0; i < targetTokenIndexes.length; i++ ) {
 				var targetTokenIndex = targetTokenIndexes[i];
 				if ( targetTokenIndex < baseTargetTokenIndex ) {
+          // Skip alignments into the prefix
 					continue;
 				}
 				if ( rightMostTargetTokenIndex >= 0 && targetTokenIndex - rightMostTargetTokenIndex !== 1 ) {
+          // Stop when a discontinuity is encountered. The source was reordered.
 					break;
 				}
 				rightMostTargetTokenIndex = targetTokenIndex;
@@ -202,7 +211,7 @@ TargetBoxState.prototype.updatePrefixTokensAndSuggestionList = function() {
 		// Get the next translation, and its source-to-target and target-to-source alignments
 		var translation = translationList[ translationIndex ];
 		var s2t = s2tAlignments[ translationIndex ];
-    	var t2s = t2sAlignments[ translationIndex ];
+    var t2s = t2sAlignments[ translationIndex ];
 		var suggestionText = this.__identifyContinugousSuggestion( translation, s2t, t2s, baseTargetTokenIndex );
 		if ( suggestionText !== null ) {
 			if ( ! suggestionList.hasOwnProperty(suggestionText) ) {
@@ -223,9 +232,11 @@ TargetBoxState.prototype.updatePrefixTokensAndSuggestionList = function() {
 	if ( suggestionRank === 0 && translationList.length > 0 ) {
   		suggestionList[ translationList[0][baseTargetTokenIndex] ] = suggestionRank++;
 	}
-	
+
+  // ********
 	// Determine suggestions starting from further down in the sentence
-	for ( var futureTargetTokenIndex = baseTargetTokenIndex; futureTargetTokenIndex < maxBaseTargetTokenIndex; futureTargetTokenIndex++ ) {
+  // ********
+  for ( var futureTargetTokenIndex = baseTargetTokenIndex; futureTargetTokenIndex < maxBaseTargetTokenIndex; futureTargetTokenIndex++ ) {
 
 		// Restrict search to only the best MT
 		// Alternative is to search all MTs with "translationIndex < translationList.length"
@@ -347,7 +358,7 @@ TargetBoxState.prototype.__updateSuggestions = function() {
 	var prefix = this.get( "prefix" );
 	var caretIndex = this.get( "caretIndex" );
 	var bestTranslation = this.get( "bestTranslation" );
-
+  
 	// Only show suggestions if caret is in the first word following the prefix
 	// Lowerbound: Must be longer than prefix
 	if ( caretIndex > prefix.length || prefix.length === 0 ) {
@@ -406,7 +417,9 @@ TargetBoxState.prototype.__updateMatchingTokens = function() {
 		    var s2t = s2tAlignments[0];
 			var t2s = t2sAlignments[0];
 			if ( userTokens.length > 0 ) {
-				var maxIndex = userTokens.length-1;
+        var size = userTokens.length;
+        // Account for the pad at the end of the user prefix
+ 				var maxIndex = userTokens[size-1].length === 0 ? userTokens.length-1 : userTokens.length;
 				var rightMostSrcIndex = -1;
 		        for ( var t = 0; t < maxIndex; t++ ) {
 					if ( t2s.hasOwnProperty(t) ) {
@@ -456,10 +469,18 @@ TargetBoxState.prototype.updateBoxDims = function() {
 };
 
 TargetBoxState.prototype.focus = function() {
-	var caretIndex = this.viewTextarea.textarea[0][0].value.length
-	this.viewTextarea.textarea[0][0].selectionStart = caretIndex;
-	this.viewTextarea.textarea[0][0].selectionEnd = caretIndex;
-	this.viewTextarea.textarea[0][0].focus();
+	var postEditMode = this.get("postEditMode");
+	if ( postEditMode ) {
+		this.viewTextarea.textarea[0][0].selectionStart = 0;
+		this.viewTextarea.textarea[0][0].selectionEnd = 0;
+		this.viewTextarea.textarea[0][0].focus();
+	}
+	else {
+		var caretIndex = this.viewTextarea.textarea[0][0].value.length;
+		this.viewTextarea.textarea[0][0].selectionStart = caretIndex;
+		this.viewTextarea.textarea[0][0].selectionEnd = caretIndex;
+		this.viewTextarea.textarea[0][0].focus();
+	}
 	this.set({
 		"hasFocus" : true,
 		"caretIndex" : caretIndex

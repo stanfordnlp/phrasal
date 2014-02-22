@@ -4,7 +4,11 @@ var TargetOverlayView = Backbone.View.extend({
 
 TargetOverlayView.prototype.initialize = function() {
 	this.views = {};
-	this.views.container = d3.select( this.el ).style( "pointer-events", "none" ).call( this.__containerRenderOnce.bind(this) );
+	this.views.container = d3.select( this.el ).style( "pointer-events", "none" )
+		.style( "-moz-user-select", "none" )
+		.style( "-webkit-user-select", "none" )
+		.style( "-ms-user-select", "none" )
+		.call( this.__containerRenderOnce.bind(this) );
 	this.views.prefixContent = this.views.container.append( "span" ).attr( "class", "PrefixContent" ).call( this.__userContentStyles.bind(this) );
 	this.views.editingContent = this.views.container.append( "span" ).attr( "class", "EditingContent" ).call( this.__userContentStyles.bind(this) );
 	this.views.mtContent = this.views.container.append( "span" ).attr( "class", "MtContent" ).call( this.__mtContentStyles.bind(this) );

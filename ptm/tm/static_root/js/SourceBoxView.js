@@ -6,6 +6,7 @@ SourceBoxView.prototype.REGULAR_COLOR = "#333";
 SourceBoxView.prototype.UNMATCHED_COLOR = "#333";
 SourceBoxView.prototype.MATCHED_COLOR = "#4292C6";
 SourceBoxView.prototype.HOVER_COLOR = "#ff7f0e";
+SourceBoxView.prototype.EMPTY_SUGGESTIONC_COLOR = "#999";
 
 SourceBoxView.prototype.ANIMATION_DURATION = 120;
 
@@ -48,15 +49,29 @@ SourceBoxView.prototype.__containerRenderAlways = function( elem ) {
 };
 
 SourceBoxView.prototype.__tokenRenderOnce = function( elem ) {
+	var layoutSpec = this.model.get( "layoutSpec" );
+	var noWrapBeforeOrAfterElem = function( d, i ) {
+		var specBefore = layoutSpec[i];
+		if ( specBefore === "cl" ) {
+			return "nowrap";
+		}
+		if ( i < layoutSpec.length - 1 ) {
+			var specAfter = layoutSpec[i+1];
+			if ( specAfter === "cl" ) {
+				return "nowrap";
+			}
+		}
+		return null;
+	};
 	elem.style( "pointer-events", "auto" )
 		.style( "cursor", "default" )
+		.style( "white-space", noWrapBeforeOrAfterElem )
 		.on( "click", this.__mouseClick.bind(this) );
 };
 SourceBoxView.prototype.__tokenRenderAlways = function() {};
 
 SourceBoxView.prototype.__tokenTermRenderOnce = function( elem ) {
 	elem.style( "display", "inline-block" )
-		.style( "white-space", "pre-wrap" )
 		.style( "vertical-align", "top" )
 		.text( function(d) { return d } )
 		.style( "pointer-events", "auto" )
@@ -67,14 +82,19 @@ SourceBoxView.prototype.__tokenTermRenderOnce = function( elem ) {
 };
 SourceBoxView.prototype.__tokenTermRenderAlways = function( elem ) {
 	var hasFocus = this.model.get( "hasFocus" );
+	var isEmptySuggestion = this.model.get( "isEmptySuggestion" );
 	var color = function( _, tokenIndex ) {
 		var isHovered = ( tokenIndex === this.model.get( "hoverTokenIndex" ) );
 		var isMatched = ( this.model.get( "matchedTokenIndexes" ).hasOwnProperty( tokenIndex ) );
 		if ( hasFocus ) {
-			if ( isHovered ) 
-				return this.HOVER_COLOR;
-			else if ( isMatched ) 
-			 	return this.MATCHED_COLOR;
+			if ( isHovered ) {
+				if ( isEmptySuggestion )
+					return this.EMPTY_SUGGESTIONC_COLOR;
+				else
+					return this.HOVER_COLOR;
+			}
+			else if ( isMatched )
+				return this.MATCHED_COLOR;
 			else
 				return this.UNMATCHED_COLOR;
 		}
@@ -86,10 +106,22 @@ SourceBoxView.prototype.__tokenTermRenderAlways = function( elem ) {
 };
 
 SourceBoxView.prototype.__tokenSepRenderOnce = function( elem ) {
+	var layoutSpec = this.model.get( "layoutSpec" );
+	var selectNoSepElem = function( d, i ) {
+		if ( i < layoutSpec.length - 1 ) {
+			var spec = layoutSpec[i+1];
+			if ( spec === "cl" ) {
+				return true;
+			}
+		}
+		return false;
+	};
 	elem.style( "display", "inline-block" )
 		.style( "white-space", "pre-wrap" )
 		.style( "vertical-align", "top" )
 		.text( " " )
+		.filter( selectNoSepElem )
+			.remove();
 };
 SourceBoxView.prototype.__tokenSepRenderAlways = function() {};
 

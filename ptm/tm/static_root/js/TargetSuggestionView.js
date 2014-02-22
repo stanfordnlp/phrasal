@@ -19,6 +19,10 @@ TargetSuggestionView.prototype.initialize = function() {
 
 TargetSuggestionView.prototype.render = function() {
 	var candidates = this.model.get( "candidates" );
+
+  // Don't render if the prefix is empty
+  
+  
 	var elems = this.views.overlay.selectAll( "div.token" ).data( candidates );
 	elems.enter().append( "div" ).attr( "class", "token" ).call( this.__tokenRenderOnce.bind(this) );
 	elems.exit().remove();
@@ -35,9 +39,10 @@ TargetSuggestionView.prototype.__containerRenderOnce = function( elem ) {
 		.style( "visibility", "visible" );
 };
 TargetSuggestionView.prototype.__containerRenderAlways = function( elem ) {
-	var hasFocus = this.model.get( "hasFocus" );
+	var hasFocus = this.model.get( "hasFocus" ) && this.model.get( "hasMasterFocus" );
 	var candidates = this.model.get( "candidates" );
-	var isVisible = ( hasFocus && candidates.length > 0 );
+  var isInitial = this.model.get( "isInitial" );
+	var isVisible = ( hasFocus && candidates.length > 0 && ! isInitial );
 	elem.style( "visibility", isVisible ? "visible" : "hidden" )
 		.style( "display", isVisible ? "inline-block" : "none" );
 };

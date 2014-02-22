@@ -3,7 +3,7 @@ var SourceSuggestionView = Backbone.View.extend({
 });
 
 SourceSuggestionView.prototype.X_OFFSET = 0;
-SourceSuggestionView.prototype.Y_OFFSET = -( 12 + 7 ) + 12 + 4;
+SourceSuggestionView.prototype.Y_OFFSET = -( 12 + 7 ) + 12 + 2;
 SourceSuggestionView.prototype.CATCHER_PADDING = 4;
 SourceSuggestionView.prototype.MT_COLOR = "#4292C6";
 SourceSuggestionView.prototype.ACTIVE_COLOR = "#ff7f0e";
@@ -37,7 +37,7 @@ SourceSuggestionView.prototype.__containerRenderOnce = function( elem ) {
 		.style( "visibility", "visible" );
 };
 SourceSuggestionView.prototype.__containerRenderAlways = function( elem ) {
-	var hasFocus = this.model.get( "hasFocus" );
+	var hasFocus = this.model.get( "hasFocus" ) && this.model.get( "hasMasterFocus" );
 	var tokenIndex = this.model.get( "tokenIndex" );
 	var targets = this.model.get( "targets" );
 	var isVisible = ( hasFocus && tokenIndex !== null && targets.length > 0 );
@@ -82,9 +82,9 @@ SourceSuggestionView.prototype.__overlayRenderAlways = function( elem ) {
 };
 
 SourceSuggestionView.prototype.__tokenRenderOnce = function( elem ) {
-	var os = d3.scale.linear().domain( [ 0, 0.25 ] ).range( [ 0, 1 ] );
+	var os = d3.scale.linear().domain( [ 0, 0.5 ] ).range( [ 0.3, 1 ] );
 	var opacity = function(d) {
-		return Math.min( 1, Math.max( 0, os( d.score ) ) )
+		return Math.min( 1, Math.max( 0.3, os( d.score ) ) )
 	}.bind(this);
 	var borderTop = function(_,i) {
 		return i===0 ? null : "1px dotted " + this.MT_COLOR
