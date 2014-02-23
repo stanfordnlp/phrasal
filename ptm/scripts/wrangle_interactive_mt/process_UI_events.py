@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #
 # Get a database log dump and extract out the log json object
-#
+# Get a db log dump by executing: 
+#./export_sqlite3_script.sh ../tm/db.sqlite3 sql/dump_logs.sql dump.txt
+
 
 import sys
 import json
@@ -23,14 +25,14 @@ SrcInputCols = ["id",
                 "text",
                 "log"]
 
-#Get user token array (remove last entry if empty)    
+#Get the user token array (remove last entry if empty)    
 def getTokens(entry):
     userTokens = entry['keyValues']['userTokens']
     if userTokens[-1] == "":
         userTokens = userTokens[:-1]
     return userTokens
 
-#Find the new tokens
+#Find the different tokens in a new set of user tokens
 def getNewTokens(entry,state):
     newUserTokens = getTokens(entry)
     #Find the changed token
@@ -44,7 +46,7 @@ def getNewTokens(entry,state):
     else:
         return newUserTokens[idx]
 
-#Maintain the state for a given sentence
+#Maintain the state for a given sentence (subElement)
 class SentenceState:
     userTokens = [""]
     firstSuggestion = []
@@ -75,6 +77,7 @@ class SentenceState:
         if entry['element'] == 'targetBoxes' and 'userTokens' in entry['keyValues']:
             self.userTokens = getTokens(entry)
 
+    #Determin the origin of a new user token(s)
     def checkNewToken(self,newToken):
         #Check if token is a suggested word
         if newToken == self.firstSuggestion:
@@ -96,7 +99,7 @@ def sourceFromLog(log):
             if len(entry['keyValues']['segments']) > 0:
                 return entry['keyValues']['segments']
 
-#Create an event sequence form a log file
+#Create an event sequence from a log file
 def processLog(log):
     events = []
     #Get log source
@@ -121,6 +124,10 @@ def processLog(log):
     return events
 
 def main():
+    if len(sys.argv) < 2:
+        print "Usage: please enter db dump filename argument"
+        return
+
     #Get the db dump file
     dbdump = open(sys.argv[1])
 
