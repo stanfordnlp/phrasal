@@ -40,9 +40,9 @@ public class TargetUnigramClass1 implements RuleFeaturizer<IString, String> {
   public TargetUnigramClass1(String...args) {
     Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
   }
   
   @Override

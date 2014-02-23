@@ -32,13 +32,13 @@ import edu.stanford.nlp.stats.Counters;
  * @author Daniel Cer 
  *
  */
-public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
+public class ExpectedBLEUOptimizer2 extends AbstractOnlineOptimizer {
 
   static public boolean VERBOSE = false;
 
   private static final int INITIAL_CAPACITY = 5000;
   
-  public ExpectedBLEUOptimizer(int tuneSetSize, int expectedNumFeatures, String[] args) {
+  public ExpectedBLEUOptimizer2(int tuneSetSize, int expectedNumFeatures, String[] args) {
     super(tuneSetSize, expectedNumFeatures, args);
   }	
 
@@ -89,7 +89,7 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
       double p = Math.exp(logP);
       double eval = scoreMetric.score(sourceId, source, references, trans.translation);
       // System.err.printf("score: %.3f p: %.3f eval %.3f\n", score, p, eval);
-      double Eeval = p*eval;
+      double Eeval = p*Math.pow(eval, 2.0);
       expectedLoss += Eeval;
       for (FeatureValue<String> feat : trans.features) {
         double EfeatEval = Eeval*feat.value;

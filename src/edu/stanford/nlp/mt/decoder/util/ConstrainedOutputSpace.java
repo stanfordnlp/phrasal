@@ -195,4 +195,7 @@ public class ConstrainedOutputSpace<TK, FV> implements
 
     return filteredOptions;
   }
+
+  @Override
+  public void setSourceSequence(Sequence<TK> sourceSequence) {}
 }

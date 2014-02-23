@@ -12,13 +12,21 @@ import edu.stanford.nlp.mt.process.CoreNLPPreprocessor;
  *
  */
 public class FrenchPreprocessor extends CoreNLPPreprocessor {
+  
+  private final boolean cased;
+  
   public FrenchPreprocessor() {
+    this(false);
+  }
+  
+  public FrenchPreprocessor(boolean cased) {
     super(FrenchTokenizer.factory());
     tf.setOptions("invertible=true,ptb3Escaping=false,ptb3Dashes=false");
+    this.cased = cased;
   }
 
   @Override
   public String toUncased(String input) {
-    return input.toLowerCase(Locale.FRENCH);
+    return cased ? input : input.toLowerCase(Locale.FRENCH);
   }
 }

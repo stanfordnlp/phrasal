@@ -57,9 +57,9 @@ public class TargetClassBigramBoundary1 extends DerivationFeaturizer<IString, St
   public TargetClassBigramBoundary1(String...args) {
     Properties options = SparseFeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
     
     // Thang Jan14
     startEdges = new ArrayList<IString>();

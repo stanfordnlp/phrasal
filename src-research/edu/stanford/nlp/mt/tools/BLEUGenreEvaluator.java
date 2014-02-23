@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -12,17 +13,23 @@ import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
+/**
+ * Evaluate per-genre BLEU for a finite input set.
+ * 
+ * @author Spence Green
+ *
+ */
 public class BLEUGenreEvaluator {
 
   private static final String DEFAULT_GENRE = "default";
@@ -70,13 +77,13 @@ public class BLEUGenreEvaluator {
     String[] parameters = options.getProperty("").split("\\s+");
     String[] refs = new String[parameters.length - 1];
     System.arraycopy(parameters, 1, refs, 0, refs.length);
-    Map<Integer,Pair<String,Integer>> genreSpec = SparseFeatureUtils.loadGenreFile(parameters[0]);
+    List<InputProperties> inputProperties = InputProperties.parse(new File(parameters[0]));
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs);
 
     Set<String> genreList = Generics.newHashSet();
     Map<String,List<List<Sequence<IString>>>> refsByGenre = Generics.newHashMap();
     for (int sourceId = 0; sourceId < referencesList.size(); ++sourceId) {
-      String genre = genreSpec.containsKey(sourceId) ? genreSpec.get(sourceId).first()
+      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
           : DEFAULT_GENRE;
       genreList.add(genre);
       if ( ! refsByGenre.containsKey(genre)) {
@@ -100,7 +107,7 @@ public class BLEUGenreEvaluator {
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       int sourceId = reader.getLineNumber()-1;
-      String genre = genreSpec.containsKey(sourceId) ? genreSpec.get(sourceId).first()
+      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
           : DEFAULT_GENRE;
       metrics.get(genre).add(tran);
     }

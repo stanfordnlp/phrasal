@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
@@ -88,6 +89,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   @Override
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
@@ -99,7 +101,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     // TM (phrase table) query for applicable rules
     List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, targets, sourceInputId, scorer);
+        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
@@ -107,7 +109,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     ruleList = outputSpace.filter(ruleList);
     logger.info(String.format("input %d: Rule list after pruning by output constraint: %d/%d",
         sourceInputId, ruleList.size(), originalLength));
-
+    
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
 
@@ -116,7 +118,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         recombinationHistory, maxDistortion, 0);
     List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
     allOptions.add(ruleList);
-    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source,
+    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
         heuristic, scorer, allOptions);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);

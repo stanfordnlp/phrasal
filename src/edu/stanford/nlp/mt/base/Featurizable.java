@@ -21,6 +21,11 @@ public class Featurizable<TK, FV> {
   public final int sourceInputId;
 
   /**
+   * Annotations specific to this input. See <code>InputProperty</code>.
+   */
+  public final InputProperties sourceInputProperties;
+  
+  /**
    * Most recently translated source phrase (source side of rule)
    */
   public final Sequence<TK> sourcePhrase;
@@ -133,6 +138,7 @@ public class Featurizable<TK, FV> {
     linearDistortion = derivation.linearDistortion;
     targetPrefix = derivation.targetSequence;
     sourceSentence = derivation.sourceSequence;
+    sourceInputProperties = derivation.sourceInputProperties;
     numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
     states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
@@ -174,6 +180,7 @@ public class Featurizable<TK, FV> {
 
     targetPrefix = derivation.targetSequence;
     sourceSentence = derivation.sourceSequence;
+    sourceInputProperties = derivation.sourceInputProperties;
     numUntranslatedSourceTokens = derivation.untranslatedTokens;
     prior = derivation.preceedingDerivation.featurizable;
     states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
@@ -212,7 +219,7 @@ public class Featurizable<TK, FV> {
    * @param rule
    * @param sourceInputId
    */
-  public Featurizable(Sequence<TK> sourceSequence,
+  public Featurizable(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
       ConcreteRule<TK,FV> rule, int sourceInputId) {
     this.sourceInputId = sourceInputId;
     this.rule = rule;
@@ -227,6 +234,7 @@ public class Featurizable<TK, FV> {
     sourcePosition = rule.sourcePosition;
     targetPrefix = targetPhrase;
     sourceSentence = sourceSequence;
+    this.sourceInputProperties = sourceInputProperties;
     numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
     states = null;
@@ -242,7 +250,7 @@ public class Featurizable<TK, FV> {
    * @param sourceInputId
    * @param targetPhrase
    */
-  protected Featurizable(Sequence<TK> sourceSequence,
+  protected Featurizable(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
       ConcreteRule<TK,FV> rule, int sourceInputId,
       Sequence<TK> targetPhrase) {
     assert (rule.abstractRule.getClass().equals(DTURule.class));
@@ -261,28 +269,13 @@ public class Featurizable<TK, FV> {
     sourcePosition = rule.sourcePosition;
     targetPrefix = targetPhrase;
     sourceSentence = sourceSequence;
+    this.sourceInputProperties = sourceInputProperties;
     numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
     prior = null;
     states = null;
     linearDistortion = Integer.MAX_VALUE;
     derivation = null;
   }
-
-//  protected static <TK, FV> Object[] retrieveTokens(int sz, Derivation<TK, FV> h) {
-//    Object[] tokens = new Object[sz];
-//    int pos = 0;
-//    Featurizable<TK, FV> preceedingF = h.preceedingDerivation.featurizable;
-//    if (preceedingF != null) {
-//      Object[] preceedingTokens = preceedingF.targetPrefixRaw.elements;
-//      System.arraycopy(preceedingTokens, 0, tokens, 0,
-//          pos = preceedingTokens.length);
-//    }
-//
-//    ConcreteRule<TK,FV> concreteOpt = h.rule;
-//    Object[] newTokens = concreteOpt.abstractRule.target.elements;
-//    System.arraycopy(newTokens, 0, tokens, pos, newTokens.length);
-//    return tokens;
-//  }
 
   private static final float[] nullScores = new float[0];
   private static final String[] nullNames = new String[0];
