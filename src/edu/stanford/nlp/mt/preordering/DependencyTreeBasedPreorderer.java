@@ -71,9 +71,12 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   private static int parseSentenceIndex = 0;
   private static LabeledScoredTreeFactory tf = new LabeledScoredTreeFactory();
   
-  /* only the K most frequent permutation classes will be used to train the classifier */
+  /* Only the K most frequent permutation classes will be used to train the classifier. */
   private static int K = 20;
 
+  /* Discard features wit a count of less than FEATURE_THRESHOLD */
+  private static int FEATURE_THRESHOLD = 5;
+  
   /*
    * Mapping from Penn treebank tags to Universal POS Tags as described in
    * "A Universal Part-of-Speech Tagset" by Slav Petrov, Dipanjan Das and Ryan McDonald
@@ -182,9 +185,12 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     List<CoreLabel> tokens = currentSentence.get(CoreAnnotations.TokensAnnotation.class);    
     
     List<String> features = new ArrayList<String>();
+    if (family.isQuestion())
+      features.add("ISQUESTION");
     
     //the head word
     addWordFeature(features, headWord, "HEAD");
+    features.add("HEAD-DEP:" + headWord.category());
     //the children
     int i = 0;
     IndexedWord prevChild = null;
@@ -193,6 +199,11 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
         prevChild = null;
         continue;
       }
+      
+      addWordFeature(features, child, "CHILD-" + i);
+      addWordFeature(features, child, child.category() + "-CHILD-" + i);
+      features.add("CHILD-" + i + "-DEP:" + child.category());
+
       if (child.index() < headWord.index()) {
         if (child.index() == headWord.index() - 1)
           addWordFeature(features, child, "CHILD-" + i + "-PREVWORD");
@@ -316,6 +327,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
    EnglishGrammaticalStructureFactory gsf = new EnglishGrammaticalStructureFactory(new NoFilter());
    SemanticGraph basicDependencies = SemanticGraphFactory.generateUncollapsedDependencies(gsf.newGrammaticalStructure(parseTree), docID, sentenceIndex);
 
+   boolean isQuestion = false;
+   if (parseTree != null && parseTree.firstChild() != null && parseTree.firstChild().label().toString().endsWith("Q"))
+     isQuestion = true;
+       
    IndexedWord sentenceHead = basicDependencies.getRoots().iterator().next();
 
    q.add(sentenceHead);
@@ -324,6 +339,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
      ArrayList<IndexedWord> familyWords = new ArrayList<IndexedWord>(); 
      for (SemanticGraphEdge edge : basicDependencies.outgoingEdgeIterable(currentHead)) {
        IndexedWord dependent = edge.getDependent();
+       dependent.setCategory(edge.getRelation().getShortName());
        q.add(dependent);
        familyWords.add(dependent);
      }
@@ -346,7 +362,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
        if (alignment != null) 
          include = alignmentConstraintsSatisfied(sortedFamilyWords, alignment);
        if (include) {
-         Family family = new Family(currentHead, sortedFamilyWords); 
+         Family family = new Family(currentHead, sortedFamilyWords, isQuestion); 
          families.add(family);
        }
      }
@@ -377,7 +393,6 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   public static Dataset<String, String> pruneDataset(Dataset<String, String> ds) {
     if (ds.numClasses() <= K)
       return ds;
-    System.err.println("PRUNED DS");
     Dataset<String, String> prunedDs = new Dataset<String, String>();
     ClassicCounter<String> numDatumsPerLabel = ds.numDatumsPerLabel();
     Counters.retainTop(numDatumsPerLabel, K);
@@ -401,6 +416,7 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
       Dataset<String, String> ds = datasets.get(size);
       Dataset<String, String> prunedDs = pruneDataset(ds);
       ds = null;
+      prunedDs.applyFeatureCountThreshold(FEATURE_THRESHOLD);
       LinearClassifier<String, String> lc = lcf.trainClassifier(prunedDs);
       classifiers.put(size, lc);
     }
@@ -692,11 +708,13 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
   private static class Family {
     private IndexedWord headWord;
     private ArrayList<IndexedWord> sortedWords;
+    private boolean isQuestion;
     
     
-    public Family(IndexedWord headWord, ArrayList<IndexedWord> sortedWords) {
+    public Family(IndexedWord headWord, ArrayList<IndexedWord> sortedWords, boolean isQuestion) {
       this.headWord = headWord;
       this.sortedWords = sortedWords;
+      this.isQuestion = isQuestion;
     }
     
     public ArrayList<IndexedWord> getSortedWords() {
@@ -709,6 +727,10 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
     
     public int getSize() {
       return sortedWords.size() - 1;
+    }
+    
+    public boolean isQuestion() {
+      return isQuestion;
     }
     
     public String toString() {
