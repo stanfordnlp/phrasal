@@ -23,5 +23,5 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^robots\.txt$', TextPlainView.as_view(template_name='robots.txt')),
-    url(r'^favicon\.ico$', RedirectView.as_view(url=settings.STATIC_URL+'favicon.ico')),
+    url(r'^favicon\.ico$', RedirectView.as_view(url='/static/favicon.ico')),
 )
