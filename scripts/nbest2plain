@@ -5,7 +5,7 @@ while(<>) {
  chomp;
  @f = split / \|\|\| /;
  if ($f[0] != $id) {
-   print "$f[1] \n";
+   print "$f[1]\n";
    $id = $f[0];
  } 
 }
