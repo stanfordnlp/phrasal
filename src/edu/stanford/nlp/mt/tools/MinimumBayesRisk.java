@@ -70,8 +70,10 @@ public class MinimumBayesRisk {
     final String metricName = options.getProperty("m", "bleu");
 
     final String filename = options.getProperty("");
+    System.err.print("Loading n-best list...");
     FlatNBestList nbestlists = new FlatNBestList(filename);
-
+    System.err.println("done!");
+    System.err.println("Decoding...");
     int idx = -1; 
     for (List<ScoredFeaturizedTranslation<IString,String>> nbestlist :
       nbestlists.nbestLists()) { idx++;
