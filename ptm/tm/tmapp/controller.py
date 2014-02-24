@@ -12,6 +12,10 @@ import choices
 from models import UserConfiguration,TrainingRecord,TranslationSession,DemographicData
 from forms import DemographicForm,ExitSurveyForm,DivErrorList,TranslationInputForm
 
+# Give the user an untimed break after translating this many
+# documents.
+BREAK_INTERVAL = 4
+
 logger = logging.getLogger(__name__)
 
 def get_user_app_status(user):
@@ -57,7 +61,9 @@ def user_training_status(user, complete=False):
     else:
         return False
 
-def get_translate_configuration_for_user(user,training=False):
+def get_translate_configuration_for_user(user,
+                                         training=False,
+                                         last_condition=None):
     """
     Configures the translation session for the user.
 
@@ -87,6 +93,12 @@ def get_translate_configuration_for_user(user,training=False):
     # in javascript UI code
     session_object['is_postedit'] = str(choices.is_postedit(session.interface)).lower()
     session_object['interface'] = session.interface
+
+    # Break logic. Give the user a break if we are about
+    # to change UI conditions or the this is the third document
+    # that the user has seen
+    show_break = (last_condition and not session.interface == last_condition) or (session.order > 0 and session.order % BREAK_INTERVAL == 0)
+    session_object['show_break'] = show_break
 
     logger.debug(str(user.username) + " : " + str(session_object))
 

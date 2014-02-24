@@ -118,11 +118,14 @@ def translate(request):
     elif request.method == 'POST':
         # Will raise a runtime error in the event of
         # a problem on the backend.
-        last_condition = controller.save_translation_session(request.user, request.POST)
+        try:
+            last_condition = controller.save_translation_session(request.user, request.POST)
+        except RuntimeError:
+            logger.error('User submitted a translation twice: %s' % (user.username))
 
         # If the user is about to switch UI conditions, then allow a break.
-        conf,_ = controller.get_translate_configuration_for_user(request.user)
-        if conf and not last_condition == conf['interface']:
+        conf,_ = controller.get_translate_configuration_for_user(request.user,last_condition=last_condition)
+        if conf == None or conf['show_break']:
             return redirect('/tm/')
         else:
             return redirect('/tm/translate/')
