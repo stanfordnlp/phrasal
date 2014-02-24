@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+#####################################################
+# Convert Moses nbest list into 1best list
+# (keep lists in same format)
+#####################################################
+
+$id = -1;
+
+#open(F,"sort -s -k 1n -k 10nr -t '|' --buffer-size=2g |");
+while(<STDIN>) {
+	/^(\d+)\s+\|\|\|/;
+	if($id != $1) {
+		warn "Missing sentence: $id+1 != $1\n" if $1 != $id+1;
+		$id = $1;
+		print;
+	}
+}
+close(F);
