@@ -59,7 +59,7 @@
 
 <p>During the study, translate the documents as quickly and as accurately as you can.</p>
 
-<p><b>Speed</b>: Once you start working on a document, you <b>may not idle for longer than 3 minutes</b> within a single session. If you pause---meaning an absence of keyboard or mouse input---for 3 continuous minutes, your session will be automatically terminated. The payment for the equivalent number of words will be deducted from your final pay. Continuing to translate will reset the &ldquo;idle timer.&rdquo; Otherwise, you will not be penalized or rewarded for total amount of time you spend on a translation.</p> 
+<p><b>Speed</b>: Once you start working on a document, you <b>may not idle for longer than 3 minutes</b> within a single session. If you pause---meaning an absence of keyboard or mouse input---for 3 continuous minutes, your current set of translations will be automatically submitted. The payment for the equivalent number of words will be deducted from your final pay. Continuing to translate will reset the &ldquo;idle timer,&rdquo; which will be located at the bottom of your browser window.</p>
 
 <p><b>Quality</b>: Once you submit a translated document, you will not have another opportunity to edit it. Make sure that your translation is in good shape before you press the submit button!</p>
 
@@ -81,7 +81,7 @@
 <li>Exit Survey</li>
 </ul>
 
-<p>We ask that you complete each translation module in a continuous session. Once you complete Module #1, the website will prompt you to take a break, and the idle timer will be disabled. Get up, go to the bathroom, get some coffee: whatever you need to stay productive. We expect that you'll take about 15 minutes, and no more than an hour. We require that you complete both modules on the same day.</p>
+<p>Each module consists of a series of documents, and you'll receive an untimed break after every 4 documents. We ask that you complete the translation job on a single day. You will also receive a break after completing Module #1 since the next module will contain a new interface. Get up, have lunch, go to the bathroom, get some coffee: whatever you need to stay productive. We expect that you'll take no more than an hour. <b>We require that you complete both modules on the same day.</b></p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -126,18 +126,34 @@
 </div>
 
 {% elif step == 5 %}
-<p>The two translation modules have different interfaces.</p>
+<h3>Description of the CAT Modes</h3>
 
-<h3>Translation Interface A (Post-edit)</h3>
+<p>This experiment tests the difference between two different CAT modes: post-edit and interactive. The modes have similar interfaces that differ only in terms of the type of assistance offered. You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Please work as quickly and as accurately as you can.</p>
 
-<p>You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Each textbox will be pre-populated with a suggested {{ tgt_lang }} translation. You may accept, edit, or delete the suggested translation. Please work as quickly and as accurately as you can. The "idle timer," which limits your pauses to 3 minutes, is located at the bottom of your browser window. If you do not complete the translation before the idle timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next document.</p>
+<p>Both interfaces adhere to the following target text convention:
+<ul>
+  <li><span style="color:#000">Black text</span> : belongs to human translator, never modified by machine.</li>
+  <li><span style="color:#999">Gray text</span> : belongs to machine, never modified by human translator. In the post-edit mode, the gray text immediately becomes black, indicating human ownership. In the interactive mode, the human can select/accept parts of the gray text.</li>
+</ul>
+</p>
 
-<h3>Translation Interface B (Interactive)</h3>
+<h3>Post-editing Interface</h3>
 
-<p>You will be presented with {{ src_lang }} documents in a sequence. The interface will provide several interactive aids to help you translate each document into {{ tgt_lang }}. The objective remains the same: translate each document as quickly and as accurately as you can. As before, the "idle timer" will appear at the bottom of your browser window.</p>
+<p>This is a standard post-editing scenario. Each textbox will be pre-populated with a suggested {{ tgt_lang }} translation in black. You may accept, edit, or delete the suggested translation.</p>
 
-<h3>Interactive Interface Tutorial</h3>
-<p>The interactive interface offers both source and target aids. The suggestions update as you type. You may select suggestions via the keyboard and mouse. Please watch the following tutorial, which demonstrates the several translation aids.</p>
+<h3>Interactive Interface</h3>
+
+<p>Each textbox will now be populated with gray text. You can accept the text immediately after your cursor by pressing the Tab key. A drop-down will sometimes show several translation options, and the Tab key always selects the top translation. You can filter the drop-down by typing, or navigate it with the arrow keys. Accepted text will turn black.</p>
+
+<p>The interactive interface includes three types of aides:
+  <ul>
+  <li>Term lookup : implemented as hover over source text</li>
+  <li>Full MT : implemented as gray text</li>
+  <li>In-context translation options : implemented as drop-down and gray text updates while editing</li>
+  </ul>
+</p>
+
+<p><b>IMPORTANT</b>: Only black text will be submitted when you press Submit. If you want to submit a full suggestion, then you need to Tab through it. If there is extra gray text at the end of your translation, don't worry. It won't be submitted.</p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -150,8 +166,10 @@
 
 <iframe width="640" height="480" src="//www.youtube.com/embed/ktRebX9SA5Y" frameborder="0" allowfullscreen></iframe>
 
-<p>Once you have watched the tutorial, please translate a few documents using the two interfaces.</p>
+<h3>IMPORTANT: Using the Interactive Interface</h3>
+<p>Interactive translation is a new tool, and we strongly encourage you to consider using it in a new way. We recognize that some translators "read through" a source text before working. This is called global planning. In the interactive mode, we encourage you to try local planning instead. Read a source phrase or two, and then dive into translation. The machine will revise it's suggestion as you work. We want to see if interactive translation can speed up translation---while retaining or even improving quality. Reducing planning might be one way to increase productivity.</p>
 
+<h3>Practicing with the Interfaces</h3>
 <p>When you press the button below, the translator workbench will open. The workbench will alternate between the post-edit and interactive modes. Take your time. You will be paid for these translations, but the idle timer will not be present. We want you to develop some proficiency with the interfaces prior to starting the experiment.</p>
 
 <p>When you feel proficient, please click the link at the bottom of the workbench interface to return to the homepage. Then you can start the experiment.</p>
