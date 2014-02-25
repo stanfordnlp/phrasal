@@ -18,6 +18,13 @@ import edu.stanford.nlp.mt.base.Sequence;
 public interface OutputSpace<TK, FV> {
 
   /**
+   * Optionally specify the source translation sequence.
+   * 
+   * @param sourceSequence
+   */
+  public void setSourceSequence(Sequence<TK> sourceSequence);
+  
+  /**
    * Filter a list of translation rules to a set of target
    * sequences.
    * 

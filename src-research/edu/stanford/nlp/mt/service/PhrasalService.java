@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -16,11 +15,12 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * Top-level class that loads the Phrasal servlet.
+ * Lightweight Jetty-based container for the PhrasalServlet.
  * 
  *
  * @author Spence Green
@@ -33,10 +33,15 @@ public final class PhrasalService {
 
   private PhrasalService() {}
 
+  /**
+   * Specify the command-line arguments.
+   * 
+   * @return
+   */
   private static Map<String, Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = new HashMap<String,Integer>();
+    Map<String,Integer> optionArgDefs = Generics.newHashMap();
     optionArgDefs.put("p", 1);
-    optionArgDefs.put("dl", 0);
+    optionArgDefs.put("d", 1);
     optionArgDefs.put("m", 0);
     optionArgDefs.put("l", 0);
     optionArgDefs.put("u", 1);
@@ -44,13 +49,18 @@ public final class PhrasalService {
     return optionArgDefs;
   }
 
+  /**
+   * Generate a usage message.
+   * 
+   * @return
+   */
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
     sb.append(String.format("Usage: java %s [OPTS] phrasal_ini%n%n", PhrasalService.class.getName()));
     sb.append("Options:").append(nl);
     sb.append(" -p       : Port (default: ").append(DEFAULT_HTTP_PORT).append(")").append(nl);
-    sb.append(" -dl      : Debug logging level").append(nl);
+    sb.append(" -d level : Logging level from java.util.logging.Level (default: WARNING)").append(nl);
     sb.append(" -l       : Run on localhost").append(nl);
     sb.append(" -m       : Load mock servlet").append(nl);
     sb.append(" -u file  : UI to load (html file)").append(nl);
@@ -58,10 +68,15 @@ public final class PhrasalService {
     return sb.toString();
   }
 
+  /**
+   * Start the service.
+   * 
+   * @param args
+   */
   public static void main(String[] args) {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     int port = PropertiesUtils.getInt(options, "p", DEFAULT_HTTP_PORT);
-    boolean debugLogLevel = PropertiesUtils.getBool(options, "dl", false);
+    Level logLevel = options.containsKey("d") ? Level.parse(options.getProperty("d")) : Level.WARNING;
     boolean loadMockServlet = PropertiesUtils.getBool(options, "m", false);
     boolean localHost = PropertiesUtils.getBool(options, "l", false);
     String uiFile = options.getProperty("u", "debug.html");
@@ -92,11 +107,8 @@ public final class PhrasalService {
     if (localHost) {
       connector.setHost(DEBUG_URL);
     }
-    if (debugLogLevel) {    
-      SystemLogger.setLevel(LogName.SERVICE, Level.INFO);
-    } else {
-      SystemLogger.disableConsoleLogger();
-    }
+    SystemLogger.setLevel(LogName.SERVICE, logLevel);
+    SystemLogger.disableConsoleLogger();
     Logger logger = Logger.getLogger(PhrasalService.class.getName());
     SystemLogger.attach(logger, LogName.SERVICE);
     
@@ -124,11 +136,11 @@ public final class PhrasalService {
     
     // Start the service
     try {
-      logger.info("Starting PhrasalService on port " + String.valueOf(port));
+      logger.info("Starting PhrasalService on port: " + String.valueOf(port));
       server.start();
       server.join();
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.log(Level.SEVERE, "Servlet crashed. Service shutting down.", e);
     }
   }
 }

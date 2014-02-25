@@ -1,13 +1,33 @@
 package edu.stanford.nlp.mt.decoder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.recomb.*;
-import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.base.ConcreteRule;
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.DTURule;
+import edu.stanford.nlp.mt.base.FeatureValues;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.RichTranslation;
+import edu.stanford.nlp.mt.base.Rule;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
+import edu.stanford.nlp.mt.decoder.util.Beam;
+import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
+import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.OutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Abstract interfaces and algorithms that apply to all inference algorithms.
  * 
  * @author danielcer
  * 
@@ -21,24 +41,29 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_OPT, "false"));
   static public boolean DISTINCT_SURFACE_TRANSLATIONS = false;
+  
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
+  private final Comparator<RichTranslation<TK,FV>> translationComparator;
 
-  public static final int MAX_DUPLICATE_FACTOR = 10;
-  public static final int SAFE_LIST = 500;
-
+  /**
+   * Constructor.
+   * 
+   * @param builder
+   */
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
     this.beamCapacity = builder.beamCapacity;
     this.beamType = builder.beamType;
+    this.translationComparator = new RichTranslationComparator<TK,FV>();
   }
 
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
-      int sourceInputId, OutputSpace<TK, FV> outputSpace,
-      List<Sequence<TK>> targets, int size) {
-    return nbest(scorer, source, sourceInputId, outputSpace,
-        targets, size);
+      int sourceInputId, InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
+    return nbest(scorer, source, sourceInputId, sourceInputProperties,
+        outputSpace, targets, size);
   }
 
   /**
@@ -48,7 +73,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @return
    */
   private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
-    List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, -1, null);
+    if (source == null) return null;
+    List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, null, -1, null);
 
     CoverageSet possibleCoverage = new CoverageSet();
     for (ConcreteRule<TK,FV> rule : rules) {
@@ -66,22 +92,27 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     return filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
   }
 
+  /**
+   * TODO(spenceg): This routine is *extremely* inefficient. Rewrite with e.g., Huang and Chiang's
+   * k-best extraction or something.
+   */
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      OutputSpace<TK, FV> outputSpace,
-      List<Sequence<TK>> targets, int size) {
+      InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
 
     // filter unknown words
     if (filterUnknownWords) {
        source = filterUnknownWords(source);
     }
     if (source == null) return null;
+    if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     // Decoding
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
         new RecombinationHistory<Derivation<TK, FV>>();
-    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         recombinationHistory, outputSpace, targets, size);
     if (beam == null) {
       // Decoder failure
@@ -96,77 +127,69 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<Derivation<TK, FV>>(
         goalStates, recombinationHistory);
     Set<Sequence<TK>> distinctSurfaceTranslations = Generics.newHashSet();
-    if (DISTINCT_SURFACE_TRANSLATIONS) {
-      System.err.println("N-best list with distinct surface strings: " + DISTINCT_SURFACE_TRANSLATIONS);
-    }
 
     // Extract
-    int hypCount = 0;
-    final int maxDuplicateCount = size * MAX_DUPLICATE_FACTOR;
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
-    for (List<Derivation<TK, FV>> hypList : latticeDecoder) {
+    int numExtracted = 0;
+    for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
       boolean withDTUs = false;
-      ++hypCount;
-      Derivation<TK, FV> hyp = null;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
 
-      for (Derivation<TK, FV> nextHyp : hypList) {
-        if (hyp == null) {
-          hyp = nextHyp;
+      // TODO(spenceg): This is very inefficient. Reconstruct the derivation
+      // from the lattice path since the current n-best list extractor
+      // does not set the parent references when it traverses the lattice. These
+      // references may be incorrect due to recombination.
+      // When we replace StateLatticeDecoder, this code should go away.
+      Derivation<TK, FV> goalHyp = null;
+      long goalHypId = -1;
+      for (Derivation<TK, FV> node : latticePath) {
+        if (goalHyp == null) {
+          goalHyp = node;
           continue;
         }
-        if (nextHyp.rule.abstractRule instanceof DTURule)
+        goalHypId = node.id;
+        if (node.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {
-          hyp = new DTUHypothesis<TK, FV>(sourceInputId,
-              nextHyp.rule, hyp.length, hyp, nextHyp, featurizer,
+          goalHyp = new DTUHypothesis<TK, FV>(sourceInputId,
+              node.rule, goalHyp.length, goalHyp, node, featurizer,
               scorer, heuristic, seenOptions);
         } else {
-          hyp = new Derivation<TK, FV>(sourceInputId, nextHyp.rule,
-              hyp.length, hyp, featurizer, scorer, heuristic);
+          goalHyp = new Derivation<TK, FV>(sourceInputId, node.rule,
+              goalHyp.length, goalHyp, featurizer, scorer, heuristic);
         }
       }
 
       if (withDTUs) {
-        DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) hyp;
+        DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) goalHyp;
         if (!dtuHyp.isDone() || dtuHyp.hasExpired())
           System.err.printf("Warning: option not complete(%d,%s): %s\n",
-              translations.size(), dtuHyp.hasExpired(), hyp);
+              translations.size(), dtuHyp.hasExpired(), goalHyp);
       }
 
       // Decoder failure in which the null hypothesis was returned.
-      if (hyp == null || hyp.featurizable == null) {
+      if (goalHyp == null || goalHyp.featurizable == null) {
         System.err.printf("%s: WARNING: null hypothesis encountered for input %d; decoder failed%n", 
             this.getClass().getName(), sourceInputId);
         return null;
       }
       
+      ++numExtracted;
+      
       if (DISTINCT_SURFACE_TRANSLATIONS) {
-        // Get surface string:
-        AbstractSequence<TK> seq = (AbstractSequence<TK>) hyp.featurizable.targetPrefix;
-
-        // If seen this string before and not among the top-k, skip it:
-        if (hypCount > SAFE_LIST && distinctSurfaceTranslations.contains(seq)) {
+        if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
+          // Seen a higher-scoring derivation with this target string before
           continue;
+        } else {
+          distinctSurfaceTranslations.add(goalHyp.featurizable.targetPrefix);
         }
-
-        // Add current hypothesis to nbest list and set of uniq strings:
-        Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
-        translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
-            hyp.score, FeatureValues.combine(hyp), beamGoalHyp.id));
-        distinctSurfaceTranslations.add(seq);
-        if (distinctSurfaceTranslations.size() >= size
-            || hypCount >= maxDuplicateCount)
-          break;
-
-      } else {
-        Derivation<TK, FV> beamGoalHyp = hypList.get(hypList.size() - 1);
-        translations.add(new RichTranslation<TK, FV>(hyp.featurizable,
-            hyp.score, FeatureValues.combine(hyp), beamGoalHyp.id));
-        if (translations.size() >= size) {
-          break;
-        }
+      }
+      
+      translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
+          goalHyp.score, FeatureValues.combine(goalHyp), goalHypId));
+      if (translations.size() >= size) {
+        break;
       }
     }
 
@@ -175,56 +198,45 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // scores.
     // Since the n-best list should be sorted according to the true scores, we
     // re-sort things here just in case.
-    Collections.sort(translations, new Comparator<RichTranslation<TK, FV>>() {
-      @Override
-      public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
-        return (int) Math.signum(o2.score - o1.score);
-      }
-    });
+    Collections.sort(translations, translationComparator);
 
-    assert (!translations.isEmpty());
-    System.err.printf("source id %d: n-best list size: %d%n", sourceInputId, translations.size());
     if (DEBUG) {
-      long nBestConstructionTime = System.nanoTime() - nbestStartTime;
-      System.err.printf("N-best generation time: %.3f seconds\n",
-          nBestConstructionTime / 1e9);
+      System.err.printf("source id %d: #extracted: %d #final: %d time: %.3fsec%n", sourceInputId, numExtracted, translations.size(),
+          (System.nanoTime() - nbestStartTime) / 1e9);
     }
-
-    if (DISTINCT_SURFACE_TRANSLATIONS) {
-      List<RichTranslation<TK, FV>> dtranslations = Generics.newLinkedList();
-      distinctSurfaceTranslations.clear();
-      for (RichTranslation<TK, FV> rt : translations) {
-        if (distinctSurfaceTranslations.contains(rt.translation)) {
-          continue;
-        }
-        distinctSurfaceTranslations.add(rt.translation);
-        dtranslations.add(rt);
-      }
-      return dtranslations;
-    } else {
-      return translations;
+    
+    return translations;
+  }
+  
+  private static class RichTranslationComparator<TK,FV> implements Comparator<RichTranslation<TK,FV>> {
+    @Override
+    public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+      return (int) Math.signum(o2.score - o1.score);
     }
   }
 
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
-      int sourceInputId, OutputSpace<TK, FV> constrainedOutputSpace,
-      List<Sequence<TK>> targets) {
-    return translate(scorer, source, sourceInputId, constrainedOutputSpace,
-        targets);
+      int sourceInputId, InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
+    return translate(scorer, source, sourceInputId, sourceInputProperties,
+        constrainedOutputSpace, targets);
   }
 
   @Override
   public RichTranslation<TK, FV> translate(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
-      OutputSpace<TK, FV> outputSpace,
-      List<Sequence<TK>> targets) {
-    // filter unknown words
+      InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
+    
+    // filter unknown source words
     if (filterUnknownWords) {
       source = filterUnknownWords(source);
     }
     if (source == null) return null;
-    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId,
+    if (outputSpace != null) outputSpace.setSourceSequence(source);
+    
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         null, outputSpace, targets, 1);
     if (beam == null)
       return null;
@@ -238,6 +250,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 	 */
   abstract protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest);
@@ -276,7 +289,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @author danielcer
    */
   public class CoverageBeams {
-    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = new HashMap<CoverageSet, Beam<Derivation<TK, FV>>>();
+    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = Generics.newHashMap();
     final private Set<CoverageSet>[] coverageCountToCoverageSets;
     final private RecombinationHistory<Derivation<TK, FV>> recombinationHistory;
 
@@ -285,7 +298,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
       coverageCountToCoverageSets = new Set[sourceSize + 1];
       for (int i = 0; i < sourceSize + 1; i++) {
-        coverageCountToCoverageSets[i] = new HashSet<CoverageSet>();
+        coverageCountToCoverageSets[i] = Generics.newHashSet();
       }
       this.recombinationHistory = recombinationHistory;
     }
@@ -307,7 +320,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
 
     public List<Derivation<TK, FV>> getHypotheses(int coverageCount) {
-      List<Derivation<TK, FV>> hypothesisList = new LinkedList<Derivation<TK, FV>>();
+      List<Derivation<TK, FV>> hypothesisList = Generics.newLinkedList();
 
       for (CoverageSet coverage : coverageCountToCoverageSets[coverageCount]) {
         Beam<Derivation<TK, FV>> hypothesisBeam = get(coverage);

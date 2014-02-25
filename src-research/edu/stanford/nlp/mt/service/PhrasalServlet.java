@@ -37,6 +37,9 @@ public class PhrasalServlet extends HttpServlet {
   private static final long serialVersionUID = -2229782317949182871L;
 
   public static final String ASYNC_KEY = "As#R";
+  
+  // Time in ms that an asynchronous response can be suspended.
+  private static final long ASYNC_TIMEOUT = 30000;
 
   private final RequestHandler[] requestHandlers;
   private final Logger logger;
@@ -112,6 +115,7 @@ public class PhrasalServlet extends HttpServlet {
     Continuation continuation = ContinuationSupport.getContinuation(request);
     if (baseRequest.isAsynchronous() && continuation.isInitial()) {
       // Asynchronous request that will be suspended by the handler
+      continuation.setTimeout(ASYNC_TIMEOUT);
       RequestHandler handler = requestHandlers[messageType.ordinal()];
       if (handler.validate(baseRequest)) {
         handler.handleAsynchronous(baseRequest, request, response);

@@ -19,7 +19,7 @@
 <div id="main-content" style="font-size: 1.15em">
 
 {% if step == 0 %}
-<p>This module will test your browser, describe the experiment, and present the translation workbench. Then you'll have the opportunity to practice by translating some sample documents before the experiment starts.</p>
+<p>This training module will test your browser, describe the experiment, and present the translation workbench. You'll have the opportunity to practice by translating some sample documents before the experiment starts.</p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -46,7 +46,7 @@
 	<p style="margin-top: 0" id="BrowserNoPass"></p>
 </div>
 
-<p>If your browser fails any tests other than <b>touch</b>, then first ensure that your browser is the latest version of <a href="http://www.google.com/chrome/‎" target="_blank">Google Chrome</a>. If your browser still fails these checks, then contact the administrators before proceeding. <b>You will not be paid if your browser does not pass prior to starting the experiment.</b></p>
+<p>If your browser fails any tests, then first ensure that your browser is the latest version of <a href="http://www.google.com/chrome/" target="_blank">Google Chrome</a>. If your browser still fails these checks, then contact the administrators before proceeding. <b>You will not be paid if your browser does not pass prior to starting the experiment.</b></p>
 <div>
 <form action="/tm/training/{{ step }}/">
     <input type="submit" value="{{ form_button_text }}">
@@ -58,9 +58,9 @@
 
 <p>During the study, translate the documents as quickly and as accurately as you can.</p>
 
-<p><b>Speed</b>: Once you start working on a document, you <b>may not idle for longer than 3 minutes</b> within a single session. If you pause for 3 continuous minutes, your session will be automatically terminated. The payment for the equivalent number of words will be deducted from your final pay. Continuing to translate will reset the &ldquo;idle timer.&rdquo; Otherwise, you will not be penalized or rewarded for total amount of time you spend on a translation.</p> 
+<p><b>Speed</b>: Once you start working on a document, you <b>may not idle for longer than 3 minutes</b> within a single session. If you pause---meaning an absence of keyboard or mouse input---for 3 continuous minutes, your session will be automatically terminated. The payment for the equivalent number of words will be deducted from your final pay. Continuing to translate will reset the &ldquo;idle timer.&rdquo; Otherwise, you will not be penalized or rewarded for total amount of time you spend on a translation.</p> 
 
-<p><b>Quality</b>: Once you submit a translated document, you will not have another opportunity to edit it. Make sure that your translation is in good shape before you press the submit button! This job is the first in a series of studies that we are running over the next few months. You plan to invite good translators to join us for future studies.</p>
+<p><b>Quality</b>: Once you submit a translated document, you will not have another opportunity to edit it. Make sure that your translation is in good shape before you press the submit button!</p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -71,13 +71,12 @@
 {% elif step == 3 %}
 <h3>Overview of the Experiment</h3>
 
-<p>Our website will administer the translation job, which is organized into two modules separated by a break:</p>
+<p>This website will administer the translation job, which is organized into two modules separated by a break:</p>
 
 <ul>
-<li>Demographic Survey</li>
-<li>Translation Module #1 (about TODO words)</li>
+<li>Translation Module #1 (about 1,200 source words)</li>
 <li>Break (not timed)</li>
-<li>Translation Module #2 (about TODO words)</li>
+<li>Translation Module #2 (about 1,200 source words)</li>
 <li>Exit Survey</li>
 </ul>
 
@@ -96,7 +95,7 @@
 
 <p>The document may be unrelated to each other. You will be presented with paragraphs selected from the documents. You will see the sentences from these paragraphs, in the same order in which they appear in the original document.</p>
 
-<p>We expect that the sentences will challenge you. Please make sure that your {{ tgt_lang }} translation:
+<p>This text comes from technical domains, so it will challenge you. Please make sure that your {{ tgt_lang }} translation:
 <ul>
 <li>Is faithful to the original text in both meaning and style</li>
 <li>Is grammatical, fluent, and natural-sounding</li>
@@ -117,7 +116,7 @@
 <li><b>Do not use</b> browser plugins or extensions</li>
 </ul>
 
-<p>We will check the translations you submit against those produced by various machine translation systems. We're curious to know how humans work (we already know a lot about machines!). Please help us by not using machine assistance.</p>
+<p>We will check the translations you submit against those produced by various machine translation systems. We're trying to understand how this specific CAT system works, so please help us by not using other machine assistance.</p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -126,17 +125,15 @@
 </div>
 
 {% elif step == 5 %}
+<p>The two translation modules have different interfaces.</p>
+
 <h3>Translation Interface A (Post-edit)</h3>
 
-<p>The two translation modules have different interfaces. In this first module...</p>
-
-<p>You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Each textbox will be pre-populated with a suggested {{ tgt_lang }} translation. You may accept, edit, or delete the suggested translation. Please work as quickly and as accurately as you can. The "idle timer," which limits your pauses to 3 minutes, is located at the bottom left of your browser window. If you do not complete the translation before the idle timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next document.</p>
+<p>You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Each textbox will be pre-populated with a suggested {{ tgt_lang }} translation. You may accept, edit, or delete the suggested translation. Please work as quickly and as accurately as you can. The "idle timer," which limits your pauses to 3 minutes, is located at the bottom of your browser window. If you do not complete the translation before the idle timer expires, then the incomplete translation will be submitted for you. The site will then redirect you to the next document.</p>
 
 <h3>Translation Interface B (Interactive)</h3>
 
-<p>The two translation modules have different interfaces. In this second module...</p>
-
-<p>You will be presented with {{ src_lang }} documents in a sequence. The interface will provide several interactive aids to help you translate each document into {{ tgt_lang }}. The objective remains the same: translate each document as quickly and as accurately as you can. As before, the "idle timer" will appear at the bottom left of your browser window.</p>
+<p>You will be presented with {{ src_lang }} documents in a sequence. The interface will provide several interactive aids to help you translate each document into {{ tgt_lang }}. The objective remains the same: translate each document as quickly and as accurately as you can. As before, the "idle timer" will appear at the bottom of your browser window.</p>
 
 <h3>Interactive Interface Tutorial</h3>
 <p>The interactive interface offers both source and target aids. The suggestions update as you type. You may select suggestions via the keyboard and mouse. Please watch the following tutorial, which demonstrates the several translation aids.</p>
@@ -148,9 +145,13 @@
 </div>
 
 {% elif step == 6 %}
-<strong>TODO: Screencast + YouTube link</strong>
+<iframe width="640" height="480" src="//www.youtube.com/embed/ktRebX9SA5Y" frameborder="0" allowfullscreen></iframe>
 
-<p>Once you have watched the tutorial, please translate a few documents using the new interface. Take your time. You will be paid for these translations, but the idle timer will not be present. We want you to develop some proficiency with the interface prior to starting the experiment. When you have translated a few documents, please click the link at the bottom of the interface to return to this page. Then you can start the experiment.</p>
+<p>Once you have watched the tutorial, please translate a few documents using the two interfaces.</p>
+
+<p>When you press the button below, the translator workbench will open. The workbench will alternate between the post-edit and interactive modes. Take your time. You will be paid for these translations, but the idle timer will not be present. We want you to develop some proficiency with the interfaces prior to starting the experiment.</p>
+
+<p>When you feel proficient, please click the link at the bottom of the workbench interface to return to the homepage. Then you can start the experiment.</p>
 
 <div>
 <form action="{{ ui_link }}">

@@ -68,9 +68,9 @@ public class DiscriminativeAlignments1 implements RuleFeaturizer<IString,String>
       targetMap = TargetClassMap.getInstance();
     }
     this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+//    if (addDomainFeatures) {
+//      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
+//    }
   }
 
   @Override
