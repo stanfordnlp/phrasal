@@ -3,11 +3,13 @@
 # Get a database log dump and extract out the log json object
 # Get a db log dump by executing: 
 #./export_sqlite3_script.sh ../tm/db.sqlite3 sql/dump_logs.sql dump.txt
-
-
 import sys
+import codecs
 import json
 import time
+import os
+
+sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 # Cols in the source dump file
 SrcInputCols = ["id",
@@ -129,22 +131,25 @@ def main():
         return
 
     #Get the db dump file
-    dbdump = open(sys.argv[1])
-
+    with codecs.open(sys.argv[1],encoding='utf-8') as dbdump:
     #Events structure
     #[timestamp, eventType, sourceword, {metadata(hovertime, targetword etc..)}]
-    allEvents = []
+        allEvents = []
 
-    for row in dbdump:
-        # Extract the log
-        log = json.loads(row.split('|')[SrcInputCols.index("log")])
-        # Process the log
-        allEvents.append(processLog(log))
+        for i,row in enumerate(dbdump):
+            # Extract the log
+            try:
+                log = json.loads(row.split('|')[SrcInputCols.index("log")])
+            except ValueError:
+                sys.stderr.write('No json file on line: %d%s' % (i,os.linesep))
+                continue
+            # Process the log
+            allEvents.append(processLog(log))
     
-    for i,session in enumerate(allEvents):
-        print "Session " + str(i)
-        for event in session:
-            print event[1] + " at "+str(event[0])
+        for i,session in enumerate(allEvents):
+            print "Session " + str(i)
+            for event in session:
+                print event[1] + " at "+str(event[0])
 
 if __name__ == '__main__': 
     main()
