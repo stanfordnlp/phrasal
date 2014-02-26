@@ -18,7 +18,6 @@ public class OutputSpaceFactory {
   /**
    * Create an OutputSpace instance for a source input.
    * 
-   * @param source
    * @param sourceInputId 
    * @param targets if null, don't constrain the output space
    * @param targetsArePrefixes
@@ -26,14 +25,13 @@ public class OutputSpaceFactory {
    * @param longestTargetPhrase 
    * @return
    */
-  public static OutputSpace<IString,String> getOutputSpace(Sequence<IString> source, 
-      int sourceInputId, List<Sequence<IString>> targets, boolean targetsArePrefixes, int longestSourcePhrase, 
-      int longestTargetPhrase) {
+  public static OutputSpace<IString,String> getOutputSpace(int sourceInputId, List<Sequence<IString>> targets, 
+      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase) {
     if (targets == null || targets.size() == 0) {
       return new UnconstrainedOutputSpace<IString,String>();
     
     } else if (targetsArePrefixes) {
-      return new SoftPrefixOutputSpace(source, targets.get(0), sourceInputId);
+      return new SoftPrefixOutputSpace(targets.get(0), sourceInputId);
     
     } else {
       return new ConstrainedOutputSpace<IString,String>(targets, longestSourcePhrase, longestTargetPhrase);

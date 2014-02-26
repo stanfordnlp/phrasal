@@ -39,6 +39,7 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer2;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
@@ -709,7 +710,7 @@ public class OnlineTuner {
       // Initialize according to Moses heuristic
       Set<String> featureNames = Generics.newHashSet(weights.keySet());
       featureNames.addAll(BASELINE_DENSE_FEATURES);
-      for (String key : weights.keySet()) {
+      for (String key : featureNames) {
         if (key.startsWith("LM")) {
           weights.setCount(key, 0.5);
         } else if (key.startsWith("WordPenalty")) {
@@ -752,7 +753,13 @@ public class OnlineTuner {
        Counters.normalize(wtsAccumulator);
        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
      
-    } else {
+    } else if (optimizerAlg.equals("expectedBLEU2")) {
+      assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
+      assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
+      Counters.normalize(wtsAccumulator);
+      return new ExpectedBLEUOptimizer2(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+    
+   } else {
       throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
   }

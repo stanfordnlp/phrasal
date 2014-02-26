@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat.sparse;
+package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 import java.util.Map;
@@ -9,6 +9,7 @@ import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.SimpleSequence;
@@ -18,6 +19,7 @@ import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
+import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
@@ -46,7 +48,6 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
   private final SourceClassMap sourceMap;
   private final TargetClassMap targetMap;
   private final boolean addDomainFeatures;
-  private final Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
   private final int lexicalCutoff;
 
   private Sequence<IString> sourceClassSequence;
@@ -62,7 +63,6 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
     this.sourceMap = SourceClassMap.getInstance();
     this.targetMap = null;
     this.addDomainFeatures = false;
-    this.sourceIdInfoMap = null;
     this.lexicalCutoff = DEFAULT_LEXICAL_CUTOFF;
   }
 
@@ -78,8 +78,7 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     sourceMap = SourceClassMap.getInstance();
     targetMap = addClassBasedRule ? TargetClassMap.getInstance() : null;
-    this.addDomainFeatures = options.containsKey("domainFile");
-    sourceIdInfoMap = addDomainFeatures ? SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile")) : null;
+    this.addDomainFeatures = options.containsKey("domainFeature");
     this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
   }
 
@@ -101,9 +100,8 @@ public class RuleContext extends DerivationFeaturizer<IString, String> implement
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) 
-        ? sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
 
     // Retrieve context
     RuleContextState priorState = f.prior == null ? null : (RuleContextState) f.prior.getState(this);

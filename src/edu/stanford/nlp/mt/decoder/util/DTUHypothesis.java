@@ -120,7 +120,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
         Double score = fcCache.get(id);
         if (score == null) {
           Featurizable<TK, FV> f = new DTUFeaturizable<TK, FV>(
-              hyp.sourceSequence, concreteOpt, sourceInputId, i);
+              hyp.sourceSequence, hyp.sourceInputProperties, concreteOpt, sourceInputId, i);
           List<FeatureValue<FV>> phraseFeatures = featurizer
               .ruleFeaturize(f);
           score = scorer.getIncrementalScore(phraseFeatures);

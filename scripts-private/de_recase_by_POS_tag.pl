@@ -1,12 +1,17 @@
 #!/usr/bin/perl
 
-system("java -mx300m edu.stanford.nlp.tagger.maxent.MaxentTagger  -model ~cerd/scr/stanford-postagger-full-2013-04-04/models/german-fast.tagger -tokenize false -textFile $ARGV[0] > $ARGV[0].pos");
+# Uppercases nouns (words for which POS tag starts with N). Input should be lowercased.
+
+system("java -mx300m edu.stanford.nlp.tagger.maxent.MaxentTagger  -model /u/nlp/data/pos-tagger/distrib-2014-02-20/german-fast-caseless.tagger -tokenize false -sentenceDelimiter newline -outputFormatOptions keepEmptySentences -textFile $ARGV[0] > $ARGV[0].pos");
 
 open fh, "$ARGV[0].pos" or die;
 
 while (<fh>) {
   chomp;
-  next if (/^\s*$/);
+  if (/^\s*$/) {
+    print "\n";
+    next;
+  }
   @toks = split /\s+/;
   $l = "";
   foreach $tok (@toks) {

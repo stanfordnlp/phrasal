@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -113,22 +114,22 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   @Override
-  public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
-    return getInitialHeuristic(foreignSequence, options, scorer, translationId, DEBUG);
+  public double getInitialHeuristic(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int sourceInputId) {
+    return getInitialHeuristic(sourceSequence, sourceInputProperties, options, scorer, sourceInputId, DEBUG);
   }
 
   @SuppressWarnings("unchecked")
-  public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId, boolean debug) {
+  public double getInitialHeuristic(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int sourceInputId, boolean debug) {
 
-    int foreignSequenceSize = foreignSequence.size();
+    int foreignSequenceSize = sourceSequence.size();
 
     SpanScores viterbiSpanScores = new SpanScores(foreignSequenceSize);
 
     if (debug) {
       System.err.println("IsolatedPhraseForeignCoverageHeuristic");
-      System.err.printf("Foreign Sentence: %s\n", foreignSequence);
+      System.err.printf("Foreign Sentence: %s\n", sourceSequence);
 
       System.err.println("Initial Spans from PhraseTable");
       System.err.println("------------------------------");
@@ -148,8 +149,8 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
       for (ConcreteRule<TK,FV> option : options.get(i)) {
         if (IGNORE_TGT && option.abstractRule instanceof DTURule)
           continue;
-        Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
-            option, translationId);
+        Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, 
+            option, sourceInputId);
         List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
             .ruleFeaturize(f);
         double score = scorer.getIncrementalScore(phraseFeatures), childScore = 0.0;
@@ -185,7 +186,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
       }
     }
-    dumpScores(viterbiSpanScores, foreignSequence, "InitialMinimums", debug);
+    dumpScores(viterbiSpanScores, sourceSequence, "InitialMinimums", debug);
 
     if (debug) {
       System.err.println();
@@ -256,7 +257,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
         }
       }
     }
-    dumpScores(viterbiSpanScores, foreignSequence, "Final Scores", debug);
+    dumpScores(viterbiSpanScores, sourceSequence, "Final Scores", debug);
 
     hSpanScores = viterbiSpanScores;
 
@@ -264,7 +265,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
     if (Double.isInfinite(hCompleteSequence) || Double.isNaN(hCompleteSequence)) {
       //hCompleteSequence = MINUS_INF;
-      getInitialHeuristic(foreignSequence, options, scorer, translationId, true);
+      getInitialHeuristic(sourceSequence, sourceInputProperties, options, scorer, sourceInputId, true);
       throw new RuntimeException("Error: h is either NaN or infinite: " + hCompleteSequence);
     }
 

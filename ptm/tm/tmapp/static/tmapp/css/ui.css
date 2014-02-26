@@ -1,0 +1,21 @@
+#table-main-steps {
+   border:none;
+   font-size:120%;
+}
+
+#table-main-steps .left-col {
+   margin-left:0;
+   padding-left:0;
+}
+
+#table-main-steps .right-col {
+   padding-left:30px;
+}
+
+.step-complete {
+   color:MediumSeaGreen;
+}
+
+.step-incomplete {
+   color:IndianRed;
+}

@@ -3,11 +3,11 @@ package edu.stanford.nlp.mt.wordcls;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.base.HasIntegerIdentity;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.IntegerArrayIndex;
-import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
 
 /**
  * An (semi!)-efficient implementation of n-gram history storage.
@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
 public class NgramHistory implements Iterable<IString>,HasIntegerIdentity {
   
   // This data structure is threadsafe
-  private static final IntegerArrayIndex index = new TrieIntegerArrayIndex();
+  private static final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
   
   private final int id;
   
