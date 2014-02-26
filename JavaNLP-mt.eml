@@ -6,92 +6,92 @@
 		<testFolder url="file://$MODULE_DIR$/test/src"/>
 	</contentEntry>
 	<lib name="tokyocabinet.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tokyocabinet.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/tokyocabinet.jar!/"/>
 	</lib>
 	<lib name="create_phrasedb.jar" scope="COMPILE">
 		<srcroot url="file://C:/cygwin/home/daniel/terp.v1/src"/>
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/create_phrasedb.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/create_phrasedb.jar!/"/>
 	</lib>
 	<lib name="meteor.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/meteor.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/meteor.jar!/"/>
 	</lib>
 	<lib name="optimize_terp.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/optimize_terp.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/optimize_terp.jar!/"/>
 	</lib>
 	<lib name="terp.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/terp.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/terp.jar!/"/>
 	</lib>
 	<lib name="tercom.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/tercom.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/tercom.jar!/"/>
 	</lib>
 	<lib name="JDBM-3.0-alpha2.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/JDBM-3.0-alpha2.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib/JDBM-3.0-alpha2.jar!/"/>
 	</lib>
 	<lib name="pinyin4j-2.5.0.jar" scope="COMPILE">
 		<srcroot url="jar://$MODULE_DIR$/libsrc/pinyin4j-2.5.0.zip!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/pinyin4j-2.5.0.zip!/"/>
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/pinyin4j-2.5.0.jar!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/mt/libsrc/pinyin4j-2.5.0.zip!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/pinyin4j-2.5.0.jar!/"/>
 	</lib>
 	<lib name="jetty-annotations-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-annotations-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-annotations-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-client-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-client-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-client-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-continuation-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-continuation-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-continuation-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-deploy-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-deploy-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-deploy-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-http-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-http-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-http-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-io-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-io-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-io-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-jaas-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jaas-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-jaas-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-jmx-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jmx-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-jmx-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-jndi-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-jndi-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-jndi-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-plus-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-plus-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-plus-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-proxy-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-proxy-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-proxy-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-rewrite-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-rewrite-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-rewrite-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-security-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-security-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-security-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-server-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-server-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-server-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-servlet-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-servlet-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-servlet-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-servlets-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-servlets-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-servlets-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-util-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-util-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-util-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-webapp-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-webapp-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-webapp-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jetty-xml-9.0.4.v20130625.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jetty-xml-9.0.4.v20130625.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jetty-xml-9.0.4.v20130625.jar!/"/>
 	</lib>
 	<lib name="jopt-simple.jar" scope="COMPILE">
 		<srcroot url="jar://$MODULE_DIR$/libsrc/jopt-simple-4.3-sources.jar!/"/>
-		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-4.3-sources.jar!/"/>
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jopt-simple.jar!/"/>
+		<relative-module-src project-related="jar://$PROJECT_DIR$/mt/libsrc/jopt-simple-4.3-sources.jar!/"/>
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/mt/lib-research/jopt-simple.jar!/"/>
 	</lib>
 </component>
