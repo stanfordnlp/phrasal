@@ -43,7 +43,7 @@ class Vocabulary : public base::Vocabulary {
 };
 
 // Sorry for imposing my limitations on your code.
-#define NPLM_MAX_ORDER 7
+#define NPLM_MAX_ORDER 15
 
 struct State {
   WordIndex words[NPLM_MAX_ORDER - 1];

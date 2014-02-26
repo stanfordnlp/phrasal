@@ -710,7 +710,7 @@ public class OnlineTuner {
       // Initialize according to Moses heuristic
       Set<String> featureNames = Generics.newHashSet(weights.keySet());
       featureNames.addAll(BASELINE_DENSE_FEATURES);
-      for (String key : weights.keySet()) {
+      for (String key : featureNames) {
         if (key.startsWith("LM")) {
           weights.setCount(key, 0.5);
         } else if (key.startsWith("WordPenalty")) {
