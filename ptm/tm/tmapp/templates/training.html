@@ -128,12 +128,12 @@
 {% elif step == 5 %}
 <h3>Description of the CAT Modes</h3>
 
-<p>This experiment tests the difference between two different CAT modes: post-edit and interactive. The modes have similar interfaces that differ only in terms of the type of assistance offered. You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Please work as quickly and as accurately as you can.</p>
+<p>This experiment tests the difference between two different CAT modes: post-edit and interactive. The modes have similar interfaces that differ only in terms of the type of assistance offered. You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Please translate as quickly and as accurately as you can.</p>
 
-<p>Both interfaces adhere to the following target text convention:
+<p>Both interfaces adhere to the following {{ tgt_lang }} target text convention:
 <ul>
   <li><span style="color:#000">Black text</span> : belongs to human translator, never modified by machine.</li>
-  <li><span style="color:#999">Gray text</span> : belongs to machine, never modified by human translator. In the post-edit mode, the gray text immediately becomes black, indicating human ownership. In the interactive mode, the human can select/accept parts of the gray text.</li>
+  <li><span style="color:#999">Gray text</span> : belongs to machine, never modified by human translator. In the post-edit mode, the gray text immediately becomes black, indicating human ownership. In the interactive mode, the human can accept parts of the gray text, but cannot edit or manipulate it.</li>
 </ul>
 </p>
 
@@ -143,17 +143,20 @@
 
 <h3>Interactive Interface</h3>
 
-<p>Each textbox will now be populated with gray text. You can accept the text immediately after your cursor by pressing the Tab key. A drop-down will sometimes show several translation options, and the Tab key always selects the top translation. You can filter the drop-down by typing, or navigate it with the arrow keys. Accepted text will turn black.</p>
+<p>Each textbox will now be populated with gray text. You can accept the gray text adjacent to your cursor by pressing the Tab key. Accepted text turns black. You may also enter text as usual, and edit any black text. Think of it this way: to the left of your cursor is a standard text box, and to the right is a static area that indicates the machine's best suggestion. A drop-down will sometimes show several translation options, and the Tab key always selects the top option. You can filter the drop-down by typing, or navigate it with the arrow keys. The machine suggestion will update in real-time based on the black text that you've accepted.</p>
+
+<p>The interface is designed to be operated from the keyboard. The various menus are clickable as you would expect, but with some practice we expect that you won't need to lift your hands from the keyboard.</p>
 
 <p>The interactive interface includes three types of aides:
   <ul>
-  <li>Term lookup : implemented as hover over source text</li>
-  <li>Full MT : implemented as gray text</li>
-  <li>In-context translation options : implemented as drop-down and gray text updates while editing</li>
+  <li>Term lookup : implemented as hover over source text. You can click on the term options to accept them.</li>
+  <li>Full MT : implemented as gray text.</li>
+  <li>In-context translation options : implemented as drop-down and gray text updates while editing.</li>
   </ul>
 </p>
 
-<p><b>IMPORTANT</b>: Only black text will be submitted when you press Submit. If you want to submit a full suggestion, then you need to Tab through it. If there is extra gray text at the end of your translation, don't worry. It won't be submitted.</p>
+<h3>IMPORTANT: Submitting Translations</h3>
+<p>Only black text will be submitted when you press Submit. In interactive mode, if you want to submit a full suggestion, then you need to Tab through it. If there is extra gray text at the end of your translation, don't worry. It won't be submitted. THE GRAY TEXT SIMPLY REFLECTS THE MACHINE'S BEST SUGGESTION.</p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -162,17 +165,19 @@
 </div>
 
 {% elif step == 6 %}
-<p>Please watch this tutorial, which explains the features of the CAT interfaces.</p>
+<p>Please watch this tutorial, which narrates the features of the CAT interfaces.</p>
 
 <iframe width="640" height="480" src="//www.youtube.com/embed/ktRebX9SA5Y" frameborder="0" allowfullscreen></iframe>
 
 <h3>IMPORTANT: Using the Interactive Interface</h3>
-<p>Interactive translation is a new tool, and we strongly encourage you to consider using it in a new way. We recognize that some translators "read through" a source text before working. This is called global planning. In the interactive mode, we encourage you to try local planning instead. Read a source phrase or two, and then dive into translation. The machine will revise it's suggestion as you work. We want to see if interactive translation can speed up translation---while retaining or even improving quality. Reducing planning might be one way to increase productivity.</p>
+<p>Interactive translation is a new tool, and we strongly encourage you to consider using it in a new way. We recognize that some translators &ldquo;read through&rdquo; a source text before working. This is called <b>global planning</b>. In the interactive mode, we encourage you to try <b>local planning</b> instead. Read a source phrase or two, and then dive into translation. The machine will revise it's suggestion as you work. Our goal is to improve human translator productivity, and we want to see if you can find a way to use the tool to increase throughput and/or quality. Reducing global planning might be one way to increase productivity.</p>
 
 <h3>Practicing with the Interfaces</h3>
-<p>When you press the button below, the translator workbench will open. The workbench will alternate between the post-edit and interactive modes. Take your time. You will be paid for these translations, but the idle timer will not be present. We want you to develop some proficiency with the interfaces prior to starting the experiment.</p>
+<p>When you press the button below, the translator workbench will open for practice. The workbench will alternate between the post-edit and interactive modes. Take your time, especially with the interactive interface. You don't need to translate all of the sentences or documents---feel free to skip some of them---as they are for practice only. We want you to develop some proficiency with the interfaces prior to starting the experiment.</p>
 
-<p>When you feel proficient, please click the link at the bottom of the workbench interface to return to the homepage. Then you can start the experiment.</p>
+<p>We will add an additional $10 to your payment for watching the video and practicing with the workbench.</p>
+
+<p>When you feel proficient, please click the button at the bottom of the workbench interface to return to the homepage. Then you can start the actual translation experiment.</p>
 
 <div>
 <form action="{{ ui_link }}">
