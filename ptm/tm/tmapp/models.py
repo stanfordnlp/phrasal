@@ -183,8 +183,8 @@ class ExitSurveyData(models.Model):
 	exit_more_efficient = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
 
         # Interactive MT questions
-	exit_itm_most_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
-	exit_itm_least_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
+	exit_itm_most_useful = models.CharField( max_length = 5, choices = choices.IMT_AID_CHOICES, default = None )
+	exit_itm_least_useful = models.CharField( max_length = 5, choices = choices.IMT_AID_CHOICES, default = None )
 	exit_useful_src_lookup = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_inlined = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_suggestions = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )

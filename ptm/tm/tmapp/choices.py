@@ -25,9 +25,9 @@ GAZE_CHOICES = (('src', 'Source text'),
                 ('tgtmt', 'Target MT suggestion'),
                 ('other', 'Other'))
 
-IMT_AID_CHOICES = (('srclookup', 'Source text lookup with mouse'),
-                   ('tgtdropdown','Target text drop-down with autocomplete'),
-                   ('tgt1best', 'Target best full translation'),
+IMT_AID_CHOICES = (('srclookup', 'Source text lookup with mouse hover'),
+                   ('tgtdropdown','Target text drop-down'),
+                   ('tgt1best', 'Target text best full translation (gray text)'),
                    ('reordering', 'Reordering of target spans'))
 
 # Basic POS categories that may be difficult to translate
