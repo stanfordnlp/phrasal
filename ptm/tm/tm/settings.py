@@ -190,6 +190,8 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.Loader',
 )
 
+
+LOGGING_LEVEL='DEBUG'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -200,17 +202,17 @@ LOGGING = {
     },
     'handlers': {
         'null': {
-            'level':'DEBUG',
+            'level':LOGGING_LEVEL,
             'class':'django.utils.log.NullHandler',
         },
         'default': {
-            'level':'DEBUG',
+            'level':LOGGING_LEVEL,
             'class':'logging.FileHandler',
             'filename': os.path.join(BASE_DIR,'logs/server.log'),
             'formatter':'verbose',
         },  
         'request_handler': {
-            'level':'DEBUG',
+            'level':LOGGING_LEVEL,
             'class':'logging.FileHandler',
             'filename': os.path.join(BASE_DIR,'logs/request.log'),
             'formatter':'verbose',
@@ -219,17 +221,17 @@ LOGGING = {
     'loggers': {
         '': { # Catch-all logger that handles all events
             'handlers': ['default'],
-            'level': 'DEBUG',
+            'level': LOGGING_LEVEL,
             'propagate': True
         },
         'django.request': { # Logs all requests to the server
             'handlers': ['request_handler'],
-            'level': 'DEBUG',
+            'level': LOGGING_LEVEL,
             'propagate': False
         },
         'django.db.backends': { # Stop SQL debug from logging to main logger
             'handlers': ['null'],
-            'level': 'DEBUG',
+            'level': LOGGING_LEVEL,
             'propagate': False
         },
     }
