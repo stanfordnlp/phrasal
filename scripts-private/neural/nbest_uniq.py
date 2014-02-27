@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # Author: Minh-Thang Luong <luong.m.thang@gmail.com>, created on Tue Aug  6 13:33:55 PDT 2013
 
 """
@@ -79,7 +79,10 @@ def process_files(in_file, out_file):
     eachline = clean_line(eachline)
     tokens = re.split(' \|\|\| ', eachline)
     if len(tokens)>=2:
-      sent_map[tokens[1]] = 1
+      sent = clean_line(tokens[1])
+      if sent == '':
+        continue
+      sent_map[sent] = 1
     else:
       sys.stderr.write('! Line % doesn\'t have a translation\n' % line_id)
       sys.exit(1)
@@ -91,7 +94,7 @@ def process_files(in_file, out_file):
   sys.stderr.write('done! Num lines = %d, num distinct lines = %d\n' % (line_id, len(sent_map)))
 
   for eachline in sent_map:
-    distinct_ouf.write('0 %s\n' % eachline) 
+    distinct_ouf.write('%s\n' % eachline) 
 
   inf.close()
   distinct_ouf.close()
