@@ -30,7 +30,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '4d40c118!g2(q9yf#)e!yfg6uhf(+rxmgjz5%y0&e+ki=w21yo'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['ptm.stanford.edu']
 
 
 # Application definition

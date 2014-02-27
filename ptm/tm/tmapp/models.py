@@ -112,12 +112,13 @@ class TranslationSession(models.Model):
     log = models.TextField(null=True,blank=True)
 
     def __unicode__(self):
-        return '%s %s ui: %s tgt_lang: %s done: %s training: %s' % (self.user.username,
+        return '%s %s ui: %s tgt_lang: %s done: %s training: %s order: %d' % (self.user.username,
                                                                     self.src_document.url,
                                                                     self.interface,
                                                                     self.tgt_language.code,
                                                                     str(self.complete),
-                                                                    str(self.training))
+                                                                    str(self.training),
+                                                                              self.order)
     
 class DemographicData(models.Model):
     """

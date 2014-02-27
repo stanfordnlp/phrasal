@@ -5,18 +5,15 @@
 # (keep lists in same format)
 #####################################################
 
-my $oldid = -1; 
-my $maxsize = $ARGV[0];
+$id = -1;
 
+#open(F,"sort -s -k 1n -k 10nr -t '|' --buffer-size=2g |");
 while(<STDIN>) {
-	$skip=0;
-	/^(\d+)\s+/;
-	$id = $1;
-	if($id == $oldid) {
-		$skip=1 if ++$size > $maxsize;
-	} else {
-		$oldid = $id;
-		$size=1;
+	/^(\d+)\s+\|\|\|/;
+	if($id != $1) {
+		warn "Missing sentence: $id+1 != $1\n" if $1 != $id+1;
+		$id = $1;
+		print;
 	}
-	print $_ unless $skip;
 }
+close(F);
