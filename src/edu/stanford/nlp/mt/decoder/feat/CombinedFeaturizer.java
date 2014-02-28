@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +14,7 @@ import edu.stanford.nlp.util.Generics;
  * Container class for featurizers.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
@@ -76,7 +76,10 @@ public class CombinedFeaturizer<TK, FV> extends
   }
 
   /**
-	 */
+   * Constructor.
+   * 
+   * @param featurizers
+   */
   public CombinedFeaturizer(List<Featurizer<TK, FV>> featurizers) {
     this.featurizers = Generics.newArrayList(featurizers);
     int id = -1;
@@ -96,42 +99,20 @@ public class CombinedFeaturizer<TK, FV> extends
     return nbStatefulFeaturizers;
   }
 
-  /**
-	 */
-  public CombinedFeaturizer(Featurizer<TK, FV>...featurizers) {
-    this(Arrays.asList(featurizers));
-    
-    // Initialize rule featurizers
-    initialize();
-  }
-
-  @SuppressWarnings("unchecked")
   @Override
   public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
-
-    List<Object> featureValueLists = Generics.newArrayList(featurizers.size());
+    List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if ( ! (featurizer instanceof DerivationFeaturizer)) {
-        continue;
-      }
-      DerivationFeaturizer<TK,FV> incFeaturizer = (DerivationFeaturizer<TK,FV>) featurizer;
-      List<FeatureValue<FV>> listFeatureValues = incFeaturizer.featurize(f);
-      if (listFeatureValues != null) {
-        featureValueLists.add(listFeatureValues);
-      }
-    }
-    
-    List<FeatureValue<FV>> featureValues = Generics.newArrayList(featureValueLists.size());
-    for (Object o : featureValueLists) {
-      if (o instanceof FeatureValue) {
-        featureValues.add((FeatureValue<FV>) o);
-        continue;
-      }
-      List<FeatureValue<FV>> listFeatureValues = (List<FeatureValue<FV>>) o;
-      // profiling reveals that addAll is slow due to a buried call to clone()
-      for (FeatureValue<FV> fv : listFeatureValues) {
-        if (fv.name != null && fv.value != 0.0)
-          featureValues.add(fv);
+      if (featurizer instanceof DerivationFeaturizer) {
+        List<FeatureValue<FV>> listFeatureValues = 
+            ((DerivationFeaturizer<TK,FV>) featurizer).featurize(f);
+        if (listFeatureValues != null) {
+          for (FeatureValue<FV> fv : listFeatureValues) {
+            if (fv.name != null) {
+              featureValues.add(fv);
+            }
+          }
+        }
       }
     }
     return featureValues;
@@ -141,19 +122,17 @@ public class CombinedFeaturizer<TK, FV> extends
   public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (!(featurizer instanceof RuleFeaturizer)) {
-        continue;
-      }
-      RuleFeaturizer<TK, FV> ruleFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
-      List<FeatureValue<FV>> listFeatureValues = ruleFeaturizer
-          .ruleFeaturize(f);
-      if (listFeatureValues != null) {
-        boolean doNotCache = ruleFeaturizer.isolationScoreOnly();
-        // profiling reveals that addAll is slow due to a buried call to clone()
-        for (FeatureValue<FV> fv : listFeatureValues) {
-          if (fv.name != null) {
-            fv.doNotCache = doNotCache;
-            featureValues.add(fv);
+      if (featurizer instanceof RuleFeaturizer) {
+        RuleFeaturizer<TK, FV> ruleFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
+        List<FeatureValue<FV>> listFeatureValues = 
+            ((RuleFeaturizer<TK, FV>) featurizer).ruleFeaturize(f);
+        if (listFeatureValues != null) {
+          boolean doNotCache = ruleFeaturizer.isolationScoreOnly();
+          for (FeatureValue<FV> fv : listFeatureValues) {
+            if (fv.name != null) {
+              fv.doNotCache = doNotCache;
+              featureValues.add(fv);
+            }
           }
         }
       }
@@ -163,10 +142,10 @@ public class CombinedFeaturizer<TK, FV> extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> foreign) {
+      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> sourceSequence) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
-        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, foreign);
+        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, sourceSequence);
       }
     }
   }
