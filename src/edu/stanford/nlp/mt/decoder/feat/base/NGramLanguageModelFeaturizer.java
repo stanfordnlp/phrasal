@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
@@ -84,7 +84,7 @@ RuleFeaturizer<IString, String> {
     this.featureName = args[1];
 
     // Named parameters
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.isClassBased = PropertiesUtils.getBool(options, "classBased", false);
     this.targetClassMap = isClassBased ? TargetClassMap.getInstance() : null;
   }
