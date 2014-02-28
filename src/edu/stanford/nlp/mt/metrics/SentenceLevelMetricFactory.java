@@ -39,6 +39,10 @@ public final class SentenceLevelMetricFactory {
       // Nakov's extensions to BLEU+1
       return new BLEUGain<IString,String>(true);
     
+    } else if (scoreMetricStr.equals("bleu-nakov-unscaled")) {
+      // Nakov's extensions to BLEU+1
+      return new BLEUGain<IString,String>(DEFAULT_ORDER, true, false);
+    
     } else if (scoreMetricStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay
       return new BLEUOracleCost<IString,String>(DEFAULT_ORDER, false);
