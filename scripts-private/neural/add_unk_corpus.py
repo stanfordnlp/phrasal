@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # Author: Minh-Thang Luong <luong.m.thang@gmail.com>, created on Thu Aug  1 14:45:05 PDT 2013
 
 """

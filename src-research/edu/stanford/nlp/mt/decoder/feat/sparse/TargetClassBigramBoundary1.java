@@ -14,6 +14,7 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
@@ -55,7 +56,7 @@ public class TargetClassBigramBoundary1 extends DerivationFeaturizer<IString, St
    * @param args
    */
   public TargetClassBigramBoundary1(String...args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFile");
 //    if (addDomainFeatures) {
 //      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));

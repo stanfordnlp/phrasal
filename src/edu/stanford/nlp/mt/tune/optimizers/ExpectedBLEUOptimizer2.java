@@ -34,6 +34,12 @@ import edu.stanford.nlp.stats.Counters;
  */
 public class ExpectedBLEUOptimizer2 extends AbstractOnlineOptimizer {
 
+  // Testing options
+  public static final boolean LENGTH_SCALE = System.getProperty("ebLengthScale") != null;
+  public static final boolean CONVEX_TRANSFORM = System.getProperty("ebConvexTransform") != null;
+  public static final double TEMPERATURE = System.getProperty("ebTemperature") == null ? 1.0 : 
+    Double.parseDouble(System.getProperty("ebTemperature"));
+  
   static public boolean VERBOSE = false;
 
   private static final int INITIAL_CAPACITY = 5000;
@@ -52,7 +58,7 @@ public class ExpectedBLEUOptimizer2 extends AbstractOnlineOptimizer {
         .iterator();
     for (int i = 0; iter.hasNext(); i++) {
       ScoredFeaturizedTranslation<IString, String> trans = iter.next();
-      scores[i] = OptimizerUtils.scoreTranslation(wts, trans);
+      scores[i] = OptimizerUtils.scoreTranslation(wts, trans) / TEMPERATURE;
       if (scores[i] > scores[max_i])
         max_i = i;
     }
@@ -79,17 +85,35 @@ public class ExpectedBLEUOptimizer2 extends AbstractOnlineOptimizer {
     Counter<String> expectedF = new ClassicCounter<String>(INITIAL_CAPACITY);
     double expectedLoss = 0;
 
+    int minLength = Integer.MAX_VALUE;
+    if (LENGTH_SCALE) {
+      for (Sequence<IString> sentence : references) {
+        if (sentence.size() < minLength) {
+          minLength = sentence.size();
+        }
+      }
+    }
+    
     double logZ = logZ(translations, weights);
     double argmaxScore = Double.NEGATIVE_INFINITY;
     double argmaxP = 0;
     double argmaxEval = 0;
     for (RichTranslation<IString,String> trans: translations) {
-      double score =  OptimizerUtils.scoreTranslation(weights, trans);
+      double score =  OptimizerUtils.scoreTranslation(weights, trans) / TEMPERATURE;
       double logP = score - logZ;
       double p = Math.exp(logP);
       double eval = scoreMetric.score(sourceId, source, references, trans.translation);
       // System.err.printf("score: %.3f p: %.3f eval %.3f\n", score, p, eval);
-      double Eeval = p*Math.pow(eval, 2.0);
+      
+      // Apply a convex function and then scale up.
+      if (CONVEX_TRANSFORM) {
+        eval = Math.pow(eval, 2.0);
+      }
+      if (LENGTH_SCALE) {
+        eval *= minLength;
+      }
+      
+      double Eeval = p*eval;
       expectedLoss += Eeval;
       for (FeatureValue<String> feat : trans.features) {
         double EfeatEval = Eeval*feat.value;

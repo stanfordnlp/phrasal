@@ -30,7 +30,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '4d40c118!g2(q9yf#)e!yfg6uhf(+rxmgjz5%y0&e+ki=w21yo'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['ptm.stanford.edu']
 
 
 # Application definition
@@ -190,6 +190,8 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.Loader',
 )
 
+
+LOGGING_LEVEL='DEBUG'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -200,17 +202,17 @@ LOGGING = {
     },
     'handlers': {
         'null': {
-            'level':'DEBUG',
+            'level':LOGGING_LEVEL,
             'class':'django.utils.log.NullHandler',
         },
         'default': {
-            'level':'DEBUG',
+            'level':LOGGING_LEVEL,
             'class':'logging.FileHandler',
             'filename': os.path.join(BASE_DIR,'logs/server.log'),
             'formatter':'verbose',
         },  
         'request_handler': {
-            'level':'DEBUG',
+            'level':LOGGING_LEVEL,
             'class':'logging.FileHandler',
             'filename': os.path.join(BASE_DIR,'logs/request.log'),
             'formatter':'verbose',
@@ -219,17 +221,17 @@ LOGGING = {
     'loggers': {
         '': { # Catch-all logger that handles all events
             'handlers': ['default'],
-            'level': 'DEBUG',
+            'level': LOGGING_LEVEL,
             'propagate': True
         },
         'django.request': { # Logs all requests to the server
             'handlers': ['request_handler'],
-            'level': 'DEBUG',
+            'level': LOGGING_LEVEL,
             'propagate': False
         },
         'django.db.backends': { # Stop SQL debug from logging to main logger
             'handlers': ['null'],
-            'level': 'DEBUG',
+            'level': LOGGING_LEVEL,
             'propagate': False
         },
     }

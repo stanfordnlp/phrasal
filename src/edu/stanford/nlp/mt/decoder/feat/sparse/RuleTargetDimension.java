@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -35,7 +36,7 @@ public class RuleTargetDimension implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public RuleTargetDimension(String...args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFeature");
   }
 

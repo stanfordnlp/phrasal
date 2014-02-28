@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -43,7 +44,7 @@ public class DomainAdaptation extends DerivationFeaturizer<IString, String> {
     if (args.length < 1) {
       throw new RuntimeException("Specify the phrase table feature index of the in-domain indicator feature");
     }
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.addAdjacentRuleFeature = options.containsKey("adjacentRuleFeature");
     this.addDomainSpecificFeatures = options.containsKey("domainSpecificFeature");
     this.addDomainLengthRatio = options.containsKey("domainLengthRatioFeature");

@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -38,7 +39,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
    * @param args
    */
   public DiscriminativeSignedDistortion(String...args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFeature");
   }
   
