@@ -314,17 +314,12 @@ public class PhraseExtractNeuralTraining {
           while (true){
             int leftE = i-distance;
             int rightE = i+distance;
+
+            // search right (like Jacob did)
+            if (rightE<esize) fIndices = sent.e2f(rightE);
             
-            if (extractOpt==0) { // Jacob: search right, then left
-              // search current/right
-              if (rightE<esize) fIndices = sent.e2f(rightE);
-              
-              // search left
-              if (fIndices.isEmpty() && leftE!= rightE && leftE>0) fIndices = sent.e2f(leftE);
-            } else if (extractOpt==1) { // search within ngram
-              // search current/left, don't go beyond ngram
-              if (fIndices.isEmpty() && leftE>0 && distance<tgtNgram) fIndices = sent.e2f(leftE);              
-            }
+            // search left if no alignment
+            if (fIndices.isEmpty() && leftE!= rightE && leftE>0) fIndices = sent.e2f(leftE);
             
             // either found or distance is too large now
             if(!fIndices.isEmpty() || (leftE<0 && rightE>=esize)) break; 
