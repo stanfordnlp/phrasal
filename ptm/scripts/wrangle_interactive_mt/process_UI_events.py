@@ -88,7 +88,7 @@ class SentenceState:
             return "User changed \"" + self.firstSuggestion + "\" to target suggestion \"" + newToken+"\""
         elif newToken == self.lastSourceSuggestion:
             return "User selected source suggestion \""+newToken +"\"" 
-        elif newToken in self.sourceSuggestions and self.index(newToken) > 0:
+        elif newToken in self.sourceSuggestions and self.sourceSuggestions.index(newToken) > 0:
             return "User changed \"" + self.firstSuggestion + "\" to source suggestion \"" + newToken+"\""
         else:
             return "User typed \"" + newToken + "\""
