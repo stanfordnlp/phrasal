@@ -67,7 +67,12 @@ class SentenceState:
                 self.targetSuggestions = entry['keyValues']['candidates']
         #Capture user focus on target suggestion
         if entry['element'] == 'targetSuggestions' and 'optionIndex' in entry['keyValues'] and entry['keyValues']['optionIndex'] is not None:
-            self.lastTargetSuggestion = self.targetSuggestions[entry['keyValues']['optionIndex']]
+            # TODO(spenceg): This throws an exception. Need to fix.
+            try:
+                self.lastTargetSuggestion = self.targetSuggestions[entry['keyValues']['optionIndex']]
+            except:
+                sys.stderr.write('WARNING: Exception\n')
+                self.lastTargetSuggestion = ''
         #Capture source suggestions
         if entry['element'] == 'sourceSuggestions' and 'targets' in entry['keyValues']:
             if len(entry['keyValues']['targets']) > 0:
