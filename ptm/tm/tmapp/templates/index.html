@@ -6,6 +6,10 @@
 {% endblock %}
 
 {% block user_static %}
+
+{% load compressed %}
+{% compressed_css 'tmapp_css' %}
+
 {% endblock %}
 
 {% block header %}
@@ -14,6 +18,7 @@ Stanford Translation Study
 
 {% block content %}
 
+{% if not status.demographic_form_done %}
 <p>Thank you for helping us with this experiment! We are a group of researchers in the <a href="http://cs.stanford.edu/" target="_blank">Computer Science Department at Stanford University</a> working on translation interfaces. Our goal is to how study how translators, like you, use machine-assisted translation systems.</p>
 
 <p><b>Privacy</b>: During the study, we will record your responses (i.e., translations), keystrokes, mouse actions, and browser settings. We will also ask you to fill out two surveys on your demographic information and about your experience with this study. We will not collect any other personal information.</p>
@@ -24,19 +29,44 @@ Stanford Translation Study
 
 <p>By clicking below, you understand that your participation in this study is voluntary, and agree to the collection of your survey and study data.</p>
 
-<!-- TODO(spenceg) This should disappear after the user consents -->
 <div>
 <form action="/tm/demographic">
     <input type="submit" value="I Agree">
 </form>
 </div>
 
-<!-- TODO(spenceg) These should show some status -->
-<h3> Experiment Steps </h3>
-<div><a href="/tm/training">Training</a></div>
-<div><a href="/tm/translate">Translate</a></div>
-<div><a href="/tm/exit">Exit Questionnaire</a></div>
+{% else %}
 
-<div><a href="/bye/">Logout</a></div>
+{% if status.training_done and not status.translate_done %}
+<p>If needed, take an untimed break before clicking 'Translate' to continue with the experiment! </p>
+{% endif %}
+
+<h3> Experiment Steps </h3>
+<table id="table-main-steps">
+  <tr>
+    <td class="left-col"><a href="/tm/training">Training</a></td>
+    <td class="right-col"><span {% if status.training_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
+  </tr>
+  {% if status.training_done %}
+  <tr>
+    <td class="left-col"><a href="/tm/translate">Translate</a></td>
+    <td class="right-col"><span {% if status.translate_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
+  </tr>
+  {% endif %}
+  {% if status.training_done and status.translate_done %}
+  <tr>
+    <td class="left-col"><a href="/tm/exit">Exit Questionnaire</a></td>
+    <td class="right-col"><span {% if status.exit_form_done %} class="step-complete">Complete {% else %} class="step-incomplete">Incomplete {% endif %}</span></td>
+  </tr>
+  {% endif %}
+</table>
+
+<div style="margin-top:2em">
+<form action="/bye/">
+    <input type="submit" value="Logout">
+</form>
+</div>
+
+{% endif %}
 
 {% endblock %}

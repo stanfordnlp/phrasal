@@ -1,12 +1,11 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Generics;
 
 
@@ -42,7 +41,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     this.norm = norm;
     this.customL1 = customL1;
     
-    sumGradSquare = new OpenAddressCounter<String>(expectedNumFeatures, 1.0f);
+    sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
   }
 
   public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda) {
@@ -141,8 +140,8 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     for (Set<String> fGroup: featureGroups.values()) {
       double testUpdateAbsSum = 0;
       int groupSize = fGroup.size();
-      Counter<String> testUpdateCache = new OpenAddressCounter<String>(groupSize, 1.0f);
-      Counter<String> currentRateCache = new OpenAddressCounter<String>(groupSize, 1.0f);
+      Counter<String> testUpdateCache = new ClassicCounter<String>(groupSize);
+      Counter<String> currentRateCache = new ClassicCounter<String>(groupSize);
       for (String feature: fGroup) {
         gValue = gradient.getCount(feature);
         sgsValue = sumGradSquare.getCount(feature);

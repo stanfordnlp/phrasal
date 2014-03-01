@@ -68,6 +68,6 @@ public final class ProcessorFactory {
       return new FrenchPostprocessor(options);
     }
     
-    throw new IllegalArgumentException("Invalid postprocessor langauge code: " + language);
+    throw new IllegalArgumentException("Invalid postprocessor language code: " + language);
   }
 }

@@ -13,13 +13,19 @@ import edu.stanford.nlp.process.PTBTokenizer;
  */
 public class GermanPreprocessor extends CoreNLPPreprocessor {
   
+  private final boolean cased;
+  
   public GermanPreprocessor() {
+    this(false);
+  }
+  public GermanPreprocessor(boolean cased) {
     super(PTBTokenizer.coreLabelFactory());
     tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false");
+    this.cased = cased;
   }
 
   @Override
   public String toUncased(String input) {
-    return input.toLowerCase(Locale.GERMAN);
+    return cased ? input : input.toLowerCase(Locale.GERMAN);
   }
 }

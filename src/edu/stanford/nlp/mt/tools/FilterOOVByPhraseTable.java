@@ -62,7 +62,7 @@ public class FilterOOVByPhraseTable {
   private static Sequence<IString> filterUnknownWords(String input, 
       PhraseGenerator<IString,String> phraseGenerator) {
     Sequence<IString> source = IStrings.tokenize(input);
-    List<ConcreteRule<IString,String>> rules = phraseGenerator.getRules(source, null, -1, null);
+    List<ConcreteRule<IString,String>> rules = phraseGenerator.getRules(source, null, null, -1, null);
 
     CoverageSet possibleCoverage = new CoverageSet();
     for (ConcreteRule<IString,String> rule : rules) {

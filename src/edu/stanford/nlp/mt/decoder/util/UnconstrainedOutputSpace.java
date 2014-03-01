@@ -40,4 +40,7 @@ public class UnconstrainedOutputSpace<TK, FV> implements
   public List<Sequence<IString>> getAllowableSequences() {
     return null;
   }
+
+  @Override
+  public void setSourceSequence(Sequence<IString> sourceSequence) {}
 }

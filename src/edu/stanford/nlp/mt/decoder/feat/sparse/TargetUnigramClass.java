@@ -1,16 +1,16 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Target class unigram insertion.
@@ -24,8 +24,10 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
 
   private final TargetClassMap targetMap = TargetClassMap.getInstance();
   private final boolean addDomainFeatures;
-  private Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
   
+  /**
+   * Constructor.
+   */
   public TargetUnigramClass() {
     this.addDomainFeatures = false;
   }
@@ -36,11 +38,8 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public TargetUnigramClass(String...args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
-    this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+    Properties options = FeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFeature");
   }
   
   @Override
@@ -50,9 +49,8 @@ public class TargetUnigramClass implements RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
-        sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
     for (IString token : f.targetPhrase) {
       String tokenClass = targetMap.get(token).toString();
       String featureString = String.format("%s:%s",FEATURE_NAME,tokenClass);

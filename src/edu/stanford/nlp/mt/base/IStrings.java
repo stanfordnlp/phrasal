@@ -50,6 +50,12 @@ public final class IStrings {
     return new SimpleSequence<IString>(true, istrs);
   }
   
+  /**
+   * Convert String to IString.
+   * 
+   * @param strings
+   * @return
+   */
   static public IString[] toIStringArray(String[] strings) {
     IString[] istrs = new IString[strings.length];
     for (int i = 0; i < istrs.length; i++) {
@@ -58,21 +64,23 @@ public final class IStrings {
     return istrs;
   }
   
+  /**
+   * Convert a List of String to a Sequence.
+   * 
+   * @param seq
+   * @return
+   */
   public static Sequence<IString> toIStringSequence(List<String> seq) {
     IString[] istrs = toIStringArray(seq);
     return new SimpleSequence<IString>(true, istrs);
   }
 
-  static public IString[] toSyncIStringArray(String[] strings) {
-    IString[] istrs = new IString[strings.length];
-    for (int i = 0; i < istrs.length; i++) {
-      synchronized (IString.class) {
-        istrs[i] = new IString(strings[i]);
-      }
-    }
-    return istrs;
-  }
-
+  /**
+   * Convert a collection of String to an IString array.
+   * 
+   * @param strings
+   * @return
+   */
   static public IString[] toIStringArray(Collection<String> strings) {
     IString[] istrs = new IString[strings.size()];
     int i = 0;
@@ -82,17 +90,12 @@ public final class IStrings {
     return istrs;
   }
 
-  static public IString[] toSyncIStringArray(Collection<String> strings) {
-    IString[] istrs = new IString[strings.size()];
-    int i = 0;
-    for (String str : strings) {
-      synchronized (IString.class) {
-        istrs[i++] = new IString(str);
-      }
-    }
-    return istrs;
-  }
-
+  /**
+   * Convert an array of IString to an array of the underlying ids.
+   * 
+   * @param strings
+   * @return
+   */
   static public int[] toIntArray(IString[] strings) {
     int[] intArray = new int[strings.length];
     for (int i = 0; i < strings.length; i++) {
@@ -101,6 +104,12 @@ public final class IStrings {
     return intArray;
   }
 
+  /**
+   * Convert an array of ids to IString.
+   * 
+   * @param ids
+   * @return
+   */
   static public IString[] toIStringArray(int[] ids) {
     IString[] istrs = new IString[ids.length];
     for (int i = 0; i < istrs.length; i++) {
@@ -109,6 +118,12 @@ public final class IStrings {
     return istrs;
   }
 
+  /**
+   * Convert an array of ids to an array of String.
+   * 
+   * @param ids
+   * @return
+   */
   static public String[] toStringArray(int[] ids) {
     String[] strs = new String[ids.length];
     for (int i = 0; i < strs.length; i++) {

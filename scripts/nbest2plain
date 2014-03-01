@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+$id = -1;
+while(<>) {
+ chomp;
+ @f = split / \|\|\| /;
+ if ($f[0] != $id) {
+   print "$f[1]\n";
+   $id = $f[0];
+ } 
+}
+

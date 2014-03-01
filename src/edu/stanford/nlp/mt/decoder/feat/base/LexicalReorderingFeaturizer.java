@@ -2,13 +2,13 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.LexicalReorderingTable;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -19,12 +19,10 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
-import edu.stanford.nlp.mt.decoder.feat.sparse.SparseFeatureUtils;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Generative and discriminative lexicalized reordering models.
@@ -52,7 +50,6 @@ public class LexicalReorderingFeaturizer extends
   private TargetClassMap targetMap;
   
   private final boolean addDomainFeatures;
-  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
 
   /**
    * Constructor for discriminative lexicalized reordering.
@@ -75,7 +72,7 @@ public class LexicalReorderingFeaturizer extends
    */
   public LexicalReorderingFeaturizer(String...args) {
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
-    Properties options = StringUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     // Which reordering classes to extract
@@ -93,10 +90,7 @@ public class LexicalReorderingFeaturizer extends
       targetMap = TargetClassMap.getInstance();
     }
     // Add domain-specific features
-    this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+    this.addDomainFeatures = options.containsKey("domainFeature");
     mlrt = null;
     featureTags = null;
   }
@@ -150,9 +144,8 @@ public class LexicalReorderingFeaturizer extends
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
           features.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId)) {
-            Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
-            String genre = genreInfo.first();
+          if (addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)) {
+            String genre = (String) f.sourceInputProperties.get(InputProperty.Domain);
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
           }
         
@@ -163,9 +156,8 @@ public class LexicalReorderingFeaturizer extends
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
           features.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId)) {
-            Pair<String,Integer> genreInfo = sourceIdInfoMap.get(f.sourceInputId);
-            String genre = genreInfo.first();
+          if (addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)) {
+            String genre = (String) f.sourceInputProperties.get(InputProperty.Domain);
             features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
           }
         }
