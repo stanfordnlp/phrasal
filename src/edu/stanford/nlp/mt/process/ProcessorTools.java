@@ -174,7 +174,9 @@ public final class ProcessorTools {
           sequence.add(createDatum(tChar, Operation.ToUpper.toString(), i, parentToken, charIndex));
         } else {
           // Replace
-          String label = Operation.Replace.toString() + OP_DELIM + sChar;
+          // TODO(spenceg) Disable the replace class right now
+//          String label = Operation.Replace.toString() + OP_DELIM + sChar;
+          String label = Operation.None.toString();
           sequence.add(createDatum(tChar, label, i, parentToken, charIndex));
         }
       }
