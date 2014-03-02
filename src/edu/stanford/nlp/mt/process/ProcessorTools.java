@@ -13,6 +13,9 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.CharAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.OriginalTextAnnotation;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.objectbank.IteratorFromReaderFactory;
@@ -53,42 +56,42 @@ public final class ProcessorTools {
    * @param str
    * @return
    */
-  public static List<CoreLabel> stringToCharacterSequence(String str) {
-    String[] tokens = str.split("\\s+");
-    return stringToCharacterSequence(tokens);
+  public static List<CoreLabel> toCharacterSequence(String str) {
+    Sequence<IString> sequence = IStrings.tokenize(str);
+    return toCharacterSequence(sequence);
   }
   
   /**
    * Convert a tokenized sequence to a character string.
    * 
-   * @param tokens
+   * @param tokenSequence
    * @return
    */
-  public static List<CoreLabel> stringToCharacterSequence(String[] tokens) {
-    List<CoreLabel> sequence = Generics.newArrayList(tokens.length * 7);
-    int charIndex = 0;
-    for (String token : tokens) {
-      if (sequence.size() > 0) {
+  public static List<CoreLabel> toCharacterSequence(Sequence<IString> tokenSequence) {
+    List<CoreLabel> charSequence = Generics.newArrayList(tokenSequence.size() * 7);
+    for (IString token : tokenSequence) {
+      String tokenStr = token.toString();
+      if (charSequence.size() > 0) {
         CoreLabel charLabel = new CoreLabel();
         charLabel.set(CoreAnnotations.TextAnnotation.class, WHITESPACE);
         charLabel.set(CoreAnnotations.CharAnnotation.class, WHITESPACE);
         charLabel.set(CoreAnnotations.ParentAnnotation.class, WHITESPACE);
         charLabel.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, -1);
-        charLabel.setIndex(charIndex++);
-        sequence.add(charLabel);
+        charLabel.setIndex(charSequence.size());
+        charSequence.add(charLabel);
       }
-      for (int j = 0; j < token.length(); ++j) {
+      for (int j = 0, size = tokenStr.length(); j < size; ++j) {
         CoreLabel charLabel = new CoreLabel();
-        String ch = String.valueOf(token.charAt(j));
+        String ch = String.valueOf(tokenStr.charAt(j));
         charLabel.set(CoreAnnotations.TextAnnotation.class, ch);
         charLabel.set(CoreAnnotations.CharAnnotation.class, ch);
-        charLabel.set(CoreAnnotations.ParentAnnotation.class, token);
+        charLabel.set(CoreAnnotations.ParentAnnotation.class, tokenStr);
         charLabel.set(CoreAnnotations.CharacterOffsetBeginAnnotation.class, j);
-        charLabel.setIndex(charIndex++);
-        sequence.add(charLabel);
+        charLabel.setIndex(charSequence.size());
+        charSequence.add(charLabel);
       }
     } 
-    return sequence;
+    return charSequence;
   }
   
   /**
@@ -354,7 +357,7 @@ public final class ProcessorTools {
         System.err.printf("%s: WARNING Illegal operation %s/%s%n", ProcessorTools.class.getName(), text, fields[0]);
         label = Operation.None;
       }
-      if (label == Operation.Whitespace) {
+      if (label == Operation.Whitespace || (label == Operation.None && text.equals(WHITESPACE))) {
         // This is the token delimiter.
         String original = originalToken.toString();
         String[] outputTokens = currentToken.toString().split("\\s+");
