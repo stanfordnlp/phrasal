@@ -270,6 +270,8 @@ public class ClauseTypeLabeller {
           }
           i++;
         }
+        if (firstCommaIdx == gloss.size() -1 )
+          firstCommaIdx = -1;
         if (firstCommaIdx != -1) {
         if (!finiteVerbs.isEmpty() && mainVerbs.isEmpty()) {
           int c = 0;
