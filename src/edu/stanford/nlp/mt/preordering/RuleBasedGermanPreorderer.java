@@ -96,7 +96,17 @@ public class RuleBasedGermanPreorderer {
         HashMap<String, Clause> clauses = labeller.labelTree(parseTree);
         Clause c1 = clauses.get("--C-1");
         if (c1 != null){
-          System.out.println(c1.preorder(clauses));
+          try {
+            System.out.println(c1.preorder(clauses));
+          } catch (Exception e) {
+            e.printStackTrace();
+            List<Tree> gloss = parseTree.getLeaves();
+            for (Tree t : gloss) {
+              System.out.print(t.label().value());
+              System.out.print(" ");
+            }
+            System.out.println("");
+          }
         } else {
           List<Tree> gloss = parseTree.getLeaves();
           for (Tree t : gloss) {
