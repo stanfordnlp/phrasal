@@ -57,9 +57,9 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     p_e2f = Double.parseDouble(comment_f2e[comment_e2f.length - 1]);
     // Read target strings:
     f = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(escape(f2e_line2.split("\\s+"))));
+        IStrings.toIStringArray(escape(f2e_line2.split("\\s+"))));
     e = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(escape(e2f_line2.split("\\s+"))));
+        IStrings.toIStringArray(escape(e2f_line2.split("\\s+"))));
     // Read alignments:
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];
@@ -76,9 +76,9 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     p_f2e = Double.parseDouble(comment_f2e[comment_f2e.length - 1]);
     // Read target strings:
     f = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(escape(f2e_line2.split("\\s+"))));
+        IStrings.toIStringArray(escape(f2e_line2.split("\\s+"))));
     e = new SimpleSequence<IString>(true,
-        IStrings.toSyncIStringArray(extractWordsFromAlignment(f2e_line3)));
+        IStrings.toIStringArray(extractWordsFromAlignment(f2e_line3)));
     // Read alignments:
     f2e = new TreeSet[f.size()];
     e2f = new TreeSet[e.size()];

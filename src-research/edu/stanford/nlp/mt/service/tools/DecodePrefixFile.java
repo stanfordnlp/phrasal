@@ -9,6 +9,8 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.util.Generics;
@@ -47,8 +49,10 @@ public class DecodePrefixFile {
       Sequence<IString> targetPrefix = IStrings.tokenize(prefix);
       List<Sequence<IString>> prefixes = Generics.newLinkedList();
       prefixes.add(targetPrefix);
+      InputProperties inputProperties = new InputProperties();
+      inputProperties.put(InputProperty.TargetPrefix, true);
       List<RichTranslation<IString,String>> nbestList = 
-          p.decode(source, sourceId, 0, N_BEST_SIZE, prefixes, true);
+          p.decode(source, sourceId, 0, N_BEST_SIZE, prefixes, inputProperties);
       for (RichTranslation<IString,String> t : nbestList) {
         System.out.printf("%d\t%.3f\t%s%n", sourceId, t.score, t.translation.toString());
       }

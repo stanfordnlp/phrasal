@@ -112,6 +112,7 @@ elif [ $lang == "English" ]; then
 	fixnl="$fixnl --latin"
     fi
     
+    echo "$CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK > ${outfile}.notPostprocess"
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK > ${outfile}.notPostprocess
 
     # post processing

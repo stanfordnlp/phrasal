@@ -37,24 +37,22 @@ import edu.stanford.nlp.util.StringUtils;
 
 
 /**
- * Language Model based TrueCasing
- * 
+ * Language Model-based TrueCasing.
+ *
  * This class implements n-gram language model based truecasing, an approach
  * similar to that seen Lita et al 2003's paper tRuEcasIng.
- * 
+ *
  * @author danielcer
- * 
  */
-
 public class LanguageModelTrueCaser implements TrueCaser {
 
   private static final int BEAM_SIZE = 50;
-  
+
   static final int MAX_ACRONYM_LIMIT = 4;
 
   private Inferer<IString, String> inferer;
 
-  public static void main(String args[]) throws Exception {
+  public static void main(String[] args) throws Exception {
     if (args.length != 1) {
       System.err
           .println("Usage:\n\tjava ... TrueCaser (language model) < uncased_input > cased_output");
@@ -71,12 +69,13 @@ public class LanguageModelTrueCaser implements TrueCaser {
       String[] tokens = line.split("\\s+");
       int lineNumber = reader.getLineNumber();
       String[] trg = tc.trueCase(tokens, lineNumber);
-      System.out.printf("%s \n", StringUtils.join(trg, " "));
+      System.out.printf("%s %n", StringUtils.join(trg, " "));
     }
 
     System.exit(0);
   }
 
+  @Override
   public void init(String lmFilename) {
 
     MultiBeamDecoder.MultiBeamDecoderBuilder<IString, String> infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder<IString, String>) InfererBuilderFactory
@@ -105,7 +104,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
       lgModels.add(lmFeaturizer.getLM());
 
       // misc. decoder configuration
-      RecombinationFilter<Derivation<IString, String>> recombinationFilter = 
+      RecombinationFilter<Derivation<IString, String>> recombinationFilter =
           new TranslationNgramRecombinationFilter(listFeaturizers);
       infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
@@ -119,12 +118,13 @@ public class LanguageModelTrueCaser implements TrueCaser {
     }
   }
 
+  @Override
   public String[] trueCase(String[] tokens, int id) {
 
     Sequence<IString> source = new SimpleSequence<IString>(true,
         IStrings.toIStringArray(tokens));
     RichTranslation<IString, String> translation = inferer.translate(source,
-        id - 1, new UnconstrainedOutputSpace<IString,String>(), null);
+        id - 1, null, new UnconstrainedOutputSpace<IString,String>(), null);
 
     // manual fix up(s)
     // capitalize the first letter
@@ -142,14 +142,14 @@ public class LanguageModelTrueCaser implements TrueCaser {
 
 class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
 
-  static final String NAME = "AllCasePhrGen";
+  private static final String NAME = "AllCasePhrGen";
 
   public AllCasePhraseGenerator(
       RuleFeaturizer<IString, String> phraseFeaturizer) {
     super(phraseFeaturizer);
   }
 
-  List<String> caseMapGet(String token) {
+  private static List<String> caseMapGet(String token) {
     List<String> casings = new LinkedList<String>();
     if (token.length() == 0) return casings;
 
@@ -171,11 +171,13 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     casings.add(capToken);
     return casings;
   }
-  
+
+  @Override
   public String getName() {
     return NAME;
   }
 
+  @Override
   public List<Rule<IString>> query(
       Sequence<IString> sequence) {
     if (sequence.size() != 1) {
@@ -199,14 +201,15 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
     return list;
   }
 
+  @Override
   public int longestSourcePhrase() {
     return 1;
   }
 
-  public void setCurrentSequence(Sequence<IString> foreign,
-      List<Sequence<IString>> tranList) {
-    // no op
-  }
+  // public void setCurrentSequence(Sequence<IString> foreign,
+  //     List<Sequence<IString>> tranList) {
+  //   // no op
+  // }
 
   @Override
   public int longestTargetPhrase() {
@@ -217,4 +220,5 @@ class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
   public List<String> getFeatureNames() {
     return Generics.newArrayList(1);
   }
+
 }

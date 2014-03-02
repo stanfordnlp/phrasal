@@ -1,20 +1,20 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Target rule boundary bigrams.
@@ -28,7 +28,6 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
 
   private final TargetClassMap targetMap = TargetClassMap.getInstance();
   private final boolean addDomainFeatures;
-  private Map<Integer, Pair<String, Integer>> sourceIdInfoMap;
 
   /**
    * Constructor.
@@ -43,11 +42,8 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
    * @param args
    */
   public TargetClassBigramBoundary(String...args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
-    this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+    Properties options = FeatureUtils.argsToProperties(args);
+    this.addDomainFeatures = options.containsKey("domainFeature");
   }
 
   @Override
@@ -62,9 +58,8 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
     BoundaryState priorState = f.prior == null ? null : (BoundaryState) f.prior.getState(this);
     IString leftEdge = priorState == null ? TokenUtils.START_TOKEN : priorState.classId;
     
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
-        sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
     
     // Detect this phrase
     if (f.targetPhrase != null && f.targetPhrase.size() > 0) {

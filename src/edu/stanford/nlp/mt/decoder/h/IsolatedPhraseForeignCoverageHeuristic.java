@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -69,16 +70,16 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   }
 
   @Override
-  public double getInitialHeuristic(Sequence<TK> foreignSequence,
-      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
+  public double getInitialHeuristic(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int sourceInputId) {
 
-    int foreignSequenceSize = foreignSequence.size();
+    int foreignSequenceSize = sourceSequence.size();
 
     SpanScores viterbiSpanScores = new SpanScores(foreignSequenceSize);
 
     if (DEBUG) {
       System.err.println("IsolatedPhraseForeignCoverageHeuristic");
-      System.err.printf("Foreign Sentence: %s\n", foreignSequence);
+      System.err.printf("Foreign Sentence: %s\n", sourceSequence);
 
       System.err.println("Initial Spans from PhraseTable");
       System.err.println("------------------------------");
@@ -87,8 +88,8 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
     // initialize viterbiSpanScores
     assert (options.size() == 1);
     for (ConcreteRule<TK,FV> option : options.get(0)) {
-      Featurizable<TK, FV> f = new Featurizable<TK, FV>(foreignSequence,
-          option, translationId);
+      Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, 
+          option, sourceInputId);
       List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
           .ruleFeaturize(f);
       double score = scorer.getIncrementalScore(phraseFeatures);

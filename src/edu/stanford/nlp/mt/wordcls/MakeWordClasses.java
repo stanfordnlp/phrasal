@@ -138,7 +138,9 @@ public class MakeWordClasses {
       logger.info("Reading: " + filename);
       LineNumberReader reader = IOTools.getReaderFromFile(filename, inputEncoding);
       for (String line; (line = reader.readLine()) != null;) {
-        Sequence<IString> tokens = IStrings.tokenize(line.trim());
+        line = line.trim();
+        if (line.length() == 0) continue;
+        Sequence<IString> tokens = IStrings.tokenize(line);
         List<IString> history = Generics.newLinkedList(defaultHistory);
         for (IString token : tokens) {
           if (normalizeDigits && TokenUtils.hasDigit(token.toString())) {

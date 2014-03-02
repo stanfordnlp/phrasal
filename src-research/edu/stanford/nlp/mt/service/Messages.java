@@ -87,13 +87,15 @@ public final class Messages {
     public final Language src;
     public final Language tgt;
     public final String text;
+    public final String inputProperties;
     // The id field *must* correspond to the ordinal()
     // method of the associate MessageType.
     protected transient int id;
-    public Request(Language sourceLang, Language targetLang, String source) {
+    public Request(Language sourceLang, Language targetLang, String source, String inputProperties) {
       this.src = sourceLang == null ? Language.UNK : sourceLang;
       this.tgt = targetLang == null ? Language.UNK : targetLang;
       this.text = source == null ? "" : source.trim();
+      this.inputProperties = inputProperties == null ? "" : inputProperties;
     
       // Sanity checking
       assert src != null;
@@ -109,8 +111,8 @@ public final class Messages {
     // The number of translations to generate
     public final int n;
     public final String tgtPrefix;
-    public TranslationRequest(Language sourceLang, Language targetLang, String source, int n, String tgtPrefix) {
-      super(sourceLang, targetLang, source);
+    public TranslationRequest(Language sourceLang, Language targetLang, String source, String inputProps, int n, String tgtPrefix) {
+      super(sourceLang, targetLang, source, inputProps);
       this.n = (n <= 0 || n > 50) ? 10 : n;
       this.id = MessageType.TRANSLATION_REQUEST.ordinal();
       this.tgtPrefix = tgtPrefix == null || tgtPrefix.length() == 0 ? "" : tgtPrefix.trim();
@@ -137,8 +139,8 @@ public final class Messages {
     public final int spanLimit;
     public final String leftContext;
     public RuleQueryRequest(Language sourceLang, Language targetLang,
-        String source, int spanLimit, String leftContext) {
-      super(sourceLang, targetLang, source);
+        String source, String inputProps, int spanLimit, String leftContext) {
+      super(sourceLang, targetLang, source, inputProps);
       this.spanLimit = (spanLimit <= 0 || spanLimit > 500) ? 10 : spanLimit;
       this.leftContext = leftContext;
       this.id = MessageType.RULE_QUERY_REQUEST.ordinal();
@@ -155,7 +157,7 @@ public final class Messages {
   
   public static class UnknownRequest extends Request {
     public UnknownRequest() {
-      super(null, null, null);
+      super(null, null, null, null);
     }
 
     @Override

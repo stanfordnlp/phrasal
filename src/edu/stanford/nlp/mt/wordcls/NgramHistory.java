@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.base.IntegerArrayIndex;
  */
 public class NgramHistory implements Iterable<IString>,HasIntegerIdentity {
   
+  // This data structure is threadsafe
   private static final IntegerArrayIndex index = new DynamicIntegerArrayIndex();
   
   private final int id;

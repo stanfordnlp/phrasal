@@ -44,26 +44,36 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   private static final RuleFeaturizer<IString,String> featurizer = 
       new PhraseTableScoresFeaturizer(NUM_SYNTHETIC_SCORES);
 
-  private final Sequence<IString> sourceSequence;
-  private final int sourceLength;
+  private Sequence<IString> sourceSequence;
   private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
   private final int sourceInputId;
-    
-  public SoftPrefixOutputSpace(Sequence<IString> sourceSequence, Sequence<IString> allowablePrefix, int sourceInputId) {
-    this.sourceSequence = sourceSequence;
-    this.sourceLength = sourceSequence.size();
+
+  /**
+   * Constructor.
+   * 
+   * @param sourceSequence
+   * @param allowablePrefix
+   * @param sourceInputId
+   */
+  public SoftPrefixOutputSpace(Sequence<IString> allowablePrefix, int sourceInputId) {
     this.allowablePrefix = allowablePrefix;
     this.allowablePrefixLength = allowablePrefix.size();
     this.sourceInputId = sourceInputId;
   }
 
+
+  @Override
+  public void setSourceSequence(Sequence<IString> sourceSequence) {
+    this.sourceSequence = sourceSequence;
+  }
+  
   @Override
   public List<ConcreteRule<IString, String>> filter(List<ConcreteRule<IString, String>> ruleList) {
     // Allow any target word to map anywhere into the source, but with high
     // cost so that only OOVs and words outside the distortion limit will
     // be used.
-    for (int i = 0; i < sourceLength; ++i) {
+    for (int i = 0, limit = sourceSequence.size(); i < limit; ++i) {
       final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
       for (int j = 0, size = allowablePrefix.size(); j < size; ++j) {
         ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, 
@@ -93,7 +103,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     sourceCoverage.set(sourceIndex);
     ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
         sourceCoverage, featurizer, null, sourceSequence, 
-        PHRASE_TABLE_NAME, sourceInputId);
+        PHRASE_TABLE_NAME, sourceInputId, null);
     
     // Deterministically set the isolation score since we didn't provide a scorer to the
     // ConcreteRule constructor.

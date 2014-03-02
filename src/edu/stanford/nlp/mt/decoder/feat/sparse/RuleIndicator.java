@@ -1,18 +1,18 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.SourceClassMap;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
@@ -34,7 +34,6 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
   private final int lexicalCutoff;
   private final boolean addDomainFeatures;
 
-  private Map<Integer,Pair<String,Integer>> sourceIdInfoMap;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
@@ -55,18 +54,15 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
    * @param args
    */
   public RuleIndicator(String... args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.addLexicalizedRule = options.containsKey("addLexicalized");
-    this.addClassBasedRule = options.contains("addClassBased");
+    this.addClassBasedRule = options.containsKey("addClassBased");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     if (addClassBasedRule) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = options.containsKey("domainFile");
-    if (addDomainFeatures) {
-      sourceIdInfoMap = SparseFeatureUtils.loadGenreFile(options.getProperty("domainFile"));
-    }
+    this.addDomainFeatures = options.containsKey("domainFeature");
     this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
   }
 
@@ -76,9 +72,8 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    Pair<String,Integer> genreInfo = addDomainFeatures && sourceIdInfoMap.containsKey(f.sourceInputId) ? 
-        sourceIdInfoMap.get(f.sourceInputId) : null;
-    final String genre = genreInfo == null ? null : genreInfo.first();
+    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
     
     if (addLexicalizedRule && aboveThreshold(f.rule)) {
       String sourcePhrase = f.sourcePhrase.toString("-");

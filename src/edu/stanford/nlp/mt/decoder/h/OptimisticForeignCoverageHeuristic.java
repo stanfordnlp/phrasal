@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -39,8 +40,8 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
   }
 
   @Override
-  public double getInitialHeuristic(Sequence<TK> sequence,
-      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int translationId) {
+  public double getInitialHeuristic(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
+      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int sourceInputId) {
     return 0;
   }
 }

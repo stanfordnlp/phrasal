@@ -14,9 +14,7 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Generics;
 
-import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -57,9 +55,6 @@ NeedsCloneable<IString,String> {
   }
   
   public SourceSideCoreNLPFeaturizer(String ... args) {
-    if ( ! CoreNLPCache.isLoaded()) {
-      throw new RuntimeException("You must enable the " + Phrasal.LOAD_SOURCE_CORENLP + " decoder option");
-    }
     // Enable features
     addContentDeletion = args.length > 0 ? Boolean.parseBoolean(args[0]) : true;
     addHeadDeletion = args.length > 1 ? Boolean.parseBoolean(args[1]) : false;
@@ -78,7 +73,8 @@ NeedsCloneable<IString,String> {
       List<ConcreteRule<IString, String>> options, 
       Sequence<IString> foreign) {
     final int length = foreign.size();
-    final CoreMap currentSentence = CoreNLPCache.get(sourceInputId);
+    // TODO(spenceg): Integrate with new CoreNLP annotations
+    final CoreMap currentSentence = null;//CoreNLPCache.get(sourceInputId);
     if (currentSentence == null) {
       throw new RuntimeException("No annotation for source id " + String.valueOf(sourceInputId));
     }

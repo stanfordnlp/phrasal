@@ -13,13 +13,20 @@ import edu.stanford.nlp.process.PTBTokenizer;
  */
 public class EnglishPreprocessor extends CoreNLPPreprocessor {
 
+  private final boolean cased;
+  
   public EnglishPreprocessor() {
+    this(false);
+  }
+  
+  public EnglishPreprocessor(boolean cased) {
     super(PTBTokenizer.coreLabelFactory());
     tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false");
+    this.cased = cased;
   }
 
   @Override
   public String toUncased(String input) {
-    return input.toLowerCase(Locale.ENGLISH);
+    return cased ? input : input.toLowerCase(Locale.ENGLISH);
   }
 }
