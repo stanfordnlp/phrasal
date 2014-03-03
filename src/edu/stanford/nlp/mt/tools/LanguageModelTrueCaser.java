@@ -11,7 +11,6 @@ import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.CubePruningDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
@@ -28,8 +27,6 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.StringUtils;
-
 
 /**
  * Language Model-based TrueCasing.
@@ -41,89 +38,68 @@ import edu.stanford.nlp.util.StringUtils;
  */
 public class LanguageModelTrueCaser {
 
-  static final int MAX_ACRONYM_LIMIT = 7;
+  private static final int MAX_ACRONYM_LIMIT = 7;
 
-  private Inferer<IString, String> inferer;
+  private final Inferer<IString, String> inferer;
 
-  public static void main(String[] args) throws Exception {
-    if (args.length != 2) {
-      System.err
-      .println("Usage:\n\tjava ... TrueCaser lm_file uncased_input > cased_output");
-      System.exit(-1);
-    }
-
-    LanguageModelTrueCaser trueCaser = new LanguageModelTrueCaser();
-    trueCaser.init(args[0]);
-
-    // enter main truecasing loop
-    LineNumberReader reader = IOTools.getReaderFromFile(args[1]);
-    for (String line; (line = reader.readLine()) != null;) {
-      String[] tokens = line.split("\\s+");
-      int inputId = reader.getLineNumber() - 1;
-      String[] trg = trueCaser.trueCase(tokens, inputId);
-      System.out.println(StringUtils.join(trg, " "));
-    }
-    reader.close();
-  }
-
-  public void init(String lmFilename) {
-
-    CubePruningDecoder.CubePruningDecoderBuilder<IString, String> infererBuilder = (CubePruningDecoder.CubePruningDecoderBuilder<IString, String>) InfererBuilderFactory
-        .factory(InfererBuilderFactory.CUBE_PRUNING_DECODER);
-
+  /**
+   * Constructor.
+   * 
+   * @param lmFilename
+   * @throws IOException 
+   */
+  public LanguageModelTrueCaser(String lmFilename) throws IOException {
     // Read in LM & create LM featurizer
-    try {
-      NGramLanguageModelFeaturizer lmFeaturizer = new NGramLanguageModelFeaturizer
-          (lmFilename, NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
-      List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
-      listFeaturizers.add(lmFeaturizer);
-      CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
-          listFeaturizers);
+    NGramLanguageModelFeaturizer lmFeaturizer = new NGramLanguageModelFeaturizer(lmFilename, 
+        NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
+    List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
+    listFeaturizers.add(lmFeaturizer);
+    CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
+        listFeaturizers);
 
-      infererBuilder.setIncrementalFeaturizer(combinedFeaturizer);
-      infererBuilder.setScorer(new UniformScorer<String>());
+    CubePruningDecoder.CubePruningDecoderBuilder<IString, String> infererBuilder = 
+        (CubePruningDecoder.CubePruningDecoderBuilder<IString, String>) InfererBuilderFactory.factory(InfererBuilderFactory.CUBE_PRUNING_DECODER);
+    infererBuilder.setIncrementalFeaturizer(combinedFeaturizer);
+    infererBuilder.setScorer(new UniformScorer<String>());
 
-      // Create truecasing phrase generator
-      infererBuilder.setPhraseGenerator(new AllCasePhraseGenerator(
-          combinedFeaturizer));
-      infererBuilder
-      .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
-          combinedFeaturizer));
+    // Create truecasing phrase generator
+    infererBuilder.setPhraseGenerator(new AllCasePhraseGenerator(
+        combinedFeaturizer));
+    infererBuilder
+    .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
+        combinedFeaturizer));
 
-      // misc. decoder configuration
-      RecombinationFilter<Derivation<IString, String>> recombinationFilter =
-          new TranslationNgramRecombinationFilter(listFeaturizers);
-      infererBuilder.setRecombinationFilter(recombinationFilter);
-      infererBuilder.setMaxDistortion(0);
-//      infererBuilder.setBeamCapacity(BEAM_SIZE);
-//      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
+    // misc. decoder configuration
+    RecombinationFilter<Derivation<IString, String>> recombinationFilter =
+        new TranslationNgramRecombinationFilter(listFeaturizers);
+    //        new IdentityRecombinationFilter();
+    infererBuilder.setRecombinationFilter(recombinationFilter);
+    infererBuilder.setMaxDistortion(0);
 
-      // builder decoder
-      inferer = infererBuilder.build();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    // builder decoder
+    inferer = infererBuilder.build();    
   }
 
-  public String[] trueCase(String[] tokens, int inputId) {
-    Sequence<IString> source = new SimpleSequence<IString>(true,
-        IStrings.toIStringArray(tokens));
+  /**
+   * Apply casing to the input.
+   * 
+   * @param input
+   * @param inputId
+   * @return
+   */
+  public String trueCase(String input, int inputId) {
+    Sequence<IString> source = IStrings.tokenize(input);
     RichTranslation<IString, String> translation = inferer.translate(source,
         inputId, null, new UnconstrainedOutputSpace<IString,String>(), null);
-
-    // manual fix up(s)
-    // capitalize the first letter
-    String[] trg = translation.translation.toString().split("\\s+");
-    if (trg.length > 0 && trg[0].length() > 0) {
-      String firstLetter = trg[0].substring(0, 1);
-      String rest = trg[0].substring(1, trg[0].length());
-      String capTrg = firstLetter.toUpperCase() + rest;
-      trg[0] = capTrg;
-    }
-
-    return trg;
+    return translation.translation.toString();
   }
-  
+
+  /**
+   * Only recombine exact matches.
+   * 
+   * @author Spence Green
+   *
+   */
   private static class IdentityRecombinationFilter implements RecombinationFilter<Derivation<IString, String>> {
 
     @Override
@@ -143,13 +119,19 @@ public class LanguageModelTrueCaser {
     public long recombinationHashCode(Derivation<IString, String> hyp) {
       return hyp.targetSequence.hashCode();
     }
-    
+
     @Override
     public Object clone() throws CloneNotSupportedException {
       return super.clone();
     }
   }
-  
+
+  /**
+   * Generate casing options.
+   * 
+   * @author Spence Green
+   *
+   */
   private static class AllCasePhraseGenerator extends AbstractPhraseGenerator<IString, String> {
 
     private static final String NAME = "AllCasePhrGen";
@@ -163,12 +145,12 @@ public class LanguageModelTrueCaser {
       List<String> casings = Generics.newLinkedList();
       casings.add(token);
       if (token.length() == 0) return casings;
-      
+
       // Add the lowercased version if necessary
       if ( ! token.equals(token.toLowerCase())) {
         casings.add(token.toLowerCase());
       }
-      
+
       // add all caps token
       if (token.length() <= LanguageModelTrueCaser.MAX_ACRONYM_LIMIT) {
         casings.add(token.toUpperCase());
@@ -179,7 +161,7 @@ public class LanguageModelTrueCaser {
       String rest = token.substring(1, token.length());
       String capToken = firstLetter.toUpperCase() + rest;
       casings.add(capToken);
-      
+
       return casings;
     }
 
@@ -190,17 +172,17 @@ public class LanguageModelTrueCaser {
 
     @Override
     public List<Rule<IString>> query(
-        Sequence<IString> sequence) {
-      if (sequence.size() != 1) {
+        Sequence<IString> sourceSequence) {
+      if (sourceSequence.size() != 1) {
         throw new RuntimeException("Subsequence length != 1");
       }
       List<Rule<IString>> list = Generics.newLinkedList();
-      String token = sequence.get(0).toString().toLowerCase();
+      String token = sourceSequence.get(0).toString().toLowerCase();
       List<String> casings = getCasings(token);
       for (String casing : casings) {
         Sequence<IString> target = IStrings.tokenize(casing);
         list.add(new Rule<IString>(new float[0], new String[0], target,
-            sequence, PhraseAlignment.getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT)));
+            sourceSequence, PhraseAlignment.getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT)));
       }
       return list;
     }
@@ -219,5 +201,29 @@ public class LanguageModelTrueCaser {
     public List<String> getFeatureNames() {
       return Generics.newArrayList(1);
     }
+  }
+
+  /**
+   * 
+   * @param args
+   * @throws IOException 
+   */
+  public static void main(String[] args) throws IOException {
+    if (args.length != 2) {
+      System.err.printf("Usage: java %s lm_file uncased_input > cased_output%n",
+          LanguageModelTrueCaser.class.getName());
+      System.exit(-1);
+    }
+
+    LanguageModelTrueCaser trueCaser = new LanguageModelTrueCaser(args[0]);
+
+    // enter main truecasing loop
+    LineNumberReader reader = IOTools.getReaderFromFile(args[1]);
+    for (String line; (line = reader.readLine()) != null;) {
+      final int inputId = reader.getLineNumber() - 1;
+      String output = trueCaser.trueCase(line, inputId);
+      System.out.println(output);
+    }
+    reader.close();
   }
 }
