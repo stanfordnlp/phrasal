@@ -17,4 +17,4 @@ HOST=`hostname -s`
 JVM_OPTS="-server -ea -Xmx2g -Xms2g -XX:+UseParallelGC -XX:+UseParallelOldGC"
 JNI_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOST}"
 
-java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile 
+java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $lm_file < $infile 
