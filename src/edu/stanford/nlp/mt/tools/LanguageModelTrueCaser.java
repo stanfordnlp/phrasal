@@ -143,6 +143,7 @@ public class LanguageModelTrueCaser {
 
     private static List<String> getCasings(String token) {
       List<String> casings = Generics.newLinkedList();
+      // Identity
       casings.add(token);
       if (token.length() == 0) return casings;
 
@@ -151,12 +152,12 @@ public class LanguageModelTrueCaser {
         casings.add(token.toLowerCase());
       }
 
-      // add all caps token
+      // Add all caps token
       if (token.length() <= LanguageModelTrueCaser.MAX_ACRONYM_LIMIT) {
         casings.add(token.toUpperCase());
       }
 
-      // add first letter capitalized version of token
+      // Add first letter capitalized version of token
       String firstLetter = token.substring(0, 1);
       String rest = token.substring(1, token.length());
       String capToken = firstLetter.toUpperCase() + rest;
@@ -173,11 +174,11 @@ public class LanguageModelTrueCaser {
     @Override
     public List<Rule<IString>> query(
         Sequence<IString> sourceSequence) {
-      if (sourceSequence.size() != 1) {
-        throw new RuntimeException("Subsequence length != 1");
+      if (sourceSequence.size() != longestSourcePhrase()) {
+        throw new RuntimeException("Subsequence length != " + String.valueOf(longestSourcePhrase()));
       }
       List<Rule<IString>> list = Generics.newLinkedList();
-      String token = sourceSequence.get(0).toString().toLowerCase();
+      String token = sourceSequence.get(0).toString();
       List<String> casings = getCasings(token);
       for (String casing : casings) {
         Sequence<IString> target = IStrings.tokenize(casing);
@@ -189,11 +190,13 @@ public class LanguageModelTrueCaser {
 
     @Override
     public int longestSourcePhrase() {
+      // DO NOT CHANGE THIS!
       return 1;
     }
 
     @Override
     public int longestTargetPhrase() {
+      // DO NOT CHANGE THIS!
       return 1;
     }
 
