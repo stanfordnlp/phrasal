@@ -18,6 +18,7 @@ import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -96,9 +97,9 @@ public class LanguageModelTrueCaser implements TrueCaser {
           combinedFeaturizer));
 
       // misc. decoder configuration
-//      RecombinationFilter<Derivation<IString, String>> recombinationFilter =
-//          new TranslationNgramRecombinationFilter(listFeaturizers);
-      infererBuilder.setRecombinationFilter(new IdentityRecombinationFilter());
+      RecombinationFilter<Derivation<IString, String>> recombinationFilter =
+          new TranslationNgramRecombinationFilter(listFeaturizers);
+      infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
       infererBuilder.setBeamCapacity(BEAM_SIZE);
       infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
