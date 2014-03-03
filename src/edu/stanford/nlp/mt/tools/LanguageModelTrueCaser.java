@@ -1,11 +1,11 @@
 package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.List;
 
 import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
+import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
@@ -13,15 +13,13 @@ import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.Rule;
+import edu.stanford.nlp.mt.decoder.CubePruningDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
-import edu.stanford.nlp.mt.decoder.MultiBeamDecoder;
 import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.decoder.util.BeamFactory;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
@@ -41,18 +39,16 @@ import edu.stanford.nlp.util.StringUtils;
  *
  * @author danielcer
  */
-public class LanguageModelTrueCaser implements TrueCaser {
-
-  private static final int BEAM_SIZE = 400;
+public class LanguageModelTrueCaser {
 
   static final int MAX_ACRONYM_LIMIT = 7;
 
   private Inferer<IString, String> inferer;
 
   public static void main(String[] args) throws Exception {
-    if (args.length != 1) {
+    if (args.length != 2) {
       System.err
-      .println("Usage:\n\tjava ... TrueCaser (language model) < uncased_input > cased_output");
+      .println("Usage:\n\tjava ... TrueCaser lm_file uncased_input > cased_output");
       System.exit(-1);
     }
 
@@ -60,21 +56,20 @@ public class LanguageModelTrueCaser implements TrueCaser {
     trueCaser.init(args[0]);
 
     // enter main truecasing loop
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in, "UTF-8"));
+    LineNumberReader reader = IOTools.getReaderFromFile(args[1]);
     for (String line; (line = reader.readLine()) != null;) {
       String[] tokens = line.split("\\s+");
       int inputId = reader.getLineNumber() - 1;
       String[] trg = trueCaser.trueCase(tokens, inputId);
       System.out.println(StringUtils.join(trg, " "));
     }
+    reader.close();
   }
 
-  @Override
   public void init(String lmFilename) {
 
-    MultiBeamDecoder.MultiBeamDecoderBuilder<IString, String> infererBuilder = (MultiBeamDecoder.MultiBeamDecoderBuilder<IString, String>) InfererBuilderFactory
-        .factory(InfererBuilderFactory.MULTIBEAM_DECODER);
+    CubePruningDecoder.CubePruningDecoderBuilder<IString, String> infererBuilder = (CubePruningDecoder.CubePruningDecoderBuilder<IString, String>) InfererBuilderFactory
+        .factory(InfererBuilderFactory.CUBE_PRUNING_DECODER);
 
     // Read in LM & create LM featurizer
     try {
@@ -86,8 +81,7 @@ public class LanguageModelTrueCaser implements TrueCaser {
           listFeaturizers);
 
       infererBuilder.setIncrementalFeaturizer(combinedFeaturizer);
-      Scorer<String> scorer = new UniformScorer<String>();
-      infererBuilder.setScorer(scorer);
+      infererBuilder.setScorer(new UniformScorer<String>());
 
       // Create truecasing phrase generator
       infererBuilder.setPhraseGenerator(new AllCasePhraseGenerator(
@@ -101,8 +95,8 @@ public class LanguageModelTrueCaser implements TrueCaser {
           new TranslationNgramRecombinationFilter(listFeaturizers);
       infererBuilder.setRecombinationFilter(recombinationFilter);
       infererBuilder.setMaxDistortion(0);
-      infererBuilder.setBeamCapacity(BEAM_SIZE);
-      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
+//      infererBuilder.setBeamCapacity(BEAM_SIZE);
+//      infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       // builder decoder
       inferer = infererBuilder.build();
@@ -111,7 +105,6 @@ public class LanguageModelTrueCaser implements TrueCaser {
     }
   }
 
-  @Override
   public String[] trueCase(String[] tokens, int inputId) {
     Sequence<IString> source = new SimpleSequence<IString>(true,
         IStrings.toIStringArray(tokens));
