@@ -3,7 +3,7 @@
 # Re-case French and German text. The procedures for converting MT
 # output to "readable" text differs for the two languages.
 #
-# German: 1) detokenize, 2) re-case
+# German: 1) re-case 2) detokenize
 #
 # French: 1) re-case, 2) detokenize
 #
@@ -25,11 +25,11 @@ if [ $RECASE_MODEL ]; then
 elif [ $lang == "French" ]; then
 	model=srilm:${model_path}/french.hmm.recaser.arpa
 else
-	model=srilm:${model_path}/german.hmm.recaser.arpa
+	model=kenlm:${model_path}/german.hmm.recaser.probing
 fi
 
 HOST=`hostname -s`
-JVM_OPTS="-server -Xmx2g -Xms2g -XX:+UseParallelGC"
+JVM_OPTS="-server -Xmx20g -Xms2g -XX:+UseParallelGC"
 JNI_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOST}:/scr/nlp/data/gale3/SRILM-JNI/${HOST}"
 
 java $JVM_OPTS $JNI_OPTS edu.stanford.nlp.mt.tools.LanguageModelTrueCaser $model < $infile 

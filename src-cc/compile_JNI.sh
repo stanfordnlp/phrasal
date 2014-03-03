@@ -19,4 +19,4 @@ else
   SUFFIX=.so
 fi
 
-g++ -I. -DKENLM_MAX_ORDER=6 -I$JAVA_HOME/include -Ikenlm/ -I$JAVA_HOME/include/linux edu_stanford_nlp_mt_lm_KenLanguageModel.cc kenlm/lm/*.o kenlm/util/*.o kenlm/util/double-conversion/*.o -shared -o libPhrasalKenLM$SUFFIX $CXXFLAGS $LDFLAGS $extra_flags $RT
+g++ -I. -DKENLM_MAX_ORDER=7 -I$JAVA_HOME/include -Ikenlm/ -I$JAVA_HOME/include/linux edu_stanford_nlp_mt_lm_KenLanguageModel.cc kenlm/lm/*.o kenlm/util/*.o kenlm/util/double-conversion/*.o -shared -o libPhrasalKenLM$SUFFIX $CXXFLAGS $LDFLAGS $extra_flags $RT

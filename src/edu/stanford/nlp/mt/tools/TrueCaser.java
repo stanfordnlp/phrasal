@@ -1,9 +1,5 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.ling.CoreLabel;
-
-import java.util.List;
-
 /**
  * @author Michel Galley
  */
@@ -18,7 +14,7 @@ public interface TrueCaser {
 
   /**
    * Truecase a given tokenized sentence.
-   * 
+   *
    * @param tokens Tokenized sentence.
    * @param id Sentence number.
    */

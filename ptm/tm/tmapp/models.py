@@ -112,12 +112,13 @@ class TranslationSession(models.Model):
     log = models.TextField(null=True,blank=True)
 
     def __unicode__(self):
-        return '%s %s ui: %s tgt_lang: %s done: %s training: %s' % (self.user.username,
+        return '%s %s ui: %s tgt_lang: %s done: %s training: %s order: %d' % (self.user.username,
                                                                     self.src_document.url,
                                                                     self.interface,
                                                                     self.tgt_language.code,
                                                                     str(self.complete),
-                                                                    str(self.training))
+                                                                    str(self.training),
+                                                                              self.order)
     
 class DemographicData(models.Model):
     """
@@ -182,8 +183,8 @@ class ExitSurveyData(models.Model):
 	exit_more_efficient = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
 
         # Interactive MT questions
-	exit_itm_most_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
-	exit_itm_least_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
+	exit_itm_most_useful = models.CharField( max_length = 15, choices = choices.IMT_AID_CHOICES, default = None )
+	exit_itm_least_useful = models.CharField( max_length = 15, choices = choices.IMT_AID_CHOICES, default = None )
 	exit_useful_src_lookup = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_inlined = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_suggestions = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
@@ -200,3 +201,6 @@ class ExitSurveyData(models.Model):
 
         # Any other comments?
 	exit_comments = models.TextField()
+
+        def __unicode__(self):
+            return self.user.username

@@ -9,7 +9,6 @@ import java.util.TreeMap;
 
 import com.google.gson.Gson;
 
-import edu.stanford.nlp.international.french.process.FrenchTokenizer;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
@@ -84,7 +83,11 @@ public class RawFrenchToJSON {
     
     // Configure tokenizer
     FrenchPreprocessor preprocessor = new FrenchPreprocessor(true);
-    preprocessor.setOptions(FrenchTokenizer.FTB_OPTIONS);
+    
+    // TODO(spenceg): Currently we use a different tokenization for MT than for parsing. If given a tradeoff
+    // between MT quality and parse quality, we'd take MT quality any day. So stick with the default
+    // MT tokenization for now.
+    // preprocessor.setOptions(FrenchTokenizer.FTB_OPTIONS);
     
     LineNumberReader reader = IOTools.getReaderFromFile(textFile);
     Map<Integer,SourceSegment> annotations = new TreeMap<Integer,SourceSegment>();

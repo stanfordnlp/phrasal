@@ -12,8 +12,9 @@ if [ $mode == "local" ]; then
     MEM=9g
     DECODER_OPTS="-Djava.library.path=/home/rayder441/sandbox/javanlp/projects/mt/src-cc"
 elif [ $mode == "cluster" ]; then
-    MEM=80g
-    DECODER_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOSTNAME}"
+    MEM=170g
+    HOST=`hostname -s`
+    DECODER_OPTS="-Djava.library.path=/scr/nlp/data/gale3/KENLM-JNI/${HOST}"
 else
     echo Usage: `basename $0` "[local|cluster]" options
     exit -1
