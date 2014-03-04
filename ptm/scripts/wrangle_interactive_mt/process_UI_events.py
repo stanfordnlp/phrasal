@@ -66,13 +66,11 @@ class SentenceState:
             if len(entry['keyValues']['candidates']) > 0:
                 self.targetSuggestions = entry['keyValues']['candidates']
         #Capture user focus on target suggestion
-        if entry['element'] == 'targetSuggestions' and 'optionIndex' in entry['keyValues'] and entry['keyValues']['optionIndex'] is not None:
-            # TODO(spenceg): This throws an exception. Need to fix.
-            try:
-                self.lastTargetSuggestion = self.targetSuggestions[entry['keyValues']['optionIndex']]
-            except:
-                sys.stderr.write('WARNING: Exception\n')
-                self.lastTargetSuggestion = ''
+        if entry['element'] == 'targetSuggestions' \
+                and 'optionIndex' in entry['keyValues'] \
+                and entry['keyValues']['optionIndex'] is not None \
+                and entry['keyValues']['optionIndex'] > 0:
+            self.lastTargetSuggestion = self.targetSuggestions[entry['keyValues']['optionIndex']]
         #Capture source suggestions
         if entry['element'] == 'sourceSuggestions' and 'targets' in entry['keyValues']:
             if len(entry['keyValues']['targets']) > 0:
@@ -89,14 +87,15 @@ class SentenceState:
         #Check if token is a suggested word
         if newToken == self.firstSuggestion:
             return "User accepted suggestion \"" + newToken + "\""
-        elif newToken in self.targetSuggestions and self.targetSuggestions.index(newToken) > 0:
+        elif newToken == self.lastTargetSuggestion:
             return "User changed \"" + self.firstSuggestion + "\" to target suggestion \"" + newToken+"\""
         elif newToken == self.lastSourceSuggestion:
-            return "User selected source suggestion \""+newToken +"\"" 
-        elif newToken in self.sourceSuggestions and self.sourceSuggestions.index(newToken) > 0:
             return "User changed \"" + self.firstSuggestion + "\" to source suggestion \"" + newToken+"\""
+        elif newToken in self.sourceSuggestions and self.sourceSuggestions.index(newToken) > 0 \
+                or newToken in self.targetSuggestions and self.targetSuggestions.index(newToken) > 0:
+            return "User typed suggested token: \"" + newToken + "\""
         else:
-            return "User typed \"" + newToken + "\""
+            return "User typed unsuggested token: \"" + newToken + "\""
 
 #Extract the source sentences/tokens
 def sourceFromLog(log):
@@ -121,7 +120,7 @@ def processLog(log):
         #Check for user entry event
         if entry['element'] == 'targetBoxes' and 'userTokens' in entry['keyValues']:
             newToken = getNewTokens(entry,state[subElement])
-            if newToken is None: continue
+            if newToken is None or newToken == "": continue
             events.append([entry['time'],state[subElement].checkNewToken(newToken)])
         #Check for sourceBox event
         if entry['element'] == 'sourceSuggestions' and 'source' in entry['keyValues'] and entry['keyValues']['source'] != "":
@@ -140,8 +139,10 @@ def main():
     #Events structure
     #[timestamp, eventType, sourceword, {metadata(hovertime, targetword etc..)}]
         allEvents = []
-
         for i,row in enumerate(dbdump):
+            # Check that entry has a log object
+            if len(row.split('|')[SrcInputCols.index("log")]) < 2:
+                continue 
             # Extract the log
             try:
                 log = json.loads(row.split('|')[SrcInputCols.index("log")])
