@@ -71,8 +71,7 @@ public class LanguageModelTrueCaser {
 
     // misc. decoder configuration
     RecombinationFilter<Derivation<IString, String>> recombinationFilter =
-//        new TranslationNgramRecombinationFilter(listFeaturizers);
-            new IdentityRecombinationFilter();
+        new TranslationNgramRecombinationFilter(listFeaturizers);
     infererBuilder.setRecombinationFilter(recombinationFilter);
     infererBuilder.setMaxDistortion(0);
 
@@ -92,38 +91,6 @@ public class LanguageModelTrueCaser {
     RichTranslation<IString, String> translation = inferer.translate(source,
         inputId, null, new UnconstrainedOutputSpace<IString,String>(), null);
     return translation.translation.toString();
-  }
-
-  /**
-   * Only recombine exact matches.
-   * 
-   * @author Spence Green
-   *
-   */
-  private static class IdentityRecombinationFilter implements RecombinationFilter<Derivation<IString, String>> {
-
-    @Override
-    public boolean combinable(Derivation<IString, String> hypA,
-        Derivation<IString, String> hypB) {
-      if (hypA.featurizable == null && hypB.featurizable == null) {
-        // null hypothesis
-        return true;
-      } else if (hypA.featurizable == null || hypB.featurizable == null) {
-        // one or the other is the null hypothesis
-        return false;
-      }
-      return hypA.targetSequence.equals(hypB.targetSequence);
-    }
-
-    @Override
-    public long recombinationHashCode(Derivation<IString, String> hyp) {
-      return hyp.targetSequence.hashCode();
-    }
-
-    @Override
-    public Object clone() throws CloneNotSupportedException {
-      return super.clone();
-    }
   }
 
   /**
