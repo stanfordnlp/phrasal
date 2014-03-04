@@ -71,8 +71,8 @@ public class LanguageModelTrueCaser {
 
     // misc. decoder configuration
     RecombinationFilter<Derivation<IString, String>> recombinationFilter =
-        new TranslationNgramRecombinationFilter(listFeaturizers);
-    //        new IdentityRecombinationFilter();
+//        new TranslationNgramRecombinationFilter(listFeaturizers);
+            new IdentityRecombinationFilter();
     infererBuilder.setRecombinationFilter(recombinationFilter);
     infererBuilder.setMaxDistortion(0);
 
