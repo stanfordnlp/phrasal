@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -41,7 +42,7 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
    * @param args
    */
   public PunctuationDifference(String...args) {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     this.addDomainFeatures = options.containsKey("domainFeature");
   }
   

@@ -1,4 +1,0 @@
-WSGI script for running the app inside Apache2 using mod_wsgi. Edit the install paths in django.wsgi as needed. Then see tmapp/conf for an example apache conf file. Ensure that the conf file points to django.wsgi.
-
-Spence
-12 Mar. 2012

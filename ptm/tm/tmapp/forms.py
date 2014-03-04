@@ -5,8 +5,6 @@ from django.utils.safestring import mark_safe
 from models import Language,DemographicData,ExitSurveyData,TranslationSession
 from django.forms import ModelForm
 
-import choices
-
 logger = logging.getLogger(__name__)
 
 class DivErrorList(ErrorList):
@@ -62,7 +60,7 @@ class ExitSurveyForm(ModelForm):
             'exit_itm_most_useful' : 'In the interactive interface: Which interactive aid did you find most useful?',
             'exit_itm_least_useful' : 'In the interactive interface: Which interactive aid did you find least useful?',
             'exit_useful_src_lookup' : 'In the interactive interface: Source text lookup with mouse was generally useful.',
-            'exit_useful_tgt_inlined' : 'In the interactive interface: Inlined target translations (in the typing box) was generally useful.',
+            'exit_useful_tgt_inlined' : 'In the interactive interface: Inlined target translation (gray text in the typing area) was generally useful.',
             'exit_useful_tgt_suggestions' : 'In the interactive interface: Drop-down target suggestions were generally useful.',
             'exit_useful_tgt_completion' : 'In the interactive interface: Suggestions about the current word in the target text were generally useful.',
             'exit_useful_tgt_chunking' : 'In the interactive interface: Suggestions of phrases (groups of words longer than two) were generally useful.',

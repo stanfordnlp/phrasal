@@ -22,6 +22,9 @@ public class FeatureValue<T> {
 	 */
   @SuppressWarnings("unchecked")
   public FeatureValue(T name, double value, boolean cacheFeatureName) {
+    if (name == null) {
+      throw new RuntimeException("Feature name cannot be null");
+    }
     this.value = value;
     if (cacheFeatureName) {
       synchronized(nameCache) {
@@ -39,6 +42,9 @@ public class FeatureValue<T> {
   }
 
   public FeatureValue(T name, double value) {
+    if (name == null) {
+      throw new RuntimeException("Feature name cannot be null");
+    }
     this.name = name;
     this.value = value;
   }

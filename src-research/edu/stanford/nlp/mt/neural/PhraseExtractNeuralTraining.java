@@ -329,7 +329,7 @@ public class PhraseExtractNeuralTraining {
               
               // search left
               if (fIndices.isEmpty() && leftE!= rightE && leftE>0) fIndices = sent.e2f(leftE);
-            } else if (extractOpt==0) { // search within ngram
+            } else if (extractOpt==1) { // search within ngram
               // search current/left, don't go beyond ngram
               if (fIndices.isEmpty() && leftE>0 && distance<tgtNgram) fIndices = sent.e2f(leftE);              
             }

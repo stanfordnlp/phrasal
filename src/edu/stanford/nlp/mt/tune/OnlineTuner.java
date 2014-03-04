@@ -34,6 +34,8 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
@@ -64,29 +66,10 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  *
  */
 public class OnlineTuner {
-
-  // Baseline dense configuration from edu.stanford.nlp.mt.decoder.feat.base
-  // Extended phrase table, hierarchical reordering, one language model 
-  private static final Set<String> BASELINE_DENSE_FEATURES = Generics.newHashSet();
+  
+  // TODO(spenceg) Experimental code
   static {
-    BASELINE_DENSE_FEATURES.add("LM");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithNext"); 
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:swapWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:swapWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LinearDistortion");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.0");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.1");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.2");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.3");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.4");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.5");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.6");
-    BASELINE_DENSE_FEATURES.add("WordPenalty");
+    CombinedFeaturizer.DROPOUT = System.getProperty("dropoutReg") != null;
   }
   
   // Tuning set
@@ -709,8 +692,8 @@ public class OnlineTuner {
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
       Set<String> featureNames = Generics.newHashSet(weights.keySet());
-      featureNames.addAll(BASELINE_DENSE_FEATURES);
-      for (String key : weights.keySet()) {
+      featureNames.addAll(FeatureUtils.BASELINE_DENSE_FEATURES);
+      for (String key : featureNames) {
         if (key.startsWith("LM")) {
           weights.setCount(key, 0.5);
         } else if (key.startsWith("WordPenalty")) {

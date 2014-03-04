@@ -21,7 +21,7 @@ import edu.stanford.nlp.util.Generics;
 public class PhraseTableScoresFeaturizer implements RuleFeaturizer<IString, String> {
   private static final String FEATURE_PREFIX = "TM";
   private static final FeatureValue<String> emptyFV = new FeatureValue<String>(
-      null, 0.0);
+      "", 0.0);
 
   // Only construct the feature strings once for each phrase table
   private final ConcurrentHashMap<String, String[]> featureNamesHash;
