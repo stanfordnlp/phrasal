@@ -715,7 +715,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     // Load the references
     String[] refs = options.getProperty("").split("\\s+");
     System.out.printf("Metric: BLEU-%d with %d references%n", BLEUOrder, refs.length);
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs);
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs, true);
 
     // For backwards compatibility
     doSmooth |= System.getProperty("smoothBLEU") != null;
