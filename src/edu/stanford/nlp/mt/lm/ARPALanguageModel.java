@@ -23,9 +23,13 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   static boolean verbose = false;
 
+  // in srilm -99 is -infinity
+  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100.0;
+
   protected final String name;
   
   private static final RawSequence<IString> EMPTY_SEQUENCE = new RawSequence<IString>();
+  private static final int[] UNK_QUERY = new int[]{TokenUtils.UNK_TOKEN.id};
   
   @Override
   public String getName() {
@@ -188,7 +192,11 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     
     // OOV
     if (ngramInts.length == 1) {
-      return new ARPALMState(Double.NEGATIVE_INFINITY, EMPTY_SEQUENCE);
+      // First check for an <unk> class, which is present for KenLM
+      // but not necessarily for SRILM.
+      index = tables[0].getIndex(UNK_QUERY);
+      double p = index >= 0 ? probs[0][index] : MOSES_LM_UNKNOWN_WORD_SCORE;
+      return new ARPALMState(p, EMPTY_SEQUENCE);
     }
     
     // Backoff recursively
