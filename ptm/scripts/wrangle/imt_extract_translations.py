@@ -42,7 +42,8 @@ doc_to_timing = defaultdict(dict)
 session_id = 0
 
 stderr('Loading database dump...')
-doc_to_user = defaultdict(dict)
+doc_to_user_txt = defaultdict(dict)
+doc_to_user_time = defaultdict(dict)
 with open(dump_file) as in_file:
     r = UnicodeReader(in_file, delimiter='|', quoting = csv.QUOTE_NONE)
     for row in map(DumpRow._make, r):
@@ -52,21 +53,25 @@ with open(dump_file) as in_file:
             continue
         text = json.loads(row.text)
         doc_name = url2doc(row.src_doc)
+        log = json.loads(row.log)
+        log_time = str(log[-1]['time'])
         for line_id in sorted(text.keys()):
             doc_id = doc_name + ':' + line_id
             user_id = row.username + ':' + row.interface
-            doc_to_user[doc_id][user_id] = text[line_id]
-
+            doc_to_user_txt[doc_id][user_id] = text[line_id]
+            doc_to_user_time[doc_id][user_id] = log_time
+            
 for doc_name in sorted(doc_to_ref.keys()):
     for i,ref in enumerate(doc_to_ref[doc_name]):
         doc_id = '%s:%d' % (doc_name, i)
         print doc_id
-        print '%s\t%s\t%s' % ('ref', 'ref', ref)
-        for user_id in doc_to_user[doc_id]:
+        print '%s\t%s\t%.3f\t%s' % ('ref', 'ref', 0.0, ref)
+        for user_id in sorted(doc_to_user_txt[doc_id].keys()):
             username,ui = user_id.split(':')
-            tgt_txt = doc_to_user[doc_id][user_id]
+            tgt_txt = doc_to_user_txt[doc_id][user_id]
+            doc_time = doc_to_user_time[doc_id][user_id]
             tgt_txt = re.sub('\s+', ' ', tgt_txt)
-            print '%s\t%s\t%s' % (username, ui, tgt_txt)
+            print '%s\t%s\t%s\t%s' % (username, ui, doc_time, tgt_txt)
         print
         
         
