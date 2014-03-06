@@ -60,7 +60,7 @@ def make_pilot_layout():
     user_to_layout = {}
     user_to_layout[0] = [(0,0,0),(1,0,0), (0,1,1),(1,1,1)]
     user_to_layout[1] = [(1,0,1),(0,1,1), (1,1,0),(0,0,0)]
-    user_to_layout[2] = [(0,1,0),(1,1,0), (1,0,1),(0,0,1)]
+    user_to_layout[2] = [(1,1,0),(0,1,0), (1,0,1),(0,0,1)]
     user_to_layout[3] = [(1,1,1),(0,1,1), (0,0,0),(1,0,0)]
     return user_to_layout
 
