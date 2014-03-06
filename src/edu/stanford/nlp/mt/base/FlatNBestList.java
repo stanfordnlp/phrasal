@@ -216,6 +216,17 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       throw new RuntimeException("N-best list has some empty ids");
     }
 
+    // Thang Mar14: go through the nbest list again, remove null entries at the front (this is useful when we split nbest lists for tune/test where sent id doesn't start from 0). Throw error if there's a null entry in the middle of the list.
+    while(nbestLists.size()>0 && nbestLists.get(0)==null){
+      nbestLists.remove(0);
+    }
+    for(int id=0; id<nbestLists.size(); id++){
+      if (nbestLists.get(id) == null){
+        System.err.printf("! null in nbest list\n");
+        System.exit(1);
+      }
+    }
+
     sequenceSelfMap = null;
 
     long postNBestListLoadMemUsed = rt.totalMemory() - rt.freeMemory();
