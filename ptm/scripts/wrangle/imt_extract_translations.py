@@ -1,8 +1,10 @@
 #!/usr/bin/env python
+#
+# Extract translation information from a database dump.
+#
 import sys
 import codecs
 import csv
-import dateutil.parser
 import json
 import os
 import re
@@ -10,24 +12,12 @@ from os.path import basename,split
 from datetime import datetime
 from collections import namedtuple,defaultdict
 from csv_unicode import UnicodeReader
+import imt_utils
+from imt_utils import segment_times_from_log,url2doc,initial_translations_from_imt_log,initial_translations_from_pe_log,load_references
 
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
-DumpRow = namedtuple('DumpRow', 'username src_doc tgt_lang interface order create_time start_time end_time complete training valid text log')
-
-str2bool = lambda x:True if x == '1' else False
 stderr = lambda x:sys.stderr.write(str(x) + os.linesep)
-url2doc = lambda x:basename(x).replace('.json','').replace('src','tgt')
-
-def load_refs(filename_list):
-    """
-    """
-    filename_to_lines = {}
-    for filename in filename_list:
-        doc_id = url2doc(filename)
-        with codecs.open(filename, encoding='utf-8') as infile:
-            filename_to_lines[doc_id] = [x.strip() for x in infile.readlines()]
-    return filename_to_lines
 
 args = sys.argv[1:]
 if len(args) < 2:
@@ -37,29 +27,28 @@ if len(args) < 2:
 dump_file = args[0]
 
 stderr('Loading references...')
-doc_to_ref = load_refs(args[1:])
+doc_to_ref = load_references(args[1:])
 doc_to_timing = defaultdict(dict)
 session_id = 0
 
 stderr('Loading database dump...')
 doc_to_user_txt = defaultdict(dict)
 doc_to_user_time = defaultdict(dict)
-with open(dump_file) as in_file:
-    r = UnicodeReader(in_file, delimiter='|', quoting = csv.QUOTE_NONE)
-    for row in map(DumpRow._make, r):
-        if not row.log or len(row.log.strip()) == 0:
-            continue
-        if str2bool(row.training):
-            continue
-        text = json.loads(row.text)
-        doc_name = url2doc(row.src_doc)
-        log = json.loads(row.log)
-        log_time = str(log[-1]['time'])
-        for line_id in sorted(text.keys()):
-            doc_id = doc_name + ':' + line_id
-            user_id = row.username + ':' + row.interface
-            doc_to_user_txt[doc_id][user_id] = text[line_id]
-            doc_to_user_time[doc_id][user_id] = log_time
+dump_row_list = imt_utils.load_middleware_dump(dump_file)
+for row in dump_row_list:
+    segment_to_tgt_txt = imt_utils.final_translations_from_dump_row(row)
+    doc_name = url2doc(row.src_doc)
+    log = json.loads(row.log)
+    segment_to_time = segment_times_from_log(log)
+    segment_to_mt = initial_translations_from_imt_log(log) if row.interface == 'imt' else initial_translations_from_pe_log(log)
+    for line_id in sorted(segment_to_tgt_txt.keys()):
+        doc_id = '%s:%d' % (doc_name, line_id)
+        user_id = row.username + ':' + row.interface
+        mt_id = 'MT:' + row.interface
+        doc_to_user_txt[doc_id][user_id] = segment_to_tgt_txt[line_id]
+        doc_to_user_time[doc_id][user_id] = segment_to_time[line_id]
+        doc_to_user_txt[doc_id][mt_id] = segment_to_mt[line_id]
+        doc_to_user_time[doc_id][mt_id] = 0.0
             
 for doc_name in sorted(doc_to_ref.keys()):
     for i,ref in enumerate(doc_to_ref[doc_name]):
