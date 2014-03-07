@@ -556,7 +556,7 @@ public class PhraseExtractNeuralTraining {
             + " -srcEndToken <string> : e.g. </s>\n"
             + " -tgtStartToken <string> : e.g. </s>\n"
             + " -srcUnkToken <string> : e.g. <unk>\n"
-            + " -extractOpt <int> : 0 -- Jacob's heuristics (search right, then left), 1 -- search within n-gram <unk>\n"
+            + " -extractOpt <int> : 0 -- Jacob's heuristics (search right, then left), 1 -- search within n-gram\n"
             + " -outputFile path : Output file to <path>\n"
             );
   }
