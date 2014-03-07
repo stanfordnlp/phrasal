@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -25,14 +24,14 @@ import edu.stanford.nlp.mt.neural.Util;
 import edu.stanford.nlp.util.Generics;
 
 /**
- * Featurizer for Neural Probabilistic Language Models (NPLMs).
+ * Featurizer for source-conditioned Neural Probabilistic Language Models (NPLMs).
  * Based on the NGramLanguageModelFeaturizer code.
  * 
  * @author Thang Luong
  */
 public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implements
    RuleFeaturizer<IString, String> {
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   public static final String DEFAULT_FEATURE_NAME = "NPLM";
   
   // in srilm -99 is -infinity
@@ -43,16 +42,6 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   private final boolean addContextFeatures;
   private String[] contextFeatureNames;
 
-//Thang Feb14: for src-conditioned NPLM
-// private boolean srcConditioned = false;
-// private int srcOrder; // tgtOrder = order - srcOrder
-// private int tgtVocabSize; // the src-conditioned NPLM has as vocab tgtVocabSize tgt words followed by src words.
-// // Thang Feb14: for src-conditioned NPLM
-// this.srcOrder = srcOrder;
-// this.tgtVocabSize = tgtVocabSize;
-// this.srcConditioned = true;
-
-  // Thang Mar14: keep track of the source for src-conditioned NPLM
   private final String INPUT_VOCAB_SIZE = "input_vocab_size";
   private final String OUTPUT_VOCAB_SIZE = "output_vocab_size";
   private final String SRC_ORDER = "src_ngram_size";
@@ -68,9 +57,6 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   private final Map<IString, Integer> tgtVocabMap;
   private final Map<Integer, IString> srcReverseVocabMap;
   private final Map<Integer, IString> tgtReverseVocabMap;
-  private final int srcUnk;
-  private final int tgtUnk;
-  private final int tgtStart;
   
   /**
    *
@@ -80,7 +66,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   }
 
   /**
-   * Constructor called by Phrasal when NGramLanguageModelFeaturizer appears in
+   * Constructor called by Phrasal when NPLMFeaturizer appears in
    * [additional-featurizers].
    */
   public NPLMFeaturizer(String...args) throws IOException {
@@ -149,11 +135,6 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     }
     br.close();
     
-    // set unk, start
-    srcUnk = srcVocabMap.get(UNK);
-    tgtUnk = tgtVocabMap.get(UNK);
-    tgtStart = tgtVocabMap.get(START);
-    
     this.srcOrder = srcOrder;
     this.tgtOrder = this.lmOrder - this.srcOrder;
     this.srcWindow = (srcOrder-1)/2;
@@ -176,14 +157,14 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     
 //    int tgtLength = f.targetPhrase.size();
-//    if(DEBUG){// && tgtLength>2) {
-//      System.err.println("# NPLMFeaturizer getScore, isRuleFeaturize=" + isRuleFeaturize
-//          + ", startPos=" + startPos + ", srcPos=" + f.sourcePosition + ", limit=" + limit + ", f=" + f);
-//      System.err.println("  translation=" + translation);
-//      System.err.println("  targetPrefix=" + f.targetPrefix);
-//      System.err.println("  targetPhrase=" + f.targetPhrase);
-//      System.err.println("  lmOrder=" + lmOrder);
-//    }
+    if(DEBUG){// && tgtLength>2) {
+      System.err.println("# NPLMFeaturizer getScore, isRuleFeaturize=" + isRuleFeaturize
+          + ", startPos=" + startPos + ", srcPos=" + f.sourcePosition + ", limit=" + limit + ", f=" + f);
+      System.err.println("  translation=" + translation);
+      System.err.println("  targetPrefix=" + f.targetPrefix);
+      System.err.println("  targetPhrase=" + f.targetPhrase);
+      System.err.println("  lmOrder=" + lmOrder);
+    }
     
     for (int pos = startPos; pos < limit; pos++) {
       // create id array
@@ -246,22 +227,22 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       }
       lmSumScore += ngramScore;
       
-//      if(DEBUG) { // && tgtLength>2){
-//        System.err.println(" # tgtPos=" + (pos-startPos));
-//        System.err.println("  srcAvgPos=" + srcAvgPos);
-//        System.err.println("  ngram reverse=" + Util.intArrayToString(ngramIds));
-//        System.err.print("  src words=");
-//        for (int j = lmOrder-1; j >= (lmOrder-srcOrder); j--) {
-//          System.err.print(" " + srcReverseVocabMap.get(ngramIds[j]).toString());
-//        }
-//        System.err.println();
-//        
-//        System.err.print("  tgt words=");
-//        for (int j = tgtOrder-1; j >= 0; j--) {
-//          System.err.print(" " + tgtReverseVocabMap.get(ngramIds[j]).toString());
-//        }
-//        System.err.println("  score=" + ngramScore);
-//      }
+      if(DEBUG) { // && tgtLength>2){
+        System.err.println(" # tgtPos=" + (pos-startPos));
+        System.err.println("  srcAvgPos=" + srcAvgPos);
+        System.err.println("  ngram reverse=" + Util.intArrayToString(ngramIds));
+        System.err.print("  src words=");
+        for (int j = lmOrder-1; j >= (lmOrder-srcOrder); j--) {
+          System.err.print(" " + srcReverseVocabMap.get(ngramIds[j]).toString());
+        }
+        System.err.println();
+        
+        System.err.print("  tgt words=");
+        for (int j = tgtOrder-1; j >= 0; j--) {
+          System.err.print(" " + tgtReverseVocabMap.get(ngramIds[j]).toString());
+        }
+        System.err.println("  score=" + ngramScore);
+      }
     }
     // The featurizer state is the result of the last n-gram query
     if (!isRuleFeaturize) {
