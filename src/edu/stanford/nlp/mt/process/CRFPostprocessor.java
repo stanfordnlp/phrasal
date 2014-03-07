@@ -22,7 +22,6 @@ import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.objectbank.ObjectBank;
 import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
@@ -143,38 +142,38 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
   }
 
   @Override
-  public SymmetricalWordAlignment process(Sequence<IString> sequence) {
-    String[] tokens = Sequences.toStringArray(sequence);
-    List<CoreLabel> labeledTokens = ProcessorTools.stringToCharacterSequence(tokens);
+  public SymmetricalWordAlignment process(Sequence<IString> inputSequence) {
+    List<CoreLabel> labeledTokens = ProcessorTools.toCharacterSequence(inputSequence);
     labeledTokens = classifier.classify(labeledTokens);
-    List<CoreLabel> processedTokens = ProcessorTools.toPostProcessedSequence(labeledTokens);
-    List<String> targetStrings = Generics.newLinkedList();
-    for (CoreLabel label : processedTokens) {
-      targetStrings.add(label.word());
+    List<CoreLabel> outputTokens = ProcessorTools.toPostProcessedSequence(labeledTokens);
+    List<String> outputStrings = Generics.newLinkedList();
+    for (CoreLabel label : outputTokens) {
+      outputStrings.add(label.word());
     }
-    Sequence<IString> target = IStrings.toIStringSequence(targetStrings);
-    SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sequence, target);
+    Sequence<IString> outputSequence = IStrings.toIStringSequence(outputStrings);
+    SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, outputSequence);
     
     // Reconstruct the alignment by iterating over the target
-    for (int j = 0, sourceIndex = 0, tgtMax = processedTokens.size(), seqMax = sequence.size(); 
-        j < tgtMax && sourceIndex < seqMax; ++j) {
-      String originalToken = processedTokens.get(j).get(OriginalTextAnnotation.class);
-      String sourceCandidate = sequence.get(sourceIndex).toString();
-      if (originalToken.equals(sourceCandidate)) {
+    for (int outputIndex = 0, inputIndex = 0, outputSize = outputTokens.size(), inputSize = inputSequence.size(); 
+        outputIndex < outputSize && inputIndex < inputSize; ++outputIndex) {
+      String outputToken = outputTokens.get(outputIndex).get(OriginalTextAnnotation.class);
+      String inputCandidate = inputSequence.get(inputIndex).toString();
+      if (outputToken.equals(inputCandidate)) {
         // Unigram alignment
-        alignment.addAlign(sourceIndex, j);
-        ++sourceIndex;
+        alignment.addAlign(inputIndex, outputIndex);
+        ++inputIndex;
         
       } else {
-        // one-to-many alignment (target-to-source)
-        String[] originalTokens = originalToken.split("\\s+");
-        int newSourceIndex = findSubsequenceStart(originalTokens, sequence, sourceIndex);
-        if (newSourceIndex < 0) {
-          System.err.printf("Unable to find |%s| in |%s|", originalToken, sequence.toString());
+        // one-to-many alignment (output-to-input)
+        String[] originalTokens = outputToken.split("\\s+");
+        int newInputIndex = findSubsequenceStart(originalTokens, inputSequence, inputIndex);
+        if (newInputIndex < 0) {
+          System.err.printf("Unable to find |%s| in |%s|%n", outputToken, inputSequence.toString());
         } else {
+          inputIndex = newInputIndex;
           for (int i = 0; i < originalTokens.length; ++i) {
-            sourceIndex = newSourceIndex + i;
-            alignment.addAlign(sourceIndex, j);
+            alignment.addAlign(inputIndex, outputIndex);
+            ++inputIndex;
           }
         }
       }
@@ -182,26 +181,32 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     return alignment;
   }
   
-  private int findSubsequenceStart(String[] originalTokens,
+  /**
+   * Brute-force substring matching in O(n*m) time.
+   * 
+   * @param subSequence
+   * @param sequence
+   * @param startIndex
+   * @return
+   */
+  private static int findSubsequenceStart(String[] subSequence,
       Sequence<IString> sequence, int startIndex) {
-    int startOfSubstring = -1;
-    for (int i = startIndex, srcMax = sequence.size(); i < srcMax; ++i) {
-      String sourceCandidate = sequence.get(i).toString();
-      if (originalTokens[0].equals(sourceCandidate)) {
-        // Found the start
-        boolean isContiguous = true;
-        for (int j = 1; j < originalTokens.length; ++j) {
-          int sourceIndex = i + j;
-          if (sourceIndex >= srcMax || ! originalTokens[j].equals(sequence.get(sourceIndex).toString())) {
-            isContiguous = false;
+    for (int i = startIndex, sequenceSize = sequence.size(); i < sequenceSize; ++i) {
+      if (i + subSequence.length > sequenceSize) break;
+      if (subSequence[0].equals(sequence.get(i).toString())) {
+        if (subSequence.length == 1) return i;
+        for (int j = 1; j < subSequence.length; ++j) {
+          if (subSequence[j].equals(sequence.get(i+j).toString())) {
+            if (j+1 == subSequence.length) {
+              return i;
+            }
+          } else {
             break;
           }
-        }
-        startOfSubstring = isContiguous ? i : -1;
-        break;
+        } 
       }
     }
-    return startOfSubstring;
+    return -1;
   }
 
   /**
@@ -308,7 +313,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
               new ThreadsafeProcessor<String,String>() {
                 @Override
                 public String process(String input) {
-                  List<CoreLabel> labeledSeq = ProcessorTools.stringToCharacterSequence(input);
+                  List<CoreLabel> labeledSeq = ProcessorTools.toCharacterSequence(input);
                   labeledSeq = postProcessor.classifier.classify(labeledSeq);
                   List<CoreLabel> tokenSeq = ProcessorTools.toPostProcessedSequence(labeledSeq);
                   return Sentence.listToString(tokenSeq);

@@ -34,7 +34,6 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
@@ -66,11 +65,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  *
  */
 public class OnlineTuner {
-  
-  // TODO(spenceg) Experimental code
-  static {
-    CombinedFeaturizer.DROPOUT = System.getProperty("dropoutReg") != null;
-  }
   
   // Tuning set
   private List<Sequence<IString>> tuneSource;
