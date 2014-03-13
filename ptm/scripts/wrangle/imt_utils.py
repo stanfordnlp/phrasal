@@ -1,13 +1,16 @@
 import sys
 import codecs
+import csv
+from os.path import basename,split
 from csv_unicode import UnicodeReader,UnicodeWriter
 from collections import Counter,namedtuple
 
-DumpRow = namedtuple('DumpRow', 'username src_doc tgt_lang interface order create_time start_time end_time complete training valid text log')
+DumpRow = namedtuple('DumpRow', 'username birth_country resident_of mt_opinion src_proficiency tgt_proficiency src_doc tgt_lang interface order create_time start_time end_time complete training valid text log')
 
 # Convenience methods
 str2bool = lambda x:True if x == '1' else False
 url2doc = lambda x:basename(x).replace('.json','').replace('src','tgt')
+genre_from_url = lambda x:basename(split(x)[0])
 
 def load_middleware_dump(filename):
     """
@@ -18,7 +21,7 @@ def load_middleware_dump(filename):
     Raises:
     """
     row_list = []
-    with open(file_name) as in_file:
+    with open(filename) as in_file:
         r = UnicodeReader(in_file, delimiter='|', quoting = csv.QUOTE_NONE)
         for row in map(DumpRow._make, r):
             if not row.log or len(row.log.strip()) == 0:
@@ -128,10 +131,10 @@ def source_segments_from_log(log):
     """
     segment_to_text = {}
     for entry in log:
-        if 'keyValues' in entry and 'segments' in entry['keyValues']:
-            for line_id,txt in entry['keyValues']['segments'].iteritems():
+        if 'keyValues' in entry and 'docId' in entry['keyValues'] and entry['keyValues']['docId']:
+            for line_id,src_item in entry['keyValues']['segments'].iteritems():
                 line_id = int(line_id)
-                segment_to_text[line_id] = txt
+                segment_to_text[line_id] = ' '.join(src_item['tokens'])
             break
     return segment_to_text
 
@@ -145,6 +148,6 @@ def final_translations_from_dict(segment_to_txt):
     """
     id_to_segment = {}
     for line_id in sorted([int(x) for x in segment_to_txt.keys()]):
-        id_to_segment[line_id] = text_json[str(x)].strip()
+        id_to_segment[line_id] = segment_to_txt[str(line_id)].strip()
     return id_to_segment
 

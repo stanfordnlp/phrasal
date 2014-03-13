@@ -36,7 +36,8 @@ doc_to_user_txt = defaultdict(dict)
 doc_to_user_time = defaultdict(dict)
 dump_row_list = imt_utils.load_middleware_dump(dump_file)
 for row in dump_row_list:
-    segment_to_tgt_txt = imt_utils.final_translations_from_dump_row(row)
+    text_dict = json.loads(row.text)
+    segment_to_tgt_txt = imt_utils.final_translations_from_dict(text_dict)
     doc_name = url2doc(row.src_doc)
     log = json.loads(row.log)
     segment_to_time = segment_times_from_log(log)
@@ -44,7 +45,7 @@ for row in dump_row_list:
     for line_id in sorted(segment_to_tgt_txt.keys()):
         doc_id = '%s:%d' % (doc_name, line_id)
         user_id = row.username + ':' + row.interface
-        mt_id = 'MT:' + row.interface
+        mt_id = 'MT:mt'
         doc_to_user_txt[doc_id][user_id] = segment_to_tgt_txt[line_id]
         doc_to_user_time[doc_id][user_id] = segment_to_time[line_id]
         doc_to_user_txt[doc_id][mt_id] = segment_to_mt[line_id]
