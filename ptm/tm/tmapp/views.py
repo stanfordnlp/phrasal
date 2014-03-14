@@ -42,6 +42,27 @@ def index(request):
                               context_instance=RequestContext(request))
 
 @login_required
+def playback(request, session_id=None):
+    if not session_id:
+        session_list = controller.get_session_list()
+        if not session_list:
+            raise Http404
+        return render_to_response('playback.html',
+                                  {'page_title' : 'Playback sessions',
+                                   'session_list' : session_list},
+                                  context_instance=RequestContext(request))
+    else:
+        session = controller.get_session(session_id)
+        if not session:
+            raise Http404
+        return render_to_response('translate_playback.html',
+                                  {'src_document_url' : session.src_document.url,
+                                   'src_language' : session.src_document.language.code,
+                                   'tgt_language' : session.tgt_language.code,
+                                   'session_log' : session.log},
+                                  context_instance=RequestContext(request))
+
+@login_required
 def training(request, step_id=None):
     page_title = _('Experiment Overview and CAT Training')
     page_name = _('Experiment Overview and Training')
