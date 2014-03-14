@@ -29,7 +29,7 @@ out_file_name = args[1]
 dump_row_list = imt_utils.load_middleware_dump(dump_file)
 output_row_list = []
 total_translation_time = Counter()
-#user_order_to_time = defaultdict(defaultdict(dict))
+user_order_to_time = defaultdict(list)
 for i,row in enumerate(dump_row_list):
     if i > 0 and i % 10 == 0:
         sys.stdout.write('.')
@@ -45,11 +45,12 @@ for i,row in enumerate(dump_row_list):
     doc_name = imt_utils.url2doc(row.src_doc)
     doc_genre = imt_utils.genre_from_url(row.src_doc)
     for line_id in sorted(segment_to_tgt_txt.keys()):
-        segment_id = '%s.%d' % (doc_name, line_id)
+        segment_id = '%s:%d' % (doc_name, line_id)
         time = segment_to_time[line_id]
         total_translation_time[row.username] += time
         order = int(row.order)
-        #user_order_to_time[row.username][order][segment_id] = time
+        time_key = '%s:%d' % (row.username,order)
+        user_order_to_time[time_key].append(time)
         output_row = OutputRow(time=str(time),
                                last_time=str(0.01),
                                username=row.username,
@@ -65,14 +66,25 @@ for i,row in enumerate(dump_row_list):
         output_row_list.append(output_row)
 
 # Fill in the previous time column
-#for i in xrange(len(output_row_list)):
-#    row = output_row_list[i]
-#    segment_id = float(row.segment_id)
-#    last_segment_id = str(float(segment_id) - 0.1)
-#    if last_segment_id in user_order_to_time[row.username]:
-#        last_time = user_order_to_time[row.username][last_segment_id]
-#        output_row_list[i] = row._replace(last_time=str(last_time))
-        
+for i in xrange(len(output_row_list)):
+    row = output_row_list[i]
+    order = int(row.order)
+    time_key = '%s:%d' % (row.username,order)
+    doc_name,line_id = row.segment_id.split(':')
+    prev_line_id = int(line_id) - 1
+    if prev_line_id >= 0:
+        last_time = user_order_to_time[time_key][prev_line_id] + 0.0001
+        output_row_list[i] = row._replace(last_time=str(last_time))
+    else:
+        # Look back to previous document
+        time_key = '%s:%d' % (row.username,order-1)
+        if time_key in user_order_to_time:
+            last_time = user_order_to_time[time_key][-1] + 0.0001
+            output_row_list[i] = row._replace(last_time=str(last_time))
+        else:
+            # This is the first segment
+            pass
+    
 print
 print 'Writing to:',out_file_name
 imt_utils.write_rows_to_csv(output_row_list, out_file_name)
