@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.lm;
 
+import cern.colt.Arrays;
+
 /**
  * Result of a KenLM query.
  * 
@@ -53,5 +55,10 @@ public class KenLMState extends LMState {
   @Override
   public int length() {
     return stateLength;
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("%.4f %s", this.score, Arrays.toString(this.state));
   }
 }

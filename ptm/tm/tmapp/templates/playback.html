@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load url from future %}
+
+{% block title %}
+ -- {{ page_title }}
+{% endblock %}
+
+{% block user_static %}
+
+{% load compressed %}
+{% compressed_css 'tmapp_css' %}
+
+{% endblock %}
+
+{% block header %}
+Stanford Translation Study
+{% endblock%}
+
+{% block content %}
+
+<ul>
+{% for session in session_list %}
+    <li><a href="/tm/playback/{{ session.id }}" target="_blank">{{ session.user.username }} {{ session.src_document.url }}</a> {{ session.interface }} {{ session.tgt_language.code }}</li>
+{% endfor %}
+</ul>
+
+{% endblock %}

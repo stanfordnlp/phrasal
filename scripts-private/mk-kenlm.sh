@@ -20,7 +20,7 @@ if [ $# -le 3 ]; then
     exit
 fi
 
-KENLM_BIN=/u/nlp/packages/kenlm/bin
+KENLM_BIN=$JAVANLP_HOME/projects/mt/src-cc/kenlm/bin
 MAKELM=${KENLM_BIN}/lmplz
 MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp
@@ -33,7 +33,7 @@ shift 3
 mkdir -p $TEMPDIR
 
 echo "Building ARPA LM..."
-zcat $* | perl -ne 's/<s>//g; print' | $MAKELM -o $ORDER -S 80% -T $TEMPDIR > "$NAME".arpa
+zcat $* | perl -ne 's/<s>//g; print' | $MAKELM --interpolate_unigrams -o $ORDER -S 80% -T $TEMPDIR > "$NAME".arpa
 
 echo "Binarizing ARPA LM with standard settings"
 $MAKEBIN $TYPE "$NAME".arpa "$NAME".bin
