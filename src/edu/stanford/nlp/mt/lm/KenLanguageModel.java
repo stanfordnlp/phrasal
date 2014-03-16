@@ -135,14 +135,18 @@ public class KenLanguageModel implements LanguageModel<IString> {
     if (boundaryState != null) {
       return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
     }
-    int[] ngramIds = toKenLMIds(sequence);
+    return score(toKenLMIds(sequence));
+  }
+  
+  // Thang Mar14: factor out from the original score(Sequence<IString sequence) method
+  public LMState score(int[] ngramIds) { 
     // got is (state_length << 32) | prob where prob is a float.
     long got = scoreNGram(kenLMPtr, ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
     return new KenLMState(score, ngramIds, stateLength);
   }
-
+  
   @Override
   public IString getStartToken() {
     return TokenUtils.START_TOKEN;
