@@ -23,13 +23,13 @@ public final class LanguageModelPerplexity {
   
   private LanguageModelPerplexity() {}
   
-  public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
+  public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> sequence) {
     double logP = 0;
-    Sequence<T> s = new InsertedStartEndToken<T>(s2, lm.getStartToken(),
+    Sequence<T> paddedSequence = new InsertedStartEndToken<T>(sequence, lm.getStartToken(),
         lm.getEndToken());
-    int sz = s.size();
-    for (int i = 1; i < sz; i++) {
-      Sequence<T> ngram = s.subsequence(0, i + 1);
+    for (int i = 1, limit = paddedSequence.size(); i < limit; i++) {
+      final int seqStart = Math.max(0, i - lm.order() + 1);
+      Sequence<T> ngram = paddedSequence.subsequence(seqStart, i + 1);
       double ngramScore = lm.score(ngram).getScore();
       if (ngramScore == ARPALanguageModel.UNKNOWN_WORD_SCORE) {
         // like sri lm's n-gram utility w.r.t. closed vocab models,
