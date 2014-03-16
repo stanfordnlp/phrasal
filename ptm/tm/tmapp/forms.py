@@ -1,4 +1,5 @@
 import logging
+import re
 from django import forms
 from django.forms.util import ErrorList
 from django.utils.safestring import mark_safe
@@ -6,6 +7,9 @@ from models import Language,DemographicData,ExitSurveyData,TranslationSession
 from django.forms import ModelForm
 
 logger = logging.getLogger(__name__)
+
+# Strip whitespace in freeform text fields.
+normalize_whitespace = lambda x : re.sub(r'\s+', ' ', x.strip(), re.U)
 
 class DivErrorList(ErrorList):
     """
@@ -22,6 +26,23 @@ class ExitSurveyForm(ModelForm):
     """
     Final questionnaire after the experiment completes.
     """
+    def clean_exit_technical_comparison(self):
+        data = self.cleaned_data['exit_technical_comparison']
+        logger.debug(data)
+        return normalize_whitespace(self.cleaned_data['exit_technical_comparison'])
+    def clean_exit_hardest_source(self):
+        return normalize_whitespace(self.cleaned_data['exit_hardest_source'])
+    def clean_exit_hardest_target(self):
+        return normalize_whitespace(self.cleaned_data['exit_hardest_target'])
+    def clean_exit_cat_strength_weakness(self):
+        return normalize_whitespace(self.cleaned_data['exit_cat_strength_weakness'])
+    def clean_exit_itm_strength_weakness(self):
+        return normalize_whitespace(self.cleaned_data['exit_itm_strength_weakness'])
+    def clean_exit_itm_missing_aid(self):
+        return normalize_whitespace(self.cleaned_data['exit_itm_missing_aid'])
+    def clean_exit_comments(self):
+        return normalize_whitespace(self.cleaned_data['exit_comments'])
+    
     class Meta:
         model=ExitSurveyData
         exclude=['user']
