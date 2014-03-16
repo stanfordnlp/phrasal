@@ -60,12 +60,16 @@ public final class LanguageModelPerplexity {
         new LineNumberReader(new InputStreamReader(System.in)) :
           IOTools.getReaderFromFile(args[1]);
     
-    double logSum = 0;
+    double logSum = 0.0;
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
       Sequence<IString> seq = IStrings.tokenize(sent);
-      double score = scoreSequence(lm, seq);
-      logSum += Math.log(score);
+      final double score = scoreSequence(lm, seq);
+      assert score != 0.0;
+      assert ! Double.isNaN(score);
+      assert ! Double.isInfinite(score);
+      
+      logSum += score;
       
       System.out.println("Sentence: " + sent);
       System.out.printf("Sequence score: %f score_log10: %f%n", score, score
