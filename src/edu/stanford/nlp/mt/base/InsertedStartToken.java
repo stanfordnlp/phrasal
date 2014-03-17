@@ -1,5 +1,12 @@
 package edu.stanford.nlp.mt.base;
 
+/**
+ * Wrap a sequence with a begin symbol.
+ * 
+ * @author danielcer
+ *
+ * @param <TK>
+ */
 public class InsertedStartToken<TK> extends AbstractSequence<TK> {
   Sequence<TK> wrapped;
   TK startToken;

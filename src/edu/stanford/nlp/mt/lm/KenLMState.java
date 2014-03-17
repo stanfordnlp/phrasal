@@ -27,6 +27,13 @@ public class KenLMState extends LMState {
     this.hashCode = result;
   }
   
+  /**
+   * Getter for KenLM.
+   * 
+   * @return
+   */
+  public int[] getState() { return state; }
+  
   @Override
   public boolean equals(Object other) {
     if (this == other) {

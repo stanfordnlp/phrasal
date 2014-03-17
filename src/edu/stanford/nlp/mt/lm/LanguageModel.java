@@ -17,6 +17,17 @@ public interface LanguageModel<T> {
   LMState score(Sequence<T> sequence);
 
   /**
+   * Score a full sequence starting from a prior state, and return
+   * the state of the last scoring call.
+   * 
+   * @param sequence
+   * @param startIndex index in sequence to start scoring.
+   * @param priorState
+   * @return
+   */
+  LMState score(Sequence<T> sequence, int startIndex, LMState priorState);
+  
+  /**
 	 * @return the LM-specific start token.
 	 */
   T getStartToken();

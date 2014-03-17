@@ -1,34 +1,29 @@
 package edu.stanford.nlp.mt.base;
 
 /**
- * Wrap a sequence with begin/end symbols.
+ * Wrap a sequence with an end symbol.
  * 
- * @author danielcer
+ * @author Spence Green
  *
  * @param <TK>
  */
-public class InsertedStartEndToken<TK> extends AbstractSequence<TK> {
+public class InsertedEndToken<TK> extends AbstractSequence<TK> {
   final Sequence<TK> wrapped;
-  final TK startToken;
   final TK endToken;
   final int wrappedSz;
 
-  public InsertedStartEndToken(Sequence<TK> wrapped, TK startToken, TK endToken) {
+  public InsertedEndToken(Sequence<TK> wrapped, TK endToken) {
     this.wrapped = wrapped;
-    this.startToken = startToken;
     this.endToken = endToken;
     this.wrappedSz = wrapped.size();
   }
 
   @Override
   public TK get(int i) {
-    if (i == 0) {
-      return startToken;
+    if (i < wrappedSz) {
+      return wrapped.get(i);
     }
-    if (i < wrappedSz + 1) {
-      return wrapped.get(i - 1);
-    }
-    if (i == wrappedSz + 1) {
+    if (i == wrappedSz) {
       return endToken;
     }
 
@@ -38,12 +33,12 @@ public class InsertedStartEndToken<TK> extends AbstractSequence<TK> {
 
   @Override
   public int size() {
-    return wrapped.size() + 2;
+    return wrapped.size() + 1;
   }
 
   @Override
   public Sequence<TK> subsequence(int start, int end) {
-    if (start == 0 || end == size()) {
+    if (end == size()) {
       return super.subsequence(start, end);
     } else {
       return wrapped.subsequence(start - 1, end - 1);

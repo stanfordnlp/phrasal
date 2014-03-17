@@ -6,11 +6,11 @@ import junit.framework.TestCase;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.lm.ARPALanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
-import edu.stanford.nlp.mt.tools.LanguageModelPerplexity;
 
 /**
  * @author Karthik Raghunathan
@@ -33,9 +33,10 @@ public class ARPALanguageModelTest extends TestCase {
   public void testLoad() {
     assertTrue(lm.tables.length == 3);
     String sent = "This is a test sentence to be scored by the language model";
-    Sequence<IString> seq = new SimpleSequence<IString>(
-        IStrings.toIStringArray(sent.split("\\s")));
-    double score = LanguageModelPerplexity.scoreSequence(lm, seq);
+    Sequence<IString> seq = IStrings.tokenize(sent);
+    Sequence<IString> paddedSequence = new InsertedStartEndToken<IString>(seq, lm.getStartToken(),
+        lm.getEndToken());
+    double score = lm.score(paddedSequence, 1, null).getScore();
     assertTrue(score == (double) -81.74873375892639);
   }
 

@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.lm.ARPALanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 
@@ -17,30 +16,13 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  * Evaluate the perplexity of an input file under a language model.
  * 
  * @author danielcer
+ * @author Spence Green
  *
  */
 public final class LanguageModelPerplexity {
   
   private LanguageModelPerplexity() {}
-  
-  public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> s2) {
-    double logP = 0;
-    Sequence<T> s = new InsertedStartEndToken<T>(s2, lm.getStartToken(),
-        lm.getEndToken());
-    int sz = s.size();
-    for (int i = 1; i < sz; i++) {
-      Sequence<T> ngram = s.subsequence(0, i + 1);
-      double ngramScore = lm.score(ngram).getScore();
-      if (ngramScore == ARPALanguageModel.UNKNOWN_WORD_SCORE) {
-        // like sri lm's n-gram utility w.r.t. closed vocab models,
-        // right now we silently ignore unknown words.
-        continue;
-      }
-      logP += ngramScore;
-    }
-    return logP;
-  }
-  
+
   /**
    * 
    * @param args
@@ -64,8 +46,14 @@ public final class LanguageModelPerplexity {
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
       Sequence<IString> seq = IStrings.tokenize(sent);
-      double score = scoreSequence(lm, seq);
-      logSum += Math.log(score);
+      Sequence<IString> paddedSequence = new InsertedStartEndToken<IString>(seq, lm.getStartToken(),
+          lm.getEndToken());
+      final double score = lm.score(paddedSequence, 1, null).getScore();
+      assert score != 0.0;
+      assert ! Double.isNaN(score);
+      assert ! Double.isInfinite(score);
+      
+      logSum += score;
       
       System.out.println("Sentence: " + sent);
       System.out.printf("Sequence score: %f score_log10: %f%n", score, score

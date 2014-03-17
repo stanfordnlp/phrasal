@@ -268,4 +268,10 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   public int order() {
     return probs.length;
   }
+
+  @Override
+  public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

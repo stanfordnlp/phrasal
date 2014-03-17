@@ -50,6 +50,7 @@ class WrapAbstract {
     virtual ~WrapAbstract() {}
     virtual lm::WordIndex Index(const char *word) const = 0;
     virtual jlong Query(const lm::WordIndex *context_begin, const lm::WordIndex *context_end, lm::WordIndex predict) const = 0;
+  virtual jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *array_start, const lm::WordIndex *array_end) const = 0;
     // This isn't called much so just be lazy and make it virtual.
     virtual unsigned char Order() const = 0;
 
@@ -73,6 +74,35 @@ template <class Model> class Wrap : public WrapAbstract {
       // Return a jlong whose top bits are state length and bottom bits are floating-point probability.
       return convert.i | (static_cast<jlong>(StateLength(out_state)) << 32);
     }
+
+  jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *array_start, const lm::WordIndex *array_end) const {
+    typename Model::State out_state;
+    float sum_score = 0.0;
+    bool first_ngram = true;
+    bool is_done = false;
+    while( ! is_done ) {
+      lm::FullScoreReturn got;
+      if (first_ngram) {
+	lm::WordIndex *context_start = (lm::WordIndex*) (array_start + 1);
+	//std::cout << *context_start << std::endl;
+	got = back_.FullScoreForgotState(context_start, array_end, *array_start, out_state);
+      } else {
+	typename Model::State new_state;
+	//std::cout << *array_start << std::endl;
+	got = back_.FullScore(out_state, *array_start, new_state);
+	out_state = new_state;
+      }
+      //std::cout << got.prob << std::endl;
+      sum_score += got.prob;
+      first_ngram = false;
+      is_done = array_begin == array_start;
+      --array_start;
+    }
+    //fflush(stdout);
+    union {float f; uint32_t i; } convert;
+    convert.f = sum_score * M_LN10;
+    return convert.i | (static_cast<jlong>(StateLength(out_state)) << 32);
+  }
 
     unsigned char Order() const { return back_.Order(); }
 
@@ -171,7 +201,7 @@ JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getLMId
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    scoreNGram
- * Signature: ([Ljava/lang/String;)D
+ * Signature: (L[I)L
  */
 JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
@@ -185,8 +215,23 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
+ * Method:    scoreNGram
+ * Signature: (L[II)L
+ */
+JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGramSeq
+(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, jint start_index) {
+  // Convert the sequence input to a C array
+  jint ngram_sz = env->GetArrayLength(jint_ngram);
+  jint ngram_array[ngram_sz]; 
+  env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
+  
+  return reinterpret_cast<WrapAbstract*>(kenLM_ptr)->QuerySequence((lm::WordIndex*)&ngram_array[0], (lm::WordIndex*)&ngram_array[start_index], (lm::WordIndex*)&ngram_array[ngram_sz]);
+}
+  
+/*
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    getOrder
- * Signature: ()I
+ * Signature: (L)I
  */
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {

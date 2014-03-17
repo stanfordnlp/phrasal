@@ -33,6 +33,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   // JNI methods
   private native long readKenLM(String filename);
   private native long scoreNGram(long kenLMPtr, int[] ngram);
+  private native long scoreNGramSeq(long kenLMPtr, int[] ngram, int startIndex);
   private native int getLMId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
 
@@ -135,10 +136,17 @@ public class KenLanguageModel implements LanguageModel<IString> {
     if (boundaryState != null) {
       return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
     }
-    return score(toKenLMIds(sequence));
+    int[] ngramIds = toKenLMIds(sequence);
+    long got = scoreNGram(kenLMPtr, ngramIds);
+    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
+    int stateLength = (int)(got >> 32);
+    return new KenLMState(score, ngramIds, stateLength);
   }
   
   // Thang Mar14: factor out from the original score(Sequence<IString sequence) method
+  // TODO(spenceg): This really should *not* be a public method since it reveals KenLM internals
+  // to the outside world. Also, don't factor it out from score(), which is on the critical path
+  // in the decoder.
   public LMState score(int[] ngramIds) { 
     // got is (state_length << 32) | prob where prob is a float.
     long got = scoreNGram(kenLMPtr, ngramIds);
@@ -165,5 +173,41 @@ public class KenLanguageModel implements LanguageModel<IString> {
   @Override
   public int order() {
     return order;
+  }
+  
+  @Override
+  public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
+    Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
+    if (boundaryState != null) {
+      return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
+    }
+    
+    // Handling prior state
+    KenLMState state = priorState == null ? null : (KenLMState) priorState;
+    int priorStateLength = state == null ? 0 : state.length();
+    int[] ngramIds = state == null ? toKenLMIds(sequence, null, 0) :
+        toKenLMIds(sequence, state.getState(), priorStateLength);
+    
+    // Reverse the start index for KenLM
+    final int kenLMStartIndex = ngramIds.length - priorStateLength - startIndex - 1;
+    
+    long got = scoreNGramSeq(kenLMPtr, ngramIds, kenLMStartIndex);
+//    System.out.flush();
+    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
+    int stateLength = (int)(got >> 32);
+    return new KenLMState(score, ngramIds, stateLength);
+  }
+  
+  private int[] toKenLMIds(Sequence<IString> ngram, int[] priorState, int priorStateLength) {
+    final int ngramSize = ngram.size();
+    int[] ngramIds = new int[ngramSize + priorStateLength];
+    if (priorStateLength > 0) {
+      System.arraycopy(priorState, 0, ngramIds, ngramSize, priorStateLength);
+    }
+    for (int i = 0; i < ngramSize; i++) {
+      // Notice: ngramids are in reverse order vv. the Sequence
+      ngramIds[ngramSize-1-i] = toKenLMId(ngram.get(i));
+    }
+    return ngramIds;
   }
 }
