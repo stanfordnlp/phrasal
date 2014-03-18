@@ -75,34 +75,20 @@ template <class Model> class Wrap : public WrapAbstract {
       return convert.i | (static_cast<jlong>(StateLength(out_state)) << 32);
     }
 
-  jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *array_start, const lm::WordIndex *array_end) const {
-    typename Model::State out_state;
-    float sum_score = 0.0;
-    bool first_ngram = true;
-    bool is_done = false;
-    while( ! is_done ) {
-      lm::FullScoreReturn got;
-      if (first_ngram) {
-	lm::WordIndex *context_start = (lm::WordIndex*) (array_start + 1);
-	//std::cout << *context_start << std::endl;
-	got = back_.FullScoreForgotState(context_start, array_end, *array_start, out_state);
-      } else {
-	typename Model::State new_state;
-	//std::cout << *array_start << std::endl;
-	got = back_.FullScore(out_state, *array_start, new_state);
-	out_state = new_state;
+    jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *array_start, const lm::WordIndex *array_end) const {
+      // Could handle this case if there was a need to with GetState.
+      assert(array_start != array_end);
+      typename Model::State state[2];
+      typename Model::State *in_state = &state[0], *out_state = &state[1];
+      float sum_score = back_.FullScoreForgotState(array_start + 1, array_end, *array_start, *out_state).prob;
+      for (const lm::WordIndex *i = array_start - 1; i >= array_begin; --i) {
+        std::swap(in_state, out_state);
+        sum_score += back_.FullScore(*in_state, *i, *out_state).prob;
       }
-      //std::cout << got.prob << std::endl;
-      sum_score += got.prob;
-      first_ngram = false;
-      is_done = array_begin == array_start;
-      --array_start;
+      union {float f; uint32_t i; } convert;
+      convert.f = sum_score * M_LN10;
+      return convert.i | (static_cast<jlong>(StateLength(*out_state)) << 32);
     }
-    //fflush(stdout);
-    union {float f; uint32_t i; } convert;
-    convert.f = sum_score * M_LN10;
-    return convert.i | (static_cast<jlong>(StateLength(out_state)) << 32);
-  }
 
     unsigned char Order() const { return back_.Order(); }
 
@@ -225,7 +211,7 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGramS
   jint ngram_array[ngram_sz]; 
   env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
   
-  return reinterpret_cast<WrapAbstract*>(kenLM_ptr)->QuerySequence((lm::WordIndex*)&ngram_array[0], (lm::WordIndex*)&ngram_array[start_index], (lm::WordIndex*)&ngram_array[ngram_sz]);
+  return reinterpret_cast<WrapAbstract*>(kenLM_ptr)->QuerySequence((const lm::WordIndex*)&ngram_array[0], (const lm::WordIndex*)&ngram_array[start_index], (const lm::WordIndex*)&ngram_array[ngram_sz]);
 }
   
 /*
