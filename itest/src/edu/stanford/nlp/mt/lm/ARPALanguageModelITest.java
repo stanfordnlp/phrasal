@@ -16,13 +16,13 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  * 
  * @author Spence Green
  */
-public class ARPALanguageModelTest extends TestCase {
+public class ARPALanguageModelITest extends TestCase {
 
   private static ARPALanguageModel lm;
   static {
     try {
       lm = (ARPALanguageModel) LanguageModelFactory
-          .load("projects/mt/test/inputs/3gm-probing.arpa.gz");
+          .load("/u/nlp/data/phrasal_test/3gm-probing.arpa.gz");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

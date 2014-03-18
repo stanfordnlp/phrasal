@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  * 
  * @author Spence Green
  */
-public class KenLanguageModelTest extends TestCase {
+public class KenLanguageModelITest extends TestCase {
 
   private static double scoreTestSentence(KenLanguageModel lm) {
     String sent = "This is a test sentence to be scored by the language model";
@@ -30,7 +30,7 @@ public class KenLanguageModelTest extends TestCase {
     KenLanguageModel lm;
     try {
       lm = (KenLanguageModel) LanguageModelFactory
-          .load("kenlm:projects/mt/test/inputs/3gm-probing.bin");
+          .load("kenlm:/u/nlp/data/phrasal_test/3gm-probing.bin");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }  
@@ -42,7 +42,7 @@ public class KenLanguageModelTest extends TestCase {
     KenLanguageModel lm;
     try {
       lm = (KenLanguageModel) LanguageModelFactory
-          .load("kenlm:projects/mt/test/inputs/3gm-probing.arpa.gz");
+          .load("kenlm:/u/nlp/data/phrasal_test/3gm-probing.arpa.gz");
     } catch (IOException e) {
       throw new RuntimeException(e);
     }  
