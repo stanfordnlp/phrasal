@@ -121,6 +121,9 @@ public class RuleQueryRequestHandler implements RequestHandler {
         } else if (rule.abstractRule.target == null || rule.abstractRule.target.size() == 0) {
           // Ignore deletion rules from the unknown word model
           continue;
+        } else if (source.equals(rule.abstractRule.target)) {
+          // Ignore identity translation rules when drop-unknown-words is disabled.
+          continue;
         }
 
         // Extract word-word alignment from the rule.
