@@ -1,5 +1,3 @@
-<!-- JavaNLP MT5 build file -->
-
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
   <property name="project.more"   value="${basedir}/../more" />
@@ -9,6 +7,7 @@
   <property name="source-research.path"    value="${basedir}/src-research" />
   <property name="tests.path"     value="${basedir}/test/src" />
   <property name="itests.path"     value="${basedir}/itest/src" />
+  <property name="kenlm.path"     value="${basedir}/src-cc" />
   
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
@@ -17,8 +16,18 @@
   <property name="compile.target"      value="1.7" />
   <property name="compile.encoding"    value="utf-8" />
 
-  <target name="kenlm">
-    <exec executable="${basedir}/src-cc/compile_JNI.sh" dir="${basedir}/src-cc"/>
+  <property environment="env"/>
+
+  <target name="checkkenlm">
+    <available file="${kenlm.path}/libPhrasalKenLM.so" type="file" property="kenlm.present"/>
+  </target>
+  
+  <target name="kenlm" depends="checkkenlm" unless="kenlm.present">
+    <echo message="Building KenLM (C++). Windows users must set the CYGWIN environment variable to point to Cygwin."/>
+    <exec executable="${env.CYGWIN}\bin\bash" dir="${kenlm.path}" osfamily="windows">
+      <arg value="${kenlm.path}/compile_JNI.sh"/>
+    </exec>
+    <exec executable="${kenlm.path}/compile_JNI.sh" dir="${kenlm.path}" osfamily="unix"/>
   </target>
   
   <target name="classpath" description="Sets the classpath">
@@ -60,6 +69,7 @@
   <target name="clean" description="Delete old classes">
     <echo message="${ant.project.name}" />
     <delete dir="${build.path}"/>
+    <delete file="${kenlm.path}/libPhrasalKenLM.so" />
   </target>
 
   <target name="compile" depends="classpath,kenlm"
@@ -108,7 +118,7 @@ includeantruntime="false">
     </junit>
   </target>
   
-  <target name="itest" depends="classpath,compile"
+  <target name="itest" depends="classpath,compile,kenlm"
           description="Run mt integration tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
