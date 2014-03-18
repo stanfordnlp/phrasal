@@ -31,7 +31,10 @@
   </target>
 
   <target name="checkkenlm">
+    <!-- Unix filename -->
     <available file="${kenlm.path}/libPhrasalKenLM.so" type="file" property="kenlm.present"/>
+    <!-- MacOS filename -->
+    <available file="${kenlm.path}/libPhrasalKenLM.dylib" type="file" property="kenlm.present"/>
   </target>
   
   <target name="kenlm" depends="checkkenlm" unless="kenlm.present">
@@ -79,10 +82,11 @@
     </copy>
   </target>
 
-  <target name="clean"
-        description="clean up" >
+  <target name="clean" description="clean up" >
     <delete dir="${build.path}"/>
-    <delete file="${kenlm.path}/libPhrasalKenLM.so" />
+    <delete>
+      <fileset dir="${kenlm.path}" includes="libPhrasalKenLM.*" />
+    </delete>
   </target>
 	
   <target name="all" depends="clean,compile"

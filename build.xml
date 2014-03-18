@@ -19,7 +19,10 @@
   <property environment="env"/>
 
   <target name="checkkenlm">
+    <!-- Unix filename -->
     <available file="${kenlm.path}/libPhrasalKenLM.so" type="file" property="kenlm.present"/>
+    <!-- MacOS filename -->
+    <available file="${kenlm.path}/libPhrasalKenLM.dylib" type="file" property="kenlm.present"/>
   </target>
   
   <target name="kenlm" depends="checkkenlm" unless="kenlm.present">
@@ -69,7 +72,9 @@
   <target name="clean" description="Delete old classes">
     <echo message="${ant.project.name}" />
     <delete dir="${build.path}"/>
-    <delete file="${kenlm.path}/libPhrasalKenLM.so" />
+    <delete>
+      <fileset dir="${kenlm.path}" includes="libPhrasalKenLM.*" />
+    </delete>
   </target>
 
   <target name="compile" depends="classpath,kenlm"
