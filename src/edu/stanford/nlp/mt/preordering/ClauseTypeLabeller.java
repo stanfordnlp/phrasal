@@ -409,11 +409,12 @@ public class ClauseTypeLabeller {
       }
       for (int i = 0; i < gloss.size(); i++) {
         String w = gloss.get(i).value();
+        if (i > 0)
+          sb.append(" ");
         if (w.startsWith("--C-"))
           sb.append(clauses.get(w).preorder(clauses));
         else
           sb.append(w);
-        sb.append(" ");
       }
       return sb.toString();
     }
