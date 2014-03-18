@@ -6,23 +6,78 @@
 	{% load compressed %}
 	{% compressed_css 'ui_css' %}
 	{% compressed_js 'ui_js' %}
-	<script type="text/javascript">
-		$(document).ready( function() {
-		        ptm = new PTM({
-				"postEditMode" : false,
-				"docURL" : "{{ src_document_url }}",
-				"sourceLang" : "{{ src_language }}",
-				"targetLang" : "{{ tgt_language }}",
-				"maxIdleTime" : "9999"
-			});
-		ptm.load();
-		        var log = JSON.parse("{{ session_log|escapejs }}");
-		        ptm.playback(log);
+<script type="text/javascript">
+var msec = d3.format("0.3f");
+var SpeedModel = Backbone.Model.extend({
+	defaults : { "speed" : 1.0 },
+	initialize : function() {
+		this.on("change:speed", function() {
+			ptm.setPlaybackSpeed(this.get("speed"));
+		}.bind(this));
+	}
+});
+var SpeedControlView = Backbone.View.extend({
+	el : "#SpeedControl",
+	initialize : function() {
+		d3.select(this.el).on("change", function() {
+			var tick = parseInt(d3.event.target.value);
+			var speed = tick;
+			if ( tick === 5 ) { speed = 5 }
+			if ( tick === 6 ) { speed = 10 }
+			if ( tick === 7 ) { speed = 999 }
+			this.model.set("speed", speed);
+		}.bind(this));
+	}
+});
+var SpeedReadingView = Backbone.View.extend({
+	el : "#SpeedReading",
+	initialize : function() {
+		this.model.on("change:speed", function() {
+			var time = ptm.playbackTime;
+			var speed = this.model.get("speed");
+			var label = speed+"x ("+msec(time)+"ms)";
+			if ( speed === 999 ) { label = "variable ("+msec(time)+"ms)" }
+			d3.select(this.el).text( label );
+		}.bind(this));
+	},
+	refresh : function() {
+		var time = ptm.playbackTime;
+		var speed = this.model.get("speed");
+		var label = speed+"x ("+msec(time)+"ms)";
+		if ( speed === 999 ) { label = "variable ("+msec(time)+"ms)" }
+		d3.select(this.el).text( label );
+	}
+});
+</script>
+
+<script type="text/javascript">
+	$(document).ready( function() {
+		speed = new SpeedModel();
+		control = new SpeedControlView({ model : speed });
+		reading = new SpeedReadingView({ model : speed });
+		
+		ptm = new PTM({
+			"postEditMode" : false,
+			"docURL" : "{{ src_document_url }}",
+			"sourceLang" : "{{ src_language }}",
+			"targetLang" : "{{ tgt_language }}",
+			"maxIdleTime" : "9999"
 		});
-	</script>
+		ptm.on("playback:tick", reading.refresh.bind(reading));
+		ptm.load();
+		try {
+			var log = JSON.parse("{{ session_log|escapejs }}");
+			ptm.playback(log);
+		}
+		catch (e) {
+			console.log( "Cannot run PTM.playback()" );
+		}
+	});
+</script>
 </head>
 <body style="padding: 0; margin: 0; background: #eee;">
 <div class="PAGE" style="margin: 20px 20px 200px 20px">
+  <div style="margin: 5px 5px 15px 5px">Playback speed = <span id="SpeedReading" style="display: inline-block; width: 160px">1x ()</span> <input type="range" style="width: 100px; vertical-align: top" min="0" max="7" value="1" id="SpeedControl"></input> </div>
   <div id="PTM"></div>
 </div>
 </body>
