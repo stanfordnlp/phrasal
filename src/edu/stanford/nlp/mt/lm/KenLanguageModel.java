@@ -135,18 +135,17 @@ public class KenLanguageModel implements LanguageModel<IString> {
   public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
     Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
     if (boundaryState != null) {
-      return new KenLMState(0.0, makeKenLMInput(boundaryState, null, 0), boundaryState.size());
+      return new KenLMState(0.0, makeKenLMInput(boundaryState, new int[0]), boundaryState.size());
     }
     
-    // Handling prior state
-    KenLMState state = priorState == null ? null : (KenLMState) priorState;
-    int priorStateLength = state == null ? 0 : state.length();
-    int[] ngramIds = state == null ? makeKenLMInput(sequence, null, 0) :
-        makeKenLMInput(sequence, state.getState(), priorStateLength);
+    // Extract prior state
+    int[] state = priorState == null ? new int[0] : ((KenLMState) priorState).getState();
+    int[] ngramIds = makeKenLMInput(sequence, state);
     
     // Reverse the start index for KenLM
-    final int kenLMStartIndex = ngramIds.length - priorStateLength - startIndex - 1;
+    int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
     
+    // Execute the query (via JNI) and construct the return state
     long got = scoreNGramSeq(kenLMPtr, ngramIds, kenLMStartIndex);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
@@ -156,20 +155,20 @@ public class KenLanguageModel implements LanguageModel<IString> {
   /**
    * Convert a Sequence and an optional state to an input for KenLM.
    * 
-   * @param ngram
+   * @param sequence
    * @param priorState
    * @param priorStateLength
    * @return
    */
-  private int[] makeKenLMInput(Sequence<IString> ngram, int[] priorState, int priorStateLength) {
-    final int ngramSize = ngram.size();
-    int[] ngramIds = new int[ngramSize + priorStateLength];
-    if (priorStateLength > 0) {
-      System.arraycopy(priorState, 0, ngramIds, ngramSize, priorStateLength);
+  private int[] makeKenLMInput(Sequence<IString> sequence, int[] priorState) {
+    final int sequenceSize = sequence.size();
+    int[] ngramIds = new int[sequenceSize + priorState.length];
+    if (priorState.length > 0) {
+      System.arraycopy(priorState, 0, ngramIds, sequenceSize, priorState.length);
     }
-    for (int i = 0; i < ngramSize; i++) {
+    for (int i = 0; i < sequenceSize; i++) {
       // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[ngramSize-1-i] = toKenLMId(ngram.get(i));
+      ngramIds[sequenceSize-1-i] = toKenLMId(sequence.get(i));
     }
     return ngramIds;
   }
