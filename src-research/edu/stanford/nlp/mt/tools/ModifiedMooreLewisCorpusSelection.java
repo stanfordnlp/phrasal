@@ -10,8 +10,10 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.LineIndexedCorpus;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.lm.KenLanguageModel;
 
@@ -119,16 +121,11 @@ public class ModifiedMooreLewisCorpusSelection {
   // (in|out)KenLM can be either source or target
   public double computeSinglePerpDiff(String[] tokens, KenLanguageModel inKenLM, KenLanguageModel outKenLM){
     // build sequence of IString
-    IString[] istrings = new IString[tokens.length+2];
-    istrings[0] = startToken; // start token
-    for (int i = 0; i < tokens.length; i++) {
-      istrings[i+1] = new IString(tokens[i]);
-    }
-    istrings[istrings.length-1] = endToken; // end token
-    Sequence<IString> sequence = new SimpleSequence<IString>(istrings);
+    Sequence<IString> seq = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+    Sequence<IString> sequence = Sequences.wrapStartEnd(seq, startToken, endToken);
 
     // compute entropy diff = -1/N*log p_in - (-1/N*log p_out) 
-    int numNgrams = (istrings.length<order)?1 : (istrings.length-order+1); // N
+    int numNgrams = (sequence.size()<order)?1 : (sequence.size()-order+1); // N
     return Math.exp(-inKenLM.score(sequence, 1, null).getScore()/numNgrams) - Math.exp(-outKenLM.score(sequence, 1, null).getScore()/numNgrams);
   }
   
