@@ -24,7 +24,9 @@ var SpeedControlView = Backbone.View.extend({
 			var speed = tick;
 			if ( tick === 5 ) { speed = 5 }
 			if ( tick === 6 ) { speed = 10 }
-			if ( tick === 7 ) { speed = 999 }
+			if ( tick === 7 ) { speed = -2 }
+			if ( tick === 8 ) { speed = -5 }
+			if ( tick === 9 ) { speed = -10 }
 			this.model.set("speed", speed);
 		}.bind(this));
 	}
@@ -36,7 +38,7 @@ var SpeedReadingView = Backbone.View.extend({
 			var time = ptm.playbackTime;
 			var speed = this.model.get("speed");
 			var label = speed+"x ("+msec(time)+"ms)";
-			if ( speed === 999 ) { label = "variable ("+msec(time)+"ms)" }
+			if ( speed < 0 ) { label = "var "+(-speed)+"x ("+msec(time)+"ms)" }
 			d3.select(this.el).text( label );
 		}.bind(this));
 	},
@@ -44,7 +46,7 @@ var SpeedReadingView = Backbone.View.extend({
 		var time = ptm.playbackTime;
 		var speed = this.model.get("speed");
 		var label = speed+"x ("+msec(time)+"ms)";
-		if ( speed === 999 ) { label = "variable ("+msec(time)+"ms)" }
+		if ( speed < 0 ) { label = "var "+(-speed)+"x ("+msec(time)+"ms)" }
 		d3.select(this.el).text( label );
 	}
 });
@@ -77,7 +79,7 @@ var SpeedReadingView = Backbone.View.extend({
 </head>
 <body style="padding: 0; margin: 0; background: #eee;">
 <div class="PAGE" style="margin: 20px 20px 200px 20px">
-  <div style="margin: 5px 5px 15px 5px">Playback speed = <span id="SpeedReading" style="display: inline-block; width: 160px">1x ()</span> <input type="range" style="width: 100px; vertical-align: top" min="0" max="7" value="1" id="SpeedControl"></input> </div>
+  <div style="margin: 5px 5px 15px 5px">Playback speed = <span id="SpeedReading" style="display: inline-block; width: 160px">1x ()</span> <input type="range" style="width: 100px; vertical-align: top" min="0" max="9" value="1" id="SpeedControl"></input> </div>
   <div id="PTM"></div>
 </div>
 </body>
