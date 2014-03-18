@@ -1,5 +1,3 @@
-<!-- JavaNLP MT5 build file -->
-
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
   <property name="project.more"   value="${basedir}/../more" />
@@ -9,6 +7,7 @@
   <property name="source-research.path"    value="${basedir}/src-research" />
   <property name="tests.path"     value="${basedir}/test/src" />
   <property name="itests.path"     value="${basedir}/itest/src" />
+  <property name="kenlm.path"     value="${basedir}/src-cc" />
   
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
@@ -17,6 +16,23 @@
   <property name="compile.target"      value="1.7" />
   <property name="compile.encoding"    value="utf-8" />
 
+  <property environment="env"/>
+
+  <target name="checkkenlm">
+    <!-- Unix filename -->
+    <available file="${kenlm.path}/libPhrasalKenLM.so" type="file" property="kenlm.present"/>
+    <!-- MacOS filename -->
+    <available file="${kenlm.path}/libPhrasalKenLM.dylib" type="file" property="kenlm.present"/>
+  </target>
+  
+  <target name="kenlm" depends="checkkenlm" unless="kenlm.present">
+    <echo message="Building KenLM (C++). Windows users must set the CYGWIN environment variable to point to Cygwin."/>
+    <exec executable="${env.CYGWIN}\bin\bash" dir="${kenlm.path}" osfamily="windows">
+      <arg value="${kenlm.path}/compile_JNI.sh"/>
+    </exec>
+    <exec executable="${kenlm.path}/compile_JNI.sh" dir="${kenlm.path}" osfamily="unix"/>
+  </target>
+  
   <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">
@@ -56,9 +72,12 @@
   <target name="clean" description="Delete old classes">
     <echo message="${ant.project.name}" />
     <delete dir="${build.path}"/>
+    <delete>
+      <fileset dir="${kenlm.path}" includes="libPhrasalKenLM.*" />
+    </delete>
   </target>
 
-  <target name="compile" depends="classpath"
+  <target name="compile" depends="classpath,kenlm"
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
@@ -91,6 +110,7 @@ includeantruntime="false">
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
+      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>

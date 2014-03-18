@@ -34,7 +34,7 @@ class SourceDocument(models.Model):
                                  related_name='+')
     
     def __unicode__(self):
-        return self.url
+        return '%s %s' % (self.url, self.language.code)
     
 class UserConfiguration(models.Model):
     """
