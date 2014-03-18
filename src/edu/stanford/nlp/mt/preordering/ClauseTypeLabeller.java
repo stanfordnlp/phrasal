@@ -10,7 +10,6 @@ import edu.stanford.nlp.ling.StringLabel;
 import edu.stanford.nlp.trees.LabeledScoredTreeNode;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.StringUtils;
 
 /*
  * @author Sebastian Schuster
@@ -19,7 +18,7 @@ import edu.stanford.nlp.util.StringUtils;
 public class ClauseTypeLabeller {
   
   
-  private static String[] pennPunctTags = {"''", "``", "-LRB-", "-RRB-", ".", ":", ",", "?", "\""};
+  private static String[] pennPunctTags = {"''", "``", "-LRB-", "-RRB-", ".", ":", ",", "?", "\"", "!"};
 
   
   /* adds clause type labels to the parse tree of a sentence 
@@ -47,13 +46,18 @@ public class ClauseTypeLabeller {
       Tree currentNode = curr.first();
       Tree parentNode = curr.second();
       //check whether the current node is "S","SBAR", "SINV", "SBARQ" or "SQ"
-      if (currentNode.label().toString().startsWith("S")) {
+      if (currentNode.label().toString().startsWith("S") || currentNode.label().toString().equals("FRAG")) {
         if (first) {
           //check for interrogative clause
           List<Label>posTags = currentNode.preTerminalYield();
           List<Label>gloss = currentNode.yield();
           String firstWord = gloss.isEmpty() ? null : gloss.get(0).toString();
+          
+            
+          
           String firstChild = currentNode.getChildrenAsList().isEmpty() ? null : currentNode.getChildrenAsList().get(0).label().value();
+          if ((firstChild.equals("''") || firstChild.equals("\"")) && currentNode.getChildrenAsList().size() > 1)
+            firstChild = currentNode.getChildrenAsList().get(1).label().value();
 
           
           //question word at the beginning of the sentence
@@ -88,7 +92,7 @@ public class ClauseTypeLabeller {
           
           
           first = false;
-        } else if (parentNode == null || (!parentNode.label().toString().startsWith("S") || parentNode.label().toString().equals("S-EXTR") || parentNode.label().toString().equals("S-MAIN"))) {
+        } else if (parentNode == null || (!parentNode.label().toString().startsWith("S-") || parentNode.label().toString().equals("S-EXTR") || parentNode.label().toString().equals("S-MAIN"))) {
           List<Label>posTags = currentNode.preTerminalYield();
           List<Label>gloss = currentNode.yield();
 
@@ -98,6 +102,10 @@ public class ClauseTypeLabeller {
           //check for infinitival clause
           if (posTags.size() > 1 && posTags.get(0).toString().equals("TO") && (posTags.get(1).toString().equals("VB") || posTags.get(1).toString().equals("RB"))) {
             currentNode.label().setValue("S-XCOMP");
+          } else if (posTags.size() > 2 && gloss.get(0).value().toLowerCase().equals("not") && posTags.get(1).toString().equals("TO") && (posTags.get(2).toString().equals("VB") || posTags.get(2).toString().equals("RB"))) {
+              
+            currentNode.label().setValue("S-XCOMP");
+
           //check for subordinate clause
           } else if (firstChild.equals("IN") || firstChild.startsWith("WH")) {
             currentNode.label().setValue("S-SUB");
@@ -183,8 +191,9 @@ public class ClauseTypeLabeller {
       return tree;
     }
     
-    private boolean isFiniteVerb (String posTag) {
-      return (posTag.equals("MD") || posTag.equals("VBP") || posTag.equals("VBZ") || posTag.equals("VBD"));
+    private boolean isFiniteVerb (String posTag, String word) {
+      return ((posTag.equals("MD") || posTag.equals("VBP") || posTag.equals("VBZ") || posTag.equals("VBD"))
+          && (!word.toLowerCase().equals("do") && !word.toLowerCase().equals("does")) && !word.toLowerCase().equals("did")) ;
     }
     
     private boolean isPunct (String word) {
@@ -198,17 +207,9 @@ public class ClauseTypeLabeller {
       return false;
     }
     
-    private boolean containsDo(List<Label> gloss, List<Integer> finiteVerbs) {
-      if (gloss.isEmpty() || finiteVerbs.isEmpty())
-        return false;
-      for (int i = 0; i < finiteVerbs.size(); i++) {
-        String w = gloss.get(finiteVerbs.get(i)).value().toLowerCase();
-        if (w.equals("do") || w.equals("does") || w.equals("did"))
-          return true;
-      }
-      return false;
+    private boolean isDo(String word) {
+      return (word.toLowerCase().equals("do") || word.toLowerCase().equals("does") || word.toLowerCase().equals("did"));
     }
-    
     
     public String preorder(HashMap<String, Clause> clauses) {
       List<Label> posTags = tree.preTerminalYield();
@@ -223,31 +224,52 @@ public class ClauseTypeLabeller {
       for (int i = 0; i < posTags.size(); i++) {
         Label pos = posTags.get(i);
         String word = gloss.get(i).value();
-        if (isFiniteVerb (pos.value())
-            || (i > 0 && pos.value().equals("RP") && !word.toLowerCase().startsWith("n") && isFiniteVerb(posTags.get(i-1).value())) 
-            || (i > 0 && pos.value().equals("VBG") && isFiniteVerb(posTags.get(i-1).value()))
+        if (isFiniteVerb (pos.value(), word)
+            || (i > 0 && pos.value().equals("RP") && !word.toLowerCase().startsWith("n") && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value())) 
+            || (i > 0 && pos.value().equals("VBG") && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value()))
             ) {
           finiteVerbs.add(i);
           hasFoundVerbComplex = true;
         } else if (pos.value().startsWith("VB") || (pos.value().equals("RP") && !word.toLowerCase().startsWith("n") )) {
+          
           if (!pos.value().equals("VBG") || (i > 0 &&  (posTags.get(i-1).value().startsWith("VB")))) {
             mainVerbs.add(i);
             hasFoundVerbComplex = true;
           }
-        } else if (pos.value().equals("RP") && word.toLowerCase().startsWith("n")) {
+        } else if ((pos.value().equals("RP") || pos.value().equals("RB")) && word.toLowerCase().startsWith("n")) {
           negativeParticlePos = i;
-        } else if (hasFoundVerbComplex && !type.equals("S-INT")) {
-        
+        } else if (hasFoundVerbComplex && !type.equals("S-INT") && !pos.value().equals("RB")) {
+          
           break;
         }
       }
-      for (int i = gloss.size() - 1; i > 0; i--) {
-        if (!isPunct(gloss.get(i).value()))
-          break;
-        terminalPunctCount++;
+      
+      if (finiteVerbs.isEmpty()) {
+        finiteVerbs.addAll(mainVerbs);
+        mainVerbs.clear();
       }
+      
+      for (int i = 0; i < gloss.size(); i++) {
+        if (gloss.get(i).value().startsWith("--C-") || gloss.get(i).value().equals(":")) {
+          if (!finiteVerbs.isEmpty() && finiteVerbs.get(0) < i) {
+            if (i > 0 && (isPunct(gloss.get(i -1).value()) || posTags.get(i - 1).value().equals("IN")))
+              i--;
+          
+            terminalPunctCount = gloss.size() - i;
+            break;
+          }
+        }
+      }
+      if (terminalPunctCount == 0) {
+        for (int i = gloss.size() - 1; i > 0; i--) {
+          if (!isPunct(gloss.get(i).value()))
+            break;
+          terminalPunctCount++;
+        }
+      }
+
       if (type.equals("S-MAIN")) {
-        if (!finiteVerbs.isEmpty() && !mainVerbs.isEmpty() && !containsDo(gloss, finiteVerbs)) {
+        if (!finiteVerbs.isEmpty() && !mainVerbs.isEmpty()) {
           int c = 0;
           if (negativeParticlePos != -1) {
             Label w = gloss.remove(negativeParticlePos);
@@ -259,22 +281,55 @@ public class ClauseTypeLabeller {
              Label w = gloss.remove(idx - c++);
              gloss.add(len - 1 - terminalPunctCount, w);
           }
-        }
+        } 
       } else if (type.equals("S-EXTR")) {
         int firstCommaIdx = -1;
         int i = 0;
-        for (Label word : gloss) {
-          if (word.value().equals(",")) {
-            firstCommaIdx = i;
+        Label commaLabel = null;
+        for (Tree child : tree.getChildrenAsList()) {
+          if (child.value().equals(",")) {
+            commaLabel = child.getChild(0).label();
             break;
           }
-          i++;
         }
-        if (firstCommaIdx == gloss.size() -1 )
+        
+        if (commaLabel != null) {
+          for (Label word : gloss) {
+            if (word.equals(commaLabel)) {
+              firstCommaIdx = i;
+              break;
+            }
+            i++;
+          }
+        } else {
+          for (Tree child : tree.getChildrenAsList()) {
+            if (child.value().equals("NP")) {
+              commaLabel = child.getLeaves().get(0).label();
+              break;
+            }
+          }
+          if (commaLabel != null) {
+            i = 0;
+            for (Label word : gloss) {
+              if (word.equals(commaLabel)) {
+                firstCommaIdx = i - 1;
+                break;
+              }
+              i++;
+            }
+          }
+        }
+        if (commaLabel == null || firstCommaIdx == gloss.size() - 1) {
           firstCommaIdx = -1;
+        }       
         if (firstCommaIdx != -1) {
-        if (!finiteVerbs.isEmpty() && mainVerbs.isEmpty()) {
+        if (mainVerbs.isEmpty()) {
           int c = 0;
+          if (negativeParticlePos != -1) {
+            Label w = gloss.remove(negativeParticlePos);
+            gloss.add(len - 1 - terminalPunctCount, w);
+            c = 1;
+          }
           for (int idx : finiteVerbs) {
             Label w = gloss.remove(idx);
             gloss.add(firstCommaIdx + 1 + c++, w);
@@ -303,14 +358,18 @@ public class ClauseTypeLabeller {
         }
         
       } else if (type.equals("S-SUB")) {
+        int c = 0;
+        if (negativeParticlePos != -1) {
+          Label w = gloss.remove(negativeParticlePos);
+          gloss.add(len - 1 - terminalPunctCount, w);
+          c = 1;
+        }
         if (mainVerbs.isEmpty()) {
-          int c = 0;
           for (int idx : finiteVerbs) {
             Label w = gloss.remove(idx - c++);
             gloss.add(len - 1 - terminalPunctCount, w);
           } 
         } else {
-          int c = 0;
           for (int idx : mainVerbs) {
             Label w = gloss.remove(idx - c++);
             gloss.add(len - 1 - terminalPunctCount, w);
@@ -322,12 +381,23 @@ public class ClauseTypeLabeller {
           } 
         } 
       } else if (type.equals("S-XCOMP")) {
-        mainVerbs.add(0, 0);
-        int c = 0;
-        for (int idx : mainVerbs) {
-          Label w = gloss.remove(idx - c++);
-          gloss.add(len - 1 - terminalPunctCount, w);
-        }       
+        //Do nothing for very short clauses, seems to cause more harm
+        //than it helps
+        if (gloss.size() > 4) {
+          //Add "to" to the list of main verbs
+          finiteVerbs.add(0, 0);
+          int c = 0;
+          //Check if the first word is not
+          if (gloss.get(0).value().toLowerCase().equals("not")) {
+            finiteVerbs.add(1,1);
+          }
+          
+          //Move verb complex to the end
+          for (int idx : finiteVerbs) {
+            Label w = gloss.remove(idx - c++);
+            gloss.add(len - 1 - terminalPunctCount, w);
+          } 
+        }
       } else if (type.equals("S-INT")) {
         if (!finiteVerbs.isEmpty() && !mainVerbs.isEmpty()) {
           int c = 0;
@@ -337,15 +407,13 @@ public class ClauseTypeLabeller {
           }
         }
       }
-      
       for (int i = 0; i < gloss.size(); i++) {
         String w = gloss.get(i).value();
-        if (i > 0)
-          sb.append(" ");
         if (w.startsWith("--C-"))
           sb.append(clauses.get(w).preorder(clauses));
         else
           sb.append(w);
+        sb.append(" ");
       }
       return sb.toString();
     }
@@ -355,13 +423,12 @@ public class ClauseTypeLabeller {
       StringBuilder sb = new StringBuilder();
       sb.append("[").append(this.type).append("] ");
       for (int i = 0; i < gloss.size(); i++) {
-        if (i != 0)
-          sb.append(" ");
         sb.append(gloss.get(i).toString());
-        
+        sb.append(" ");
       }
       sb.append("\n");
       return sb.toString();
     }
+    
   }
 }
