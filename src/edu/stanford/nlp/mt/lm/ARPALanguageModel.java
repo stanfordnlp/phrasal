@@ -178,7 +178,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
    * p(wd2|wd1)= if(bigram exists) p_2(wd1,wd2) else bo_wt_1(wd1)*p_1(wd2)
    * 
    */
-  protected LMState scoreR(Sequence<IString> sequence) {
+  protected ARPALMState scoreNgram(Sequence<IString> sequence) {
     int[] ngramInts = Sequences.toIntArray(sequence);
     int index;
 
@@ -195,7 +195,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       // First check for an <unk> class, which is present for KenLM
       // but not necessarily for SRILM.
       index = tables[0].getIndex(UNK_QUERY);
-      double p = index >= 0 ? probs[0][index] : Double.NEGATIVE_INFINITY;
+      double p = index >= 0 ? probs[0][index] : UNKNOWN_WORD_SCORE;
       return new ARPALMState(p, EMPTY_SEQUENCE);
     }
     
@@ -210,16 +210,13 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     if (Double.isNaN(bow)) {
       bow = 0.0; // treat NaNs as bow that are not found at all
     }
-    LMState state = scoreR(sequence.subsequence(1, ngramInts.length));
+    ARPALMState state = scoreNgram(sequence.subsequence(1, ngramInts.length));
     double p = bow + state.getScore();
-    if (p == Double.NEGATIVE_INFINITY) {
-      p = UNKNOWN_WORD_SCORE;
-    }
     if (verbose) {
       System.err.printf("scoreR: seq: %s logp: %f [%f] bow: %f\n",
           sequence.toString(), p, p / Math.log(10), bow);
     }
-    return new ARPALMState(p, (ARPALMState) state);
+    return new ARPALMState(p, state);
   }
 
   /**
@@ -245,33 +242,36 @@ public class ARPALanguageModel implements LanguageModel<IString> {
   }
 
   @Override
-  public LMState score(Sequence<IString> sequence) {
+  public LMState score(Sequence<IString> sequence, int startOffsetIndex, LMState priorState) {
     Sequence<IString> boundaryState = isBoundaryWord(sequence);
     if (boundaryState != null) {
       return new ARPALMState(0.0, boundaryState);
     }
     
-    // Query the LM
-    int sequenceSz = sequence.size();
-    int maxOrder = (probs.length < sequenceSz ? probs.length : sequenceSz);
-    Sequence<IString> ngram = sequenceSz == maxOrder ? sequence :
-      sequence.subsequence(sequenceSz - maxOrder, sequenceSz);
-    LMState state = scoreR(ngram);
+    // Concatenate the state onto the sequence.
+    if (priorState != null && priorState instanceof ARPALMState) {
+      sequence = Sequences.concatenate(((ARPALMState) priorState).getState(), sequence);
+    }
+
+    // Score the sequence
+    double lmSumScore = 0.0;
+    ARPALMState state = null;
+    for (int pos = startOffsetIndex, limit = sequence.size(); pos < limit; pos++) {
+      final int seqStart = Math.max(0, pos - order() + 1);
+      Sequence<IString> ngram = sequence.subsequence(seqStart, pos + 1);
+      state = scoreNgram(ngram);
+      lmSumScore += state.getScore();
+    }
+    
     if (verbose) {
-      System.err.printf("score: seq: %s logp: %f [%f]\n", sequence.toString(),
+      System.err.printf("score: seq: %s logp: %f [%f]%n", sequence.toString(),
           state.getScore(), state.getScore() / Math.log(10));
     }
-    return state;
+    return new ARPALMState(lmSumScore, state);
   }
 
   @Override
   public int order() {
     return probs.length;
-  }
-
-  @Override
-  public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
-    // TODO Auto-generated method stub
-    return null;
   }
 }

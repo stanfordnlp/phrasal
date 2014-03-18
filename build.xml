@@ -17,6 +17,10 @@
   <property name="compile.target"      value="1.7" />
   <property name="compile.encoding"    value="utf-8" />
 
+  <target name="kenlm">
+    <exec executable="${basedir}/src-cc/compile_JNI.sh" dir="${basedir}/src-cc"/>
+  </target>
+  
   <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">
@@ -58,7 +62,7 @@
     <delete dir="${build.path}"/>
   </target>
 
-  <target name="compile" depends="classpath"
+  <target name="compile" depends="classpath,kenlm"
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
@@ -91,6 +95,7 @@ includeantruntime="false">
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
+      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>

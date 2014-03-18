@@ -210,7 +210,8 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
         i++;
       }
       assert(i==lmOrder);
-      state = lm.score(ngramIds);
+      // TODO(spenceg): Don't expose part of the underlying LM. Instead, implement NPLMLanguageModel or something.
+//      state = lm.score(ngramIds);
       double ngramScore = state.getScore();
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {

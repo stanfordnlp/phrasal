@@ -129,7 +129,7 @@ public class ModifiedMooreLewisCorpusSelection {
 
     // compute entropy diff = -1/N*log p_in - (-1/N*log p_out) 
     int numNgrams = (istrings.length<order)?1 : (istrings.length-order+1); // N
-    return Math.exp(-inKenLM.score(sequence).getScore()/numNgrams) - Math.exp(-outKenLM.score(sequence).getScore()/numNgrams);
+    return Math.exp(-inKenLM.score(sequence, 1, null).getScore()/numNgrams) - Math.exp(-outKenLM.score(sequence, 1, null).getScore()/numNgrams);
   }
   
   public void select(String outPrefix, int selectionSize, 

@@ -112,49 +112,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
     return getLMId(kenLMPtr, token.toString());
   }
 
-  /**
-   * Truncate and reverse the input sequence.
-   * 
-   * @param ngram
-   * @return
-   */
-  private int[] toKenLMIds(Sequence<IString> ngram) {
-    final int ngramSize = ngram.size();
-    final int maxOrder = order < ngramSize ? order : ngramSize;
-    final int offset = ngramSize - maxOrder;
-    int[] ngramIds = new int[maxOrder];
-    for (int i = 0; i < ngramIds.length; i++) {
-      // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(offset+i));
-    }
-    return ngramIds;
-  }
-
-  @Override
-  public LMState score(Sequence<IString> sequence) {
-    Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
-    if (boundaryState != null) {
-      return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
-    }
-    int[] ngramIds = toKenLMIds(sequence);
-    long got = scoreNGram(kenLMPtr, ngramIds);
-    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
-    int stateLength = (int)(got >> 32);
-    return new KenLMState(score, ngramIds, stateLength);
-  }
-  
-  // Thang Mar14: factor out from the original score(Sequence<IString sequence) method
-  // TODO(spenceg): This really should *not* be a public method since it reveals KenLM internals
-  // to the outside world. Also, don't factor it out from score(), which is on the critical path
-  // in the decoder.
-  public LMState score(int[] ngramIds) { 
-    // got is (state_length << 32) | prob where prob is a float.
-    long got = scoreNGram(kenLMPtr, ngramIds);
-    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
-    int stateLength = (int)(got >> 32);
-    return new KenLMState(score, ngramIds, stateLength);
-  }
-  
   @Override
   public IString getStartToken() {
     return TokenUtils.START_TOKEN;
@@ -179,7 +136,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
     Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
     if (boundaryState != null) {
-      return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
+      return new KenLMState(0.0, toKenLMIds(boundaryState, null, 0), boundaryState.size());
     }
     
     // Handling prior state
