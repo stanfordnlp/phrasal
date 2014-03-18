@@ -33,9 +33,6 @@ RuleFeaturizer<IString, String> {
   private static final boolean DEBUG = false;
   public static final String DEFAULT_FEATURE_NAME = "LM";
 
-  // in srilm -99 is -infinity
-  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
-
   private final String featureName;
   private final LanguageModel<IString> lm;
   private final int lmOrder;
@@ -123,10 +120,6 @@ RuleFeaturizer<IString, String> {
       Sequence<IString> ngram = targetSequence.subsequence(seqStart, pos + 1);
       state = lm.score(ngram);
       double ngramScore = state.getScore();
-      if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
-        lmSumScore += MOSES_LM_UNKNOWN_WORD_SCORE;
-        continue;
-      }
       lmSumScore += ngramScore;
       if (DEBUG) {
         System.err.printf("  n-gram: %s score: %f%n", ngram, ngramScore);

@@ -54,7 +54,7 @@ class ExitSurveyForm(ModelForm):
             'exit_hardest_source' : 'Please describe the hardest source segments to translate, citing examples if you remember them.',
             'exit_hardest_target' : 'Please describe the hardest target segments to generate, citing examples if you remember them.',
             'exit_focus_in_postedit' : 'When translating with the post-edit interface, what part of the UI do you generally focus on?',
-            'exit_focus_in_imt' : 'When translating with the iteractive interface, what part of the UI do you generally focus on?',
+            'exit_focus_in_imt' : 'When translating with the interactive interface, what part of the UI do you generally focus on?',
             'exit_like_better' : 'In general, which interface did you prefer?',
             'exit_more_efficient' : 'In which interface did you feel most productive?',
             'exit_itm_most_useful' : 'In the interactive interface: Which interactive aid did you find most useful?',

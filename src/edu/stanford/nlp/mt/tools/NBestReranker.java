@@ -41,18 +41,27 @@ public class NBestReranker {
     final String nl = System.getProperty("line.separator");
     BufferedWriter outputFh = new BufferedWriter(new FileWriter(outputFn));
     List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists = nbest.nbestLists();
+
+    int id = 0;
     for (List<ScoredFeaturizedTranslation<IString, String>> nbestList : nbestLists) {
       double bestScore = Double.NEGATIVE_INFINITY;
       ScoredFeaturizedTranslation<IString,String> bestTrans = null;
-       for (ScoredFeaturizedTranslation<IString, String> trans : nbestList) {
-         double score = scorer.getIncrementalScore(trans.features);
-         if (score > bestScore) {
-           bestScore = score;
-           bestTrans = trans;
-         }
-       }
-       outputFh.write(bestTrans.translation.toString());
-       outputFh.write(nl);
+      
+      // Thang Mar14: check for null nbestList
+      if(nbestList==null){
+        System.err.printf("null nbest list for sent %d\n", id);
+        System.exit(1);
+      }
+      for (ScoredFeaturizedTranslation<IString, String> trans : nbestList) {
+        double score = scorer.getIncrementalScore(trans.features);
+        if (score > bestScore) {
+          bestScore = score;
+          bestTrans = trans;
+        }
+      }
+      outputFh.write(bestTrans.translation.toString());
+      outputFh.write(nl);
+      id++;
     }
     outputFh.close();
   }

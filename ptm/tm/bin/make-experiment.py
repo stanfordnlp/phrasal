@@ -60,7 +60,7 @@ def make_pilot_layout():
     user_to_layout = {}
     user_to_layout[0] = [(0,0,0),(1,0,0), (0,1,1),(1,1,1)]
     user_to_layout[1] = [(1,0,1),(0,1,1), (1,1,0),(0,0,0)]
-    user_to_layout[2] = [(0,1,0),(1,0,0), (1,0,1),(0,1,1)]
+    user_to_layout[2] = [(1,1,0),(0,1,0), (1,0,1),(0,0,1)]
     user_to_layout[3] = [(1,1,1),(0,1,1), (0,0,0),(1,0,0)]
     return user_to_layout
 
@@ -89,7 +89,7 @@ def make_experiment(user_prefix, num_users, num_splits, src_lang,
     exp_design = make_pilot_layout()
     spec = defaultdict(dict)
     
-    for i in xrange(num_users):
+    for i in sorted(exp_design.keys()):
         username = user_prefix + str(i)
         password = pw_generator()
         print username,password

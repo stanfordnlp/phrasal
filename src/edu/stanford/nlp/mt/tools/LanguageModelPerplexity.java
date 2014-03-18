@@ -9,6 +9,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.lm.ARPALanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 
@@ -30,7 +31,7 @@ public final class LanguageModelPerplexity {
     for (int i = 1; i < sz; i++) {
       Sequence<T> ngram = s.subsequence(0, i + 1);
       double ngramScore = lm.score(ngram).getScore();
-      if (ngramScore == Double.NEGATIVE_INFINITY) {
+      if (ngramScore == ARPALanguageModel.UNKNOWN_WORD_SCORE) {
         // like sri lm's n-gram utility w.r.t. closed vocab models,
         // right now we silently ignore unknown words.
         continue;
