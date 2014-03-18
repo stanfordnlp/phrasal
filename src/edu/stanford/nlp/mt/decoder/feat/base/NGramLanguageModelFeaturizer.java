@@ -85,15 +85,6 @@ RuleFeaturizer<IString, String> {
   }
 
   /**
-   * Getter for the underlying <code>LanguageModel</code>.
-   * 
-   * @return
-   */
-  public LanguageModel<IString> getLM() {
-    return lm;
-  }
-
-  /**
    * Convert a lexical n-gram to a class-based n-gram.
    * 
    * @param leftEdge 
