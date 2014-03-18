@@ -50,7 +50,7 @@ class WrapAbstract {
     virtual ~WrapAbstract() {}
     virtual lm::WordIndex Index(const char *word) const = 0;
     virtual jlong Query(const lm::WordIndex *context_begin, const lm::WordIndex *context_end, lm::WordIndex predict) const = 0;
-  virtual jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *array_start, const lm::WordIndex *array_end) const = 0;
+  virtual jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *predict_start, const lm::WordIndex *array_end) const = 0;
     // This isn't called much so just be lazy and make it virtual.
     virtual unsigned char Order() const = 0;
 
@@ -75,13 +75,13 @@ template <class Model> class Wrap : public WrapAbstract {
       return convert.i | (static_cast<jlong>(StateLength(out_state)) << 32);
     }
 
-    jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *array_start, const lm::WordIndex *array_end) const {
+    jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *predict_start, const lm::WordIndex *array_end) const {
       // Could handle this case if there was a need to with GetState.
-      assert(array_start != array_end);
+      assert(predict_start != array_end);
       typename Model::State state[2];
       typename Model::State *in_state = &state[0], *out_state = &state[1];
-      float sum_score = back_.FullScoreForgotState(array_start + 1, array_end, *array_start, *out_state).prob;
-      for (const lm::WordIndex *i = array_start - 1; i >= array_begin; --i) {
+      float sum_score = back_.FullScoreForgotState(predict_start + 1, array_end, *predict_start, *out_state).prob;
+      for (const lm::WordIndex *i = predict_start - 1; i >= array_begin; --i) {
         std::swap(in_state, out_state);
         sum_score += back_.FullScore(*in_state, *i, *out_state).prob;
       }
