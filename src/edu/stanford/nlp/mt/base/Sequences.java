@@ -137,4 +137,174 @@ public final class Sequences {
     }
     return stringList;
   }
+  
+  /**
+   * Append a start symbol to the beginning of a sequence.
+   * 
+   * @param sequence
+   * @param startToken
+   * @return
+   */
+  public static <T> Sequence<T> wrapStart(Sequence<T> sequence, T startToken) {
+    return new InsertedStartToken<T>(sequence, startToken);
+  }
+  
+  /**
+   * Append an end symbol to the end of a sequence.
+   * 
+   * @param sequence
+   * @param endToken
+   * @return
+   */
+  public static <T> Sequence<T> wrapEnd(Sequence<T> sequence, T endToken) {
+    return new InsertedEndToken<T>(sequence, endToken);
+  }
+  
+  /**
+   * Append a start symbol to the beginning of a sequence and an end symbol to the end
+   * of a sequence.
+   * 
+   * @param sequence
+   * @param startToken
+   * @param endToken
+   * @return
+   */
+  public static <T> Sequence<T> wrapStartEnd(Sequence<T> sequence, T startToken, T endToken) {
+    return new InsertedStartEndToken<T>(sequence, startToken, endToken);
+  }
+  
+  /**
+   * Efficient wrapper around a sequence.
+   * 
+   * @author Spence Green
+   *
+   * @param <TK>
+   */
+  private static class InsertedStartEndToken<TK> extends AbstractSequence<TK> {
+    final Sequence<TK> wrapped;
+    final TK startToken;
+    final TK endToken;
+    final int wrappedSz;
+
+    public InsertedStartEndToken(Sequence<TK> wrapped, TK startToken, TK endToken) {
+      this.wrapped = wrapped;
+      this.startToken = startToken;
+      this.endToken = endToken;
+      this.wrappedSz = wrapped.size();
+    }
+
+    @Override
+    public TK get(int i) {
+      if (i == 0) {
+        return startToken;
+      }
+      if (i < wrappedSz + 1) {
+        return wrapped.get(i - 1);
+      }
+      if (i == wrappedSz + 1) {
+        return endToken;
+      }
+
+      throw new IndexOutOfBoundsException(String.format(
+          "Index: %d Sequence Length: %s\n", i, size()));
+    }
+
+    @Override
+    public int size() {
+      return wrapped.size() + 2;
+    }
+
+    @Override
+    public Sequence<TK> subsequence(int start, int end) {
+      if (start == 0 || end == size()) {
+        return super.subsequence(start, end);
+      } else {
+        return wrapped.subsequence(start - 1, end - 1);
+      }
+    }
+  }
+  
+  /**
+   * Efficient wrapper around a sequence.
+   * 
+   * @author Spence Green
+   *
+   * @param <TK>
+   */
+  private static class InsertedEndToken<TK> extends AbstractSequence<TK> {
+    final Sequence<TK> wrapped;
+    final TK endToken;
+    final int wrappedSz;
+
+    public InsertedEndToken(Sequence<TK> wrapped, TK endToken) {
+      this.wrapped = wrapped;
+      this.endToken = endToken;
+      this.wrappedSz = wrapped.size();
+    }
+
+    @Override
+    public TK get(int i) {
+      if (i < wrappedSz) {
+        return wrapped.get(i);
+      }
+      if (i == wrappedSz) {
+        return endToken;
+      }
+
+      throw new IndexOutOfBoundsException(String.format(
+          "Index: %d Sequence Length: %s\n", i, size()));
+    }
+
+    @Override
+    public int size() {
+      return wrapped.size() + 1;
+    }
+
+    @Override
+    public Sequence<TK> subsequence(int start, int end) {
+      if (end == size()) {
+        return super.subsequence(start, end);
+      } else {
+        return wrapped.subsequence(start - 1, end - 1);
+      }
+    }
+  }
+  
+  /**
+   * Efficient wrapper around a sequence.
+   * 
+   * @author Spence Green
+   *
+   * @param <TK>
+   */
+  private static class InsertedStartToken<TK> extends AbstractSequence<TK> {
+    Sequence<TK> wrapped;
+    TK startToken;
+
+    public InsertedStartToken(Sequence<TK> wrapped, TK startToken) {
+      this.wrapped = wrapped;
+      this.startToken = startToken;
+    }
+
+    @Override
+    public TK get(int i) {
+      if (i == 0)
+        return startToken;
+      return wrapped.get(i - 1);
+    }
+
+    @Override
+    public int size() {
+      return wrapped.size() + 1;
+    }
+
+    @Override
+    public Sequence<TK> subsequence(int start, int end) {
+      if (start == 0) {
+        return super.subsequence(start, end);
+      } else {
+        return wrapped.subsequence(start - 1, end - 1);
+      }
+    }
+  }
 }

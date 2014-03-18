@@ -7,9 +7,8 @@ import java.io.LineNumberReader;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.lm.ARPALanguageModel;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 
@@ -17,29 +16,10 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  * Evaluate the perplexity of an input file under a language model.
  * 
  * @author danielcer
+ * @author Spence Green
  *
  */
 public final class LanguageModelPerplexity {
-  
-  private LanguageModelPerplexity() {}
-  
-  public static <T> double scoreSequence(LanguageModel<T> lm, Sequence<T> sequence) {
-    double logP = 0;
-    Sequence<T> paddedSequence = new InsertedStartEndToken<T>(sequence, lm.getStartToken(),
-        lm.getEndToken());
-    for (int i = 1, limit = paddedSequence.size(); i < limit; i++) {
-      final int seqStart = Math.max(0, i - lm.order() + 1);
-      Sequence<T> ngram = paddedSequence.subsequence(seqStart, i + 1);
-      double ngramScore = lm.score(ngram).getScore();
-      if (ngramScore == ARPALanguageModel.UNKNOWN_WORD_SCORE) {
-        // like sri lm's n-gram utility w.r.t. closed vocab models,
-        // right now we silently ignore unknown words.
-        continue;
-      }
-      logP += ngramScore;
-    }
-    return logP;
-  }
   
   /**
    * 
@@ -64,7 +44,9 @@ public final class LanguageModelPerplexity {
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
       Sequence<IString> seq = IStrings.tokenize(sent);
-      final double score = scoreSequence(lm, seq);
+      Sequence<IString> paddedSequence = Sequences.wrapStartEnd(seq, lm.getStartToken(),
+          lm.getEndToken());
+      final double score = lm.score(paddedSequence, 1, null).getScore();
       assert score != 0.0;
       assert ! Double.isNaN(score);
       assert ! Double.isInfinite(score);

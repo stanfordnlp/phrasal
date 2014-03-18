@@ -27,6 +27,13 @@ public class KenLMState extends LMState {
     this.hashCode = result;
   }
   
+  /**
+   * Getter for KenLM.
+   * 
+   * @return
+   */
+  public int[] getState() { return state; }
+  
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -59,6 +66,6 @@ public class KenLMState extends LMState {
   
   @Override
   public String toString() {
-    return String.format("%.4f %s", this.score, Arrays.toString(this.state));
+    return String.format("%.6f\t%s", score, Arrays.toString(state));
   }
 }
