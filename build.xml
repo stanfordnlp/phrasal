@@ -123,7 +123,7 @@ includeantruntime="false">
     </junit>
   </target>
   
-  <target name="itest" depends="classpath,compile,kenlm"
+  <target name="itest" depends="classpath,compile"
           description="Run mt integration tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
