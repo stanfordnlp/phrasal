@@ -8,10 +8,8 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InsertedEndToken;
-import edu.stanford.nlp.mt.base.InsertedStartEndToken;
-import edu.stanford.nlp.mt.base.InsertedStartToken;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -115,14 +113,14 @@ RuleFeaturizer<IString, String> {
     Sequence<IString> partialTranslation = f.targetPhrase;
     int startIndex = 0;
     if (f.prior == null && f.done) {
-      partialTranslation = new InsertedStartEndToken<IString>(
+      partialTranslation = Sequences.wrapStartEnd(
           f.targetPhrase, startToken, endToken);
       startIndex = 1;
     } else if (f.prior == null) {
-      partialTranslation = new InsertedStartToken<IString>(f.targetPhrase, startToken);
+      partialTranslation = Sequences.wrapStart(f.targetPhrase, startToken);
       startIndex = 1;
     } else if (f.done) {
-      partialTranslation = new InsertedEndToken<IString>(f.targetPhrase, endToken);
+      partialTranslation = Sequences.wrapEnd(f.targetPhrase, endToken);
     }
     if (isClassBased) {
       partialTranslation = toClassRepresentation(partialTranslation);

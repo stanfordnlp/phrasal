@@ -11,10 +11,9 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InsertedStartEndToken;
-import edu.stanford.nlp.mt.base.InsertedStartToken;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.lm.KenLanguageModel;
@@ -267,10 +266,10 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     Sequence<IString> partialTranslation;
     int startPos = f.targetPosition + 1;
     if (f.done) {
-      partialTranslation = new InsertedStartEndToken<IString>(
+      partialTranslation = Sequences.wrapStartEnd(
           f.targetPrefix, startToken, endToken);
     } else {
-      partialTranslation = new InsertedStartToken<IString>(
+      partialTranslation = Sequences.wrapStart(
           f.targetPrefix, startToken);
     }
     int limit = partialTranslation.size();

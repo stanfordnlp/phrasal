@@ -7,8 +7,8 @@ import java.io.LineNumberReader;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.InsertedStartEndToken;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 
@@ -46,7 +46,7 @@ public final class LanguageModelPerplexity {
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
       Sequence<IString> seq = IStrings.tokenize(sent);
-      Sequence<IString> paddedSequence = new InsertedStartEndToken<IString>(seq, lm.getStartToken(),
+      Sequence<IString> paddedSequence = Sequences.wrapStartEnd(seq, lm.getStartToken(),
           lm.getEndToken());
       final double score = lm.score(paddedSequence, 1, null).getScore();
       assert score != 0.0;
