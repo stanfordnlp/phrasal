@@ -931,7 +931,7 @@ public class MERT extends Thread {
       System.out.printf("\npoint %d - initial wts: %s", ptI, wts.toString());
       System.out.printf("\npoint %d - seed: %d\n", ptI, threadSeed);
 
-      NBestOptimizer opt = NBestOptimizerFactory.factory(optStr, ptI, this);
+      BatchOptimizer opt = BatchOptimizerFactory.factory(optStr, ptI, this);
       System.err.println("using: " + opt.toString());
 
       // Make sure weights that shouldn't be optimized are not in wts:

@@ -31,7 +31,7 @@ import edu.stanford.nlp.util.Pair;
  * @author daniel cer
  *
  */
-public class PairwiseRankingOptimizer extends AbstractNBestOptimizer {
+public class PairwiseRankingOptimizer extends AbstractBatchOptimizer {
   static public final int DEFAULT_GAMMA = 5000;
   static public final int DEFAULT_XI = 50;
   static public final double DEFAULT_N_THRESHOLD = 0.05;
