@@ -66,7 +66,7 @@ RuleFeaturizer<IString, String> {
   public NGramLanguageModelFeaturizer(String...args) throws IOException {
     if (args.length < 2) {
       throw new RuntimeException(
-          "At least two arguments are needed: LM file name and LM ID");
+          "At least two arguments are needed: LM file name and LM feature name");
     }
     // Load the LM
     this.lm = LanguageModelFactory.load(args[0]);
@@ -140,7 +140,6 @@ RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
-    //double lmScore = getScore(0, f.targetPhrase, null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(featureName, lmScore));
