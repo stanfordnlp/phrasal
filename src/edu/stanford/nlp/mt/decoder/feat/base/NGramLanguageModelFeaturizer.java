@@ -66,7 +66,7 @@ RuleFeaturizer<IString, String> {
   public NGramLanguageModelFeaturizer(String...args) throws IOException {
     if (args.length < 2) {
       throw new RuntimeException(
-          "At least two arguments are needed: LM file name and LM ID");
+          "At least two arguments are needed: LM file name and LM feature name");
     }
     // Load the LM
     this.lm = LanguageModelFactory.load(args[0]);
@@ -85,13 +85,11 @@ RuleFeaturizer<IString, String> {
   /**
    * Convert a lexical n-gram to a class-based n-gram.
    * 
-   * @param leftEdge 
    * @param targetSequence
    * @return
    */
   private Sequence<IString> toClassRepresentation(Sequence<IString> targetSequence) {
-    // No need to copy the elements to the left of leftEdge, but allocate
-    // space for them so that the indices don't need to be changed.
+    if (targetSequence.size() == 0) return targetSequence;
     IString[] array = new IString[targetSequence.size()];
     for (int i = 0; i < array.length; ++i) {
       array[i] = targetClassMap.get(targetSequence.get(i));
@@ -110,20 +108,18 @@ RuleFeaturizer<IString, String> {
     
     LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
     
-    Sequence<IString> partialTranslation = f.targetPhrase;
+    Sequence<IString> partialTranslation = isClassBased ? 
+        toClassRepresentation(f.targetPhrase) : f.targetPhrase;
     int startIndex = 0;
     if (f.prior == null && f.done) {
       partialTranslation = Sequences.wrapStartEnd(
-          f.targetPhrase, startToken, endToken);
+          partialTranslation, startToken, endToken);
       startIndex = 1;
     } else if (f.prior == null) {
-      partialTranslation = Sequences.wrapStart(f.targetPhrase, startToken);
+      partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
       startIndex = 1;
     } else if (f.done) {
-      partialTranslation = Sequences.wrapEnd(f.targetPhrase, endToken);
-    }
-    if (isClassBased) {
-      partialTranslation = toClassRepresentation(partialTranslation);
+      partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
     }
     
     LMState state = lm.score(partialTranslation, startIndex, priorState);
@@ -144,7 +140,6 @@ RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
-    //double lmScore = getScore(0, f.targetPhrase, null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(featureName, lmScore));
