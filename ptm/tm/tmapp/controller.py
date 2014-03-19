@@ -61,6 +61,25 @@ def user_training_status(user, complete=False):
     else:
         return False
 
+def get_session_list(include_training=False):
+    """
+    """
+    try:
+        if include_training:
+            return Translation.objects.all()
+        else:
+            return TranslationSession.objects.exclude(training=True)
+    except:
+        logger.error('Unable to retrieve session list')
+    return None
+
+def get_session(session_id):
+    try:
+        return TranslationSession.objects.get(id=session_id)
+    except:
+        logger.error('Translation session not found: ' + str(session_id))
+    return None
+
 def get_translate_configuration_for_user(user,
                                          training=False,
                                          last_condition=None):

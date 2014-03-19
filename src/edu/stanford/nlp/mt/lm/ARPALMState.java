@@ -25,6 +25,8 @@ public class ARPALMState extends LMState {
     this.state = state.state;
     this.hashCode = state.hashCode;
   }
+  
+  public Sequence<IString> getState() { return state; }
 
   @Override
   public int hashCode() {
@@ -46,5 +48,10 @@ public class ARPALMState extends LMState {
   @Override
   public int length() {
     return state.size();
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("%.6f\t%s", score, state.toString());
   }
 }

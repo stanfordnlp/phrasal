@@ -32,7 +32,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
   // JNI methods
   private native long readKenLM(String filename);
-  private native long scoreNGram(long kenLMPtr, int[] ngram);
+  private native long scoreNGramSeq(long kenLMPtr, int[] ngram, int startIndex);
   private native int getLMId(long kenLMPtr, String token);
   private native int getOrder(long kenLMPtr);
 
@@ -111,42 +111,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
     return getLMId(kenLMPtr, token.toString());
   }
 
-  /**
-   * Truncate and reverse the input sequence.
-   * 
-   * @param ngram
-   * @return
-   */
-  private int[] toKenLMIds(Sequence<IString> ngram) {
-    final int ngramSize = ngram.size();
-    final int maxOrder = order < ngramSize ? order : ngramSize;
-    final int offset = ngramSize - maxOrder;
-    int[] ngramIds = new int[maxOrder];
-    for (int i = 0; i < ngramIds.length; i++) {
-      // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[ngramIds.length-1-i] = toKenLMId(ngram.get(offset+i));
-    }
-    return ngramIds;
-  }
-
-  @Override
-  public LMState score(Sequence<IString> sequence) {
-    Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
-    if (boundaryState != null) {
-      return new KenLMState(0.0, toKenLMIds(boundaryState), boundaryState.size());
-    }
-    return score(toKenLMIds(sequence));
-  }
-  
-  // Thang Mar14: factor out from the original score(Sequence<IString sequence) method
-  public LMState score(int[] ngramIds) { 
-    // got is (state_length << 32) | prob where prob is a float.
-    long got = scoreNGram(kenLMPtr, ngramIds);
-    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
-    int stateLength = (int)(got >> 32);
-    return new KenLMState(score, ngramIds, stateLength);
-  }
-  
   @Override
   public IString getStartToken() {
     return TokenUtils.START_TOKEN;
@@ -165,5 +129,47 @@ public class KenLanguageModel implements LanguageModel<IString> {
   @Override
   public int order() {
     return order;
+  }
+  
+  @Override
+  public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
+    Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
+    if (boundaryState != null) {
+      return new KenLMState(0.0, makeKenLMInput(boundaryState, new int[0]), boundaryState.size());
+    }
+    
+    // Extract prior state
+    int[] state = priorState == null ? new int[0] : ((KenLMState) priorState).getState();
+    int[] ngramIds = makeKenLMInput(sequence, state);
+    
+    // Reverse the start index for KenLM
+    int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
+    
+    // Execute the query (via JNI) and construct the return state
+    long got = scoreNGramSeq(kenLMPtr, ngramIds, kenLMStartIndex);
+    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
+    int stateLength = (int)(got >> 32);
+    return new KenLMState(score, ngramIds, stateLength);
+  }
+  
+  /**
+   * Convert a Sequence and an optional state to an input for KenLM.
+   * 
+   * @param sequence
+   * @param priorState
+   * @param priorStateLength
+   * @return
+   */
+  private int[] makeKenLMInput(Sequence<IString> sequence, int[] priorState) {
+    final int sequenceSize = sequence.size();
+    int[] ngramIds = new int[sequenceSize + priorState.length];
+    if (priorState.length > 0) {
+      System.arraycopy(priorState, 0, ngramIds, sequenceSize, priorState.length);
+    }
+    for (int i = 0; i < sequenceSize; i++) {
+      // Notice: ngramids are in reverse order vv. the Sequence
+      ngramIds[sequenceSize-1-i] = toKenLMId(sequence.get(i));
+    }
+    return ngramIds;
   }
 }

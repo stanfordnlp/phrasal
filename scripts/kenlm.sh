@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# Estimate a language model using KenLM. Great for research purposes
-# since there are no funny hyperparameters to tweak.
+# Estimate a language model using KenLM.
 #
 # You should run this on a local disk with sufficient space since
 # the lm compiler uses a disk-based merge sort of the counts.

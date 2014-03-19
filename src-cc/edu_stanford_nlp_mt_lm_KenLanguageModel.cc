@@ -50,6 +50,7 @@ class WrapAbstract {
     virtual ~WrapAbstract() {}
     virtual lm::WordIndex Index(const char *word) const = 0;
     virtual jlong Query(const lm::WordIndex *context_begin, const lm::WordIndex *context_end, lm::WordIndex predict) const = 0;
+  virtual jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *predict_start, const lm::WordIndex *array_end) const = 0;
     // This isn't called much so just be lazy and make it virtual.
     virtual unsigned char Order() const = 0;
 
@@ -72,6 +73,21 @@ template <class Model> class Wrap : public WrapAbstract {
       convert.f = got.prob * M_LN10;
       // Return a jlong whose top bits are state length and bottom bits are floating-point probability.
       return convert.i | (static_cast<jlong>(StateLength(out_state)) << 32);
+    }
+
+    jlong QuerySequence(const lm::WordIndex *array_begin, const lm::WordIndex *predict_start, const lm::WordIndex *array_end) const {
+      // Could handle this case if there was a need to with GetState.
+      assert(predict_start != array_end);
+      typename Model::State state[2];
+      typename Model::State *in_state = &state[0], *out_state = &state[1];
+      float sum_score = back_.FullScoreForgotState(predict_start + 1, array_end, *predict_start, *out_state).prob;
+      for (const lm::WordIndex *i = predict_start - 1; i >= array_begin; --i) {
+        std::swap(in_state, out_state);
+        sum_score += back_.FullScore(*in_state, *i, *out_state).prob;
+      }
+      union {float f; uint32_t i; } convert;
+      convert.f = sum_score * M_LN10;
+      return convert.i | (static_cast<jlong>(StateLength(*out_state)) << 32);
     }
 
     unsigned char Order() const { return back_.Order(); }
@@ -171,7 +187,7 @@ JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getLMId
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    scoreNGram
- * Signature: ([Ljava/lang/String;)D
+ * Signature: (L[I)L
  */
 JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
@@ -185,8 +201,23 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 
 /*
  * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
+ * Method:    scoreNGram
+ * Signature: (L[II)L
+ */
+JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGramSeq
+(JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, jint start_index) {
+  // Convert the sequence input to a C array
+  jint ngram_sz = env->GetArrayLength(jint_ngram);
+  jint ngram_array[ngram_sz]; 
+  env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
+  
+  return reinterpret_cast<WrapAbstract*>(kenLM_ptr)->QuerySequence((const lm::WordIndex*)&ngram_array[0], (const lm::WordIndex*)&ngram_array[start_index], (const lm::WordIndex*)&ngram_array[ngram_sz]);
+}
+  
+/*
+ * Class:     edu_stanford_nlp_mt_lm_KenLanguageModel
  * Method:    getOrder
- * Signature: ()I
+ * Signature: (L)I
  */
 JNIEXPORT jint JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_getOrder
   (JNIEnv *env, jobject thisJObj, jlong kenLM_ptr) {
