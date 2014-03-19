@@ -57,6 +57,9 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   private final Map<IString, Integer> tgtVocabMap;
   private final Map<Integer, IString> srcReverseVocabMap;
   private final Map<Integer, IString> tgtReverseVocabMap;
+  private final int srcUnkVocabId; 
+  private final int tgtUnkVocabId; 
+  private final int tgtStartVocabId;
   
   /**
    *
@@ -135,6 +138,9 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     }
     br.close();
     
+    this.srcUnkVocabId = srcVocabMap.get(UNK);
+    this.tgtUnkVocabId = tgtVocabMap.get(START);
+    this.tgtStartVocabId = tgtVocabMap.get(START);
     this.srcOrder = srcOrder;
     this.tgtOrder = this.lmOrder - this.srcOrder;
     this.srcWindow = (srcOrder-1)/2;
@@ -174,7 +180,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       // get source avg alignment pos within rule
       int srcAvgPos = Util.findSrcAvgPos(pos-startPos, alignment); // pos-startPos: position within the local target phrase
       if(srcAvgPos==-1) { // no source alignment, add <unk>
-        for(i=0; i<srcOrder; i++) ngramIds[lmOrder-i-1] = srcVocabMap.get(UNK);
+        for(i=0; i<srcOrder; i++) ngramIds[lmOrder-i-1] = srcUnkVocabId;
       } else {
         // convert this local srcAvgPos within the current srcPhrase, to the global position within the source sent
         if(!isRuleFeaturize) srcAvgPos += f.sourcePosition;
@@ -187,12 +193,12 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
         
         i=0;
         for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
-          IString srcTok = UNK;
+          int id = srcUnkVocabId;
           if(srcPos>=0 && srcPos<srcLen) { // within range
-            srcTok = sourceSeq.get(srcPos);
-            if(!srcVocabMap.containsKey(srcTok)) srcTok = UNK;
+          	IString srcTok = sourceSeq.get(srcPos);
+            if(srcVocabMap.containsKey(srcTok)) id = srcVocabMap.get(srcTok); 
           }
-          ngramIds[lmOrder-i-1] = srcVocabMap.get(srcTok);
+          ngramIds[lmOrder-i-1] = id;
           i++;
         }
       }
@@ -201,12 +207,13 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       // extract tgt subsequence
       int tgtSeqStart = pos - tgtOrder + 1;
       for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
-        IString tgtTok = START;
+        int id = tgtStartVocabId;
         if(tgtPos>=0) { 
-          tgtTok = translation.get(tgtPos);
-          if(!tgtVocabMap.containsKey(tgtTok)) tgtTok = UNK;
+        	IString tgtTok = translation.get(tgtPos);
+          if(!tgtVocabMap.containsKey(tgtTok)) id = tgtUnkVocabId;
+          else id = tgtVocabMap.get(tgtTok);
         }
-        ngramIds[lmOrder-i-1] = tgtVocabMap.get(tgtTok);
+        ngramIds[lmOrder-i-1] = id;
         i++;
       }
       assert(i==lmOrder);
