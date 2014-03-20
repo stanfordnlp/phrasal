@@ -68,7 +68,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     }
     
     // DEBUG
-    double bleuScores[] = new double[nbestListSize];
+//    double bleuScores[] = new double[nbestListSize];
 //    System.arraycopy(labelDistribution, 0, bleuScores, 0, nbestListSize);
     
     ArrayMath.normalize(labelDistribution);
@@ -88,14 +88,14 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     
     // DEBUG
     if (DEBUG) {
-      double expBLEU = 0.0;
-      double crossEntropy = 0.0;  
-      for (int i = 0; i < nbestListSize; ++i) {
-//        RichTranslation<IString,String> translation = translations.get(i);
-        expBLEU += (bleuScores[i] * modelDistribution[i]);
-        crossEntropy -= (labelDistribution[i] * Math.log(modelDistribution[i]));
-      }
-      System.err.printf("%d EB: %.3f  CE: %.3f%n", sourceId, expBLEU, crossEntropy);
+//      double expBLEU = 0.0;
+//      double crossEntropy = 0.0;  
+//      for (int i = 0; i < nbestListSize; ++i) {
+////        RichTranslation<IString,String> translation = translations.get(i);
+//        expBLEU += (bleuScores[i] * modelDistribution[i]);
+//        crossEntropy -= (labelDistribution[i] * Math.log(modelDistribution[i]));
+//      }
+//      System.err.printf("%d EB: %.3f  CE: %.3f%n", sourceId, expBLEU, crossEntropy);
     }
     return gradient;
   }
