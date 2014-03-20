@@ -40,6 +40,7 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer2;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
@@ -734,7 +735,13 @@ public class OnlineTuner {
       Counters.normalize(wtsAccumulator);
       return new ExpectedBLEUOptimizer2(tuneSource.size(), expectedNumFeatures, optimizerFlags);
     
-   } else {
+    } else if (optimizerAlg.equals("crossentropy")) {
+      assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
+      assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
+      Counters.normalize(wtsAccumulator);
+      return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+    
+    } else {
       throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
   }
