@@ -166,7 +166,7 @@ public final class Messages {
     }
     @Override
     public String toString() {
-      return "Unknown reqeust";
+      return "Unknown request";
     }
   }
   
