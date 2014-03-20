@@ -57,6 +57,10 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     
     // Compute the model and the label distributions
     final int nbestListSize = translations.size();
+    if (nbestListSize == 0) {
+      System.err.printf("WSGDEBUG: NULL GRADIENT FOR source id %d%n", sourceId);
+      return new ClassicCounter<String>();
+    }
     double labelDistribution[] = new double[nbestListSize];
     double modelDistribution[] = new double[nbestListSize];
     
