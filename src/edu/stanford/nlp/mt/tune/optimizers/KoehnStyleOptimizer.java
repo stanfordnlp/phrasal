@@ -9,7 +9,7 @@ import edu.stanford.nlp.stats.Counter;
  * 
  * @author danielcer
  */
-public class KoehnStyleOptimizer extends AbstractNBestOptimizer {
+public class KoehnStyleOptimizer extends AbstractBatchOptimizer {
 
   static public final boolean DEBUG = false;
 

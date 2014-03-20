@@ -12,7 +12,7 @@ import edu.stanford.nlp.stats.Counter;
  * 
  * @author Michel Galley
  */
-public class LineSearchOptimizer extends AbstractNBestOptimizer {
+public class LineSearchOptimizer extends AbstractBatchOptimizer {
 
   static public final boolean DEBUG = false;
 

@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.tune.optimizers;
+package edu.stanford.nlp.mt.tune;
 
 import java.util.List;
 

@@ -10,7 +10,7 @@ import edu.stanford.nlp.util.ErasureUtils;
 /**
  * @author danielcer
  */
-public class CerStyleOptimizer extends AbstractNBestOptimizer {
+public class CerStyleOptimizer extends AbstractBatchOptimizer {
 
   static public final boolean DEBUG = true;
   final int point;

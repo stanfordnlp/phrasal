@@ -22,7 +22,7 @@ import edu.stanford.nlp.util.MutableDouble;
 /**
  * @author danielcer
  */
-public class MCMCELossObjectiveCG extends AbstractNBestOptimizer {
+public class MCMCELossObjectiveCG extends AbstractBatchOptimizer {
 
   public MCMCELossObjectiveCG(MERT mert) {
     super(mert);

@@ -16,7 +16,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class PerceptronOptimizer extends AbstractNBestOptimizer {
+public class PerceptronOptimizer extends AbstractBatchOptimizer {
 
   public PerceptronOptimizer(MERT mert) {
     super(mert);

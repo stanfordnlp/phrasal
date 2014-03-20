@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
