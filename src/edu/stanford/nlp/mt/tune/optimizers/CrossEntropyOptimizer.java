@@ -57,10 +57,6 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     
     // Compute the model and the label distributions
     final int nbestListSize = translations.size();
-    if (nbestListSize == 0) {
-      System.err.printf("WSGDEBUG: NULL GRADIENT FOR source id %d%n", sourceId);
-      return new ClassicCounter<String>();
-    }
     double labelDistribution[] = new double[nbestListSize];
     double modelDistribution[] = new double[nbestListSize];
     
@@ -74,10 +70,17 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     // DEBUG
 //    double bleuScores[] = new double[nbestListSize];
 //    System.arraycopy(labelDistribution, 0, bleuScores, 0, nbestListSize);
-    
-    ArrayMath.normalize(labelDistribution);
-    ArrayMath.normalize(modelDistribution);
 
+    try {
+      ArrayMath.normalize(labelDistribution);
+      ArrayMath.normalize(modelDistribution);
+    } catch(RuntimeException e) {
+      String bestTranslation = nbestListSize > 0 ? translations.get(0).translation.toString():
+        "NONE";
+      System.err.printf("Zero BLEU score for source id: %d || %s ||%n", sourceId, bestTranslation);
+      return new ClassicCounter<String>();
+    }
+    
     Counter<String> gradient = new ClassicCounter<String>(INITIAL_CAPACITY);
     for (int i = 0; i < nbestListSize; ++i) {
       RichTranslation<IString,String> translation = translations.get(i);
