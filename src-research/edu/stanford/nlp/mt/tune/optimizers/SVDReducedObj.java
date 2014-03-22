@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.SparseFeatureValueCollection;
 import edu.stanford.nlp.mt.tune.MERT;
-import edu.stanford.nlp.mt.tune.NBestOptimizer;
+import edu.stanford.nlp.mt.tune.BatchOptimizer;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -26,7 +26,7 @@ import edu.stanford.nlp.util.Ptr;
 /**
  * @author danielcer
  */
-public class SVDReducedObj extends AbstractNBestOptimizer {
+public class SVDReducedObj extends AbstractBatchOptimizer {
 
   public enum SVDOptChoices {
     exact, evalue
@@ -81,12 +81,12 @@ public class SVDReducedObj extends AbstractNBestOptimizer {
     switch (opt) {
     case exact:
       System.err.println("Using exact MERT");
-      NBestOptimizer opt = new KoehnStyleOptimizer(mert);
+      BatchOptimizer opt = new KoehnStyleOptimizer(mert);
       reducedWts = opt.optimize(reducedInitialWts);
       break;
     case evalue:
       System.err.println("Using E(Eval) MERT");
-      NBestOptimizer opt2 = new MCMCELossObjectiveCG(mert);
+      BatchOptimizer opt2 = new MCMCELossObjectiveCG(mert);
       reducedWts = opt2.optimize(reducedInitialWts);
       break;
     default:

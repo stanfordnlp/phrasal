@@ -14,7 +14,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class BetterWorseCentroids extends AbstractNBestOptimizer {
+public class BetterWorseCentroids extends AbstractBatchOptimizer {
 
   boolean useCurrentAsWorse;
   boolean useOnlyBetter;

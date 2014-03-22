@@ -19,7 +19,7 @@ import edu.stanford.nlp.stats.Counters;
  * 
  * @author danielcer
  */
-public class BasicPowellOptimizer extends AbstractNBestOptimizer {
+public class BasicPowellOptimizer extends AbstractBatchOptimizer {
 
   static public final boolean DEBUG = false;
 

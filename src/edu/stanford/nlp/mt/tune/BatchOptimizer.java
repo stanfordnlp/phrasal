@@ -5,7 +5,7 @@ import edu.stanford.nlp.stats.Counter;
 /**
  * @author Michel Galley, Daniel Cer
  */
-public interface NBestOptimizer {
+public interface BatchOptimizer {
 
   public Counter<String> optimize(Counter<String> initialWts);
 

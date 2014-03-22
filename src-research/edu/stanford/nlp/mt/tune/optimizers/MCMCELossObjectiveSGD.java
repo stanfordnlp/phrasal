@@ -9,7 +9,7 @@ import edu.stanford.nlp.util.MutableDouble;
 /**
  * @author danielcer
  */
-public class MCMCELossObjectiveSGD extends AbstractNBestOptimizer {
+public class MCMCELossObjectiveSGD extends AbstractBatchOptimizer {
 
   static final int DEFAULT_MAX_ITER_SGD = 1000;
 

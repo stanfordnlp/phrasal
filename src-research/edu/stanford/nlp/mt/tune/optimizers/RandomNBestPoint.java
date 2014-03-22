@@ -10,7 +10,7 @@ import edu.stanford.nlp.stats.Counter;
 /**
  * @author danielcer
  */
-public class RandomNBestPoint extends AbstractNBestOptimizer {
+public class RandomNBestPoint extends AbstractBatchOptimizer {
 
   boolean better;
 

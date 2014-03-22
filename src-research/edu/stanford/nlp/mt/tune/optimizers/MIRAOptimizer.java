@@ -17,7 +17,7 @@ import edu.stanford.nlp.stats.Counters;
  * 
  * @author Daniel Cer
  */
-public class MIRAOptimizer extends AbstractNBestOptimizer {
+public class MIRAOptimizer extends AbstractBatchOptimizer {
   final double weightsConvergenceTol = 1e-6;
   final double C;
   public static final double DEFAULT_C = 100;

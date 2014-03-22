@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.ErasureUtils;
 /**
  * @author danielcer
  */
-public class FullKMeans extends AbstractNBestOptimizer {
+public class FullKMeans extends AbstractBatchOptimizer {
 
   static FlatNBestList lastNbest;
   static List<Counter<String>> lastKMeans;
