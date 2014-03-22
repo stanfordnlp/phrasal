@@ -134,6 +134,8 @@
 
 <p>This experiment tests the difference between two different CAT modes: post-edit and interactive. The modes have similar interfaces that differ only in terms of the type of assistance offered. You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Please translate as quickly and as accurately as you can.</p>
 
+<p>You might notice that both interfaces lack common aids such as translation memories and spell checking. This experiment focuses on testing new aids.</p>
+
 <p>Both interfaces adhere to the following {{ tgt_lang }} target text convention:
 <ul>
   <li><span style="color:#000">Black text</span> : belongs to human translator, never modified by machine.</li>
@@ -149,13 +151,14 @@
 
 <p>Each textbox will now be populated with gray text. You can accept the gray text adjacent to your cursor by pressing the Tab key. Accepted text turns black. You may also enter text as usual, and edit any black text. Think of it this way: to the left of your cursor is a standard text box, and to the right is a static area that indicates the machine's best suggestion. A drop-down will sometimes show several translation options, and the Tab key always selects the top option. You can filter the drop-down by typing, or navigate it with the arrow keys. The machine suggestion will update in real-time based on the black text that you've accepted.</p>
 
-<p>The interface is designed to be operated from the keyboard. The various menus are clickable as you would expect, but with some practice we expect that you won't need to lift your hands from the keyboard.</p>
+<p>The interface is designed to be operated from the keyboard. The various menus are clickable as you would expect, but with some practice we expect that you won't need to lift your hands from the keyboard except to navigate between source sentences.</p>
 
-<p>The interactive interface includes three types of aides:
+<p>The interactive interface includes four types of aides:
   <ul>
   <li>Term lookup : implemented as hover over source text. You can click on the term options to accept them.</li>
   <li>Full MT : implemented as gray text.</li>
   <li>In-context translation options : implemented as drop-down and gray text updates while editing.</li>
+  <li>Source coverage: implemented as highlighting of source tokens that have already been translated.</li>
   </ul>
 </p>
 
@@ -171,7 +174,7 @@
 {% elif step == 6 %}
 <p>Please watch this tutorial, which narrates the features of the CAT interfaces. We recommend that you watch it in full-screen mode to view the text clearly.</p>
 
-<iframe width="640" height="360" src="//www.youtube.com/embed/w30tZH-QAL0?rel=0&vq=hd720" frameborder="0" allowfullscreen></iframe>
+<iframe width="640" height="360" src="//www.youtube.com/embed/gEO4o0jSFkQ?rel=0&vq=hd720" frameborder="0" allowfullscreen></iframe>
 
 <h3>IMPORTANT: Using the Interactive Interface</h3>
 <p>Interactive translation is a new tool, and we strongly encourage you to consider using it in a new way. We recognize that some translators &ldquo;read through&rdquo; a source text before working. This is called <b>global planning</b>. In the interactive mode, we encourage you to try <b>local planning</b> instead. Read a source phrase or two, and then dive into translation. The machine will revise it's suggestion as you work. Our goal is to improve human translator productivity, and we want to see if you can find a way to use the tool to increase throughput and/or quality. Reducing global planning might be one way to increase productivity.</p>

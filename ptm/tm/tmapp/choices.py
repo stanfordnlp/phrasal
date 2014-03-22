@@ -28,7 +28,8 @@ GAZE_CHOICES = (('src', 'Source text'),
 IMT_AID_CHOICES = (('srclookup', 'Source text lookup with mouse hover'),
                    ('tgtdropdown','Target text drop-down'),
                    ('tgt1best', 'Target text best full translation (gray text)'),
-                   ('reordering', 'Reordering of target spans'))
+                   ('reordering', 'Reordering of target spans'),
+                   ('coverage','Highlighting of source text coverage'))
 
 # Basic POS categories that may be difficult to translate
 POS_CHOICES = (('N','Nouns'),
