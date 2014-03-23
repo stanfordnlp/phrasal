@@ -17,18 +17,18 @@ import edu.stanford.nlp.mt.tune.optimizers.SequenceOptimizer;
  * @author Daniel Cer
  * @author Michel Galley
  */
-public class NBestOptimizerFactory {
+public class BatchOptimizerFactory {
 
-  private NBestOptimizerFactory() {
+  private BatchOptimizerFactory() {
   }
 
-  public static NBestOptimizer factory(String name, int point, MERT mert) {
+  public static BatchOptimizer factory(String name, int point, MERT mert) {
 
     if (name.contains("+") || name.endsWith("~")) {
       boolean loop = name.endsWith("~");
       name = name.replaceAll("~", "");
       System.err.println("seq: loop: " + loop);
-      List<NBestOptimizer> opts = new ArrayList<NBestOptimizer>();
+      List<BatchOptimizer> opts = new ArrayList<BatchOptimizer>();
       for (String el : name.split("\\+")) {
         opts.add(factory(el, point, mert));
         System.err.println("seq: adding " + el);
@@ -69,7 +69,7 @@ public class NBestOptimizerFactory {
       System.err.printf("Loading %s", loadPath);
       try {
           System.err.printf("Trying: %s\n", loadPath);
-          NBestOptimizer nbo = (NBestOptimizer) Class.forName(loadPath).getConstructor(MERT.class, args.getClass()).newInstance(new Object[]{mert, args});
+          BatchOptimizer nbo = (BatchOptimizer) Class.forName(loadPath).getConstructor(MERT.class, args.getClass()).newInstance(new Object[]{mert, args});
           System.err.println("Loaded optimizer "+nbo.getClass().toString());
           return nbo;
       } catch (Exception e) { 

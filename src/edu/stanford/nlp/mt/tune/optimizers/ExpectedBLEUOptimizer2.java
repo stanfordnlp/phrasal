@@ -116,8 +116,9 @@ public class ExpectedBLEUOptimizer2 extends AbstractOnlineOptimizer {
       double Eeval = p*eval;
       expectedLoss += Eeval;
       for (FeatureValue<String> feat : trans.features) {
-        double EfeatEval = Eeval*feat.value;
-        double Efeat = p*feat.value;
+        double fValue = feat.value / TEMPERATURE;
+        double EfeatEval = Eeval*fValue;
+        double Efeat = p*fValue;
         expectedLossF.incrementCount(feat.name, EfeatEval);
         expectedF.incrementCount(feat.name, Efeat);
       }

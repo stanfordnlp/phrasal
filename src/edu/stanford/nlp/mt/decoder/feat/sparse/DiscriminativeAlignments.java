@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
  * Indicator features for aligned and unaligned tokens in phrase pairs.
@@ -56,14 +57,15 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
    */
   public DiscriminativeAlignments(String...args) {
     Properties options = FeatureUtils.argsToProperties(args);
-    this.addSourceDeletions = options.containsKey("sourceDeletionFeature");
-    this.addTargetInsertions = options.containsKey("targetInsertionFeature");
-    this.useClasses = options.containsKey("useClasses");
+    // Thang Mar14: use PropertiesUtils.getBool
+    this.addSourceDeletions = PropertiesUtils.getBool(options, "sourceDeletionFeature"); //options.containsKey("sourceDeletionFeature");
+    this.addTargetInsertions = PropertiesUtils.getBool(options, "targetInsertionFeature"); //options.containsKey("targetInsertionFeature");
+    this.useClasses = PropertiesUtils.getBool(options, "useClasses"); //options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = options.containsKey("domainFeature");
+    this.addDomainFeatures = PropertiesUtils.getBool(options, "domainFeature"); //options.containsKey("domainFeature");
   }
 
   @Override

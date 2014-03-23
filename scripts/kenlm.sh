@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# Estimate a language model using KenLM. Great for research purposes
-# since there are no funny hyperparameters to tweak.
+# Estimate a language model using KenLM.
 #
 # You should run this on a local disk with sufficient space since
 # the lm compiler uses a disk-based merge sort of the counts.
@@ -20,7 +19,7 @@ if [ $# -le 3 ]; then
     exit
 fi
 
-KENLM_BIN=/u/nlp/packages/kenlm/bin
+KENLM_BIN=$JAVANLP_HOME/projects/mt/src-cc/kenlm/bin
 MAKELM=${KENLM_BIN}/lmplz
 MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp
@@ -33,7 +32,7 @@ shift 3
 mkdir -p $TEMPDIR
 
 echo "Building ARPA LM..."
-zcat $* | perl -ne 's/<s>//g; print' | $MAKELM -o $ORDER -S 80% -T $TEMPDIR > "$NAME".arpa
+zcat $* | perl -ne 's/<s>//g; print' | $MAKELM --interpolate_unigrams -o $ORDER -S 80% -T $TEMPDIR > "$NAME".arpa
 
 echo "Binarizing ARPA LM with standard settings"
 $MAKEBIN $TYPE "$NAME".arpa "$NAME".bin

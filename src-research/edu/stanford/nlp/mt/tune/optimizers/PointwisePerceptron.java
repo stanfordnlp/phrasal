@@ -19,7 +19,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class PointwisePerceptron extends AbstractNBestOptimizer {
+public class PointwisePerceptron extends AbstractBatchOptimizer {
 
   public PointwisePerceptron(MERT mert) {
     super(mert);

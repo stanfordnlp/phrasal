@@ -31,12 +31,12 @@ def process_command_line():
   
   parser = argparse.ArgumentParser(description=usage) # add description
   # positional arguments
+  parser.add_argument('score_type', metavar='score_type', type=str, help='score type, e.g. nplm or rnnlm') 
   parser.add_argument('in_file', metavar='in_file', type=str, help='input file') 
   parser.add_argument('distinct_nbest_file', metavar='distinct_nbest_file', type=str, help='nbest file containing distinct sentences') 
   parser.add_argument('score_file', metavar='score_file', type=str, help='nbest score file with the same number of lines as distinct_nbest_file') 
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
 
-  parser.add_argument('-e', '--escape', dest='is_escape', action='store_true', default=False, help='escape \uFFFA by space when output (default: false)') 
   parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='option (default=0)')
   # version info
   parser.add_argument('-v', '--version', action='version', version=__version__ )
@@ -71,8 +71,7 @@ def load_nbest_score(nbest_file, score_file):
       if score!='' and re.search('^[a-zA-Z#]', score)==None: # skip debug text
         break
 
-    tokens = re.split(' ', nbest_line)
-    nbest_map[' '.join(tokens[1:])] = score
+    nbest_map[nbest_line] = score
     line_id = line_id + 1
     if (line_id % 10000 == 0):
       sys.stderr.write(' (%d) ' % line_id)
@@ -84,7 +83,7 @@ def load_nbest_score(nbest_file, score_file):
 
   return nbest_map
 
-def process_files(in_file, distinct_nbest_file, score_file, out_file, is_escape):
+def process_files(score_type, in_file, distinct_nbest_file, score_file, out_file):
   """
   Read data from in_file, and output to out_file
   """
@@ -95,6 +94,7 @@ def process_files(in_file, distinct_nbest_file, score_file, out_file, is_escape)
   ouf = codecs.open(out_file, 'w', 'utf-8')
 
   line_id = 0
+  cur_id = 0
   for eachline in inf:
     eachline = clean_line(eachline)
     tokens = re.split(' \|\|\| ', eachline)
@@ -103,17 +103,23 @@ def process_files(in_file, distinct_nbest_file, score_file, out_file, is_escape)
       break
 
     id = tokens[0]
+    if int(id)<cur_id:
+      sys.stderr.write('! In continuous id %s in nbest line %d\n%s\n' % (id, line_id, eachline))
+      sys.exit(1)
+    cur_id = int(id)
+
     translation = tokens[1]
-    rnnlm_score = nbest_map[translation] 
-    
-    if is_escape: # replace \uFFFA by space. Important: this line should come after nbest_map lookup
-      translation = re.sub(ur'\uFFFA', ' ', translation)
+    if translation == '':
+      sys.stderr.write('\n! Empty translation: %s. Use score -100.\n' % eachline)
+      neural_score = -100
+    else:
+      neural_score = nbest_map[translation] 
     
     if len(tokens)>3:
       decode_score = tokens[3]
     else:
       decode_score = tokens[2]
-    ouf.write('%s ||| %s ||| rnnlm: %s DM: %s ||| %s\n' % (id, translation, rnnlm_score, decode_score, decode_score))
+    ouf.write('%s ||| %s ||| %s: %s dm: %s ||| %s\n' % (id, translation, score_type, neural_score, decode_score, decode_score))
 
     line_id = line_id + 1
     if (line_id % 10000 == 0):
@@ -126,8 +132,4 @@ def process_files(in_file, distinct_nbest_file, score_file, out_file, is_escape)
 
 if __name__ == '__main__':
   args = process_command_line()
-  
-  if args.debug == True:
-    debug = True
-
-  process_files(args.in_file, args.distinct_nbest_file, args.score_file, args.out_file, args.is_escape)
+  process_files(args.score_type, args.in_file, args.distinct_nbest_file, args.score_file, args.out_file)

@@ -533,11 +533,13 @@ public class PhraseExtractNeuralTraining {
             + " -verbose : enable verbose mode\n"
             
             // Thang Feb14
-            + " -ngram <n> : n-gram size\n"
-            + " -srcWindow <n> : extract (2*srcWindow+1) source words that correspond to the current n-gram\n"
-            + " -srcStartToken token : e.g. <src_s>\n"
-            + " -srcEndToken token : e.g. </src_s>\n"
-            + " -tgtStartToken token : e.g. <s>\n"
+            + " -ngram <int> : n-gram size\n"
+            + " -srcWindow <int> : extract (2*srcWindow+1) source words that correspond to the current n-gram\n"
+            + " -srcStartToken <string> : e.g. <s>\n"
+            + " -srcEndToken <string> : e.g. </s>\n"
+            + " -tgtStartToken <string> : e.g. </s>\n"
+            + " -srcUnkToken <string> : e.g. <unk>\n"
+            + " -extractOpt <int> : 0 -- Jacob's heuristics (search right, then left), 1 -- search within n-gram\n"
             + " -outputFile path : Output file to <path>\n"
             );
   }

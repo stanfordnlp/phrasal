@@ -13,7 +13,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class RandomPairs extends AbstractNBestOptimizer {
+public class RandomPairs extends AbstractBatchOptimizer {
 
   public RandomPairs(MERT mert, String[] args) {
     super(mert);

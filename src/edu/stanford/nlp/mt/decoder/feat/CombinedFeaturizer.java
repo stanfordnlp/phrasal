@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,8 +8,6 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -25,10 +22,6 @@ import edu.stanford.nlp.util.Generics;
 public class CombinedFeaturizer<TK, FV> extends 
     DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV>,
     Cloneable {
-  
-  // TODO(spenceg): Experimental code.
-  public static boolean DROPOUT = false;
-  private static final double DROPOUT_FRACTION = 0.5;
   
   public List<Featurizer<TK, FV>> featurizers;
   private final int nbStatefulFeaturizers;
@@ -120,50 +113,7 @@ public class CombinedFeaturizer<TK, FV> extends
         }
       }
     }
-    if (DROPOUT) {
-      featureValues = dropout(featureValues, DROPOUT_FRACTION);
-    }
     return featureValues;
-  }
-
-  /**
-   * Implementation of a dropout regularizer.
-   * 
-   * @param featureValues
-   * @param dropoutFraction
-   * @return
-   */
-  private List<FeatureValue<FV>> dropout(List<FeatureValue<FV>> featureValues, double dropoutFraction) {
-    Counter<FV> featureCounter = new ClassicCounter<FV>(featureValues.size());
-    Set<String> retainedFeatureNames = Generics.newHashSet(featureValues.size());
-    for (FeatureValue<FV> fv : featureValues) {
-      featureCounter.incrementCount(fv.name, fv.value);
-      if (fv.name instanceof String) {
-        retainedFeatureNames.add((String) fv.name);
-      } else {
-        // Shouldn't happen
-        throw new RuntimeException();
-      }
-    }
-    
-    // Dropout on extended features in featureNames
-    retainedFeatureNames.removeAll(FeatureUtils.BASELINE_DENSE_FEATURES);
-    List<String> featureNameList = Generics.newArrayList(retainedFeatureNames);
-    Collections.shuffle(featureNameList);
-    int maxIndex = (int) (featureNameList.size() * dropoutFraction);
-    featureNameList = featureNameList.subList(0, maxIndex);
-    retainedFeatureNames = Generics.newHashSet(featureNameList);
-    
-    List<FeatureValue<FV>> dropOutList = Generics.newLinkedList();
-    for (FV featureName : featureCounter.keySet()) {
-      String featName = (featureName instanceof String) ? (String) featureName : null;
-      assert featName != null;
-      if (retainedFeatureNames.contains(featName) || FeatureUtils.BASELINE_DENSE_FEATURES.contains(featName)) {
-        double value = featureCounter.getCount(featureName);
-        dropOutList.add(new FeatureValue<FV>(featureName, value));
-      }
-    }
-    return dropOutList;
   }
 
   @Override
@@ -182,9 +132,6 @@ public class CombinedFeaturizer<TK, FV> extends
           }
         }
       }
-    }
-    if (DROPOUT) {
-      featureValues = dropout(featureValues, DROPOUT_FRACTION);
     }
     return featureValues;
   }

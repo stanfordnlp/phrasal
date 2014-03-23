@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.tune.optimizers;
 
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.tune.MERT;
-import edu.stanford.nlp.mt.tune.NBestOptimizer;
+import edu.stanford.nlp.mt.tune.BatchOptimizer;
 import edu.stanford.nlp.mt.base.FlatNBestList;
 import edu.stanford.nlp.mt.base.IString;
 
@@ -11,7 +11,7 @@ import java.util.Random;
 /**
  * @author Michel Galley, Daniel Cer
  */
-public abstract class AbstractNBestOptimizer implements NBestOptimizer {
+public abstract class AbstractBatchOptimizer implements BatchOptimizer {
 
   protected final FlatNBestList nbest;
 
@@ -23,7 +23,7 @@ public abstract class AbstractNBestOptimizer implements NBestOptimizer {
     return true;
   }
 
-  public AbstractNBestOptimizer(MERT mert) {
+  public AbstractBatchOptimizer(MERT mert) {
     this.mert = mert;
     this.emetric = mert.emetric;
     this.random = mert.random;
