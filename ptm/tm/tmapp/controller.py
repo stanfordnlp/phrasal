@@ -12,37 +12,7 @@ import choices
 from models import UserConfiguration,TrainingRecord,TranslationSession,DemographicData
 from forms import DemographicForm,ExitSurveyForm,DivErrorList,TranslationInputForm
 
-# Give the user an untimed break after translating this many
-# documents.
-BREAK_INTERVAL = 4
-
 logger = logging.getLogger(__name__)
-
-def get_user_app_status(user):
-    """
-    Returns the status of the app for the current user.
-    The status determines which functions are active.
-    
-    Args:
-    Returns:
-    Raises:
-    """
-    user_status = {}
-    
-    # Filled out demographic info
-    user_status['demographic_form_done'] = True if model_utils.get_demographic_data(user) else False
-
-    # Completed training
-    user_status['training_done'] = True if model_utils.get_training_record(user) else False
-
-    # Translation sessions remaining
-    sessions = TranslationSession.objects.filter(user=user,training=False).exclude(complete=True)
-    user_status['translate_done'] = True if len(sessions) == 0 else False
-
-    # Filled out exit survey
-    user_status['exit_form_done'] = True if model_utils.get_exit_data(user) else False
-        
-    return user_status
 
 def user_training_status(user, complete=False):
     """
@@ -80,18 +50,54 @@ def get_session(session_id):
         logger.error('Translation session not found: ' + str(session_id))
     return None
 
+def get_last_complete_session_for_user(user):
+    """
+    Return the last completed translation session for a given user
+
+    Returns: the session object or None if the user hasn't completed any sessions
+    """
+    try:
+        return TranslationSession.objects.filter(user=user,training=False).exclude(complete=False).order_by('order').reverse()[0]
+    
+    except IndexError:
+        # TODO Logging
+        return None
+
+def get_next_session_for_user(user,training=False):
+    """
+    Returns the next translation session for a given user.
+
+    Returns: the session object or None if the user is finished.
+    """
+    try:
+        session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
+        return session
+
+    except IndexError:
+        return None
+
+def show_break(last_session,next_session):
+    """
+    Return one of [ui_break,domain_break] and None otherwise.
+    """
+    if next_session.interface != last_session.interface:
+        logger.debug('UI break for ' + next_session.user.username)
+        return 'ui_break'
+    elif next_session.src_document.domain != last_session.src_document.domain:
+        logger.debug('Domain break for ' + next_session.user.username)
+        return 'domain_break'
+    else:
+        return None
+    
 def get_translate_configuration_for_user(user,
                                          training=False,
-                                         last_condition=None):
+                                         last_session=None):
     """
     Configures the translation session for the user.
 
     """
-    try:
-        session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
-        
-    except IndexError:
-        # TODO Logging
+    session = get_next_session_for_user(user, training)
+    if session == None:
         return None,None
 
     # Set the time of this query
@@ -112,16 +118,50 @@ def get_translate_configuration_for_user(user,
     # in javascript UI code
     session_object['is_postedit'] = str(choices.is_postedit(session.interface)).lower()
     session_object['interface'] = session.interface
-
-    # Break logic. Give the user a break if we are about
-    # to change UI conditions or the this is the third document
-    # that the user has seen
-    show_break = (last_condition and not session.interface == last_condition) or (session.order > 0 and session.order % BREAK_INTERVAL == 0)
-    session_object['show_break'] = show_break
+    if last_session:
+        session_object['show_break'] = show_break(last_session, session) != None
 
     logger.debug(str(user.username) + " : " + str(session_object))
 
     return (session_object,form)
+
+def get_user_app_status(user):
+    """
+    Returns the status of the app for the current user.
+    The status determines which functions are active.
+    
+    Args:
+    Returns:
+    Raises:
+    """
+    user_status = {}
+    
+    # Filled out demographic info
+    user_status['demographic_form_done'] = True if model_utils.get_demographic_data(user) else False
+
+    # Completed training
+    user_status['training_done'] = True if model_utils.get_training_record(user) else False
+
+    # Translation sessions remaining
+    next_session = get_next_session_for_user(user)
+    if next_session:
+        user_status['ui_mode'] = next_session.interface
+        user_status['src_domain'] = next_session.src_document.domain
+    user_status['translate_done'] = next_session == None
+
+    # Filled out exit survey
+    user_status['exit_form_done'] = True if model_utils.get_exit_data(user) else False
+
+    # Should the UI show a break?
+    last_session = get_last_complete_session_for_user(user)
+    user_status['show_break'] = False
+    if last_session:
+        break_type = show_break(last_session, next_session)
+        user_status['show_break'] = break_type != None
+        if break_type:
+            user_status['break_type'] = break_type
+    
+    return user_status
 
 def get_user_translation_direction(user):
     """
@@ -145,7 +185,7 @@ def save_translation_session(user, post_data, training=False):
     Save the result of a translation session
 
     Raises: RuntimeError
-    Returns: The condition (usually the UI) of this session.
+    Returns: A reference to the session that was saved.
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
@@ -173,7 +213,7 @@ def save_translation_session(user, post_data, training=False):
         logger.error('Form validation failed: %s || %s ||%s' % (user.username, str(post_data), str(session)))
         raise RuntimeError
 
-    return session.interface
+    return session
     
 def get_demographic_form(user, post_data=None):
     """
@@ -278,7 +318,7 @@ def service_redirect(request):
     except Exception as e:
         logger.error(str(e) + req)
         raise Http404
-    logger.debug(url)
+    logger.debug('%s\t%s' % (query_type,service_url))
         
     #Execute the query
     request = urllib2.urlopen( url )

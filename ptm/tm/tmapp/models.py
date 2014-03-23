@@ -6,7 +6,6 @@ import choices
 ## TODO:
 ##  * Add related_to field to ForeignKey objects? Did
 ##    that in the original impl and can't figure out why
-##  * Language column, SourceDocument must be populated in the database setup.
 
 class Language(models.Model):
     """ Specification of a (human) language. Mostly contains details for rendering the language in the browser.
@@ -30,11 +29,12 @@ class SourceDocument(models.Model):
     A source document. 
     """
     url = models.CharField(max_length=150)
+    domain = models.CharField(max_length=10)
     language = models.ForeignKey(Language,
                                  related_name='+')
     
     def __unicode__(self):
-        return '%s %s' % (self.url, self.language.code)
+        return '%s %s %s' % (self.url, self.domain, self.language.code)
     
 class UserConfiguration(models.Model):
     """

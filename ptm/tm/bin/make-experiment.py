@@ -62,7 +62,10 @@ def make_layout(num_users, num_conditions, source_dict):
     domains = source_dict.keys()
     domains.remove(TRAIN_DOMAIN_NAME)
     for i in xrange(num_users):
+        # Bookkeeping for ensuring that each document is only
+        # shown to each user once
         assignments_per_condition = (i / num_conditions) + 1
+        all_user_urls = {}
         for j in xrange(num_conditions):
             condition = UI_CONDITIONS[j]
             random.shuffle(domains)
@@ -75,12 +78,14 @@ def make_layout(num_users, num_conditions, source_dict):
                 sample_urls = []
                 for url in url_list:
                     k = '%s:%s' % (condition,url)
-                    if document_condition_cnt[k] < assignments_per_condition:
-                        sample_urls.append(url)
+                    if not url in all_user_urls and document_condition_cnt[k] < assignments_per_condition:
+                        sample_urls.append((url,domain))
                         document_condition_cnt[k] += 1
                     if len(sample_urls) == max_docs:
                         break
                 sample_urls.sort()
+                for url in sample_urls:
+                    all_user_urls[url] = 1
                 print 'User: %d Condition %s domain: %s #docs %d' % (i,UI_CONDITIONS[j], domain, len(sample_urls))
                 if condition in user_to_condition[i]:
                     user_to_condition[i][condition].extend(sample_urls)
@@ -116,10 +121,10 @@ def make_experiment(user_prefix, num_users, src_lang,
         sessions = []
         docs_per_condition = Counter()
         for condition in UI_CONDITIONS:
-            for url in user_to_condition[i][condition]:
+            for url,domain in user_to_condition[i][condition]:
                 k = '%s:%s' % (url,condition)
                 document_count[k] += 1
-                sessions.append((url,condition))
+                sessions.append((url,domain,condition))
                 docs_per_condition[condition] += 1
         spec[username]['sessions'] = sessions
 
@@ -131,7 +136,7 @@ def make_experiment(user_prefix, num_users, src_lang,
         ui_id = 0
         training = []
         for url in source_dict[TRAIN_DOMAIN_NAME]:
-            training.append((url,UI_CONDITIONS[ui_id]))
+            training.append((url,'train',UI_CONDITIONS[ui_id]))
             ui_id = 1 if ui_id == 0 else 0
         spec[username]['training'] = training
 
