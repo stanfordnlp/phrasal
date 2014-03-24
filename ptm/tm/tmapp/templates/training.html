@@ -79,13 +79,16 @@
 <p>This website will administer the translation job, which is organized into two modules separated by a break:</p>
 
 <ul>
-<li>Translation Module #1 (about 1,200 source words)</li>
-<li>Break (not timed)</li>
-<li>Translation Module #2 (about 1,200 source words)</li>
-<li>Exit Survey</li>
+  <li>Training module (which you're reading now!)</li>
+  <li>Translation Module #1 (about 1,500 source words)</li>
+  <li>Break (not timed)</li>
+  <li>Translation Module #2 (about 1,500 source words)</li>
+  <li>Exit Survey</li>
 </ul>
 
-<p>Each module consists of a series of documents, and you'll receive an untimed break after every 4 documents. We ask that you complete the translation job on a single day. You will also receive a break after completing Module #1 since the next module will contain a new interface. Get up, have lunch, go to the bathroom, get some coffee: whatever you need to stay productive. We expect that you'll take no more than an hour. <b>We require that you complete both modules on the same day.</b></p>
+<p>Each module features a different CAT interface and consists of documents from three different text genres (software, medical, and newswire). In addition to the break between modules, the site will offer an untimed break each time you switch genres (about every 500 source tokens. Get up, go to the bathroom, get some coffee: whatever you need to stay productive.</p>
+
+<p><b>We require that you complete both translation modules on the same day.</b></p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -96,11 +99,11 @@
 {% elif step == 4 %}
 <h3>Job Description and Requirements</h3>
 
-<p>You will be asked to translate two sets of documents from <b>{{ src_lang }}</b> to <b>{{ tgt_lang }}</b>.</p>
+<p>You will be asked to translate two sets of documents from <b>{{ src_lang }}</b> to <b>{{ tgt_lang }}</b>. You will be presented with paragraphs selected from the documents. You will see the sentences from these paragraphs in the same order in which they appear in the original document.</p>
 
-<p>The document may be unrelated to each other. You will be presented with paragraphs selected from the documents. You will see the sentences from these paragraphs, in the same order in which they appear in the original document.</p>
+<p>The text will probably challenge you and may be outside of your area of expertise. Don't worry. We're interested in how accurately you can translate the material with our tools relative to other translators.</p>
 
-<p>This text comes from technical domains, so it will challenge you. Please make sure that your {{ tgt_lang }} translation:
+<p>Please make sure that your {{ tgt_lang }} translation:
 <ul>
 <li>Is faithful to the original text in both meaning and style</li>
 <li>Is grammatical, fluent, and natural-sounding</li>
@@ -121,7 +124,7 @@
 <li><b>Do not use</b> browser plugins or extensions</li>
 </ul>
 
-<p>We will check the translations you submit against those produced by various machine translation systems. We're trying to understand how this specific CAT system works, so please help us by not using other machine assistance.</p>
+<p>We will check the translations you submit against those produced by various machine translation systems. We're trying to understand how our specific CAT system works, so please help us by not using other machine assistance.</p>
 
 <div>
 <form action="/tm/training/{{ step }}/">
@@ -134,7 +137,7 @@
 
 <p>This experiment tests the difference between two different CAT modes: post-edit and interactive. The modes have similar interfaces that differ only in terms of the type of assistance offered. You will be presented with {{ src_lang }} documents in a sequence. The interface will contain textboxes to enter {{ tgt_lang }} translations. Please translate as quickly and as accurately as you can.</p>
 
-<p>You might notice that both interfaces lack common aids such as translation memories and spell checking. This experiment focuses on testing new aids.</p>
+<p>You might notice that both interfaces lack standard aids such as translation memories and spell checking. That's because this experiment focuses on testing new aids, and we're trying to isolate the contributions---if any---of those aids.</p>
 
 <p>Both interfaces adhere to the following {{ tgt_lang }} target text convention:
 <ul>
@@ -149,7 +152,7 @@
 
 <h3>Interactive Interface</h3>
 
-<p>Each textbox will now be populated with gray text. You can accept the gray text adjacent to your cursor by pressing the Tab key. Accepted text turns black. You may also enter text as usual, and edit any black text. Think of it this way: to the left of your cursor is a standard text box, and to the right is a static area that indicates the machine's best suggestion. A drop-down will sometimes show several translation options, and the Tab key always selects the top option. You can filter the drop-down by typing, or navigate it with the arrow keys. The machine suggestion will update in real-time based on the black text that you've accepted.</p>
+<p>Each textbox will now be populated with gray text. You can accept the gray text adjacent to your cursor by pressing the <b>Tab</b> key. Accepted text turns black. You may also type text as usual, and edit any black text. Think of it this way: to the left of your cursor is a standard text box, and to the right is a static area that indicates the machine's best suggestion. A drop-down will sometimes show several translation options, and the <b>Tab</b> key always selects the top option. You can filter the drop-down by typing, or navigate it with the arrow keys. The machine suggestion will update in real-time based on the black text that you've accepted. You can select all of the gray text at any time by typing <b>Control+Enter</b>.</p>
 
 <p>The interface is designed to be operated from the keyboard. The various menus are clickable as you would expect, but with some practice we expect that you won't need to lift your hands from the keyboard except to navigate between source sentences.</p>
 
@@ -180,7 +183,7 @@
 <p>Interactive translation is a new tool, and we strongly encourage you to consider using it in a new way. We recognize that some translators &ldquo;read through&rdquo; a source text before working. This is called <b>global planning</b>. In the interactive mode, we encourage you to try <b>local planning</b> instead. Read a source phrase or two, and then dive into translation. The machine will revise it's suggestion as you work. Our goal is to improve human translator productivity, and we want to see if you can find a way to use the tool to increase throughput and/or quality. Reducing global planning might be one way to increase productivity.</p>
 
 <h3>Practicing with the Interfaces</h3>
-<p>When you press the button below, the translator workbench will open for practice. The workbench will alternate between the post-edit and interactive modes. Take your time, especially with the interactive interface. You don't need to translate all of the sentences or documents---feel free to skip some of them---as they are for practice only. We want you to develop some proficiency with the interfaces prior to starting the experiment.</p>
+<p>When you press the button below, the translator workbench will open for practice. The workbench will alternate between the post-edit and interactive modes. Take your time, especially with the interactive interface. You don't need to translate all of the sentences or documents---feel free to skip some of them---as they are for practice only. We expect you to develop some proficiency with the interfaces prior to starting the experiment.</p>
 
 <p>We will add an additional $10 to your payment for watching the video and practicing with the workbench.</p>
 
