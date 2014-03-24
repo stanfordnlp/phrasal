@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.Pair;
 public class ClauseTypeLabeller {
   
   
-  private static String[] pennPunctTags = {"''", "``", "-LRB-", "-RRB-", ".", ":", ",", "?", "\"", "!"};
+  private static String[] pennPunctTags = {"''", "``", ".", ":", ",", "?", "\"", "!"};
 
   
   /* adds clause type labels to the parse tree of a sentence 
@@ -32,7 +32,6 @@ public class ClauseTypeLabeller {
     
     HashMap<String,Clause> clauses = new HashMap<String,Clause>();
     LinkedList<Pair<Tree, Tree>> q = new LinkedList<Pair<Tree, Tree>>();
-    List<Tree> leaves = tree.getLeaves();
     Pair<Tree, Tree> root = new Pair<Tree, Tree>(tree, null);
     q.add(root);
     boolean first = true;
@@ -49,7 +48,6 @@ public class ClauseTypeLabeller {
       if (currentNode.label().toString().startsWith("S") || currentNode.label().toString().equals("FRAG")) {
         if (first) {
           //check for interrogative clause
-          List<Label>posTags = currentNode.preTerminalYield();
           List<Label>gloss = currentNode.yield();
           String firstWord = gloss.isEmpty() ? null : gloss.get(0).toString();
           
@@ -154,230 +152,269 @@ public class ClauseTypeLabeller {
   }
   
   public class Clause {
-    private int start;
-    private int end;
     private Tree tree;
     private String id;
     private String type;
-    
+    private List<Integer> mainVerbIndices;
+    private List<Integer> finiteVerbIndices;
+    private int negativeParticlePos;
     
     
     public Clause (String id, String type, Tree tree) {
       this.id = id;
       this.type = type;
       this.tree = tree;
+      this.negativeParticlePos = -1;
     }
     
-    /*
-     * start: index of first word in the clause
-     * end: index of last word in the clause
-     * tree: subtree beginning at S node of the clause
-     */
-    public Clause(int start, int end, Tree tree) {
-      this.start = start;
-      this.end = end;
-      this.tree = tree;
-    }
-    
-    public int getStart() {
-      return start;
-    }
-    
-    public int getEnd() {
-      return end;
-    }
     
     public Tree getTree() {
       return tree;
     }
     
+    /* Checks if the specified POS Tag corresponds to a finite verb. */
     private boolean isFiniteVerb (String posTag, String word) {
-      return ((posTag.equals("MD") || posTag.equals("VBP") || posTag.equals("VBZ") || posTag.equals("VBD"))
-          && (!word.toLowerCase().equals("do") && !word.toLowerCase().equals("does")) && !word.toLowerCase().equals("did")) ;
+      return ((posTag.equals("MD") || posTag.equals("VBP") 
+                   || posTag.equals("VBZ") || posTag.equals("VBD"))
+               && (!word.toLowerCase().equals("do") && 
+                   !word.toLowerCase().equals("does")) && 
+                   !word.toLowerCase().equals("did")) ;
     }
     
-    private boolean isPunct (String word) {
-      for (int i = 0; i <pennPunctTags.length; i++) {
+    /* Returns true if WORD is not a punctuation mark or a clause 
+     * reference.
+     */
+    private boolean isWord (String word) {
+      for (int i = 0; i < pennPunctTags.length; i++) {
         if (word.equals(pennPunctTags[i]))
-          return true;
+          return false;
       }
       if (word.startsWith("--C-")) {
-        return true;
+        return false;
       }
-      return false;
+      return true;
     }
     
     private boolean isDo(String word) {
-      return (word.toLowerCase().equals("do") || word.toLowerCase().equals("does") || word.toLowerCase().equals("did"));
+      return (word.toLowerCase().equals("do") 
+              || word.toLowerCase().equals("does") 
+              || word.toLowerCase().equals("did"));
     }
     
-    public String preorder(HashMap<String, Clause> clauses) {
-      List<Label> posTags = tree.preTerminalYield();
-      List<Label> gloss = tree.yield();
-      List<Integer> finiteVerbs = new ArrayList<Integer>();
-      List <Integer> mainVerbs = new ArrayList<Integer>();
-      int negativeParticlePos = -1;
-      int len = gloss.size();
-      int terminalPunctCount = 0;
-      StringBuilder sb = new StringBuilder();
+    /* 
+     * Returns true if the POS tag of the i-th token is a particle and the verb in front
+     * of the particle is a finite verb and the particle is not a negation particle.
+     */
+    private boolean isFiniteVerbParticle(List<Label> posTags, List<Label> gloss, int i) {
+      String pos = posTags.get(i).value();
+      String word = gloss.get(i).value();
+      return (i > 0
+              && pos.equals("RP") //is particle?
+              && !word.toLowerCase().startsWith("n") //not a negative particle
+              && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value()));
+    }
+    
+    /* 
+     * Returns true if the i-th token is a gerund verb and the previous word is a 
+     * finite verb.
+     */
+    private boolean isFiniteGerund(List<Label> posTags, List<Label> gloss, int i) {
+      String pos = posTags.get(i).value();
+      return (i > 0
+              && pos.equals("VBG") 
+              && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value()));
+    }
+    
+    private List<Label> preorderMainClause(List<Label> posTags, List<Label> gloss) {
+      return null;
+    }
+    
+    private List<Label> preorderExtrClause(List<Label> posTags, List<Label> gloss) {
+      return null;
+    }
+    
+    private List<Label> preorderSubClause(List<Label> posTags, List<Label> gloss) {
+      return null;
+    }
+    
+    private List<Label> preorderXcompClause(List<Label> posTags, List<Label> gloss) {
+      return null;
+    }
+    
+    private List<Label> preorderIntClause(List<Label> posTags, List<Label> gloss) {
+      return null;
+    }
+    
+    private void extractVerbIndices(List<Label> posTags, List<Label> gloss) {
       boolean hasFoundVerbComplex = false;
       for (int i = 0; i < posTags.size(); i++) {
         Label pos = posTags.get(i);
         String word = gloss.get(i).value();
+        /* Extract finite verb indices. */
         if (isFiniteVerb (pos.value(), word)
-            || (i > 0 && pos.value().equals("RP") && !word.toLowerCase().startsWith("n") && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value())) 
-            || (i > 0 && pos.value().equals("VBG") && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value()))
-            ) {
-          finiteVerbs.add(i);
+            || isFiniteVerbParticle(posTags, gloss, i)
+            || isFiniteGerund(posTags, gloss, i)) {
+         
+          finiteVerbIndices.add(i);
           hasFoundVerbComplex = true;
-        } else if (pos.value().startsWith("VB") || (pos.value().equals("RP") && !word.toLowerCase().startsWith("n") )) {
           
+        } else if (pos.value().startsWith("VB") /* All other verbs are main verbs. */
+                   || (pos.value().equals("RP") /* Particles that are attached to main verbs. */
+                       && !word.toLowerCase().startsWith("n") )) {
+          
+          /* Don't add gerund verbs without preceding finite or main verb. */
           if (!pos.value().equals("VBG") || (i > 0 &&  (posTags.get(i-1).value().startsWith("VB")))) {
-            mainVerbs.add(i);
+            mainVerbIndices.add(i);
             hasFoundVerbComplex = true;
           }
         } else if ((pos.value().equals("RP") || pos.value().equals("RB")) && word.toLowerCase().startsWith("n")) {
+          /* Set negative particle index. */
           negativeParticlePos = i;
-        } else if (hasFoundVerbComplex && !type.equals("S-INT") && !pos.value().equals("RB")) {
           
+        /* Only extract one verb complex per clause. */
+        } else if (hasFoundVerbComplex 
+                   && !type.equals("S-INT") 
+                   && !pos.value().equals("RB")) {
           break;
         }
       }
       
-      if (finiteVerbs.isEmpty()) {
-        finiteVerbs.addAll(mainVerbs);
-        mainVerbs.clear();
-      }
       
+      if (finiteVerbIndices.isEmpty()) {
+        finiteVerbIndices.addAll(mainVerbIndices);
+        mainVerbIndices.clear();
+      }
+    }
+    
+    /* Returns the position before the first NP that is a direct child of the clause. */
+    private int getClauseStart(List<Label> posTags, List<Label> gloss) {
+      Label npLabel = null;
+      int start = -1;
+      /* Find the first NP child. */
+      for (Tree child : tree.getChildrenAsList()) {
+        if (child.value().equals("NP")) {
+          npLabel = child.getLeaves().get(0).label();
+          break;
+        }
+      }
+      /* Get its index in the clause. */
+      if (npLabel != null) {
+        int i = 0;
+        for (Label word : gloss) {
+          if (word.equals(npLabel)) {
+            start = i;
+            break;
+          }
+          i++;
+        }
+      }
+      return start;
+    }
+    
+    /* Returns the position before final punctuation marks or another clause. */
+    private int getClauseEnd(List<Label> posTags, List<Label> gloss) {
+      int end = gloss.size() - 1;
       for (int i = 0; i < gloss.size(); i++) {
         if (gloss.get(i).value().startsWith("--C-") || gloss.get(i).value().equals(":")) {
-          if (!finiteVerbs.isEmpty() && finiteVerbs.get(0) < i) {
-            if (i > 0 && (isPunct(gloss.get(i -1).value()) || posTags.get(i - 1).value().equals("IN")))
+          if (!finiteVerbIndices.isEmpty() && finiteVerbIndices.get(0) < i) {
+            if (i > 0 && (!isWord(gloss.get(i - 1).value()) || posTags.get(i - 1).value().equals("IN")))
               i--;
           
-            terminalPunctCount = gloss.size() - i;
+            end = i - 1;
             break;
           }
         }
       }
-      if (terminalPunctCount == 0) {
+      if (end == gloss.size() - 1) {
         for (int i = gloss.size() - 1; i > 0; i--) {
-          if (!isPunct(gloss.get(i).value()))
+          if (isWord(gloss.get(i).value()))
             break;
-          terminalPunctCount++;
+          end--;
         }
       }
+      return end;
+    }
+    
+    
+    public String preorder(HashMap<String, Clause> clauses) {
+      finiteVerbIndices = new ArrayList<Integer>();
+      mainVerbIndices = new ArrayList<Integer>();
+      
+      List<Label> posTags = tree.preTerminalYield();
+      List<Label> gloss = tree.yield();
+      
+      extractVerbIndices(posTags, gloss);
+
+
+      
+      int len = gloss.size();
+
+      int clauseStart = getClauseStart(posTags, gloss);
+      int clauseEnd = getClauseEnd(posTags, gloss);
+      
+      
 
       if (type.equals("S-MAIN")) {
-        if (!finiteVerbs.isEmpty() && !mainVerbs.isEmpty()) {
+        if (!finiteVerbIndices.isEmpty() && !mainVerbIndices.isEmpty()) {
           int c = 0;
           if (negativeParticlePos != -1) {
             Label w = gloss.remove(negativeParticlePos);
-            gloss.add(len - 1 - terminalPunctCount, w);
+            gloss.add(clauseEnd, w);
             c = 1;
           }
             
-          for (int idx : mainVerbs) {
+          for (int idx : mainVerbIndices) {
              Label w = gloss.remove(idx - c++);
-             gloss.add(len - 1 - terminalPunctCount, w);
+             gloss.add(clauseEnd, w);
           }
         } 
       } else if (type.equals("S-EXTR")) {
-        int firstCommaIdx = -1;
-        int i = 0;
-        Label commaLabel = null;
-        for (Tree child : tree.getChildrenAsList()) {
-          if (child.value().equals(",")) {
-            commaLabel = child.getChild(0).label();
-            break;
-          }
-        }
-        
-        if (commaLabel != null) {
-          for (Label word : gloss) {
-            if (word.equals(commaLabel)) {
-              firstCommaIdx = i;
-              break;
+        if (clauseStart > 0) {
+          if (mainVerbIndices.isEmpty()) {
+            int c = 0;
+            for (int idx : finiteVerbIndices) {
+              Label w = gloss.remove(idx);
+              gloss.add(clauseStart + c++, w);
             }
-            i++;
-          }
-        } else {
-          for (Tree child : tree.getChildrenAsList()) {
-            if (child.value().equals("NP")) {
-              commaLabel = child.getLeaves().get(0).label();
-              break;
+          } else if (!finiteVerbIndices.isEmpty() && !mainVerbIndices.isEmpty()) {
+            int c = 0;
+            if (negativeParticlePos != -1) {
+              Label w = gloss.remove(negativeParticlePos);
+              gloss.add(clauseEnd, w);
+              c = 1;
             }
-          }
-          if (commaLabel != null) {
-            i = 0;
-            for (Label word : gloss) {
-              if (word.equals(commaLabel)) {
-                firstCommaIdx = i - 1;
-                break;
-              }
-              i++;
+            for (int idx : mainVerbIndices) {
+              Label w = gloss.remove(idx - c++);
+              gloss.add(clauseEnd, w);
             }
+            c = 0;
+            for (int idx : finiteVerbIndices) {
+              Label w = gloss.remove(idx);
+              gloss.add(clauseStart + c++, w);
+            } 
           }
         }
-        if (commaLabel == null || firstCommaIdx == gloss.size() - 1) {
-          firstCommaIdx = -1;
-        }       
-        if (firstCommaIdx != -1) {
-        if (mainVerbs.isEmpty()) {
-          int c = 0;
-          if (negativeParticlePos != -1) {
-            Label w = gloss.remove(negativeParticlePos);
-            gloss.add(len - 1 - terminalPunctCount, w);
-            c = 1;
-          }
-          for (int idx : finiteVerbs) {
-            Label w = gloss.remove(idx);
-            gloss.add(firstCommaIdx + 1 + c++, w);
-          }
-          if (negativeParticlePos != -1) {
-            Label w = gloss.remove(negativeParticlePos);
-            gloss.add(firstCommaIdx + 1 + c, w);
-          }
-        } else if (!finiteVerbs.isEmpty() && !mainVerbs.isEmpty()) {
-          int c = 0;
-          if (negativeParticlePos != -1) {
-            Label w = gloss.remove(negativeParticlePos);
-            gloss.add(len - 1 - terminalPunctCount, w);
-            c = 1;
-          }
-          for (int idx : mainVerbs) {
-            Label w = gloss.remove(idx - c++);
-            gloss.add(len - 1 - terminalPunctCount, w);
-          }
-          c = 0;
-          for (int idx : finiteVerbs) {
-            Label w = gloss.remove(idx);
-            gloss.add(firstCommaIdx + 1 + c++, w);
-          } 
-        }
-        }
-        
       } else if (type.equals("S-SUB")) {
         int c = 0;
         if (negativeParticlePos != -1) {
           Label w = gloss.remove(negativeParticlePos);
-          gloss.add(len - 1 - terminalPunctCount, w);
+          gloss.add(clauseEnd, w);
           c = 1;
         }
-        if (mainVerbs.isEmpty()) {
-          for (int idx : finiteVerbs) {
+        if (mainVerbIndices.isEmpty()) {
+          for (int idx : finiteVerbIndices) {
             Label w = gloss.remove(idx - c++);
-            gloss.add(len - 1 - terminalPunctCount, w);
+            gloss.add(clauseEnd, w);
           } 
         } else {
-          for (int idx : mainVerbs) {
+          for (int idx : mainVerbIndices) {
             Label w = gloss.remove(idx - c++);
-            gloss.add(len - 1 - terminalPunctCount, w);
+            gloss.add(clauseEnd, w);
           }
           c = 0;
-          for (int idx : finiteVerbs) {
+          for (int idx : finiteVerbIndices) {
             Label w = gloss.remove(idx - c++);
-            gloss.add(len - 1 - terminalPunctCount, w);
+            gloss.add(clauseEnd, w);
           } 
         } 
       } else if (type.equals("S-XCOMP")) {
@@ -385,28 +422,31 @@ public class ClauseTypeLabeller {
         //than it helps
         if (gloss.size() > 4) {
           //Add "to" to the list of main verbs
-          finiteVerbs.add(0, 0);
+          finiteVerbIndices.add(0, 0);
           int c = 0;
-          //Check if the first word is not
+          //Check if the first word is "not"
           if (gloss.get(0).value().toLowerCase().equals("not")) {
-            finiteVerbs.add(1,1);
+            finiteVerbIndices.add(1,1);
           }
           
           //Move verb complex to the end
-          for (int idx : finiteVerbs) {
+          for (int idx : finiteVerbIndices) {
             Label w = gloss.remove(idx - c++);
-            gloss.add(len - 1 - terminalPunctCount, w);
+            gloss.add(clauseEnd, w);
           } 
         }
       } else if (type.equals("S-INT")) {
-        if (!finiteVerbs.isEmpty() && !mainVerbs.isEmpty()) {
+        if (!finiteVerbIndices.isEmpty() && !mainVerbIndices.isEmpty()) {
           int c = 0;
-          for (int idx : mainVerbs) {
+          for (int idx : mainVerbIndices) {
             Label w = gloss.remove(idx - c++);
-            gloss.add(len - 1 - terminalPunctCount, w);
+            gloss.add(clauseEnd, w);
           }
         }
       }
+      
+      StringBuilder sb = new StringBuilder();
+
       for (int i = 0; i < gloss.size(); i++) {
         String w = gloss.get(i).value();
         if (i > 0)
@@ -418,6 +458,8 @@ public class ClauseTypeLabeller {
       }
       return sb.toString();
     }
+    
+    
     
     public String toString(){
       List<Label> gloss = tree.yield();

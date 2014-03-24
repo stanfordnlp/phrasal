@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.classify.Dataset;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.preordering.ClauseTypeLabeller.Clause;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -93,6 +95,7 @@ public class RuleBasedGermanPreorderer {
       //In case of an empty line sentence will be null.
       if (sentence != null) {
         Tree parseTree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+        //System.out.println(parseTree.toString());
         HashMap<String, Clause> clauses = labeller.labelTree(parseTree);
         Clause c1 = clauses.get("--C-1");
         if (c1 != null){
