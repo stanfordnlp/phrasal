@@ -22,7 +22,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
-public class LogLinearOptimizer extends AbstractNBestOptimizer {
+public class LogLinearOptimizer extends AbstractBatchOptimizer {
 
   final double l2sigma;
   final double l1b;

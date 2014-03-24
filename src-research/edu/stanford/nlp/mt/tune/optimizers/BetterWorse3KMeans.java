@@ -17,7 +17,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class BetterWorse3KMeans extends AbstractNBestOptimizer {
+public class BetterWorse3KMeans extends AbstractBatchOptimizer {
 
   static enum Cluster3 {
     better, worse, same

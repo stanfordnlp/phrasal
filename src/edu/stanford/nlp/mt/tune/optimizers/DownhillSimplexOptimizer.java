@@ -13,7 +13,7 @@ import edu.stanford.nlp.stats.Counters;
  * 
  * @author Daniel Cer
  */
-public class DownhillSimplexOptimizer extends AbstractNBestOptimizer {
+public class DownhillSimplexOptimizer extends AbstractBatchOptimizer {
 
 
   public DownhillSimplexOptimizer(MERT mert, String... fields) {

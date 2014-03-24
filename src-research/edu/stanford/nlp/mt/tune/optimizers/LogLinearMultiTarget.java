@@ -19,7 +19,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
-public class LogLinearMultiTarget extends AbstractNBestOptimizer {
+public class LogLinearMultiTarget extends AbstractBatchOptimizer {
   final double l2sigma;
   final double topFrac;
   

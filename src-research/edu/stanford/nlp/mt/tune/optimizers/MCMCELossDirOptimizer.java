@@ -8,7 +8,7 @@ import edu.stanford.nlp.util.MutableDouble;
 /**
  * @author danielcer
  */
-public class MCMCELossDirOptimizer extends AbstractNBestOptimizer {
+public class MCMCELossDirOptimizer extends AbstractBatchOptimizer {
 
   public MCMCELossDirOptimizer(MERT mert) {
     super(mert);

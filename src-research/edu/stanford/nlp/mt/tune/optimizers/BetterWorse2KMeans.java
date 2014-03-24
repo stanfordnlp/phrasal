@@ -17,7 +17,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class BetterWorse2KMeans extends AbstractNBestOptimizer {
+public class BetterWorse2KMeans extends AbstractBatchOptimizer {
 
   boolean perceptron;
   boolean useWts;

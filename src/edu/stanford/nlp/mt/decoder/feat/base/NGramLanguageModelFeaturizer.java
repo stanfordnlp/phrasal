@@ -8,9 +8,8 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InsertedStartEndToken;
-import edu.stanford.nlp.mt.base.InsertedStartToken;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -35,7 +34,6 @@ RuleFeaturizer<IString, String> {
 
   private final String featureName;
   private final LanguageModel<IString> lm;
-  private final int lmOrder;
   private final IString startToken;
   private final IString endToken;
 
@@ -50,7 +48,6 @@ RuleFeaturizer<IString, String> {
   public NGramLanguageModelFeaturizer(LanguageModel<IString> lm) {
     this.lm = lm;
     featureName = DEFAULT_FEATURE_NAME;
-    this.lmOrder = lm.order();
     this.startToken = lm.getStartToken();
     this.endToken = lm.getEndToken();
     this.isClassBased = false;
@@ -69,11 +66,10 @@ RuleFeaturizer<IString, String> {
   public NGramLanguageModelFeaturizer(String...args) throws IOException {
     if (args.length < 2) {
       throw new RuntimeException(
-          "At least two arguments are needed: LM file name and LM ID");
+          "At least two arguments are needed: LM file name and LM feature name");
     }
     // Load the LM
     this.lm = LanguageModelFactory.load(args[0]);
-    this.lmOrder = lm.order();
     this.startToken = lm.getStartToken();
     this.endToken = lm.getEndToken();
 
@@ -87,69 +83,15 @@ RuleFeaturizer<IString, String> {
   }
 
   /**
-   * Getter for the underlying <code>LanguageModel</code>.
-   * 
-   * @return
-   */
-  public LanguageModel<IString> getLM() {
-    return lm;
-  }
-
-  /**
-   * Score a target sequence.
-   * 
-   * @param startPos
-   * @param limit
-   * @param targetSequence
-   * @param f
-   * @param features
-   * @return
-   */
-  private double getScore(int startPos, Sequence<IString> targetSequence, 
-      Featurizable<IString, String> f) {
-    if (isClassBased) {
-      int leftEdge = Math.max(0, startPos - lmOrder + 1);
-      targetSequence = toClassRepresentation(leftEdge, targetSequence);
-    }
-
-    // Score targetSequence
-    double lmSumScore = 0.0;
-    LMState state = null;
-    for (int pos = startPos, limit = targetSequence.size(); pos < limit; pos++) {
-      final int seqStart = Math.max(0, pos - lmOrder + 1);
-      Sequence<IString> ngram = targetSequence.subsequence(seqStart, pos + 1);
-      state = lm.score(ngram);
-      double ngramScore = state.getScore();
-      lmSumScore += ngramScore;
-      if (DEBUG) {
-        System.err.printf("  n-gram: %s score: %f%n", ngram, ngramScore);
-      }
-    }
-
-    // The featurizer state is the result of the last n-gram query
-    if (f != null) {
-      // Don't set state for rule queries
-      if (state == null) {
-        // Target-deletion rule
-        state = (LMState) f.prior.getState(this);
-      }
-      f.setState(this, state);
-    } 
-    return lmSumScore;
-  }
-
-  /**
    * Convert a lexical n-gram to a class-based n-gram.
    * 
-   * @param leftEdge 
    * @param targetSequence
    * @return
    */
-  private Sequence<IString> toClassRepresentation(int leftEdge, Sequence<IString> targetSequence) {
-    // No need to copy the elements to the left of leftEdge, but allocate
-    // space for them so that the indices don't need to be changed.
+  private Sequence<IString> toClassRepresentation(Sequence<IString> targetSequence) {
+    if (targetSequence.size() == 0) return targetSequence;
     IString[] array = new IString[targetSequence.size()];
-    for (int i = leftEdge; i < array.length; ++i) {
+    for (int i = 0; i < array.length; ++i) {
       array[i] = targetClassMap.get(targetSequence.get(i));
     }
     return new SimpleSequence<IString>(true, array);
@@ -164,19 +106,31 @@ RuleFeaturizer<IString, String> {
       System.err.println("ngram scoring:");
     }
     
-    // TODO(spenceg): If we remove targetPrefix---which we should---then we'd need to retrieve the
-    // prior state to perform this calculation.
-    int startPos = f.targetPosition + 1;
-    final Sequence<IString> partialTranslation = f.done ? new InsertedStartEndToken<IString>(
-        f.targetPrefix, startToken, endToken) :
-          new InsertedStartToken<IString>(f.targetPrefix, startToken);
+    LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
+    
+    Sequence<IString> partialTranslation = isClassBased ? 
+        toClassRepresentation(f.targetPhrase) : f.targetPhrase;
+    int startIndex = 0;
+    if (f.prior == null && f.done) {
+      partialTranslation = Sequences.wrapStartEnd(
+          partialTranslation, startToken, endToken);
+      startIndex = 1;
+    } else if (f.prior == null) {
+      partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
+      startIndex = 1;
+    } else if (f.done) {
+      partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
+    }
+    
+    LMState state = lm.score(partialTranslation, startIndex, priorState);
 
-    final double lmScore = getScore(startPos, partialTranslation, f);
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(featureName, lmScore));
+    features.add(new FeatureValue<String>(featureName, state.getScore()));
 
+    f.setState(this, state);
+    
     if (DEBUG) {
-      System.err.printf("Final score: %f%n", lmScore);
+      System.err.printf("Final score: %f%n", state.getScore());
       System.err.println("===================");
     }
     return features;
@@ -186,7 +140,7 @@ RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
-    double lmScore = getScore(0, f.targetPhrase, null);
+    double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(featureName, lmScore));
     return features;

@@ -18,7 +18,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
-public class SoftmaxMaxMarginMarkovNetwork extends AbstractNBestOptimizer {
+public class SoftmaxMaxMarginMarkovNetwork extends AbstractBatchOptimizer {
   final double C;
 
   @Override

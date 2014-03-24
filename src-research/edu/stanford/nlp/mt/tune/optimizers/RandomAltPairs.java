@@ -16,7 +16,7 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * @author danielcer
  */
-public class RandomAltPairs extends AbstractNBestOptimizer {
+public class RandomAltPairs extends AbstractBatchOptimizer {
   static final boolean FORCE_BETTER_DEFAULT = true;
   final boolean forceBetter;
 
