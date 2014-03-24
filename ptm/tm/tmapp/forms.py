@@ -85,7 +85,7 @@ class ExitSurveyForm(ModelForm):
             'exit_useful_tgt_suggestions' : 'In the interactive interface: Drop-down target suggestions were generally useful.',
             'exit_useful_tgt_completion' : 'In the interactive interface: Highlighting of the source coverage during translation was generally useful.',
             'exit_useful_tgt_chunking' : 'In the interactive interface: Suggestions of phrases (groups of words longer than two) were generally useful.',
-            'exit_useful_tgt_anywhere' : 'In the interactive interface: Reordering of gray text was generally useful.',
+            'exit_useful_tgt_anywhere' : 'In the interactive interface: Bringing any gray text into the drop-down suggestion box by typing its prefix was generally useful.',
             'exit_cat_strength_weakness' : 'Please describe major strengths and weaknesses of the post-edit mode in general.',
             'exit_itm_strength_weakness' : 'Please describe major strengths and weaknesses of the interactive translation mode in general.',
             'exit_itm_missing_aid' : 'Was there an aid not present in the current interactive interface that would have been helpful?',
