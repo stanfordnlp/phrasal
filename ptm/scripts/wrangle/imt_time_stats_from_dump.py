@@ -16,9 +16,6 @@ stderr = lambda x:sys.stderr.write(str(x) + os.linesep)
 
 OutputRow = namedtuple('OutputRow', 'time last_time username user_resident_of user_mt_opinion user_gender interface doc_id segment_id src_len order genre')
 
-# TODO: remove. Hack for the pilot study.
-USER_TO_GENDER = {'subject0':'m', 'subject1':'f', 'subject2':'f', 'subject3':'m' }
-
 args = sys.argv[1:]
 if len(args) != 2:
     stderr('Usage: python %s dump_file out_file' % (basename(sys.argv[0])))
@@ -56,7 +53,7 @@ for i,row in enumerate(dump_row_list):
                                username=row.username,
                                user_resident_of=row.resident_of,
                                user_mt_opinion=row.mt_opinion,
-                               user_gender=USER_TO_GENDER[row.username],
+                               user_gender='m',
                                interface=row.interface,
                                doc_id=doc_name,
                                segment_id=segment_id,
