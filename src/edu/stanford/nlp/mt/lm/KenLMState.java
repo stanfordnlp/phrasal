@@ -16,7 +16,12 @@ public class KenLMState extends LMState {
 
   public KenLMState(double score, int[] state, int stateLength) {
     this.score = score;
-    this.state = state;
+    if (stateLength < state.length) {
+      this.state = new int[stateLength];
+      System.arraycopy(state, 0, this.state, 0, stateLength);
+    } else {
+      this.state = state;
+    }
     this.stateLength = stateLength;
     
     // Unwrapped call to Arrays.hashCode
