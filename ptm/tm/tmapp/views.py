@@ -42,9 +42,9 @@ def index(request):
     Return the main index template.
     """
     status = controller.get_user_app_status(request.user)
-    if status['ui_mode']:
+    if 'ui_mode' in status:
         status['ui_mode'] = UI_DESCRIPTIONS[status['ui_mode']]
-    if status['src_domain']:
+    if 'src_domain' in status:
         status['src_domain'] = SRC_DOMAIN_DESCRIPTIONS[status['src_domain']]
     return render_to_response('index.html',
                               {'page_title' : 'Overview',
