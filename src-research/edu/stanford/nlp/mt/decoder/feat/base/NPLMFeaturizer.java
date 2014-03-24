@@ -188,15 +188,13 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       }
     }
     
-    // The featurizer state is the result of the last n-gram query
-    if (!isRuleFeaturize) {
-      // Don't set state for rule queries
-      if (state == null) {
-        // Target-deletion rule
-        state = (LMState) f.prior.getState(this);
-      }
-      f.setState(this, state);
-    } 
+    // The featurizer state is the result of the last n-gram query 
+    // Don't set state for rule queries
+    if (state == null) {
+      // Target-deletion rule
+      state = (LMState) f.prior.getState(this);
+    }
+    f.setState(this, state);
     return lmSumScore;
   }
 

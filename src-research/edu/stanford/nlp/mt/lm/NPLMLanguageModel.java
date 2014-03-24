@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
@@ -19,7 +19,7 @@ import edu.stanford.nlp.util.Util;
  *
  */
 public class NPLMLanguageModel implements LanguageModel<IString> {
-	private KenLanguageModel kenlm;
+	private KenLM kenlm;
 	
   private final String INPUT_VOCAB_SIZE = "input_vocab_size";
   private final String OUTPUT_VOCAB_SIZE = "output_vocab_size";
@@ -51,7 +51,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    */
   public NPLMLanguageModel(String filename) throws IOException {
   	name = String.format("NPLM(%s)", filename);
-  	kenlm = new KenLanguageModel(filename);
+  	kenlm = new KenLM(filename);
   	order = kenlm.order();
   	
   	System.err.println("# Loading NPLMLanguageModel ...");
@@ -145,7 +145,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    */
   public LMState score(int[] ngramIds) { 
     // got is (state_length << 32) | prob where prob is a float.
-    long got = scoreNGramSeq(kenLMPtr, ngramIds, ngramIds.length-1);
+    long got = kenlm.marshalledScore(ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
     return new KenLMState(score, ngramIds, stateLength);
@@ -176,10 +176,6 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   	return score(ngramIds);
   }
   
-  @Override
-  public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
-    throw new NotImplementedException();
-  }
   
   
   /** Getters & Setters **/
@@ -219,15 +215,15 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
 		return tgtVocabMap;
 	}
 
-	@Override
-	public IString getStartToken() {
-		return kenlm.getStartToken();
-	}
+  @Override
+  public IString getStartToken() {
+    return TokenUtils.START_TOKEN;
+  }
 
-	@Override
-	public IString getEndToken() {
-		return kenlm.getEndToken();
-	}
+  @Override
+  public IString getEndToken() {
+    return TokenUtils.END_TOKEN;
+  }
 
 	@Override
 	public String getName() {
@@ -237,6 +233,13 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
 	@Override
 	public int order() {
 		return order;
+	}
+
+	@Override
+	public LMState score(Sequence<IString> sequence, int startOffsetIndex,
+			LMState priorState) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
 

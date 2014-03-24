@@ -16,7 +16,7 @@ import edu.stanford.nlp.util.Util;
  *
  */
 public class NPLMLanguageModelTest {
-	public static final String PREFIX = ""; // "projects/mt/"; //
+	public static final String PREFIX = ""; //"projects/mt/"; // 
   public static final String nplmFile = PREFIX + "test/inputs/src5.tgt3.nplm";
   
   
