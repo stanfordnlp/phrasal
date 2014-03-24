@@ -39,15 +39,20 @@ Stanford Translation Study
 
 {% if status.show_break %}
 
-<b>Take an untimed break.</b>
+<p><b>Take an untimed break.</b>
 
 {% if status.break_type == "ui_break" %}
-<p>When you resume, you will see a <b>new CAT interface</b>.</p>
+ When you resume, you will see a <b>new CAT interface</b>.</p>
 
 {% elif status.break_type == "domain_break" %}
-<p>When you resume, you will see a <b>new source text domain</b>.</p>
+ When you resume, you will see a <b>new genre of source text</b>.</p>
 
 {% endif %}
+{% endif %}
+
+{% if status.demographic_form_done and not status.training_done %}
+<p>Click 'Training' to get started.</p>
+
 {% endif %}
 
 {% if status.training_done and not status.translate_done %}
