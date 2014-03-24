@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
-import edu.stanford.nlp.more.lm.KenLM;
+import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
