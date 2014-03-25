@@ -84,12 +84,12 @@ public class RuleBasedGermanPreorderer {
       //In case of an empty line sentence will be null.
       if (sentence != null) {
         Tree parseTree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        List<Tree> gloss = parseTree.getLeaves();
+        List<Tree> originalGloss = parseTree.getLeaves();
         StringBuffer osb = new StringBuffer();
         {
           boolean first = true;
           int j = 1;
-          for (Tree t : gloss) {
+          for (Tree t : originalGloss) {
             if (!first)
               osb.append(" ");
             else
@@ -108,6 +108,7 @@ public class RuleBasedGermanPreorderer {
         try {
           StringBuffer sb = new StringBuffer();
           boolean first = true;
+          List<Tree> gloss = parseTree.getLeaves();
           for (Tree t : gloss) {
             if (!first) 
               sb.append(" ");
