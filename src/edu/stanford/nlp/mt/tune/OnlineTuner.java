@@ -52,6 +52,7 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.util.Triple;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -103,6 +104,11 @@ public class OnlineTuner {
   
   private final Logger logger;
 
+  /**
+   * Print decode time of each sentence
+   */
+  private static boolean printDecodeTime = true; // Thang Mar14: to measure time for NPLM
+  
   /**
    * Constructor.
    * 
@@ -328,8 +334,11 @@ public class OnlineTuner {
         for (int i = 0; i < input.translationIds.length; ++i) {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
-          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
-              threadId);
+          
+          if(printDecodeTime) { Timing.startDoing("Thread " + threadId + " starts decoding sent " + translationId + ": " + source); }
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
+          if(printDecodeTime) { Timing.endDoing("\nThread " + threadId + " ends decoding sent " + translationId); }
+          
           nbestLists.add(nbestList);
         }
 
@@ -797,6 +806,7 @@ public class OnlineTuner {
     optionMap.put("fmc", 1);
     optionMap.put("tmp", 1);
     optionMap.put("p", 1);
+    optionMap.put("pdt", 0); // Thang Mar14: print decode time
     return optionMap;
   }
 
@@ -861,6 +871,8 @@ public class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
+    
+    OnlineTuner.printDecodeTime = PropertiesUtils.getBool(opts, "pdt", false); // Thang Mar14
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
