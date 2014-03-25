@@ -84,27 +84,29 @@ public class RuleBasedGermanPreorderer {
       //In case of an empty line sentence will be null.
       if (sentence != null) {
         Tree parseTree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        List<Tree> originalGloss = parseTree.getLeaves();
+        List<Tree> gloss = parseTree.getLeaves();
         StringBuffer osb = new StringBuffer();
         {
           boolean first = true;
-          for (Tree t : originalGloss) {
+          int j = 1;
+          for (Tree t : gloss) {
             if (!first)
               osb.append(" ");
             else
               first = false;
             CoreLabel cl = (CoreLabel) t.label();
+            cl.setIndex(j);
             if (outputPermutations)
               osb.append(cl.index());
             else
               osb.append(cl.value());
+            j++;
           }
         }
         
         HashMap<String, Clause> clauses = labeller.labelTree(parseTree);                
         try {
           StringBuffer sb = new StringBuffer();
-          List<Tree> gloss = parseTree.getLeaves();
           boolean first = true;
           for (Tree t : gloss) {
             if (!first) 
