@@ -102,6 +102,8 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     br.close();
 
     /** create mapping **/
+    System.err.println("unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN + 
+    		", IString.index.size = " + IString.index.size());
     srcVocabMap = new int[IString.index.size()];
     tgtVocabMap = new int[IString.index.size()];
     // initialize to -1, to make sure we don't map words not in NPLM to 0.
