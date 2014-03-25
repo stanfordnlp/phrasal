@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.StringLabel;
 import edu.stanford.nlp.trees.LabeledScoredTreeNode;
@@ -176,9 +177,9 @@ public class ClauseTypeLabeller {
     private boolean isFiniteVerb (String posTag, String word) {
       return ((posTag.equals("MD") || posTag.equals("VBP") 
                    || posTag.equals("VBZ") || posTag.equals("VBD"))
-               && (!word.toLowerCase().equals("do") && 
-                   !word.toLowerCase().equals("does")) && 
-                   !word.toLowerCase().equals("did")) ;
+               && (!word.toLowerCase().equals("do") 
+                   && !word.toLowerCase().equals("does")) 
+                   && !word.toLowerCase().equals("did")) ;
     }
     
     /* Returns true if WORD is not a punctuation mark or a clause 
@@ -195,10 +196,10 @@ public class ClauseTypeLabeller {
       return true;
     }
     
-    private boolean isDo(String word) {
-      return (word.toLowerCase().equals("do") 
-              || word.toLowerCase().equals("does") 
-              || word.toLowerCase().equals("did"));
+    
+    private boolean isNot(String word) {
+      return (word.toLowerCase().equals("not") 
+              ||  word.toLowerCase().equals("n't"));
     }
     
     /* 
@@ -210,7 +211,7 @@ public class ClauseTypeLabeller {
       String word = gloss.get(i).value();
       return (i > 0
               && pos.equals("RP") //is particle?
-              && !word.toLowerCase().startsWith("n") //not a negative particle
+              && !isNot(word) //not a negative particle
               && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value()));
     }
     
@@ -225,26 +226,7 @@ public class ClauseTypeLabeller {
               && isFiniteVerb(posTags.get(i-1).value(), gloss.get(i-1).value()));
     }
     
-    private List<Label> preorderMainClause(List<Label> posTags, List<Label> gloss) {
-      return null;
-    }
-    
-    private List<Label> preorderExtrClause(List<Label> posTags, List<Label> gloss) {
-      return null;
-    }
-    
-    private List<Label> preorderSubClause(List<Label> posTags, List<Label> gloss) {
-      return null;
-    }
-    
-    private List<Label> preorderXcompClause(List<Label> posTags, List<Label> gloss) {
-      return null;
-    }
-    
-    private List<Label> preorderIntClause(List<Label> posTags, List<Label> gloss) {
-      return null;
-    }
-    
+     
     private void extractVerbIndices(List<Label> posTags, List<Label> gloss) {
       boolean hasFoundVerbComplex = false;
       for (int i = 0; i < posTags.size(); i++) {
@@ -260,14 +242,14 @@ public class ClauseTypeLabeller {
           
         } else if (pos.value().startsWith("VB") /* All other verbs are main verbs. */
                    || (pos.value().equals("RP") /* Particles that are attached to main verbs. */
-                       && !word.toLowerCase().startsWith("n") )) {
+                       && !isNot(word) )) {
           
           /* Don't add gerund verbs without preceding finite or main verb. */
           if (!pos.value().equals("VBG") || (i > 0 &&  (posTags.get(i-1).value().startsWith("VB")))) {
             mainVerbIndices.add(i);
             hasFoundVerbComplex = true;
           }
-        } else if ((pos.value().equals("RP") || pos.value().equals("RB")) && word.toLowerCase().startsWith("n")) {
+        } else if ((pos.value().equals("RP") || pos.value().equals("RB")) && isNot(word)) {
           /* Set negative particle index. */
           negativeParticlePos = i;
           
@@ -336,7 +318,7 @@ public class ClauseTypeLabeller {
     }
     
     
-    public String preorder(HashMap<String, Clause> clauses) {
+    public String preorder(HashMap<String, Clause> clauses, boolean outputPermutations) {
       finiteVerbIndices = new ArrayList<Integer>();
       mainVerbIndices = new ArrayList<Integer>();
       
@@ -345,7 +327,7 @@ public class ClauseTypeLabeller {
       
       extractVerbIndices(posTags, gloss);
 
-
+      
       
       int len = gloss.size();
 
@@ -452,9 +434,14 @@ public class ClauseTypeLabeller {
         if (i > 0)
           sb.append(" ");
         if (w.startsWith("--C-"))
-          sb.append(clauses.get(w).preorder(clauses));
-        else
-          sb.append(w);
+          sb.append(clauses.get(w).preorder(clauses, outputPermutations));
+        else {
+          CoreLabel cl = (CoreLabel) gloss.get(i);
+          if (outputPermutations)
+            sb.append(cl.index());
+          else
+            sb.append(cl.value());
+        }
       }
       return sb.toString();
     }

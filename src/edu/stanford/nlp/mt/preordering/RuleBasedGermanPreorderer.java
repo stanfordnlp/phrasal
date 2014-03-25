@@ -1,20 +1,15 @@
 package edu.stanford.nlp.mt.preordering;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import edu.stanford.nlp.classify.Dataset;
-import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.preordering.ClauseTypeLabeller.Clause;
-import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
@@ -85,40 +80,58 @@ public class RuleBasedGermanPreorderer {
     while ((sentence = getParsedSentence(annotations, i, annotationsSplit)) != null 
         || getParsedSentence(annotations, i+1, annotationsSplit) != null) {
         
-      //for (CoreLabel t: sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-      //  System.out.print(t.word() + " ");
-      //}
-      //System.out.print("\n");
-      //System.err.print("Reordered sentence #");
-      //System.err.println(i);
-      
+    
       //In case of an empty line sentence will be null.
       if (sentence != null) {
         Tree parseTree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        //System.out.println(parseTree.toString());
-        HashMap<String, Clause> clauses = labeller.labelTree(parseTree);
-        Clause c1 = clauses.get("--C-1");
-        if (c1 != null){
-          try {
-            System.out.println(c1.preorder(clauses));
-          } catch (Exception e) {
-            e.printStackTrace();
-            List<Tree> gloss = parseTree.getLeaves();
-            for (Tree t : gloss) {
-              System.out.print(t.label().value());
-              System.out.print(" ");
-            }
-            System.out.println("");
+        List<Tree> originalGloss = parseTree.getLeaves();
+        StringBuffer osb = new StringBuffer();
+        {
+          boolean first = true;
+          for (Tree t : originalGloss) {
+            if (!first)
+              osb.append(" ");
+            else
+              first = false;
+            CoreLabel cl = (CoreLabel) t.label();
+            if (outputPermutations)
+              osb.append(cl.index());
+            else
+              osb.append(cl.value());
           }
-        } else {
-          List<Tree> gloss = parseTree.getLeaves();
-          for (Tree t : gloss) {
-            System.out.print(t.label().value());
-            System.out.print(" ");
-          }
-          System.out.println("");
         }
-          
+        
+        HashMap<String, Clause> clauses = labeller.labelTree(parseTree);                
+        try {
+          StringBuffer sb = new StringBuffer();
+          List<Tree> gloss = parseTree.getLeaves();
+          boolean first = true;
+          for (Tree t : gloss) {
+            if (!first) 
+              sb.append(" ");
+            else
+              first = false;
+            String w = t.label().value();
+            if (w.startsWith("--C-")) {
+              Clause c = clauses.get(w);
+              sb.append(c.preorder(clauses, outputPermutations));
+            } else {
+              if (outputPermutations) {
+                CoreLabel cl = (CoreLabel) t.label();
+                sb.append(cl.index());
+              } else {
+                sb.append(w);
+              }
+            }
+            
+          }
+          System.out.println(sb.toString());
+        } catch (Exception e) {
+          e.printStackTrace();
+          System.err.println("Error caused by: \n" + osb.toString());
+
+          System.out.println(osb.toString());
+        }
       } else 
         System.out.println("");
       i++;
