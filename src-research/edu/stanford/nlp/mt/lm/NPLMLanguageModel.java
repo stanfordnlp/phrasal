@@ -102,7 +102,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     br.close();
 
     /** create mapping **/
-    System.err.println("unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN + 
+    System.err.println("  unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN + 
     		", IString.index.size = " + IString.index.size());
     srcVocabMap = new int[IString.index.size()];
     tgtVocabMap = new int[IString.index.size()];
@@ -174,7 +174,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
 				ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkVocabId;
 			}
 		}
-  	System.err.println(Util.sprint(ngramIds));
+//  	System.err.println(Util.sprint(ngramIds));
   	return score(ngramIds);
   }
   

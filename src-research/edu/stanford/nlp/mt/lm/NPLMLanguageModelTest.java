@@ -17,7 +17,7 @@ import edu.stanford.nlp.util.Util;
  *
  */
 public class NPLMLanguageModelTest {
-	public static final String PREFIX = ""; //"projects/mt/"; // 
+	public static final String PREFIX = ""; // "projects/mt/"; //
   public static final String nplmFile = PREFIX + "test/inputs/src5.tgt3.nplm";
   
   
@@ -28,7 +28,7 @@ public class NPLMLanguageModelTest {
 		String[] tokens = new String[]{"a", "b", "c", "d", "e", "f", "g", "h"};
 		Sequence<IString> sequence = Util.getIStringSequence(tokens);
 		LMState state = nplm.score(sequence);
-		System.err.println(sequence + "\t" + state.getScore());
+//		System.err.println(sequence + "\t" + state.getScore());
 		assertEquals(-0.767296, state.getScore(), 1e-5);
 	}
 
@@ -39,7 +39,7 @@ public class NPLMLanguageModelTest {
 		String[] tokens = new String[]{"一", "个", "中国", "银行", ",", "a", "chinese", "bank"};
 		Sequence<IString> sequence = Util.getIStringSequence(tokens);
 		LMState state = nplm.score(sequence);
-		System.err.println(sequence + "\t" + state.getScore());
+//		System.err.println(sequence + "\t" + state.getScore());
 		assertEquals(-4.39918, state.getScore(), 1e-5);
 	}
 	
@@ -50,7 +50,7 @@ public class NPLMLanguageModelTest {
 		String[] tokens = new String[]{"a", "b", "c", "中国", "银行", "d", "chinese", "enterprises"};
 		Sequence<IString> sequence = Util.getIStringSequence(tokens);
 		LMState state = nplm.score(sequence);
-		System.err.println(sequence + "\t" + state.getScore());
+//		System.err.println(sequence + "\t" + state.getScore());
 		assertEquals(-4.27661, state.getScore(), 1e-5);
 	}
 }
