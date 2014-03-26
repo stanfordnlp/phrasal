@@ -1,7 +1,7 @@
 import sys
 import codecs
 import csv
-from os.path import basename,split
+from os.path import basename,split,join
 from csv_unicode import UnicodeReader,UnicodeWriter
 from collections import Counter,namedtuple
 
@@ -9,8 +9,15 @@ DumpRow = namedtuple('DumpRow', 'username birth_country resident_of mt_opinion s
 
 # Convenience methods
 str2bool = lambda x:True if x == '1' else False
-url2doc = lambda x:basename(x).replace('.json','').replace('src','tgt')
 genre_from_url = lambda x:basename(split(x)[0])
+
+def url2doc(raw_url):
+    """
+    Extract a URL from a pathname.
+    """
+    filename = basename(raw_url).replace('.json','').replace('src','tgt')
+    genre = genre_from_url(raw_url)
+    return join(genre,filename)
 
 def load_middleware_dump(filename):
     """

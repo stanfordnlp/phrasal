@@ -1,8 +1,9 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.RichTranslation;
@@ -10,6 +11,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * Cross-entropy objective function.             
@@ -19,10 +21,9 @@ import edu.stanford.nlp.stats.Counter;
  */
 public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
 
-  // Testing options
-  public static final boolean CONVEX_TRANSFORM = System.getProperty("ceConvexTransform") != null;
+  private static final int K_BEST = 5;
   
-  private static final int INITIAL_CAPACITY = 5000;
+  private static final int INITIAL_CAPACITY = 2000;
 
   private static final boolean DEBUG = false;
   
@@ -47,6 +48,11 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     assert references.size() > 0;
     assert scoreMetric != null;
     
+    if (translations.size() == 0) {
+      System.err.printf("WSGDEBUG: NULL GRADIENT FOR source id %d%n", sourceId);
+      return new ClassicCounter<String>();
+    }
+    
     // Get the minimum reference length
     int minLength = Integer.MAX_VALUE;
     for (Sequence<IString> ref : references) {
@@ -56,54 +62,52 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     }
     
     // Compute the model and the label distributions
-    final int nbestListSize = translations.size();
-    double labelDistribution[] = new double[nbestListSize];
-    double modelDistribution[] = new double[nbestListSize];
-    
-    for (int i = 0; i < nbestListSize; ++i) {
-      RichTranslation<IString,String> translation = translations.get(i);
-      modelDistribution[i] = Math.exp(translation.score);
+    List<GoldScoredTranslation> scoredList = Generics.newArrayList(translations.size());
+    double qNormalizer = 0.0;
+    for (RichTranslation<IString,String> translation : translations) {
+      qNormalizer += Math.exp(translation.score);
       double labelScore = scoreMetric.score(sourceId, source, references, translation.translation);
-      labelDistribution[i] = transformScore(translation, labelScore, minLength);
+      double scaledScore = scaleScore(labelScore, minLength);
+      scoredList.add(new GoldScoredTranslation(translation, scaledScore));
+    }
+    Collections.sort(scoredList);
+
+    double pNormalizer = 0.0;
+    double lastScore = 0.0;
+    int rank = 0;
+    int id = 1;
+    Map<Long,GoldScoredTranslation> items = Generics.newHashMap();
+    for (GoldScoredTranslation g : scoredList) {
+      if (g.goldScore != lastScore) {
+        rank = id;
+      }
+      lastScore = g.goldScore;
+      if (rank > K_BEST) break;
+      g.goldScore = g.goldScore / Math.log(rank + 1);
+      pNormalizer += g.goldScore;
+      items.put(g.t.latticeSourceId, g);
+      ++id;
     }
     
-    // DEBUG
-//    double bleuScores[] = new double[nbestListSize];
-//    System.arraycopy(labelDistribution, 0, bleuScores, 0, nbestListSize);
-
-    try {
-      ArrayMath.normalize(labelDistribution);
-      ArrayMath.normalize(modelDistribution);
-    } catch(RuntimeException e) {
-      String bestTranslation = nbestListSize > 0 ? translations.get(0).translation.toString():
-        "NONE";
-      System.err.printf("Zero BLEU score for source id: %d || %s ||%n", sourceId, bestTranslation);
-      return new ClassicCounter<String>();
+    if (DEBUG) {
+      System.err.printf("%d #items %d max: %.3f / %d%n", sourceId, 
+          items.size(), scoredList.get(0).goldScore, scoredList.get(0).t.latticeSourceId);
     }
     
     Counter<String> gradient = new ClassicCounter<String>(INITIAL_CAPACITY);
-    for (int i = 0; i < nbestListSize; ++i) {
-      RichTranslation<IString,String> translation = translations.get(i);
-      double p = labelDistribution[i];
-      double q = modelDistribution[i];
+    for (RichTranslation<IString, String> translation : translations) {
+      double p = items.containsKey(translation.latticeSourceId) ? 
+          items.get(translation.latticeSourceId).goldScore / pNormalizer : 0.0;
+      double q = Math.exp(translation.score) / qNormalizer;
       double diff = q - p;
+      if (diff == 0.0) continue;
       for (FeatureValue<String> f : translation.features) {
         double g = f.value * diff;
+        assert ! Double.isNaN(g);
         gradient.incrementCount(f.name, g);
       }
     }
     
-    // DEBUG
-    if (DEBUG) {
-//      double expBLEU = 0.0;
-//      double crossEntropy = 0.0;  
-//      for (int i = 0; i < nbestListSize; ++i) {
-////        RichTranslation<IString,String> translation = translations.get(i);
-//        expBLEU += (bleuScores[i] * modelDistribution[i]);
-//        crossEntropy -= (labelDistribution[i] * Math.log(modelDistribution[i]));
-//      }
-//      System.err.printf("%d EB: %.3f  CE: %.3f%n", sourceId, expBLEU, crossEntropy);
-    }
     return gradient;
   }
 
@@ -115,11 +119,48 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
    * @param minRefLength
    * @return
    */
-  private double transformScore(RichTranslation<IString, String> translation,
-      double labelScore, int minRefLength) {
-    if (CONVEX_TRANSFORM) {
-      labelScore *= labelScore;
-    }
+  private double scaleScore(double labelScore, int minRefLength) {
+    // Convex transform
+    labelScore *= labelScore;
+    // Scale by min reference length
     return labelScore * minRefLength;
   }
+  
+  
+  private static class GoldScoredTranslation implements Comparable<GoldScoredTranslation> {
+    public final RichTranslation<IString,String> t;
+    public double goldScore;
+    public GoldScoredTranslation(RichTranslation<IString,String> t, double goldScore) {
+      this.t = t;
+      this.goldScore = goldScore;
+    }
+    
+    @Override
+    public String toString() {
+      return String.format("id: %d score: %.4f", (int) t.latticeSourceId, goldScore);
+    }
+    
+    @Override
+    public int compareTo(GoldScoredTranslation o) {
+      return (int) Math.signum(o.goldScore - this.goldScore);
+    }
+    
+    @Override
+    public int hashCode() { 
+      return (int) this.t.latticeSourceId; 
+    }
+    
+    @Override
+    public boolean equals(Object other) {
+      if (this == other) {
+        return true;
+      } else if ( ! (other instanceof GoldScoredTranslation)) {
+        return false;
+      } else {
+        GoldScoredTranslation o = (GoldScoredTranslation) other;
+        return this.t == o.t;
+      }
+    }
+  }
+  
 }

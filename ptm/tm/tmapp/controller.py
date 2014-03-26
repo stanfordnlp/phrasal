@@ -144,23 +144,22 @@ def get_user_app_status(user):
 
     # Translation sessions remaining
     next_session = get_next_session_for_user(user)
+    user_status['translate_done'] = next_session == None
     if next_session:
         user_status['ui_mode'] = next_session.interface
         user_status['src_domain'] = next_session.src_document.domain
-    user_status['translate_done'] = next_session == None
+        # Should the UI show a break?
+        user_status['show_break'] = False
+        last_session = get_last_complete_session_for_user(user)
+        if last_session:
+            break_type = show_break(last_session, next_session)
+            user_status['show_break'] = break_type != None
+            if break_type:
+                user_status['break_type'] = break_type
 
     # Filled out exit survey
     user_status['exit_form_done'] = True if model_utils.get_exit_data(user) else False
 
-    # Should the UI show a break?
-    last_session = get_last_complete_session_for_user(user)
-    user_status['show_break'] = False
-    if last_session:
-        break_type = show_break(last_session, next_session)
-        user_status['show_break'] = break_type != None
-        if break_type:
-            user_status['break_type'] = break_type
-    
     return user_status
 
 def get_user_translation_direction(user):
@@ -264,7 +263,7 @@ def save_modelform(user, model_form):
 SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
 SERVICE_URLS['fr']['en'] = 'http://jonah.stanford.edu:8017/x'
-SERVICE_URLS['en']['de'] = 'http://127.0.0.1:8017/x'
+SERVICE_URLS['en']['de'] = 'http://joan.stanford.edu:8017/x'
 
 # Request types
 TRANSLATION_REQUEST = 'tReq'

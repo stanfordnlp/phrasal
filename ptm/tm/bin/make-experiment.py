@@ -65,7 +65,7 @@ def make_layout(num_users, num_conditions, source_dict):
         # Bookkeeping for ensuring that each document is only
         # shown to each user once
         assignments_per_condition = (i / num_conditions) + 1
-        all_user_urls = {}
+        all_user_urls = set()
         for j in xrange(num_conditions):
             condition = UI_CONDITIONS[j]
             random.shuffle(domains)
@@ -79,13 +79,12 @@ def make_layout(num_users, num_conditions, source_dict):
                 for url in url_list:
                     k = '%s:%s' % (condition,url)
                     if not url in all_user_urls and document_condition_cnt[k] < assignments_per_condition:
+                        all_user_urls.add(url)
                         sample_urls.append((url,domain))
                         document_condition_cnt[k] += 1
                     if len(sample_urls) == max_docs:
                         break
                 sample_urls.sort()
-                for url in sample_urls:
-                    all_user_urls[url] = 1
                 print 'User: %d Condition %s domain: %s #docs %d' % (i,UI_CONDITIONS[j], domain, len(sample_urls))
                 if condition in user_to_condition[i]:
                     user_to_condition[i][condition].extend(sample_urls)
@@ -106,7 +105,7 @@ def make_experiment(user_prefix, num_users, src_lang,
     user_to_condition = make_layout(num_users, num_conditions, source_dict)
 
     spec = defaultdict(dict)
-    document_count = Counter()
+    document_count = defaultdict(list)
     print
     print 'Users:'
     for i in xrange(num_users):
@@ -120,10 +119,13 @@ def make_experiment(user_prefix, num_users, src_lang,
         spec[username]['tgt_lang'] = tgt_lang
         sessions = []
         docs_per_condition = Counter()
+        seen_urls = {}
         for condition in UI_CONDITIONS:
             for url,domain in user_to_condition[i][condition]:
+                assert not url in seen_urls
                 k = '%s:%s' % (url,condition)
-                document_count[k] += 1
+                seen_urls[url] = 1
+                document_count[url].append(username+':'+condition)
                 sessions.append((url,domain,condition))
                 docs_per_condition[condition] += 1
         spec[username]['sessions'] = sessions
@@ -142,11 +144,9 @@ def make_experiment(user_prefix, num_users, src_lang,
 
     # Sanity checking
     print
-    print 'Document assignments per condition:'
+    print 'Document assignments:'
     for url in url_list:
-        for condition in UI_CONDITIONS:
-            k = '%s:%s' % (url,condition)
-            print '%s\t%d' % (k,document_count[k])
+        print '%s\t%s' % (url,str(document_count[url]))
     
     # Serialize to json
     with open(OUT_FILENAME,'w') as out_file:
