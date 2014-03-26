@@ -127,6 +127,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
    * @return
    */
   private double scaleScore(double labelScore, int minRefLength) {
+    if (labelScore == 0.0) return 0.0;
     // Convex transform
     labelScore *= labelScore;
     // Scale by min reference length
