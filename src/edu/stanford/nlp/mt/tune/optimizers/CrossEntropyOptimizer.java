@@ -94,11 +94,15 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
           items.size(), scoredList.get(0).goldScore, scoredList.get(0).t.latticeSourceId);
     }
     
+    assert pNormalizer > 0.0 : String.format("pNormalizer is %f", pNormalizer);
+    assert qNormalizer > 0.0 : String.format("qNormalizer is %f", qNormalizer);
     Counter<String> gradient = new ClassicCounter<String>(INITIAL_CAPACITY);
     for (RichTranslation<IString, String> translation : translations) {
       double p = items.containsKey(translation.latticeSourceId) ? 
           items.get(translation.latticeSourceId).goldScore / pNormalizer : 0.0;
       double q = Math.exp(translation.score) / qNormalizer;
+      assert ! Double.isNaN(p);
+      assert ! Double.isNaN(q);
       double diff = q - p;
       if (diff == 0.0) continue;
       for (FeatureValue<String> f : translation.features) {
