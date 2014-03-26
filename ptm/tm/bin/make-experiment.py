@@ -24,7 +24,6 @@ from collections import defaultdict,Counter
 # UI conditions for UIST14 experiments
 UI_CONDITIONS = ['pe','imt']
 OUT_FILENAME = 'experiment.json'
-URL_PREFIX = '/static/data/fren'
 TRAIN_DOMAIN_NAME = 'train'
 
 def pw_generator(size=8, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
@@ -36,14 +35,14 @@ def pw_generator(size=8, chars=string.ascii_uppercase + string.digits + string.a
     """
     return ''.join(random.choice(chars) for x in xrange(size))
 
-def load_source_dict(source_paths):
+def load_source_dict(source_paths, url_prefix):
     """
     """
     source_to_paths = {}
     url_list = []
     for path in source_paths:
         domain_name = basename(path)
-        file_list = [join(URL_PREFIX,domain_name,basename(x)) for x in glob.glob(path + '/*.json')]
+        file_list = [join(url_prefix,domain_name,basename(x)) for x in glob.glob(path + '/*.json')]
         file_list.sort()
         url_list.extend(file_list)
         source_to_paths[domain_name] = file_list
@@ -93,11 +92,11 @@ def make_layout(num_users, num_conditions, source_dict):
     return user_to_condition
 
 def make_experiment(user_prefix, num_users, src_lang,
-                    tgt_lang, source_paths):
+                    tgt_lang, url_prefix, source_paths):
     """
     """
 
-    source_dict,url_list = load_source_dict(source_paths)
+    source_dict,url_list = load_source_dict(source_paths, url_prefix)
 
     num_conditions = len(UI_CONDITIONS)
     assert num_conditions == 2
@@ -169,6 +168,8 @@ def main():
                         help='Source language.')
     parser.add_argument('tgt_lang',
                         help='Target language.')
+    parser.add_argument('url_prefix',
+                        help='URL prefix for files e.g. /static/data/fren.')
     parser.add_argument('source_paths',
                         metavar='source_path',
                         nargs='+',
@@ -179,6 +180,7 @@ def main():
                     args.num_users,
                     args.src_lang,
                     args.tgt_lang,
+                    args.url_prefix,
                     args.source_paths)
     
 if __name__ == '__main__':
