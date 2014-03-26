@@ -25,7 +25,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
   
   private static final int INITIAL_CAPACITY = 2000;
 
-  private static final boolean DEBUG = false;
+  private static final boolean DEBUG = true;
   
   /**
    * Constructor.
