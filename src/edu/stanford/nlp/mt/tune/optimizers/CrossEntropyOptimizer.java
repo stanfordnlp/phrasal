@@ -103,7 +103,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
       if (diff == 0.0) continue;
       for (FeatureValue<String> f : translation.features) {
         double g = f.value * diff;
-        assert ! Double.isNaN(g);
+        assert ! Double.isNaN(g) : String.format("%s %f %f", f.name, f.value, diff);
         gradient.incrementCount(f.name, g);
       }
     }
