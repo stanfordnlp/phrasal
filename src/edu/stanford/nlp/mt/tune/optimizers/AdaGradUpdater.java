@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.util.HashSet;
 import java.util.Set;
 
+import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
 import edu.stanford.nlp.stats.Counter;
 
 /**

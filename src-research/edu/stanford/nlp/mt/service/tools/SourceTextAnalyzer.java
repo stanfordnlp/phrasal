@@ -29,8 +29,9 @@ import edu.stanford.nlp.trees.UnnamedConcreteDependency;
 import edu.stanford.nlp.util.CoreMap;
 
 /**
+ * Source text statistics used in the CHI-13 analysis.
  * 
- * @author rayder441
+ * @author Spence Green
  *
  */
 public final class SourceTextAnalyzer {

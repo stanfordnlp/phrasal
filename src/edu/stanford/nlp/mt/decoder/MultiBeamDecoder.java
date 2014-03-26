@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
@@ -134,6 +135,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   @Override
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
@@ -148,7 +150,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // TM (phrase table) query for applicable rules
     if (DEBUG) System.err.println("Generating Translation Options");
     List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, targets, sourceInputId, scorer);
+        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = sourceInputId;
@@ -176,7 +178,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // Generate null/start hypothesis
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
     allOptions.add(ruleList);
-    Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source,
+    Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties,
         heuristic, scorer, allOptions);
     beams[0].put(nullHyp);
     int totalHypothesesGenerated = 1;

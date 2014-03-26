@@ -4,7 +4,9 @@ $(document).ready( function() {
 		$("#BrowserLog").val(log);
 	};
 	var BrowserReport = function(stats) {
-		$("#BrowserUserAgent").text(stats.userAgent);
+		$("#BrowserUserAgent").text(
+      'Your browser is: ' 
+      + stats.userAgent);
 		var support = [];
 		var noSupport = [];
 		for ( var key in stats.jQuerySupport )
@@ -15,15 +17,29 @@ $(document).ready( function() {
 		var pass = [];
 		var noPass = [];
 		stats.modernizrTests.forEach(function(d) {
-			if ( d.substr(0,3) === "no-" )
+      // Ignore the "touch" test, which does not apply to
+      // this experiment.
+			if ( d.substr(0,3) === "no-" && d.substr(3) !== "touch") {
 				noPass.push(d.substr(3));
-			else
+			} else {
 				pass.push(d);
+      }
 		})
-		$("#BrowserSupport").text(support.join(", "));
-		$("#BrowserNoSupport").text(noSupport.join(", "));
-		$("#BrowserPass").text(pass.join(", "));
-		$("#BrowserNoPass").text(noPass.join(", "));
+
+    // spenceg: Disable things we don't want to show
+    // to the user.
+		// $("#BrowserSupport").text(support.join(", "));
+		// $("#BrowserNoSupport").text(noSupport.join(", "));
+		// $("#BrowserPass").text(pass.join(", "));
+    var noPassString = noPass.join(", ");
+    if (noPassString.length > 0) {
+      $("#BrowserTestStatus").text(
+        'Your browser did not pass the following tests: '
+          + noPassString);
+    } else {
+      $("#BrowserTestStatus").text(
+        'Your browser passed all tests!');
+    }
 	};
 	var userAgent = navigator.userAgent;
 	var jQuerySupport = $.support;

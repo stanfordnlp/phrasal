@@ -6,6 +6,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Factory for sentence-level scoring metrics.
  * 
  * @author Spence Green
  *
@@ -17,7 +18,7 @@ public final class SentenceLevelMetricFactory {
   private SentenceLevelMetricFactory() {}
   
   /**
-   * Load a loss function from a string key.
+   * Load a scoring metric from a string key.
    * 
    * @param scoreMetricStr
    * @param scoreMetricOpts 
@@ -30,15 +31,17 @@ public final class SentenceLevelMetricFactory {
       // Lin and Och smoothed BLEU (BLEU+1)
       return new BLEUGain<IString,String>();
 
-    } else if (scoreMetricStr.equals("bleu-noise-prec")) {
-      return new BLEUGainNoise<IString,String>();
-
-    } else if (scoreMetricStr.equals("bleu-noise-beta")) {
-      return new BLEUGainNoiseBeta<IString,String>();
-
+    } else if (scoreMetricStr.equals("bleu-smooth-unscaled")) {
+      // Nakov's extensions to BLEU+1
+      return new BLEUGain<IString,String>(DEFAULT_ORDER, false, false);
+    
     } else if (scoreMetricStr.equals("bleu-nakov")) {
       // Nakov's extensions to BLEU+1
       return new BLEUGain<IString,String>(true);
+    
+    } else if (scoreMetricStr.equals("bleu-nakov-unscaled")) {
+      // Nakov's extensions to BLEU+1
+      return new BLEUGain<IString,String>(DEFAULT_ORDER, true, false);
     
     } else if (scoreMetricStr.equals("bleu-chiang")) {
       // Chiang's oracle document and exponential decay

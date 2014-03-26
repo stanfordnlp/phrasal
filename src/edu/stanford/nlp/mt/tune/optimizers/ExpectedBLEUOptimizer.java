@@ -36,6 +36,8 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
 
   static public boolean VERBOSE = false;
 
+  private static final int INITIAL_CAPACITY = 5000;
+  
   public ExpectedBLEUOptimizer(int tuneSetSize, int expectedNumFeatures, String[] args) {
     super(tuneSetSize, expectedNumFeatures, args);
   }	
@@ -73,8 +75,8 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
     assert references.size() > 0;
     assert scoreMetric != null;
     
-    Counter<String> expectedLossF = new ClassicCounter<String>();
-    Counter<String> expectedF = new ClassicCounter<String>();
+    Counter<String> expectedLossF = new ClassicCounter<String>(INITIAL_CAPACITY);
+    Counter<String> expectedF = new ClassicCounter<String>(INITIAL_CAPACITY);
     double expectedLoss = 0;
 
     double logZ = logZ(translations, weights);
@@ -102,19 +104,20 @@ public class ExpectedBLEUOptimizer extends AbstractOnlineOptimizer {
         argmaxEval = eval; 
       }
     }
-    Counter<String> expectedLossExpectedF = new ClassicCounter<String>(expectedF);
-    Counters.multiplyInPlace(expectedLossExpectedF, expectedLoss);
-    Counter<String> gradient = new ClassicCounter<String>(expectedLossF);
-    Counters.subtractInPlace(gradient, expectedLossExpectedF);
 
+    // spenceg: These memory copies are redundant
+//    Counter<String> expectedLossExpectedF = new ClassicCounter<String>(expectedF);
+//    Counters.multiplyInPlace(expectedLossExpectedF, expectedLoss);
+//    Counter<String> gradient = new ClassicCounter<String>(expectedLossF);
+//    Counters.subtractInPlace(gradient, expectedLossExpectedF);
+
+    Counters.multiplyInPlace(expectedF, expectedLoss);
+    Counters.subtractInPlace(expectedLossF, expectedF);
+    Counter<String> gradient = expectedLossF;
+    
     if (VERBOSE) {
       System.err.println("======================");
       System.err.printf("Argmax score: %.3f P: %.3f Eval: %.3f\n", argmaxScore, argmaxP, argmaxEval);
-      System.err.printf("Expected Loss: %.3f\n", expectedLoss);
-
-      System.err.printf("Expected Feature Values: %s\n", expectedF);
-      System.err.printf("Expected Feature Values * Expected Loss: %s\n", expectedLossF);
-
       System.err.println("Gradient: ");
       System.err.println(gradient);
       System.err.println();

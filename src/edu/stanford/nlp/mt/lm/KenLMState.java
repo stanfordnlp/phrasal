@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.lm;
 
+import cern.colt.Arrays;
+
 /**
  * Result of a KenLM query.
  * 
@@ -24,6 +26,13 @@ public class KenLMState extends LMState {
     }
     this.hashCode = result;
   }
+  
+  /**
+   * Getter for KenLM.
+   * 
+   * @return
+   */
+  public int[] getState() { return state; }
   
   @Override
   public boolean equals(Object other) {
@@ -53,5 +62,10 @@ public class KenLMState extends LMState {
   @Override
   public int length() {
     return stateLength;
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("%.6f\t%s", score, Arrays.toString(state));
   }
 }

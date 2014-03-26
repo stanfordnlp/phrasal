@@ -12,6 +12,10 @@ import choices
 from models import UserConfiguration,TrainingRecord,TranslationSession,DemographicData
 from forms import DemographicForm,ExitSurveyForm,DivErrorList,TranslationInputForm
 
+# Give the user an untimed break after translating this many
+# documents.
+BREAK_INTERVAL = 4
+
 logger = logging.getLogger(__name__)
 
 def get_user_app_status(user):
@@ -26,17 +30,17 @@ def get_user_app_status(user):
     user_status = {}
     
     # Filled out demographic info
-    user_status['demographic_form'] = True if model_utils.get_demographic_data(user) else False
+    user_status['demographic_form_done'] = True if model_utils.get_demographic_data(user) else False
 
     # Completed training
-    user_status['training'] = True if model_utils.get_training_record(user) else False
+    user_status['training_done'] = True if model_utils.get_training_record(user) else False
 
     # Translation sessions remaining
-    sessions = TranslationSession.objects.filter(user=user).exclude(text__isnull=False).order_by('order')
-    user_status['translate'] = True if len(sessions) == 0 else False
+    sessions = TranslationSession.objects.filter(user=user,training=False).exclude(complete=True)
+    user_status['translate_done'] = True if len(sessions) == 0 else False
 
     # Filled out exit survey
-    user_status['exit_form'] = True if model_utils.get_exit_data(user) else False
+    user_status['exit_form_done'] = True if model_utils.get_exit_data(user) else False
         
     return user_status
 
@@ -57,10 +61,31 @@ def user_training_status(user, complete=False):
     else:
         return False
 
-def get_translate_configuration_for_user(user,training=False):
+def get_session_list(include_training=False):
+    """
+    """
+    try:
+        if include_training:
+            return Translation.objects.all()
+        else:
+            return TranslationSession.objects.exclude(training=True)
+    except:
+        logger.error('Unable to retrieve session list')
+    return None
+
+def get_session(session_id):
+    try:
+        return TranslationSession.objects.get(id=session_id)
+    except:
+        logger.error('Translation session not found: ' + str(session_id))
+    return None
+
+def get_translate_configuration_for_user(user,
+                                         training=False,
+                                         last_condition=None):
     """
     Configures the translation session for the user.
-    
+
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
@@ -85,9 +110,16 @@ def get_translate_configuration_for_user(user,training=False):
     session_object['tgt_language'] = session.tgt_language.code.upper()
     # Convert to string and lowercase since this will be used as a boolean
     # in javascript UI code
-    session_object['disable_interactive'] = str(choices.is_postedit(session.interface)).lower()
-    logger.debug(session.interface)
-    logger.debug(str(session_object))
+    session_object['is_postedit'] = str(choices.is_postedit(session.interface)).lower()
+    session_object['interface'] = session.interface
+
+    # Break logic. Give the user a break if we are about
+    # to change UI conditions or the this is the third document
+    # that the user has seen
+    show_break = (last_condition and not session.interface == last_condition) or (session.order > 0 and session.order % BREAK_INTERVAL == 0)
+    session_object['show_break'] = show_break
+
+    logger.debug(str(user.username) + " : " + str(session_object))
 
     return (session_object,form)
 
@@ -111,6 +143,9 @@ def get_user_translation_direction(user):
 def save_translation_session(user, post_data, training=False):
     """
     Save the result of a translation session
+
+    Raises: RuntimeError
+    Returns: The condition (usually the UI) of this session.
     """
     try:
         session = TranslationSession.objects.filter(user=user,training=training).exclude(complete=True).order_by('order')[0]
@@ -137,6 +172,8 @@ def save_translation_session(user, post_data, training=False):
     else:
         logger.error('Form validation failed: %s || %s ||%s' % (user.username, str(post_data), str(session)))
         raise RuntimeError
+
+    return session.interface
     
 def get_demographic_form(user, post_data=None):
     """
@@ -186,6 +223,8 @@ def save_modelform(user, model_form):
 #
 SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
+SERVICE_URLS['fr']['en'] = 'http://jonah.stanford.edu:8017/x'
+SERVICE_URLS['en']['de'] = 'http://127.0.0.1:8017/x'
 
 # Request types
 TRANSLATION_REQUEST = 'tReq'

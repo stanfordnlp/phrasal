@@ -148,6 +148,20 @@ public class Metrics {
    */
   static public List<List<Sequence<IString>>> readReferences(
       String[] referenceFilenames) throws IOException {
+    return readReferences(referenceFilenames, false);
+  }
+
+  /**
+   * Read a set of referneces from a list of newline-delimited files. Optionally
+   * apply NIST tokenization for evaluation.
+   * 
+   * @param referenceFilenames
+   * @param applyNistTokenizer
+   * @return
+   * @throws IOException
+   */
+  public static List<List<Sequence<IString>>> readReferences(String[] referenceFilenames,
+      boolean applyNistTokenizer) throws IOException {
     List<List<Sequence<IString>>> referencesList = new ArrayList<List<Sequence<IString>>>();
     for (String referenceFilename : referenceFilenames) {
       LineNumberReader reader = IOTools.getReaderFromFile(referenceFilename);
@@ -156,6 +170,9 @@ public class Metrics {
         if (referencesList.size() < lineNumber) {
           referencesList.add(new ArrayList<Sequence<IString>>(
               referenceFilenames.length));
+        }
+        if (applyNistTokenizer) {
+          line = NISTTokenizer.tokenize(line);
         }
         referencesList.get(lineNumber - 1).add(IStrings.tokenize(line));
       }

@@ -22,7 +22,7 @@ import edu.stanford.nlp.util.MutableDouble;
 /**
  * @author danielcer
  */
-public class MCMCDerivative extends AbstractNBestOptimizer {
+public class MCMCDerivative extends AbstractBatchOptimizer {
 
   MutableDouble expectedEval;
   MutableDouble objValue;

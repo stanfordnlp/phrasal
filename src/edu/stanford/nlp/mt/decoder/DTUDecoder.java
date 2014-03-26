@@ -139,6 +139,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   @Override
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties, 
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
@@ -165,7 +166,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.println("Generating Translation Options");
 
     List<ConcreteRule<TK,FV>> options = phraseGenerator
-        .getRules(source, targets, sourceInputId, scorer);
+        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
 
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:
@@ -210,7 +211,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     DTUOptionGrid optionGrid = new DTUOptionGrid(options, source);
 
     // insert initial hypothesis
-    Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source,
+    Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
         heuristic, scorer, allOptions);
     beams[0].put(nullHyp);
     if (DEBUG) {

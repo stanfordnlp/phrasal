@@ -5,8 +5,6 @@ from django.utils.safestring import mark_safe
 from models import Language,DemographicData,ExitSurveyData,TranslationSession
 from django.forms import ModelForm
 
-import choices
-
 logger = logging.getLogger(__name__)
 
 class DivErrorList(ErrorList):
@@ -28,6 +26,8 @@ class ExitSurveyForm(ModelForm):
         model=ExitSurveyData
         exclude=['user']
         widgets = {
+            'exit_data_comparison' : forms.RadioSelect,
+            'exit_fatigue_comparison' : forms.RadioSelect,
             'exit_hardest_pos' : forms.RadioSelect,
             'exit_easiest_pos' : forms.RadioSelect,
             'exit_focus_in_postedit' : forms.RadioSelect,
@@ -43,52 +43,39 @@ class ExitSurveyForm(ModelForm):
             'exit_useful_tgt_chunking' : forms.RadioSelect,
             'exit_useful_tgt_anywhere' : forms.RadioSelect,
             'exit_prefer_itm' : forms.RadioSelect,
-            'exit_got_better_at_itm' : forms.RadioSelect,
-            'exit_comments' : forms.RadioSelect
-#            'stanford_mt_opinion' : forms.RadioSelect,
-#            'imt_improvement' : forms.RadioSelect,
-#            'imt_would_use' : forms.RadioSelect,
+            'exit_got_better_at_itm' : forms.RadioSelect
         }
         labels = {
+            'exit_data_comparison' : 'Were the documents in the two modules equally difficult to translate?',
+            'exit_fatigue_comparison' : 'Did you notice that fatigue affected your ability to translate in the second translation module relative to the first translation module?',
+            'exit_technical_comparison' : 'Did you experience any technical issues with the software during the experiment? If yes, please describe:',
             'exit_hardest_pos' : 'What was the hardest source part of speech to translate?',
             'exit_easiest_pos' : 'What was the easiest source part of speech to translate?',
             'exit_hardest_source' : 'Please describe the hardest source segments to translate, citing examples if you remember them.',
             'exit_hardest_target' : 'Please describe the hardest target segments to generate, citing examples if you remember them.',
-            'exit_focus_in_postedit' : 'When translating in post-edit mode, what part of the UI do you generally focus on?',
-            'exit_focus_in_imt' : 'When translating using interactive MT, what part of the UI do you generally focus on?',
-            'exit_like_better' : 'Which interface did you like more?',
-            'exit_more_efficient' : 'In which interface condition did you translate most efficiently?',
-            'exit_itm_most_useful' : 'Which interactive aid did you find most useful?',
-            'exit_itm_least_useful' : 'Which interactive aid did you find least useful?',
-            'exit_useful_src_lookup' : 'Source text lookup with mouse was generally useful.',
-            'exit_useful_tgt_inlined' : 'Inlined target text was generally useful.',
-            'exit_useful_tgt_suggestions' : 'Drop-down target suggestions were generally useful.',
-            'exit_useful_tgt_completion' : 'Suggestions about the current word in the target text were generally useful.',
-            'exit_useful_tgt_chunking' : 'Suggestions of phrases (groups of words longer than two) were generally useful.',
-            'exit_useful_tgt_anywhere' : 'Suggestions about the words anywhere in the target text were generally useful.',
+            'exit_focus_in_postedit' : 'When translating with the post-edit interface, what part of the UI do you generally focus on?',
+            'exit_focus_in_imt' : 'When translating with the interactive interface, what part of the UI do you generally focus on?',
+            'exit_like_better' : 'In general, which interface did you prefer?',
+            'exit_more_efficient' : 'In which interface did you feel most productive?',
+            'exit_itm_most_useful' : 'In the interactive interface: Which interactive aid did you find most useful?',
+            'exit_itm_least_useful' : 'In the interactive interface: Which interactive aid did you find least useful?',
+            'exit_useful_src_lookup' : 'In the interactive interface: Source text lookup with mouse was generally useful.',
+            'exit_useful_tgt_inlined' : 'In the interactive interface: Inlined target translation (gray text in the typing area) was generally useful.',
+            'exit_useful_tgt_suggestions' : 'In the interactive interface: Drop-down target suggestions were generally useful.',
+            'exit_useful_tgt_completion' : 'In the interactive interface: Suggestions about the current word in the target text were generally useful.',
+            'exit_useful_tgt_chunking' : 'In the interactive interface: Suggestions of phrases (groups of words longer than two) were generally useful.',
+            'exit_useful_tgt_anywhere' : 'In the interactive interface: Suggestions about the words anywhere in the target text were generally useful.',
             'exit_cat_strength_weakness' : 'Please describe major strengths and weaknesses of your current CAT tool.',
-            'exit_itm_strength_weakness' : 'Please describe major strengths and weaknesses of interactive MT.',
-            'exit_itm_missing_aid' : 'Was there an aid not present in the current interactive MT that would have been helpful?',
-            'exit_prefer_itm' : 'I would use an interactive MT interface tool like this one instead of my existing CAT tool.',
-            'exit_got_better_at_itm' : 'I got better at using the interactive MT interface with practice/experience.',
+            'exit_itm_strength_weakness' : 'Please describe major strengths and weaknesses of interactive translation in general.',
+            'exit_itm_missing_aid' : 'Was there an aid not present in the current interactive interface that would have been helpful?',
+            'exit_prefer_itm' : 'I would use an interactive translation interface tool like this one instead of my existing translation workbench (assuming that support for translation workflow, translation memories, formatting, etc. were added).',
+            'exit_got_better_at_itm' : 'I got better at using the interactive interface with practice/experience.',
             'exit_comments' : 'Any other feedback on the interfaces or experiment?'
-#            'stanford_mt_opinion' : 'To what degree do you agree with the following statement: The MT suggestions were generally useful.',
-#            'imt_improvement' : 'To what degree do you agree with the following statement: I got better at using the interactive MT interface with practice/experience',
-#            'imt_would_use' : 'To what degree do you agree with the following statement: I would use an interactive translation tool like this instead of my existing CAT tool.',
-#            'preferred_ui': 'In which interface condition did you translate most efficiently?',
-#            'hardest_pos': 'What was the hardest source part of speech to translate?',
-#            'easiest_pos': 'What was the easiest source part of speech to translate?',
-#            'hardest_src': 'Please describe the hardest source segments to translate, citing examples if you remember them.',
-#            'hardest_tgt': 'Please describe the hardest target segments to generate, citing examples if you remember them.',
-#            'gaze_location': 'When translating, what part of the UI do you generally focus on?',
-#            'imt_most_useful': 'Which interactive aid did you find most useful?',
-#            'imt_least_useful' : 'Which interactive aid did you find least useful?',
-#            'imt_aid_suggestions' : 'Was there an aid not present in the current interface that would have been helpful?',
-#            'imt_gaze_location' : 'Did you focus on a different part of the UI when using the interactive MT interface?',
-#            'cat_response' : 'Please describe major strengths and weaknesses of your current CAT tool.',
-#            'other_response' : 'Any other feedback on the interfaces or experiment?',
         }
         error_messages = {
+            'exit_data_comparison' : { 'required': ("Required field.") },
+            'exit_fatigue_comparison' : { 'required': ("Required field.") },
+            'exit_technical_comparison' : { 'required': ("Required field.") },
             'exit_hardest_pos' : { 'required': ("Required field.") },
             'exit_easiest_pos' : { 'required': ("Required field.") },
             'exit_hardest_source' : { 'required': ("Required field.") },
@@ -111,20 +98,6 @@ class ExitSurveyForm(ModelForm):
             'exit_prefer_itm' : { 'required': ("Required field.") },
             'exit_got_better_at_itm' : { 'required': ("Required field.") },
             'exit_comments' : { 'required': ("Required field.") }
-#            'stanford_mt_opinion': { 'required': ("Required field.") },
-#            'imt_improvement': { 'required': ("Required field.") },
-#            'imt_would_use': { 'required': ("Required field.") },
-#            'preferred_ui': { 'required': ("Required field.") },
-#            'hardest_pos': { 'required': ("Required field.") },
-#            'easiest_pos': { 'required': ("Required field.") },
-#            'hardest_src': { 'required': ("Required field.") },
-#            'hardest_tgt': { 'required': ("Required field.") },
-#            'gaze_location': { 'required': ("Required field.") },
-#            'imt_most_useful': { 'required': ("Required field.") },
-#            'imt_least_useful': { 'required': ("Required field.") },
-#            'imt_aid_suggestions': { 'required': ("Required field.") },
-#            'imt_gaze_location': { 'required': ("Required field.") },
-#            'cat_response': { 'required': ("Required field.") },
         }
     
 class DemographicForm(ModelForm):

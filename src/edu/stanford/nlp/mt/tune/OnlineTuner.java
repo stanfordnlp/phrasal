@@ -34,14 +34,15 @@ import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
+import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer2;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
-import edu.stanford.nlp.mt.tune.optimizers.OnlineOptimizer;
-import edu.stanford.nlp.mt.tune.optimizers.OnlineUpdateRule;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
 import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer;
@@ -51,6 +52,7 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.util.Triple;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -63,30 +65,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  *
  */
 public class OnlineTuner {
-
-  // Baseline dense configuration from edu.stanford.nlp.mt.decoder.feat.base
-  // Extended phrase table, hierarchical reordering, one language model 
-  private static final Set<String> BASELINE_DENSE_FEATURES = Generics.newHashSet();
-  static {
-    BASELINE_DENSE_FEATURES.add("LM");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithNext"); 
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:swapWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:swapWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LinearDistortion");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.0");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.1");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.2");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.3");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.4");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.5");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.6");
-    BASELINE_DENSE_FEATURES.add("WordPenalty");
-  }
   
   // Tuning set
   private List<Sequence<IString>> tuneSource;
@@ -126,6 +104,11 @@ public class OnlineTuner {
   
   private final Logger logger;
 
+  /**
+   * Print decode time of each sentence
+   */
+  private static boolean printDecodeTime = true; // Thang Mar14: to measure time for NPLM
+  
   /**
    * Constructor.
    * 
@@ -351,8 +334,11 @@ public class OnlineTuner {
         for (int i = 0; i < input.translationIds.length; ++i) {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
-          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
-              threadId);
+          
+          if(printDecodeTime) { Timing.startDoing("Thread " + threadId + " starts decoding sent " + translationId + ": " + source); }
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
+          if(printDecodeTime) { Timing.endDoing("\nThread " + threadId + " ends decoding sent " + translationId); }
+          
           nbestLists.add(nbestList);
         }
 
@@ -708,8 +694,8 @@ public class OnlineTuner {
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
       Set<String> featureNames = Generics.newHashSet(weights.keySet());
-      featureNames.addAll(BASELINE_DENSE_FEATURES);
-      for (String key : weights.keySet()) {
+      featureNames.addAll(FeatureUtils.BASELINE_DENSE_FEATURES);
+      for (String key : featureNames) {
         if (key.startsWith("LM")) {
           weights.setCount(key, 0.5);
         } else if (key.startsWith("WordPenalty")) {
@@ -752,6 +738,18 @@ public class OnlineTuner {
        Counters.normalize(wtsAccumulator);
        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
      
+    } else if (optimizerAlg.equals("expectedBLEU2")) {
+      assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
+      assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
+      Counters.normalize(wtsAccumulator);
+      return new ExpectedBLEUOptimizer2(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+    
+    } else if (optimizerAlg.equals("crossentropy")) {
+      assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
+      assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
+      Counters.normalize(wtsAccumulator);
+      return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+    
     } else {
       throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
@@ -808,6 +806,7 @@ public class OnlineTuner {
     optionMap.put("fmc", 1);
     optionMap.put("tmp", 1);
     optionMap.put("p", 1);
+    optionMap.put("pdt", 0); // Thang Mar14: print decode time
     return optionMap;
   }
 
@@ -872,6 +871,8 @@ public class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
+    
+    OnlineTuner.printDecodeTime = PropertiesUtils.getBool(opts, "pdt", false); // Thang Mar14
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");

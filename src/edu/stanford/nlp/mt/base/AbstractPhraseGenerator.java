@@ -26,7 +26,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
 
   @Override
   public List<ConcreteRule<TK,FV>> getRules(
-      Sequence<TK> source, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
+      Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
     List<ConcreteRule<TK,FV>> opts = Generics.newLinkedList();
     int sequenceSz = source.size();
     int longestForeignPhrase = this.longestSourcePhrase();
@@ -43,9 +43,9 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
         List<Rule<TK>> abstractOpts = this.query(foreignPhrase);
         if (abstractOpts != null) {
           for (Rule<TK> abstractOpt : abstractOpts) {
-            opts.add(new ConcreteRule<TK,FV>(abstractOpt,
+            opts.add(new ConcreteRule<TK,FV>(abstractOpt, 
                 foreignCoverage, phraseFeaturizer, scorer, source, this
-                .getName(), sourceInputId));
+                .getName(), sourceInputId, sourceInputProperties));
           }
         }
       }

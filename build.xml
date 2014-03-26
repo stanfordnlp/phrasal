@@ -1,5 +1,3 @@
-<!-- JavaNLP MT5 build file -->
-
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
   <property name="project.more"   value="${basedir}/../more" />
@@ -17,6 +15,8 @@
   <property name="compile.target"      value="1.7" />
   <property name="compile.encoding"    value="utf-8" />
 
+  <property environment="env"/>
+ 
   <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">
@@ -91,6 +91,7 @@ includeantruntime="false">
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
+      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
@@ -107,6 +108,7 @@ includeantruntime="false">
           description="Run mt integration tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
+      <sysproperty key="java.library.path" path="${project.more}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>

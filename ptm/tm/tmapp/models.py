@@ -51,6 +51,16 @@ class UserConfiguration(models.Model):
         return '%s %s->%s' % (self.user.username,
                               self.source_language.code,
                               self.target_language.code)
+
+class Experiment(models.Model):
+    """
+    Created when a full experiment configuration is loaded.
+    """
+    name = models.CharField(max_length=100)
+    json_spec = models.TextField()
+
+    def __unicode__(self):
+        return self.name
     
 class TrainingRecord(models.Model):
     """
@@ -102,13 +112,18 @@ class TranslationSession(models.Model):
     log = models.TextField(null=True,blank=True)
 
     def __unicode__(self):
-        return '%s %s %s' % (self.user.username,
-                             self.src_document.url,
-                             self.tgt_language.code)
+        return '%s %s ui: %s tgt_lang: %s done: %s training: %s order: %d' % (self.user.username,
+                                                                    self.src_document.url,
+                                                                    self.interface,
+                                                                    self.tgt_language.code,
+                                                                    str(self.complete),
+                                                                    str(self.training),
+                                                                              self.order)
     
 class DemographicData(models.Model):
     """
-    Demographic data about a user and his work environment.
+    Demographic data about a user. Entered when the user consents to participate
+    in the experiment.
     """
     user = models.OneToOneField(User)
     
@@ -146,85 +161,46 @@ class DemographicData(models.Model):
 
 class ExitSurveyData(models.Model):
 	"""
-	Exit survey entered by the user
+	Exit survey entered by the user after the experiment ends.
 	"""
 	user = models.OneToOneField(User)
 
-	exit_hardest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
+        # Sanity check questions
+        exit_data_comparison = models.BooleanField(choices=choices.BOOLEAN_CHOICES, default = None)
+        exit_fatigue_comparison = models.BooleanField(choices=choices.BOOLEAN_CHOICES, default = None)
+        exit_technical_comparison = models.TextField()
+
+        # Linguistic difficulty questions
+        exit_hardest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
 	exit_easiest_pos = models.CharField( max_length = 3, choices = choices.POS_CHOICES, default = None )
 	exit_hardest_source = models.TextField()
 	exit_hardest_target = models.TextField()
-	exit_focus_in_postedit = models.CharField( max_length = 5, choices = choices.POSTEDIT_GAZE, default = None )
+
+        # UI Comparison questions
+        exit_focus_in_postedit = models.CharField( max_length = 5, choices = choices.POSTEDIT_GAZE, default = None )
 	exit_focus_in_imt = models.CharField( max_length = 5, choices = choices.ITM_GAZE, default = None )
 	exit_like_better = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
 	exit_more_efficient = models.CharField( max_length = 3, choices = choices.INTERFACES, default = None )
-	exit_itm_most_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
-	exit_itm_least_useful = models.CharField( max_length = 5, choices = choices.ITM_UI_ELEMENTS, default = None )
+
+        # Interactive MT questions
+	exit_itm_most_useful = models.CharField( max_length = 15, choices = choices.IMT_AID_CHOICES, default = None )
+	exit_itm_least_useful = models.CharField( max_length = 15, choices = choices.IMT_AID_CHOICES, default = None )
 	exit_useful_src_lookup = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_inlined = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_suggestions = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_completion = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_chunking = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_useful_tgt_anywhere = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+
+        # Verdict on interactive MT questions
 	exit_cat_strength_weakness = models.TextField()
 	exit_itm_strength_weakness = models.TextField()
 	exit_itm_missing_aid = models.TextField()
 	exit_prefer_itm = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
 	exit_got_better_at_itm = models.PositiveSmallIntegerField( choices = choices.LIKERT_CHOICES, default = None )
+
+        # Any other comments?
 	exit_comments = models.TextField()
 
-
-    # Experiment/condition questions
-    # Which interface was most efficient?
-#    preferred_ui = models.CharField(max_length=3,
-#                                    choices=choices.INTERFACES)
-    
-    # Which POS categories was the hardest to translate?
-#    hardest_pos = models.CharField(max_length=3,
-#                                   choices=choices.POS_CHOICES)
-
-#    easiest_pos = models.CharField(max_length=3,
-#                                   choices=choices.POS_CHOICES)
-    
-    # Which source hardest to translate?
-#    hardest_src = models.TextField()
-    
-    # Which target hardest to generate?
-#    hardest_tgt = models.TextField()
-    
-    # Likert: the MT suggestions were useful
-#    stanford_mt_opinion = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
-    
-    # When translating, what part of the UI do you usually focus on?
-#    gaze_location = models.CharField(max_length=5,
-#                                     choices=choices.GAZE_CHOICES)
-    
-    # UI-imt questions
-    # Which aid did you find most useful?
-#    imt_most_useful = models.CharField(max_length=20,
-#                                       choices=choices.IMT_AID_CHOICES)
-    
-    # Which aid was least effective?
-#    imt_least_useful = models.CharField(max_length=20,
-#                                        choices=choices.IMT_AID_CHOICES)
-    
-    # Likert: I became more efficient with practice
-#    imt_improvement = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
-     
-    # Text: Was there an aid not present in the current interface that would have been helpful?
-#    imt_aid_suggestions = models.TextField()
-    
-    # Did you focus on a different part of the UI when using IMT?
-    # When translating, what part of the UI do you usually focus on?
-#    imt_gaze_location = models.CharField(max_length=5,
-#                                         choices=choices.GAZE_CHOICES)
-    
-    # UI-imt relative to other CAT tools
-    # Likert: I would use an tool like this instead of my existing CAT tool
-#    imt_would_use = models.PositiveSmallIntegerField(choices=choices.LIKERT_CHOICES,default=3)
-    
-    # Text: Please describe major strengths and weaknesses of your current CAT tool.
-#    cat_response = models.TextField()
-    
-    # Text: Anything else
-#    other_response = models.TextField(blank=True,null=True)
+        def __unicode__(self):
+            return self.user.username
