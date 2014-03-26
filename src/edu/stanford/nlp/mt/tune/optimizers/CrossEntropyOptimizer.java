@@ -49,7 +49,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     assert scoreMetric != null;
     
     if (translations.size() == 0) {
-      System.err.printf("WSGDEBUG: NULL GRADIENT FOR source id %d%n", sourceId);
+      System.err.printf("NULL GRADIENT FOR source id %d%n", sourceId);
       return new ClassicCounter<String>();
     }
     
@@ -88,14 +88,17 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
       items.put(g.t.latticeSourceId, g);
       ++id;
     }
+
+    if (pNormalizer == 0.0) {
+      System.err.printf("NULL GRADIENT FOR source id %d due to 0 BLEU score%n", sourceId);
+      return new ClassicCounter<String>();
+    }
     
     if (DEBUG) {
       System.err.printf("%d #items %d max: %.3f / %d%n", sourceId, 
           items.size(), scoredList.get(0).goldScore, scoredList.get(0).t.latticeSourceId);
     }
     
-    assert pNormalizer > 0.0 : String.format("pNormalizer is %f", pNormalizer);
-    assert qNormalizer > 0.0 : String.format("qNormalizer is %f", qNormalizer);
     Counter<String> gradient = new ClassicCounter<String>(INITIAL_CAPACITY);
     for (RichTranslation<IString, String> translation : translations) {
       double p = items.containsKey(translation.latticeSourceId) ? 
