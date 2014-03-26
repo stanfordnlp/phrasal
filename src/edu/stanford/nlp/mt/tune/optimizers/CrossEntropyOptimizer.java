@@ -73,7 +73,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     Collections.sort(scoredList);
 
     double pNormalizer = 0.0;
-    double lastScore = 0.0;
+    double lastScore = Double.NEGATIVE_INFINITY;
     int rank = 0;
     int id = 1;
     Map<Long,GoldScoredTranslation> items = Generics.newHashMap();
@@ -105,7 +105,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
       double p = items.containsKey(translation.latticeSourceId) ? 
           items.get(translation.latticeSourceId).goldScore / pNormalizer : 0.0;
       double logQ = translation.score - logQNormalizer;
-      assert ! Double.isNaN(p) : String.format("%f %f", items.get(translation.latticeSourceId).goldScore, pNormalizer);
+      assert ! Double.isNaN(p) : String.format("%d: %f %f", sourceId, items.get(translation.latticeSourceId).goldScore, pNormalizer);
       double diff = Math.exp(logQ) - p;
       if (diff == 0.0) continue;
       for (FeatureValue<String> f : translation.features) {
