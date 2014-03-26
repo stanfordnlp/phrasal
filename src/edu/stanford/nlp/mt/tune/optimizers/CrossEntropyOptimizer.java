@@ -100,13 +100,13 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     }
     
     Counter<String> gradient = new ClassicCounter<String>(INITIAL_CAPACITY);
+    double logQNormalizer = Math.log(qNormalizer);
     for (RichTranslation<IString, String> translation : translations) {
       double p = items.containsKey(translation.latticeSourceId) ? 
           items.get(translation.latticeSourceId).goldScore / pNormalizer : 0.0;
-      double q = Math.exp(translation.score) / qNormalizer;
-      assert ! Double.isNaN(p);
-      assert ! Double.isNaN(q);
-      double diff = q - p;
+      double logQ = translation.score - logQNormalizer;
+      assert ! Double.isNaN(p) : String.format("%f %f", items.get(translation.latticeSourceId).goldScore, pNormalizer);
+      double diff = Math.exp(logQ) - p;
       if (diff == 0.0) continue;
       for (FeatureValue<String> f : translation.features) {
         double g = f.value * diff;
