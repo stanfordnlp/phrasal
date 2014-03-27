@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
@@ -38,7 +39,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
-  private final int maxDistortion;
+  private int maxDistortion;
   private final Logger logger;
 
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
@@ -95,6 +96,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       List<Sequence<TK>> targets, int nbest) {
     final int sourceLength = source.size();
 
+    this.maxDistortion = Integer.parseInt((String) sourceInputProperties.get(InputProperty.DistortionLimit));
+    
     // create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
