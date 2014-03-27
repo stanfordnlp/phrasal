@@ -17,6 +17,8 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
+
 /**
  * 
  * @author Sebastian Schuster
@@ -34,7 +36,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   
   public PreorderingAgreement(String... args) throws IOException {
-    Properties options = SparseFeatureUtils.argsToProperties(args);
+    Properties options = FeatureUtils.argsToProperties(args);
     if (!options.containsKey("permutationsFile")) {
       throw new RuntimeException(
           this.getClass().getName() + ": ERROR No permutations file was specified!");
