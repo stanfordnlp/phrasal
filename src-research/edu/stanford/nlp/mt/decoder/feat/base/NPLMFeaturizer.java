@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
@@ -11,11 +12,14 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.lm.NPLMLanguageModel;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.neural.Util;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
  * Featurizer for source-conditioned Neural Probabilistic Language Models (NPLMs).
@@ -33,6 +37,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
  
   private final String featureName;
   private final NPLMLanguageModel nplm;
+  private final KenLanguageModel kenlm;
   private final boolean addContextFeatures;
   private String[] contextFeatureNames;
   
@@ -53,19 +58,33 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
 	private final int tgtUnkVocabId; 
   private final int tgtStartVocabId;
 
+  public String helpMessage(){
+  	return "NPLMFeaturizer(nplm=<string>,kenlm=<string>,id=<string>). kenlm is optional.";
+  }
   /**
    * Constructor called by Phrasal when NPLMFeaturizer appears in
    * [additional-featurizers].
    */
   public NPLMFeaturizer(String...args) throws IOException {
-    if (args.length < 2)
-      throw new RuntimeException(
-          "At least 2 arguments are needed: LM file name, src and LM ID");
-    featureName = args[1];
+    Properties options = FeatureUtils.argsToProperties(args);
+    String nplmFile = PropertiesUtils.getString(options, "nplm", null);
+    String kenlmFile = PropertiesUtils.getString(options, "kenlm", null); // backoff language model
+    featureName = PropertiesUtils.getString(options, "id", null);
     
-    // load KenLM
-    String modelFile = args[0];
-    nplm = new NPLMLanguageModel(modelFile);
+    if(nplmFile==null || featureName==null) {
+    	throw new RuntimeException(
+          "At least 2 arguments are needed: nplm and id. " + helpMessage());
+    }
+    
+    // load back-off KenLM (if any)
+    if (kenlmFile!=null){
+    	System.err.println("# NPLMFeaturizer back-off KenLM: " + kenlmFile);
+    	kenlm = new KenLanguageModel(kenlmFile);
+    } else { kenlm = null; }
+    
+    
+    // load NPLM
+    nplm = new NPLMLanguageModel(nplmFile);
     this.lmOrder = nplm.order();
     this.srcOrder = nplm.getSrcOrder();
     this.tgtOrder = nplm.getTgtOrder();
@@ -224,12 +243,14 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   }
 
   @Override
-  public List<FeatureValue<String>> ruleFeaturize(
-      Featurizable<IString, String> f) {
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
+    double lmScore = 0.0;
     
-    // we don't score rule at the moment
-    double lmScore = 0.0; // getScore(0, f.targetPhrase.size(), f.targetPhrase, f, null, true); 
+    if (kenlm!=null) { // score if back-off LM is specified
+    	lmScore = kenlm.score(f.targetPhrase, 0, null).getScore();
+    }
+    
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(featureName, lmScore));
     return features;

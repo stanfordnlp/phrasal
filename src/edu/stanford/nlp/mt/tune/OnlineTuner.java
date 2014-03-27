@@ -335,9 +335,9 @@ public class OnlineTuner {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
           
-          if(printDecodeTime) { Timing.startDoing("Thread " + threadId + " starts decoding sent " + translationId + ": " + source); }
+          if(printDecodeTime && threadId==0) { Timing.startTime(); }
           List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
-          if(printDecodeTime) { Timing.endDoing("\nThread " + threadId + " ends decoding sent " + translationId); }
+          if(printDecodeTime && threadId==0) { Timing.endDoing("\nThread " + threadId + " ends decoding sent " + translationId); }
           
           nbestLists.add(nbestList);
         }
@@ -806,7 +806,7 @@ public class OnlineTuner {
     optionMap.put("fmc", 1);
     optionMap.put("tmp", 1);
     optionMap.put("p", 1);
-    optionMap.put("pdt", 0); // Thang Mar14: print decode time
+    optionMap.put("pdt", 0);
     return optionMap;
   }
 
@@ -871,8 +871,7 @@ public class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
-    
-    OnlineTuner.printDecodeTime = PropertiesUtils.getBool(opts, "pdt", false); // Thang Mar14
+    OnlineTuner.printDecodeTime = PropertiesUtils.getBool(opts, "pdt", false);
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
