@@ -1,0 +1,1 @@
+SELECT username,url,interface from tmapp_translationsession, tmapp_sourcedocument, auth_user where tmapp_translationsession.user_id=auth_user.id and tmapp_translationsession.src_document_id=tmapp_sourcedocument.id and tmapp_translationsession.complete=1 and tmapp_translationsession.valid=0;

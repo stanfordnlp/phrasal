@@ -1,6 +1,7 @@
 import sys
 import codecs
 import csv
+import os
 from os.path import basename,split,join
 from csv_unicode import UnicodeReader,UnicodeWriter
 from collections import Counter,namedtuple
@@ -31,9 +32,19 @@ def load_middleware_dump(filename):
     with open(filename) as in_file:
         r = UnicodeReader(in_file, delimiter='|', quoting = csv.QUOTE_NONE)
         for row in map(DumpRow._make, r):
-            if not row.log or len(row.log.strip()) == 0:
+            complete = str2bool(row.complete)
+            valid = str2bool(row.valid)
+            training = str2bool(row.training)
+            if row.username == 'rayder441':
+                # Debug/test username
                 continue
-            if str2bool(row.training):
+            elif not valid:
+                sys.stderr.write('WARNING: Skipping invalid row: %s %s%s' %(row.username, row.src_doc, os.linesep))
+                continue
+            elif not complete:
+                sys.stderr.write('Skipping incomplete row: %s %s%s' %(row.username, row.src_doc, os.linesep))
+                continue
+            elif training:
                 continue
             row_list.append(row)
     return row_list

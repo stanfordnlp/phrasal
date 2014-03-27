@@ -36,8 +36,6 @@ doc_to_user_txt = defaultdict(dict)
 doc_to_user_time = defaultdict(dict)
 dump_row_list = imt_utils.load_middleware_dump(dump_file)
 for row in dump_row_list:
-    if row.username == 'rayder441':
-        continue
     text_dict = json.loads(row.text)
     segment_to_tgt_txt = imt_utils.final_translations_from_dict(text_dict)
     doc_name = url2doc(row.src_doc)
