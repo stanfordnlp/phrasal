@@ -19,5 +19,8 @@ public enum InputProperty {
   
   // Indicator feature index from PhraseExtract to trigger
   // various templates in the feature API.
-  RuleFeatureIndex
+  RuleFeatureIndex,
+  
+  //Sentence based distortion limit
+  DistortionLimit
 }
