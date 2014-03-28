@@ -173,9 +173,8 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       }
       assert(i==lmOrder);
       
-      state = nplm.score(ngramIds);
+ //     state = nplm.score(ngramIds);
       
-      /*
       LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
       Sequence<IString> partialTranslation = f.targetPhrase;
       int startIndex = 0;
@@ -190,7 +189,6 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
         partialTranslation = Sequences.wrapEnd(partialTranslation, TokenUtils.END_TOKEN);
       }
       state = kenlm.score(partialTranslation, startIndex, priorState);
-      */
       
       double ngramScore = state.getScore();
       
@@ -266,9 +264,9 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     assert (f.targetPhrase != null);
     double lmScore = 0.0;
     
-    if (kenlm!=null) { // score if back-off LM is specified
-    	lmScore = kenlm.score(f.targetPhrase, 0, null).getScore();
-    }
+//    if (kenlm!=null) { // score if back-off LM is specified
+//    	lmScore = kenlm.score(f.targetPhrase, 0, null).getScore();
+//    }
     
     List<FeatureValue<String>> features = Generics.newLinkedList();
     features.add(new FeatureValue<String>(featureName, lmScore));
