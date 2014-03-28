@@ -35,12 +35,13 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   
   // in srilm -99 is -infinity
   private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
- 
+
+  private final IString startToken;
+  private final IString endToken;
+
   private final String featureName;
   private final NPLMLanguageModel nplm;
   private final KenLanguageModel kenlm;
-  private final boolean addContextFeatures;
-  private String[] contextFeatureNames;
   
   private Sequence<IString> sourceSent;
   
@@ -93,14 +94,13 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     this.srcVocabMap = nplm.getSrcVocabMap();
     this.tgtVocabMap = nplm.getTgtVocabMap();
     
+    this.startToken = nplm.getStartToken();
+    this.endToken = nplm.getEndToken();
+
     // special tokens
     this.srcUnkVocabId = nplm.getSrcUnkVocabId();
     this.tgtUnkVocabId = nplm.getTgtUnkVocabId();
     this.tgtStartVocabId = nplm.getTgtStartVocabId();
-    
-    // context features
-    this.addContextFeatures = args.length > 2 ? true : false;
-    contextFeatureNames = addContextFeatures ? new String[lmOrder] : null;
   }
   
   /**
@@ -109,7 +109,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
 	 * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
 	 */
   private double getScore(int startPos, int limit, Sequence<IString> translation, 
-      Featurizable<IString, String> f, List<FeatureValue<String>> features){ //, boolean isRuleFeaturize) {
+      Featurizable<IString, String> f, List<FeatureValue<String>> features){ 
     double lmSumScore = 0;
     LMState state = null;
     
@@ -173,36 +173,12 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       }
       assert(i==lmOrder);
       
- //     state = nplm.score(ngramIds);
-      
-      LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
-      Sequence<IString> partialTranslation = f.targetPhrase;
-      int startIndex = 0;
-      if (f.prior == null && f.done) {
-        partialTranslation = Sequences.wrapStartEnd(
-            partialTranslation, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
-        startIndex = 1;
-      } else if (f.prior == null) {
-        partialTranslation = Sequences.wrapStart(partialTranslation, TokenUtils.START_TOKEN);
-        startIndex = 1;
-      } else if (f.done) {
-        partialTranslation = Sequences.wrapEnd(partialTranslation, TokenUtils.END_TOKEN);
-      }
-      state = kenlm.score(partialTranslation, startIndex, priorState);
-      
+      state = nplm.score(ngramIds);
       double ngramScore = state.getScore();
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         lmSumScore += MOSES_LM_UNKNOWN_WORD_SCORE;
         continue;
-      }
-      if (addContextFeatures && features != null) {
-        int stateLength = state.length();
-        if (contextFeatureNames[stateLength] == null) {
-          contextFeatureNames[stateLength] = 
-              String.format("%sC%d", featureName, stateLength);
-        }
-        features.add(new FeatureValue<String>(contextFeatureNames[stateLength], 1.0));
       }
       lmSumScore += ngramScore;
       
@@ -225,9 +201,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     }
     
     // The featurizer state is the result of the last n-gram query 
-    // Don't set state for rule queries
-    if (state == null) {
-      // Target-deletion rule
+    if (state == null) { // Target-deletion rule
       state = (LMState) f.prior.getState(this);
     }
     f.setState(this, state);
@@ -236,13 +210,37 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
 
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    IString startToken = nplm.getStartToken();
-    IString endToken = nplm.getEndToken();
+    if (DEBUG) {
+      System.err.printf("Sequence: %s%n\tNovel Phrase: %s%n",
+          f.targetPrefix, f.targetPhrase);
+      System.err.printf("Untranslated tokens: %d%n", f.numUntranslatedSourceTokens);
+      System.err.println("ngram scoring:");
+    }
 
-    // TODO(spenceg): If we remove targetPrefix---which we should---then we'd need to retrieve the
-    // prior state to perform this calculation.
-    Sequence<IString> partialTranslation;
-    int startPos = f.targetPosition + 1;
+    Sequence<IString> partialTranslation = null;
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+
+    /*
+    LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
+    int startIndex = 0;
+    if (f.prior == null && f.done) {
+      partialTranslation = Sequences.wrapStartEnd(
+          f.targetPhrase, startToken, endToken);
+      startIndex = 1;
+    } else if (f.prior == null) {
+      partialTranslation = Sequences.wrapStart(f.targetPhrase, startToken);
+      startIndex = 1;
+    } else if (f.done) {
+      partialTranslation = Sequences.wrapEnd(f.targetPhrase, endToken);
+    } else {
+      partialTranslation = f.targetPhrase;
+    }
+    LMState state = kenlm.score(partialTranslation, startIndex, priorState);
+    f.setState(this, state);
+    double lmScore = state.getScore();
+    */
+    
+    // f.targetPrefix includes priorState + targetPhrase
     if (f.done) {
       partialTranslation = Sequences.wrapStartEnd(
           f.targetPrefix, startToken, endToken);
@@ -250,12 +248,17 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       partialTranslation = Sequences.wrapStart(
           f.targetPrefix, startToken);
     }
+    int startPos = f.targetPosition + 1;
     int limit = partialTranslation.size();
-
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    double lmScore = getScore(startPos, limit, partialTranslation, f, features); //, false);
+    double lmScore = getScore(startPos, limit, partialTranslation, f, features);
+    
     features.add(new FeatureValue<String>(featureName, lmScore));
     
+    if (DEBUG) {
+      System.err.printf("Final score: %f%n", lmScore);
+      System.err.println("===================");
+    }
+
     return features;
   }
 
