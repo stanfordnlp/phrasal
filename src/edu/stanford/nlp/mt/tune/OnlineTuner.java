@@ -298,6 +298,7 @@ public class OnlineTuner {
     private final OnlineOptimizer<IString, String> optimizer; 
     private final SentenceLevelMetric<IString, String> scoreMetric;
     private final int threadId;
+    private final Timing timer; // Thang Mar14
 
     // Counter for the newInstance() method
     private int childThreadId;
@@ -308,6 +309,7 @@ public class OnlineTuner {
       this.scoreMetric = scoreMetric;
       this.threadId = firstThreadId;
       this.childThreadId = firstThreadId+1;
+      this.timer = new Timing();
     }
 
     @Override
@@ -335,9 +337,8 @@ public class OnlineTuner {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
           
-          if(printDecodeTime && threadId==0) { Timing.startTime(); }
           List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
-          if(printDecodeTime && threadId==0) { Timing.endDoing("\nThread " + threadId + " ends decoding sent " + translationId); }
+          if(printDecodeTime) { timer.end("Thread " + threadId + " ends decoding sent " + translationId + ", num words = " + source.size()); }
           
           nbestLists.add(nbestList);
         }
