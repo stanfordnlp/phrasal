@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -128,12 +129,12 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     for (int pos = startPos; pos < limit; pos++) {
       // create id array
       int i;
-      int[] ngramIds = new int[lmOrder]; // will be stored in reverse order
+      int[] ngramIds = new int[lmOrder]; // will be stored in normal order
       
       // get source avg alignment pos within rule
       int srcAvgPos = Util.findSrcAvgPos(pos-startPos, alignment); // pos-startPos: position within the local target phrase
       if(srcAvgPos==-1) { // no source alignment, add <unk>
-        for(i=0; i<srcOrder; i++) ngramIds[lmOrder-i-1] = srcUnkVocabId;
+        for(i=0; i<srcOrder; i++) ngramIds[i] = srcUnkVocabId; // lmOrder-i-1
       } else {
         // convert this local srcAvgPos within the current srcPhrase, to the global position within the source sent
         //if(!isRuleFeaturize) 
@@ -152,7 +153,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
           	IString srcTok = sourceSeq.get(srcPos);
             if(srcTok.id<srcVocabMap.length) id = srcVocabMap[srcTok.id]; 
           }
-          ngramIds[lmOrder-i-1] = id;
+          ngramIds[i] = id; // lmOrder-i-1
           i++;
         }
       }
@@ -167,12 +168,30 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
           if(tgtTok.id<tgtVocabMap.length) id = tgtVocabMap[tgtTok.id];
           else id = tgtUnkVocabId;
         }
-        ngramIds[lmOrder-i-1] = id;
+        ngramIds[i] = id; // lmOrder-i-1
         i++;
       }
       assert(i==lmOrder);
       
       state = nplm.score(ngramIds);
+      
+      /*
+      LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
+      Sequence<IString> partialTranslation = f.targetPhrase;
+      int startIndex = 0;
+      if (f.prior == null && f.done) {
+        partialTranslation = Sequences.wrapStartEnd(
+            partialTranslation, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
+        startIndex = 1;
+      } else if (f.prior == null) {
+        partialTranslation = Sequences.wrapStart(partialTranslation, TokenUtils.START_TOKEN);
+        startIndex = 1;
+      } else if (f.done) {
+        partialTranslation = Sequences.wrapEnd(partialTranslation, TokenUtils.END_TOKEN);
+      }
+      state = kenlm.score(partialTranslation, startIndex, priorState);
+      */
+      
       double ngramScore = state.getScore();
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {

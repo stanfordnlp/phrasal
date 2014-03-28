@@ -51,9 +51,8 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    */
   public NPLMLanguageModel(String filename) throws IOException {
   	name = String.format("NPLM(%s)", filename);
-  	kenlm = new KenLM(filename);
+  	kenlm = new KenLM(filename, 1<<20);
   	order = kenlm.order();
-  	
   	System.err.println("# Loading NPLMLanguageModel ...");
   	
   	// load src-conditioned info
@@ -142,12 +141,13 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   /**
    * Thang Mar14: factor out from the original score(Sequence<IString sequence) method
    * 
-   * @param ngramIds: reversed ids
+   * @param ngramIds: normal order 	ids
    * @return
    */
   public LMState score(int[] ngramIds) { 
     // got is (state_length << 32) | prob where prob is a float.
-    long got = kenlm.marshalledScore(ngramIds);
+//  	long got = kenlm.marshalledScore(ngramIds);
+  	long got = kenlm.marshalledScoreNPLM(ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
     return new KenLMState(score, ngramIds, stateLength);
@@ -169,12 +169,14 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   	for (int i = 0; i<numTokens; i++) {
 			tok = sequence.get(i);
 			if(i<srcOrder) { // look up from tgt vocab
-				ngramIds[numTokens-i-1] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkVocabId;
+				//ngramIds[numTokens-i-1] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkVocabId;
+				ngramIds[i] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkVocabId;
 			} else {
-				ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkVocabId;
+//				ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkVocabId;
+				ngramIds[i] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkVocabId;
 			}
 		}
-//  	System.err.println(Util.sprint(ngramIds));
+  	System.err.println(Util.sprint(ngramIds));
   	return score(ngramIds);
   }
   
