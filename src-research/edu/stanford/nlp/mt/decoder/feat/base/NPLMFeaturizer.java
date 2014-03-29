@@ -60,7 +60,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   private final int tgtStartVocabId;
 
   public String helpMessage(){
-  	return "NPLMFeaturizer(nplm=<string>,kenlm=<string>,id=<string>). kenlm is optional.";
+  	return "NPLMFeaturizer(nplm=<string>,cache=<int>,kenlm=<string>,id=<string>). kenlm is optional, for back-off LM.";
   }
   /**
    * Constructor called by Phrasal when NPLMFeaturizer appears in
@@ -69,6 +69,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   public NPLMFeaturizer(String...args) throws IOException {
     Properties options = FeatureUtils.argsToProperties(args);
     String nplmFile = PropertiesUtils.getString(options, "nplm", null);
+    int cacheSize = PropertiesUtils.getInt(options, "cache", 0);
     String kenlmFile = PropertiesUtils.getString(options, "kenlm", null); // backoff language model
     featureName = PropertiesUtils.getString(options, "id", null);
     
@@ -85,7 +86,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     
     
     // load NPLM
-    nplm = new NPLMLanguageModel(nplmFile, 1<<20);
+    nplm = new NPLMLanguageModel(nplmFile, cacheSize);
     this.lmOrder = nplm.order();
     this.srcOrder = nplm.getSrcOrder();
     this.tgtOrder = nplm.getTgtOrder();

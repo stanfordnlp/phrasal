@@ -4,9 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -21,6 +25,7 @@ import edu.stanford.nlp.util.Util;
  */
 public class NPLMLanguageModel implements LanguageModel<IString> {
 	private NPLM nplm;
+//	private KenLM kenlm;
 	
   private final String INPUT_VOCAB_SIZE = "input_vocab_size";
   private final String OUTPUT_VOCAB_SIZE = "output_vocab_size";
@@ -57,10 +62,12 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   	name = String.format("NPLM(%s)", filename);
   	nplm = new NPLM(filename, 0);
   	order = nplm.order();
+//  	kenlm = new KenLM(filename, 0);
+//  	order = kenlm.order();
   	
   	// cache
   	if (cacheSize>0){
-  		cacheMap = new ConcurrentHashMap<>(cacheSize);
+  		cacheMap = new ConcurrentHashMap<NPLMState, Double>(cacheSize);
   	}
   	
   	// load src-conditioned info
@@ -152,11 +159,10 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    * @param ngramIds: normal order 	ids
    * @return
    */
-  public NPLMState score(int[] ngramIds) { 
+  public LMState score(int[] ngramIds) { 
     
   	int stateLength = ngramIds.length; // Thang TODO: this is not quite right stateLength can be shorter than the ngram length.
   	NPLMState state = new NPLMState(0.0, ngramIds, stateLength);
-  	
   	double score = 0.0;
     if(cacheMap != null) { // caching
     	cacheLookup++;
@@ -174,13 +180,14 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     	score = nplm.scoreNPLM(ngramIds);
     }
     state.setScore(score);
-  		
-  	// got is (state_length << 32) | prob where prob is a float.	
-//  	long got = nplm.marshalledScoreNPLM(ngramIds);
+    return state; 
+  	
+//  	// got is (state_length << 32) | prob where prob is a float.	
+//  	ArrayUtils.reverse(ngramIds);
+//  	long got = kenlm.marshalledScore(ngramIds);
 //    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
 //    int stateLength = (int)(got >> 32);
-    
-    return state; //new NPLMState(score, ngramIds, stateLength); 
+//    return new KenLMState(score, ngramIds, stateLength);
   }
   
   /**
