@@ -24,7 +24,7 @@ public class NPLMLanguageModelTest {
 	@Test
 	public void testUnk() throws IOException {
 		System.err.println(System.getProperty("user.dir"));
-		NPLMLanguageModel nplm = new NPLMLanguageModel(nplmFile);
+		NPLMLanguageModel nplm = new NPLMLanguageModel(nplmFile, 0);
 		String[] tokens = new String[]{"a", "b", "c", "d", "e", "f", "g", "h"};
 		Sequence<IString> sequence = Util.getIStringSequence(tokens);
 		LMState state = nplm.score(sequence);
@@ -35,7 +35,7 @@ public class NPLMLanguageModelTest {
 	@Test
 	public void testInVocab() throws IOException {
 		System.err.println(System.getProperty("user.dir"));
-		NPLMLanguageModel nplm = new NPLMLanguageModel(nplmFile);
+		NPLMLanguageModel nplm = new NPLMLanguageModel(nplmFile, 0);
 		String[] tokens = new String[]{"一", "个", "中国", "银行", ",", "a", "chinese", "bank"};
 		Sequence<IString> sequence = Util.getIStringSequence(tokens);
 		LMState state = nplm.score(sequence);
@@ -46,7 +46,7 @@ public class NPLMLanguageModelTest {
 	@Test
 	public void testMixVocab() throws IOException {
 		System.err.println(System.getProperty("user.dir"));
-		NPLMLanguageModel nplm = new NPLMLanguageModel(nplmFile);
+		NPLMLanguageModel nplm = new NPLMLanguageModel(nplmFile, 0);
 		String[] tokens = new String[]{"a", "b", "c", "中国", "银行", "d", "chinese", "enterprises"};
 		Sequence<IString> sequence = Util.getIStringSequence(tokens);
 		LMState state = nplm.score(sequence);

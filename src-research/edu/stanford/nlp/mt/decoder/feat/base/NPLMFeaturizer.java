@@ -11,7 +11,6 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -86,7 +85,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     
     
     // load NPLM
-    nplm = new NPLMLanguageModel(nplmFile);
+    nplm = new NPLMLanguageModel(nplmFile, 1<<20);
     this.lmOrder = nplm.order();
     this.srcOrder = nplm.getSrcOrder();
     this.tgtOrder = nplm.getTgtOrder();
@@ -185,15 +184,17 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       if(DEBUG) { // && tgtLength>2){
         System.err.println(" # tgtPos=" + (pos-startPos));
         System.err.println("  srcAvgPos=" + srcAvgPos);
-        System.err.println("  ngram reverse=" + Util.intArrayToString(ngramIds));
+        System.err.println("  ngram =" + Util.intArrayToString(ngramIds));
         System.err.print("  src words=");
-        for (int j = lmOrder-1; j >= (lmOrder-srcOrder); j--) {
+        // for (int j = lmOrder-1; j >= (lmOrder-srcOrder); j--) {
+        for (int j = 0; j<srcOrder; j++) {
           System.err.print(" " + nplm.getSrcWord(ngramIds[j]).toString());
         }
         System.err.println();
         
         System.err.print("  tgt words=");
-        for (int j = tgtOrder-1; j >= 0; j--) {
+        // for (int j = tgtOrder-1; j >= 0; j--) {
+        for (int j = srcOrder; j < lmOrder; j++) {
           System.err.print(" " + nplm.getTgtWord(ngramIds[j]).toString());
         }
         System.err.println("  score=" + ngramScore);
