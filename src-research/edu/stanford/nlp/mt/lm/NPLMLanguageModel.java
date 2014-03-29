@@ -15,7 +15,7 @@ import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.util.Util;
+import edu.stanford.nlp.mt.neural.Util;
 
 /**
  * NPLM Language Model interface backed by KenLanguageModel
@@ -25,7 +25,7 @@ import edu.stanford.nlp.util.Util;
  */
 public class NPLMLanguageModel implements LanguageModel<IString> {
 	private NPLM nplm;
-//	private KenLM kenlm;
+  //private KenLM kenlm;
 	
   private final String INPUT_VOCAB_SIZE = "input_vocab_size";
   private final String OUTPUT_VOCAB_SIZE = "output_vocab_size";
@@ -42,7 +42,9 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
 	// map IString id to NPLM id
   private final int[] srcVocabMap;
 	private final int[] tgtVocabMap;
-  
+  private int srcVocabSize;
+  private int tgtVocabSize;
+
   private final int srcUnkVocabId; 
 	private final int tgtUnkVocabId; 
   private final int tgtStartVocabId;
@@ -58,36 +60,36 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    * @throws IOException 
    */
   public NPLMLanguageModel(String filename, int cacheSize) throws IOException {
-  	System.err.println("# Loading NPLMLanguageModel ...");
+  	//System.err.println("# Loading NPLMLanguageModel ...");
   	name = String.format("NPLM(%s)", filename);
-  	nplm = new NPLM(filename, 0);
+  	nplm = new NPLM(filename, 0); //1<<20);
   	order = nplm.order();
-//  	kenlm = new KenLM(filename, 0);
-//  	order = kenlm.order();
+  	//kenlm = new KenLM(filename, 1<<20);
+  	//order = kenlm.order();
   	
   	// cache
   	if (cacheSize>0){
+      System.err.println("  Use caching, size=" + cacheSize);
   		cacheMap = new ConcurrentHashMap<NPLMState, Double>(cacheSize);
   	}
   	
   	// load src-conditioned info
   	BufferedReader br = new BufferedReader(new FileReader(filename));
     String line;
-    int vocabSize=0; // = tgtVocabSize + srcVocabSize
-    int tgtVocabSize=0;
-    int srcOrder=0;
+    int srcOrder=0, vocabSize=0;
     while((line=br.readLine())!=null){
       if (line.startsWith(INPUT_VOCAB_SIZE)) {
         vocabSize = Integer.parseInt(line.substring(INPUT_VOCAB_SIZE.length()+1));
       } else if (line.startsWith(OUTPUT_VOCAB_SIZE)) {
-        tgtVocabSize = Integer.parseInt(line.substring(OUTPUT_VOCAB_SIZE.length()+1));
+        this.tgtVocabSize = Integer.parseInt(line.substring(OUTPUT_VOCAB_SIZE.length()+1));
       } else if (line.startsWith(SRC_ORDER)) {
         srcOrder = Integer.parseInt(line.substring(SRC_ORDER.length()+1));
       } else if (line.startsWith("\\input_vocab")) { // stop reading
         break;
       }
     }
-    int srcVocabSize=vocabSize-tgtVocabSize;
+    // = tgtVocabSize + srcVocabSize
+    this.srcVocabSize=vocabSize-tgtVocabSize;
     
     // load tgtWords first
     tgtWords = new ArrayList<IString>(); 
@@ -116,8 +118,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     br.close();
 
     /** create mapping **/
-    System.err.println("  unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN + 
-    		", IString.index.size = " + IString.index.size());
+    System.err.println("  unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN + ", IString.index.size = " + IString.index.size());
     srcVocabMap = new int[IString.index.size()];
     tgtVocabMap = new int[IString.index.size()];
     // initialize to -1, to make sure we don't map words not in NPLM to 0.
@@ -160,18 +161,17 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    * @return
    */
   public LMState score(int[] ngramIds) { 
-    
-  	int stateLength = ngramIds.length; // Thang TODO: this is not quite right stateLength can be shorter than the ngram length.
+    int stateLength = ngramIds.length; // Thang TODO: this is not quite right stateLength can be shorter than the ngram length.
   	NPLMState state = new NPLMState(0.0, ngramIds, stateLength);
   	double score = 0.0;
     if(cacheMap != null) { // caching
     	cacheLookup++;
     	
-    	if(cacheMap.contains(state)) { // cache hit
+    	if(cacheMap.containsKey(state)) { // cache hit
     		score = cacheMap.get(state);
     		
     		cacheHit++;
-    		if(cacheHit%10000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup); }
+    		if(cacheHit%100000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup); }
     	} else {
     		score = nplm.scoreNPLM(ngramIds);
     		cacheMap.put(state, score);
@@ -181,13 +181,18 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     }
     state.setScore(score);
     return state; 
+  	// got is (state_length << 32) | prob where prob is a float.	
+  	//ArrayUtils.reverse(ngramIds);
+    //int[] reverseNgramIds = Util.reverseArray(ngramIds);
+  	//long got = kenlm.marshalledScore(reverseNgramIds);
   	
-//  	// got is (state_length << 32) | prob where prob is a float.	
-//  	ArrayUtils.reverse(ngramIds);
-//  	long got = kenlm.marshalledScore(ngramIds);
-//    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
-//    int stateLength = (int)(got >> 32);
-//    return new KenLMState(score, ngramIds, stateLength);
+    /*
+    long got = nplm.marshalledScoreNPLM(ngramIds);
+    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
+    int stateLength = (int)(got >> 32);
+    //return new KenLMState(score, reverseNgramIds, stateLength);
+    return new KenLMState(score, ngramIds, stateLength);
+    */
   }
   
   /**
@@ -255,6 +260,14 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
 	public int[] getTgtVocabMap() {
 		return tgtVocabMap;
 	}
+
+  public int getSrcVocabSize(){
+    return srcVocabSize;
+  }
+
+  public int getTgtVocabSize(){
+    return tgtVocabSize;
+  }
 
   @Override
   public IString getStartToken() {

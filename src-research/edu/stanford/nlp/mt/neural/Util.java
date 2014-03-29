@@ -6,11 +6,27 @@ package edu.stanford.nlp.mt.neural;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+
 /**
  * @author Minh-Thang Luong <lmthang@stanford.edu>, created on Mar 6, 2014
  *
  */
 public class Util {
+  public static int[] reverseArray(int[] values){
+    int numElements = values.length;
+    int[] reverseValues = new int[numElements];
+    for(int i=0; i<numElements; i++){
+      reverseValues[i] = values[numElements-i-1];
+    }
+    return reverseValues;
+  }
+
   public static String intArrayToString(int[] values){
     StringBuffer sb = new StringBuffer();
     for (int value : values) {
@@ -68,4 +84,49 @@ public class Util {
     
     return srcAvgPos;
   }
+
+  public static void error(boolean cond, String message){
+  	if(cond){
+  		System.err.println(message);
+  		System.exit(1);
+  	}
+  }
+  
+  // print double array
+  public static String sprint(int[] values){
+  	StringBuffer sb = new StringBuffer("[");
+
+  	if(values.length > 0){
+  		for(int value : values){
+  			sb.append(value + ", ");
+  		}
+  		sb.delete(sb.length()-2, sb.length());
+  	}
+  	sb.append("]");
+  	return sb.toString();
+  }
+
+  //print double array
+  public static String sprint(double[] values){
+  	StringBuffer sb = new StringBuffer("[");
+
+  	if(values.length > 0){
+  		for(double value : values){
+  			sb.append(value + ", ");
+  		}
+  		sb.delete(sb.length()-2, sb.length());
+  	}
+  	sb.append("]");
+  	return sb.toString();
+  }
+
+  
+  public static Sequence<IString> getIStringSequence(String[] tokens){
+  	List<IString> istringList = new ArrayList<IString>();
+  	for (String token : tokens) {
+			istringList.add(new IString(token));
+		}
+  	return new SimpleSequence<IString>(istringList);
+  }
+
 }

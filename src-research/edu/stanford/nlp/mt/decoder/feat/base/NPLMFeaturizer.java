@@ -108,8 +108,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
    * @param features 
 	 * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
 	 */
-  private double getScore(int startPos, int limit, Sequence<IString> translation, 
-      Featurizable<IString, String> f, List<FeatureValue<String>> features){ 
+  private double getScore(int startPos, int limit, Sequence<IString> translation, Featurizable<IString, String> f, List<FeatureValue<String>> features){ 
     double lmSumScore = 0;
     LMState state = null;
     
@@ -183,13 +182,11 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       lmSumScore += ngramScore;
       
       if(DEBUG) { // && tgtLength>2){
-        System.err.println(" # tgtPos=" + (pos-startPos));
-        System.err.println("  srcAvgPos=" + srcAvgPos);
-        System.err.println("  ngram =" + Util.intArrayToString(ngramIds));
+        System.err.println("  tgtPos=" + (pos-startPos) + ", srcAvgPos=" + srcAvgPos + ", ngram =" + Util.intArrayToString(ngramIds));
         System.err.print("  src words=");
         // for (int j = lmOrder-1; j >= (lmOrder-srcOrder); j--) {
         for (int j = 0; j<srcOrder; j++) {
-          System.err.print(" " + nplm.getSrcWord(ngramIds[j]).toString());
+          System.err.print(" " + nplm.getSrcWord(ngramIds[j]-nplm.getTgtVocabSize()).toString());
         }
         System.err.println();
         
@@ -198,7 +195,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
         for (int j = srcOrder; j < lmOrder; j++) {
           System.err.print(" " + nplm.getTgtWord(ngramIds[j]).toString());
         }
-        System.err.println("  score=" + ngramScore);
+        System.err.println("\n  score=" + ngramScore);
       }
     }
     
@@ -213,10 +210,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (DEBUG) {
-      System.err.printf("Sequence: %s%n\tNovel Phrase: %s%n",
-          f.targetPrefix, f.targetPhrase);
-      System.err.printf("Untranslated tokens: %d%n", f.numUntranslatedSourceTokens);
-      System.err.println("ngram scoring:");
+      System.err.printf("Sequence: %s, novel phrase: %s, num untranslated tokens: %d\n", f.targetPrefix, f.targetPhrase, f.numUntranslatedSourceTokens);
     }
 
     Sequence<IString> partialTranslation = null;
