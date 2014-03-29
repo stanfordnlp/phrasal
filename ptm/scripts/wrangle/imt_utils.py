@@ -4,13 +4,35 @@ import csv
 import os
 from os.path import basename,split,join
 from csv_unicode import UnicodeReader,UnicodeWriter
-from collections import Counter,namedtuple
+from collections import Counter,namedtuple,defaultdict
 
 DumpRow = namedtuple('DumpRow', 'username birth_country resident_of mt_opinion src_proficiency tgt_proficiency src_doc tgt_lang interface order create_time start_time end_time complete training valid text log')
 
 # Convenience methods
 str2bool = lambda x:True if x == '1' else False
 genre_from_url = lambda x:basename(split(x)[0])
+
+def load_sbleu_files(directory):
+    """
+    Returns d[username][doc_id] -> BLEU
+    """
+    file_list = [join(directory,x) for x in os.listdir(directory)]
+    d = defaultdict(dict)
+    for filename in file_list:
+        if not filename.endswith('sbleu_ref'):
+            continue
+        username = basename(filename).split('.')[0]
+        with open(filename) as csv_file:
+            r = csv.reader(csv_file, delimiter='\t')
+            # Skip header
+            r.next()
+            for row in r:
+                assert len(row) == 2
+                doc_id = row[0]
+                sbleu = row[1]
+                d[username][doc_id] = sbleu
+    return d
+        
 
 def url2doc(raw_url):
     """
@@ -20,7 +42,7 @@ def url2doc(raw_url):
     genre = genre_from_url(raw_url)
     return join(genre,filename)
 
-def load_middleware_dump(filename):
+def load_middleware_dump(filename, target_lang):
     """
     Load a middleware dump.
 
@@ -35,18 +57,20 @@ def load_middleware_dump(filename):
             complete = str2bool(row.complete)
             valid = str2bool(row.valid)
             training = str2bool(row.training)
-            if row.username == 'rayder441':
+            if not row.tgt_lang == target_lang:
+                continue
+            elif row.username == 'rayder441':
                 # Debug/test username
+                continue
+            elif training:
                 continue
             elif not valid:
                 sys.stderr.write('WARNING: Skipping invalid row: %s %s%s' %(row.username, row.src_doc, os.linesep))
                 continue
             elif not complete:
-                sys.stderr.write('Skipping incomplete row: %s %s%s' %(row.username, row.src_doc, os.linesep))
                 continue
-            elif training:
-                continue
-            row_list.append(row)
+            else:
+                row_list.append(row)
     return row_list
 
 def write_rows_to_csv(row_list, filename):
