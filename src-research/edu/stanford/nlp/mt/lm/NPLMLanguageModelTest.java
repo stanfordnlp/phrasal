@@ -6,11 +6,11 @@ package edu.stanford.nlp.mt.lm;
 import java.io.IOException;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 
+import static org.junit.Assert.*;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.util.Util;
+import edu.stanford.nlp.mt.neural.Util;
 
 /**
  * @author Thang Luong
