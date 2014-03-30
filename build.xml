@@ -126,7 +126,6 @@ includeantruntime="false">
   <target name="all" depends="clean,compile-all"
           description="Clean and re-compile." />
   
-  <!-- Thang Aug13 -->
   <target name="jar" depends="compile">
     <jar destfile="javanlp-mt.jar">
       <fileset dir="./classes" />
