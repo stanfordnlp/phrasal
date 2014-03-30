@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.lm.NPLMLanguageModel;
 import edu.stanford.nlp.mt.lm.LMState;
-import edu.stanford.nlp.mt.neural.Util;
+import edu.stanford.nlp.mt.util.Util;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 

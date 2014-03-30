@@ -10,7 +10,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.neural.Util;
+import edu.stanford.nlp.mt.util.Util;
 
 /**
  * @author Thang Luong

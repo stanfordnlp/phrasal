@@ -486,7 +486,7 @@ public class OnlineTuner {
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
-      if(OnlineTuner.printDecodeTime>0) { tuneTimer.start("Start tuning for epoch " + epoch); }    
+      if(OnlineTuner.printDecodeTime>0) { tuneTimer.start("# Start tuning for epoch " + epoch); }    
       
       // n-best lists. Purge for each epoch
       Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
@@ -517,7 +517,8 @@ public class OnlineTuner {
 
       // Wait for threadpool shutdown for this epoch and get final gradients
       if(OnlineTuner.noThreadShutdown) {
-      	wrapper.joinNoShutDown(); // Thang Mar14: not shuting down threadpool, so that thread-local caches in NPLM don't get reseted.
+      	// Thang Mar14: not shuting down threadpool, so that thread-local caches in NPLM don't get reseted.
+      	wrapper.joinNoShutDown();
       } else {
       	wrapper.join();
       }

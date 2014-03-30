@@ -4,18 +4,16 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.lang3.ArrayUtils;
 
 import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.mt.neural.Util;
+import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.Util;
 
 /**
  * NPLM Language Model interface backed by KenLanguageModel
@@ -50,8 +48,8 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   private final int tgtStartVocabId;
   
   // caching
-  //private long cacheHit=0, cacheLookup = 0;
-  //private ConcurrentHashMap<NPLMState, Double> cacheMap = null;
+  private long cacheHit=0, cacheLookup = 0;
+  private ConcurrentHashMap<Long, Float> cacheMap = null;
   
   /**
    * Constructor for NPLMLanguageModel
@@ -62,18 +60,16 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   public NPLMLanguageModel(String filename, int cacheSize) throws IOException {
   	//System.err.println("# Loading NPLMLanguageModel ...");
   	name = String.format("NPLM(%s)", filename);
-  	nplm = new NPLM(filename, cacheSize); //1<<20);
+  	nplm = new NPLM(filename, 0);
   	order = nplm.order();
   	//kenlm = new KenLM(filename, 1<<20);
   	//order = kenlm.order();
   	
   	// cache
-    /*
   	if (cacheSize>0){
-      System.err.println("  Use caching, size=" + cacheSize);
-  		cacheMap = new ConcurrentHashMap<NPLMState, Double>(cacheSize);
+      System.err.println("  Use global caching, size=" + cacheSize);
+  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
   	}
-  	*/
 
   	// load src-conditioned info
   	BufferedReader br = new BufferedReader(new FileReader(filename));
@@ -159,42 +155,35 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   /**
    * Thang Mar14: factor out from the original score(Sequence<IString sequence) method
    * 
-   * @param ngramIds: normal order 	ids
+   * @param ngramIds: normal order ids
    * @return
    */
-  public LMState score(int[] ngramIds) { 
-    /*
-    int stateLength = ngramIds.length; // Thang TODO: this is not quite right stateLength can be shorter than the ngram length.
-  	NPLMState state = new NPLMState(0.0, ngramIds, stateLength);
-  	double score = 0.0;
+  public LMState score(int[] ngramIds) {
+  	long key = 0;
     if(cacheMap != null) { // caching
     	cacheLookup++;
+    	int stateLength = ngramIds.length; // TODO: consider a proper state length
+    	byte[] data = Util.toByteArray(ngramIds, stateLength); 
+    	key = MurmurHash.hash64(data, data.length);
     	
-    	if(cacheMap.containsKey(state)) { // cache hit
-    		score = cacheMap.get(state);
+    	if(cacheMap.containsKey(key)) { // cache hit
+    		float score = cacheMap.get(key);
     		
     		cacheHit++;
-    		if(cacheHit%100000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup); }
-    	} else {
-    		score = nplm.scoreNPLM(ngramIds);
-    		cacheMap.put(state, score);
+    		if(cacheHit%1000000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size()); }
+    		return new KenLMState(score, ngramIds, stateLength);
     	}
-    } else {
-    	score = nplm.scoreNPLM(ngramIds);
     }
-    state.setScore(score);
-    return state; 
-    */
-  	
-    // got is (state_length << 32) | prob where prob is a float.	
-  	//ArrayUtils.reverse(ngramIds);
-    //int[] reverseNgramIds = Util.reverseArray(ngramIds);
-  	//long got = kenlm.marshalledScore(reverseNgramIds);
-  	
+
+    //ngramIds = Util.reverseArray(ngramIds);
+  	//long got = kenlm.marshalledScore(ngramIds);
     long got = nplm.marshalledScoreNPLM(ngramIds);
     float score = Float.intBitsToFloat((int)(got & 0xffffffff));
     int stateLength = (int)(got >> 32);
-    //return new KenLMState(score, reverseNgramIds, stateLength);
+    
+    // not in cache
+    if(cacheMap != null) { cacheMap.put(key, score); }
+    
     return new KenLMState(score, ngramIds, stateLength);
   }
   
