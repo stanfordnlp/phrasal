@@ -899,9 +899,7 @@ public class OnlineTuner {
     
     OnlineTuner.printDecodeTime = PropertiesUtils.getInt(opts, "pdt", 0);
     OnlineTuner.noThreadShutdown = PropertiesUtils.getBool(opts, "nts", false);
-    System.err.println("printDecodeTime=" + OnlineTuner.printDecodeTime);
-    System.err.println("noThreadShutdown=" + OnlineTuner.noThreadShutdown);
-    
+   
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {
