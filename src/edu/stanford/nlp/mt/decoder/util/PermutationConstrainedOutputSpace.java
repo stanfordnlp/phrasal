@@ -49,12 +49,13 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
       }
       prior = prior.prior;
     }
+    if (featurizable != null && featurizable.sourceSentence != null && featurizable.targetPrefix != null) { 
     System.err.println("-----------------------------------");
     System.err.println("Source Phrase:" + featurizable.sourceSentence.toString(" "));
     System.err.println("Permutation Sequence:" + StringUtils.join(permutationSequence));
     System.err.println("Current target translation: " + featurizable.targetPrefix.toString(" ") + " " + featurizable.targetPhrase.toString(" "));
     System.err.println("-----------------------------------");
-
+    }
     return permutationSequence;
   }
   
