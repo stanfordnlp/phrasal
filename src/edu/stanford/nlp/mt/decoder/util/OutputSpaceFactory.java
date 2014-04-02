@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.decoder.feat.sparse.PreorderingAgreement;
 
 /**
  * Factory for OutputSpace objects, which define the decoder output space.
@@ -26,15 +27,17 @@ public class OutputSpaceFactory {
    * @return
    */
   public static OutputSpace<IString,String> getOutputSpace(int sourceInputId, List<Sequence<IString>> targets, 
-      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase) {
-    if (targets == null || targets.size() == 0) {
-      return new PermutationConstrainedOutputSpace<IString,String>();
-    
-    } else if (targetsArePrefixes) {
+      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase, String permutationString) {
+    if ((targets == null || targets.size() == 0) && permutationString == null) {
+      return new UnconstrainedOutputSpace<IString, String>();
+    } else if (targets != null && targets.size() > 0 && targetsArePrefixes) {
       return new SoftPrefixOutputSpace(targets.get(0), sourceInputId);
     
-    } else {
+    } else if (targets != null && targets.size() > 0) {
       return new ConstrainedOutputSpace<IString,String>(targets, longestSourcePhrase, longestTargetPhrase);
+    } else {
+      List<Integer> permutation = PreorderingAgreement.parsePermutation(permutationString);
+      return new PermutationConstrainedOutputSpace<IString, String>(permutation);
     }
   }
 }
