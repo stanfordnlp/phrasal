@@ -16,8 +16,8 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
-
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * 
@@ -41,24 +41,40 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
       throw new RuntimeException(
           this.getClass().getName() + ": ERROR No permutations file was specified!");
     }
-    preorderedPermutations = new ArrayList<List<Integer>>();
 
     String permutationsFilename = options.getProperty("permutationsFile");
+    
+    preorderedPermutations = parsePermutations(permutationsFilename);
+
+   }
+  
+  
+  public static List<List<Integer>> parsePermutations(String permutationsFilename) throws IOException {
+    List<List<Integer>> permutations = new ArrayList<List<Integer>>();
     File permutationsFile = new File(permutationsFilename);
     BufferedReader reader = new BufferedReader(new FileReader(permutationsFile));
     String line = null;
     while ((line = reader.readLine()) != null) {
-      preorderedPermutations.add(parsePermutation(line));
+      permutations.add(parsePermutation(line));
     }
     reader.close();
+    return permutations;
   }
   
-  
-  private List<Integer> parsePermutation(String permutation) {
+  public static List<Integer> parsePermutation(String permutation) {
+    
+    //ArrayList<Pair<Integer, Integer>> wordOrder = new ArrayList<Pair<Integer, Integer>>();
+    
     ArrayList<Integer> permutationSequence = new ArrayList<Integer>();
     String[] splits = permutation.split(" ");
-    for (String s : splits) {
-      permutationSequence.add(Integer.parseInt(s));
+    //int len = splits.length;
+    //for (int i = 0; i < len; i++) {
+      //wordOrder.add(Pair.makePair(Integer.parseInt(splits[i]), i + 1));
+    //}
+    
+    //Collections.sort(wordOrder);
+    for (String s: splits) {
+      permutationSequence.add(Integer.parseInt(s) - 1);
     }
     return permutationSequence;
   }
@@ -81,6 +97,8 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   }
   
 
+  
+  //TODO: Fix this for new permutations
   private boolean isPermutationSequenceIdentical(List<Integer> prediction, List<Integer> reference) {
     int predLength = prediction.size();
     int predStart = prediction.get(0);
@@ -94,6 +112,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     return true;
   }
   
+  //TODO: Fix this for new permutations
   private double pearsonCorrelationCoeff(List<Integer> prediction, List<Integer> reference) {
     int predLength = prediction.size();
     int refLength = reference.size();
@@ -114,6 +133,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     return numerator / denominator;
   }
   
+  //TODO: Walk back
   private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference) {
     int predLength = prediction.size();
     int predStart = prediction.get(0);
@@ -174,8 +194,8 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   public static void main(String args[]) throws IOException {
     PreorderingAgreement ag = new PreorderingAgreement();
-    List<Integer> p1 = ag.parsePermutation("0 1 2 3 4 5 6 7 8 9 10 11");
-    List<Integer> p2 = ag.parsePermutation("0 2 10 3 5 4 6 8 7 9 11 1");
+    List<Integer> p1 = parsePermutation("0 1 2 3 4 5 6 7 8 9 10 11");
+    List<Integer> p2 = parsePermutation("0 2 10 3 5 4 6 8 7 9 11 1");
     System.out.println("Identical? " + ag.isPermutationSequenceIdentical(p1, p2));
     double s = 0;
     for (int i = 0; i < p1.size(); i = i + 2) {

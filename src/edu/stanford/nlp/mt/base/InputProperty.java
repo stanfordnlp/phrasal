@@ -22,5 +22,8 @@ public enum InputProperty {
   RuleFeatureIndex,
   
   //Sentence based distortion limit
-  DistortionLimit
+  DistortionLimit,
+  
+  //Reference Permutations
+  ReferencePermutation
 }
