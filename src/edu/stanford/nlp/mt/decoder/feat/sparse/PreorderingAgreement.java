@@ -66,7 +66,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     //ArrayList<Pair<Integer, Integer>> wordOrder = new ArrayList<Pair<Integer, Integer>>();
     
     ArrayList<Integer> permutationSequence = new ArrayList<Integer>();
-    String[] splits = permutation.split(" ");
+    String[] splits = permutation.split("-");
     //int len = splits.length;
     //for (int i = 0; i < len; i++) {
       //wordOrder.add(Pair.makePair(Integer.parseInt(splits[i]), i + 1));
