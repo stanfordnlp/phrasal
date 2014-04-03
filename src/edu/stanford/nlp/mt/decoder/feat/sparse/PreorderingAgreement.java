@@ -74,7 +74,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     
     //Collections.sort(wordOrder);
     for (String s: splits) {
-      permutationSequence.add(Integer.parseInt(s) - 1);
+      permutationSequence.add(Integer.parseInt(s));
     }
     return permutationSequence;
   }
