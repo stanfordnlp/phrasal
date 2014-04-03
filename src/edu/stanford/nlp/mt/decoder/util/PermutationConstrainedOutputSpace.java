@@ -57,6 +57,7 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
       System.err.println("-----------------------------------");
       System.err.println("Source Phrase:" + featurizable.sourceSentence.toString(" "));
       System.err.println("Permutation Sequence:" + StringUtils.join(permutationSequence));
+      System.err.println("Reference Permutation: " + StringUtils.join(this.refPermutationSequence));
       System.err.println("Current target translation: " + featurizable.targetPrefix.toString(" "));
       System.err.println("-----------------------------------");
     }
