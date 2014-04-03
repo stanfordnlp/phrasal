@@ -184,7 +184,6 @@ public class Phrasal {
   private static final String LOG_LEVEL = "log-level";
   private static final String INPUT_PROPERTIES = "input-properties";
   private static final String DOMAIN_PROPERTIES = "domain-properties";
-  private static final String SOURCE_PERMUTATIONS = "source-permutations";
 
   
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
@@ -206,7 +205,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, DOMAIN_PROPERTIES, SOURCE_PERMUTATIONS));
+        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, DOMAIN_PROPERTIES));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
