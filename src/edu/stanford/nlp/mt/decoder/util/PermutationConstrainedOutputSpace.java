@@ -80,7 +80,7 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
     CollectionUtils.sort(localRefPermutation);
     for (int i = 0; i < sourceLen; i++) {
      int a = localPermutation.get(i);
-     int b = localPermutation.get(i);
+     int b = localRefPermutation.get(i);
      if (Math.abs(a-b) > DEVIATION_LIMIT) {
        System.err.println("DISALLOWED!");
        return false;
