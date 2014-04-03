@@ -96,7 +96,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       List<Sequence<TK>> targets, int nbest) {
     final int sourceLength = source.size();
 
-    this.maxDistortion = Integer.parseInt((String) sourceInputProperties.get(InputProperty.DistortionLimit));
+    //this.maxDistortion = Integer.parseInt((String) sourceInputProperties.get(InputProperty.DistortionLimit));
     
     // create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
