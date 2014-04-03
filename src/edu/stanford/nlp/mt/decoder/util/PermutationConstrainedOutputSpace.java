@@ -53,14 +53,14 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
     }
     
     Collections.reverse(permutationSequence);
-    if (featurizable != null && featurizable.sourceSentence != null && featurizable.targetPrefix != null) { 
-      System.err.println("-----------------------------------");
-      System.err.println("Source Phrase:" + featurizable.sourceSentence.toString(" "));
-      System.err.println("Permutation Sequence:" + StringUtils.join(permutationSequence));
-      System.err.println("Reference Permutation: " + StringUtils.join(this.refPermutationSequence));
-      System.err.println("Current target translation: " + featurizable.targetPrefix.toString(" "));
-      System.err.println("-----------------------------------");
-    }
+//    if (featurizable != null && featurizable.sourceSentence != null && featurizable.targetPrefix != null) { 
+//      System.err.println("-----------------------------------");
+//      System.err.println("Source Phrase:" + featurizable.sourceSentence.toString(" "));
+//      System.err.println("Permutation Sequence:" + StringUtils.join(permutationSequence));
+//      System.err.println("Reference Permutation: " + StringUtils.join(this.refPermutationSequence));
+//      System.err.println("Current target translation: " + featurizable.targetPrefix.toString(" "));
+//      System.err.println("-----------------------------------");
+//    }
     return permutationSequence;
   }
   
@@ -70,7 +70,7 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
     
     List<Integer> permutationSequence = getPermutationSequence(featurizable);
     int sourceLen = featurizable != null && featurizable.sourcePhrase != null ? featurizable.sourcePhrase.size() : 0;
-    System.err.println("SourceLen: " + sourceLen);
+    //System.err.println("SourceLen: " + sourceLen);
 
     int permutationLen = permutationSequence.size();
     int start = permutationLen - sourceLen;
@@ -82,7 +82,7 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
      int a = localPermutation.get(i);
      int b = localRefPermutation.get(i);
      if (Math.abs(a-b) > DEVIATION_LIMIT) {
-       System.err.println("DISALLOWED!");
+       //System.err.println("DISALLOWED!");
        return false;
      }
     }
