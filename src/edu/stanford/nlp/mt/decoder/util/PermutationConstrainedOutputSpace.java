@@ -70,6 +70,8 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
     
     List<Integer> permutationSequence = getPermutationSequence(featurizable);
     int sourceLen = featurizable != null && featurizable.sourcePhrase != null ? featurizable.sourcePhrase.size() : 0;
+    System.err.println("SourceLen: " + sourceLen);
+
     int permutationLen = permutationSequence.size();
     int start = permutationLen - sourceLen;
     List<Integer>localPermutation = new ArrayList<Integer>(permutationSequence.subList(start, permutationLen));
@@ -80,7 +82,7 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
      int a = localPermutation.get(i);
      int b = localPermutation.get(i);
      if (Math.abs(a-b) > DEVIATION_LIMIT) {
-       System.err.print("DISALLOWED!");
+       System.err.println("DISALLOWED!");
        return false;
      }
     }
