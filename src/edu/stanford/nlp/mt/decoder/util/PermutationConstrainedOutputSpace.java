@@ -68,7 +68,7 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
       ConcreteRule<TK, FV> rule) {
     
     List<Integer> permutationSequence = getPermutationSequence(featurizable);
-    int sourceLen = featurizable.sourcePhrase.size();
+    int sourceLen = featurizable.sourcePhrase != null ? featurizable.sourcePhrase.size() : 0;
     int permutationLen = permutationSequence.size();
     int start = permutationLen - sourceLen;
     List<Integer>localPermutation = new ArrayList<Integer>(permutationSequence.subList(start, permutationLen));
