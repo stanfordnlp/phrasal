@@ -26,16 +26,16 @@ import edu.stanford.nlp.util.Generics;
  */
 public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
 
-  private final RecombinationHash<Derivation<TK,FV>> recombinationHash;
-  private final int capacity;
-  private int recombined = 0;
-  private final int distortionLimit;
-  private final int sourceLength;
+  protected final RecombinationHash<Derivation<TK,FV>> recombinationHash;
+  protected final int capacity;
+  protected int recombined = 0;
+  protected final int distortionLimit;
+  protected final int sourceLength;
 
-  private Map<Integer,List<HyperedgeBundle<TK,FV>>> bundles;
-  private final RecombinationHistory<Derivation<TK,FV>> recombinationHistory;
-  private final RuleGrid<TK, FV> optionGrid;
-  private final int coverageCardinality;
+  protected Map<Integer,List<HyperedgeBundle<TK,FV>>> bundles;
+  protected final RecombinationHistory<Derivation<TK,FV>> recombinationHistory;
+  protected final RuleGrid<TK, FV> optionGrid;
+  protected final int coverageCardinality;
   /**
    * 
    * @param capacity
@@ -115,7 +115,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     // Make hyperedge bundles
     bundles = new HashMap<Integer,List<HyperedgeBundle<TK,FV>>>();
     for (CoverageSet coverage : coverageGroups.keySet()) {
-      List<Range> rangeList = ranges(coverage);
+      List<Range> rangeList = this.ranges(coverage);
       List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
       Collections.sort(itemList);
       for (Range range : rangeList) {
@@ -157,7 +157,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     return hypotheses.iterator();
   }
 
-  private List<Range> ranges(CoverageSet sourceCoverage) {
+  protected List<Range> ranges(CoverageSet sourceCoverage) {
     List<Range> rangeList = Generics.newLinkedList();
     int firstCoverageGap = sourceCoverage.nextClearBit(0);
     for (int startPos = firstCoverageGap; startPos < sourceLength; startPos++) {
@@ -223,7 +223,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     throw new UnsupportedOperationException();
   }
 
-  private static class Range {
+  protected static class Range {
     public int start;
     public int end;
     public Range(int start, int end) {

@@ -28,7 +28,7 @@ public class OutputSpaceFactory {
    */
   public static OutputSpace<IString,String> getOutputSpace(int sourceInputId, List<Sequence<IString>> targets, 
       boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase, String permutationString) {
-    if ((targets == null || targets.size() == 0) && permutationString == null) {
+    if ((targets == null || targets.size() == 0)) {
       return new UnconstrainedOutputSpace<IString, String>();
     } else if (targets != null && targets.size() > 0 && targetsArePrefixes) {
       return new SoftPrefixOutputSpace(targets.get(0), sourceInputId);

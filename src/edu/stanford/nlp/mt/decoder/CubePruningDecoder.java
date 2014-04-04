@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.base.InputProperty;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SystemLogger;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.mt.decoder.feat.sparse.PreorderingAgreement;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
@@ -22,6 +23,7 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.SmartBundleBeam;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -98,6 +100,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     //this.maxDistortion = Integer.parseInt((String) sourceInputProperties.get(InputProperty.DistortionLimit));
     
+    String permutationString = (String) sourceInputProperties.get(InputProperty.ReferencePermutation);
+    List<Integer> permutationSequence = permutationString != null 
+        ? PreorderingAgreement.parsePermutation(permutationString) : null;
+    
     // create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
@@ -117,8 +123,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
 
     // Fill Beam 0...only has one cube
-    BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
-        recombinationHistory, maxDistortion, 0);
+    BundleBeam<TK,FV> nullBeam = null;
+    if (permutationSequence == null)
+      nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+          recombinationHistory, maxDistortion, 0);
+    else
+      nullBeam = new SmartBundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+          recombinationHistory, permutationSequence, 0);
     List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
     allOptions.add(ruleList);
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
