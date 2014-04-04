@@ -73,8 +73,8 @@ public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
         ranges.add(range);
       }
 
-      if (range.size() == MAX_PHRASE_LEN) 
-        break;
+      //if (range.size() == MAX_PHRASE_LEN) 
+      //  break;
     }
     
     return ranges;
