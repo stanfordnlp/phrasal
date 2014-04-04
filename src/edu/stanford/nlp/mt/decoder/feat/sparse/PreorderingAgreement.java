@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -17,7 +18,7 @@ import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.Generics;
 
 /**
  * 
@@ -62,19 +63,10 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   }
   
   public static List<Integer> parsePermutation(String permutation) {
-    
-    //ArrayList<Pair<Integer, Integer>> wordOrder = new ArrayList<Pair<Integer, Integer>>();
-    
     ArrayList<Integer> permutationSequence = new ArrayList<Integer>();
     String[] splits = permutation.split("-");
-    //int len = splits.length;
-    //for (int i = 0; i < len; i++) {
-      //wordOrder.add(Pair.makePair(Integer.parseInt(splits[i]), i + 1));
-    //}
-    
-    //Collections.sort(wordOrder);
     for (String s: splits) {
-      permutationSequence.add(Integer.parseInt(s));
+      permutationSequence.add(Integer.parseInt(s) - 1);
     }
     return permutationSequence;
   }
@@ -87,64 +79,60 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   }
   
   private List<Integer> getPermutationSequence(Featurizable<IString, String> f) {
-    ArrayList<Integer> permutationSequence = new ArrayList<Integer>();
-    int first = f.sourcePosition;
-    int last = f.sourcePosition + f.sourcePhrase.size() - 1;
-    for (int i = first; i <= last; i++) {
+  List<Integer> permutationSequence = new LinkedList<Integer>();
+    Featurizable<IString, String> prior = f;
+    while (prior != null) {
+      int end = prior.sourcePosition + prior.sourcePhrase.size() - 1;
+      int start = prior.sourcePosition;
+      for (int i = end; i >= start; i--) {
         permutationSequence.add(i);
+      }
+      prior = prior.prior;
     }
+    Collections.reverse(permutationSequence);
     return permutationSequence;
   }
   
 
   
-  //TODO: Fix this for new permutations
-  private boolean isPermutationSequenceIdentical(List<Integer> prediction, List<Integer> reference) {
-    int predLength = prediction.size();
-    int predStart = prediction.get(0);
-    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
+  private boolean isPermutationSequenceIdentical(List<Integer> prediction, List<Integer> reference, int start) {
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(start, prediction.size()));
     Collections.sort(sortedReference);
-
-    for (int i = 0; i < predLength; i++) {
-      if (!prediction.get(i).equals(sortedReference.get(i)))
+    for (int i = 0; i < sortedReference.size(); i++) {
+      if (!prediction.get(start + i).equals(sortedReference.get(i)))
         return false;
     }
     return true;
   }
   
-  //TODO: Fix this for new permutations
-  private double pearsonCorrelationCoeff(List<Integer> prediction, List<Integer> reference) {
-    int predLength = prediction.size();
+  private double pearsonCorrelationCoeff(List<Integer> prediction, List<Integer> reference, int start) {
     int refLength = reference.size();
-    int predStart = prediction.get(0);
     
     if (refLength == 1) {
       return 1.0;
     }
     
-    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(start, prediction.size()));
     Collections.sort(sortedReference);
     double numerator = 0;
     double denominator = (Math.pow(refLength, 2) - 1) * refLength;
     
-    for (int i = 0; i < predLength; i++) {
-      numerator += (Math.pow(refLength, 2) - 1) - 6 * Math.pow(prediction.get(i) - sortedReference.get(i), 2);
+    for (int i = 0; i < sortedReference.size(); i++) {
+      numerator += (Math.pow(refLength, 2) - 1) - 6 * Math.pow(prediction.get(start + i) - sortedReference.get(i), 2);
     }
     return numerator / denominator;
   }
   
-  //TODO: Walk back
-  private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference) {
-    int predLength = prediction.size();
-    int predStart = prediction.get(0);
-    
-    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(predStart, predStart + predLength));
+  private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference, int start) {
+  
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(start, prediction.size()));
     List<Integer> remainingPrediction = new ArrayList<Integer>();
     Collections.sort(sortedReference);
-    for (int i = 0; i < predLength; i++) {
+    int len = sortedReference.size();
+    for (int i = 0; i < len; i++) {
       boolean found = false;
       for (int j = 0; j < sortedReference.size(); j++) {
-        if (prediction.get(i).equals(sortedReference.get(j))) {
+        if (prediction.get(start + i).equals(sortedReference.get(j))) {
           String fname = String.format("%s-DIFF.0", FEATURE_NAME);
           features.add(new FeatureValue<String>(fname, 1.0));
           sortedReference.remove(j);
@@ -153,7 +141,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
         }
       }
       if (!found) {
-        remainingPrediction.add(prediction.get(i));
+        remainingPrediction.add(prediction.get(start + i));
       }
     }
     
@@ -178,38 +166,25 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = new ArrayList<FeatureValue<String>>();
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    if (f  == null || f.sourcePhrase == null)
+      return features;
+
     List<Integer> permutationSequence = getPermutationSequence(f);
-    double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence);
+    int start = permutationSequence.size() - f.sourcePhrase.size();
+    double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence, start);
     features.add(new FeatureValue<String>(FEATURE_NAME + "-CORR", correlationCoeff));
    
-    boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence);
+    boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence, start);
     double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
     features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
     
-    addDistanceCountFeatures(features, permutationSequence, this.preorderedPermutationSequence);
+    addDistanceCountFeatures(features, permutationSequence, this.preorderedPermutationSequence, start);
     
     return features;
   }
   
-  public static void main(String args[]) throws IOException {
-    PreorderingAgreement ag = new PreorderingAgreement();
-    List<Integer> p1 = parsePermutation("0 1 2 3 4 5 6 7 8 9 10 11");
-    List<Integer> p2 = parsePermutation("0 2 10 3 5 4 6 8 7 9 11 1");
-    System.out.println("Identical? " + ag.isPermutationSequenceIdentical(p1, p2));
-    double s = 0;
-    for (int i = 0; i < p1.size(); i = i + 2) {
-      double part = ag.pearsonCorrelationCoeff(p1.subList(i, i + 2), p2);
-      s += part;
-      System.out.println("Spearman Correlation: " + part);
-      System.out.println("Identical?: " + ag.isPermutationSequenceIdentical(p1.subList(i, i + 2), p2));
-
-    }
-    System.out.println("Sum: " + s);
-
-    
-  }
- 
+  
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
