@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -41,6 +42,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   private final int maxDistortion;
   private final Logger logger;
 
+  // Thang Apr14
+  private final boolean DEBUG = false;
+  private boolean nplmRerank = false;
+  
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
     return new CubePruningDecoderBuilder<TK, FV>();
   }
@@ -178,6 +183,30 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
         }
       }
+      
+      // Thang Apr14: use NPLM to re-rank hypotheses
+      if(nplmRerank){
+      	System.err.println("# NPLM rerank beam " + i);
+      	Iterator<Derivation<TK,FV>> beamIter = newBeam.iterator();
+      	Queue<Derivation<TK,FV>> nplmPQ = new PriorityQueue<Derivation<TK,FV>>(beamCapacity);
+      	
+      	// rerank
+      	while(beamIter.hasNext()){
+      		Derivation<TK,FV> beamDerivation = beamIter.next();
+      		double nplmScore = 0.0;
+      		
+      		// update with nplmScore and add to the priority queue
+      		beamDerivation.score = nplmScore;
+      		nplmPQ.add(beamDerivation);
+      	}
+      	
+      	// nplm beam
+      	BundleBeam<TK,FV> nplmBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+            recombinationHistory, maxDistortion, i);
+      	while (! nplmPQ.isEmpty()) { nplmBeam.put(nplmPQ.poll()); }
+      	newBeam = nplmBeam; 
+      }
+      
       beams.add(newBeam);
       numRecombined += newBeam.recombined();
     }

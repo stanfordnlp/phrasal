@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.util.MurmurHash;
@@ -32,6 +33,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   private final String name;
   private final int order;
   private final int srcOrder;
+  private final int srcWindow; // = (srcOrder-1)/2
 	private final int tgtOrder;
 	
 	private final List<IString> srcWords;
@@ -43,14 +45,24 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   private int srcVocabSize;
   private int tgtVocabSize;
 
-  private final int srcUnkVocabId; 
-	private final int tgtUnkVocabId; 
-  private final int tgtStartVocabId;
+  // NPLM id
+  private final int srcUnkNPLMId;
+  private final int tgtUnkNPLMId;
+  private final int srcStartNPLMId;
+  private final int tgtStartNPLMId;
+  private final int srcEndNPLMId;
+//  private final int tgtEndNPLMId;
   
+  // we're not handling <null> right now so does NPLM
+//  private final String NULL = "<null>";
+//  private final int srcNullNPLMId;
+//  private final int tgtNullNPLMId;
+	
   // caching
   private long cacheHit=0, cacheLookup = 0;
-  private ConcurrentHashMap<Long, Float> cacheMap = null;
+  private ConcurrentHashMap<Integer, Float> cacheMap = null;
   
+  private final int DEBUG = 0; // 0: no print-out, 1: minimal print out
   /**
    * Constructor for NPLMLanguageModel
    * 
@@ -67,8 +79,8 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   	
   	// cache
   	if (cacheSize>0){
-      System.err.println("  Use global caching, size=" + cacheSize);
-  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
+      if(DEBUG>0) { System.err.println("  Use global caching, size=" + cacheSize); }
+  		cacheMap = new ConcurrentHashMap<Integer, Float>(cacheSize);
   	}
 
   	// load src-conditioned info
@@ -94,7 +106,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     for (int i = 0; i < tgtVocabSize; i++) {
       tgtWords.add(new IString(br.readLine()));
       
-      if(i==0) { System.err.println("  first tgt word=" + tgtWords.get(i)); }
+      if(DEBUG>0 && i==0) { System.err.println("  first tgt word=" + tgtWords.get(i)); }
       else if(i==(tgtVocabSize-1)) { System.err.println("  last tgt word=" + tgtWords.get(i)); }
     }
 
@@ -103,7 +115,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     for (int i = 0; i < srcVocabSize; i++) {
       srcWords.add(new IString(br.readLine()));
       
-      if(i==0) { System.err.println("  first src word=" + srcWords.get(i)); }
+      if(DEBUG>0 && i==0) { System.err.println("  first src word=" + srcWords.get(i)); }
       else if(i==(srcVocabSize-1)) { System.err.println("  last src word=" + srcWords.get(i)); }
     }
     br.readLine(); // empty line
@@ -116,7 +128,9 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     br.close();
 
     /** create mapping **/
-    System.err.println("  unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN + ", IString.index.size = " + IString.index.size());
+    // Important: DO NOT remove this line, we need it to get the correct size of IString.index.size() in the subsequent code
+    System.err.println("  unk=" + TokenUtils.UNK_TOKEN + ", start=" + TokenUtils.START_TOKEN 
+    		 + ", end=" + TokenUtils.END_TOKEN  + ", IString.index.size = " + IString.index.size());
     srcVocabMap = new int[IString.index.size()];
     tgtVocabMap = new int[IString.index.size()];
     // initialize to -1, to make sure we don't map words not in NPLM to 0.
@@ -134,22 +148,31 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     }
     
     // special tokens
-    this.srcUnkVocabId = srcVocabMap[TokenUtils.UNK_TOKEN.id];
-    this.tgtUnkVocabId = tgtVocabMap[TokenUtils.UNK_TOKEN.id];
-    this.tgtStartVocabId = tgtVocabMap[TokenUtils.START_TOKEN.id];
+    this.srcUnkNPLMId = srcVocabMap[TokenUtils.UNK_TOKEN.id];
+    this.tgtUnkNPLMId = tgtVocabMap[TokenUtils.UNK_TOKEN.id];
+    this.srcStartNPLMId = srcVocabMap[TokenUtils.START_TOKEN.id];
+    this.tgtStartNPLMId = tgtVocabMap[TokenUtils.START_TOKEN.id];
+    this.srcEndNPLMId = srcVocabMap[TokenUtils.END_TOKEN.id];
+//    this.tgtEndNPLMId = tgtVocabMap[TokenUtils.END_TOKEN.id];
     
     // replace -1 by unk id
     for (int i = 0; i < IString.index.size(); i++) {
-			if(srcVocabMap[i] == -1) srcVocabMap[i] = this.srcUnkVocabId;
-			if(tgtVocabMap[i] == -1) tgtVocabMap[i] = this.tgtUnkVocabId;
+			if(srcVocabMap[i] == -1) srcVocabMap[i] = this.srcUnkNPLMId;
+			if(tgtVocabMap[i] == -1) tgtVocabMap[i] = this.tgtUnkNPLMId;
 		}
     
     // ngram orders
     this.srcOrder = srcOrder;
     this.tgtOrder = order - this.srcOrder;
-    System.err.println("  srcOrder=" + this.srcOrder + ", tgtOrder=" + this.tgtOrder + 
-        ", srcVocabSize=" + srcVocabSize + ", tgtVocabSize=" + tgtVocabSize + 
-        ", srcUnkVocabId=" + srcUnkVocabId + ", tgtUnkVocabId=" + srcUnkVocabId + ", tgtStartVocabId=" + tgtStartVocabId);
+    this.srcWindow = (srcOrder-1)/2;
+    
+    if(DEBUG>0){
+	    System.err.println("  srcOrder=" + this.srcOrder + ", tgtOrder=" + this.tgtOrder + 
+	        ", srcVocabSize=" + srcVocabSize + ", tgtVocabSize=" + tgtVocabSize + 
+	        ", srcUnkNPLMId=" + srcUnkNPLMId + ", tgtUnkNPLMId=" + srcUnkNPLMId +
+	        ", srcStartNPLMId=" + srcStartNPLMId + ", tgtStartNPLMId=" + srcStartNPLMId +
+	        ", srcEndNPLMId=" + srcEndNPLMId + ", tgtEndNPLMId=" + srcEndNPLMId);
+    }
   }
   
   /**
@@ -159,12 +182,12 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    * @return
    */
   public LMState score(int[] ngramIds) {
-  	long key = 0;
+  	int key = 0;
     if(cacheMap != null) { // caching
     	cacheLookup++;
     	int stateLength = ngramIds.length; // TODO: consider a proper state length
     	byte[] data = Util.toByteArray(ngramIds, stateLength); 
-    	key = MurmurHash.hash64(data, data.length);
+    	key = MurmurHash.hash32(data, data.length);
     	
     	if(cacheMap.containsKey(key)) { // cache hit
     		float score = cacheMap.get(key);
@@ -203,17 +226,80 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   	for (int i = 0; i<numTokens; i++) {
 			tok = sequence.get(i);
 			if(i<srcOrder) { // look up from tgt vocab
-				//ngramIds[numTokens-i-1] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkVocabId;
-				ngramIds[i] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkVocabId;
+				//ngramIds[numTokens-i-1] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkNPLMId;
+				ngramIds[i] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkNPLMId;
 			} else {
-//				ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkVocabId;
-				ngramIds[i] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkVocabId;
+				//ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkNPLMId;
+				ngramIds[i] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkNPLMId;
 			}
 		}
-//  	System.err.println(Util.sprint(ngramIds));
   	return score(ngramIds);
   }
   
+  
+  /**
+   * Extract ngrams that we want to score after adding the recent phrase pair. 
+   * 
+   * @param srcSent
+   * @param tgtSent
+   * @param recentPhraseAlign
+   * @param srcStartPos -- src start position of the recent phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recent phrase pair.
+   * @return list of ngrams, each of which consists of NPLM ids.
+   */
+	public List<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+			PhraseAlignment recentPhraseAlign, int srcStartPos, int tgtStartPos){
+		List<int[]> ngramList = new ArrayList<int[]>();
+		int i, id;
+		
+		int srcLen = srcSent.size();
+		int tgtLen = tgtSent.size();
+		for (int pos = tgtStartPos; pos < tgtLen; pos++) {
+      int[] ngram = new int[order]; // will be stored in normal order (cf. KenLM stores in reverse order)
+      
+      // get the local srcAvgPos within the current srcPhrase
+      // pos-startPos: position within the local target phrase
+      int srcAvgPos = SrcNPLMUtil.findSrcAvgPos(pos-tgtStartPos, recentPhraseAlign); 
+      if(srcAvgPos==-1) { continue; } // no source alignment
+      else { // has source alignment
+        // convert to the global position within the source sent
+        srcAvgPos += srcStartPos;
+        
+        // extract src subsequence
+        int srcSeqStart = srcAvgPos-srcWindow;
+        int srcSeqEnd = srcAvgPos+srcWindow;
+        i=0;
+        for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
+          if(srcPos<0) { id = srcStartNPLMId; } // start
+          else if (srcPos>=srcLen) { id = srcEndNPLMId; } // end
+          else { // within range
+          	IString srcTok = srcSent.get(srcPos);
+            if(srcTok.id<srcVocabMap.length) { id = srcVocabMap[srcTok.id]; } // known
+            else { id = srcUnkNPLMId; }  // unk
+          }
+          ngram[i++] = id;
+        }
+      }
+      assert(i==srcOrder);
+      
+      // extract tgt subsequence
+      int tgtSeqStart = pos - tgtOrder + 1;
+      for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
+        if(tgtPos<0) { id = tgtStartNPLMId; } // start
+        else { // within range 
+        	IString tgtTok = tgtSent.get(tgtPos);
+          if(tgtTok.id<tgtVocabMap.length) { id = tgtVocabMap[tgtTok.id]; } // known
+          else { id = tgtUnkNPLMId; } // unk
+        }
+        ngram[i++] = id;
+      }
+      assert(i==order);
+      
+      ngramList.add(ngram);
+    }
+		
+		return ngramList;
+	}
   
   
   /** Getters & Setters **/
@@ -233,16 +319,24 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
 		return tgtOrder;
 	}
 	
-  public int getSrcUnkVocabId() {
-		return srcUnkVocabId;
+  public int getSrcUnkNPLMId() {
+		return srcUnkNPLMId;
 	}
 
-	public int getTgtUnkVocabId() {
-		return tgtUnkVocabId;
+	public int getTgtUnkNPLMId() {
+		return tgtUnkNPLMId;
 	}
 
+	public int getSrcStartVocabId() {
+		return srcStartNPLMId;
+	}
+	
 	public int getTgtStartVocabId() {
-		return tgtStartVocabId;
+		return tgtStartNPLMId;
+	}
+	
+	public int getSrcEndVocabId() {
+		return srcEndNPLMId;
 	}
 	
 	public int[] getSrcVocabMap() {
