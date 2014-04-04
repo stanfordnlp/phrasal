@@ -90,12 +90,10 @@ public class PermutationConstrainedOutputSpace<TK, FV> implements OutputSpace<TK
   }
 
   public boolean allowableFinal(Featurizable<TK, FV> featurizable) {
-    // TODO Auto-generated method stub
-    return true;
+    return allowableContinuation(featurizable, null);
   }
 
   public List<Sequence<TK>> getAllowableSequences() {
-    // TODO Auto-generated method stub
     return null;
   }
 
