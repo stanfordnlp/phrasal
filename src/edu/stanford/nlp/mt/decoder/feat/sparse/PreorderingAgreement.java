@@ -173,10 +173,10 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
       return features;
 
     List<Integer> permutationSequence = getPermutationSequence(f);
-    System.err.println("----------------------------------------");
-    System.err.println("Reference Permutation: " + StringUtils.join(this.preorderedPermutationSequence));
-    System.err.println("Predicted Permutation: " + StringUtils.join(permutationSequence));
-    System.err.println("SourcePhraseSize: " + f.sourcePhrase.size());
+    //System.err.println("----------------------------------------");
+    //System.err.println("Reference Permutation: " + StringUtils.join(this.preorderedPermutationSequence));
+    //System.err.println("Predicted Permutation: " + StringUtils.join(permutationSequence));
+    //System.err.println("SourcePhraseSize: " + f.sourcePhrase.size());
 
     int start = permutationSequence.size() - f.sourcePhrase.size();
     double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence, start);
@@ -186,9 +186,9 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
     features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
     
-    System.err.println("Permutation identical?: " + featVal);
+    //System.err.println("Permutation identical?: " + featVal);
 
-    System.err.println("----------------------------------------");
+    //System.err.println("----------------------------------------");
 
     //addDistanceCountFeatures(features, permutationSequence, this.preorderedPermutationSequence, start);
     
