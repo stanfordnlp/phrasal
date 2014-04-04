@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import edu.berkeley.nlp.util.CollectionUtils;
+import edu.berkeley.nlp.util.StringUtils;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -171,6 +173,11 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
       return features;
 
     List<Integer> permutationSequence = getPermutationSequence(f);
+    System.err.println("----------------------------------------");
+    System.err.println("Reference Permutation: " + StringUtils.join(this.preorderedPermutationSequence));
+    System.err.println("Predicted Permutation: " + StringUtils.join(permutationSequence));
+    System.err.println("SourcePhraseSize: " + f.sourcePhrase.size());
+
     int start = permutationSequence.size() - f.sourcePhrase.size();
     double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence, start);
     features.add(new FeatureValue<String>(FEATURE_NAME + "-CORR", correlationCoeff));
@@ -179,7 +186,11 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
     features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
     
-    addDistanceCountFeatures(features, permutationSequence, this.preorderedPermutationSequence, start);
+    System.err.println("Permutation identical?: " + featVal);
+
+    System.err.println("----------------------------------------");
+
+    //addDistanceCountFeatures(features, permutationSequence, this.preorderedPermutationSequence, start);
     
     return features;
   }
