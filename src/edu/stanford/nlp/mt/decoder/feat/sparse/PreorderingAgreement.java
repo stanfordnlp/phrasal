@@ -125,6 +125,18 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     return numerator / denominator;
   }
   
+  private double getDistortion(List<Integer> prediction, List<Integer> reference, int start) {
+    List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(start, prediction.size()));
+    Collections.sort(sortedReference);
+    
+    double distortion = 0;
+    for (int i = 0; i < sortedReference.size(); i++) {
+      distortion += Math.abs(prediction.get(start + i) - sortedReference.get(i));
+    }
+    
+    return distortion;
+  }
+  
   private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference, int start) {
   
     List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(start, prediction.size()));
@@ -185,6 +197,8 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence, start);
     double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
     features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
+    
+    features.add(new FeatureValue<String>(FEATURE_NAME + "-DISTORTION", getDistortion(permutationSequence, preorderedPermutationSequence, start)));
     
     //System.err.println("Permutation identical?: " + featVal);
 
