@@ -127,7 +127,7 @@ public class Phrasal {
       .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
-      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [classic,exact,dtu] (default: classic).").append(nl)
+      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [pharoah,exact,dtu] (default: exact).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
       .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
@@ -295,7 +295,7 @@ public class Phrasal {
   /**
    * Recombination configuration.
    */
-  private String recombinationMode = RecombinationFilterFactory.CLASSIC_RECOMBINATION;
+  private String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
 
   /**
    * Pre/post processing filters.
