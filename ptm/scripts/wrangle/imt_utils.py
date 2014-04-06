@@ -1,4 +1,5 @@
 import sys
+import re
 import codecs
 import csv
 import os
@@ -103,6 +104,22 @@ def load_references(filename_list):
     for filename in filename_list:
         doc_id = url2doc(filename)
         with codecs.open(filename, encoding='utf-8') as infile:
+            filename_to_lines[doc_id] = [x.strip() for x in infile.readlines()]
+    return filename_to_lines
+
+def load_sources(filename_list):
+    """
+    Load references from a list of filenames.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    filename_to_lines = {}
+    for filename in filename_list:
+        src_file = re.sub('tgt','src',filename)
+        doc_id = url2doc(filename)
+        with codecs.open(src_file, encoding='utf-8') as infile:
             filename_to_lines[doc_id] = [x.strip() for x in infile.readlines()]
     return filename_to_lines
             

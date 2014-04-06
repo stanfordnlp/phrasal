@@ -15,7 +15,7 @@ from datetime import datetime
 from collections import namedtuple,defaultdict
 from csv_unicode import UnicodeReader
 import imt_utils
-from imt_utils import segment_times_from_log,url2doc,initial_translations_from_imt_log,initial_translations_from_pe_log,load_references
+from imt_utils import segment_times_from_log,url2doc,initial_translations_from_imt_log,initial_translations_from_pe_log,load_references,load_sources
 
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
@@ -23,13 +23,15 @@ stderr = lambda x:sys.stderr.write(str(x) + os.linesep)
 
 SYSTEM_DIR='translations'
 
-def console_dump(doc_to_ref, doc_to_user_txt, doc_to_user_time):
+def console_dump(doc_to_ref, doc_to_src, doc_to_user_txt, doc_to_user_time):
     """
     """
     for doc_name in sorted(doc_to_ref.keys()):
         for i,ref in enumerate(doc_to_ref[doc_name]):
+            src = doc_to_src[doc_name][i]
             doc_id = '%s:%d' % (doc_name, i)
             print doc_id
+            print '%s\t%s\t%.3f\t%s' % ('src', 'src', 0.0, src)
             print '%s\t%s\t%.3f\t%s' % ('ref', 'ref', 0.0, ref)
             for user_id in sorted(doc_to_user_txt[doc_id].keys()):
                 username,ui = user_id.split(':')
@@ -46,23 +48,27 @@ def get_fd(fd_dict, key, filepath):
     fd_dict[key] = fd
     return fd
             
-def output_system_files(doc_to_ref, doc_to_user_txt, username_set):
+def output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, username_set):
     """
     """
     if exists(SYSTEM_DIR):
         shutil.rmtree(SYSTEM_DIR)
     os.mkdir(SYSTEM_DIR)
     ref_name = 'ref0'
+    src_name = 'src0'
     refpath = join(SYSTEM_DIR, ref_name)
+    srcpath = join(SYSTEM_DIR, src_name)
     docid_file = codecs.open(join(SYSTEM_DIR,ref_name+'.ids'),'w',encoding='utf-8')
     fd_dict = {}
     for ref_doc in sorted(doc_to_ref.keys()):
         seen_username_set = set()
         num_lines = 0
-        for i,segment in enumerate(doc_to_ref[ref_doc]):
+        for i,ref in enumerate(doc_to_ref[ref_doc]):
             num_lines = i+1
             fd = get_fd(fd_dict, ref_name, refpath)
-            fd.write(segment.strip() + os.linesep)
+            fd.write(ref + os.linesep)
+            fd = get_fd(fd_dict, src_name, srcpath)
+            fd.write(doc_to_src[ref_doc][i] + os.linesep)
             doc_id = '%s:%d' % (ref_doc, i)
             docid_file.write(doc_id + os.linesep)
             for user_id in sorted(doc_to_user_txt[doc_id].keys()):
@@ -98,6 +104,7 @@ def extract_translations(dump_file,
     """
     stderr('Loading references...')
     doc_to_ref = load_references(ref_file_list)
+    doc_to_src = load_sources(ref_file_list)
     doc_to_timing = defaultdict(dict)
     session_id = 0
 
@@ -124,9 +131,9 @@ def extract_translations(dump_file,
             doc_to_user_time[doc_id][mt_id] = 0.0
 
     # Output the results
-    output_system_files(doc_to_ref, doc_to_user_txt, username_set)
+    output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, username_set)
     if output_to_console:
-        console_dump(doc_to_ref, doc_to_user_txt, doc_to_user_time)
+        console_dump(doc_to_ref, doc_to_src, doc_to_user_txt, doc_to_user_time)
 
 def main():
     """
