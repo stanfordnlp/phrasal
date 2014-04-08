@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -15,11 +16,11 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.lm.KenLanguageModel;
-import edu.stanford.nlp.mt.lm.NPLMLanguageModel;
+import edu.stanford.nlp.mt.lm.SrcNPLM;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.SrcNPLMUtil;
-import edu.stanford.nlp.mt.util.Util;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
@@ -30,7 +31,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
  */
 public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implements
    RuleFeaturizer<IString, String> {
-  private static final boolean DEBUG = true;
+  private static final boolean DEBUG = false;
   public static final String DEFAULT_FEATURE_NAME = "NPLM";
   
   // in srilm -99 is -infinity
@@ -40,10 +41,9 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   private final IString endToken;
 
   private final String featureName;
-  private final NPLMLanguageModel nplm;
+  private final SrcNPLM nplm;
   private final KenLanguageModel kenlm;
-  
-  private Sequence<IString> sourceSent;
+  private Sequence<IString> srcSent;
   
   // orders
   private final int lmOrder; // lmOrder = srcOrder + tgtOrder
@@ -89,7 +89,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     
     
     // load NPLM
-    nplm = new NPLMLanguageModel(nplmFile, cacheSize);
+    nplm = new SrcNPLM(nplmFile, cacheSize);
     this.lmOrder = nplm.order();
     this.srcOrder = nplm.getSrcOrder();
     this.tgtOrder = nplm.getTgtOrder();
@@ -111,31 +111,55 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   /**
    * @param f 
    * @param features 
-	 * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
-	 */
-  private double getScore(int startPos, int limit, Sequence<IString> translation, Featurizable<IString, String> f, List<FeatureValue<String>> features){ 
-    double lmSumScore = 0;
-    LMState state = null;
+     * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
+     */
+  private double getScore(int tgtStartPos, int tgtEndPos, Sequence<IString> tgtSent, Featurizable<IString, String> f){
     assert(f!=null);
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
-    if(DEBUG){ printDebugQuery(startPos, limit, translation, f); }
+    if(DEBUG){ printDebugQuery(tgtStartPos, tgtEndPos, tgtSent, f); }
+    
+    int srcStartPos = f.sourcePosition;
+    
+    Pair<LMState, Double> pair = getScore(tgtStartPos, tgtEndPos, tgtSent, srcStartPos, srcSent, alignment);
+    LMState state = pair.first;
+    double score = pair.second;
+    
+    
+    // The featurizer state is the result of the last n-gram query 
+    if (state == null) { // Target-deletion rule
+      state = (LMState) f.prior.getState(this);
+    }
+    f.setState(this, state);
+    
+    return score;
+  }
+  
+  /**
+   * @param f 
+   * @param features 
+	 * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
+	 */
+  public Pair<LMState, Double> getScore(int tgtStartPos, int tgtEndPos, Sequence<IString> tgtSent, 
+      int srcStartPos, Sequence<IString> srcSent, PhraseAlignment alignment){ 
+    double lmSumScore = 0;
+    LMState state = null;
     
     int i, id;
-    for (int pos = startPos; pos < limit; pos++) {;
+    for (int pos = tgtStartPos; pos <=tgtEndPos; pos++) {;
       int[] ngramIds = new int[lmOrder]; // will be stored in normal order
       
       // get source avg alignment pos within rule
-      int srcAvgPos = SrcNPLMUtil.findSrcAvgPos(pos-startPos, alignment); // pos-startPos: position within the local target phrase
+      int srcAvgPos = SrcNPLMUtil.findSrcAvgPos(pos-tgtStartPos, alignment); // pos-startPos: position within the local target phrase
       if(srcAvgPos==-1) { // no source alignment, identity translation I-I
         // Thang TODO: the below code should be replaced by a continue statement, but then we have to explicitly compute the state
       	for (i=0; i < srcOrder; i++) { ngramIds[i] = srcUnkVocabId; }
       } else {
         // convert this local srcAvgPos within the current srcPhrase, to the global position within the source sent
         //if(!isRuleFeaturize) 
-        srcAvgPos += f.sourcePosition;
+        srcAvgPos += srcStartPos;
         
         // extract src subsequence
-        Sequence<IString> sourceSeq = sourceSent; // (isRuleFeaturize) ? f.rule.abstractRule.source : sourceSent;
+        Sequence<IString> sourceSeq = srcSent;
         int srcLen = sourceSeq.size();
         int srcSeqStart = srcAvgPos-srcWindow;
         int srcSeqEnd = srcAvgPos+srcWindow;
@@ -159,7 +183,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
         if(tgtPos<0) { id = tgtStartVocabId; }
         else { 
-        	IString tgtTok = translation.get(tgtPos);
+        	IString tgtTok = tgtSent.get(tgtPos);
           if(tgtTok.id<tgtVocabMap.length) id = tgtVocabMap[tgtTok.id];
           else id = tgtUnkVocabId;
         }
@@ -172,24 +196,19 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         // lmSumScore += MOSES_LM_UNKNOWN_WORD_SCORE;
-      	System.err.println("! Infinity or Nan NPLM score");
-      	printDebugNPLM(startPos, pos, srcAvgPos, ngramIds, ngramScore);
-        System.exit(1);
+      	printDebugNPLM(tgtStartPos, pos, srcAvgPos, ngramIds, ngramScore);
+      	throw new RuntimeException("! Infinity or Nan NPLM score");
       }
       lmSumScore += ngramScore;
     }
     
-    // The featurizer state is the result of the last n-gram query 
-    if (state == null) { // Target-deletion rule
-      state = (LMState) f.prior.getState(this);
-    }
-    f.setState(this, state);
-    return lmSumScore;
+    
+    return new Pair<LMState, Double>(state, lmSumScore);
   }
 
-  private void printDebugQuery(int startPos, int limit, Sequence<IString> translation, Featurizable<IString, String> f){
-  	System.err.println("# NPLMFeaturizer: srcPos=" + f.sourcePosition 
-  			+ " tgtPos=" + startPos + ", limit=" + limit + ", f=" + f);
+  private void printDebugQuery(int tgtStartPos, int tgtEndPos, Sequence<IString> translation, Featurizable<IString, String> f){
+  	System.err.println("# NPLMFeaturizer: srcStartPos=" + f.sourcePosition 
+  			+ " tgtStartPos=" + tgtStartPos + ", tgtEndPos=" + tgtEndPos + ", f=" + f);
     System.err.println("  translation=" + translation);
     System.err.println("  targetPrefix=" + f.targetPrefix);
     System.err.println("  targetPhrase=" + f.targetPhrase);
@@ -198,7 +217,8 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   }
   
   private void printDebugNPLM(int startPos, int pos, int srcAvgPos, int[] ngramIds, double ngramScore){
-  	System.err.println("  tgtPos=" + (pos-startPos) + ", srcAvgPos=" + srcAvgPos + ", ngram =" + Util.intArrayToString(ngramIds));
+  	System.err.println("  tgtPos=" + (pos-startPos) + ", srcAvgPos=" + srcAvgPos + 
+  	    ", ngram =" + Arrays.toString(ngramIds));
     System.err.print("  src words=");
     for (int j = 0; j<srcOrder; j++) {
       System.err.print(" " + nplm.getSrcWord(ngramIds[j]-nplm.getTgtVocabSize()).toString());
@@ -220,25 +240,25 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
       System.err.printf("Sequence: %s, novel phrase: %s, num untranslated tokens: %d\n", f.targetPrefix, f.targetPhrase, f.numUntranslatedSourceTokens);
     }
 
-    Sequence<IString> partialTranslation = null;
+    Sequence<IString> tgtSent = null;
     List<FeatureValue<String>> features = Generics.newLinkedList();
 
     /*
     LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
     int startIndex = 0;
     if (f.prior == null && f.done) {
-      partialTranslation = Sequences.wrapStartEnd(
+      tgtSent = Sequences.wrapStartEnd(
           f.targetPhrase, startToken, endToken);
       startIndex = 1;
     } else if (f.prior == null) {
-      partialTranslation = Sequences.wrapStart(f.targetPhrase, startToken);
+      tgtSent = Sequences.wrapStart(f.targetPhrase, startToken);
       startIndex = 1;
     } else if (f.done) {
-      partialTranslation = Sequences.wrapEnd(f.targetPhrase, endToken);
+      tgtSent = Sequences.wrapEnd(f.targetPhrase, endToken);
     } else {
-      partialTranslation = f.targetPhrase;
+      tgtSent = f.targetPhrase;
     }
-    LMState state = kenlm.score(partialTranslation, startIndex, priorState);
+    LMState state = kenlm.score(tgtSent, startIndex, priorState);
     f.setState(this, state);
     double lmScore = state.getScore();
     */
@@ -246,13 +266,13 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     // f.targetPrefix includes priorState + targetPhrase
     // f.targetPosition: position in targetPrefix where the targetPhrase starts.
     if (f.done) {
-      partialTranslation = Sequences.wrapStartEnd(f.targetPrefix, startToken, endToken);
+      tgtSent = Sequences.wrapStartEnd(f.targetPrefix, startToken, endToken);
     } else {
-      partialTranslation = Sequences.wrapStart(f.targetPrefix, startToken);
+      tgtSent = Sequences.wrapStart(f.targetPrefix, startToken);
     }
-    int startPos = f.targetPosition + 1;
-    int limit = partialTranslation.size();
-    double lmScore = getScore(startPos, limit, partialTranslation, f, features);
+    int tgtStartPos = f.targetPosition + 1;
+    int tgtEndPos = tgtSent.size()-1;
+    double lmScore = getScore(tgtStartPos, tgtEndPos, tgtSent, f);
     
     features.add(new FeatureValue<String>(featureName, lmScore));
     
@@ -281,8 +301,8 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
-    this.sourceSent = foreign;
-    if (DEBUG) { System.err.println("# Source sent: " + sourceSent); }
+    this.srcSent = foreign;
+    if (DEBUG) { System.err.println("# Source sent: " + srcSent); }
   }
 
   @Override

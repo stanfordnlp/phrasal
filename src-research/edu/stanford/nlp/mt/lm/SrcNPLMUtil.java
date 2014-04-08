@@ -20,7 +20,7 @@ import edu.stanford.nlp.mt.base.TokenUtils;
 public class SrcNPLMUtil {
 	public final static int startId = TokenUtils.START_TOKEN.id; // index of <s>
 	
-	public static double getNPLMScore(NPLMLanguageModel nplm, Featurizable<IString, String> f){
+	public static double getNPLMScore(SrcNPLM nplm, Featurizable<IString, String> f){
 		return 0.0;
 	}
 	

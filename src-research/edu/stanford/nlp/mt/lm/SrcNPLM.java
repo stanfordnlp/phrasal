@@ -22,7 +22,7 @@ import edu.stanford.nlp.mt.util.Util;
  * @author Thang Luong
  *
  */
-public class NPLMLanguageModel implements LanguageModel<IString> {
+public class SrcNPLM implements LanguageModel<IString> {
 	private NPLM nplm;
   //private KenLM kenlm;
 	
@@ -36,14 +36,18 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
   private final int srcWindow; // = (srcOrder-1)/2
 	private final int tgtOrder;
 	
+	// vocabulary
 	private final List<IString> srcWords;
 	private final List<IString> tgtWords;
-	
+	private int srcVocabSize;
+  private int tgtVocabSize;
+  
 	// map IString id to NPLM id
   private final int[] srcVocabMap;
 	private final int[] tgtVocabMap;
-  private int srcVocabSize;
-  private int tgtVocabSize;
+  
+	// map NPLM id to IString id
+  private final int[] reverseVocabMap;
 
   // NPLM id
   private final int srcUnkNPLMId;
@@ -69,7 +73,7 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    * @param filename
    * @throws IOException 
    */
-  public NPLMLanguageModel(String filename, int cacheSize) throws IOException {
+  public SrcNPLM(String filename, int cacheSize) throws IOException {
   	//System.err.println("# Loading NPLMLanguageModel ...");
   	name = String.format("NPLM(%s)", filename);
   	nplm = new NPLM(filename, 0);
@@ -133,6 +137,8 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     		 + ", end=" + TokenUtils.END_TOKEN  + ", IString.index.size = " + IString.index.size());
     srcVocabMap = new int[IString.index.size()];
     tgtVocabMap = new int[IString.index.size()];
+    reverseVocabMap = new int[srcVocabSize+tgtVocabSize];
+    
     // initialize to -1, to make sure we don't map words not in NPLM to 0.
     for (int i = 0; i < IString.index.size(); i++) {
 			srcVocabMap[i] = -1;
@@ -141,10 +147,12 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
     // map tgtWords first
     for (int i = 0; i < tgtVocabSize; i++) {
     	tgtVocabMap[tgtWords.get(i).id] = i;
+    	reverseVocabMap[i] = tgtWords.get(i).id;
     }
     // map srcWords
     for (int i = 0; i < srcVocabSize; i++) {
     	srcVocabMap[srcWords.get(i).id] = i+tgtVocabSize;
+    	reverseVocabMap[i+tgtVocabSize] = srcWords.get(i).id;
     }
     
     // special tokens
@@ -216,26 +224,39 @@ public class NPLMLanguageModel implements LanguageModel<IString> {
    * @return
    */
   public LMState score(Sequence<IString> sequence){
-  	Util.error(sequence.size()!=order, "Currently, NPLMLanguageModel requires sequence " + sequence + 
-  			" to have " + order + " tokens.");
-  	int numTokens = sequence.size();
-  	int[] ngramIds = new int[numTokens];
-  	
-  	IString tok;
-  	
-  	for (int i = 0; i<numTokens; i++) {
-			tok = sequence.get(i);
-			if(i<srcOrder) { // look up from tgt vocab
-				//ngramIds[numTokens-i-1] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkNPLMId;
-				ngramIds[i] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkNPLMId;
-			} else {
-				//ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkNPLMId;
-				ngramIds[i] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkNPLMId;
-			}
-		}
-  	return score(ngramIds);
+//  	Util.error(sequence.size()!=order, "Currently, NPLMLanguageModel requires sequence " + sequence + 
+//  			" to have " + order + " tokens.");
+  	return score(toId(sequence));
   }
   
+  public int[] toId(Sequence<IString> sequence){
+    int numTokens = sequence.size();
+    int[] ngramIds = new int[numTokens];
+    
+    IString tok;
+    
+    for (int i = 0; i<numTokens; i++) {
+      tok = sequence.get(i);
+      if(i<srcOrder) { // look up from tgt vocab
+        //ngramIds[numTokens-i-1] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkNPLMId;
+        ngramIds[i] = (tok.id<srcVocabMap.length) ? srcVocabMap[tok.id] : srcUnkNPLMId;
+      } else {
+        //ngramIds[numTokens-i-1] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkNPLMId;
+        ngramIds[i] = (tok.id<tgtVocabMap.length) ? tgtVocabMap[tok.id] : tgtUnkNPLMId;
+      }
+    }
+    
+    return ngramIds;
+  }
+  
+  public Sequence<IString> toIString(int[] ngramIds){
+    int numTokens = ngramIds.length;
+    int[] istringIndices = new int[numTokens];
+    for (int i = 0; i<numTokens; i++) {
+      istringIndices[i] = reverseVocabMap[ngramIds[i]];
+    }
+    return IString.getIStringSequence(istringIndices);
+  }
   
   /**
    * Extract ngrams that we want to score after adding the recent phrase pair. 

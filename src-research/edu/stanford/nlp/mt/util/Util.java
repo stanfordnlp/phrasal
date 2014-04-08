@@ -3,42 +3,22 @@
  */
 package edu.stanford.nlp.mt.util;
 
-import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
 
 /**
  * @author Minh-Thang Luong <lmthang@stanford.edu>, created on Mar 6, 2014
  *
  */
 public class Util {
-  public static int[] reverseArray(int[] values){
-    int numElements = values.length;
-    int[] reverseValues = new int[numElements];
-    for(int i=0; i<numElements; i++){
-      reverseValues[i] = values[numElements-i-1];
-    }
-    return reverseValues;
-  }
-
   /**
    * Convert an int[] to a byte[]. Follow http://stackoverflow.com/questions/2183240/java-integer-to-byte-array.
    * 
    * @param ints
+   * @param length
    * @return
    */
-  public static byte[] toByteArray(int[] ints){
-  	return toByteArray(ints, ints.length);
-  }
- 
   public static byte[] toByteArray(int[] ints, int length){
   	byte[] bytes = new byte[length*4];
 	 	for (int i = 0; i < length; i++) {
@@ -48,6 +28,9 @@ public class Util {
 			bytes[4*i+3] = (byte) ints[i];
 		}
 	 	return bytes;
+  }
+  public static byte[] toByteArray(int[] ints){
+    return toByteArray(ints, ints.length);
   }
   
   /**
@@ -63,58 +46,27 @@ public class Util {
     return byteBuffer.array();
  }
  
+//  public static int[] reverseArray(int[] values){
+//    int numElements = values.length;
+//    int[] reverseValues = new int[numElements];
+//    for(int i=0; i<numElements; i++){
+//      reverseValues[i] = values[numElements-i-1];
+//    }
+//    return reverseValues;
+//  }
   
-  public static String intArrayToString(int[] values){
-    StringBuffer sb = new StringBuffer();
-    for (int value : values) {
-      sb.append(value + " ");
-    }
-    sb.deleteCharAt(sb.length()-1);
-    return sb.toString();
-  }
+//  public static String intArrayToString(int[] values){
+//    StringBuilder sb = new StringBuilder();
+//    for (int value : values) {
+//      sb.append(value + " ");
+//    }
+//    sb.deleteCharAt(sb.length()-1);
+//    return sb.toString();
+//  }
 
-  public static void error(boolean cond, String message){
-  	if(cond){
-  		System.err.println(message);
-  		System.exit(1);
-  	}
-  }
-  
-  // print int array
-  public static String sprint(int[] values){
-  	StringBuffer sb = new StringBuffer("[");
-
-  	if(values.length > 0){
-  		for(int value : values){
-  			sb.append(value + ", ");
-  		}
-  		sb.delete(sb.length()-2, sb.length());
-  	}
-  	sb.append("]");
-  	return sb.toString();
-  }
-
-  //print double array
-  public static String sprint(double[] values){
-  	StringBuffer sb = new StringBuffer("[");
-
-  	if(values.length > 0){
-  		for(double value : values){
-  			sb.append(value + ", ");
-  		}
-  		sb.delete(sb.length()-2, sb.length());
-  	}
-  	sb.append("]");
-  	return sb.toString();
-  }
-
-  
-  public static Sequence<IString> getIStringSequence(String[] tokens){
-  	List<IString> istringList = new ArrayList<IString>();
-  	for (String token : tokens) {
-			istringList.add(new IString(token));
-		}
-  	return new SimpleSequence<IString>(istringList);
-  }
-
+//  public static void error(boolean cond, String message){
+//  	if(cond){
+//  	  throw new RuntimeException(message);
+//  	}
+//  }
 }
