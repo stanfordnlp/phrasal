@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -46,7 +47,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   private Sequence<IString> srcSent;
   
   // orders
-  private final int lmOrder; // lmOrder = srcOrder + tgtOrder
+  private final int order; // lmOrder = srcOrder + tgtOrder
   private final int srcOrder;
   private final int tgtOrder;
   private final int srcWindow; // = (srcOrder-1)/2
@@ -90,7 +91,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     
     // load NPLM
     nplm = new SrcNPLM(nplmFile, cacheSize);
-    this.lmOrder = nplm.order();
+    this.order = nplm.order();
     this.srcOrder = nplm.getSrcOrder();
     this.tgtOrder = nplm.getTgtOrder();
     this.srcWindow = (srcOrder-1)/2;
@@ -137,6 +138,32 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
   /**
    * @param f 
    * @param features 
+     * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
+     */
+  private double getScoreMulti(int tgtStartPos, int tgtEndPos, Sequence<IString> tgtSent, Featurizable<IString, String> f){
+    assert(f!=null);
+    PhraseAlignment alignment = f.rule.abstractRule.alignment;
+    if(DEBUG){ printDebugQuery(tgtStartPos, tgtEndPos, tgtSent, f); }
+    
+    int srcStartPos = f.sourcePosition;
+    
+    List<int[]> ngramList = nplm.extractNgrams(tgtSent, tgtSent, alignment, srcStartPos, tgtStartPos);
+    LMState state = nplm.scoreNgramList(ngramList);
+    double score = state.getScore();
+    
+    // The featurizer state is the result of the last n-gram query 
+    if (state == null) { // Target-deletion rule
+      state = (LMState) f.prior.getState(this);
+    }
+    f.setState(this, state);
+    
+    
+    return score;
+  }
+  
+  /**
+   * @param f 
+   * @param features 
 	 * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
 	 */
   public Pair<LMState, Double> getScore(int tgtStartPos, int tgtEndPos, Sequence<IString> tgtSent, 
@@ -146,7 +173,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     
     int i, id;
     for (int pos = tgtStartPos; pos <=tgtEndPos; pos++) {;
-      int[] ngramIds = new int[lmOrder]; // will be stored in normal order
+      int[] ngramIds = new int[order]; // will be stored in normal order
       
       // get source avg alignment pos within rule
       int srcAvgPos = SrcNPLMUtil.findSrcAvgPos(pos-tgtStartPos, alignment); // pos-startPos: position within the local target phrase
@@ -189,7 +216,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
         }
         ngramIds[i++] = id; // lmOrder-i-1
       }
-      assert(i==lmOrder);
+      assert(i==order);
       
       state = nplm.score(ngramIds);
       double ngramScore = state.getScore();
@@ -213,7 +240,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     System.err.println("  targetPrefix=" + f.targetPrefix);
     System.err.println("  targetPhrase=" + f.targetPhrase);
     System.err.println("  alignment=" + f.rule.abstractRule.alignment);
-    System.err.println("  lmOrder=" + lmOrder);
+    System.err.println("  lmOrder=" + order);
   }
   
   private void printDebugNPLM(int startPos, int pos, int srcAvgPos, int[] ngramIds, double ngramScore){
@@ -227,7 +254,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     
     System.err.print("  tgt words=");
 
-    for (int j = srcOrder; j < lmOrder; j++) {
+    for (int j = srcOrder; j < order; j++) {
       System.err.print(" " + nplm.getTgtWord(ngramIds[j]).toString());
     }
     System.err.println("\n  score=" + ngramScore);
