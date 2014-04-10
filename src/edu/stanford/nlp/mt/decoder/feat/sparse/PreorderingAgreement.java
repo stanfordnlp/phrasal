@@ -10,8 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
-import edu.berkeley.nlp.util.CollectionUtils;
-import edu.berkeley.nlp.util.StringUtils;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -36,7 +34,9 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
   private static List<List<Integer>> preorderedPermutations = null;
   private List<Integer> preorderedPermutationSequence = null;
   
-  
+  private boolean addCorrelationFeature = false;
+  private boolean addPermutationIdentityFeature = false;
+  private boolean addPermutationDistortionFeature = false;
   
   public PreorderingAgreement(String... args) throws IOException {
     Properties options = FeatureUtils.argsToProperties(args);
@@ -46,9 +46,12 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     }
 
     String permutationsFilename = options.getProperty("permutationsFile");
-    
     preorderedPermutations = parsePermutations(permutationsFilename);
 
+    
+    addCorrelationFeature = options.getProperty("addCorrelationFeature") != null;
+    addPermutationIdentityFeature = options.getProperty("addPermutationIdentityFeature") != null;
+    addPermutationDistortionFeature = options.getProperty("addPermutationDistortionFeature") != null;
    }
   
   
@@ -137,7 +140,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     return distortion;
   }
   
-  private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference, int start) {
+  /*private void addDistanceCountFeatures (List<FeatureValue<String>> features, List<Integer> prediction, List<Integer> reference, int start) {
   
     List<Integer> sortedReference = new ArrayList<Integer>(reference.subList(start, prediction.size()));
     List<Integer> remainingPrediction = new ArrayList<Integer>();
@@ -176,7 +179,7 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
       features.add(new FeatureValue<String>(fname, 1.0));
     }
   }
-  
+  */
   
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
@@ -191,15 +194,20 @@ public class PreorderingAgreement extends DerivationFeaturizer<IString, String> 
     //System.err.println("SourcePhraseSize: " + f.sourcePhrase.size());
 
     int start = permutationSequence.size() - f.sourcePhrase.size();
-    double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence, start);
-    features.add(new FeatureValue<String>(FEATURE_NAME + "-CORR", correlationCoeff));
+    if (addCorrelationFeature) {
+      double correlationCoeff = pearsonCorrelationCoeff(permutationSequence, this.preorderedPermutationSequence, start);
+      features.add(new FeatureValue<String>(FEATURE_NAME + "-CORR", correlationCoeff));
+    }
    
-    boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence, start);
-    double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
-    features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
+    if (addPermutationIdentityFeature) {
+      boolean permIdentical = isPermutationSequenceIdentical(permutationSequence, this.preorderedPermutationSequence, start);
+      double featVal = permIdentical ? 1.0 / this.preorderedPermutationSequence.size() : 0.0;
+      features.add(new FeatureValue<String>(FEATURE_NAME + "-IDENT", featVal));
+    }
     
-    features.add(new FeatureValue<String>(FEATURE_NAME + "-DISTORTION", getDistortion(permutationSequence, preorderedPermutationSequence, start)));
-    
+    if (addPermutationDistortionFeature) {
+      features.add(new FeatureValue<String>(FEATURE_NAME + "-DISTORTION", getDistortion(permutationSequence, preorderedPermutationSequence, start)));
+    }
     //System.err.println("Permutation identical?: " + featVal);
 
     //System.err.println("----------------------------------------");

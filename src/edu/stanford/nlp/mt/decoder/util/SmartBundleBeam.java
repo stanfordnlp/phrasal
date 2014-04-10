@@ -11,7 +11,6 @@ import edu.stanford.nlp.util.Generics;
 public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
 
   
-  private List<Integer> permutationSequence;
   private List<Range> contiguousRanges;
 
   private static int MAX_PHRASE_LEN = 5;
@@ -24,7 +23,6 @@ public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
       List<Integer> permutationSequence, int coverageCardinality) {
 
       super(capacity, filter, optionGrid, recombinationHistory, -1, coverageCardinality);
-      this.permutationSequence = permutationSequence;
       
       
       this.contiguousRanges = Generics.newLinkedList();
