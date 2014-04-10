@@ -8,12 +8,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import cern.colt.Arrays;
 import static org.junit.Assert.*;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.util.Util;
 
 /**
  * @author Thang Luong
@@ -30,9 +28,9 @@ public class SrcNPLMTest {
 		SrcNPLM nplm = new SrcNPLM(nplmFile, 0);
 		String[] tokens = new String[]{"a", "b", "c", "d", "e", "f", "g", "h"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
-		LMState state = nplm.score(sequence);
-//		System.err.println(sequence + "\t" + state.getScore());
-		assertEquals(-1.8107199668884277, state.getScore(), 1e-5);
+		double score = nplm.score(sequence);
+		System.err.println(sequence + "\t" + score);
+		assertEquals(-1.8107199668884277, score, 1e-5);
 	}
 
 	@Test
@@ -40,9 +38,9 @@ public class SrcNPLMTest {
 		SrcNPLM nplm = new SrcNPLM(nplmFile, 0);
 		String[] tokens = new String[]{"一", "个", "中国", "银行", ",", "a", "chinese", "bank"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
-		LMState state = nplm.score(sequence);
-		System.err.println(sequence + "\t" + state.getScore());
-		assertEquals(-7.802870273590088, state.getScore(), 1e-5);
+		double score = nplm.score(sequence);
+		System.err.println(sequence + "\t" + score);
+		assertEquals(-7.802870273590088, score, 1e-5);
 	}
 	
 	@Test
@@ -50,9 +48,9 @@ public class SrcNPLMTest {
 		SrcNPLM nplm = new SrcNPLM(nplmFile, 0);
 		String[] tokens = new String[]{"a", "b", "c", "中国", "银行", "d", "chinese", "enterprises"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
-		LMState state = nplm.score(sequence);
-		System.err.println(sequence + "\t" + state.getScore());
-		assertEquals(-7.744800090789795, state.getScore(), 1e-5);
+		double score = nplm.score(sequence);
+		System.err.println(sequence + "\t" + score);
+		assertEquals(-7.744800090789795, score, 1e-5);
 	}
 	
 	@Test

@@ -14,6 +14,7 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.SrcNPLM;
+import edu.stanford.nlp.mt.lm.SrcNPLMState;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -37,10 +38,10 @@ public class NPLMFeaturizerTest {
     int srcStartPos = 2, tgtStartPos = 5; // 
     PhraseAlignment alignment = PhraseAlignment.getPhraseAlignment("(0) (1)");
     
-    Pair<LMState, Double> pair = nplmFeat.getScore(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
-    LMState state = pair.first;
-    double score = pair.second;
-    assertEquals("-2.916110\t[2051, 2298, 1474, 1549, 1543, 445, 378, 44]", state.toString());
+//    SrcNPLMState state = nplmFeat.getScore(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
+    SrcNPLMState state = nplmFeat.getScoreMulti(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
+    double score = state.getScore();
+    assertEquals("[378, 44]", state.toString());
     assertEquals(-9.93789005279541, score, 1e-6);
   }
 
