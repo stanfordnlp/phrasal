@@ -28,7 +28,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
  * 
  * @author Thang Luong
  */
-public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implements
+public class SrcNPLMFeaturizer extends DerivationFeaturizer<IString, String> implements
    RuleFeaturizer<IString, String> {
   private static final boolean DEBUG = false;
   public static final String DEFAULT_FEATURE_NAME = "SrcNPLM";
@@ -56,7 +56,7 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
    * Constructor called by Phrasal when NPLMFeaturizer appears in
    * [additional-featurizers].
    */
-  public NPLMFeaturizer(String...args) throws IOException {
+  public SrcNPLMFeaturizer(String...args) throws IOException {
     Properties options = FeatureUtils.argsToProperties(args);
     String nplmFile = PropertiesUtils.getString(options, "nplm", null);
     int cacheSize = PropertiesUtils.getInt(options, "cache", 0);
@@ -131,10 +131,12 @@ public class NPLMFeaturizer extends DerivationFeaturizer<IString, String> implem
     LinkedList<int[]> ngramList = srcNPLM.extractNgrams(srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
     double score = 0.0;
     SrcNPLMState state = null;
-    if(ngramList.size()>0){
+    int numNgrams = ngramList.size(); 
+    if(numNgrams>0){
       double[] ngramScores = srcNPLM.scoreMultiNgrams(ngramList);
-      for (double ngramScore : ngramScores) {
-        score += ngramScore;
+      for (int i = 0; i < numNgrams; i++) {
+        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
+        score += ngramScores[i];
       }
       
       // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices)

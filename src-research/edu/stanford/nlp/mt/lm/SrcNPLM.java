@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import cern.colt.Arrays;
 import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
@@ -69,7 +68,7 @@ public class SrcNPLM implements LanguageModel<IString> {
   private long cacheHit=0, cacheLookup = 0;
   private ConcurrentHashMap<Long, Float> cacheMap = null;
   
-  private final int DEBUG = 0; // 0: no print-out, 1: minimal print out
+  private int DEBUG = 0; // 0: no print-out, 1: minimal print out
   /**
    * Constructor for NPLMLanguageModel
    * 
@@ -312,13 +311,13 @@ public class SrcNPLM implements LanguageModel<IString> {
    * 
    * @param srcSent
    * @param tgtSent
-   * @param recentPhraseAlign
+   * @param alignment
    * @param srcStartPos -- src start position of the recent phrase pair. 
    * @param tgtStartPos -- tgt start position of the recent phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
 	public LinkedList<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
-			PhraseAlignment recentPhraseAlign, int srcStartPos, int tgtStartPos){
+			PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
 		LinkedList<int[]> ngramList = new LinkedList<int[]>();
 		int i, id;
 		
@@ -329,26 +328,25 @@ public class SrcNPLM implements LanguageModel<IString> {
       
       // get the local srcAvgPos within the current srcPhrase
       // pos-startPos: position within the local target phrase
-      int srcAvgPos = SrcNPLMUtil.findSrcAvgPos(pos-tgtStartPos, recentPhraseAlign); 
-      if(srcAvgPos==-1) { continue; } // no source alignment
-      else { // has source alignment
-        // convert to the global position within the source sent
-        srcAvgPos += srcStartPos;
-        
-        // extract src subsequence
-        int srcSeqStart = srcAvgPos-srcWindow;
-        int srcSeqEnd = srcAvgPos+srcWindow;
-        i=0;
-        for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
-          if(srcPos<0) { id = srcStartNPLMId; } // start
-          else if (srcPos>=srcLen) { id = srcEndNPLMId; } // end
-          else { // within range
-          	IString srcTok = srcSent.get(srcPos);
-            if(srcTok.id<srcVocabMap.length) { id = srcVocabMap[srcTok.id]; } // known
-            else { id = srcUnkNPLMId; }  // unk
-          }
-          ngram[i++] = id;
+      int srcAvgPos = alignment.findSrcAvgPos(pos-tgtStartPos); 
+      assert(srcAvgPos>=0);
+      
+      // convert to the global position within the source sent
+      srcAvgPos += srcStartPos;
+      
+      // extract src subsequence
+      int srcSeqStart = srcAvgPos-srcWindow;
+      int srcSeqEnd = srcAvgPos+srcWindow;
+      i=0;
+      for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
+        if(srcPos<0) { id = srcStartNPLMId; } // start
+        else if (srcPos>=srcLen) { id = srcEndNPLMId; } // end
+        else { // within range
+          IString srcTok = srcSent.get(srcPos);
+          if(srcTok.id<srcVocabMap.length) { id = srcVocabMap[srcTok.id]; } // known
+          else { id = srcUnkNPLMId; }  // unk
         }
+        ngram[i++] = id;
       }
       assert(i==srcOrder);
       

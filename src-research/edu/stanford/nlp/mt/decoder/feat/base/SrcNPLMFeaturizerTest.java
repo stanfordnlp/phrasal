@@ -21,14 +21,14 @@ import edu.stanford.nlp.util.Pair;
  * @author lmthang
  *
  */
-public class NPLMFeaturizerTest {
+public class SrcNPLMFeaturizerTest {
   public static final String PREFIX = ""; // "projects/mt/"; //
   public static final String nplmFile = PREFIX + "test/inputs/src5.tgt3.nplm";
   
   
   @Test
   public void test() throws IOException {
-    NPLMFeaturizer nplmFeat = new NPLMFeaturizer("nplm="+nplmFile, "cache=0", "id=srcNPLM");
+    SrcNPLMFeaturizer nplmFeat = new SrcNPLMFeaturizer("nplm="+nplmFile, "cache=0", "id=srcNPLM");
     String srcStr = "建设 法治 政府 , 就 是 为了 使 行政 权力 授予 有 据 , 行使 有规 , 监督 有效 , 做到 依法 治官 , 依法 治权 , 防止 行政 权力 的 缺失 和 滥用 , 带动 全 社会 尊重 法律 , 遵守 法律 , 维护 法律 \" 。";
     Sequence<IString> srcSent = IString.getIStringSequence(srcStr.split("\\s+"));
     String tgtStr = "<s> construction if so law government ,";
