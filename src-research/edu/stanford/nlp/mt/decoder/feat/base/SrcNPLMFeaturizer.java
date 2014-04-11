@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -46,8 +45,6 @@ RuleFeaturizer<IString, String> {
   private Sequence<IString> srcSent;
 
   // orders
-  private final int order; // lmOrder = srcOrder + tgtOrder
-  private final int srcOrder;
   private final int tgtOrder;
 
   public String helpMessage(){
@@ -78,56 +75,48 @@ RuleFeaturizer<IString, String> {
 
     // load NPLM
     srcNPLM = new SrcNPLM(nplmFile, cacheSize);
-    this.order = srcNPLM.order();
-    this.srcOrder = srcNPLM.getSrcOrder();
-    this.tgtOrder = srcNPLM.getTgtOrder();
+    this.tgtOrder = srcNPLM.getTgtOrder(); // to store state
 
     this.startToken = srcNPLM.getStartToken();
     this.endToken = srcNPLM.getEndToken();
-
-    this.srcWindow = (srcOrder-1)/2;
-    this.srcVocabMap = srcNPLM.getSrcVocabMap();
-    this.tgtVocabMap = srcNPLM.getTgtVocabMap();
-
-    // special tokens
-    this.srcUnkVocabId = srcNPLM.getSrcUnkNPLMId();
-    this.tgtUnkVocabId = srcNPLM.getTgtUnkNPLMId();
-    this.srcStartVocabId = srcNPLM.getSrcStartVocabId();
-    this.tgtStartVocabId = srcNPLM.getTgtStartVocabId();
-    this.srcEndVocabId = srcNPLM.getSrcEndVocabId();
   }
 
   /**
-   * @param f 
-   * @param features 
-   * @param isRuleFeaturize -- true if we score rule in isolation, i.e. no access to the source sentence
+   * Compute score and state for a new phrase pair added.
+   *
+   * @param tgtSent
+   * @param srcSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+   * @return
    */
-  private double getFeatureScore(int tgtStartPos, Sequence<IString> tgtSent, Featurizable<IString, String> f){
-    assert(f!=null);
-    PhraseAlignment alignment = f.rule.abstractRule.alignment;
-    if(DEBUG){ printDebugQuery(tgtStartPos, tgtSent, f); }
-
-    int srcStartPos = f.sourcePosition;
-
-    SrcNPLMState state = getScore(tgtStartPos, tgtSent, srcStartPos, srcSent, alignment);
-    //SrcNPLMState state = getScoreMulti(tgtStartPos, tgtSent, srcStartPos, srcSent, alignment);
-    double score;
-
-
-    // The featurizer state is the result of the last n-gram query 
-    if (state == null) { // Target-deletion rule
-      state = (SrcNPLMState) f.prior.getState(this);
-      score = 0.0;
-    } else {
-      score = state.getScore();
+  public SrcNPLMState getScore(int tgtStartPos, Sequence<IString> tgtSent, 
+      int srcStartPos, Sequence<IString> srcSent, PhraseAlignment alignment){ 
+    double lmSumScore = 0;
+    int[] ngramIds = null;
+    
+    for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
+      ngramIds = srcNPLM.extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
+      double ngramScore = srcNPLM.score(ngramIds);
+      if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramIds) + "\t" + ngramScore); }
+      
+      if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
+        throw new RuntimeException("! Infinity or Nan NPLM score: " + 
+            srcNPLM.toIString(ngramIds) + "\t" + ngramScore);
+      }
+      lmSumScore += ngramScore;
     }
-    f.setState(this, state);
 
-    return score;
+    // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices) 
+    SrcNPLMState state = (tgtSent.size()>tgtStartPos) ? new SrcNPLMState(lmSumScore, ngramIds, tgtOrder) : null;
+    return state;
   }
-
+  
   /**
-   * Extract multiple ngrams and score them all at once.
+   * Extract multiple ngrams and score them all at once. 
+   * Should return the same score as getScore.
+   * This method is slower than getScore and is used only to test srcNPLM.extractNgrams/scoreMultiNgrams.
    * 
    * @param tgtStartPos
    * @param tgtEndPos
@@ -145,18 +134,11 @@ RuleFeaturizer<IString, String> {
     SrcNPLMState state = null;
     int numNgrams = ngramList.size(); 
     if(numNgrams>0){
-      //      double[] ngramScores = srcNPLM.scoreMultiNgrams(ngramList);
-      //      for (int i = 0; i < numNgrams; i++) {
-      //        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
-      //        score += ngramScores[i];
-      //      }
-
+      double[] ngramScores = srcNPLM.scoreMultiNgrams(ngramList);
       for (int i = 0; i < numNgrams; i++) {
-        double ngramScore = srcNPLM.score(ngramList.get(i));  
-        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScore); }
-        score += ngramScore;
+        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
+        score += ngramScores[i];
       }
-
 
       // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices)
       int[] ngramIds = ngramList.getLast();
@@ -166,37 +148,8 @@ RuleFeaturizer<IString, String> {
     return state;
   }
 
-  private void printDebugQuery(int tgtStartPos, Sequence<IString> tgtSent, Featurizable<IString, String> f){
-    System.err.println("# NPLMFeaturizer: srcStartPos=" + f.sourcePosition + " tgtStartPos=" + tgtStartPos 
-        + ", srcLen=" + srcSent.size() + ", tgtLen=" + tgtSent.size() + ", f=" + f);
-    System.err.println("  srcSent=" + tgtSent);
-    System.err.println("  tgtSent=" + tgtSent);
-  }
-
-  private void printDebugNPLM(int startPos, int pos, int srcAvgPos, int[] ngramIds, double ngramScore){
-    System.err.println("  tgtPos=" + (pos-startPos) + ", srcAvgPos=" + srcAvgPos + 
-        ", ngram =" + Arrays.toString(ngramIds));
-    System.err.print("  src words=");
-    for (int j = 0; j<srcOrder; j++) {
-      System.err.print(" " + srcNPLM.getSrcWord(ngramIds[j]-srcNPLM.getTgtVocabSize()).toString());
-    }
-    System.err.println();
-
-    System.err.print("  tgt words=");
-
-    for (int j = srcOrder; j < order; j++) {
-      System.err.print(" " + srcNPLM.getTgtWord(ngramIds[j]).toString());
-    }
-    System.err.println("\n  score=" + ngramScore);
-
-  }
-
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    if (DEBUG) {
-      System.err.printf("Sequence: %s, novel phrase: %s, num untranslated tokens: %d\n", f.targetPrefix, f.targetPhrase, f.numUntranslatedSourceTokens);
-    }
-
     Sequence<IString> tgtSent = null;
     List<FeatureValue<String>> features = Generics.newLinkedList();
 
@@ -227,15 +180,31 @@ RuleFeaturizer<IString, String> {
     } else {
       tgtSent = Sequences.wrapStart(f.targetPrefix, startToken);
     }
+    
+    int srcStartPos = f.sourcePosition;
     int tgtStartPos = f.targetPosition + 1;
-    double lmScore = getFeatureScore(tgtStartPos, tgtSent, f);
-
-    features.add(new FeatureValue<String>(featureName, lmScore));
-
-    if (DEBUG) {
-      System.err.printf("Final score: %f%n", lmScore);
-      System.err.println("===================");
+    if(DEBUG){ 
+      System.err.println("# NPLMFeaturizer: srcStartPos=" + srcStartPos + " tgtStartPos=" + tgtStartPos 
+          + ", srcLen=" + srcSent.size() + ", tgtLen=" + tgtSent.size() + ", f=" + f);
+      System.err.println("  srcSent=" + tgtSent);
+      System.err.println("  tgtSent=" + tgtSent);
+      System.err.println("  sequence=" + f.targetPrefix);
+      System.err.println("  num untranslated tokens=" + f.numUntranslatedSourceTokens);
     }
+    
+    SrcNPLMState state = getScore(tgtStartPos, tgtSent, srcStartPos, srcSent, f.rule.abstractRule.alignment);
+    //SrcNPLMState state = getScoreMulti(tgtStartPos, tgtSent, srcStartPos, srcSent, f.rule.abstractRule.alignment);
+    
+    double score = 0.0;
+    if (state == null) { // Target-deletion rule
+      state = (SrcNPLMState) f.prior.getState(this);
+    } else {
+      score = state.getScore();
+    }
+    f.setState(this, state);
+    features.add(new FeatureValue<String>(featureName, score));
+
+    if (DEBUG) { System.err.println("Final score: " + score + "\n==================="); }
 
     return features;
   }
@@ -267,83 +236,6 @@ RuleFeaturizer<IString, String> {
   @Override
   public boolean isolationScoreOnly() {
     return true;
-  }
-
-  private final int srcWindow; // = (srcOrder-1)/2
-
-  // map IString id to NPLM id
-  private final int[] srcVocabMap;
-  private final int[] tgtVocabMap;
-
-  // special tokens
-  private final int srcUnkVocabId; 
-  private final int tgtUnkVocabId;
-  private final int srcStartVocabId;
-  private final int tgtStartVocabId;
-  private final int srcEndVocabId;
-
-  public SrcNPLMState getScore(int tgtStartPos, Sequence<IString> tgtSent, 
-      int srcStartPos, Sequence<IString> srcSent, PhraseAlignment alignment){ 
-    double lmSumScore = 0;
-    int srcLen = srcSent.size();
-    int tgtLen = tgtSent.size();
-    
-    int i, id;
-    int[] ngramIds = new int[order]; // will be stored in normal order
-    int srcAvgPos;
-    for (int pos = tgtStartPos; pos <tgtLen; pos++) {
-      if(pos==(tgtLen-1) && tgtSent.get(pos).id==TokenUtils.END_TOKEN.id) { // end of sent
-        srcAvgPos = srcLen-1;
-      } else {
-        // get source avg alignment pos within rule
-        srcAvgPos = alignment.findSrcAvgPos(pos-tgtStartPos); // pos-startPos: position within the local target phrase
-        assert(srcAvgPos>=0);
-        // convert this local srcAvgPos within the current srcPhrase, to the global position within the source sent
-        srcAvgPos += srcStartPos;
-      }
-
-      // extract src subsequence
-      int srcSeqStart = srcAvgPos-srcWindow;
-      int srcSeqEnd = srcAvgPos+srcWindow;
-
-      i=0;
-      for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
-        if(srcPos<0) { id = srcStartVocabId; }
-        else if (srcPos>=srcLen) { id = srcEndVocabId; }
-        else  { // within range
-          IString srcTok = srcSent.get(srcPos);
-          if(srcTok.id<srcVocabMap.length) id = srcVocabMap[srcTok.id];
-          else { id = srcUnkVocabId; }
-        }
-        ngramIds[i++] = id; // lmOrder-i-1
-      }
-      assert(i==srcOrder);
-
-      // extract tgt subsequence
-      int tgtSeqStart = pos - tgtOrder + 1;
-      for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
-        if(tgtPos<0) { id = tgtStartVocabId; }
-        else { 
-          IString tgtTok = tgtSent.get(tgtPos);
-          if(tgtTok.id<tgtVocabMap.length) id = tgtVocabMap[tgtTok.id];
-          else id = tgtUnkVocabId;
-        }
-        ngramIds[i++] = id; // lmOrder-i-1
-      }
-      assert(i==order);
-
-      double ngramScore = srcNPLM.score(ngramIds);
-
-      if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
-        printDebugNPLM(tgtStartPos, pos, srcAvgPos, ngramIds, ngramScore);
-        throw new RuntimeException("! Infinity or Nan NPLM score");
-      }
-      lmSumScore += ngramScore;
-    }
-
-    // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices) 
-    SrcNPLMState state = (tgtLen>tgtStartPos) ? new SrcNPLMState(lmSumScore, ngramIds, tgtOrder) : null;
-    return state;
   }
 }
 

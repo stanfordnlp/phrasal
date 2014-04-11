@@ -307,73 +307,85 @@ public class SrcNPLM implements LanguageModel<IString> {
   }
   
   /**
-   * Extract ngrams that we want to score after adding the recent phrase pair. 
+   * Extract ngrams that we want to score after adding the recently added phrase pair. 
    * 
    * @param srcSent
    * @param tgtSent
-   * @param alignment
-   * @param srcStartPos -- src start position of the recent phrase pair. 
-   * @param tgtStartPos -- tgt start position of the recent phrase pair.
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
 	public LinkedList<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
 			PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
 		LinkedList<int[]> ngramList = new LinkedList<int[]>();
-		int i, id;
 		
-		int srcLen = srcSent.size();
-		int tgtLen = tgtSent.size();
-		int srcAvgPos;
-		for (int pos = tgtStartPos; pos < tgtLen; pos++) {
-      int[] ngram = new int[order]; // will be stored in normal order (cf. KenLM stores in reverse order)
-      
-      if(pos==(tgtLen-1) && tgtSent.get(pos).id==TokenUtils.END_TOKEN.id) { // end of sent
-        srcAvgPos = srcLen-1;
-      } else {
-        // get the local srcAvgPos within the current srcPhrase
-        // pos-startPos: position within the local target phrase
-        srcAvgPos = alignment.findSrcAvgPos(pos-tgtStartPos); 
-        assert(srcAvgPos>=0);
-        
-        // convert to the global position within the source sent
-        srcAvgPos += srcStartPos;
-      }
-      
-      // extract src subsequence
-      int srcSeqStart = srcAvgPos-srcWindow;
-      int srcSeqEnd = srcAvgPos+srcWindow;
-      i=0;
-      for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
-        if(srcPos<0) { id = srcStartNPLMId; } // start
-        else if (srcPos>=srcLen) { id = srcEndNPLMId; } // end
-        else { // within range
-          IString srcTok = srcSent.get(srcPos);
-          if(srcTok.id<srcVocabMap.length) { id = srcVocabMap[srcTok.id]; } // known
-          else { id = srcUnkNPLMId; }  // unk
-        }
-        ngram[i++] = id;
-      }
-      assert(i==srcOrder);
-      
-      // extract tgt subsequence
-      int tgtSeqStart = pos - tgtOrder + 1;
-      for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
-        if(tgtPos<0) { id = tgtStartNPLMId; } // start
-        else { // within range 
-        	IString tgtTok = tgtSent.get(tgtPos);
-          if(tgtTok.id<tgtVocabMap.length) { id = tgtVocabMap[tgtTok.id]; } // known
-          else { id = tgtUnkNPLMId; } // unk
-        }
-        ngram[i++] = id;
-      }
-      assert(i==order);
-      
-      ngramList.add(ngram);
+		for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
+      ngramList.add(extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos));
     }
 		
 		return ngramList;
 	}
   
+	/**
+   * Extract an ngram. 
+   * 
+   * @param pos -- tgt position of the last word in the ngram to be extracted.
+   * @param srcSent
+   * @param tgtSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+   * @return list of ngrams, each of which consists of NPLM ids.
+   */
+  public int[] extractNgram(int pos, Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
+    int id, srcAvgPos;
+    int[] ngram = new int[order]; // will be stored in normal order (cf. KenLM stores in reverse order)
+    
+    if(pos==(tgtSent.size()-1) && tgtSent.get(pos).id==TokenUtils.END_TOKEN.id) { // end of sent
+      srcAvgPos = srcSent.size()-1;
+    } else {
+      // get the local srcAvgPos within the current srcPhrase
+      // pos-startPos: position within the local target phrase
+      srcAvgPos = alignment.findSrcAvgPos(pos-tgtStartPos); 
+      assert(srcAvgPos>=0);
+      
+      // convert to the global position within the source sent
+      srcAvgPos += srcStartPos;
+    }
+    
+    // extract src subsequence
+    int srcSeqStart = srcAvgPos-srcWindow;
+    int srcSeqEnd = srcAvgPos+srcWindow;
+    int i=0;
+    for (int srcPos = srcSeqStart; srcPos <= srcSeqEnd; srcPos++) {
+      if(srcPos<0) { id = srcStartNPLMId; } // start
+      else if (srcPos>=srcSent.size()) { id = srcEndNPLMId; } // end
+      else { // within range
+        IString srcTok = srcSent.get(srcPos);
+        if(srcTok.id<srcVocabMap.length) { id = srcVocabMap[srcTok.id]; } // known
+        else { id = srcUnkNPLMId; }  // unk
+      }
+      ngram[i++] = id;
+    }
+    assert(i==srcOrder);
+    
+    // extract tgt subsequence
+    int tgtSeqStart = pos - tgtOrder + 1;
+    for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
+      if(tgtPos<0) { id = tgtStartNPLMId; } // start
+      else { // within range 
+        IString tgtTok = tgtSent.get(tgtPos);
+        if(tgtTok.id<tgtVocabMap.length) { id = tgtVocabMap[tgtTok.id]; } // known
+        else { id = tgtUnkNPLMId; } // unk
+      }
+      ngram[i++] = id;
+    }
+    assert(i==order);
+    
+    return ngram;
+  }
   
   /** Getters & Setters **/
   public IString getSrcWord(int i){
