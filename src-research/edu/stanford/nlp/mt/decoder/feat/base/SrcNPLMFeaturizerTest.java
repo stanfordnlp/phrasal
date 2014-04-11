@@ -43,6 +43,11 @@ public class SrcNPLMFeaturizerTest {
     double score = state.getScore();
     assertEquals("[378, 44]", state.toString());
     assertEquals(-9.93789005279541, score, 1e-6);
+    
+//    state = nplmFeat.getScore(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
+//    score = state.getScore();
+//    assertEquals("[378, 44]", state.toString());
+//    assertEquals(-9.93789005279541, score, 1e-6);
   }
 
 }

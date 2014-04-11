@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
@@ -133,11 +134,18 @@ public class SrcNPLMFeaturizer extends DerivationFeaturizer<IString, String> imp
     SrcNPLMState state = null;
     int numNgrams = ngramList.size(); 
     if(numNgrams>0){
-      double[] ngramScores = srcNPLM.scoreMultiNgrams(ngramList);
+//      double[] ngramScores = srcNPLM.scoreMultiNgrams(ngramList);
+//      for (int i = 0; i < numNgrams; i++) {
+//        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
+//        score += ngramScores[i];
+//      }
+
       for (int i = 0; i < numNgrams; i++) {
-        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
-        score += ngramScores[i];
+        double ngramScore = srcNPLM.score(ngramList.get(i));  
+        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScore); }
+        score += ngramScore;
       }
+
       
       // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices)
       int[] ngramIds = ngramList.getLast();
