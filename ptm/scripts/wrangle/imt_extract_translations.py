@@ -127,8 +127,13 @@ def extract_translations(dump_file,
             mt_id = 'MT:mt'
             doc_to_user_txt[doc_id][user_id] = segment_to_tgt_txt[line_id]
             doc_to_user_time[doc_id][user_id] = segment_to_time[line_id]
-            doc_to_user_txt[doc_id][mt_id] = segment_to_mt[line_id]
-            doc_to_user_time[doc_id][mt_id] = 0.0
+            if line_id in segment_to_mt:
+                doc_to_user_txt[doc_id][mt_id] = segment_to_mt[line_id]
+                doc_to_user_time[doc_id][mt_id] = 0.0
+            else:
+                stderr('WARNING: No MT for %s %s %d' % (row.username,
+                                                        doc_id,
+                                                        line_id))
 
     # Output the results
     output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, username_set)
