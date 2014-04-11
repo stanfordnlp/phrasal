@@ -4,9 +4,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.lm.KenLM;
@@ -64,9 +67,10 @@ public class SrcNPLM implements LanguageModel<IString> {
 //  private final int srcNullNPLMId;
 //  private final int tgtNullNPLMId;
 	
-  // caching
+  // LRU caching
   private long cacheHit=0, cacheLookup = 0;
   private ConcurrentHashMap<Long, Float> cacheMap = null;
+  private int cacheSize;
   
   private int DEBUG = 0; // 0: no print-out, 1: minimal print out
   /**
@@ -84,6 +88,7 @@ public class SrcNPLM implements LanguageModel<IString> {
   	//order = kenlm.order();
   	
   	// cache
+  	this.cacheSize = cacheSize;
   	if (cacheSize>0){
       if(DEBUG>0) { System.err.println("  Use global caching, size=" + cacheSize); }
   		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
@@ -202,7 +207,19 @@ public class SrcNPLM implements LanguageModel<IString> {
     	
     	if(cacheMap.containsKey(key)) { // cache hit
     		score = cacheMap.get(key);
-    		if(cacheHit++ %1000000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size()); }
+    		if(cacheHit++ %1000000==0) { 
+    		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
+    		  
+    		  // 90% full, remove 10%
+    		  if(cacheMap.size()>0.9*cacheSize) {
+    		    int count = 0;
+    		    for (Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator(); it.hasNext(); ) {
+              it.remove();
+              if (count++ > 0.1*cacheSize) { break; }
+            }
+    		    System.err.println("new cache size = " + cacheMap.size());
+    		  }
+    		}
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
     	  cacheMap.put(key, (float) score);
@@ -247,7 +264,7 @@ public class SrcNPLM implements LanguageModel<IString> {
           // remove ngram
           iter.remove();
           
-          if(cacheHit++ % 1000000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size()); }
+          if(++cacheHit % 1000000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size()); }
         } else { // cache miss
           remainedIndices.add(i);
           remainedNgrams.add(ngram);
