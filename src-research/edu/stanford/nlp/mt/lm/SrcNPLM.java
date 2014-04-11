@@ -207,18 +207,23 @@ public class SrcNPLM implements LanguageModel<IString> {
     	
     	if(cacheMap.containsKey(key)) { // cache hit
     		score = cacheMap.get(key);
-    		if(cacheHit++ %1000000==0) { 
+    		cacheHit++;
+    		if(cacheHit % (cacheSize/10) == 0) { 
     		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
     		  
-    		  // 90% full, remove 10%
-    		  if(cacheMap.size()>0.9*cacheSize) {
-    		    int count = 0;
-    		    for (Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator(); it.hasNext(); ) {
-              it.remove();
-              if (count++ > 0.1*cacheSize) { break; }
-            }
-    		    System.err.println("new cache size = " + cacheMap.size());
-    		  }
+    		  synchronized (this) {
+    		    // 90% full, remove 10%
+            if(cacheMap.size()>0.9*cacheSize) {
+              int count = 0;
+              Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
+              while(it.hasNext()){
+                it.next();
+                it.remove();
+                if (count++ > 0.1*cacheSize) { break; }
+              }
+              System.err.println("new cache size = " + cacheMap.size());
+            }  
+          }
     		}
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
