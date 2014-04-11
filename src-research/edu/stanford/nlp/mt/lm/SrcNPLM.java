@@ -323,16 +323,21 @@ public class SrcNPLM implements LanguageModel<IString> {
 		
 		int srcLen = srcSent.size();
 		int tgtLen = tgtSent.size();
+		int srcAvgPos;
 		for (int pos = tgtStartPos; pos < tgtLen; pos++) {
       int[] ngram = new int[order]; // will be stored in normal order (cf. KenLM stores in reverse order)
       
-      // get the local srcAvgPos within the current srcPhrase
-      // pos-startPos: position within the local target phrase
-      int srcAvgPos = alignment.findSrcAvgPos(pos-tgtStartPos); 
-      assert(srcAvgPos>=0);
-      
-      // convert to the global position within the source sent
-      srcAvgPos += srcStartPos;
+      if(pos==(tgtLen-1) && tgtSent.get(pos).id==TokenUtils.END_TOKEN.id) { // end of sent
+        srcAvgPos = srcLen-1;
+      } else {
+        // get the local srcAvgPos within the current srcPhrase
+        // pos-startPos: position within the local target phrase
+        srcAvgPos = alignment.findSrcAvgPos(pos-tgtStartPos); 
+        assert(srcAvgPos>=0);
+        
+        // convert to the global position within the source sent
+        srcAvgPos += srcStartPos;
+      }
       
       // extract src subsequence
       int srcSeqStart = srcAvgPos-srcWindow;

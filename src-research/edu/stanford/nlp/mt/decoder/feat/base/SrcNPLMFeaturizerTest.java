@@ -38,16 +38,15 @@ public class SrcNPLMFeaturizerTest {
     int srcStartPos = 2, tgtStartPos = 5; // 
     PhraseAlignment alignment = PhraseAlignment.getPhraseAlignment("(0) (1)");
     
-//    SrcNPLMState state = nplmFeat.getScore(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
-    SrcNPLMState state = nplmFeat.getScoreMulti(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
+    SrcNPLMState state = nplmFeat.getScoreMulti(tgtStartPos, tgtSent, srcStartPos, srcSent, alignment);
     double score = state.getScore();
     assertEquals("[378, 44]", state.toString());
     assertEquals(-9.93789005279541, score, 1e-6);
     
-//    state = nplmFeat.getScore(tgtStartPos, tgtSent.size()-1, tgtSent, srcStartPos, srcSent, alignment);
-//    score = state.getScore();
-//    assertEquals("[378, 44]", state.toString());
-//    assertEquals(-9.93789005279541, score, 1e-6);
+    state = nplmFeat.getScore(tgtStartPos, tgtSent, srcStartPos, srcSent, alignment);
+    score = state.getScore();
+    assertEquals("[378, 44]", state.toString());
+    assertEquals(-9.93789005279541, score, 1e-6);
   }
 
 }
