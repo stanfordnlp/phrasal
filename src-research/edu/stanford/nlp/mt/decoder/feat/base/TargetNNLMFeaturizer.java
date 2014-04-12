@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -10,15 +9,15 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.lm.KenLanguageModel;
-import edu.stanford.nlp.mt.lm.SrcNPLM;
-import edu.stanford.nlp.mt.lm.SrcNPLMState;
+import edu.stanford.nlp.mt.lm.NNLMState;
+import edu.stanford.nlp.mt.lm.TargetNNLM;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
@@ -28,10 +27,10 @@ import edu.stanford.nlp.util.PropertiesUtils;
  * 
  * @author Thang Luong
  */
-public class SrcNPLMFeaturizer extends DerivationFeaturizer<IString, String> implements
+public class TargetNNLMFeaturizer extends DerivationFeaturizer<IString, String> implements
 RuleFeaturizer<IString, String> {
   private static final boolean DEBUG = false;
-  public static final String DEFAULT_FEATURE_NAME = "SrcNPLM";
+  public static final String DEFAULT_FEATURE_NAME = "TargetNPLM";
 
   // in srilm -99 is -infinity
   //  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
@@ -40,7 +39,7 @@ RuleFeaturizer<IString, String> {
   private final IString endToken;
 
   private final String featureName;
-  private final SrcNPLM srcNPLM;
+  private final TargetNNLM targetNNLM;
   private final KenLanguageModel kenlm;
   private Sequence<IString> srcSent;
 
@@ -54,7 +53,7 @@ RuleFeaturizer<IString, String> {
    * Constructor called by Phrasal when NPLMFeaturizer appears in
    * [additional-featurizers].
    */
-  public SrcNPLMFeaturizer(String...args) throws IOException {
+  public TargetNNLMFeaturizer(String...args) throws IOException {
     Properties options = FeatureUtils.argsToProperties(args);
     String nplmFile = PropertiesUtils.getString(options, "nplm", null);
     int cacheSize = PropertiesUtils.getInt(options, "cache", 0);
@@ -74,11 +73,11 @@ RuleFeaturizer<IString, String> {
 
 
     // load NPLM
-    srcNPLM = new SrcNPLM(nplmFile, cacheSize);
-    this.tgtOrder = srcNPLM.getTgtOrder(); // to store state
+    targetNNLM = new TargetNNLM(nplmFile, cacheSize);
+    this.tgtOrder = targetNNLM.getTgtOrder(); // to store state
 
-    this.startToken = srcNPLM.getStartToken();
-    this.endToken = srcNPLM.getEndToken();
+    this.startToken = TokenUtils.START_TOKEN;
+    this.endToken = TokenUtils.END_TOKEN;
   }
 
   /**
@@ -91,25 +90,24 @@ RuleFeaturizer<IString, String> {
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return
    */
-  public SrcNPLMState getScore(int tgtStartPos, Sequence<IString> tgtSent, 
-      int srcStartPos, Sequence<IString> srcSent, PhraseAlignment alignment){ 
+  public NNLMState getScore(int tgtStartPos, Sequence<IString> tgtSent){ 
     double lmSumScore = 0;
     int[] ngramIds = null;
     
     for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
-      ngramIds = srcNPLM.extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
-      double ngramScore = srcNPLM.score(ngramIds);
-      if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramIds) + "\t" + ngramScore); }
+      ngramIds = targetNNLM.extractNgram(pos, tgtSent, tgtStartPos);
+      double ngramScore = targetNNLM.scoreNgram(ngramIds);
+      if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngramIds) + "\t" + ngramScore); }
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         throw new RuntimeException("! Infinity or Nan NPLM score: " + 
-            srcNPLM.toIString(ngramIds) + "\t" + ngramScore);
+            targetNNLM.toIString(ngramIds) + "\t" + ngramScore);
       }
       lmSumScore += ngramScore;
     }
 
-    // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices) 
-    SrcNPLMState state = (tgtSent.size()>tgtStartPos) ? new SrcNPLMState(lmSumScore, ngramIds, tgtOrder) : null;
+    // use the last ngramIds to create state 
+    NNLMState state = (tgtSent.size()>tgtStartPos) ? new NNLMState(lmSumScore, ngramIds, tgtOrder) : null;
     return state;
   }
   
@@ -126,23 +124,22 @@ RuleFeaturizer<IString, String> {
    * @param alignment
    * @return
    */
-  public SrcNPLMState getScoreMulti(int tgtStartPos, Sequence<IString> tgtSent,
-      int srcStartPos, Sequence<IString> srcSent, PhraseAlignment alignment){
+  public NNLMState getScoreMulti(int tgtStartPos, Sequence<IString> tgtSent){
 
-    LinkedList<int[]> ngramList = srcNPLM.extractNgrams(srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
+    LinkedList<int[]> ngramList = targetNNLM.extractNgrams(tgtSent, tgtStartPos);
     double score = 0.0;
-    SrcNPLMState state = null;
+    NNLMState state = null;
     int numNgrams = ngramList.size(); 
     if(numNgrams>0){
-      double[] ngramScores = srcNPLM.scoreMultiNgrams(ngramList);
+      double[] ngramScores = targetNNLM.scoreNgrams(ngramList);
       for (int i = 0; i < numNgrams; i++) {
-        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
+        if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
         score += ngramScores[i];
       }
 
       // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices)
       int[] ngramIds = ngramList.getLast();
-      state = new SrcNPLMState(score, ngramIds, tgtOrder);
+      state = new NNLMState(score, ngramIds, tgtOrder);
     }
 
     return state;
@@ -152,26 +149,6 @@ RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     Sequence<IString> tgtSent = null;
     List<FeatureValue<String>> features = Generics.newLinkedList();
-
-    /*
-    LMState priorState = f.prior == null ? null : (LMState) f.prior.getState(this);
-    int startIndex = 0;
-    if (f.prior == null && f.done) {
-      tgtSent = Sequences.wrapStartEnd(
-          f.targetPhrase, startToken, endToken);
-      startIndex = 1;
-    } else if (f.prior == null) {
-      tgtSent = Sequences.wrapStart(f.targetPhrase, startToken);
-      startIndex = 1;
-    } else if (f.done) {
-      tgtSent = Sequences.wrapEnd(f.targetPhrase, endToken);
-    } else {
-      tgtSent = f.targetPhrase;
-    }
-    LMState state = kenlm.score(tgtSent, startIndex, priorState);
-    f.setState(this, state);
-    double lmScore = state.getScore();
-     */
 
     // f.targetPrefix includes priorState + targetPhrase
     // f.targetPosition: position in targetPrefix where the targetPhrase starts.
@@ -192,12 +169,12 @@ RuleFeaturizer<IString, String> {
       System.err.println("  num untranslated tokens=" + f.numUntranslatedSourceTokens);
     }
     
-    SrcNPLMState state = getScore(tgtStartPos, tgtSent, srcStartPos, srcSent, f.rule.abstractRule.alignment);
-    //SrcNPLMState state = getScoreMulti(tgtStartPos, tgtSent, srcStartPos, srcSent, f.rule.abstractRule.alignment);
+    NNLMState state = getScore(tgtStartPos, tgtSent);
+    //NNLMState state = getScoreMulti(tgtStartPos, tgtSent);
     
     double score = 0.0;
     if (state == null) { // Target-deletion rule
-      state = (SrcNPLMState) f.prior.getState(this);
+      state = (NNLMState) f.prior.getState(this);
     } else {
       score = state.getScore();
     }

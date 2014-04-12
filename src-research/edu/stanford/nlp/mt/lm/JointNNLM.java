@@ -4,12 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.lm.KenLM;
@@ -18,59 +14,35 @@ import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.mt.util.MurmurHash;
-import edu.stanford.nlp.mt.util.Util;
+
 
 /**
- * NPLM Language Model interface backed by KenLanguageModel
+ * Joint NNLM (conditioned on src and tgt words). 
+ * Support caching. Backed by NPLM.
  * 
  * @author Thang Luong
  *
  */
-public class SrcNPLM implements LanguageModel<IString> {
-	private NPLM nplm;
-  //private KenLM kenlm;
-	
-  private final String INPUT_VOCAB_SIZE = "input_vocab_size";
-  private final String OUTPUT_VOCAB_SIZE = "output_vocab_size";
-  private final String SRC_ORDER = "src_ngram_size";
+public class JointNNLM extends TargetNNLM {
+	private final String SRC_ORDER = "src_ngram_size";
   
-  private final String name;
-  private final int order;
   private final int srcOrder;
   private final int srcWindow; // = (srcOrder-1)/2
-	private final int tgtOrder;
 	
 	// vocabulary
 	private final List<IString> srcWords;
-	private final List<IString> tgtWords;
 	private int srcVocabSize;
-  private int tgtVocabSize;
   
 	// map IString id to NPLM id
   private final int[] srcVocabMap;
-	private final int[] tgtVocabMap;
-  
-	// map NPLM id to IString id
-  private final int[] reverseVocabMap;
 
   // NPLM id
   private final int srcUnkNPLMId;
-  private final int tgtUnkNPLMId;
   private final int srcStartNPLMId;
-  private final int tgtStartNPLMId;
   private final int srcEndNPLMId;
-//  private final int tgtEndNPLMId;
   
   // we're not handling <null> right now so does NPLM
-//  private final String NULL = "<null>";
 //  private final int srcNullNPLMId;
-//  private final int tgtNullNPLMId;
-	
-  // LRU caching
-  private long cacheHit=0, cacheLookup = 0;
-  private ConcurrentHashMap<Long, Float> cacheMap = null;
-  private int cacheSize;
   
   private int DEBUG = 0; // 0: no print-out, 1: minimal print out
   /**
@@ -79,9 +51,9 @@ public class SrcNPLM implements LanguageModel<IString> {
    * @param filename
    * @throws IOException 
    */
-  public SrcNPLM(String filename, int cacheSize) throws IOException {
+  public JointNNLM(String filename, int cacheSize) throws IOException {
   	//System.err.println("# Loading NPLMLanguageModel ...");
-  	name = String.format("NPLM(%s)", filename);
+  	name = String.format("JointNNLM(%s)", filename);
   	nplm = new NPLM(filename, 0);
   	order = nplm.order();
   	//kenlm = new KenLM(filename, 1<<20);
@@ -184,123 +156,13 @@ public class SrcNPLM implements LanguageModel<IString> {
     if(DEBUG>0){
 	    System.err.println("  srcOrder=" + this.srcOrder + ", tgtOrder=" + this.tgtOrder + 
 	        ", srcVocabSize=" + srcVocabSize + ", tgtVocabSize=" + tgtVocabSize + 
-	        ", srcUnkNPLMId=" + srcUnkNPLMId + ", tgtUnkNPLMId=" + srcUnkNPLMId +
-	        ", srcStartNPLMId=" + srcStartNPLMId + ", tgtStartNPLMId=" + srcStartNPLMId +
-	        ", srcEndNPLMId=" + srcEndNPLMId + ", tgtEndNPLMId=" + srcEndNPLMId);
+	        ", srcUnkNPLMId=" + srcUnkNPLMId + ", tgtUnkNPLMId=" + tgtUnkNPLMId +
+	        ", srcStartNPLMId=" + srcStartNPLMId + ", tgtStartNPLMId=" + tgtStartNPLMId +
+	        ", srcEndNPLMId=" + srcEndNPLMId);
     }
   }
   
-  /**
-   * Score a single ngram.
-   * 
-   * @param ngramIds: normal order ids
-   * @return
-   */
-  public double score(int[] ngramIds) {
-  	long key = 0;
-  	double score;
-  	
-    if(cacheMap != null) { // caching
-    	cacheLookup++;
-    	byte[] data = Util.toByteArray(ngramIds, ngramIds.length); 
-    	key = MurmurHash.hash64(data, data.length);
-    	
-    	if(cacheMap.containsKey(key)) { // cache hit
-    		score = cacheMap.get(key);
-    		cacheHit++;
-    		if(cacheHit % (cacheSize/10) == 0) { 
-    		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
-    		  
-    		  synchronized (this) {
-    		    // 90% full, remove 10%
-            if(cacheMap.size()>0.9*cacheSize) {
-              int count = 0;
-              Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
-              while(it.hasNext()){
-                it.next();
-                it.remove();
-                if (count++ > 0.1*cacheSize) { break; }
-              }
-              System.err.println("new cache size = " + cacheMap.size());
-            }  
-          }
-    		}
-    	} else { // cache miss
-    	  score = nplm.scoreNgram(ngramIds);
-    	  cacheMap.put(key, (float) score);
-    	}
-    } else {
-      score = nplm.scoreNgram(ngramIds);
-    }
-          
-//    System.err.println(Arrays.toString(ngramIds) + "\t" + score);
-    return score;
-  }
-  
-  /**
-   * Score multiple ngrams.
-   * 
-   * @param ngramIds: normal order ids
-   * @return
-   */
-  public double[] scoreMultiNgrams(List<int[]> ngramList) {
-    int numNgrams = ngramList.size();
-    double[] scores = new double[numNgrams];
-    
-    int key = 0;
-    if(cacheMap != null) { // caching
-      List<Integer> remainedIndices = new LinkedList<Integer>(); // those that we will call NPLMs
-      List<int[]> remainedNgrams = new LinkedList<int[]>();
-      int i=0;
-      
-      // get precomputed scores
-      Iterator<int[]> iter = ngramList.iterator(); 
-      while(iter.hasNext()){ 
-        int[] ngram = iter.next();
-        
-        byte[] data = Util.toByteArray(ngram, ngram.length); 
-        key = MurmurHash.hash32(data, data.length);
-      
-        cacheLookup++;
-        if(cacheMap.containsKey(key)) { // cache hit
-          // get cache results
-          scores[i] = cacheMap.get(key);
-          
-          // remove ngram
-          iter.remove();
-          
-          if(++cacheHit % 1000000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size()); }
-        } else { // cache miss
-          remainedIndices.add(i);
-          remainedNgrams.add(ngram);
-        }
-        
-        i++;
-      }
-      
-      // get remaining scores
-      double[] remainedScores = nplm.scoreMultiNgrams(remainedNgrams);
-      i=0;
-      for (int remainedId : remainedIndices) {
-        scores[remainedId] =  remainedScores[i++];
-      }
-    } else {
-      scores = nplm.scoreMultiNgrams(ngramList);
-    }
-
-    return scores;
-  }
-  
-  /**
-   * Score a sequence of IString
-   * 
-   * @param sequence: sequence of words in normal order.
-   * @return
-   */
-  public double score(Sequence<IString> sequence){
-  	return score(toId(sequence));
-  }
-  
+  @Override
   public int[] toId(Sequence<IString> sequence){
     int numTokens = sequence.size();
     int[] ngramIds = new int[numTokens];
@@ -319,6 +181,7 @@ public class SrcNPLM implements LanguageModel<IString> {
     return ngramIds;
   }
   
+  @Override
   public Sequence<IString> toIString(int[] ngramIds){
     int numTokens = ngramIds.length;
     int[] istringIndices = new int[numTokens];
@@ -338,16 +201,16 @@ public class SrcNPLM implements LanguageModel<IString> {
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
-	public LinkedList<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
-			PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
-		LinkedList<int[]> ngramList = new LinkedList<int[]>();
-		
-		for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
+  public LinkedList<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
+    LinkedList<int[]> ngramList = new LinkedList<int[]>();
+    
+    for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
       ngramList.add(extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos));
     }
-		
-		return ngramList;
-	}
+    
+    return ngramList;
+  }
   
 	/**
    * Extract an ngram. 
@@ -414,32 +277,16 @@ public class SrcNPLM implements LanguageModel<IString> {
   	return srcWords.get(i);
   }
   
-  public IString getTgtWord(int i){
-  	return tgtWords.get(i);
-  }
-  
   public int getSrcOrder() {
 		return srcOrder;
-	}
-
-	public int getTgtOrder() {
-		return tgtOrder;
 	}
 	
   public int getSrcUnkNPLMId() {
 		return srcUnkNPLMId;
 	}
 
-	public int getTgtUnkNPLMId() {
-		return tgtUnkNPLMId;
-	}
-
 	public int getSrcStartVocabId() {
 		return srcStartNPLMId;
-	}
-	
-	public int getTgtStartVocabId() {
-		return tgtStartNPLMId;
 	}
 	
 	public int getSrcEndVocabId() {
@@ -449,51 +296,9 @@ public class SrcNPLM implements LanguageModel<IString> {
 	public int[] getSrcVocabMap() {
 		return srcVocabMap;
 	}
-	
-	public int[] getTgtVocabMap() {
-		return tgtVocabMap;
-	}
 
   public int getSrcVocabSize(){
     return srcVocabSize;
   }
-
-  public int getTgtVocabSize(){
-    return tgtVocabSize;
-  }
-
-  @Override
-  public IString getStartToken() {
-    return TokenUtils.START_TOKEN;
-  }
-
-  @Override
-  public IString getEndToken() {
-    return TokenUtils.END_TOKEN;
-  }
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public int order() {
-		return order;
-	}
-
-	@Override
-	public LMState score(Sequence<IString> sequence, int startOffsetIndex,
-			LMState priorState) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }
-
-//private final Map<Integer, IString> srcReverseVocabMap;
-//private final Map<Integer, IString> tgtReverseVocabMap;
-//tgtReverseVocabMap = new HashMap<Integer, IString>();
-//tgtReverseVocabMap.put(i, new IString(line));
-//srcReverseVocabMap = new HashMap<Integer, IString>();
-//srcReverseVocabMap.put(i+tgtVocabSize, new IString(line));
 

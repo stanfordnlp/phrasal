@@ -3,18 +3,18 @@ package edu.stanford.nlp.mt.lm;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 
 /**
- * Result of a SrcNPLM query.
+ * Result of a JointNPLM query.
  * 
  * @author Thang Luong
  *
  */
-public class SrcNPLMState extends FeaturizerState {
+public class NNLMState extends FeaturizerState {
   private double score;
   private final int[] ngramIds; // srcIds followed by tgtIds
   private final int tgtOrder; // we only care the last (tgtOrder-1) numbers in ngramIds
   private final int hashCode;
 
-  public SrcNPLMState(double score, int[] ngramIds, int tgtOrder) {
+  public NNLMState(double score, int[] ngramIds, int tgtOrder) {
     this.score = score;
     this.ngramIds = ngramIds;
     this.tgtOrder = tgtOrder;
@@ -33,10 +33,10 @@ public class SrcNPLMState extends FeaturizerState {
   public boolean equals(Object other) {
     if (this == other) {
       return true;
-    } else if ( ! (other instanceof SrcNPLMState)) {
+    } else if ( ! (other instanceof NNLMState)) {
       return false;
     } else {
-      SrcNPLMState otherState = (SrcNPLMState) other;
+      NNLMState otherState = (NNLMState) other;
       if (this.tgtOrder != otherState.tgtOrder) {
         return false;
       }
@@ -62,7 +62,6 @@ public class SrcNPLMState extends FeaturizerState {
   
   @Override
   public String toString() {
-//    StringBuilder sb = new StringBuilder(String.format("%.6f\t[", score));
     StringBuilder sb = new StringBuilder(String.format("[", score));
     for (int i = ngramIds.length-tgtOrder+1; i<ngramIds.length; ++i) {
       if(i==(ngramIds.length-1)){
