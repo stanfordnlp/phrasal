@@ -148,7 +148,7 @@ public class DependencyLanguageModel  extends DerivationFeaturizer<IString, Stri
           if (targetIdx2 == null) continue;
           
           //check if any of the  words in the rule are a dependent of a previous head
-          if (this.forwardDependencies.get(i).contains(j)) {
+          if (this.forwardDependencies.get(i) != null && this.forwardDependencies.get(i).contains(j)) {
             String headWord = targetSequence.get(targetIdx1).word();
             String depWord = targetSequence.get(targetIdx2).word();
             double score = dependencyProbabilities.getCount(headWord, depWord);
