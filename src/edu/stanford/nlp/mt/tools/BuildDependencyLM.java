@@ -22,7 +22,7 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
-public class BuildDepedencyLM {
+public class BuildDependencyLM {
 
   private static int parseFileIndex = 0;
   private static int parseSentenceIndex = 0;
