@@ -1,36 +1,48 @@
 #!/usr/bin/env python
 #
-# Create a frame of segment-level translation 
+# Create a frame of segment-level translation that includes
+# timing and automatic quality information for each
+# segment in each translation session.
 #
-#
+# Author: Spence Green
 #
 import sys
 import codecs
 import json
 import os
+import csv
 from os.path import basename
 from collections import namedtuple,defaultdict,Counter
+
+# Local libraries
 import imt_utils
+import edit_distance
 
 stderr = lambda x:sys.stderr.write(str(x) + os.linesep)
 
-OutputRow = namedtuple('OutputRow', 'time last_time username user_resident_of user_mt_opinion user_gender interface doc_id segment_id src_len order genre mt_sbleu subject_sbleu')
+OutputRow = namedtuple('OutputRow', 'time last_time username user_resident_of user_mt_opinion user_gender interface doc_id segment_id src_len order genre mt_sbleu subject_sbleu is_valid edit_distance')
 
 args = sys.argv[1:]
-if len(args) < 3:
-    stderr('Usage: python %s dump_file tgt_lang out_file [bleu_directory]' % (basename(sys.argv[0])))
+if len(args) < 5:
+    stderr('Usage: python %s dump_file tgt_lang gender_csv out_file [bleu_directory]' % (basename(sys.argv[0])))
     stderr('bleu_directory : output of the extract translations script')
     sys.exit(-1)
-    
+
+# Parse the command line
 dump_file = args[0]
 target_lang = args[1]
-out_file_name = args[2]
-bleu_directory = None if len(args) <= 3 else args[3]
+gender_file = args[2]
+out_file_name = args[3]
+bleu_directory = args[4] if len(args) > 4 else None
+
+user_to_gender = imt_utils.load_gender_csv(gender_file)
 user_doc_to_sbleu = imt_utils.load_sbleu_files(bleu_directory) if bleu_directory else None
 dump_row_list = imt_utils.load_middleware_dump(dump_file, target_lang)
 output_row_list = []
 total_translation_time = defaultdict(Counter)
 user_order_to_time = defaultdict(list)
+
+# Load and process the database dump
 for i,row in enumerate(dump_row_list):
     if i > 0 and i % 10 == 0:
         sys.stdout.write('.')
@@ -45,7 +57,16 @@ for i,row in enumerate(dump_row_list):
     segment_to_src_txt = imt_utils.source_segments_from_log(log)
     doc_name = imt_utils.url2doc(row.src_doc)
     doc_genre = imt_utils.genre_from_url(row.src_doc)
+
     for line_id in sorted(segment_to_tgt_txt.keys()):
+        # TODO: hack for a user with bad logs
+        edist = 0
+        if line_id in segment_to_mt:
+            mt_tgt_txt = segment_to_mt[line_id]
+            user_tgt_txt = segment_to_tgt_txt[line_id]
+            edist = edit_distance.dameraulevenshtein(mt_tgt_txt,
+                                                     user_tgt_txt,
+                                                     True)
         segment_id = '%s:%d' % (doc_name, line_id)
         time = segment_to_time[line_id]
         total_translation_time[row.username][row.interface] += time
@@ -58,7 +79,7 @@ for i,row in enumerate(dump_row_list):
                                username=row.username,
                                user_resident_of=row.resident_of,
                                user_mt_opinion=row.mt_opinion,
-                               user_gender='m',
+                               user_gender=user_to_gender[row.username],
                                interface=row.interface,
                                doc_id=doc_name,
                                segment_id=segment_id,
@@ -66,7 +87,9 @@ for i,row in enumerate(dump_row_list):
                                order=str(order),
                                genre=doc_genre,
                                mt_sbleu=user_doc_to_sbleu['MT'][segment_id],
-                               subject_sbleu=user_doc_to_sbleu[row.username][segment_id])
+                               subject_sbleu=user_doc_to_sbleu[row.username][segment_id],
+                               is_valid='T' if int(row.valid) == 1 else 'F',
+                               edit_distance=str(edist))
         output_row_list.append(output_row)
 
 # Fill in the previous time column

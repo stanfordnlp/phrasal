@@ -34,6 +34,17 @@ def load_sbleu_files(directory):
                 d[username][doc_id] = sbleu
     return d
         
+def load_gender_csv(filename_csv):
+    """
+    Load a file that maps a user/subject name to
+    gender into a dictionary that is username->gender.
+    """
+    with open(filename_csv) as infile:
+        user_to_gender = {}
+        r = csv.reader(infile, quoting = csv.QUOTE_NONE)
+        for row in r:
+            user_to_gender[row[0]] = row[1]
+        return user_to_gender
 
 def url2doc(raw_url):
     """
@@ -65,9 +76,11 @@ def load_middleware_dump(filename, target_lang):
                 continue
             elif training:
                 continue
-            elif not valid:
-                sys.stderr.write('WARNING: Skipping invalid row: %s %s%s' %(row.username, row.src_doc, os.linesep))
-                continue
+            # spenceg: Load these rows now and don't filter until import into
+            # later wrangling scripts
+#            elif not valid:
+#                sys.stderr.write('WARNING: Skipping invalid row: %s %s%s' %(row.username, row.src_doc, os.linesep))
+#                continue
             elif not complete:
                 continue
             else:

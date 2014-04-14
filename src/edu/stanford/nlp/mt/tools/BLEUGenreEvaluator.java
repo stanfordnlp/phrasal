@@ -1,9 +1,10 @@
 package edu.stanford.nlp.mt.tools;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +34,72 @@ import edu.stanford.nlp.util.StringUtils;
 public class BLEUGenreEvaluator {
 
   private static final String DEFAULT_GENRE = "default";
+
+  /**
+   * 
+   * @param referencesList
+   * @param inputProperties
+   * @param order
+   * @param inputStream
+   * @return
+   * @throws IOException
+   */
+  public static Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> run(List<List<Sequence<IString>>> referencesList,
+      List<InputProperties> inputProperties, int order, InputStream inputStream) throws IOException {
+    List<String> lines = Generics.newArrayList();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    for (String line; (line = reader.readLine()) != null;) {
+      lines.add(line);
+    }
+    return run(referencesList, inputProperties, order, lines);
+  }
+  
+  /**
+   * Run the evaluator.
+   * 
+   * @param referencesList
+   * @param inputProperties
+   * @param order
+   * @param inputStream
+   * @return
+   * @throws IOException
+   */
+  public static Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> run(List<List<Sequence<IString>>> referencesList,
+      List<InputProperties> inputProperties, int order, List<String> lines) throws IOException {
+    Set<String> genreList = Generics.newHashSet();
+    Map<String,List<List<Sequence<IString>>>> refsByGenre = Generics.newHashMap();
+    for (int sourceId = 0; sourceId < referencesList.size(); ++sourceId) {
+      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
+          : DEFAULT_GENRE;
+      genreList.add(genre);
+      if ( ! refsByGenre.containsKey(genre)) {
+        refsByGenre.put(genre, new ArrayList<List<Sequence<IString>>>());
+      }
+      refsByGenre.get(genre).add(referencesList.get(sourceId));
+    }
+    
+    Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> metrics = Generics.newHashMap(genreList.size());
+    for (String genre : genreList) {
+      BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(refsByGenre.get(genre), order,
+          false);
+      metrics.put(genre,  bleu.getIncrementalMetric());
+    }
+
+    int sourceId = 0;
+    for (String line : lines) {
+      line = NISTTokenizer.tokenize(line);
+      Sequence<IString> translation = IStrings.tokenize(line);
+      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
+          translation, null, 0);
+      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
+          : DEFAULT_GENRE;
+      metrics.get(genre).add(tran);
+      ++sourceId;
+    }
+    
+    return metrics;
+  }
+  
   
   private static String usage() {
     StringBuilder sb = new StringBuilder();
@@ -52,6 +119,11 @@ public class BLEUGenreEvaluator {
     return argDefs;
   }
 
+  /**
+   * 
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
     if (args.length < 2) {
       System.err.print(usage());
@@ -72,39 +144,9 @@ public class BLEUGenreEvaluator {
     System.arraycopy(parameters, 1, refs, 0, refs.length);
     List<InputProperties> inputProperties = InputProperties.parse(new File(parameters[0]));
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs, true);
-
-    Set<String> genreList = Generics.newHashSet();
-    Map<String,List<List<Sequence<IString>>>> refsByGenre = Generics.newHashMap();
-    for (int sourceId = 0; sourceId < referencesList.size(); ++sourceId) {
-      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
-          : DEFAULT_GENRE;
-      genreList.add(genre);
-      if ( ! refsByGenre.containsKey(genre)) {
-        refsByGenre.put(genre, new ArrayList<List<Sequence<IString>>>());
-      }
-      refsByGenre.get(genre).add(referencesList.get(sourceId));
-    }
     
-    Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> metrics = Generics.newHashMap(genreList.size());
-    for (String genre : genreList) {
-      BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(refsByGenre.get(genre), BLEUOrder,
-          false);
-      metrics.put(genre,  bleu.getIncrementalMetric());
-    }
-
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in));
-    for (String line; (line = reader.readLine()) != null; ) {
-      line = NISTTokenizer.tokenize(line);
-      Sequence<IString> translation = IStrings.tokenize(line);
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
-          translation, null, 0);
-      int sourceId = reader.getLineNumber()-1;
-      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
-          : DEFAULT_GENRE;
-      metrics.get(genre).add(tran);
-    }
-    reader.close();
+    Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> metrics = 
+        BLEUGenreEvaluator.run(referencesList, inputProperties, BLEUOrder, System.in);
 
     for (Map.Entry<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> entry : metrics.entrySet()) {
       String genre = entry.getKey();
@@ -131,5 +173,4 @@ public class BLEUGenreEvaluator {
       System.out.println();
     }
   }
-
 }
