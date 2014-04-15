@@ -5,7 +5,7 @@ import edu.stanford.nlp.mt.util.MurmurHash;
 /**
  * Assign a unique integer to int[]
  */
-public class OneWayIntArrayIndex {
+public class ProbingIntegerArrayRawIndex implements IntegerArrayRawIndex {
   static final float LOAD = 0.7f;
 
   private long[] hashedKeys;
@@ -14,7 +14,7 @@ public class OneWayIntArrayIndex {
   private int size;
   private int threshold;
 
-  public OneWayIntArrayIndex() {
+  public ProbingIntegerArrayRawIndex() {
     size = 0;
     // Arbitrary: initial number of buckets. Cannot be zero.
     init(1024);
@@ -60,13 +60,15 @@ public class OneWayIntArrayIndex {
     return size - 1;
   }
 
+  public int size() { return size; }
 
-  /* Pseudo-IntegerArrayIndex API */
-  public int indexOf(int[] key) {
+
+  /* IntegerArrayRawIndex API */
+  public int getIndex(int[] key) {
     return find(key);
   }
-  public int indexOf(int[] key, boolean add) {
-    return add ? findOrInsert(key) : find(key);
+  public int insertIntoIndex(int[] key) {
+    return findOrInsert(key);
   }
 
   private static long hash(int[] key) {

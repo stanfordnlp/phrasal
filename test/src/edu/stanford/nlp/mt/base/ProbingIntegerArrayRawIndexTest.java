@@ -4,7 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-public class OneWayIntArrayIndexTest {
+public class ProbingIntegerArrayRawIndexTest {
   @Test
   public void testInserts() {
     OneWayIntArrayIndex test = new OneWayIntArrayIndex();
