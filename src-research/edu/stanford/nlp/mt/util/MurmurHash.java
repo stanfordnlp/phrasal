@@ -143,6 +143,47 @@ public final class MurmurHash {
 
 		return h;
 	}
+
+  /** Generates 64 bit hash from byte array of the given length and seed.
+	 * 
+	 * @param data int array to hash
+   * @param length number of indices to hash
+	 * @param seed initial seed value
+	 * @return 64 bit hash of the given array
+	 */
+
+  public static long hash64(final int[] data, int length, int seed) {
+		final long m = 0xc6a4a7935bd1e995L;
+		final int r = 47;
+
+		long h = (seed&0xffffffffl)^(length*4*m);
+
+		int length8 = length/2;
+
+		for (int i=0; i<length8; i++) {
+      // We'll pretend to be little-endian.
+      long k = (((long)(data[i * 2]) & 0xffffffffl)) |
+               (((long)(data[i * 2 + 1]) & 0xffffffffl) << 32);
+              
+			k *= m;
+			k ^= k >>> r;
+			k *= m;
+			
+			h ^= k;
+			h *= m; 
+		}
+		
+    if (length % 2 == 1) {
+       h ^= (long)(data[length & ~1]) & 0xffffffffl;
+		   h *= m;
+		}
+	 
+		h ^= h >>> r;
+		h *= m;
+		h ^= h >>> r;
+
+		return h;
+  }
 	
 
 	/** Generates 64 bit hash from byte array with default seed value.
