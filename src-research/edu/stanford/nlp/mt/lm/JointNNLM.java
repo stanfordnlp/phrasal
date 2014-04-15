@@ -201,7 +201,7 @@ public class JointNNLM extends TargetNNLM {
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
-  public LinkedList<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+  public List<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
       PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
     LinkedList<int[]> ngramList = new LinkedList<int[]>();
     

@@ -30,7 +30,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
 public class TargetNNLMFeaturizer extends DerivationFeaturizer<IString, String> implements
 RuleFeaturizer<IString, String> {
   private static final boolean DEBUG = false;
-  public static final String DEFAULT_FEATURE_NAME = "TargetNPLM";
+  public static final String DEFAULT_FEATURE_NAME = "TargetNNLM";
 
   // in srilm -99 is -infinity
   //  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
@@ -55,12 +55,12 @@ RuleFeaturizer<IString, String> {
    */
   public TargetNNLMFeaturizer(String...args) throws IOException {
     Properties options = FeatureUtils.argsToProperties(args);
-    String nplmFile = PropertiesUtils.getString(options, "nplm", null);
+    String nnlmFile = PropertiesUtils.getString(options, "nnlm", null);
     int cacheSize = PropertiesUtils.getInt(options, "cache", 0);
     String kenlmFile = PropertiesUtils.getString(options, "kenlm", null); // backoff language model
     featureName = PropertiesUtils.getString(options, "id", null);
 
-    if(nplmFile==null || featureName==null) {
+    if(nnlmFile==null || featureName==null) {
       throw new RuntimeException(
           "At least 2 arguments are needed: nplm and id. " + helpMessage());
     }
@@ -73,7 +73,7 @@ RuleFeaturizer<IString, String> {
 
 
     // load NPLM
-    targetNNLM = new TargetNNLM(nplmFile, cacheSize);
+    targetNNLM = new TargetNNLM(nnlmFile, cacheSize);
     this.tgtOrder = targetNNLM.getTgtOrder(); // to store state
 
     this.startToken = TokenUtils.START_TOKEN;

@@ -1,91 +1,86 @@
 package edu.stanford.nlp.mt.decoder;
 
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
+import edu.stanford.nlp.mt.decoder.util.DerivationNNLM;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.lm.JointNNLM;
 import edu.stanford.nlp.util.Generics;
 
 /**
- * Cube pruning as described by Chiang and Huang (2007)
+ * Cube pruning as described by Chiang and Huang (2007) with NNLM reranking
  * 
- * @author Spence Green
- *
+ * @author Thang Luong, 
  * @param <TK>
  * @param <FV>
  */
-public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
-
-  // 1200 gives roughly the same baseline performance as the default beam size
-  // of MultiBeamDecoder
-  public static final int DEFAULT_BEAM_SIZE = 1200;
-  public static final int DEFAULT_MAX_DISTORTION = -1;
-
-  protected final int maxDistortion;
-  protected final Logger logger;
-
-  static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
-    return new CubePruningDecoderBuilder<TK, FV>();
+public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
+  // Thang Apr14
+  private final boolean DEBUG = true;
+  private boolean nnlmRerank = true;
+  private final JointNNLM jointNNLM;
+  
+  static public <TK, FV> CubePruningNNLMDecoderBuilder<TK, FV> builder() {
+    return new CubePruningNNLMDecoderBuilder<TK, FV>();
   }
 
-  protected CubePruningDecoder(CubePruningDecoderBuilder<TK, FV> builder) {
+  protected CubePruningNNLMDecoder(CubePruningNNLMDecoderBuilder<TK, FV> builder, JointNNLM jointNNLM) {
     super(builder);
-    maxDistortion = builder.maxDistortion;
-    logger = Logger.getLogger(CubePruningDecoder.class.getSimpleName() + String.valueOf(builder.decoderId));
-    SystemLogger.attach(logger, LogName.DECODE);
-
+    this.jointNNLM = jointNNLM;
+    
     if (maxDistortion != -1) {
-      System.err.printf("Cube pruning decoder %d. Distortion limit: %d%n", builder.decoderId, 
+      System.err.printf("Cube pruning NNLM decoder %d. Distortion limit: %d%n", builder.decoderId, 
           maxDistortion);
     } else {
-      System.err.printf("Cube pruning decoder %d. No hard distortion limit%n", builder.decoderId);
+      System.err.printf("Cube pruning NNLM decoder %d. No hard distortion limit%n", builder.decoderId);
     }    
   }
 
-  public static class CubePruningDecoderBuilder<TK, FV> extends
-  AbstractBeamInfererBuilder<TK, FV> {
-    int maxDistortion = DEFAULT_MAX_DISTORTION;
-    int decoderId = -1;
-
-    @Override
-    public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(int maxDistortion) {
-      this.maxDistortion = maxDistortion;
-      return this;
+  public static class CubePruningNNLMDecoderBuilder<TK, FV> extends CubePruningDecoderBuilder<TK, FV> {
+    private JointNNLM jointNNLM;
+    
+    public CubePruningNNLMDecoderBuilder() {
+      super();
     }
 
-    public CubePruningDecoderBuilder() {
-      super(DEFAULT_BEAM_SIZE, null);
+    public void loadNNLM(String nnlmFile, int cacheSize){
+      try {
+        System.err.println("# CubePruningNNLMDecoderBuilder loads NNLM: " + nnlmFile + "\t" + cacheSize);
+        jointNNLM = new JointNNLM(nnlmFile, cacheSize);
+      } catch (IOException e) {
+        System.err.println("! Error loading nnlmFile in CubePruningNNLMDecoder: " + nnlmFile);
+        e.printStackTrace();
+      }
     }
-
+    
     @Override
     public Inferer<TK, FV> build() {
       decoderId++;
-      return new CubePruningDecoder<TK, FV>(this);
-    }
-
-    @Override
-    public AbstractBeamInfererBuilder<TK, FV> useITGConstraints(boolean itg) {
-      throw new UnsupportedOperationException("ITG constraints are not supported yet");
+      return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM);
     }
   }
-
+  
   @Override
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
@@ -118,7 +113,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         recombinationHistory, maxDistortion, 0);
     List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
     allOptions.add(ruleList);
-    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
+    DerivationNNLM<TK, FV> nullHypothesis = new DerivationNNLM<TK, FV>(sourceInputId, source, sourceInputProperties, 
         heuristic, scorer, allOptions);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
@@ -178,6 +173,48 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
         }
       }
+      
+//      if(DEBUG) { 
+//        System.err.println("# Scorer: " + scorer);
+//        System.err.println("# Featurizer: " + featurizer);
+//        System.exit(1); 
+//      }
+      
+      // Thang Apr14: use NPLM to re-rank hypotheses
+      if(nnlmRerank){
+      	System.err.println("# NPLM rerank beam " + i);
+      	Iterator<Derivation<TK,FV>> beamIter = newBeam.iterator();
+      	Queue<Derivation<TK,FV>> nplmPQ = new PriorityQueue<Derivation<TK,FV>>(beamCapacity);
+      	
+      	// rerank
+      	while(beamIter.hasNext()){
+      		Derivation<TK,FV> beamDerivation = beamIter.next();
+      		double nplmScore = 0.0;
+      		
+      		Featurizable<IString, String> f = (Featurizable<IString, String>) beamDerivation.featurizable;
+      		Sequence<IString> tgtSent = f.done ?  
+      		      Sequences.wrapStartEnd(f.targetPrefix, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN) :
+      		      Sequences.wrapStart(f.targetPrefix, TokenUtils.START_TOKEN);
+		      int srcStartPos = f.sourcePosition;
+		      int tgtStartPos = f.targetPosition + 1;
+		      
+		      List<int[]> ngramList = jointNNLM.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, srcStartPos, tgtStartPos);
+		      System.err.println("# Derivation: " + beamDerivation);
+		      for (int[] ngram : ngramList) {
+            System.err.println("  " + jointNNLM.toIString(ngram));
+          }
+      		// update with nplmScore and add to the priority queue
+      		//beamDerivation.score = nplmScore;
+      		nplmPQ.add(beamDerivation);
+      	}
+      	
+      	// nplm beam
+      	BundleBeam<TK,FV> nplmBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+            recombinationHistory, maxDistortion, i);
+      	while (! nplmPQ.isEmpty()) { nplmBeam.put(nplmPQ.poll()); }
+      	newBeam = nplmBeam; 
+      }
+      
       beams.add(newBeam);
       numRecombined += newBeam.recombined();
     }
@@ -225,16 +262,17 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<Item<TK,FV>> consequents = Generics.newArrayList(2);
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
+      
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
       // Derivation construction: this is the expensive part
-      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
-          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic) :
+      DerivationNNLM<TK, FV> derivation = buildDerivation ? new DerivationNNLM<TK, FV>(sourceInputId,
+          successor.rule, successor.antecedent.length, (DerivationNNLM<TK, FV>) successor.antecedent, featurizer, scorer, heuristic) :
             null;
       consequents.add(new Item<TK,FV>(derivation, successor));
     }
     return consequents;
   }
-
+  
   /**
    * Wrapper for class for the priority queue that organizes successors.
    * 
@@ -244,10 +282,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <FV>
    */
   protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
-    public final Derivation<TK, FV> derivation;
+    public final DerivationNNLM<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
 
-    public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
+    public Item(DerivationNNLM<TK,FV> derivation, Consequent<TK,FV> consequent) {
       this.derivation = derivation;
       this.consequent = consequent;
     }
@@ -268,10 +306,5 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     public String toString() {
       return derivation == null ? "<<NULL>>" : derivation.toString();
     }
-  }
-
-  @Override
-  public void dump(Derivation<TK, FV> hyp) {
-    throw new UnsupportedOperationException();
   }
 }

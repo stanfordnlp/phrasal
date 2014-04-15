@@ -31,7 +31,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
 public class JointNNLMFeaturizer extends DerivationFeaturizer<IString, String> implements
 RuleFeaturizer<IString, String> {
   private static final boolean DEBUG = false;
-  public static final String DEFAULT_FEATURE_NAME = "JointNPLM";
+  public static final String DEFAULT_FEATURE_NAME = "JointNNLM";
 
   // in srilm -99 is -infinity
   //  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
@@ -40,7 +40,7 @@ RuleFeaturizer<IString, String> {
   private final IString endToken;
 
   private final String featureName;
-  private final JointNNLM srcNPLM;
+  private final JointNNLM jointNNLM;
   private final KenLanguageModel kenlm;
   private Sequence<IString> srcSent;
 
@@ -56,12 +56,12 @@ RuleFeaturizer<IString, String> {
    */
   public JointNNLMFeaturizer(String...args) throws IOException {
     Properties options = FeatureUtils.argsToProperties(args);
-    String nplmFile = PropertiesUtils.getString(options, "nplm", null);
+    String nnlmFile = PropertiesUtils.getString(options, "nnlm", null);
     int cacheSize = PropertiesUtils.getInt(options, "cache", 0);
     String kenlmFile = PropertiesUtils.getString(options, "kenlm", null); // backoff language model
     featureName = PropertiesUtils.getString(options, "id", null);
 
-    if(nplmFile==null || featureName==null) {
+    if(nnlmFile==null || featureName==null) {
       throw new RuntimeException(
           "At least 2 arguments are needed: nplm and id. " + helpMessage());
     }
@@ -74,8 +74,8 @@ RuleFeaturizer<IString, String> {
 
 
     // load NPLM
-    srcNPLM = new JointNNLM(nplmFile, cacheSize);
-    this.tgtOrder = srcNPLM.getTgtOrder(); // to store state
+    jointNNLM = new JointNNLM(nnlmFile, cacheSize);
+    this.tgtOrder = jointNNLM.getTgtOrder(); // to store state
 
     this.startToken = TokenUtils.START_TOKEN;
     this.endToken = TokenUtils.END_TOKEN;
@@ -97,13 +97,13 @@ RuleFeaturizer<IString, String> {
     int[] ngramIds = null;
     
     for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
-      ngramIds = srcNPLM.extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
-      double ngramScore = srcNPLM.scoreNgram(ngramIds);
-      if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramIds) + "\t" + ngramScore); }
+      ngramIds = jointNNLM.extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
+      double ngramScore = jointNNLM.scoreNgram(ngramIds);
+      if(DEBUG) { System.err.println("  ngram " + jointNNLM.toIString(ngramIds) + "\t" + ngramScore); }
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         throw new RuntimeException("! Infinity or Nan NPLM score: " + 
-            srcNPLM.toIString(ngramIds) + "\t" + ngramScore);
+            jointNNLM.toIString(ngramIds) + "\t" + ngramScore);
       }
       lmSumScore += ngramScore;
     }
@@ -129,14 +129,14 @@ RuleFeaturizer<IString, String> {
   public NNLMState getScoreMulti(int tgtStartPos, Sequence<IString> tgtSent,
       int srcStartPos, Sequence<IString> srcSent, PhraseAlignment alignment){
 
-    LinkedList<int[]> ngramList = srcNPLM.extractNgrams(srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
+    LinkedList<int[]> ngramList = (LinkedList<int[]>) jointNNLM.extractNgrams(srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
     double score = 0.0;
     NNLMState state = null;
     int numNgrams = ngramList.size(); 
     if(numNgrams>0){
-      double[] ngramScores = srcNPLM.scoreNgrams(ngramList);
+      double[] ngramScores = jointNNLM.scoreNgrams(ngramList);
       for (int i = 0; i < numNgrams; i++) {
-        if(DEBUG) { System.err.println("  ngram " + srcNPLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
+        if(DEBUG) { System.err.println("  ngram " + jointNNLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
         score += ngramScores[i];
       }
 
