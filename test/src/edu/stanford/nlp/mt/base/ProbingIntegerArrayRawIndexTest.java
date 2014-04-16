@@ -7,7 +7,7 @@ import org.junit.Test;
 public class ProbingIntegerArrayRawIndexTest {
   @Test
   public void testInserts() {
-    OneWayIntArrayIndex test = new OneWayIntArrayIndex();
+    ProbingIntegerArrayRawIndex test = new ProbingIntegerArrayRawIndex();
     int[] foo = new int[1];
     final int testTo = 1048576;
     for (int i = 0; i < testTo; ++i) {
