@@ -25,7 +25,7 @@ public class JointNNLMTest {
 	@Test
 	public void testUnk() throws IOException {
 //		System.err.println(System.getProperty("user.dir"));
-		JointNNLM nplm = new JointNNLM(nplmFile, 0);
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"a", "b", "c", "d", "e", "f", "g", "h"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
 		double score = nplm.scoreNgram(sequence);
@@ -35,7 +35,7 @@ public class JointNNLMTest {
 
 	@Test
 	public void testInVocab() throws IOException {
-		JointNNLM nplm = new JointNNLM(nplmFile, 0);
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"一", "个", "中国", "银行", ",", "a", "chinese", "bank"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
 		double score = nplm.scoreNgram(sequence);
@@ -45,7 +45,7 @@ public class JointNNLMTest {
 	
 	@Test
 	public void testMixVocab() throws IOException {
-		JointNNLM nplm = new JointNNLM(nplmFile, 0);
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"a", "b", "c", "中国", "银行", "d", "chinese", "enterprises"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
 		double score = nplm.scoreNgram(sequence);
@@ -55,7 +55,7 @@ public class JointNNLMTest {
 	
 	@Test
 	public void testExtractNgrams() throws IOException{
-		JointNNLM nplm = new JointNNLM(nplmFile, 0);
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String srcStr = "建设 法治 政府 , 就 是 为了 使 行政 权力 授予 有 据 , 行使 有规 , 监督 有效 , 做到 依法 治官 , 依法 治权 , 防止 行政 权力 的 缺失 和 滥用 , 带动 全 社会 尊重 法律 , 遵守 法律 , 维护 法律 \" 。";
 		Sequence<IString> srcSent = IString.getIStringSequence(srcStr.split("\\s+"));
 		String tgtStr = "<s> construction if so law government ,";

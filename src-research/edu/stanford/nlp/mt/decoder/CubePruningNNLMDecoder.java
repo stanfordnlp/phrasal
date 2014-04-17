@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import cern.colt.Arrays;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -37,7 +39,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
   // Thang Apr14
-  private final boolean DEBUG = true;
+  private final boolean DEBUG = false;
   private boolean nnlmRerank = true;
   private final JointNNLM jointNNLM;
   
@@ -64,10 +66,10 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       super();
     }
 
-    public void loadNNLM(String nnlmFile, int cacheSize){
+    public void loadNNLM(String nnlmFile, int cacheSize, int miniBatchSize){
       try {
-        System.err.println("# CubePruningNNLMDecoderBuilder loads NNLM: " + nnlmFile + "\t" + cacheSize);
-        jointNNLM = new JointNNLM(nnlmFile, cacheSize);
+        System.err.println("# CubePruningNNLMDecoderBuilder loads NNLM: " + nnlmFile + ", cacheSize=" + cacheSize + ", miniBatchSize=" + miniBatchSize);
+        jointNNLM = new JointNNLM(nnlmFile, cacheSize, miniBatchSize);
       } catch (IOException e) {
         System.err.println("! Error loading nnlmFile in CubePruningNNLMDecoder: " + nnlmFile);
         e.printStackTrace();
@@ -127,6 +129,8 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     int numRecombined = 0;
     int numPruned = 0;
     final long startTime = System.nanoTime();
+    
+    if(DEBUG) { System.err.println("# CubePruningNNLMDecoder, decoding: " + source + ", sourceLength=" + sourceLength); }
     for (int i = 1; i <= sourceLength; i++) {
       // Prune old beams
       int startBeam = Math.max(0, i-maxPhraseLength);
@@ -174,45 +178,12 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
         }
       }
       
-//      if(DEBUG) { 
-//        System.err.println("# Scorer: " + scorer);
-//        System.err.println("# Featurizer: " + featurizer);
-//        System.exit(1); 
-//      }
-      
-      // Thang Apr14: use NPLM to re-rank hypotheses
+      /************************************************/
+      /* Thang Apr14: use NNLM to re-rank derivations */
+      /************************************************/
       if(nnlmRerank){
-      	System.err.println("# NPLM rerank beam " + i);
-      	Iterator<Derivation<TK,FV>> beamIter = newBeam.iterator();
-      	Queue<Derivation<TK,FV>> nplmPQ = new PriorityQueue<Derivation<TK,FV>>(beamCapacity);
-      	
-      	// rerank
-      	while(beamIter.hasNext()){
-      		Derivation<TK,FV> beamDerivation = beamIter.next();
-      		double nplmScore = 0.0;
-      		
-      		Featurizable<IString, String> f = (Featurizable<IString, String>) beamDerivation.featurizable;
-      		Sequence<IString> tgtSent = f.done ?  
-      		      Sequences.wrapStartEnd(f.targetPrefix, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN) :
-      		      Sequences.wrapStart(f.targetPrefix, TokenUtils.START_TOKEN);
-		      int srcStartPos = f.sourcePosition;
-		      int tgtStartPos = f.targetPosition + 1;
-		      
-		      List<int[]> ngramList = jointNNLM.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, srcStartPos, tgtStartPos);
-		      System.err.println("# Derivation: " + beamDerivation);
-		      for (int[] ngram : ngramList) {
-            System.err.println("  " + jointNNLM.toIString(ngram));
-          }
-      		// update with nplmScore and add to the priority queue
-      		//beamDerivation.score = nplmScore;
-      		nplmPQ.add(beamDerivation);
-      	}
-      	
-      	// nplm beam
-      	BundleBeam<TK,FV> nplmBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
-            recombinationHistory, maxDistortion, i);
-      	while (! nplmPQ.isEmpty()) { nplmBeam.put(nplmPQ.poll()); }
-      	newBeam = nplmBeam; 
+        if(DEBUG) { System.err.println("# NNLM reranking beam " + i); }
+        nnlmRerank(newBeam);
       }
       
       beams.add(newBeam);
@@ -248,6 +219,69 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     return null;
   }
 
+  /**
+   * Create the effect of re-ranking a beam by setting neural scores for NNLM derivations in the beam.
+   * Later on, in BundleBeam.groupBundle(), a call to Collections.sort() will order derivations
+   * according to their neural scores.
+   * 
+   * @param beam
+   */
+  private void nnlmRerank(BundleBeam<TK,FV> beam){
+    Iterator<Derivation<TK,FV>> beamIter = beam.iterator();
+    
+    /** collect ngrams **/
+    List<int[]> allNgrams = new LinkedList<int[]>();
+    // to know which ngram belong to a derivation. 
+    // accumCountList.get(i): total number of ngrams for derivations 0 -> i
+    List<Integer> accumCountList = new ArrayList<Integer>();
+    int numTotalNgrams = 0;
+    while(beamIter.hasNext()){
+      DerivationNNLM<TK,FV> derivation = (DerivationNNLM<TK,FV>) beamIter.next();
+      @SuppressWarnings("unchecked")
+      Featurizable<IString, String> f = (Featurizable<IString, String>) derivation.featurizable;
+      Sequence<IString> tgtSent = f.done ?  
+            Sequences.wrapStartEnd(f.targetPrefix, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN) :
+            Sequences.wrapStart(f.targetPrefix, TokenUtils.START_TOKEN);
+      
+      // extract ngrams for this derivation
+      List<int[]> ngramList = jointNNLM.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, 
+          f.sourcePosition, f.targetPosition + 1);
+      numTotalNgrams += ngramList.size();
+      allNgrams.addAll(ngramList);
+      accumCountList.add(numTotalNgrams);
+      
+//      if (DEBUG){
+//        System.err.println("# Derivation: " + derivation);
+//        for (int[] ngram : ngramList) { System.err.println("  " + jointNNLM.toIString(ngram)); }
+//      }
+    }
+    
+    /** compute NNLM scores **/
+    if (DEBUG){ System.err.println("# Computing nnlm scores for " + numTotalNgrams + " ngrams"); }
+    double[] scores = jointNNLM.scoreNgrams(allNgrams);
+  
+    /** update derivations' neural scores **/
+    beamIter = beam.iterator();
+    int start = 0;
+    int derivationId = 0;
+    while(beamIter.hasNext()){
+      DerivationNNLM<TK,FV> derivation = (DerivationNNLM<TK,FV>) beamIter.next();
+      int end = accumCountList.get(derivationId);
+      
+      double nnlmScore = 0.0;
+      for (int j = start; j < end; j++) { nnlmScore += scores[j]; }
+      derivation.setNNLMScore(derivation.getPrevNNLMScore() + nnlmScore);
+//      if(DEBUG) { 
+//        System.err.print("Derivation " + derivationId + ": " + derivation + ", incrementalNNLMScore=" + nnlmScore + " [");
+//        for (int j = start; j < end; j++) { System.err.print(" " + scores[j]); }
+//        System.err.println(" ]");
+//      }
+      
+      start = end;
+      derivationId++;
+    }
+  }
+  
   /**
    * Searches for consequents, always returning at least one and at most two.
    * 

@@ -60,7 +60,7 @@ public class TargetNNLM implements NNLM {
   protected ConcurrentHashMap<Long, Float> cacheMap = null;
   protected int cacheSize;
   
-  protected int DEBUG = 0; // 0: no print-out, 1: minimal print out
+  protected boolean DEBUG = true;
   
   protected TargetNNLM(){}
   
@@ -70,10 +70,10 @@ public class TargetNNLM implements NNLM {
    * @param filename
    * @throws IOException 
    */
-  public TargetNNLM(String filename, int cacheSize) throws IOException {
+  public TargetNNLM(String filename, int cacheSize, int miniBatchSize) throws IOException {
   	//System.err.println("# Loading NPLMLanguageModel ...");
   	name = String.format("TargetNNLM(%s)", filename);
-  	nplm = new NPLM(filename, 0);
+  	nplm = new NPLM(filename, 0, miniBatchSize);
   	order = nplm.order();
   	tgtOrder = order;
   	//kenlm = new KenLM(filename, 1<<20);
@@ -82,7 +82,7 @@ public class TargetNNLM implements NNLM {
   	// cache
   	this.cacheSize = cacheSize;
   	if (cacheSize>0){
-      if(DEBUG>0) { System.err.println("  Use global caching, size=" + cacheSize); }
+      if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
   		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
   	}
 
@@ -102,7 +102,7 @@ public class TargetNNLM implements NNLM {
     for (int i = 0; i < tgtVocabSize; i++) {
       tgtWords.add(new IString(br.readLine()));
       
-      if(DEBUG>0 && i==0) { System.err.println("  first tgt word=" + tgtWords.get(i)); }
+      if(DEBUG && i==0) { System.err.println("  first tgt word=" + tgtWords.get(i)); }
       else if(i==(tgtVocabSize-1)) { System.err.println("  last tgt word=" + tgtWords.get(i)); }
     }
     br.readLine(); // empty line
@@ -140,11 +140,7 @@ public class TargetNNLM implements NNLM {
 			if(tgtVocabMap[i] == -1) tgtVocabMap[i] = this.tgtUnkNPLMId;
 		}
     
-    // ngram orders
-    if(DEBUG>0){
-      System.err.println("  tgtOrder=" + this.tgtOrder + ", tgtVocabSize=" + tgtVocabSize + 
-          ", tgtUnkNPLMId=" + tgtUnkNPLMId + ", tgtStartNPLMId=" + tgtStartNPLMId);
-    }
+    if(DEBUG){ System.err.println("  tgtOrder=" + this.tgtOrder + ", tgtVocabSize=" + tgtVocabSize +  ", tgtUnkNPLMId=" + tgtUnkNPLMId + ", tgtStartNPLMId=" + tgtStartNPLMId); }
   }
   
   /**
@@ -235,9 +231,7 @@ public class TargetNNLM implements NNLM {
       // get remaining scores
       double[] remainedScores = nplm.scoreNgrams(remainedNgrams);
       i=0;
-      for (int remainedId : remainedIndices) {
-        scores[remainedId] =  remainedScores[i++];
-      }
+      for (int remainedId : remainedIndices) { scores[remainedId] =  remainedScores[i++]; }
     } else {
       scores = nplm.scoreNgrams(ngrams);
     }

@@ -104,11 +104,10 @@ public class OnlineTuner {
   
   private final Logger logger;
 
-  // Thang Mar14: added mostly to support NPLM.
+  // Thang Mar14
   // Print decode time: 0 -- no printing, 1 -- per epoch time, 2 -- per sent time
   private static int printDecodeTime = 0; 
   private final Timing tuneTimer = new Timing();
-  private static boolean noThreadShutdown = false;
   
   
   /**
@@ -475,13 +474,6 @@ public class OnlineTuner {
     // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
     // to finish at the end of the epoch
     boolean orderResults = false;
-    MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = null;
-
-    // Thang Mar14: move wrapper initialization out of the for epoch if OnlineTuner.noThreadShutdown is true
-    if(OnlineTuner.noThreadShutdown) {
-    	wrapper = new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
-            new GradientProcessor(optimizer,scoreMetric,0), orderResults);
-    }
     
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
@@ -493,10 +485,8 @@ public class OnlineTuner {
           new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
       if (createPseudoReferences) updatePseudoReferences(epoch);
 
-      if(!OnlineTuner.noThreadShutdown) {
-      	wrapper = new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
-              new GradientProcessor(optimizer,scoreMetric,0), orderResults);
-      }
+      MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
+          new GradientProcessor(optimizer,scoreMetric,0), orderResults);
       
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       ArrayMath.shuffle(indices);
@@ -516,12 +506,8 @@ public class OnlineTuner {
       }
 
       // Wait for threadpool shutdown for this epoch and get final gradients
-      if(OnlineTuner.noThreadShutdown) {
-      	// Thang Mar14: not shuting down threadpool, so that thread-local caches in NPLM don't get reseted.
-      	wrapper.joinNoShutDown();
-      } else {
-      	wrapper.join();
-      }
+      wrapper.join();
+      
       if(OnlineTuner.printDecodeTime>0) { tuneTimer.end("Ends decoding for epoch " + epoch); }
       
       updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true);
@@ -831,7 +817,6 @@ public class OnlineTuner {
     
     // Thang Mar14
     optionMap.put("pdt", 1); // printDecodeTime
-    optionMap.put("nts", 0); // noThreadShutdown
     return optionMap;
   }
 
@@ -896,9 +881,7 @@ public class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
-    
     OnlineTuner.printDecodeTime = PropertiesUtils.getInt(opts, "pdt", 0);
-    OnlineTuner.noThreadShutdown = PropertiesUtils.getBool(opts, "nts", false);
    
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");

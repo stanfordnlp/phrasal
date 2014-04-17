@@ -73,7 +73,7 @@ RuleFeaturizer<IString, String> {
 
 
     // load NPLM
-    targetNNLM = new TargetNNLM(nnlmFile, cacheSize);
+    targetNNLM = new TargetNNLM(nnlmFile, cacheSize, 1); // miniBatchSize=1
     this.tgtOrder = targetNNLM.getTgtOrder(); // to store state
 
     this.startToken = TokenUtils.START_TOKEN;

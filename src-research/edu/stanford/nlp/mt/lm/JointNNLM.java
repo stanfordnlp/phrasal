@@ -51,10 +51,10 @@ public class JointNNLM extends TargetNNLM {
    * @param filename
    * @throws IOException 
    */
-  public JointNNLM(String filename, int cacheSize) throws IOException {
+  public JointNNLM(String filename, int cacheSize, int miniBatchSize) throws IOException {
   	//System.err.println("# Loading NPLMLanguageModel ...");
   	name = String.format("JointNNLM(%s)", filename);
-  	nplm = new NPLM(filename, 0);
+  	nplm = new NPLM(filename, 0, miniBatchSize);
   	order = nplm.order();
   	//kenlm = new KenLM(filename, 1<<20);
   	//order = kenlm.order();
@@ -203,7 +203,7 @@ public class JointNNLM extends TargetNNLM {
    */
   public List<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
       PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
-    LinkedList<int[]> ngramList = new LinkedList<int[]>();
+    List<int[]> ngramList = new LinkedList<int[]>();
     
     for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
       ngramList.add(extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos));

@@ -24,7 +24,7 @@ public class TargetNNLMTest {
 	@Test
 	public void testUnk() throws IOException {
 //		System.err.println(System.getProperty("user.dir"));
-		TargetNNLM nplm = new TargetNNLM(nplmFile, 0);
+		TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"a", "b", "c"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
 		double score = nplm.scoreNgram(sequence);
@@ -34,7 +34,7 @@ public class TargetNNLMTest {
 
 	@Test
 	public void testInVocab() throws IOException {
-		TargetNNLM nplm = new TargetNNLM(nplmFile, 0);
+		TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"a", "chinese", "bank"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
 		double score = nplm.scoreNgram(sequence);
@@ -44,7 +44,7 @@ public class TargetNNLMTest {
 	
 	@Test
 	public void testMixVocab() throws IOException {
-		TargetNNLM nplm = new TargetNNLM(nplmFile, 0);
+		TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"d", "chinese", "enterprises"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
 		double score = nplm.scoreNgram(sequence);
@@ -54,7 +54,7 @@ public class TargetNNLMTest {
 	
 	@Test
 	public void testExtractNgrams() throws IOException{
-	  TargetNNLM nplm = new TargetNNLM(nplmFile, 0);
+	  TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		String tgtStr = "<s> construction if so law government ,";
 		Sequence<IString> tgtSent = IString.getIStringSequence(tgtStr.split("\\s+"));
 		int tgtPos = 5; // 

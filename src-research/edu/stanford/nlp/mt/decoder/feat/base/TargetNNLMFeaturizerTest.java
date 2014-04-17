@@ -24,7 +24,7 @@ public class TargetNNLMFeaturizerTest {
   
   @Test
   public void test() throws IOException {
-    TargetNNLMFeaturizer nplmFeat = new TargetNNLMFeaturizer("nplm="+nplmFile, "cache=0", "id=srcNPLM");
+    TargetNNLMFeaturizer nplmFeat = new TargetNNLMFeaturizer("nnlm="+nplmFile, "cache=0", "id=srcNPLM");
     String tgtStr = "<s> construction if so law government ,";
     Sequence<IString> tgtSent = IString.getIStringSequence(tgtStr.split("\\s+"));
     int tgtStartPos = 5; // 

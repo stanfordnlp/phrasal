@@ -25,7 +25,7 @@ public class JointNNLMFeaturizerTest {
   
   @Test
   public void test() throws IOException {
-    JointNNLMFeaturizer nplmFeat = new JointNNLMFeaturizer("nplm="+nplmFile, "cache=0", "id=srcNPLM");
+    JointNNLMFeaturizer nplmFeat = new JointNNLMFeaturizer("nnlm="+nplmFile, "cache=0", "id=srcNPLM");
     String srcStr = "建设 法治 政府 , 就 是 为了 使 行政 权力 授予 有 据 , 行使 有规 , 监督 有效 , 做到 依法 治官 , 依法 治权 , 防止 行政 权力 的 缺失 和 滥用 , 带动 全 社会 尊重 法律 , 遵守 法律 , 维护 法律 \" 。";
     Sequence<IString> srcSent = IString.getIStringSequence(srcStr.split("\\s+"));
     String tgtStr = "<s> construction if so law government ,";

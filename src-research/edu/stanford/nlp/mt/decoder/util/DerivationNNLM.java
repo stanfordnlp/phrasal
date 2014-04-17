@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
  * @param <TK>
  */
 public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
-  // Thang Apr14: neural score for beam reranking, mainly targeting at sorting derivations in BundleBeam.groupBundles()
+  // neural score for beam reranking, mainly targeting at sorting derivations in BundleBeam.groupBundles()
   // we delay the computation of nnlmScore (in order to do batch ngram query) by keeping track of 
   // the nnlm score of the previous derivation 
   private double prevNNLMScore;
@@ -62,8 +62,8 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
 
   @Override
   public String toString() {
-    return String.format("%s %s [%.3f h: %.3f, nnlm: %3f]", targetSequence.toString(), 
-        sourceCoverage.toString(), score + h, h, nnlmScore);
+    return String.format("tgt=%s, cov=%s [%.3f h: %.3f, prev_nnlm: %3f, nnlm: %3f]", 
+        targetSequence.toString(), sourceCoverage.toString(), score + h, h, prevNNLMScore, nnlmScore);
   }
   
   @Override

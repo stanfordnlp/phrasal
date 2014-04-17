@@ -74,7 +74,7 @@ RuleFeaturizer<IString, String> {
 
 
     // load NPLM
-    jointNNLM = new JointNNLM(nnlmFile, cacheSize);
+    jointNNLM = new JointNNLM(nnlmFile, cacheSize, 1); // miniBatchSize=1
     this.tgtOrder = jointNNLM.getTgtOrder(); // to store state
 
     this.startToken = TokenUtils.START_TOKEN;

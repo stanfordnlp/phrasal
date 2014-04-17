@@ -799,11 +799,12 @@ public class Phrasal {
         InfererBuilderFactory.factory(searchAlgorithm);
     
     
-    // Thang Apr14
+    // Thang Apr14: cube pruning with NNLM reranking
     if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
       String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
       int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(2).trim());
-      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, cacheSize);
+      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
+      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, cacheSize, miniBatchSize);
     }
     
     for (int i = 0; i < numThreads; i++) {
