@@ -52,6 +52,7 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.util.Timing;
 import edu.stanford.nlp.util.Triple;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -103,6 +104,12 @@ public class OnlineTuner {
   
   private final Logger logger;
 
+  // Thang Mar14
+  // Print decode time: 0 -- no printing, 1 -- per epoch time, 2 -- per sent time
+  private static int printDecodeTime = 0; 
+  private final Timing tuneTimer = new Timing();
+  
+  
   /**
    * Constructor.
    * 
@@ -292,6 +299,7 @@ public class OnlineTuner {
     private final OnlineOptimizer<IString, String> optimizer; 
     private final SentenceLevelMetric<IString, String> scoreMetric;
     private final int threadId;
+    private final Timing timer; // Thang Mar14
 
     // Counter for the newInstance() method
     private int childThreadId;
@@ -302,6 +310,7 @@ public class OnlineTuner {
       this.scoreMetric = scoreMetric;
       this.threadId = firstThreadId;
       this.childThreadId = firstThreadId+1;
+      this.timer = new Timing();
     }
 
     @Override
@@ -328,8 +337,10 @@ public class OnlineTuner {
         for (int i = 0; i < input.translationIds.length; ++i) {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
-          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
-              threadId);
+          
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
+          if(OnlineTuner.printDecodeTime>=2) { timer.end("Thread " + threadId + " ends decoding sent " + translationId + ", num words = " + source.size()); }
+          
           nbestLists.add(nbestList);
         }
 
@@ -458,22 +469,25 @@ public class OnlineTuner {
     logger.info("Number of threads: " + numThreads);
     logger.info("Number of references: " + numReferences);
     int updateId = 0;
+    
+
+    // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
+    // to finish at the end of the epoch
+    boolean orderResults = false;
+    
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
-
+      if(OnlineTuner.printDecodeTime>0) { tuneTimer.start("# Start tuning for epoch " + epoch); }    
+      
       // n-best lists. Purge for each epoch
       Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
           new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
       if (createPseudoReferences) updatePseudoReferences(epoch);
 
-      // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
-      // to finish at the end of the epoch
-      boolean orderResults = false;
-      final MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = 
-          new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
-              new GradientProcessor(optimizer,scoreMetric,0), orderResults);
-
+      MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
+          new GradientProcessor(optimizer,scoreMetric,0), orderResults);
+      
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       ArrayMath.shuffle(indices);
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
@@ -493,6 +507,9 @@ public class OnlineTuner {
 
       // Wait for threadpool shutdown for this epoch and get final gradients
       wrapper.join();
+      
+      if(OnlineTuner.printDecodeTime>0) { tuneTimer.end("Ends decoding for epoch " + epoch); }
+      
       updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
@@ -797,6 +814,9 @@ public class OnlineTuner {
     optionMap.put("fmc", 1);
     optionMap.put("tmp", 1);
     optionMap.put("p", 1);
+    
+    // Thang Mar14
+    optionMap.put("pdt", 1); // printDecodeTime
     return optionMap;
   }
 
@@ -861,7 +881,8 @@ public class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
-    
+    OnlineTuner.printDecodeTime = PropertiesUtils.getInt(opts, "pdt", 0);
+   
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {

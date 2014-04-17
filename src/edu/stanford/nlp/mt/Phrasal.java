@@ -46,6 +46,7 @@ import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
+import edu.stanford.nlp.mt.decoder.CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
@@ -788,6 +789,7 @@ public class Phrasal {
 
     String searchAlgorithm = config.containsKey(SEARCH_ALGORITHM) ?
       config.get(SEARCH_ALGORITHM).get(0).trim() : InfererBuilderFactory.DEFAULT_INFERER;
+     
     if (dtuDecoder) {
       searchAlgorithm = InfererBuilderFactory.DTU_DECODER;
     }
@@ -795,6 +797,16 @@ public class Phrasal {
     // Configure InfererBuilder
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
+    
+    
+    // Thang Apr14: cube pruning with NNLM reranking
+    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
+      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
+      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(2).trim());
+      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
+      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, cacheSize, miniBatchSize);
+    }
+    
     for (int i = 0; i < numThreads; i++) {
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
