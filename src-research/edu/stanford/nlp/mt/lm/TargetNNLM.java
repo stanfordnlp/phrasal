@@ -162,24 +162,7 @@ public class TargetNNLM implements NNLM {
     	
     	if(cacheMap.containsKey(key)) { // cache hit
     		score = cacheMap.get(key);
-    		cacheHit++;
-    		if(cacheHit % (cacheSize/10) == 0) { 
-    		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
-    		  
-    		  synchronized (this) {
-    		    // 90% full, remove 10%
-            if(cacheMap.size()>0.9*cacheSize) {
-              int count = 0;
-              Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
-              while(it.hasNext()){
-                it.next();
-                it.remove();
-                if (count++ > 0.1*cacheSize) { break; }
-              }
-              System.err.println("new cache size = " + cacheMap.size());
-            }  
-          }
-    		}
+    		if(++cacheHit % (cacheSize/100) == 0) { checkCache(); }
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
     	  cacheMap.put(key, (float) score);
@@ -187,8 +170,7 @@ public class TargetNNLM implements NNLM {
     } else {
       score = nplm.scoreNgram(ngramIds);
     }
-          
-//    System.err.println(Arrays.toString(ngramIds) + "\t" + score);
+    
     return score;
   }
   
@@ -203,40 +185,61 @@ public class TargetNNLM implements NNLM {
     int numNgrams = ngrams.length;
     double[] scores = new double[numNgrams];
     
-    int key = 0;
+    long key = 0;
     if(cacheMap != null) { // caching
-      List<Integer> remainedIndices = new LinkedList<Integer>(); // those that we will call NPLMs
-      List<int[]> remainedNgrams = new LinkedList<int[]>();
-      int i=0;
+      List<Integer> remainedIndices = new ArrayList<Integer>(); // those that we will call NPLMs
+      List<int[]> remainedNgrams = new ArrayList<int[]>();
+      List<Long> remainedHashKeys = new ArrayList<Long>();
       
       // get precomputed scores
-      for(int[] ngram : ngrams){
+      for (int i = 0; i < numNgrams; i++) {
+        int[] ngram = ngrams[i];
         byte[] data = Util.toByteArray(ngram, ngram.length); 
-        key = MurmurHash.hash32(data, data.length);
+        key = MurmurHash.hash64(data, data.length);
       
         cacheLookup++;
         if(cacheMap.containsKey(key)) { // cache hit
-          // get cache results
           scores[i] = cacheMap.get(key);
-          
-          if(++cacheHit % 1000000==0) { System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size()); }
+          if(++cacheHit % (cacheSize/100) == 0) { checkCache(); }
         } else { // cache miss
           remainedIndices.add(i);
           remainedNgrams.add(ngram);
+          remainedHashKeys.add(key);
         }
-        
-        i++;
       }
       
       // get remaining scores
       double[] remainedScores = nplm.scoreNgrams(remainedNgrams);
-      i=0;
-      for (int remainedId : remainedIndices) { scores[remainedId] =  remainedScores[i++]; }
+      
+      // put to scores and cache
+      for (int i = 0; i < remainedScores.length; i++) {
+        scores[remainedIndices.get(i)] =  remainedScores[i];
+        cacheMap.put(remainedHashKeys.get(i), (float) remainedScores[i]);
+      }
     } else {
       scores = nplm.scoreNgrams(ngrams);
     }
 
     return scores;
+  }
+  
+
+  private void checkCache(){
+    System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
+    
+    synchronized (this) {
+      // 90% full, remove 10%
+      if(cacheMap.size()>0.9*cacheSize) {
+        int count = 0;
+        Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
+        while(it.hasNext()){
+          it.next();
+          it.remove();
+          if (count++ > 0.1*cacheSize) { break; }
+        }
+        System.err.println("new cache size = " + cacheMap.size());
+      }  
+    }
   }
   
   /**
