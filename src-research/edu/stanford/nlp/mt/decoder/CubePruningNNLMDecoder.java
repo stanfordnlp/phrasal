@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import cern.colt.Arrays;
 import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -28,6 +27,8 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.lm.JointNNLM;
+import edu.stanford.nlp.mt.lm.NNLM;
+import edu.stanford.nlp.mt.lm.TargetNNLM;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -41,15 +42,15 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
   // Thang Apr14
   private final boolean DEBUG = false;
   private boolean nnlmRerank = true;
-  private final JointNNLM jointNNLM;
+  private final NNLM nnlm;
   
   static public <TK, FV> CubePruningNNLMDecoderBuilder<TK, FV> builder() {
     return new CubePruningNNLMDecoderBuilder<TK, FV>();
   }
 
-  protected CubePruningNNLMDecoder(CubePruningNNLMDecoderBuilder<TK, FV> builder, JointNNLM jointNNLM) {
+  protected CubePruningNNLMDecoder(CubePruningNNLMDecoderBuilder<TK, FV> builder, NNLM nnlm) {
     super(builder);
-    this.jointNNLM = jointNNLM;
+    this.nnlm = nnlm;
     
     if (maxDistortion != -1) {
       System.err.printf("Cube pruning NNLM decoder %d. Distortion limit: %d%n", builder.decoderId, 
@@ -60,16 +61,23 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
   }
 
   public static class CubePruningNNLMDecoderBuilder<TK, FV> extends CubePruningDecoderBuilder<TK, FV> {
-    private JointNNLM jointNNLM;
+    private NNLM jointNNLM;
     
     public CubePruningNNLMDecoderBuilder() {
       super();
     }
 
-    public void loadNNLM(String nnlmFile, int cacheSize, int miniBatchSize){
+    public void loadNNLM(String nnlmFile, String nnlmType, int cacheSize, int miniBatchSize){
       try {
-        System.err.println("# CubePruningNNLMDecoderBuilder loads NNLM: " + nnlmFile + ", cacheSize=" + cacheSize + ", miniBatchSize=" + miniBatchSize);
-        jointNNLM = new JointNNLM(nnlmFile, cacheSize, miniBatchSize);
+        System.err.println("# CubePruningNNLMDecoderBuilder loads NNLM: " + nnlmFile + 
+            ", nnlmType=" + nnlmType + ", cacheSize=" + cacheSize + ", miniBatchSize=" + miniBatchSize);
+        if (nnlmType.equalsIgnoreCase("joint")) { // Joint
+          jointNNLM = new JointNNLM(nnlmFile, cacheSize, miniBatchSize);
+        } else if (nnlmType.equalsIgnoreCase("target")) { // Target
+          jointNNLM = new TargetNNLM(nnlmFile, cacheSize, miniBatchSize);
+        } else {
+          throw new RuntimeException("! Unknown nnlmType: " + nnlmType);
+        }
       } catch (IOException e) {
         System.err.println("! Error loading nnlmFile in CubePruningNNLMDecoder: " + nnlmFile);
         e.printStackTrace();
@@ -244,10 +252,10 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
             Sequences.wrapStart(f.targetPrefix, TokenUtils.START_TOKEN);
       
       // extract ngrams for this derivation
-      List<int[]> ngramList = jointNNLM.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, 
+      int[][] ngrams = nnlm.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, 
           f.sourcePosition, f.targetPosition + 1);
-      numTotalNgrams += ngramList.size();
-      allNgrams.addAll(ngramList);
+      numTotalNgrams += ngrams.length;
+      for (int[] ngram : ngrams) { allNgrams.add(ngram); }
       accumCountList.add(numTotalNgrams);
       
 //      if (DEBUG){
@@ -258,7 +266,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     
     /** compute NNLM scores **/
     if (DEBUG){ System.err.println("# Computing nnlm scores for " + numTotalNgrams + " ngrams"); }
-    double[] scores = jointNNLM.scoreNgrams(allNgrams);
+    double[] scores = nnlm.scoreNgrams(convertNgramList(allNgrams));
   
     /** update derivations' neural scores **/
     beamIter = beam.iterator();
@@ -280,6 +288,14 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       start = end;
       derivationId++;
     }
+  }
+  
+
+  public int[][] convertNgramList(List<int[]> ngramList) {
+    int[][] ngrams = new int[ngramList.size()][];
+    int i = 0;
+    for (int[] ngram : ngramList) { ngrams[i++] = ngram; }
+    return ngrams;
   }
   
   /**

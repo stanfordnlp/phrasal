@@ -44,7 +44,7 @@ public class JointNNLM extends TargetNNLM {
   // we're not handling <null> right now so does NPLM
 //  private final int srcNullNPLMId;
   
-  private int DEBUG = 0; // 0: no print-out, 1: minimal print out
+  private boolean DEBUG = true;
   /**
    * Constructor for NPLMLanguageModel
    * 
@@ -62,7 +62,7 @@ public class JointNNLM extends TargetNNLM {
   	// cache
   	this.cacheSize = cacheSize;
   	if (cacheSize>0){
-      if(DEBUG>0) { System.err.println("  Use global caching, size=" + cacheSize); }
+      if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
   		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
   	}
 
@@ -89,7 +89,7 @@ public class JointNNLM extends TargetNNLM {
     for (int i = 0; i < tgtVocabSize; i++) {
       tgtWords.add(new IString(br.readLine()));
       
-      if(DEBUG>0 && i==0) { System.err.println("  first tgt word=" + tgtWords.get(i)); }
+      if(DEBUG && i==0) { System.err.println("  first tgt word=" + tgtWords.get(i)); }
       else if(i==(tgtVocabSize-1)) { System.err.println("  last tgt word=" + tgtWords.get(i)); }
     }
 
@@ -98,7 +98,7 @@ public class JointNNLM extends TargetNNLM {
     for (int i = 0; i < srcVocabSize; i++) {
       srcWords.add(new IString(br.readLine()));
       
-      if(DEBUG>0 && i==0) { System.err.println("  first src word=" + srcWords.get(i)); }
+      if(DEBUG && i==0) { System.err.println("  first src word=" + srcWords.get(i)); }
       else if(i==(srcVocabSize-1)) { System.err.println("  last src word=" + srcWords.get(i)); }
     }
     br.readLine(); // empty line
@@ -153,7 +153,7 @@ public class JointNNLM extends TargetNNLM {
     this.tgtOrder = order - this.srcOrder;
     this.srcWindow = (srcOrder-1)/2;
     
-    if(DEBUG>0){
+    if(DEBUG){
 	    System.err.println("  srcOrder=" + this.srcOrder + ", tgtOrder=" + this.tgtOrder + 
 	        ", srcVocabSize=" + srcVocabSize + ", tgtVocabSize=" + tgtVocabSize + 
 	        ", srcUnkNPLMId=" + srcUnkNPLMId + ", tgtUnkNPLMId=" + tgtUnkNPLMId +
@@ -191,31 +191,10 @@ public class JointNNLM extends TargetNNLM {
     return IString.getIStringSequence(istringIndices);
   }
   
-  /**
-   * Extract ngrams that we want to score after adding the recently added phrase pair. 
-   * 
-   * @param srcSent
-   * @param tgtSent
-   * @param alignment -- alignment of the recently added phrase pair
-   * @param srcStartPos -- src start position of the recently added phrase pair. 
-   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
-   * @return list of ngrams, each of which consists of NPLM ids.
-   */
-  public List<int[]> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
-      PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
-    List<int[]> ngramList = new LinkedList<int[]>();
-    
-    for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
-      ngramList.add(extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos));
-    }
-    
-    return ngramList;
-  }
-  
 	/**
    * Extract an ngram. 
    * 
-   * @param pos -- tgt position of the last word in the ngram to be extracted.
+   * @param pos -- tgt position of the last word in the ngram to be extracted (should be >= tgtStartPos, < tgtSent.size())
    * @param srcSent
    * @param tgtSent
    * @param alignment -- alignment of the recently added phrase pair
@@ -223,12 +202,16 @@ public class JointNNLM extends TargetNNLM {
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
+  @Override
   public int[] extractNgram(int pos, Sequence<IString> srcSent, Sequence<IString> tgtSent, 
       PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
+    int tgtLen = tgtSent.size();
+    assert(pos>=tgtStartPos && pos<tgtLen);
+
     int id, srcAvgPos;
     int[] ngram = new int[order]; // will be stored in normal order (cf. KenLM stores in reverse order)
     
-    if(pos==(tgtSent.size()-1) && tgtSent.get(pos).id==TokenUtils.END_TOKEN.id) { // end of sent
+    if(pos==(tgtLen-1) && tgtSent.get(pos).id==TokenUtils.END_TOKEN.id) { // end of sent
       srcAvgPos = srcSent.size()-1;
     } else {
       // get the local srcAvgPos within the current srcPhrase

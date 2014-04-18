@@ -59,9 +59,9 @@ public class TargetNNLMTest {
 		Sequence<IString> tgtSent = IString.getIStringSequence(tgtStr.split("\\s+"));
 		int tgtPos = 5; // 
 		
-		List<int[]> ngramList = nplm.extractNgrams(tgtSent, tgtPos);
-		assertEquals(2, ngramList.size());
-		assertEquals("so law government", nplm.toIString(ngramList.get(0)).toString());
-		assertEquals("law government ,", nplm.toIString(ngramList.get(1)).toString());
+		int[][] ngrams = nplm.extractNgrams(null, tgtSent, null, -1, tgtPos);
+		assertEquals(2, ngrams.length);
+		assertEquals("so law government", nplm.toIString(ngrams[0]).toString());
+		assertEquals("law government ,", nplm.toIString(ngrams[1]).toString());
 	}
 }

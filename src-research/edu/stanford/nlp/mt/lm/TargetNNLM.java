@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import cern.colt.Arrays;
 import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.util.MurmurHash;
@@ -60,7 +60,7 @@ public class TargetNNLM implements NNLM {
   protected ConcurrentHashMap<Long, Float> cacheMap = null;
   protected int cacheSize;
   
-  protected boolean DEBUG = true;
+  private boolean DEBUG = true;
   
   protected TargetNNLM(){}
   
@@ -239,13 +239,6 @@ public class TargetNNLM implements NNLM {
     return scores;
   }
   
-  public double[] scoreNgrams(List<int[]> ngramList) {
-    int[][] ngrams = new int[ngramList.size()][];
-    int i = 0;
-    for (int[] ngram : ngramList) { ngrams[i++] = ngram; }
-    return scoreNgrams(ngrams);
-  }
-  
   /**
    * Score a sequence of IString
    * 
@@ -281,32 +274,48 @@ public class TargetNNLM implements NNLM {
     return IString.getIStringSequence(istringIndices);
   }
   
-  /**
-   * Extract ngrams that we want to score after adding the recently added phrase pair. 
+	/**
+   * Extract ngrams that we want to score after adding a phrase pair. 
    * 
-   * @param tgtSent 
+   * @param srcSent
+   * @param tgtSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
-	public LinkedList<int[]> extractNgrams(Sequence<IString> tgtSent, int tgtStartPos){
-		LinkedList<int[]> ngramList = new LinkedList<int[]>();
-		
-		for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
-      ngramList.add(extractNgram(pos, tgtSent, tgtStartPos));
+  @Override
+  public int[][] extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
+    int tgtLen = tgtSent.size();
+    int[][] ngrams = new int[tgtLen-tgtStartPos][];
+    
+    int i = 0;
+    for (int pos = tgtStartPos; pos < tgtLen; pos++) {
+      ngrams[i++] = extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
     }
-		
-		return ngramList;
-	}
-  
-	/**
+    
+    return ngrams;
+  }
+      
+  /**
    * Extract an ngram. 
    * 
-   * @param pos -- tgt position of the last word in the ngram to be extracted.
+   * @param pos -- tgt position of the last word in the ngram to be extracted (should be >= tgtStartPos, < tgtSent.size())
+   * @param srcSent
    * @param tgtSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
-  public int[] extractNgram(int pos, Sequence<IString> tgtSent, int tgtStartPos){
+  public int[] extractNgram(int pos, Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
+    /* we don't use srcSent, alignment, srcStartPos */
+    
+    int tgtLen = tgtSent.size();
+    assert(pos>=tgtStartPos && pos<tgtLen);
+    
     int id;
     int[] ngram = new int[tgtOrder]; // will be stored in normal order (cf. KenLM stores in reverse order)
     
@@ -363,3 +372,30 @@ public class TargetNNLM implements NNLM {
 		return order;
 	}
 }
+
+///**
+// * Extract ngrams that we want to score after adding the recently added phrase pair. 
+// * 
+// * @param tgtSent 
+// * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+// * @return list of ngrams, each of which consists of NPLM ids.
+// */
+//public LinkedList<int[]> extractNgrams(Sequence<IString> tgtSent, int tgtStartPos){
+//  LinkedList<int[]> ngramList = new LinkedList<int[]>();
+//  
+//  for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
+//    ngramList.add(extractNgram(pos, tgtSent, tgtStartPos));
+//  }
+//  
+//  return ngramList;
+//}
+
+///**
+// * Extract an ngram. 
+// * 
+// * @param pos -- tgt position of the last word in the ngram to be extracted.
+// * @param tgtSent
+// * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+// * @return list of ngrams, each of which consists of NPLM ids.
+// */
+//public int[] extractNgram(int pos, Sequence<IString> tgtSent, int tgtStartPos){

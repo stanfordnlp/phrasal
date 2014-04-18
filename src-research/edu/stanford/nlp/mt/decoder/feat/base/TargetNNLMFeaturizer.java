@@ -95,7 +95,7 @@ RuleFeaturizer<IString, String> {
     int[] ngramIds = null;
     
     for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
-      ngramIds = targetNNLM.extractNgram(pos, tgtSent, tgtStartPos);
+      ngramIds = targetNNLM.extractNgram(pos, null, tgtSent, null, -1, tgtStartPos);
       double ngramScore = targetNNLM.scoreNgram(ngramIds);
       if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngramIds) + "\t" + ngramScore); }
       
@@ -126,19 +126,19 @@ RuleFeaturizer<IString, String> {
    */
   public NNLMState getScoreMulti(int tgtStartPos, Sequence<IString> tgtSent){
 
-    LinkedList<int[]> ngramList = targetNNLM.extractNgrams(tgtSent, tgtStartPos);
+    int[][] ngrams = targetNNLM.extractNgrams(null, tgtSent, null, -1, tgtStartPos);
     double score = 0.0;
     NNLMState state = null;
-    int numNgrams = ngramList.size(); 
+    int numNgrams = ngrams.length; 
     if(numNgrams>0){
-      double[] ngramScores = targetNNLM.scoreNgrams(ngramList);
+      double[] ngramScores = targetNNLM.scoreNgrams(ngrams);
       for (int i = 0; i < numNgrams; i++) {
-        if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngramList.get(i)) + "\t" + ngramScores[i]); }
+        if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngrams[i]) + "\t" + ngramScores[i]); }
         score += ngramScores[i];
       }
 
       // use the last ngramIds to create state (inside SrcNPLMState, we only care about the last tgtOrder-1 indices)
-      int[] ngramIds = ngramList.getLast();
+      int[] ngramIds = ngrams[numNgrams-1];
       state = new NNLMState(score, ngramIds, tgtOrder);
     }
 

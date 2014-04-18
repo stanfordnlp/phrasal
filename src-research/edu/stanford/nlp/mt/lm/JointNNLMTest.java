@@ -65,10 +65,10 @@ public class JointNNLMTest {
 		int srcPos = 2, tgtPos = 5; // 
 		PhraseAlignment alignment = PhraseAlignment.getPhraseAlignment("(0) (1)");
 		
-		List<int[]> ngramList = nplm.extractNgrams(srcSent, tgtSent, alignment, srcPos, tgtPos);
+		int[][] ngrams = nplm.extractNgrams(srcSent, tgtSent, alignment, srcPos, tgtPos);
 		
-		assertEquals(2, ngramList.size());
-		assertEquals("建设 法治 政府 , 就 so law government", nplm.toIString(ngramList.get(0)).toString());
-		assertEquals("法治 政府 , 就 是 law government ,", nplm.toIString(ngramList.get(1)).toString());
+		assertEquals(2, ngrams.length);
+		assertEquals("建设 法治 政府 , 就 so law government", nplm.toIString(ngrams[0]).toString());
+		assertEquals("法治 政府 , 就 是 law government ,", nplm.toIString(ngrams[1]).toString());
 	}
 }
