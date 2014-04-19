@@ -154,18 +154,20 @@ public class TargetNNLM implements NNLM {
     
   	long key = 0;
   	double score;
+  	Float scoreFloat;
   	
     if(cacheMap != null) { // caching
     	cacheLookup++;
     	byte[] data = Util.toByteArray(ngramIds, ngramIds.length); 
     	key = MurmurHash.hash64(data, data.length);
     	
-    	if(cacheMap.containsKey(key)) { // cache hit
-    		score = cacheMap.get(key);
-    		if(++cacheHit % (cacheSize/100) == 0) { checkCache(); }
+    	scoreFloat = cacheMap.get(key);
+    	if(scoreFloat!=null) { // cache hit
+    	  score = scoreFloat;
+    		if(++cacheHit % (cacheSize/100) == 0) { checkAndClearCache(); }
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
-    	  cacheMap.put(key, (float) score);
+    	  cacheMap.putIfAbsent(key, (float) score);
     	}
     } else {
       score = nplm.scoreNgram(ngramIds);
@@ -186,6 +188,7 @@ public class TargetNNLM implements NNLM {
     double[] scores = new double[numNgrams];
     
     long key = 0;
+    Float scoreFloat;
     if(cacheMap != null) { // caching
       List<Integer> remainedIndices = new ArrayList<Integer>(); // those that we will call NPLMs
       List<int[]> remainedNgrams = new ArrayList<int[]>();
@@ -198,9 +201,10 @@ public class TargetNNLM implements NNLM {
         key = MurmurHash.hash64(data, data.length);
       
         cacheLookup++;
-        if(cacheMap.containsKey(key)) { // cache hit
-          scores[i] = cacheMap.get(key);
-          if(++cacheHit % (cacheSize/100) == 0) { checkCache(); }
+        scoreFloat = cacheMap.get(key);
+        if(scoreFloat!=null) { // cache hit
+          scores[i] = scoreFloat;
+          if(++cacheHit % (cacheSize/100) == 0) { checkAndClearCache(); }
         } else { // cache miss
           remainedIndices.add(i);
           remainedNgrams.add(ngram);
@@ -214,7 +218,7 @@ public class TargetNNLM implements NNLM {
       // put to scores and cache
       for (int i = 0; i < remainedScores.length; i++) {
         scores[remainedIndices.get(i)] =  remainedScores[i];
-        cacheMap.put(remainedHashKeys.get(i), (float) remainedScores[i]);
+        cacheMap.putIfAbsent(remainedHashKeys.get(i), (float) remainedScores[i]);
       }
     } else {
       scores = nplm.scoreNgrams(ngrams);
@@ -224,7 +228,7 @@ public class TargetNNLM implements NNLM {
   }
   
 
-  private void checkCache(){
+  private void checkAndClearCache(){
     System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
     
     synchronized (this) {
