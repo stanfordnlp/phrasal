@@ -104,7 +104,7 @@ public class DependencyLanguageModel  extends DerivationFeaturizer<IString, Stri
     int tgtLength = f.targetPhrase.size();
     
     List<Integer> s2t = Generics.newArrayList(srcLength);
-    for (int i = 0; i < srcLength; ++i) {
+    for (int i = 0; i < srcLength; i++) {
       s2t.add(null);
     }
     
@@ -125,6 +125,7 @@ public class DependencyLanguageModel  extends DerivationFeaturizer<IString, Stri
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
     
+
     if (f.sourcePhrase.size() < 1 || f.targetPhrase.size() < 1)
       return features;
     
@@ -148,34 +149,38 @@ public class DependencyLanguageModel  extends DerivationFeaturizer<IString, Stri
           if (targetIdx2 == null) continue;
           
           //check if any of the  words in the rule are a dependent of a previous head
-          if (this.forwardDependencies.get(i) != null && this.forwardDependencies.get(i).contains(j)) {
-            String headWord = targetSequence.get(targetIdx1).word();
-            String depWord = targetSequence.get(targetIdx2).word();
+          int idx1 = prev.sourcePosition + i;
+          int idx2 = f.sourcePosition + j;
+          if (this.forwardDependencies.get(idx1) != null && this.forwardDependencies.get(idx1).contains(idx2)) {
+            String headWord = targetSequence.get(targetIdx1 + prev.targetPosition).word();
+            String depWord = targetSequence.get(targetIdx2 + f.targetPosition).word();
+            //System.err.println(targetSequence);
+            //System.err.println("HEAD-CHILD PAIR: " + headWord + "-" + depWord);
             double score = dependencyProbabilities.getCount(headWord, depWord);
             if (score < 0.0) {
-              features.add(new FeatureValue<String>(FEATURE_NAME, -score));
+              features.add(new FeatureValue<String>(FEATURE_NAME, score));
             } else {
               features.add(new FeatureValue<String>(FEATURE_NAME_MISSING, 1.0));
             }
           }
           
           //check if any of the words in the rule is the head of a previous word
-          if (this.reverseDependencies.get(i) == j) {
-            String headWord = targetSequence.get(targetIdx1).word();
-            String depWord = targetSequence.get(targetIdx2).word();
-            
+          if (this.reverseDependencies.get(idx1) != null && this.reverseDependencies.get(idx1) == idx2) {
+            String headWord = targetSequence.get(targetIdx1 + prev.targetPosition).word();
+            String depWord = targetSequence.get(targetIdx2 + f.targetPosition).word();
+            //System.err.println(targetSequence); 
+            //System.err.println("HEAD-CHILD PAIR: " + headWord + "-" + depWord); 
             double score = dependencyProbabilities.getCount(headWord, depWord);
             if (score < 0.0) {
-              features.add(new FeatureValue<String>(FEATURE_NAME, -score));
+              features.add(new FeatureValue<String>(FEATURE_NAME, score));
             } else {
               features.add(new FeatureValue<String>(FEATURE_NAME_MISSING, 1.0));
             }
           }
         }
       }
-      prev = f.prior;
+      prev = prev.prior;
     }
-  
     return features;
   }
   
