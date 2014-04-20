@@ -232,15 +232,15 @@ public class TargetNNLM implements NNLM {
     System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
     
     synchronized (this) {
-      // 90% full, remove 10%
-      if(cacheMap.size()>0.9*cacheSize) {
-        int count = 0;
-        Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
-        while(it.hasNext()){
-          it.next();
-          it.remove();
-          if (count++ > 0.1*cacheSize) { break; }
-        }
+      if(cacheMap.size()>cacheSize) {
+        cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
+//        int count = 0;
+//        Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
+//        while(it.hasNext()){
+//          it.next();
+//          it.remove();
+//          if (count++ > 0.5*cacheSize) { break; }
+//        }
         System.err.println("new cache size = " + cacheMap.size());
       }  
     }
