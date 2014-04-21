@@ -155,7 +155,6 @@ public class ComputeDistortionProbabilities {
     for (String k1 : posDistortionCounter.firstKeySet()) {
       Counter<Integer> c = posDistortionCounter.getCounter(k1);
       for (Integer k2 : c.keySet()) {
-        System.out.println(k1 + " " + k2 + " " + c.getCount(k2));
         posBW.write(k1 + " " + k2 + " " + c.getCount(k2) + "\n");
       }
     }
@@ -173,7 +172,6 @@ public class ComputeDistortionProbabilities {
     for (String k1 : wordDistortionCounter.firstKeySet()) {
       Counter<Integer> c = wordDistortionCounter.getCounter(k1);
       for (Integer k2 : c.keySet()) {
-        System.out.println(k1 + " " + k2 + " " + c.getCount(k2));
         wordBW.write(k1 + " " + k2 + " " + c.getCount(k2) + "\n");
       }
     }
