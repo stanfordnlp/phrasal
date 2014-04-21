@@ -125,7 +125,7 @@ private void loadProbabilities(String filename) throws IOException {
     Collections.sort(sortedReference);
     
     for (int i = start; i < hypLength; i++) {
-      int dist = sortedReference.get(i) - i;
+      int dist = sortedReference.get(i - start) - i;
       int bucket = getBucket(dist);
       double val = posDistortionProbabilities.getCount(this.posTags.get(i).value(), bucket);
       features.add(new FeatureValue<String>("DIST_PROB", val));
