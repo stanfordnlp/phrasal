@@ -6,12 +6,16 @@ package edu.stanford.nlp.mt.util;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+import cern.colt.Arrays;
 
 /**
  * @author Minh-Thang Luong <lmthang@stanford.edu>, created on Mar 6, 2014
  *
  */
-public class Util {
+public class NNLMUtil {
   /**
    * Convert an int[] to a byte[]. Follow http://stackoverflow.com/questions/2183240/java-integer-to-byte-array.
    * 
@@ -29,6 +33,7 @@ public class Util {
 		}
 	 	return bytes;
   }
+  
   public static byte[] toByteArray(int[] ints){
     return toByteArray(ints, ints.length);
   }
@@ -40,33 +45,16 @@ public class Util {
    * @return
    */
   public static byte[] toByteArray1(int[] ints){
- 	 ByteBuffer byteBuffer = ByteBuffer.allocate(ints.length * 4);        
+ 	  ByteBuffer byteBuffer = ByteBuffer.allocate(ints.length * 4);        
     IntBuffer intBuffer = byteBuffer.asIntBuffer();
     intBuffer.put(ints);
     return byteBuffer.array();
  }
- 
-//  public static int[] reverseArray(int[] values){
-//    int numElements = values.length;
-//    int[] reverseValues = new int[numElements];
-//    for(int i=0; i<numElements; i++){
-//      reverseValues[i] = values[numElements-i-1];
-//    }
-//    return reverseValues;
-//  }
-  
-//  public static String intArrayToString(int[] values){
-//    StringBuilder sb = new StringBuilder();
-//    for (int value : values) {
-//      sb.append(value + " ");
-//    }
-//    sb.deleteCharAt(sb.length()-1);
-//    return sb.toString();
-//  }
 
-//  public static void error(boolean cond, String message){
-//  	if(cond){
-//  	  throw new RuntimeException(message);
-//  	}
-//  }
+  public static int[][] convertNgramList(List<int[]> ngramList) {
+    int[][] ngrams = new int[ngramList.size()][];
+    int i = 0;
+    for (int[] ngram : ngramList) { ngrams[i++] = ngram; }
+    return ngrams;
+  }
 }

@@ -29,6 +29,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.lm.JointNNLM;
 import edu.stanford.nlp.mt.lm.NNLM;
 import edu.stanford.nlp.mt.lm.TargetNNLM;
+import edu.stanford.nlp.mt.util.NNLMUtil;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -266,7 +267,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     
     /** compute NNLM scores **/
     if (DEBUG){ System.err.println("# Computing nnlm scores for " + numTotalNgrams + " ngrams"); }
-    double[] scores = nnlm.scoreNgrams(convertNgramList(allNgrams));
+    double[] scores = nnlm.scoreNgrams(NNLMUtil.convertNgramList(allNgrams));
   
     /** update derivations' neural scores **/
     beamIter = beam.iterator();
@@ -289,15 +290,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       derivationId++;
     }
   }
-  
 
-  public int[][] convertNgramList(List<int[]> ngramList) {
-    int[][] ngrams = new int[ngramList.size()][];
-    int i = 0;
-    for (int[] ngram : ngramList) { ngrams[i++] = ngram; }
-    return ngrams;
-  }
-  
   /**
    * Searches for consequents, always returning at least one and at most two.
    * 

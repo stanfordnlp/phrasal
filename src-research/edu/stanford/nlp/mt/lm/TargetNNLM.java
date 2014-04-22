@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.lm.KenLM;
@@ -17,7 +16,7 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.util.MurmurHash;
-import edu.stanford.nlp.mt.util.Util;
+import edu.stanford.nlp.mt.util.NNLMUtil;
 
 /**
  * Target NNLM (conditioned on tgt words). 
@@ -58,6 +57,7 @@ public class TargetNNLM implements NNLM {
   // caching
   protected long cacheHit=0, cacheLookup = 0;
   protected ConcurrentHashMap<Long, Float> cacheMap = null;
+  LinkedList<Long> lruKeys = null; // keep recent keys at the end
   protected int cacheSize;
   
   private boolean DEBUG = true;
@@ -84,6 +84,7 @@ public class TargetNNLM implements NNLM {
   	if (cacheSize>0){
       if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
   		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
+  		lruKeys = new LinkedList<Long>();
   	}
 
   	// load src-conditioned info
@@ -158,7 +159,7 @@ public class TargetNNLM implements NNLM {
   	
     if(cacheMap != null) { // caching
     	cacheLookup++;
-    	byte[] data = Util.toByteArray(ngramIds, ngramIds.length); 
+    	byte[] data = NNLMUtil.toByteArray(ngramIds, ngramIds.length); 
     	key = MurmurHash.hash64(data, data.length);
     	
     	scoreFloat = cacheMap.get(key);
@@ -168,6 +169,7 @@ public class TargetNNLM implements NNLM {
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
     	  cacheMap.putIfAbsent(key, (float) score);
+    	  lruKeys.addLast(key);
     	}
     } else {
       score = nplm.scoreNgram(ngramIds);
@@ -197,7 +199,7 @@ public class TargetNNLM implements NNLM {
       // get precomputed scores
       for (int i = 0; i < numNgrams; i++) {
         int[] ngram = ngrams[i];
-        byte[] data = Util.toByteArray(ngram, ngram.length); 
+        byte[] data = NNLMUtil.toByteArray(ngram, ngram.length); 
         key = MurmurHash.hash64(data, data.length);
       
         cacheLookup++;
@@ -213,12 +215,14 @@ public class TargetNNLM implements NNLM {
       }
       
       // get remaining scores
-      double[] remainedScores = nplm.scoreNgrams(remainedNgrams);
+      double[] remainedScores = nplm.scoreNgrams(NNLMUtil.convertNgramList(remainedNgrams));
       
       // put to scores and cache
       for (int i = 0; i < remainedScores.length; i++) {
+        key = remainedHashKeys.get(i);
         scores[remainedIndices.get(i)] =  remainedScores[i];
-        cacheMap.putIfAbsent(remainedHashKeys.get(i), (float) remainedScores[i]);
+        cacheMap.putIfAbsent(key, (float) remainedScores[i]);
+        lruKeys.add(key);
       }
     } else {
       scores = nplm.scoreNgrams(ngrams);
@@ -233,14 +237,17 @@ public class TargetNNLM implements NNLM {
     
     synchronized (this) {
       if(cacheMap.size()>cacheSize) {
-        cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
-//        int count = 0;
-//        Iterator<Entry<Long, Float>> it = cacheMap.entrySet().iterator();
-//        while(it.hasNext()){
-//          it.next();
-//          it.remove();
-//          if (count++ > 0.5*cacheSize) { break; }
-//        }
+        // empty half
+        int count = 0;
+        Iterator<Long> it = lruKeys.iterator();
+        while(it.hasNext()){
+          long key = it.next();
+          
+          // remove key
+          it.remove(); 
+          cacheMap.remove(key);
+          if (count++ > 0.5*cacheSize) { break; }
+        }
         System.err.println("new cache size = " + cacheMap.size());
       }  
     }
