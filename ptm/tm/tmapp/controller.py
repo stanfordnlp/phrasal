@@ -34,9 +34,10 @@ def get_demo_configuration(lang_pair):
     if num_docs > 0:
         doc_id = random.randint(0,num_docs-1)
         doc_url = doc_list[doc_id].url
+        # UI expects uppercase language codes
         conf = {'src_document_url' : doc_url,
-                'src_language' : src_lang,
-                'tgt_language' : tgt_lang}
+                'src_language' : src_lang.upper(),
+                'tgt_language' : tgt_lang.upper()}
         return conf
     else:
         return None
