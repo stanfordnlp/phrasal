@@ -5,6 +5,7 @@ from collections import defaultdict
 import json
 import urllib
 import urllib2
+import random
 from django.http import HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 
@@ -13,6 +14,33 @@ from models import UserConfiguration,TrainingRecord,TranslationSession,Demograph
 from forms import DemographicForm,ExitSurveyForm,DivErrorList,TranslationInputForm
 
 logger = logging.getLogger(__name__)
+
+def get_demo_configuration(lang_pair):
+    """
+    Get a demo configuration for the interface.
+    
+    Args:
+      lang_pair -- e.g. 'enfr'
+    Returns:
+    Raises:
+    """
+    if len(lang_pair) != 4:
+        return None
+    src_lang = lang_pair[0:2]
+    tgt_lang = lang_pair[2:4]
+
+    doc_list = model_utils.get_source_docs_for_lang(src_lang)
+    num_docs = len(doc_list)
+    if num_docs > 0:
+        doc_id = random.randint(0,num_docs-1)
+        doc_url = doc_list[doc_id].url
+        conf = {'src_document_url' : doc_url,
+                'src_language' : src_lang,
+                'tgt_language' : tgt_lang}
+        return conf
+    else:
+        return None
+    
 
 def user_training_status(user, complete=False):
     """
@@ -269,7 +297,6 @@ SERVICE_URLS['en']['de'] = 'http://joan.stanford.edu:8017/x'
 TRANSLATION_REQUEST = 'tReq'
 RULE_QUERY_REQUEST = 'rqReq'
 
-@login_required
 def service_redirect(request):
     """
     Redirect Http request to the MT service to avoid

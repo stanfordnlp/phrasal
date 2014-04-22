@@ -162,6 +162,22 @@ def translate(request):
         else:
             return redirect('/tm/translate/')
 
+@never_cache
+def demo(request,lang_pair):
+    """
+    Return the translation UI and static content.
+    """
+    if request.method == 'GET':
+        # Parse the language pair
+        # Get a random document from the backend
+        conf = controller.get_demo_configuration(lang_pair)
+        if conf:
+            return render_to_response('translate_demo.html',
+                                      {'conf' : conf},
+                                      context_instance=RequestContext(request))
+    raise Http404
+
+        
 @login_required
 def form_demographic(request):
     form = None
