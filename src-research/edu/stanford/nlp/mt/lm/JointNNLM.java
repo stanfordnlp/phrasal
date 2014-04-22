@@ -64,6 +64,7 @@ public class JointNNLM extends TargetNNLM {
   	if (cacheSize>0){
       if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
   		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
+  		lruKeys = new LinkedList<Long>();
   	}
 
   	// load src-conditioned info
