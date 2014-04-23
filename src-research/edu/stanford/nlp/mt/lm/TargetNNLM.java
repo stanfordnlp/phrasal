@@ -4,10 +4,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
 import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
@@ -56,8 +55,9 @@ public class TargetNNLM implements NNLM {
 	
   // caching
   protected long cacheHit=0, cacheLookup = 0;
-  protected ConcurrentHashMap<Long, Float> cacheMap = null;
-  LinkedList<Long> lruKeys = null; // keep recent keys at the end
+  protected ConcurrentLinkedHashMap<Long, Float> cacheMap = null;
+//  protected ConcurrentHashMap<Long, Float> cacheMap = null;
+//  LinkedList<Long> lruKeys = null; // keep recent keys at the end
   protected int cacheSize;
   
   private boolean DEBUG = true;
@@ -83,8 +83,9 @@ public class TargetNNLM implements NNLM {
   	this.cacheSize = cacheSize;
   	if (cacheSize>0){
       if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
-  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
-  		lruKeys = new LinkedList<Long>();
+      cacheMap = new ConcurrentLinkedHashMap.Builder<Long, Float>().maximumWeightedCapacity(cacheSize).build();
+//  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
+//  		lruKeys = new LinkedList<Long>();
   	}
 
   	// load src-conditioned info
@@ -165,11 +166,14 @@ public class TargetNNLM implements NNLM {
     	scoreFloat = cacheMap.get(key);
     	if(scoreFloat!=null) { // cache hit
     	  score = scoreFloat;
-    		if(++cacheHit % (cacheSize/100) == 0) { checkAndClearCache(); }
+    		if(++cacheHit % (cacheSize/100) == 0) {
+    		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
+//    		  clearCache(); 
+    		}
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
     	  cacheMap.putIfAbsent(key, (float) score);
-    	  lruKeys.addLast(key);
+//    	  lruKeys.addLast(key);
     	}
     } else {
       score = nplm.scoreNgram(ngramIds);
@@ -206,7 +210,10 @@ public class TargetNNLM implements NNLM {
         scoreFloat = cacheMap.get(key);
         if(scoreFloat!=null) { // cache hit
           scores[i] = scoreFloat;
-          if(++cacheHit % (cacheSize/100) == 0) { checkAndClearCache(); }
+          if(++cacheHit % (cacheSize/100) == 0) { 
+            System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
+//            clearCache(); 
+          }
         } else { // cache miss
           remainedIndices.add(i);
           remainedNgrams.add(ngram);
@@ -222,7 +229,7 @@ public class TargetNNLM implements NNLM {
         key = remainedHashKeys.get(i);
         scores[remainedIndices.get(i)] =  remainedScores[i];
         cacheMap.putIfAbsent(key, (float) remainedScores[i]);
-        lruKeys.add(key);
+//        lruKeys.add(key);
       }
     } else {
       scores = nplm.scoreNgrams(ngrams);
@@ -232,26 +239,22 @@ public class TargetNNLM implements NNLM {
   }
   
 
-  private void checkAndClearCache(){
-    System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
-    
-    synchronized (this) {
-      if(cacheMap.size()>cacheSize) {
-        // empty half
-        int count = 0;
-        Iterator<Long> it = lruKeys.iterator();
-        while(it.hasNext()){
-          long key = it.next();
-          
-          // remove key
-          it.remove(); 
-          cacheMap.remove(key);
-          if (count++ > 0.5*cacheSize) { break; }
-        }
-        System.err.println("new cache size = " + cacheMap.size());
-      }  
-    }
-  }
+//  private synchronized void clearCache(){
+//    if(cacheMap.size()>cacheSize) {
+//      // empty half
+//      int count = 0;
+//      Iterator<Long> it = lruKeys.iterator();
+//      while(it.hasNext()){
+//        long key = it.next();
+//        
+//        // remove key
+//        it.remove(); 
+//        cacheMap.remove(key);
+//        if (count++ > 0.5*cacheSize) { break; }
+//      }
+//      System.err.println("new cache size = " + cacheMap.size());
+//    }
+//  }
   
   /**
    * Score a sequence of IString

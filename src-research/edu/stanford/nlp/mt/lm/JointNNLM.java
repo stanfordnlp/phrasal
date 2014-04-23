@@ -4,9 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
 import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
@@ -63,8 +62,9 @@ public class JointNNLM extends TargetNNLM {
   	this.cacheSize = cacheSize;
   	if (cacheSize>0){
       if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
-  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
-  		lruKeys = new LinkedList<Long>();
+      cacheMap = new ConcurrentLinkedHashMap.Builder<Long, Float>().maximumWeightedCapacity(cacheSize).build();
+//  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
+//  		lruKeys = new LinkedList<Long>();
   	}
 
   	// load src-conditioned info
