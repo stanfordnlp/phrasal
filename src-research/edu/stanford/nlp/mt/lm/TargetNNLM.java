@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
-import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
@@ -166,7 +165,7 @@ public class TargetNNLM implements NNLM {
     	scoreFloat = cacheMap.get(key);
     	if(scoreFloat!=null) { // cache hit
     	  score = scoreFloat;
-    		if(++cacheHit % (cacheSize/100) == 0) {
+    		if(++cacheHit % (cacheSize/10) == 0) {
     		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
 //    		  clearCache(); 
     		}
@@ -210,7 +209,7 @@ public class TargetNNLM implements NNLM {
         scoreFloat = cacheMap.get(key);
         if(scoreFloat!=null) { // cache hit
           scores[i] = scoreFloat;
-          if(++cacheHit % (cacheSize/100) == 0) { 
+          if(++cacheHit % (cacheSize/10) == 0) { 
             System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
 //            clearCache(); 
           }

@@ -59,4 +59,13 @@ public class SparseScorer implements Scorer<String> {
     // Axiomatic for sparse weight vectors
     return true;
   }
+  
+  // Thang Apr14
+  public double getWeight(String featureName){
+    return weights.getCount(featureName);
+  }
+  
+  public Counter<String> getWeightVector(){
+    return weights;
+  }
 }

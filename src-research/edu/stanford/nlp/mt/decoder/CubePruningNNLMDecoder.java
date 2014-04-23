@@ -16,6 +16,7 @@ import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.base.TokenUtils;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
@@ -26,6 +27,7 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.SparseScorer;
 import edu.stanford.nlp.mt.lm.JointNNLM;
 import edu.stanford.nlp.mt.lm.NNLM;
 import edu.stanford.nlp.mt.lm.TargetNNLM;
@@ -273,18 +275,17 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     beamIter = beam.iterator();
     int start = 0;
     int derivationId = 0;
+    double lmWeight = ((SparseScorer) scorer).getWeight(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
+    
     while(beamIter.hasNext()){
       DerivationNNLM<TK,FV> derivation = (DerivationNNLM<TK,FV>) beamIter.next();
       int end = accumCountList.get(derivationId);
       
-      double nnlmScore = 0.0;
+      double nnlmScore = derivation.getPrevNNLMScore();
       for (int j = start; j < end; j++) { nnlmScore += scores[j]; }
-      derivation.setNNLMScore(derivation.getPrevNNLMScore() + nnlmScore);
-//      if(DEBUG) { 
-//        System.err.print("Derivation " + derivationId + ": " + derivation + ", incrementalNNLMScore=" + nnlmScore + " [");
-//        for (int j = start; j < end; j++) { System.err.print(" " + scores[j]); }
-//        System.err.println(" ]");
-//      }
+      
+      // replace the traditional lm score by the nnlm score
+      derivation.substituteNNLMScore(nnlmScore, lmWeight);
       
       start = end;
       derivationId++;

@@ -806,6 +806,7 @@ public class Phrasal {
       int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
       int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
       ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
+//      System.err.println("# Weight vector = " + weightVector);
     }
     
     for (int i = 0; i < numThreads; i++) {
