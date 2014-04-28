@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.PhraseTableScoresFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 
 /**
  * Constrained output space for prefix decoding. Uses the phrase table
@@ -42,7 +42,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     }
   }
   private static final RuleFeaturizer<IString,String> featurizer = 
-      new PhraseTableScoresFeaturizer(NUM_SYNTHETIC_SCORES);
+      new TranslationModelFeaturizer(NUM_SYNTHETIC_SCORES);
 
   private Sequence<IString> sourceSequence;
   private final Sequence<IString> allowablePrefix;

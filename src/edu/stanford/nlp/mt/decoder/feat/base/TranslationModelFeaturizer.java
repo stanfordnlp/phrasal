@@ -18,8 +18,8 @@ import edu.stanford.nlp.util.Generics;
  * 
  * @param <T>
  */
-public class PhraseTableScoresFeaturizer implements RuleFeaturizer<IString, String> {
-  private static final String FEATURE_PREFIX = "TM";
+public class TranslationModelFeaturizer implements RuleFeaturizer<IString, String> {
+  public static final String FEATURE_PREFIX = "TM";
   private static final FeatureValue<String> emptyFV = new FeatureValue<String>(
       "", 0.0);
 
@@ -44,7 +44,7 @@ public class PhraseTableScoresFeaturizer implements RuleFeaturizer<IString, Stri
    * @param numFeatures Set to <code>Integer.MAX_VALUE</code> to specify
    * all features defined in the phrase table.
    */
-  public PhraseTableScoresFeaturizer(int numFeatures) {
+  public TranslationModelFeaturizer(int numFeatures) {
     this.featureNamesHash = new ConcurrentHashMap<String,String[]>();
     this.numFeatures = numFeatures;
   }

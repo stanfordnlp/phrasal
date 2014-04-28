@@ -1,59 +1,46 @@
 #!/usr/bin/env bash
 #
-# Moses training and tuning on the Stanford NLP cluster.sh
+# Tune a baseline Moses system.
 #
 # Author: Spence Green
 
-# IMPORTANT! TODO: Ensure that the following is set in your environment:
+# IMPORTANT: Ensure that LD_LIBRARY_PATH points to your boost installation
 #
-# LD_LIBRARY_PATH=/u/nlp/packages/boost_1_42_0/lib
+#   LD_LIBRARY_PATH=/u/nlp/packages/boost_1_42_0/lib
+#
+# and that MOSES points to the Moses installation directory:
+#
+#   MOSES=/path/to/mosesdecoder
+#
 
-if [ $# -ne 5 ]; then
-	echo Usage: `basename $0` tune-dir-name ini-file tune-file ref-prefix cores
+if [ $# -ne 4 ]; then
+	echo Usage: `basename $0` corpus_dir src_lang tgt_lang lm_file
 	exit 0
 fi
 
-TUNEDIR=`basename $1`
-INI_FILE=$2
-TUNE_SET=$3
-REF_PREFIX=$4
-CORES=$5
+CORPUSDIR=$1
+SRC_LANG=$2
+TGT_LANG=$3
+LM_FILE=$4
 
-# Paths to stuff
+# Defaults
 HOME=`pwd`
-MOSES=/u/nlp/packages/mosesdecoder
-GIZA=/u/nlp/packages/GIZA++
-
-# TODO: Change these for your language
-CORPUSDIR=/u/spenceg/BOLT-Arabic-all/corpus2/sampled/dedup
-LM=/u/spenceg/BOLT-Arabic-all/lm/5gm-dedup.unk.model.gz
+CORES=4
+GIZA=/home/rayder441/packages/giza-pp
 
 # Phrase and feature extraction using Galley and Manning (2008)
 # hierarchical re-ordering models.
-#mkdir -p $HOME/train/model
-#$MOSES/scripts/training/train-model.perl --max-phrase-length 7 \
-#--external-bin-dir $GIZA --first-step 3 --last-step 9 \
-#-root-dir $HOME/train -corpus $CORPUSDIR/corpus -f ar -e en \
-#-giza-f2e $CORPUSDIR/giza.ar-en \
-#-giza-e2f $CORPUSDIR/giza.en-ar \
-#-alignment grow-diag \
-#-lm 0:3:"$LM":0 \
-#-reordering hier-mslr-bidirectional-fe
+mkdir -p $HOME/train/model
+$MOSES/scripts/training/train-model.perl --max-phrase-length 7 \
+-external-bin-dir $GIZA \
+--first-step 3 --last-step 9 \
+-root-dir $HOME/train -corpus $CORPUSDIR/corpus -f $SRC_LANG -e $TGT_LANG \
+-giza-f2e $CORPUSDIR/giza.ar-en \
+-giza-e2f $CORPUSDIR/giza.en-ar \
+-alignment grow-diag \
+-lm 0:3:$LM_FILE:0 \
+-reordering hier-mslr-bidirectional-fe \
+-cores $CORES
 
 
-# Batch mira Model tuning with MIRA
-# For MERT: remove the "--batch-mira" parameter
-# For PRO: replace mira with "--pairwise-ranked"
-# To continue a tuning run: add "--continue"
-mkdir -p $HOME/$TUNEDIR
-$MOSES/scripts/training/mert-moses.pl \
---working-dir $HOME/$TUNEDIR \
---decoder-flags="-distortion-limit 5 -threads $CORES" \
---mertdir $MOSES/bin/ \
---no-filter-phrase-table \
---nbest=200 \
---pairwise-ranked \
---return-best-dev \
-$TUNE_SET $REF_PREFIX \
-$MOSES/bin/moses $INI_FILE
 

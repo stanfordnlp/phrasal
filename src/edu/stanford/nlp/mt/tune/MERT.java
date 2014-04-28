@@ -1026,12 +1026,7 @@ public class MERT extends Thread {
         optTransFile = args[++argi];
       } else if (arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
-        try {
-          fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
-        } catch (IOException e) {
-          System.err.println("Fixed weight file missing: " + fixedWtsFile);
-          fixedWts = null;
-        }
+        fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
       } else if (arg.equals("-t")) {
         nThreads = Integer.parseInt(args[++argi]);
       } else {

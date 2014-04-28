@@ -672,16 +672,7 @@ public class OnlineTuner {
   private static Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights, boolean randomizeStartWeights) {
 
-    Counter<String> weights;
-    try {
-      weights = IOTools.readWeights(wtsInitialFile);
-    } catch (IOException e) {
-      e.printStackTrace();
-      throw new RuntimeException("Could not load weight vector!");
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-      throw new RuntimeException("Could not load weight vector!");
-    }
+    Counter<String> weights = IOTools.readWeights(wtsInitialFile);
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
       Set<String> featureNames = Generics.newHashSet(weights.keySet());

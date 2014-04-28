@@ -28,14 +28,8 @@ public class DenseScorer implements Scorer<String> {
   public DenseScorer(String filename) {
     sharedFeatureIndex = false;
     featureIndex = new HashIndex<String>();
-    try {
-      Counter<String> wts = IOTools.readWeights(filename, featureIndex);
-      updateWeights(wts);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
+    Counter<String> wts = IOTools.readWeights(filename, featureIndex);
+    updateWeights(wts);
   }
 
   public DenseScorer(Counter<String> featureWts) {
