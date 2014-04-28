@@ -148,10 +148,11 @@ public class DependencyProjector {
     Integer tSentenceHeadIdx = -1;
     //add root
     Collection<IndexedWord> sentenceHeads = semanticGraph.getRoots();
+    SortedSet<Integer> tHeadIndices = null;
     if (!sentenceHeads.isEmpty()) {
       IndexedWord sentenceHead = semanticGraph.getFirstRoot();
       int sHeadIndex = sentenceHead.index() - 1;
-      SortedSet<Integer> tHeadIndices = alignment.f2e(sHeadIndex);
+      tHeadIndices = alignment.f2e(sHeadIndex);
       if (tHeadIndices.size() == 1) {
         tSentenceHeadIdx = tHeadIndices.last();
         projectedDependencies.put(-1, tHeadIndices);
@@ -175,7 +176,12 @@ public class DependencyProjector {
     
     for (int j = 0; j < len; j++) {
       String word = alignment.e().get(j).word();
+      //ignore garbage collection alignments to punction marks
       if (!Character.isAlphabetic(word.charAt(0))) 
+        continue;
+
+      //don't add dependencies for sentence heads
+      if (tHeadIndices != null && tHeadIndices.contains(j))
         continue;
       
       SortedSet<Integer> sIdxs = alignment.e2f(j);
@@ -402,14 +408,14 @@ public class DependencyProjector {
     String sourceSentence;
     int i = 0;
     while ((sourceSentence = sourceReader.readLine()) != null) {
-      try {
+      //try {
         CoreMap sentence = getParsedSentence(annotations, i, annotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
-        //System.err.println("---------------------------");
-        //System.err.println("alignment = \"" + alignmentString + "\";");
+        System.err.println("---------------------------");
+        System.err.println("alignment = \"" + alignmentString + "\";");
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
-        //projectSentence(sentence, alignment);
+        projectSentence(sentence, alignment);
         Map<Integer, Set<Integer>> dependencies = projectDependencies(sentence, alignment);
         //if (i == 0) {
         //  System.err.println(dependencies.get(-1));
@@ -417,10 +423,10 @@ public class DependencyProjector {
 
         //}
         printDependencyString(dependencies, -1, alignment.e(), "");
-        //System.err.println("---------------------------");
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+        System.err.println("---------------------------");
+      //} catch (Exception e) {
+      //  e.printStackTrace();
+      //}
       i++;
     }
   
