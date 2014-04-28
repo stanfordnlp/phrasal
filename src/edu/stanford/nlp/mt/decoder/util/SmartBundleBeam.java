@@ -30,9 +30,10 @@ public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
       for (int i = 0; i < permutationLen; i++) {
         for (int j = 0; j < MAX_PHRASE_LEN; j++) {
           int end = i + j + 1 > permutationLen ? permutationLen : i + j + 1;
-          List<Integer> subsequence = permutationSequence.subList(i, end);
-          if (isContiguousSequence(subsequence)) 
+          //List<Integer> subsequence = permutationSequence.subList(i, end);
+          //if (isContiguousSequence(subsequence)) 
             this.contiguousRanges.add(new Range(i, Math.min(i + j, this.sourceLength - 1)));
+          //this.contiguousRanges.add(e)
         }
       }
       
