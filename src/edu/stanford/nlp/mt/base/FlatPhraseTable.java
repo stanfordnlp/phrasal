@@ -213,7 +213,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
                 / (1024 * 1024), elapsedTime);
     System.err.println("Longest foreign phrase: " + longestSourcePhrase);
-    System.err.printf("Phrase table signature: %d%n", getSignature());
     return numScores;
   }
 
@@ -304,26 +303,11 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public String toString() {
     return getName();
   }
-
-  /**
-   * Sort of like hashCode(), but for debugging purposes
-   * only.
-   * 
-   * @return
-   */
-  public long getSignature() {
-    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) ruleIndex;
-    long signature = 0;
-    for (int[] rule : index) {
-      signature += Arrays.hashCode(rule);
-    }
-    return signature;
-  }
   
   public static void createIndex(boolean withGaps) {
     sourceIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
-        : new DynamicIntegerArrayIndex();
-    ruleIndex = new DynamicIntegerArrayIndex();
+        : new ProbingIntegerArrayIndex();
+    ruleIndex = new ProbingIntegerArrayIndex();
   }
 
   public static void lockIndex() {
