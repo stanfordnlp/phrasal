@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
-import cern.colt.Arrays;
+import java.util.Arrays;
 
 /**
  * Result of a KenLM query.
@@ -14,6 +14,13 @@ public class KenLMState extends LMState {
   private final int stateLength;
   private final int hashCode;
 
+  /**
+   * Constructor.
+   * 
+   * @param score
+   * @param state
+   * @param stateLength
+   */
   public KenLMState(double score, int[] state, int stateLength) {
     this.score = score;
     if (stateLength < state.length) {
