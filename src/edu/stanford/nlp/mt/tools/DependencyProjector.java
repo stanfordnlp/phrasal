@@ -49,13 +49,12 @@ import edu.stanford.nlp.util.Triple;
 
 public class DependencyProjector {
 
-  private static int DEPENDENCY_LM_ORDER = 3;
-  
   private static int parseFileIndex = 0;
   private static int parseSentenceIndex = 0;
 
   private static BufferedWriter leftDepLMWriter;
   private static BufferedWriter rightDepLMWriter;
+  private static BufferedWriter headDepLMWriter;
 
   
   
@@ -150,11 +149,8 @@ public class DependencyProjector {
           if (!leftNodes.isEmpty()) {
             leftDepLMWriter.write(tokens.get(idx).word());
             leftDepLMWriter.write(" ");
-            int c = 0;
             for (Integer child : leftNodes.descendingSet()) {
               leftDepLMWriter.write(tokens.get(child).word());
-              if ((c++) >= DEPENDENCY_LM_ORDER)
-                break;
               leftDepLMWriter.write(" ");
             }
             leftDepLMWriter.write("\n");
@@ -163,15 +159,15 @@ public class DependencyProjector {
           if (!rightNodes.isEmpty()) {
             rightDepLMWriter.write(tokens.get(idx).word());
             rightDepLMWriter.write(" ");
-            int c = 0;
             for (Integer child : rightNodes) {
               rightDepLMWriter.write(tokens.get(child).word());
-              if ((c++) >= DEPENDENCY_LM_ORDER)
-                break;
               rightDepLMWriter.write(" ");
             }
             rightDepLMWriter.write("\n");
           }          
+      } else {
+        headDepLMWriter.write(tokens.get(dependencies.get(idx).first()).word());
+        headDepLMWriter.write("\n");
       }
       
       
@@ -456,7 +452,9 @@ public class DependencyProjector {
     String outdirPath = PropertiesUtils.get(options, "outdir", ".", String.class);
     String leftDepLMFilename = outdirPath + File.separator + "left.deplm";
     String rightDepLMFilename = outdirPath + File.separator + "right.deplm";
-    
+    String headDepLMFilename = outdirPath + File.separator + "head.deplm";
+
+
     File leftDepLMFile = new File(leftDepLMFilename);
     if (!leftDepLMFile.exists())
       leftDepLMFile.createNewFile();
@@ -465,12 +463,18 @@ public class DependencyProjector {
     File rightDepLMFile = new File(rightDepLMFilename);
     if (!rightDepLMFile.exists())
       rightDepLMFile.createNewFile();
+    
+    File headDepLMFile = new File(headDepLMFilename);
+    if (!headDepLMFile.exists())
+      headDepLMFile.createNewFile();
 
     FileWriter leftFW = new FileWriter(leftDepLMFile.getAbsoluteFile());
     FileWriter rightFW = new FileWriter(rightDepLMFile.getAbsoluteFile());
+    FileWriter headFW = new FileWriter(headDepLMFile.getAbsoluteFile());
 
     leftDepLMWriter = new BufferedWriter(leftFW);
     rightDepLMWriter = new BufferedWriter(rightFW);
+    headDepLMWriter = new BufferedWriter(headFW);
 
     
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
@@ -513,7 +517,8 @@ public class DependencyProjector {
 
     leftDepLMWriter.close();
     rightDepLMWriter.close();
-
+    headDepLMWriter.close();
+    
   }
 
 }
