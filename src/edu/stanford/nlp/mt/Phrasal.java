@@ -1053,6 +1053,7 @@ public class Phrasal {
       final InputProperties inputProps = inputPropertiesList != null && sourceInputId < inputPropertiesList.size() ? 
           inputPropertiesList.get(sourceInputId) : new InputProperties();
       
+          System.err.println(wrapper.toString());
       wrapper.put(new DecoderInput(source, sourceInputId, inputProps));
       while(wrapper.peek()) {
         DecoderOutput result = wrapper.poll();
