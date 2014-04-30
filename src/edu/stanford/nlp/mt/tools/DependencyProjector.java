@@ -56,6 +56,7 @@ public class DependencyProjector {
   private static BufferedWriter rightDepLMWriter;
   private static BufferedWriter headDepLMWriter;
 
+  private static String HEAD_SUFFIX = "<HEAD>";
   
   
   /**
@@ -147,7 +148,7 @@ public class DependencyProjector {
           NavigableSet<Integer> rightNodes =  dependencies.get(idx).tailSet(idx, false);
 
           if (!leftNodes.isEmpty()) {
-            leftDepLMWriter.write(tokens.get(idx).word());
+            leftDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
             leftDepLMWriter.write(" ");
             for (Integer child : leftNodes.descendingSet()) {
               leftDepLMWriter.write(tokens.get(child).word());
@@ -157,7 +158,7 @@ public class DependencyProjector {
           }
           
           if (!rightNodes.isEmpty()) {
-            rightDepLMWriter.write(tokens.get(idx).word());
+            rightDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
             rightDepLMWriter.write(" ");
             for (Integer child : rightNodes) {
               rightDepLMWriter.write(tokens.get(child).word());
