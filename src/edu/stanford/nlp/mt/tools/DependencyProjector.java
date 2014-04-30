@@ -1,14 +1,17 @@
 package edu.stanford.nlp.mt.tools;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
@@ -23,6 +26,8 @@ import java.util.SortedSet;
 
 
 
+
+import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.Label;
@@ -44,9 +49,15 @@ import edu.stanford.nlp.util.Triple;
 
 public class DependencyProjector {
 
+  private static int DEPENDENCY_LM_ORDER = 3;
+  
   private static int parseFileIndex = 0;
   private static int parseSentenceIndex = 0;
 
+  private static BufferedWriter leftDepLMWriter;
+  private static BufferedWriter rightDepLMWriter;
+
+  
   
   /**
    * Command-line option specification.
@@ -58,6 +69,8 @@ public class DependencyProjector {
     optionArgDefs.put("targetTokens", 1); 
     optionArgDefs.put("alignment", 1);
     optionArgDefs.put("annotations", 1);
+    optionArgDefs.put("outdir", 1);
+
     return optionArgDefs;
   }
   
@@ -128,8 +141,50 @@ public class DependencyProjector {
     }
   }
   
-  public static Map<Integer, Set<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment) {
-    Map<Integer, Set<Integer>> projectedDependencies = Generics.newHashMap();
+  public static void printLeftAndRightDependency(Map<Integer, NavigableSet<Integer>> dependencies, int idx, Sequence<IString> tokens) throws IOException {
+    if (dependencies.get(idx) != null && !dependencies.get(idx).isEmpty()) {
+      if (idx >= 0) {
+          NavigableSet<Integer> leftNodes =  dependencies.get(idx).headSet(idx, false);
+          NavigableSet<Integer> rightNodes =  dependencies.get(idx).tailSet(idx, false);
+
+          if (!leftNodes.isEmpty()) {
+            leftDepLMWriter.write(tokens.get(idx).word());
+            leftDepLMWriter.write(" ");
+            int c = 0;
+            for (Integer child : leftNodes.descendingSet()) {
+              leftDepLMWriter.write(tokens.get(child).word());
+              if ((c++) >= DEPENDENCY_LM_ORDER)
+                break;
+              leftDepLMWriter.write(" ");
+            }
+            leftDepLMWriter.write("\n");
+          }
+          
+          if (!rightNodes.isEmpty()) {
+            rightDepLMWriter.write(tokens.get(idx).word());
+            rightDepLMWriter.write(" ");
+            int c = 0;
+            for (Integer child : rightNodes) {
+              rightDepLMWriter.write(tokens.get(child).word());
+              if ((c++) >= DEPENDENCY_LM_ORDER)
+                break;
+              rightDepLMWriter.write(" ");
+            }
+            rightDepLMWriter.write("\n");
+          }          
+      }
+      
+      
+      for (Integer child: dependencies.get(idx)) {
+        printLeftAndRightDependency(dependencies, child, tokens);
+      }
+      
+    }
+  }
+  
+  
+  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment) {
+    Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
 
     SemanticGraph semanticGraph = annotation.get(BasicDependenciesAnnotation.class);
 
@@ -148,18 +203,18 @@ public class DependencyProjector {
     Integer tSentenceHeadIdx = -1;
     //add root
     Collection<IndexedWord> sentenceHeads = semanticGraph.getRoots();
-    SortedSet<Integer> tHeadIndices = null;
+    NavigableSet<Integer> tHeadIndices = null;
     if (!sentenceHeads.isEmpty()) {
       IndexedWord sentenceHead = semanticGraph.getFirstRoot();
       int sHeadIndex = sentenceHead.index() - 1;
-      tHeadIndices = alignment.f2e(sHeadIndex);
+      tHeadIndices = Generics.newTreeSet(alignment.f2e(sHeadIndex));
       if (tHeadIndices.size() == 1) {
         tSentenceHeadIdx = tHeadIndices.last();
         projectedDependencies.put(-1, tHeadIndices);
       } else if (tHeadIndices.size() > 1) {
         //make the right-most word the sentence head and make all the other words dependent of the head
         tSentenceHeadIdx = tHeadIndices.last();
-        Set<Integer> depSet = Generics.newHashSet();
+        NavigableSet<Integer> depSet = Generics.newTreeSet();
         projectedDependencies.put(tSentenceHeadIdx, depSet);
 
         for (Integer idx : tHeadIndices ) {
@@ -167,7 +222,7 @@ public class DependencyProjector {
           projectedDependencies.get(tSentenceHeadIdx).add(idx);
         }
         
-        Set<Integer> headSet = Generics.newHashSet();
+        NavigableSet<Integer> headSet = Generics.newTreeSet();
         headSet.add(tSentenceHeadIdx);
         projectedDependencies.put(-1, headSet);
       }
@@ -211,7 +266,7 @@ public class DependencyProjector {
     
       if (dep != null) {
         if (projectedDependencies.get(dep.first()) == null) 
-          projectedDependencies.put(dep.first(), new HashSet<Integer>());
+          projectedDependencies.put(dep.first(), new TreeSet<Integer>());
         projectedDependencies.get(dep.first()).add(dep.second());
       }
     }
@@ -398,6 +453,26 @@ public class DependencyProjector {
     String targetTokens = PropertiesUtils.get(options, "targetTokens", null, String.class);
     String alignments = PropertiesUtils.get(options, "alignment", null, String.class);
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
+    String outdirPath = PropertiesUtils.get(options, "outdir", ".", String.class);
+    String leftDepLMFilename = outdirPath + File.separator + "left.deplm";
+    String rightDepLMFilename = outdirPath + File.separator + "right.deplm";
+    
+    File leftDepLMFile = new File(leftDepLMFilename);
+    if (!leftDepLMFile.exists())
+      leftDepLMFile.createNewFile();
+
+    
+    File rightDepLMFile = new File(rightDepLMFilename);
+    if (!rightDepLMFile.exists())
+      rightDepLMFile.createNewFile();
+
+    FileWriter leftFW = new FileWriter(leftDepLMFile.getAbsoluteFile());
+    FileWriter rightFW = new FileWriter(rightDepLMFile.getAbsoluteFile());
+
+    leftDepLMWriter = new BufferedWriter(leftFW);
+    rightDepLMWriter = new BufferedWriter(rightFW);
+
+    
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
     File sourceSentences = new File(sourceTokens);
     File targetSentences = new File(targetTokens);
@@ -412,18 +487,19 @@ public class DependencyProjector {
         CoreMap sentence = getParsedSentence(annotations, i, annotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
-        System.err.println("---------------------------");
-        System.err.println("alignment = \"" + alignmentString + "\";");
+        //System.err.println("---------------------------");
+        //System.err.println("alignment = \"" + alignmentString + "\";");
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
-        projectSentence(sentence, alignment);
-        Map<Integer, Set<Integer>> dependencies = projectDependencies(sentence, alignment);
+        //projectSentence(sentence, alignment);
+        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(sentence, alignment);
         //if (i == 0) {
         //  System.err.println(dependencies.get(-1));
         //  System.err.println(dependencies.get(1));
 
         //}
-        printDependencyString(dependencies, -1, alignment.e(), "");
-        System.err.println("---------------------------");
+        //printDependencyString(dependencies, -1, alignment.e(), "");
+        printLeftAndRightDependency(dependencies, -1, alignment.e());
+        //System.err.println("---------------------------");
       //} catch (Exception e) {
       //  e.printStackTrace();
       //}
@@ -435,6 +511,8 @@ public class DependencyProjector {
     targetReader.close();
     alignmentReader.close();
 
+    leftDepLMWriter.close();
+    rightDepLMWriter.close();
 
   }
 
