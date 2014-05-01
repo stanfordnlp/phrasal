@@ -5,8 +5,7 @@ src_ngram_size 0
 input_vocab_size 1444
 output_vocab_size 1444
 input_embedding_dimension 2
-num_hidden 3
-output_embedding_dimension 4
+layers 3-4
 activation_function rectifier
 
 \input_vocab

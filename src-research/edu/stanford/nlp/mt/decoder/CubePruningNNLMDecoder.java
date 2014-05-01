@@ -29,6 +29,7 @@ import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.SparseScorer;
 import edu.stanford.nlp.mt.lm.JointNNLM;
+import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.lm.NNLM;
 import edu.stanford.nlp.mt.lm.TargetNNLM;
 import edu.stanford.nlp.mt.util.NNLMUtil;
@@ -45,7 +46,8 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
   // Thang Apr14
   private final boolean DEBUG = false;
   private boolean nnlmRerank = true;
-  private final NNLM nnlm;
+  private NNLM nnlm;
+  private KenLanguageModel kenlm;
   
   static public <TK, FV> CubePruningNNLMDecoderBuilder<TK, FV> builder() {
     return new CubePruningNNLMDecoderBuilder<TK, FV>();
@@ -56,15 +58,27 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     this.nnlm = nnlm;
     
     if (maxDistortion != -1) {
-      System.err.printf("Cube pruning NNLM decoder %d. Distortion limit: %d%n", builder.decoderId, 
-          maxDistortion);
+      System.err.printf("Cube pruning NNLM decoder %d, NNLM. Distortion limit: %d\n", builder.decoderId,  maxDistortion);
     } else {
-      System.err.printf("Cube pruning NNLM decoder %d. No hard distortion limit%n", builder.decoderId);
+      System.err.printf("Cube pruning NNLM decoder %d, NNLM. No hard distortion limit\n", builder.decoderId);
     }    
   }
 
+  protected CubePruningNNLMDecoder(CubePruningNNLMDecoderBuilder<TK, FV> builder, NNLM nnlm, KenLanguageModel kenlm) {
+    super(builder);
+    this.nnlm = nnlm;
+    this.kenlm = kenlm;
+    
+    if (maxDistortion != -1) {
+      System.err.printf("Cube pruning NNLM decoder %d, NNLM, KenLanguageModel. Distortion limit: %d\n", builder.decoderId, maxDistortion);
+    } else {
+      System.err.printf("Cube pruning NNLM decoder %d, NNLM, KenLanguageModel. No hard distortion limit\n", builder.decoderId);
+    }    
+  }
+  
   public static class CubePruningNNLMDecoderBuilder<TK, FV> extends CubePruningDecoderBuilder<TK, FV> {
     private NNLM jointNNLM;
+    private KenLanguageModel kenlm = null; // only for debugging purpose
     
     public CubePruningNNLMDecoderBuilder() {
       super();
@@ -87,10 +101,19 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       }
     }
     
+    public void loadKenLanguageModel(String kenlmFile){
+      System.err.println("# CubePruningNNLMDecoderBuilder loads KenLanguageModel: " + kenlmFile);
+      kenlm = new KenLanguageModel(kenlmFile);
+    }
+    
     @Override
     public Inferer<TK, FV> build() {
       decoderId++;
-      return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM);
+      if(kenlm==null){
+        return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM);
+      } else {
+        return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM, kenlm);
+      }
     }
   }
   
@@ -261,15 +284,26 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       for (int[] ngram : ngrams) { allNgrams.add(ngram); }
       accumCountList.add(numTotalNgrams);
       
-//      if (DEBUG){
-//        System.err.println("# Derivation: " + derivation);
-//        for (int[] ngram : ngramList) { System.err.println("  " + jointNNLM.toIString(ngram)); }
-//      }
+      if (DEBUG){
+        System.err.println("# Extract ngrams for derivation: " + derivation);
+        System.err.println("  src=" + f.sourceSentence);
+        System.err.println("  tgt=" + tgtSent);
+        System.err.println("  srcPosition=" + f.sourcePosition);
+        System.err.println("  tgtPosition=" + (f.targetPosition+1));
+        for (int[] ngram : ngrams) { System.err.println("  ngram=" + nnlm.toIString(ngram)); }
+      }
     }
     
     /** compute NNLM scores **/
     if (DEBUG){ System.err.println("# Computing nnlm scores for " + numTotalNgrams + " ngrams"); }
-    double[] scores = nnlm.scoreNgrams(NNLMUtil.convertNgramList(allNgrams));
+    double[] scores;
+    if(kenlm==null){ // use NNLM for the second layer
+      scores = nnlm.scoreNgrams(NNLMUtil.convertNgramList(allNgrams));
+    } else { // use the same KenLM for the second layer, sanity check
+      scores = new double[allNgrams.size()];
+      for(int i=0; i<allNgrams.size(); i++){ scores[i] = kenlm.score(nnlm.toIString(allNgrams.get(i))); }
+    }
+    
   
     /** update derivations' neural scores **/
     beamIter = beam.iterator();
@@ -281,11 +315,21 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       DerivationNNLM<TK,FV> derivation = (DerivationNNLM<TK,FV>) beamIter.next();
       int end = accumCountList.get(derivationId);
       
-      double nnlmScore = derivation.getPrevNNLMScore();
-      for (int j = start; j < end; j++) { nnlmScore += scores[j]; }
+      double incNNLMScore = 0;
+      for (int j = start; j < end; j++) {  incNNLMScore += scores[j]; }
+      
       
       // replace the traditional lm score by the nnlm score
-      derivation.substituteNNLMScore(nnlmScore, lmWeight);
+      double localLMScore =  derivation.getLocalLMScore(); // get local lm score
+      derivation.updateNNLMScore(incNNLMScore, localLMScore, lmWeight);
+      
+      if (DEBUG) { 
+        System.err.println("# Scores for derivation:" + derivation);
+        for (int j = start; j < end; j++) {  System.err.println("  " + nnlm.toIString(allNgrams.get(j)) + "\t" + scores[j]); }
+        
+        // sanity check with the same KenLM in the second layer
+        if(kenlm!=null){ assert(Math.abs(incNNLMScore-localLMScore)<1e-5); } 
+      }
       
       start = end;
       derivationId++;
@@ -312,6 +356,8 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       DerivationNNLM<TK, FV> derivation = buildDerivation ? new DerivationNNLM<TK, FV>(sourceInputId,
           successor.rule, successor.antecedent.length, (DerivationNNLM<TK, FV>) successor.antecedent, featurizer, scorer, heuristic) :
             null;
+      
+      if(DEBUG) { System.err.print("# Generate from antecedent=" + ((antecedent==null)? "\"\"" : antecedent.antecedent) + " -> " + derivation); }
       consequents.add(new Item<TK,FV>(derivation, successor));
     }
     return consequents;

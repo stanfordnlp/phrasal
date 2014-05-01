@@ -23,7 +23,6 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
   // the nnlm score of the previous derivation 
   private double prevNNLMScore;
   private double nnlmScore;
-  private double lmScore = 0; // traditional LM score
   
   /**
    * Constructor for null hypotheses (root of translation lattice).
@@ -65,41 +64,39 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
 
   @Override
   public String toString() {
-    return String.format("tgt=%s, cov=%s [%.3f (score=%0.3f, h=%.3f), prev_nnlm: %3f, nnlm: %3f, lm: %3f]", 
-        targetSequence.toString(), sourceCoverage.toString(), score + h, score, h, prevNNLMScore, nnlmScore, lmScore);
+    return String.format("tgt=%s, cov=%s [%.3f (score=%.3f, h=%.3f), prev_nnlm: %.3f, nnlm: %.3f]", 
+        targetSequence.toString(), sourceCoverage.toString(), score + h, score, h, prevNNLMScore, nnlmScore);
   }
-  
-//  @Override
-//  public int compareTo(Derivation<TK, FV> competitor) {
-//    //System.err.println("DerivationNNLM compareTo: " + this + " vs. " + ((DerivationNNLM<TK, FV>) competitor));
-//    // compare using nnlmScore first
-//    int cmp = (int) Math.signum(((DerivationNNLM<TK, FV>) competitor).nnlmScore - nnlmScore);
-//    if (cmp != 0) {
-//      return cmp;
-//    }
-//    return super.compareTo(competitor);
-//  }
   
   public double getPrevNNLMScore() {
     return prevNNLMScore;
   }
   
-//  public void setNNLMScore(double nnlmScore) {
-//    this.nnlmScore = nnlmScore;
-//  }
-  
-  public void substituteNNLMScore(double nnlmScore, double lmWeight){
-    // set rnnlmScore
-    this.nnlmScore = nnlmScore;
+  /**
+   * Set the nnlm score for the current derivation. 
+   * Also replace the traditional lm score with the nnlm score.
+   * 
+   * @param incNNLMScore
+   * @param lmWeight
+   */
+  public void updateNNLMScore(double incNNLMScore, double localLMScore, double lmWeight){
+    // update rnnlmScore
+    this.nnlmScore = prevNNLMScore + incNNLMScore;
     
-    // get and set lm score
+    // replace lmScore by rnnlmScore
+    score += (incNNLMScore-localLMScore)*lmWeight;
+  }
+  
+  /**
+   * @return the local LM score for this recently added phrase pair.
+   */
+  public double getLocalLMScore(){
+    double lmScore = 0;
     for (FeatureValue<FV> feature : localFeatures) {
       if(feature.name.equals(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME)){ // LM
         lmScore = feature.value;
       }
     }
-    
-    // replace lmScore by rnnlmScore
-    score += (nnlmScore-lmScore)*lmWeight;
+    return lmScore;
   }
 }
