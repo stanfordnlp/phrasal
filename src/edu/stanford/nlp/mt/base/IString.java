@@ -123,7 +123,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
     @Override
     public IString get(int i) {
-      return new IString(index.get(i));
+      return new IString(i);
     }
 
     @Override
