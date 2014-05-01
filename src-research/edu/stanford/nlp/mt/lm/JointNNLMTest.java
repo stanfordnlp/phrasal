@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import cern.colt.Arrays;
 import static org.junit.Assert.*;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
@@ -20,37 +21,53 @@ import edu.stanford.nlp.mt.base.Sequence;
 public class JointNNLMTest {
 	public static final String PREFIX = ""; // "projects/mt/"; //
   public static final String nplmFile = PREFIX + "test/inputs/src5.tgt3.nplm";
+  public static final String nplmSingleFile = PREFIX + "test/inputs/src5.tgt3.single.nplm";
   
   
 	@Test
 	public void testUnk() throws IOException {
 //		System.err.println(System.getProperty("user.dir"));
-		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"a", "b", "c", "d", "e", "f", "g", "h"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
+		
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		double score = nplm.scoreNgram(sequence);
-		System.err.println(sequence + "\t" + score);
 		assertEquals(-1.8107199668884277, score, 1e-5);
+//		System.err.println(sequence + "\t" + Arrays.toString(nplm.toId(sequence)) + "\t" + score);
+		
+		JointNNLM singleNPLM = new JointNNLM(nplmSingleFile, 0, 1);
+    score = singleNPLM.scoreNgram(sequence);
+    assertEquals(-1.811, score, 1e-5);
 	}
 
 	@Test
 	public void testInVocab() throws IOException {
-		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"一", "个", "中国", "银行", ",", "a", "chinese", "bank"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
+		
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		double score = nplm.scoreNgram(sequence);
-		System.err.println(sequence + "\t" + score);
 		assertEquals(-7.802870273590088, score, 1e-5);
+		
+//		System.err.println(sequence + "\t" + Arrays.toString(nplm.toId(sequence)) + "\t" + score);
+		JointNNLM singleNPLM = new JointNNLM(nplmSingleFile, 0, 1);
+    score = singleNPLM.scoreNgram(sequence);
+    assertEquals(-7.80283, score, 1e-5);
 	}
 	
 	@Test
 	public void testMixVocab() throws IOException {
-		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		String[] tokens = new String[]{"a", "b", "c", "中国", "银行", "d", "chinese", "enterprises"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
+		
+		JointNNLM nplm = new JointNNLM(nplmFile, 0, 1);
 		double score = nplm.scoreNgram(sequence);
-		System.err.println(sequence + "\t" + score);
 		assertEquals(-7.744800090789795, score, 1e-5);
+		
+//		System.err.println(sequence + "\t" + Arrays.toString(nplm.toId(sequence)) + "\t" + score);
+		JointNNLM singleNPLM = new JointNNLM(nplmSingleFile, 0, 1);
+    score = singleNPLM.scoreNgram(sequence);
+    assertEquals(-7.74483, score, 1e-5);
 	}
 	
 	@Test

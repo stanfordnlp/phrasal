@@ -35,6 +35,7 @@
 	<classpathentry kind="lib" path="lib-research/jetty-webapp-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jetty-xml-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
-	<classpathentry kind="lib" path="/Users/lmthang/RA/javanlp/projects/mt/lib-research/concurrentlinkedhashmap-lru-1.4.jar"/>
+	<classpathentry kind="lib" path="/Users/lmthang/RA/javanlp/projects/mt/lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="/Users/lmthang/RA/javanlp/projects/mt/lib-research/jsr305.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
