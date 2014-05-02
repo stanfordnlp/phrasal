@@ -193,10 +193,11 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGram
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram) {
   // Convert the sequence input to a C array
   jint ngram_sz = env->GetArrayLength(jint_ngram);
-  jint ngram_array[ngram_sz]; 
-  env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
 
-  return reinterpret_cast<WrapAbstract*>(kenLM_ptr)->Query((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0]);
+  jint* ngram_array = (jint*) env->GetPrimitiveArrayCritical(jint_ngram, 0);
+  jlong result = reinterpret_cast<WrapAbstract*>(kenLM_ptr)->Query((lm::WordIndex*)&ngram_array[1], (lm::WordIndex*)&ngram_array[ngram_sz], (lm::WordIndex)ngram_array[0]);
+  env->ReleasePrimitiveArrayCritical(jint_ngram, ngram_array, JNI_ABORT);
+  return result;
 }
 
 /*
@@ -208,10 +209,13 @@ JNIEXPORT jlong JNICALL Java_edu_stanford_nlp_mt_lm_KenLanguageModel_scoreNGramS
 (JNIEnv *env, jobject this_jobj, jlong kenLM_ptr, jintArray jint_ngram, jint start_index) {
   // Convert the sequence input to a C array
   jint ngram_sz = env->GetArrayLength(jint_ngram);
-  jint ngram_array[ngram_sz]; 
-  env->GetIntArrayRegion(jint_ngram, 0, ngram_sz, ngram_array);
-  
-  return reinterpret_cast<WrapAbstract*>(kenLM_ptr)->QuerySequence((const lm::WordIndex*)&ngram_array[0], (const lm::WordIndex*)&ngram_array[start_index], (const lm::WordIndex*)&ngram_array[ngram_sz]);
+
+  // GetPrimitiveArrayCritical is faster than both GetIntArrayElements and
+  // GetIntArrayRegion
+  jint* ngram_array = (jint*) env->GetPrimitiveArrayCritical(jint_ngram, 0);
+  jlong result = reinterpret_cast<WrapAbstract*>(kenLM_ptr)->QuerySequence((const lm::WordIndex*)&ngram_array[0], (const lm::WordIndex*)&ngram_array[start_index], (const lm::WordIndex*)&ngram_array[ngram_sz]);
+  env->ReleasePrimitiveArrayCritical(jint_ngram, ngram_array, JNI_ABORT);
+  return result;
 }
   
 /*
