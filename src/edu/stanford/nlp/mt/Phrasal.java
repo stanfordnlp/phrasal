@@ -1054,8 +1054,7 @@ public class Phrasal {
           inputPropertiesList.get(sourceInputId) : new InputProperties();
       
       wrapper.put(new DecoderInput(source, sourceInputId, inputProps));
-      while(wrapper.peek()) {
-        DecoderOutput result = wrapper.poll();
+      for (DecoderOutput result; (result = wrapper.poll()) != null;) {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
         } else {
