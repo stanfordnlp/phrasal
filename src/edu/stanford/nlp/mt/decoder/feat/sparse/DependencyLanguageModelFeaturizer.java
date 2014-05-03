@@ -233,7 +233,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       IString token = f.targetPhrase.get(i);
       if (token.word().length() < 1 || !Character.isAlphabetic(token.word().charAt(0)))
         continue;
-      if (alignment.t2s(i).length < 1) {
+      if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
         features.add(new FeatureValue<String>(MISSING_ARC_FEAT_NAME, 1.0));
         continue;
       }
