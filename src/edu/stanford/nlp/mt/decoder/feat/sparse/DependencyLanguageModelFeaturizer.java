@@ -224,8 +224,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    DepLMState prevState = (DepLMState) f.prior.getState(this);
-    DepLMState state = prevState.clone();
+    DepLMState prevState = f.prior == null ? null : (DepLMState) f.prior.getState(this);
+    DepLMState state = prevState == null ? new DepLMState() : prevState.clone();
     
     int targetLength = f.targetPhrase.size();
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
