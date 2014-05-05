@@ -453,6 +453,13 @@ public class OnlineTuner {
         new ArrayList<Triple<Double,Integer,Counter<String>>>(numEpochs);
     final Runtime runtime = Runtime.getRuntime();
 
+    // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
+    // to finish at the end of the epoch
+    boolean orderResults = false;
+    final MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = 
+        new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
+            new GradientProcessor(optimizer,scoreMetric,0), orderResults);
+    
     logger.info("Start of online tuning");
     logger.info("Number of epochs: " + numEpochs);
     logger.info("Number of threads: " + numThreads);
@@ -466,13 +473,6 @@ public class OnlineTuner {
       Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
           new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
       if (createPseudoReferences) updatePseudoReferences(epoch);
-
-      // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
-      // to finish at the end of the epoch
-      boolean orderResults = false;
-      final MulticoreWrapper<ProcessorInput,ProcessorOutput> wrapper = 
-          new MulticoreWrapper<ProcessorInput,ProcessorOutput>(numThreads, 
-              new GradientProcessor(optimizer,scoreMetric,0), orderResults);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       ArrayMath.shuffle(indices);
@@ -492,7 +492,8 @@ public class OnlineTuner {
       }
 
       // Wait for threadpool shutdown for this epoch and get final gradients
-      wrapper.join();
+      boolean isLastEpoch = epoch+1 == numEpochs;
+      wrapper.join(isLastEpoch);
       updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
