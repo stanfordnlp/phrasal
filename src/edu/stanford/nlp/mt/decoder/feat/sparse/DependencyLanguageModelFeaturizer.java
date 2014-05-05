@@ -214,7 +214,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       int depIndex = dep.dep().index() - 1;
       if (!this.forwardDependencies.containsKey(govIndex)) {
         this.forwardDependencies.put(govIndex, new HashSet<Integer>());
-      } 
+      }
       this.forwardDependencies.get(govIndex).add(depIndex);
       this.reverseDependencies.put(depIndex, govIndex);
     }
@@ -238,9 +238,18 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         continue;
       }
       
-      int sourceDepIndex = alignment.t2s(i)[0] + f.sourcePosition;
-      int sourceGovIndex = reverseDependencies.get(sourceDepIndex);
+      Integer sourceGovIndex = null;
+      int sourceDepIndex = -1;
+      for (int j = 0; j < alignment.t2s(i).length; j++) {
+        sourceDepIndex = alignment.t2s(i)[j] + f.sourcePosition;
+        if ((sourceGovIndex = this.reverseDependencies.get(sourceDepIndex)) != null)
+          break;
+      }
       
+      //check if the current word has a head
+      if (sourceGovIndex == null)
+        continue; 
+
       //check for root
       if (sourceGovIndex == -1) {
         double rootScore = this.rootLM.score(f.targetPhrase.subsequence(i, i+1), 0, null).getScore();
@@ -288,12 +297,12 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         if (subState.getLeftChildren().size() > 0) {
           Collections.reverse(subState.getLeftChildren());
           Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
-          seq = Sequences.wrapStart(seq, new IString(subState.headToken.word() + "<HEAD>"));
+          seq = Sequences.wrapStart(seq, new IString(token.word() + "<HEAD>"));
           double leftScore = leftLM.score(seq, 0, null).getScore();
           features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
           subState.getLeftChildren().clear();
         }
-      } else if (forwardDependencies.get(sourceDepIndex) != null && !forwardDependencies.get(sourceDepIndex).isEmpty()) {
+      } else if (this.forwardDependencies.get(sourceDepIndex) != null && !this.forwardDependencies.get(sourceDepIndex).isEmpty()) {
         subState = state.addSubState(sourceDepIndex);
       }
       
@@ -303,7 +312,9 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     }
     
     for (Integer i: state.getSubStates().keySet()) {
-      HashSet<Integer> deps = forwardDependencies.get(i);
+      if (state.getSubState(i) == null)
+        continue;
+      HashSet<Integer> deps = this.forwardDependencies.get(i);
       boolean del = f.derivation.sourceCoverage.get(i);
       if (del && deps != null) {
         for (Integer j : deps) {
@@ -391,7 +402,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     public DepLMState clone() {
       DepLMState copy = new DepLMState();
       for (Integer i : this.subStates.keySet()) {
-        copy.setSubState(i, this.subStates.get(i).clone());
+        copy.setSubState(i, this.subStates.get(i) != null ? this.subStates.get(i).clone() : null);
       }
       return copy;
     }
@@ -425,6 +436,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     
     @Override
     public boolean equals(Object other) {
+      if (other == null)
+        return false;
       if (other == this)
         return true;
       if (!(other instanceof DepLMSubState))
@@ -432,10 +445,13 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       
       DepLMSubState oState = (DepLMSubState) other;
       
-      if (!(rightLMState == null && oState.rightLMState == null) 
-          || !rightLMState.equals(oState.getRightLMState()))
+      if (rightLMState != null &&  oState.rightLMState != null && 
+           !rightLMState.equals(oState.getRightLMState()))
         return false;
       
+      if (rightLMState == null && oState.rightLMState != null)
+        return false;
+
       int lChildrenCount = oState.getLeftChildren().size();
       if (this.leftChildren.size() != lChildrenCount)
         return false;
