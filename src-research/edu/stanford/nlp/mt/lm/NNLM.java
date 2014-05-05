@@ -20,7 +20,7 @@ public interface NNLM {
    * @param ngramIds: normal order ids
    * @return
    */
-  public double scoreNgram(int[] ngrams);
+  public double scoreNgram(int[] ngram);
   
   /**
    * Score multiple ngrams.
@@ -44,6 +44,20 @@ public interface NNLM {
       PhraseAlignment alignment, int srcStartPos, int tgtStartPos);
   
   /**
+   * Extract an ngram. 
+   * 
+   * @param pos -- tgt position of the last word in the ngram to be extracted (should be >= tgtStartPos, < tgtSent.size())
+   * @param srcSent
+   * @param tgtSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+   * @return list of ngrams, each of which consists of NPLM ids.
+   */
+  public int[] extractNgram(int pos, Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos);
+  
+  /**
    * Convert a sequence of IString into an array of indices.
    * 
    * @param sequence
@@ -58,7 +72,7 @@ public interface NNLM {
    * @param sequence
    * @return
    */
-  public Sequence<IString> toIString(int[] ngramIds);
+  public Sequence<IString> toIString(int[] nnlmIds);
   
   
   /**
@@ -74,4 +88,11 @@ public interface NNLM {
    * @return
    */
   public int order();
+  
+  /**
+   * Get the target order of this NNLM. Will be different from order() if this is a joint NNLM.
+   * 
+   * @return
+   */
+  public int getTgtOrder();
 }

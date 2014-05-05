@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
-import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;

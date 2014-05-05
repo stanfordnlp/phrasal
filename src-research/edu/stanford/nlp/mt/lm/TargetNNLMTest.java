@@ -25,7 +25,6 @@ public class TargetNNLMTest {
 	@Test
 	public void testUnk() throws IOException {
 //		System.err.println(System.getProperty("user.dir"));
-//	  System.err.println(sequence + "\t" + score);
 		
 		String[] tokens = new String[]{"a", "b", "c"};
 		Sequence<IString> sequence = IString.getIStringSequence(tokens);
@@ -36,7 +35,8 @@ public class TargetNNLMTest {
 		
 		TargetNNLM singleNPLM = new TargetNNLM(nplmSingleFile, 0, 1);
     score = singleNPLM.scoreNgram(sequence);
-    assertEquals(-1.80837, score, 1e-5);
+    System.err.println(sequence + "\t" + score);
+    assertEquals(-1.81149, score, 1e-5);
 	}
 
 	@Test
@@ -50,7 +50,7 @@ public class TargetNNLMTest {
 		
     TargetNNLM singleNPLM = new TargetNNLM(nplmSingleFile, 0, 1);
     score = singleNPLM.scoreNgram(sequence);
-    assertEquals(-7.80339, score, 1e-5);
+    assertEquals(-7.80284, score, 1e-5);
 	}
 	
 	@Test
@@ -64,7 +64,7 @@ public class TargetNNLMTest {
 		
     TargetNNLM singleNPLM = new TargetNNLM(nplmSingleFile, 0, 1);
     score = singleNPLM.scoreNgram(sequence);
-    assertEquals(-7.74433, score, 1e-5);
+    assertEquals(-7.74473, score, 1e-5);
 	}
 	
 	@Test

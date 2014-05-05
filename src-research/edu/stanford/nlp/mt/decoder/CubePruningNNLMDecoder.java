@@ -13,8 +13,10 @@ import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
@@ -44,7 +46,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
   // Thang Apr14
-  private final boolean DEBUG = false;
+  private final int DEBUG_OPT = 0; // 0 -- no output, 1 -- print final translations, 2 -- lots of output!
   private boolean nnlmRerank = true;
   private NNLM nnlm;
   private KenLanguageModel kenlm;
@@ -64,15 +66,14 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     }    
   }
 
-  protected CubePruningNNLMDecoder(CubePruningNNLMDecoderBuilder<TK, FV> builder, NNLM nnlm, KenLanguageModel kenlm) {
+  protected CubePruningNNLMDecoder(CubePruningNNLMDecoderBuilder<TK, FV> builder, KenLanguageModel kenlm) {
     super(builder);
-    this.nnlm = nnlm;
     this.kenlm = kenlm;
     
     if (maxDistortion != -1) {
-      System.err.printf("Cube pruning NNLM decoder %d, NNLM, KenLanguageModel. Distortion limit: %d\n", builder.decoderId, maxDistortion);
+      System.err.printf("Cube pruning NNLM decoder %d, KenLanguageModel. Distortion limit: %d\n", builder.decoderId, maxDistortion);
     } else {
-      System.err.printf("Cube pruning NNLM decoder %d, NNLM, KenLanguageModel. No hard distortion limit\n", builder.decoderId);
+      System.err.printf("Cube pruning NNLM decoder %d, KenLanguageModel. No hard distortion limit\n", builder.decoderId);
     }    
   }
   
@@ -112,7 +113,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       if(kenlm==null){
         return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM);
       } else {
-        return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM, kenlm);
+        return new CubePruningNNLMDecoder<TK, FV>(this, kenlm);
       }
     }
   }
@@ -164,7 +165,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     int numPruned = 0;
     final long startTime = System.nanoTime();
     
-    if(DEBUG) { System.err.println("# CubePruningNNLMDecoder, decoding: " + source + ", sourceLength=" + sourceLength); }
+    if(DEBUG_OPT>0) { System.err.println("# CubePruningNNLMDecoder, decoding: " + source + ", sourceLength=" + sourceLength); }
     for (int i = 1; i <= sourceLength; i++) {
       // Prune old beams
       int startBeam = Math.max(0, i-maxPhraseLength);
@@ -216,7 +217,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       /* Thang Apr14: use NNLM to re-rank derivations */
       /************************************************/
       if(nnlmRerank){
-        if(DEBUG) { System.err.println("# NNLM reranking beam " + i); }
+        if(DEBUG_OPT>0) { System.err.println("# NNLM reranking beam " + i); }
         nnlmRerank(newBeam);
       }
       
@@ -243,6 +244,8 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
             logger.warning(String.format("input %d: DECODER FAILURE, but backed off to coverage %d/%d: ", sourceInputId,
                 coveredTokens, sourceLength));
           }
+          
+          if(DEBUG_OPT>0){ for (Derivation<TK, FV> derivation : beam) { System.err.println(derivation); }}
           return beam;
         }
       }
@@ -265,6 +268,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     
     /** collect ngrams **/
     List<int[]> allNgrams = new LinkedList<int[]>();
+    List<Sequence<IString>> allNGramSeqs = new LinkedList<Sequence<IString>>(); // debug purpose
     // to know which ngram belong to a derivation. 
     // accumCountList.get(i): total number of ngrams for derivations 0 -> i
     List<Integer> accumCountList = new ArrayList<Integer>();
@@ -278,30 +282,39 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
             Sequences.wrapStart(f.targetPrefix, TokenUtils.START_TOKEN);
       
       // extract ngrams for this derivation
-      int[][] ngrams = nnlm.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, 
-          f.sourcePosition, f.targetPosition + 1);
-      numTotalNgrams += ngrams.length;
-      for (int[] ngram : ngrams) { allNgrams.add(ngram); }
-      accumCountList.add(numTotalNgrams);
-      
-      if (DEBUG){
-        System.err.println("# Extract ngrams for derivation: " + derivation);
-        System.err.println("  src=" + f.sourceSentence);
-        System.err.println("  tgt=" + tgtSent);
-        System.err.println("  srcPosition=" + f.sourcePosition);
-        System.err.println("  tgtPosition=" + (f.targetPosition+1));
-        for (int[] ngram : ngrams) { System.err.println("  ngram=" + nnlm.toIString(ngram)); }
+      if(kenlm!=null){
+        allNGramSeqs.addAll(extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, 
+            f.sourcePosition, f.targetPosition + 1, kenlm.order()));
+        numTotalNgrams = allNGramSeqs.size();
+      } else {
+        int[][] ngrams = nnlm.extractNgrams(f.sourceSentence, tgtSent, f.rule.abstractRule.alignment, 
+            f.sourcePosition, f.targetPosition + 1);
+        numTotalNgrams += ngrams.length;
+        for (int[] ngram : ngrams) { allNgrams.add(ngram); }
+        
+        if (DEBUG_OPT>2){
+          System.err.println("# Extract ngrams for derivation: " + derivation);
+          System.err.println("  src=" + f.sourceSentence);
+          System.err.println("  tgt=" + tgtSent);
+          System.err.println("  srcPosition=" + f.sourcePosition);
+          System.err.println("  tgtPosition=" + (f.targetPosition+1));
+          for (int[] ngram : ngrams) { System.err.println("  ngram=" + nnlm.toIString(ngram)); }
+        }
       }
+      
+      accumCountList.add(numTotalNgrams);
     }
     
     /** compute NNLM scores **/
-    if (DEBUG){ System.err.println("# Computing nnlm scores for " + numTotalNgrams + " ngrams"); }
+    if (DEBUG_OPT>1){ System.err.println("# Computing nnlm scores for " + numTotalNgrams + " ngrams"); }
     double[] scores;
     if(kenlm==null){ // use NNLM for the second layer
       scores = nnlm.scoreNgrams(NNLMUtil.convertNgramList(allNgrams));
     } else { // use the same KenLM for the second layer, sanity check
-      scores = new double[allNgrams.size()];
-      for(int i=0; i<allNgrams.size(); i++){ scores[i] = kenlm.score(nnlm.toIString(allNgrams.get(i))); }
+      scores = new double[allNGramSeqs.size()];
+      for(int i=0; i<allNGramSeqs.size(); i++){ 
+        scores[i] = kenlm.score(allNGramSeqs.get(i));
+      }
     }
     
   
@@ -318,18 +331,23 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       double incNNLMScore = 0;
       for (int j = start; j < end; j++) {  incNNLMScore += scores[j]; }
       
-      
+      if (DEBUG_OPT>1) { System.err.println("\n# Derivation before:" + derivation); }
       // replace the traditional lm score by the nnlm score
       double localLMScore =  derivation.getLocalLMScore(); // get local lm score
       derivation.updateNNLMScore(incNNLMScore, localLMScore, lmWeight);
       
-      if (DEBUG) { 
-        System.err.println("# Scores for derivation:" + derivation);
-        for (int j = start; j < end; j++) {  System.err.println("  " + nnlm.toIString(allNgrams.get(j)) + "\t" + scores[j]); }
-        
-        // sanity check with the same KenLM in the second layer
-        if(kenlm!=null){ assert(Math.abs(incNNLMScore-localLMScore)<1e-5); } 
+      if (DEBUG_OPT>1) { 
+        for (int j = start; j < end; j++) {
+          if(kenlm!=null){
+            System.err.println("  " + allNGramSeqs.get(j) + "\t" + scores[j]);
+          } else {
+            System.err.println("  " + nnlm.toIString(allNgrams.get(j)) + "\t" + scores[j]);
+          }
+        }
+        System.err.println("  incNNLMScore=" + incNNLMScore + ", localLMScore=" + localLMScore + ", lmWeight=" + lmWeight);
+        System.err.println("# Derivation after:" + derivation); 
       }
+      if(kenlm!=null && Math.abs(localLMScore-incNNLMScore)>1e-3) { throw new RuntimeException(incNNLMScore + " vs. " + localLMScore); }
       
       start = end;
       derivationId++;
@@ -357,7 +375,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
           successor.rule, successor.antecedent.length, (DerivationNNLM<TK, FV>) successor.antecedent, featurizer, scorer, heuristic) :
             null;
       
-      if(DEBUG) { System.err.print("# Generate from antecedent=" + ((antecedent==null)? "\"\"" : antecedent.antecedent) + " -> " + derivation); }
+      if(DEBUG_OPT>1) { System.err.println("# Generate from antecedent=" + ((antecedent==null)? "\"\"" : antecedent.antecedent) + " -> " + derivation); }
       consequents.add(new Item<TK,FV>(derivation, successor));
     }
     return consequents;
@@ -396,5 +414,61 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     public String toString() {
       return derivation == null ? "<<NULL>>" : derivation.toString();
     }
+  }
+  
+  /**
+   * Extract ngrams that we want to score after adding a phrase pair. 
+   * 
+   * @param srcSent
+   * @param tgtSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+   * @return list of ngrams, each of which consists of NPLM ids.
+   */
+  public List<Sequence<IString>> extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos, int targetOrder){
+    int tgtLen = tgtSent.size();
+    List<Sequence<IString>> ngrams = new LinkedList<Sequence<IString>>();
+    
+    for (int pos = tgtStartPos; pos < tgtLen; pos++) {
+      ngrams.add(extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos, targetOrder));
+    }
+    
+    return ngrams;
+  }
+  
+  /**
+   * Extract an ngram (for debug purpose). 
+   * 
+   * @param pos -- tgt position of the last word in the ngram to be extracted (should be >= tgtStartPos, < tgtSent.size())
+   * @param srcSent
+   * @param tgtSent
+   * @param alignment -- alignment of the recently added phrase pair
+   * @param srcStartPos -- src start position of the recently added phrase pair. 
+   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
+   * @return list of ngrams, each of which consists of NPLM ids.
+   */
+  private Sequence<IString> extractNgram(int pos, Sequence<IString> srcSent, Sequence<IString> tgtSent, 
+      PhraseAlignment alignment, int srcStartPos, int tgtStartPos, int tgtOrder){
+    /* we don't use srcSent, alignment, srcStartPos */
+    
+    int tgtLen = tgtSent.size();
+    assert(pos>=tgtStartPos && pos<tgtLen);
+    
+    IString istring;
+    List<IString> istringList = new LinkedList<IString>();
+    
+    // extract tgt subsequence
+    int tgtSeqStart = pos - tgtOrder + 1;
+    for (int tgtPos = tgtSeqStart; tgtPos <= pos; tgtPos++) {        
+      if(tgtPos<0) { istring = TokenUtils.START_TOKEN; } // start
+      else { // within range 
+        istring = tgtSent.get(tgtPos);
+      }
+      istringList.add(istring);
+    }
+    
+    return new SimpleSequence<IString>(istringList);
   }
 }

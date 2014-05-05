@@ -64,7 +64,7 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
 
   @Override
   public String toString() {
-    return String.format("tgt=%s, cov=%s [%.3f (score=%.3f, h=%.3f), prev_nnlm: %.3f, nnlm: %.3f]", 
+    return String.format("%s %s [%.3f (score=%.3f, h=%.3f), prev_nnlm: %.3f, nnlm: %.3f]", 
         targetSequence.toString(), sourceCoverage.toString(), score + h, score, h, prevNNLMScore, nnlmScore);
   }
   

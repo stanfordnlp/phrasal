@@ -4,11 +4,9 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.junit.Test;
 
-import cern.colt.Arrays;
 import static org.junit.Assert.*;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.PhraseAlignment;
