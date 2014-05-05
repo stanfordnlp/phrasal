@@ -14,8 +14,8 @@
 #
 
 if [ $# -ne 4 ]; then
-	echo Usage: `basename $0` corpus_dir src_lang tgt_lang lm_file
-	exit 0
+    echo Usage: `basename $0` corpus_dir src_lang tgt_lang lm_file
+    exit 0
 fi
 
 CORPUSDIR=$1
