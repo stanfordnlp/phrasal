@@ -7,6 +7,7 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 import java.io.Serializable;
 import java.io.Writer;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 import java.util.Iterator;
@@ -207,4 +208,33 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     return index.get(id).compareTo(index.get(o.id));
   }
 
+  /**
+   * Get a sequence of IString from an array of strings.
+   * 
+   * @param tokens
+   * @return
+   */
+  // Thang Apr14
+  public static Sequence<IString> getIStringSequence(String[] tokens){
+    List<IString> istringList = new ArrayList<IString>();
+    for (String token : tokens) {
+      istringList.add(new IString(token));
+    }
+    return new SimpleSequence<IString>(istringList);
+  }
+  
+  /**
+   * Get a sequence of IString from an array of IString indices.
+   * 
+   * @param indices
+   * @return
+   */
+  // Thang Apr14
+  public static Sequence<IString> getIStringSequence(int[] indices){
+    List<IString> istringList = new ArrayList<IString>();
+    for (int id : indices) {
+      istringList.add(new IString(id));
+    }
+    return new SimpleSequence<IString>(istringList);
+  }
 }

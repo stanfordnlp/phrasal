@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import edu.stanford.nlp.math.ArrayMath;
+
 /** This class maintains and calculates the word alignments inside a phrase.
  *  The static factory method maintains a set of known alignment patterns and
  *  returns the same object for identical alignment patterns. Alignment
@@ -147,4 +149,59 @@ public class PhraseAlignment {
     return (t2s != null) ? t2s.length : 0;
   }
 
+  /**
+   * Find average of source positions that correspond to the current tgtPos 
+   * w.r.t to the given phrase alignment.
+   * The input target position and the output source position are relative
+   * positions within the current phrase.
+   * 
+   * @param tgtPos
+   * @param alignment
+   * @return
+   */
+  public int findSrcAvgPos(int tgtPos){
+    if(t2s==null) { // no internal alignment
+      assert(tgtPos==0);
+      return 0;
+    }
+    
+    int srcAvgPos = -1;
+    int distance = 0;
+    
+    // System.err.println("findSrcAvgPos tgtPos=" + tgtPos + ", alignment=" + alignment);
+    int[] alignments;
+    while(true){
+      // look right
+      int rightPos = tgtPos + distance;
+      boolean isStop = true;
+      if(rightPos<t2s.length){
+        alignments = (rightPos < t2s.length ? t2s[rightPos] : null); // t2s(rightPos);
+        if (alignments != null) {
+          // System.err.print("right " + rightPos + ": " + Util.intArrayToString(alignments));
+          srcAvgPos = ArrayMath.mean(alignments);
+          break;
+        }
+        
+        isStop = false;
+      }
+      
+      // look left
+      int leftPos = tgtPos - distance;
+      if(leftPos>=0 && leftPos!=rightPos){
+        alignments = (leftPos < t2s.length ? t2s[leftPos] : null); // t2s(leftPos);
+        if (alignments != null) {
+          // System.err.print("left " + leftPos + ": " + Util.intArrayToString(alignments));
+          srcAvgPos = ArrayMath.mean(alignments);
+          break;
+        }
+        
+        isStop = false;
+      }
+      
+      distance++;
+      if (isStop) break;
+    }
+    
+    return srcAvgPos;
+  }
 }

@@ -101,8 +101,8 @@ public class OnlineTuner {
   private List<List<Sequence<IString>>> pseudoReferences;
   private double[] referenceWeights;
   
-  private final Logger logger;
-
+  private final Logger logger;  
+  
   /**
    * Constructor.
    * 
@@ -328,8 +328,9 @@ public class OnlineTuner {
         for (int i = 0; i < input.translationIds.length; ++i) {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
-          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
-              threadId);
+          
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
+          
           nbestLists.add(nbestList);
         }
 
@@ -465,10 +466,11 @@ public class OnlineTuner {
     logger.info("Number of threads: " + numThreads);
     logger.info("Number of references: " + numReferences);
     int updateId = 0;
+    
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
-
+      
       // n-best lists. Purge for each epoch
       Map<Integer,Sequence<IString>> nbestLists = doExpectedBleu ? 
           new HashMap<Integer,Sequence<IString>>(tuneSetSize) : null;
@@ -853,7 +855,7 @@ public class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
-    
+   
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {

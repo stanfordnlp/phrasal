@@ -1,9 +1,11 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
+import edu.stanford.nlp.lm.KenLM;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.TokenUtils;
@@ -22,38 +24,22 @@ public class KenLanguageModel implements LanguageModel<IString> {
     System.loadLibrary("PhrasalKenLM");
   }
 
+  private KenLM model;
+
   private final String name;
-  private final int order;
-  private final long kenLMPtr;
 
   private AtomicReference<int[]> istringIdToKenLMId;
 
   private final ReentrantLock preventDuplicateWork = new ReentrantLock();
 
-  // JNI methods
-  private native long readKenLM(String filename);
-  private native long scoreNGramSeq(long kenLMPtr, int[] ngram, int startIndex);
-  private native int getLMId(long kenLMPtr, String token);
-  private native int getOrder(long kenLMPtr);
-
   /**
    * Constructor for multi-threaded queries.
    * 
    * @param filename
-   * @param numThreads
    */
   public KenLanguageModel(String filename) {
+    model = new KenLM(filename);
     name = String.format("KenLM(%s)", filename);
-    System.err.printf("KenLM: Reading %s%n", filename);
-    if (0 == (kenLMPtr = readKenLM(filename))) {
-      File f = new File(filename);
-      if (!f.exists()) {
-        new RuntimeException(String.format("Error loading %s - file not found", filename));
-      } else {
-        new RuntimeException(String.format("Error loading %s - file is likely corrupt or created with an incompatible version of kenlm", filename));
-      } 
-    }
-    order = getOrder(kenLMPtr);
     initializeIdTable();
   }
 
@@ -67,7 +53,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
         TokenUtils.END_TOKEN.toString());
     int[] table = new int[IString.index.size()];
     for (int i = 0; i < table.length; ++i) {
-      table[i] = getLMId(kenLMPtr, IString.index.get(i));
+      table[i] = model.index(IString.index.get(i));
     }
     istringIdToKenLMId = new AtomicReference<int[]>(table);
   }
@@ -99,7 +85,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
         int[] newTable = new int[IString.index.size()];
         System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
         for (int i = oldTable.length; i < newTable.length; ++i) {
-          newTable[i] = getLMId(kenLMPtr, IString.index.get(i));
+          newTable[i] = model.index(IString.index.get(i));
         }
         istringIdToKenLMId.set(newTable);
         return newTable[token.id];
@@ -108,7 +94,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
       }
     }
     // Another thread is working.  Lookup directly.
-    return getLMId(kenLMPtr, token.toString());
+    return model.index(token.toString());
   }
 
   @Override
@@ -128,7 +114,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
   @Override
   public int order() {
-    return order;
+    return model.order();
   }
   
   @Override
@@ -146,10 +132,29 @@ public class KenLanguageModel implements LanguageModel<IString> {
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
     
     // Execute the query (via JNI) and construct the return state
-    long got = scoreNGramSeq(kenLMPtr, ngramIds, kenLMStartIndex);
-    float score = Float.intBitsToFloat((int)(got & 0xffffffff));
-    int stateLength = (int)(got >> 32);
-    return new KenLMState(score, ngramIds, stateLength);
+    long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
+    return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
+  }
+  
+  // Thang Apr14
+  /**
+   * @param istringSeq: words in normal order (the number of words should be equal to the LM order.
+   * @return score the ngram
+   */
+  public double score(Sequence<IString> istringSeq) {
+    int size = istringSeq.size(); 
+    assert(size==order());
+    
+    int[] ngramIds = new int[size];
+    int i = 0;
+    for (IString iString : istringSeq) {
+      // Notice: ngramids are in reverse order vv. the Sequence
+      ngramIds[size-1-i] = toKenLMId(iString);
+      i++;
+    }
+    
+    // Execute the query (via JNI) and return the score only
+    return model.score(ngramIds);
   }
   
   /**

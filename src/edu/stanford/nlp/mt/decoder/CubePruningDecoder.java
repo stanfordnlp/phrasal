@@ -38,8 +38,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
-  private final int maxDistortion;
-  private final Logger logger;
+  protected final int maxDistortion;
+  protected final Logger logger;
 
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
     return new CubePruningDecoderBuilder<TK, FV>();
@@ -243,7 +243,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <TK>
    * @param <FV>
    */
-  private static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
+  protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
     public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
 

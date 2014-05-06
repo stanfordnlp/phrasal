@@ -33,13 +33,15 @@ State<Derivation<TK, FV>> {
 
   // primitives
   public final long id;
-  public final double score;
   public final double h;
   public final int insertionPosition;
   public final int untranslatedTokens;
   public final int depth;
   public final int linearDistortion;
   public final int length;
+  
+  // Thang Apr14: remove the final modifier so we can update during NPLM reranking.
+  public double score;
   
   public final InputProperties sourceInputProperties;
 
