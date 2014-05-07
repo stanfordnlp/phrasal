@@ -1,5 +1,16 @@
 #!/bin/sh
 
+#
+# TODO(spenceg) We moved src-cc from mt to more. Many scripts hardcode
+# the location $JAVANLP_HOME/projects/more/src-cc. In the script below,
+# src-cc has not been updated. Not sure what to do.
+#
+# TODO(spenceg) Need to promote the Phrasal service from src-research,
+# but that means we'll need to distribute jetty and gson.
+#
+echo "See TODO in this file for things to fix before release!"
+exit -1
+
 echo "Making Phrasal release tar ball"
 echo "JAVANLP_HOME set to $JAVANLP_HOME"
 
