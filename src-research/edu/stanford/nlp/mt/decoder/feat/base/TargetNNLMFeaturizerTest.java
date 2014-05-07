@@ -96,11 +96,11 @@ public class TargetNNLMFeaturizerTest {
     List<RichTranslation<IString, String>> translations = decoder.nbest
         (IString.getIStringSequence(src), 0, new InputProperties(), outputSpace, targets, 5);
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
-    assertEquals("余下 servant 违抗 依纪 严处 putting do prohibits the , any if be law . , , to would ||| LM: -1.2442E3 LinearDistortion: -75 ||| -6.3712E2 ||| 73129", translations.get(0).toString());
-    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden any if be law . , , to would ||| LM: -1.2466E3 LinearDistortion: -73 ||| -6.379E2 ||| 73129", translations.get(1).toString());
-    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden , any if law . be , to would ||| LM: -1.2466E3 LinearDistortion: -73 ||| -6.379E2 ||| 73129", translations.get(2).toString());
-    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden any if be law . , , to enough ||| LM: -1.2482E3 LinearDistortion: -73 ||| -6.3871E2 ||| 73339", translations.get(3).toString());
-    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden if be law . , , any to would ||| LM: -1.2476E3 LinearDistortion: -75 ||| -6.3878E2 ||| 73130", translations.get(4).toString());
+    assertEquals("余下 servant 违抗 依纪 严处 putting do prohibits the , any if be law . , , to would ||| LM: -1.2442E3 LinearDistortion: -75 ||| -6.3712E2", translations.get(0).toStringNoLatticeId());
+    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden any if be law . , , to would ||| LM: -1.2466E3 LinearDistortion: -73 ||| -6.379E2", translations.get(1).toStringNoLatticeId());
+    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden , any if law . be , to would ||| LM: -1.2466E3 LinearDistortion: -73 ||| -6.379E2", translations.get(2).toStringNoLatticeId());
+    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden any if be law . , , to enough ||| LM: -1.2482E3 LinearDistortion: -73 ||| -6.3871E2", translations.get(3).toStringNoLatticeId());
+    assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden if be law . , , any to would ||| LM: -1.2476E3 LinearDistortion: -75 ||| -6.3878E2", translations.get(4).toStringNoLatticeId());
   }
   
   @Test
@@ -117,11 +117,11 @@ public class TargetNNLMFeaturizerTest {
         (IString.getIStringSequence(src), 0, new InputProperties(), outputSpace, targets, 5);
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
     
-    assertEquals(translations.get(0).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , i would ||| LM: -1.238E3 LinearDistortion: -55 ||| -6.2999E2"), true);
-    assertEquals(translations.get(1).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , i would ||| LM: -1.238E3 LinearDistortion: -55 ||| -6.2999E2"), true);
-    assertEquals(translations.get(2).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , would ||| LM: -1.2382E3 LinearDistortion: -55 ||| -6.3008E2"), true);
-    assertEquals(translations.get(3).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , would ||| LM: -1.2382E3 LinearDistortion: -55 ||| -6.3008E2"), true);
-    assertEquals(translations.get(4).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant if , i would ||| LM: -1.2383E3 LinearDistortion: -55 ||| -6.3014E2"), true);
+    assertEquals("余下 made 违抗 依纪 严处 if they do just that must be forbidden , any servant , law . would ||| LM: -1.2346E3 LinearDistortion: -73 ||| -6.319E2", translations.get(0).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 if they do just that must be forbidden , any servant , law . would ||| LM: -1.2346E3 LinearDistortion: -73 ||| -6.319E2", translations.get(1).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 all if they do just that must be forbidden , any servant , law . would ||| LM: -1.2412E3 LinearDistortion: -57 ||| -6.3202E2", translations.get(2).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 all if they do just that must be forbidden , any servant , law . would ||| LM: -1.2412E3 LinearDistortion: -57 ||| -6.3202E2", translations.get(3).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 if they do just that must be prohibits , any servant , law . would ||| LM: -1.2349E3 LinearDistortion: -73 ||| -6.3205E2", translations.get(4).toStringNoLatticeId());
   }
   
   @Test
@@ -150,11 +150,11 @@ public class TargetNNLMFeaturizerTest {
       assertEquals(true, translations.get(i).toStringNoLatticeId().equals(cubeTranslations.get(i).toStringNoLatticeId()));
     }
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
-    assertEquals(translations.get(0).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , i would ||| LM: -1.238E3 LinearDistortion: -55 ||| -6.2999E2"), true);
-    assertEquals(translations.get(1).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , i would ||| LM: -1.238E3 LinearDistortion: -55 ||| -6.2999E2"), true);
-    assertEquals(translations.get(2).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , would ||| LM: -1.2382E3 LinearDistortion: -55 ||| -6.3008E2"), true);
-    assertEquals(translations.get(3).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , would ||| LM: -1.2382E3 LinearDistortion: -55 ||| -6.3008E2"), true);
-    assertEquals(translations.get(4).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant if , i would ||| LM: -1.2383E3 LinearDistortion: -55 ||| -6.3014E2"), true);
+    assertEquals("余下 made 违抗 依纪 严处 if they do just that must be forbidden , any servant , law . would ||| LM: -1.2346E3 LinearDistortion: -73 ||| -6.319E2", translations.get(0).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 if they do just that must be forbidden , any servant , law . would ||| LM: -1.2346E3 LinearDistortion: -73 ||| -6.319E2", translations.get(1).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 all if they do just that must be forbidden , any servant , law . would ||| LM: -1.2412E3 LinearDistortion: -57 ||| -6.3202E2", translations.get(2).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 all if they do just that must be forbidden , any servant , law . would ||| LM: -1.2412E3 LinearDistortion: -57 ||| -6.3202E2", translations.get(3).toStringNoLatticeId());
+    assertEquals("余下 made 违抗 依纪 严处 if they do just that must be prohibits , any servant , law . would ||| LM: -1.2349E3 LinearDistortion: -73 ||| -6.3205E2", translations.get(4).toStringNoLatticeId());
   }
   
   @SuppressWarnings("unchecked")
@@ -214,7 +214,7 @@ public class TargetNNLMFeaturizerTest {
     infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
     
     // recombination Filter
-    String recombinationMode = RecombinationFilterFactory.CLASSIC_RECOMBINATION;
+    String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
         .factory(recombinationMode, featurizer.getNestedFeaturizers());
     infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
