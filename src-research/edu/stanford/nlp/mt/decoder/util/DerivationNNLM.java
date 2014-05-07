@@ -18,11 +18,14 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
  * @param <TK>
  */
 public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
+  private static final boolean DEBUG = false;
   // neural score for beam reranking, mainly targeting at sorting derivations in BundleBeam.groupBundles()
   // we delay the computation of nnlmScore (in order to do batch ngram query) by keeping track of 
   // the nnlm score of the previous derivation 
   private double prevNNLMScore;
   private double nnlmScore;
+  
+  private StringBuilder nnlmDebugStringBuilder;
   
   /**
    * Constructor for null hypotheses (root of translation lattice).
@@ -41,6 +44,7 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
     super(sourceInputId, sourceSequence, sourceInputProperties, heuristic, scorer, ruleList);
     prevNNLMScore = 0;
     nnlmScore = 0;
+    if (DEBUG) { nnlmDebugStringBuilder = new StringBuilder(); }
   }
 
   /**
@@ -60,12 +64,22 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
     super(sourceInputId, rule, insertionPosition, base, featurizer, scorer, heuristic);
     prevNNLMScore = base.nnlmScore;
+    if (DEBUG) { nnlmDebugStringBuilder = new StringBuilder(base.nnlmDebugStringBuilder.toString()); }
   }
 
   @Override
   public String toString() {
-    return String.format("%s %s [%.3f (score=%.3f, h=%.3f), prev_nnlm: %.3f, nnlm: %.3f]", 
-        targetSequence.toString(), sourceCoverage.toString(), score + h, score, h, prevNNLMScore, nnlmScore);
+    if (DEBUG) { 
+      return String.format("%s %s [%.3f (score=%.3f, h=%.3f), prev_nnlm: %.3f, nnlm: %.3f, debug: %s]", 
+          targetSequence.toString(), sourceCoverage.toString(), score + h, score, h, prevNNLMScore, nnlmScore, nnlmDebugStringBuilder.toString());
+    } else {
+      return String.format("%s %s [%.3f (score=%.3f, h=%.3f), prev_nnlm: %.3f, nnlm: %.3f]", 
+          targetSequence.toString(), sourceCoverage.toString(), score + h, score, h, prevNNLMScore, nnlmScore);
+    }
+  }
+  
+  public void updateDebugMsg(String msg) {
+    nnlmDebugStringBuilder.append("\n" + msg);
   }
   
   public double getPrevNNLMScore() {

@@ -125,22 +125,31 @@ public class TargetNNLMFeaturizerTest {
   }
   
   @Test
-  public void testCubePruningNNLMDecodeWithKenLM() throws IOException, CloneNotSupportedException {
+  public void testCubePruningNNLMDecodeWithPseudoNNLM() throws IOException, CloneNotSupportedException {
+    /* CubePrunningNNLMDecoder */
     InfererBuilder<IString, String> infererBuilder = getInferer("cube_nnlm");
-
-    // load kenLM, to be used instead of NNLM
-    ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadKenLanguageModel(lgModel);
-    
-    // decoder
+    // load pseudo NNLM
+    String nnlmType = "pseudo"; int cacheSize = -1; int miniBatchSize = -1;
+    ((CubePruningNNLMDecoderBuilder<IString, String>)  infererBuilder).loadNNLM(lgModel, nnlmType, cacheSize, miniBatchSize);
     Inferer<IString, String> decoder = ((CubePruningNNLMDecoderBuilder<IString, String>)  infererBuilder).build();
     
+    // translate
     String src = "余下 的 事 , 就 是 必须 令 行 禁止 , 任何 公仆 若 敢 违抗 , 一律 依纪 依法 严处 。";
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
         (IString.getIStringSequence(src), 0, new InputProperties(), outputSpace, targets, 5);
+    
+    /* CubePrunningDecoder */
+    InfererBuilder<IString, String> cubeInfererBuilder = getInferer("cube");
+    Inferer<IString, String> cubeDecoder = cubeInfererBuilder.build();
+    List<RichTranslation<IString, String>> cubeTranslations = cubeDecoder.nbest
+        (IString.getIStringSequence(src), 0, new InputProperties(), outputSpace, targets, 5);
+    
+    for (int i = 0; i < translations.size(); i++) {
+      assertEquals(true, translations.get(i).toStringNoLatticeId().equals(cubeTranslations.get(i).toStringNoLatticeId()));
+    }
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
-
     assertEquals(translations.get(0).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , i would ||| LM: -1.238E3 LinearDistortion: -55 ||| -6.2999E2"), true);
     assertEquals(translations.get(1).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , i would ||| LM: -1.238E3 LinearDistortion: -55 ||| -6.2999E2"), true);
     assertEquals(translations.get(2).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant when , would ||| LM: -1.2382E3 LinearDistortion: -55 ||| -6.3008E2"), true);
@@ -148,6 +157,7 @@ public class TargetNNLMFeaturizerTest {
     assertEquals(translations.get(4).toString().startsWith("made do just that 余下 must be 依纪 law . 严处 违抗 forbidden , any servant if , i would ||| LM: -1.2383E3 LinearDistortion: -55 ||| -6.3014E2"), true);
   }
   
+  @SuppressWarnings("unchecked")
   public static InfererBuilder<IString, String> getInferer(String infererType) throws IOException, CloneNotSupportedException{
     // inferer builder
     InfererBuilder<IString, String> infererBuilder = InfererBuilderFactory.factory(infererType);    

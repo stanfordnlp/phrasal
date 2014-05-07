@@ -4,7 +4,6 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.junit.Test;
 
