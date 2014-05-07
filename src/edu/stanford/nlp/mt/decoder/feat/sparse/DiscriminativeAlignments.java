@@ -26,7 +26,6 @@ import edu.stanford.nlp.util.PropertiesUtils;
  *
  */
 public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> {
-
   private static final String FEATURE_NAME = "ALN";
   private static final String FEATURE_NAME_TGT = "ALNT";
   private static final String FEATURE_NAME_SRC = "ALNS";

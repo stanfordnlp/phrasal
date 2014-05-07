@@ -26,9 +26,6 @@ public class CombinedFeaturizer<TK, FV> extends
   public List<Featurizer<TK, FV>> featurizers;
   private final int nbStatefulFeaturizers;
 
-  // Thang May14: featurizers which delay computation until the end of the beam construction in order to do batch mode computation
-  public List<Featurizer<TK, FV>> batchFeaturizers; 
-  
   public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: " + disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
