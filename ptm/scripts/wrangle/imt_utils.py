@@ -1,18 +1,60 @@
 import sys
+import re
 import codecs
 import csv
-from os.path import basename,split
+import os
+from os.path import basename,split,join
 from csv_unicode import UnicodeReader,UnicodeWriter
-from collections import Counter,namedtuple
+from collections import Counter,namedtuple,defaultdict
 
 DumpRow = namedtuple('DumpRow', 'username birth_country resident_of mt_opinion src_proficiency tgt_proficiency src_doc tgt_lang interface order create_time start_time end_time complete training valid text log')
 
 # Convenience methods
 str2bool = lambda x:True if x == '1' else False
-url2doc = lambda x:basename(x).replace('.json','').replace('src','tgt')
 genre_from_url = lambda x:basename(split(x)[0])
 
-def load_middleware_dump(filename):
+def load_sbleu_files(directory):
+    """
+    Returns d[username][doc_id] -> BLEU
+    """
+    file_list = [join(directory,x) for x in os.listdir(directory)]
+    d = defaultdict(dict)
+    for filename in file_list:
+        if not filename.endswith('sbleu_ref'):
+            continue
+        username = basename(filename).split('.')[0]
+        with open(filename) as csv_file:
+            r = csv.reader(csv_file, delimiter='\t')
+            # Skip header
+            r.next()
+            for row in r:
+                assert len(row) == 2
+                doc_id = row[0]
+                sbleu = row[1]
+                d[username][doc_id] = sbleu
+    return d
+        
+def load_gender_csv(filename_csv):
+    """
+    Load a file that maps a user/subject name to
+    gender into a dictionary that is username->gender.
+    """
+    with open(filename_csv) as infile:
+        user_to_gender = {}
+        r = csv.reader(infile, quoting = csv.QUOTE_NONE)
+        for row in r:
+            user_to_gender[row[0]] = row[1]
+        return user_to_gender
+
+def url2doc(raw_url):
+    """
+    Extract a URL from a pathname.
+    """
+    filename = basename(raw_url).replace('.json','').replace('src','tgt')
+    genre = genre_from_url(raw_url)
+    return join(genre,filename)
+
+def load_middleware_dump(filename, target_lang):
     """
     Load a middleware dump.
 
@@ -24,11 +66,25 @@ def load_middleware_dump(filename):
     with open(filename) as in_file:
         r = UnicodeReader(in_file, delimiter='|', quoting = csv.QUOTE_NONE)
         for row in map(DumpRow._make, r):
-            if not row.log or len(row.log.strip()) == 0:
+            complete = str2bool(row.complete)
+            valid = str2bool(row.valid)
+            training = str2bool(row.training)
+            if not row.tgt_lang == target_lang:
                 continue
-            if str2bool(row.training):
+            elif row.username == 'rayder441':
+                # Debug/test username
                 continue
-            row_list.append(row)
+            elif training:
+                continue
+            # spenceg: Load these rows now and don't filter until import into
+            # later wrangling scripts
+#            elif not valid:
+#                sys.stderr.write('WARNING: Skipping invalid row: %s %s%s' %(row.username, row.src_doc, os.linesep))
+#                continue
+            elif not complete:
+                continue
+            else:
+                row_list.append(row)
     return row_list
 
 def write_rows_to_csv(row_list, filename):
@@ -61,6 +117,22 @@ def load_references(filename_list):
     for filename in filename_list:
         doc_id = url2doc(filename)
         with codecs.open(filename, encoding='utf-8') as infile:
+            filename_to_lines[doc_id] = [x.strip() for x in infile.readlines()]
+    return filename_to_lines
+
+def load_sources(filename_list):
+    """
+    Load references from a list of filenames.
+
+    Args:
+    Returns:
+    Raises:
+    """
+    filename_to_lines = {}
+    for filename in filename_list:
+        src_file = re.sub('tgt','src',filename)
+        doc_id = url2doc(filename)
+        with codecs.open(src_file, encoding='utf-8') as infile:
             filename_to_lines[doc_id] = [x.strip() for x in infile.readlines()]
     return filename_to_lines
             

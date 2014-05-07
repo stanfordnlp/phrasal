@@ -3,10 +3,9 @@ package edu.stanford.nlp.mt.base;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.math.ArrayMath;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-
 
 /** This class maintains and calculates the word alignments inside a phrase.
  *  The static factory method maintains a set of known alignment patterns and
@@ -122,7 +121,7 @@ public class PhraseAlignment {
     return s2t;
   }
 
-  private static final Map<String, PhraseAlignment> map = new Object2ObjectOpenHashMap<String, PhraseAlignment>();
+  private static final Map<String, PhraseAlignment> map = new ConcurrentHashMap<String, PhraseAlignment>(1000);
 
   public static PhraseAlignment getPhraseAlignment(String string) {
     PhraseAlignment holder = map.get(string);

@@ -36,6 +36,7 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -120,7 +121,6 @@ public class Phrasal {
       .append("  -").append(DISTORTION_FILE).append(" model_type filename : Lexicalized re-ordering model.").append(nl)
       .append("  -").append(HIER_DISTORTION_FILE).append(" model_type filename : Hierarchical lexicalized re-ordering model.").append(nl)
       .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
-      .append("  -").append(CONFIG_FILE).append(" filename : Configuration file.").append(nl)
       .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
       .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
       .append("  -").append(DISTORTION_LIMIT).append(" num : Hard distortion limit.").append(nl)
@@ -128,7 +128,7 @@ public class Phrasal {
       .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
-      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [classic,exact,dtu] (default: classic).").append(nl)
+      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [pharoah,exact,dtu] (default: exact).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
       .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
@@ -149,18 +149,17 @@ public class Phrasal {
   }
 
   private static final String TRANSLATION_TABLE_OPT = "ttable-file";
-  private static final String LANGUAGE_MODEL_OPT = "lmodel-file";
+  public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   private static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
   private static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   private static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   private static final String FORCE_DECODE = "force-decode";
-  private static final String BEAM_SIZE = "stack";
-  private static final String SEARCH_ALGORITHM = "search-algorithm";
+  public static final String BEAM_SIZE = "stack";
+  public static final String SEARCH_ALGORITHM = "search-algorithm";
   private static final String DISTORTION_FILE = "distortion-file";
   private static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
-  private static final String WEIGHTS_FILE = "weights-file";
-  private static final String CONFIG_FILE = "config-file";
+  public static final String WEIGHTS_FILE = "weights-file";
   private static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
   private static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
   private static final String DISTORTION_LIMIT = "distortion-limit";
@@ -296,7 +295,7 @@ public class Phrasal {
   /**
    * Recombination configuration.
    */
-  private String recombinationMode = RecombinationFilterFactory.CLASSIC_RECOMBINATION;
+  private String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
 
   /**
    * Pre/post processing filters.
@@ -1060,8 +1059,7 @@ public class Phrasal {
           inputPropertiesList.get(sourceInputId) : new InputProperties();
       
       wrapper.put(new DecoderInput(source, sourceInputId, inputProps));
-      while(wrapper.peek()) {
-        DecoderOutput result = wrapper.poll();
+      for (DecoderOutput result; (result = wrapper.poll()) != null;) {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
         } else {
@@ -1178,28 +1176,22 @@ public class Phrasal {
   /**
    * Read a combination of config file and other command line arguments.
    * Command-line arguments supercede those specified in the config file.
-   *
+   * 
+   * @param configFile 
    * @param options
    * @return
    * @throws IOException
    */
-  private static Map<String, List<String>> readArgs(Properties options) throws IOException {
-    Map<String, List<String>> configArgs = Generics.newHashMap();
-    Map<String, List<String>> configFile = Generics.newHashMap();
+  private static Map<String, List<String>> getConfigurationFrom(String configFile, Properties options) throws IOException {
+    Map<String, List<String>> config = configFile == null ? new HashMap<String,List<String>>() :
+      IOTools.readConfigFile(configFile);
+    // Command-line options supercede config file options
     for (Map.Entry<Object, Object> e : options.entrySet()) {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
-      if (CONFIG_FILE.equals(key)) {
-        configFile.putAll(IOTools.readConfigFile(value));
-      } else {
-        configArgs.put(key, Arrays.asList(value.split("\\s+")));
-      }
+      config.put(key, Arrays.asList(value.split("\\s+")));
     }
-    // Command-line args supercede the config file.
-    Map<String, List<String>> configFinal = Generics.newHashMap();
-    configFinal.putAll(configFile);
-    configFinal.putAll(configArgs);
-    return configFinal;
+    return config;
   }
 
   /**
@@ -1262,6 +1254,7 @@ public class Phrasal {
   public static void main(String[] args) throws Exception {
     Properties options = StringUtils.argsToProperties(args);
     String configFile = options.containsKey("") ? (String) options.get("") : null;
+    options.remove("");
     if ((options.size() == 0 && configFile == null) ||
         options.containsKey("help") || options.containsKey("h")) {
       System.err.println(usage());
@@ -1279,9 +1272,8 @@ public class Phrasal {
           }
         });
 
-    Map<String, List<String>> config = configFile == null ? readArgs(options) :
-      IOTools.readConfigFile(configFile);
-    Phrasal p = Phrasal.loadDecoder(config);
+    Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
+    Phrasal p = Phrasal.loadDecoder(configuration);
     p.decode(System.in, true);
   }
 }

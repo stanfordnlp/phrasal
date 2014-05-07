@@ -58,15 +58,9 @@ public class OnlineLearningCurve {
 
     final int numThreads = p.getNumThreads();
     for (String wtsFile : wts) {
-      try {
-        Counter<String> w = IOTools.readWeights(wtsFile);
-        for (int i = 0; i < numThreads; ++i) {
-          p.getScorer(i).updateWeights(w);
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (ClassNotFoundException e) {
-        e.printStackTrace();
+      Counter<String> w = IOTools.readWeights(wtsFile);
+      for (int i = 0; i < numThreads; ++i) {
+        p.getScorer(i).updateWeights(w);
       }
       
       System.err.printf("Decoding with %s%n", wtsFile);

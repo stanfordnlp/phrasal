@@ -12,7 +12,8 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- *
+ * A simple phrase table implementation.
+ * 
  * @author Daniel Cer
  */
 public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
@@ -35,27 +36,53 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   protected int longestSourcePhrase = -1;
   protected int longestTargetPhrase = -1;
 
-  // Originally, PharaohPhraseTables were backed by a nice simple
-  // HashMap from a foreign sequence to a list of translations.
-  //
-  // However, this resulted in a phrase table that only
-  // occupies 113 MiB on disk requiring 1304 MiB of RAM, ugh.
-  //
-  // So...we now have the slightly more evil, but hopefully not
-  // too evil, implementation below.
-  //
-  // To compare, for the phrase table huge/filtered-mt03/phrase-table.0-0:
-  //
-  // with hash maps:
-  //
-  // java 6 32-bit 862 MiB
-  // java 6 64-bit 1304 MiB
-  //
-  // with new implementation:
-  //
-  // java 6 32-bit 160 MiB
-  // java 6 64-bit 254 MiB
-  // ///////////////////////////////////////////////////////////////
+  /**
+   * Constructor.
+   * 
+   * @param phraseFeaturizer
+   * @param filename
+   * @throws IOException
+   */
+  public FlatPhraseTable(
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
+      String filename) throws IOException {
+    // default is not to do log rithm on the scores
+    this(phraseFeaturizer, filename, false);
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param filename
+   * @throws IOException
+   */
+  public FlatPhraseTable(String filename) throws IOException {
+    this(null, filename, false);
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param phraseFeaturizer
+   * @param filename
+   * @param reverse
+   * @throws IOException
+   */
+  public FlatPhraseTable(
+      RuleFeaturizer<IString, FV> phraseFeaturizer,
+      String filename, boolean reverse) throws IOException {
+    super(phraseFeaturizer);
+    File f = new File(filename);
+    name = String.format("FlatPhraseTable(%s)", f.getName());
+    // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
+    // DynamicIntegerArrayIndex();
+    translations = new ArrayList<List<IntArrayTranslationOption>>();
+    int countScores = init(f, reverse);
+    scoreNames = new String[countScores];
+    for (int i = 0; i < countScores; i++) {
+      scoreNames[i] = String.format("%s.%d", FEATURE_PREFIX, i);
+    }
+  }
 
   public static class IntArrayTranslationOption implements
       Comparable<IntArrayTranslationOption> {
@@ -102,42 +129,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
     intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex
         .get(eIndex), scores, alignment));
-  }
-
-
-  public FlatPhraseTable(
-      RuleFeaturizer<IString, FV> phraseFeaturizer,
-      String filename) throws IOException {
-    // default is not to do log rithm on the scores
-    this(phraseFeaturizer, filename, false);
-  }
-
-  public FlatPhraseTable(String filename) throws IOException {
-    this(null, filename, false);
-  }
-
-  public FlatPhraseTable(String filename, boolean reverse) throws IOException {
-    this(null, filename, reverse);
-  }
-
-  /**
-   *
-   * @throws IOException
-   */
-  public FlatPhraseTable(
-      RuleFeaturizer<IString, FV> phraseFeaturizer,
-      String filename, boolean reverse) throws IOException {
-    super(phraseFeaturizer);
-    File f = new File(filename);
-    name = String.format("FlatPhraseTable(%s)", f.getName());
-    // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
-    // DynamicIntegerArrayIndex();
-    translations = new ArrayList<List<IntArrayTranslationOption>>();
-    int countScores = init(f, reverse);
-    scoreNames = new String[countScores];
-    for (int i = 0; i < countScores; i++) {
-      scoreNames[i] = String.format("%s.%d", FEATURE_PREFIX, i);
-    }
   }
 
   @Override
@@ -222,7 +213,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
             (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
                 / (1024 * 1024), elapsedTime);
     System.err.println("Longest foreign phrase: " + longestSourcePhrase);
-    System.err.printf("Phrase table signature: %d%n", getSignature());
     return numScores;
   }
 
@@ -313,26 +303,11 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public String toString() {
     return getName();
   }
-
-  /**
-   * Sort of like hashCode(), but for debugging purposes
-   * only.
-   * 
-   * @return
-   */
-  public long getSignature() {
-    DynamicIntegerArrayIndex index = (DynamicIntegerArrayIndex) ruleIndex;
-    long signature = 0;
-    for (int[] rule : index) {
-      signature += Arrays.hashCode(rule);
-    }
-    return signature;
-  }
   
   public static void createIndex(boolean withGaps) {
     sourceIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
-        : new DynamicIntegerArrayIndex();
-    ruleIndex = new DynamicIntegerArrayIndex();
+        : new ProbingIntegerArrayIndex();
+    ruleIndex = new ProbingIntegerArrayIndex();
   }
 
   public static void lockIndex() {

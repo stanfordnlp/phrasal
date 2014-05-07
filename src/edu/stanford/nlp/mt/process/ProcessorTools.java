@@ -36,7 +36,9 @@ import edu.stanford.nlp.util.Generics;
  */
 public final class ProcessorTools {
 
-  public static enum Operation {Delete, Replace, ToUpper, InsertBefore, InsertAfter, None, Whitespace};
+  // TODO: Re-enable the Replace class
+//  public static enum Operation {Delete, Replace, ToUpper, InsertBefore, InsertAfter, None, Whitespace};
+  public static enum Operation {Delete, ToUpper, InsertBefore, InsertAfter, None, Whitespace};
     
   // Delimiter must *not* be a regex special character!
   private static final String OP_DELIM = "#";
@@ -177,8 +179,10 @@ public final class ProcessorTools {
           sequence.add(createDatum(tChar, Operation.ToUpper.toString(), i, parentToken, charIndex));
         } else {
           // Replace
-          String label = Operation.Replace.toString() + OP_DELIM + sChar;
-          sequence.add(createDatum(tChar, label, i, parentToken, charIndex));
+          // TODO(spenceg): Re-enable at some point
+//          String label = Operation.Replace.toString() + OP_DELIM + sChar;
+//          sequence.add(createDatum(tChar, label, i, parentToken, charIndex));
+          sequence.add(createDatum(tChar, Operation.None.toString(), i, parentToken, charIndex));
         }
       }
       ++charIndex;
@@ -384,11 +388,14 @@ public final class ProcessorTools {
           assert fields.length == 2;
           currentToken.append(fields[1]).append(text);
 
-        } else if (label == Operation.Replace) {
-          assert fields.length == 2;
-          currentToken.append(fields[1]);
-
-        } else if (label == Operation.ToUpper) {
+        } 
+        // TODO(spenceg): Re-enable
+//        else if (label == Operation.Replace) {
+//          assert fields.length == 2;
+//          currentToken.append(fields[1]);
+//
+//        } 
+        else if (label == Operation.ToUpper) {
           currentToken.append(text.toUpperCase());
 
         } else if (label == Operation.Delete) {

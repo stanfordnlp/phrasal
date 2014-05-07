@@ -1,6 +1,5 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.decoder.recomb;
 
-import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.MultiTranslationState;
 import edu.stanford.nlp.mt.metrics.*;
 

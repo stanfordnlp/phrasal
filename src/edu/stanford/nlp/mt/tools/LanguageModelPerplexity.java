@@ -21,8 +21,6 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  */
 public final class LanguageModelPerplexity {
   
-  private LanguageModelPerplexity() {}
-
   /**
    * 
    * @param args
@@ -42,7 +40,7 @@ public final class LanguageModelPerplexity {
         new LineNumberReader(new InputStreamReader(System.in)) :
           IOTools.getReaderFromFile(args[1]);
     
-    double logSum = 0;
+    double logSum = 0.0;
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
       Sequence<IString> seq = IStrings.tokenize(sent);

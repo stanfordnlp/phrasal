@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.service;
 
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServlet;
@@ -110,8 +111,10 @@ public class PhrasalServlet extends HttpServlet {
     Pair<MessageType,Request> message = Messages.parseRequest(request);
     MessageType messageType = message.first();
     Request baseRequest = message.second();
-    logger.info(String.format("Receive: %s %s", messageType.toString(), baseRequest.toString()));
-
+    if (logger.getLevel() == Level.INFO) {
+      // Expensive logging message, so wrap in a conditional
+      logger.info(String.format("Receive: %s %s", messageType.toString(), baseRequest.toString()));
+    }
     Continuation continuation = ContinuationSupport.getContinuation(request);
     if (baseRequest.isAsynchronous() && continuation.isInitial()) {
       // Asynchronous request that will be suspended by the handler
@@ -152,11 +155,16 @@ public class PhrasalServlet extends HttpServlet {
 
       } else {
         boolean responseOk = ServiceResponse.intoHttpResponse(serviceResponse, response);
-        String status = String.format("Response status %d: %s", response.getStatus(), 
-            serviceResponse.getReply().toString());
         if (responseOk) {
-          logger.info(status);
+          if (logger.getLevel() == Level.INFO) {
+            // Expensive logging message, so wrap in a conditional
+            String status = String.format("Response status %d: %s", response.getStatus(), 
+                serviceResponse.getReply().toString());
+            logger.info(status);
+          }
         } else {
+          String status = String.format("Response status %d: %s", response.getStatus(), 
+              serviceResponse.getReply().toString());
           logger.severe(status);
         }
       }

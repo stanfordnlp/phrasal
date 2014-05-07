@@ -123,7 +123,6 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
     TrieIntegerArrayIndex idx = new TrieIntegerArrayIndex();
     test(idx);
     idx.printInfo();
-    test(new DynamicIntegerArrayIndex());
   }
 
   private int indexOf_unsync(int[] input, boolean add) {
