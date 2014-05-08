@@ -2,13 +2,13 @@ package edu.stanford.nlp.mt.decoder.util;
  
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 
 /**
  * Extend Derivation with NNLM scores.

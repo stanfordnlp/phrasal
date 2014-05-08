@@ -6,7 +6,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -21,6 +20,7 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.util.Generics;
 
 /**

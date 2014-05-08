@@ -6,13 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTURule;
 import edu.stanford.nlp.mt.base.FeatureValues;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
@@ -24,6 +21,9 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTURule;
+import edu.stanford.nlp.mt.pt.Rule;
 import edu.stanford.nlp.util.Generics;
 
 /**

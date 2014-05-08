@@ -1,6 +1,9 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.*;
+
+import edu.stanford.nlp.mt.base.PhraseAlignment;
+import edu.stanford.nlp.mt.base.RawSequence;
 
 /**
  * 

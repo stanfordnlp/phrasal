@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
 
@@ -11,6 +10,7 @@ import java.io.IOException;
 import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.pt.DTUTable;
 
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.base.EmptySequence;
@@ -12,10 +11,11 @@ import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.Rule;
 
 /**
  * A derivation that maps a source input to a target output.

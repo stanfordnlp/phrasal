@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +18,12 @@ import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
+
+import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
 
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;

@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.pt.Rule;
+
 import junit.framework.TestCase;
 
 

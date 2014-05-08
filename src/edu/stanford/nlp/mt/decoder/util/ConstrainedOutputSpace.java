@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 
 /**
  * Constrains the output (translation) space for conventional

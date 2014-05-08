@@ -9,11 +9,11 @@ import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.util.StringUtils;
 
 /**

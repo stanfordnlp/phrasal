@@ -5,8 +5,8 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.util.Generics;
 
 /**

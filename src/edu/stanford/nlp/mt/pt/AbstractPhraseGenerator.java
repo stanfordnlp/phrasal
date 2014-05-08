@@ -1,7 +1,10 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;

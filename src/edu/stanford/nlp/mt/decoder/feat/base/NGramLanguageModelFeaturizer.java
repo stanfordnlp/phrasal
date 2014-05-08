@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
@@ -18,6 +17,7 @@ import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 

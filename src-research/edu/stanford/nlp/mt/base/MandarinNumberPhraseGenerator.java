@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.math.BigDecimal;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.pt.AbstractPhraseGenerator;
+import edu.stanford.nlp.mt.pt.Rule;
 
 public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IString,String> {
    public static final String NUMBER_PHRASE_GENERATOR_NAME = "NumberPhraseGenerator";

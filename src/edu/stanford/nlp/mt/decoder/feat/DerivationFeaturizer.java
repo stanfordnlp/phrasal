@@ -2,10 +2,10 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 
 /**
  * Extract features from partial derivations. The featurizer is called each

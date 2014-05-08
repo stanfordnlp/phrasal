@@ -4,8 +4,8 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.util.Generics;
 
 /**

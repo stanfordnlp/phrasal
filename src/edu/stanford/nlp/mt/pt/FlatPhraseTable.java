@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +7,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.base.IntegerArrayIndex;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
+import edu.stanford.nlp.mt.base.ProbingIntegerArrayIndex;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;

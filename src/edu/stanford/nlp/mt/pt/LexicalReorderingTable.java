@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.IStrings;
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;

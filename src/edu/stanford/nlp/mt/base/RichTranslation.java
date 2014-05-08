@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import java.text.DecimalFormat;
 
+import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 /**

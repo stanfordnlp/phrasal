@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.base;
 
 import java.text.DecimalFormat;
 
+import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+
 /**
  * A hypothesis with associated feature values and score under the current model.
  * 

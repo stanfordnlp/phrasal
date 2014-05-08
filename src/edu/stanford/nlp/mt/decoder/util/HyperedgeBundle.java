@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.BitSet;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.util.Generics;
 
 /**

@@ -3,17 +3,17 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 import java.util.List;
 import java.util.ArrayList;
 
-import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.DTUFeaturizable;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTUTable;
 
 /**
  * @author Michel Galley

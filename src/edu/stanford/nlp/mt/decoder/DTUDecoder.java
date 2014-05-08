@@ -33,6 +33,9 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTURule;
+import edu.stanford.nlp.mt.pt.Rule;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 

@@ -1,8 +1,15 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.Arrays;
 import java.util.List;
 
+import edu.stanford.nlp.mt.base.HasIntegerIdentity;
+import edu.stanford.nlp.mt.base.IntegerArrayIndex;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**

@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -9,6 +9,14 @@ import java.io.IOException;
 import java.io.File;
 import java.util.regex.Pattern;
 
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
+import edu.stanford.nlp.mt.base.RawSequence;
+import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 
 public class DTUTable<FV> extends FlatPhraseTable<FV> {

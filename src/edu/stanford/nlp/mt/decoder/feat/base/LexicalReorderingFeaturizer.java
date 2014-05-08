@@ -4,13 +4,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.InputProperty;
-import edu.stanford.nlp.mt.base.LexicalReorderingTable;
-import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.base.IString;
@@ -21,6 +18,9 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.LexicalReorderingTable;
+import edu.stanford.nlp.mt.pt.Rule;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 

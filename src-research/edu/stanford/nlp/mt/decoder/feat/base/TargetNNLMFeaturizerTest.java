@@ -12,13 +12,10 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import edu.stanford.nlp.mt.base.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.base.FlatPhraseTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.RichTranslation;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilder;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
@@ -39,6 +36,9 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.lm.NNLMState;
+import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;

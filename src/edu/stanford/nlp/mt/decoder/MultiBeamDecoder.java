@@ -30,7 +30,6 @@ package edu.stanford.nlp.mt.decoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.base.Sequence;
@@ -41,6 +40,7 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.stats.ClassicCounter;
 
 /**

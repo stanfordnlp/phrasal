@@ -1,8 +1,14 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.base.DTUFeaturizable;
+import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.base.InputProperties;
+import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.Phrasal;

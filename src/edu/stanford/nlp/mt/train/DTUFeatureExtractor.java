@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.train;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUTable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.pt.DTUTable;
 import edu.stanford.nlp.util.IntPair;
 
 import java.util.ArrayList;
