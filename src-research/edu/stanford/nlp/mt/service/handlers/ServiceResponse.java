@@ -49,7 +49,21 @@ public class ServiceResponse {
     return true;
   }
   
-  public static void writeError(HttpServletResponse response) {
+  /**
+   * Write BAD_REQUEST (HTTP 400) into the response.
+   * 
+   * @param response
+   */
+  public static void writeBadRequest(HttpServletResponse response) {
     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+  }
+  
+  /**
+   * Write INTERNAL_SERVER_ERROR (HTTP 500) into the response.
+   * 
+   * @param response
+   */
+  public static void writeTimeout(HttpServletResponse response) {
+    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
   }
 }

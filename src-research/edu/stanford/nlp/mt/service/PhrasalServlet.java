@@ -116,8 +116,9 @@ public class PhrasalServlet extends HttpServlet {
       logger.info(String.format("Receive: %s %s", messageType.toString(), baseRequest.toString()));
     }
     Continuation continuation = ContinuationSupport.getContinuation(request);
+    
+    // Asynchronous request that will be suspended by the handler
     if (baseRequest.isAsynchronous() && continuation.isInitial()) {
-      // Asynchronous request that will be suspended by the handler
       continuation.setTimeout(ASYNC_TIMEOUT);
       RequestHandler handler = requestHandlers[messageType.ordinal()];
       if (handler.validate(baseRequest)) {
@@ -125,48 +126,53 @@ public class PhrasalServlet extends HttpServlet {
 
       } else {
         // Invalid asynchronous request. Do not suspend. Send the response immediately.
-        ServiceResponse.writeError(response);
+        ServiceResponse.writeBadRequest(response);
         logger.warning("Bad request received: " + request.toString());
       }
 
+    } else if (continuation.isExpired()) {
+      // Asynchronous request timed out
+      ServiceResponse.writeTimeout(response);
+      logger.warning("Bad request received: " + request.toString());
+      
     } else {
       // result will be non-null if this is an asynchronous request that has been dispatched
       // by the service after processing completed
-      Object result = request.getAttribute(ASYNC_KEY);
+      Object asyncResult = request.getAttribute(ASYNC_KEY);
       
-      // Create the response
+      // First create a ServiceResponse
       ServiceResponse serviceResponse = null;
-      if (result == null) {
-        // Synchronous message
+
+      // Synchronous message
+      if (asyncResult == null) {
         RequestHandler handler = requestHandlers[messageType.ordinal()];
         if (handler.validate(baseRequest)) {
           serviceResponse = handler.handle(baseRequest);
+        } else {
+          ServiceResponse.writeBadRequest(response);
+          logger.warning("Bad request received: " + request.toString());
+          return;
         }
 
       } else {
         // Re-dispatched asynchronous message
-        serviceResponse = (ServiceResponse) result;
+        serviceResponse = (ServiceResponse) asyncResult;
       }
 
-      // Write the response into the HttpServletResponse
-      if (serviceResponse == null) {
-        ServiceResponse.writeError(response);
-        logger.warning("Bad request received: " + request.toString());
-
-      } else {
-        boolean responseOk = ServiceResponse.intoHttpResponse(serviceResponse, response);
-        if (responseOk) {
-          if (logger.getLevel() == Level.INFO) {
-            // Expensive logging message, so wrap in a conditional
-            String status = String.format("Response status %d: %s", response.getStatus(), 
-                serviceResponse.getReply().toString());
-            logger.info(status);
-          }
-        } else {
+      // Convert ServiceResponse into HttpServletResponse before returning
+      assert serviceResponse != null;
+      boolean responseOk = ServiceResponse.intoHttpResponse(serviceResponse, response);
+      if (responseOk) {
+        if (logger.getLevel() == Level.INFO) {
+          // Expensive logging message, so wrap in a conditional
           String status = String.format("Response status %d: %s", response.getStatus(), 
               serviceResponse.getReply().toString());
-          logger.severe(status);
+          logger.info(status);
         }
+      } else {
+        String status = String.format("Response status %d: %s", response.getStatus(), 
+            serviceResponse.getReply().toString());
+        logger.severe(status);
       }
     }
   }
