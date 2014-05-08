@@ -118,6 +118,7 @@ public class PhrasalServlet extends HttpServlet {
     Continuation continuation = ContinuationSupport.getContinuation(request);
     
     // Asynchronous request that will be suspended by the handler
+    ServiceResponse serviceResponse = null;
     if (baseRequest.isAsynchronous() && continuation.isInitial()) {
       continuation.setTimeout(ASYNC_TIMEOUT);
       RequestHandler handler = requestHandlers[messageType.ordinal()];
@@ -127,40 +128,35 @@ public class PhrasalServlet extends HttpServlet {
       } else {
         // Invalid asynchronous request. Do not suspend. Send the response immediately.
         ServiceResponse.writeBadRequest(response);
-        logger.warning("Bad request received: " + request.toString());
+        logger.warning("Bad asynchronous request received: " + request.toString());
       }
 
     } else if (continuation.isExpired()) {
       // Asynchronous request timed out
       ServiceResponse.writeTimeout(response);
-      logger.warning("Bad request received: " + request.toString());
+      logger.warning("Request timeout: " + request.toString());
       
-    } else {
+    } else if (continuation.isResumed()) {
       // result will be non-null if this is an asynchronous request that has been dispatched
       // by the service after processing completed
       Object asyncResult = request.getAttribute(ASYNC_KEY);
       
       // First create a ServiceResponse
-      ServiceResponse serviceResponse = null;
+      serviceResponse = (ServiceResponse) asyncResult;
 
+    } else {
       // Synchronous message
-      if (asyncResult == null) {
-        RequestHandler handler = requestHandlers[messageType.ordinal()];
-        if (handler.validate(baseRequest)) {
-          serviceResponse = handler.handle(baseRequest);
-        } else {
-          ServiceResponse.writeBadRequest(response);
-          logger.warning("Bad request received: " + request.toString());
-          return;
-        }
-
+      RequestHandler handler = requestHandlers[messageType.ordinal()];
+      if (handler.validate(baseRequest)) {
+        serviceResponse = handler.handle(baseRequest);
       } else {
-        // Re-dispatched asynchronous message
-        serviceResponse = (ServiceResponse) asyncResult;
+        ServiceResponse.writeBadRequest(response);
+        logger.warning("Bad synchronous request received: " + request.toString());
       }
+    }
 
-      // Convert ServiceResponse into HttpServletResponse before returning
-      assert serviceResponse != null;
+    // If a ServiceResponse exists, the convert it to HttpServletResponse
+    if (serviceResponse != null) {
       boolean responseOk = ServiceResponse.intoHttpResponse(serviceResponse, response);
       if (responseOk) {
         if (logger.getLevel() == Level.INFO) {
