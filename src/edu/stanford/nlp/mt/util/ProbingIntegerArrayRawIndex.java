@@ -1,8 +1,9 @@
 package edu.stanford.nlp.mt.util;
 
-
 /**
  * Assign a unique integer to int[]
+ * 
+ * @author Kenneth Heafield
  */
 public class ProbingIntegerArrayRawIndex implements IntegerArrayRawIndex {
   static final float LOAD = 0.7f;

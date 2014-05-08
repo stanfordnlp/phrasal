@@ -3,6 +3,12 @@ package edu.stanford.nlp.mt.util;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.ArrayList;
 
+/**
+ * A probing index that uses MurmurHash.
+ * 
+ * @author Kenneth Heafield
+ *
+ */
 public class ProbingIntegerArrayIndex implements IntegerArrayIndex {
   private ProbingIntegerArrayRawIndex backing;
   private ArrayList<int []> keys;
