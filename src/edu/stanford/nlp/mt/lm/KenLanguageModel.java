@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.lm;
 
-import java.io.File;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
