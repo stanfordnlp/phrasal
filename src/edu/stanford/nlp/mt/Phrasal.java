@@ -43,7 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder;

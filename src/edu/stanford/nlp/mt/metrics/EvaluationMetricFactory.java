@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.metrics;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 

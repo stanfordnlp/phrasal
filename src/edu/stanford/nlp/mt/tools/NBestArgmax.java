@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricFactory;

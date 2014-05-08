@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.tune;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.MetricBasedRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash;
 import edu.stanford.nlp.mt.decoder.util.MultiTranslationState;

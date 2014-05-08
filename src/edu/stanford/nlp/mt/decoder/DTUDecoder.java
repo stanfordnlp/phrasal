@@ -30,7 +30,6 @@ package edu.stanford.nlp.mt.decoder;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.*;
 import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.pt.ConcreteRule;

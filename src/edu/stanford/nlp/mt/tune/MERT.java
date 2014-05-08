@@ -30,9 +30,6 @@ package edu.stanford.nlp.mt.tune;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.util.*;
-
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -41,6 +38,8 @@ import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;

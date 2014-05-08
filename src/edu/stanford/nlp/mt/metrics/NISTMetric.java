@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 import edu.stanford.nlp.mt.util.IString;
