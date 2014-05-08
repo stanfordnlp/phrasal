@@ -903,11 +903,13 @@ public class Phrasal {
     public final Sequence<IString> source;
     public final InputProperties inputProps;
     public final int sourceInputId;
+    public final List<Sequence<IString>> targets;
 
-    public DecoderInput(Sequence<IString> seq, int sourceInputId, InputProperties inputProps) {
+    public DecoderInput(Sequence<IString> seq, int sourceInputId, List<Sequence<IString>> targets, InputProperties inputProps) {
       this.source = seq;
       this.sourceInputId = sourceInputId;
       this.inputProps = inputProps;
+      this.targets = targets;
     }
   }
 
@@ -956,7 +958,7 @@ public class Phrasal {
     public DecoderOutput process(DecoderInput input) {
       // Generate n-best list
       List<RichTranslation<IString, String>> translations = 
-          decode(input.source, input.sourceInputId, infererId, nbestListSize, null, input.inputProps);
+          decode(input.source, input.sourceInputId, infererId, nbestListSize, input.targets, input.inputProps);
       
       // Select and process the best translation
       Sequence<IString> bestTranslation = null;
@@ -1057,8 +1059,10 @@ public class Phrasal {
 
       final InputProperties inputProps = inputPropertiesList != null && sourceInputId < inputPropertiesList.size() ? 
           inputPropertiesList.get(sourceInputId) : new InputProperties();
+      final List<Sequence<IString>> targets = 
+          forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
       
-      wrapper.put(new DecoderInput(source, sourceInputId, inputProps));
+      wrapper.put(new DecoderInput(source, sourceInputId, targets, inputProps));
       for (DecoderOutput result; (result = wrapper.poll()) != null;) {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
