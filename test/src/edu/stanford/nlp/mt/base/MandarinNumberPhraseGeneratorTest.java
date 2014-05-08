@@ -5,6 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.pt.Rule;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.MandarinNumberPhraseGenerator;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 
