@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# Example usage: convert_ibm_sgm_to_plain_text.pl --meta MyMetadataFile < SgmFile  > PlainTextOutputFile
 
 # Read sgm data from stdin, print to stdout, optionally write metadata to auxiliary file
 
