@@ -214,6 +214,10 @@ public final class CoreNLPToJSON {
       int lastIndex = -1;
       for (Tree leaf : leaves) {
         int index = ((HasIndex) leaf.label()).index() - 1;
+        if (index < 0 || index >= iobVector.length) {
+          System.err.println("ERROR: Mangled subtree: " + match.toString());
+          continue;
+        }
         if (lastIndex > 0 && index - lastIndex != 1) break;
         if ( ! iobVector[index].equals("O")) break;
         iobVector[index] = seenStart ? "I" : "B";

@@ -198,7 +198,7 @@ public final class IOTools {
    * @throws ClassNotFoundException
    */
   public static Counter<String> readWeights(String filename,
-      Index<String> featureIndex) throws IOException, ClassNotFoundException {
+      Index<String> featureIndex) {
     Counter<String> wts;
     try {
       ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
@@ -220,7 +220,7 @@ public final class IOTools {
   }
   
   
-  public static Counter<String> readWeights(String filename) throws IOException, ClassNotFoundException {
+  public static Counter<String> readWeights(String filename) {
     return readWeights(filename, null);
   }
 

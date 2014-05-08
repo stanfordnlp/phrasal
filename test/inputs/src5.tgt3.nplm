@@ -2,409 +2,9941 @@
 version 1
 ngram_size 8
 src_ngram_size 5
-input_vocab_size 103
-output_vocab_size 57
+input_vocab_size 2789
+output_vocab_size 1444
 input_embedding_dimension 2
-num_hidden 3
-output_embedding_dimension 4
+layers 3-4
 activation_function rectifier
 
 \input_vocab
-the
-development
-of
+use
+finance
 <unk>
-'s
-is
-in
-with
-,
-00
-by
+directly
+support
+spending
+:
+can
+over
+investment
 and
-years
-has
-to
-as
+production
+!
+financial
+improve
+people
+'s
 construction
+of
+self
+nation
 .
-opening
-up
-a
-for
-this
-new
-that
-have
+system
+core
 are
-was
-china
-which
-last
-year
-region
-000
-million
+0
+distribution
+local
+being
+with
+tax
+to
+health
+benefit
+real
+time
+in
+full
+community
+or
+not
+based
+products
+every
+,
+after
+ten
+dollars
+hundred
+food
+travel
+education
+change
+powerful
+currency
+only
+promote
+its
+side
+effect
+actually
+limited
+each
+balance
+00
+new
+...
+house
+natural
+compensation
+transportation
+public
+internet
 yuan
-all
-enterprises
-foreign
-"
+000
 %
-billion
+term
+points
+big
+one
+five
+foreigners
+the
+unmanned
+iran
+got
+may
+still
+on
+state
+nothing
+?
+so
+fallen
 from
-export
+sky
+this
+kind
+good
+stuff
+interest
+as
+a
+basis
+call
+united
+states
+brother
+india
+we
+do
+n't
+attack
+them
+first
+he
+wo
+us
+if
+able
+business
+their
+south
+china
+sea
+problems
+too
+many
+be
+stable
+let
+america
+gain
+some
+it
+goes
+by
+there
+will
+human
+win
+winning
+is
+satisfied
+economic
+development
+military
+getting
+stronger
+base
+again
+just
+lose
+your
+now
+battle
+afraid
+democratic
+politics
+developing
+continuously
+who
 more
+stand
+laugh
+till
+end
+facing
+huge
+between
+rich
+poor
+-
+create
+but
+must
+key
+though
+others
+you
+master
+really
+i
+fake
+should
+technology
+power
+u.s.
+wants
+get
+involved
+russia
+election
+bad
+for
+has
+already
+had
+syria
+issue
+that
+great
+ever
+hard
+'ll
+super
+fortune
+obama
+strategic
+east
+was
+once
+forced
+give
+up
+like
+thought
+down
+hot
+news
+million
+square
+our
+why
+did
+those
+experts
+shit
+putin
+freedom
+want
+need
+see
+results
+before
+know
+country
+definitely
+step
+towards
+take
+opportunity
+solve
+replying
+non
+sense
+fight
+against
+then
+maybe
+0000
+tell
+going
+whom
+yet
+care
+about
+how
+long
+peaceful
+period
+last
+reply
+0th
+thread
+above
+does
+matter
+usa
+peace
+count
+expert
+kilometers
+territory
+say
+anything
+information
+what
+original
+such
+wait
+result
+soon
+start
+have
+positive
+poster
+talking
+seems
+started
+at
+present
+join
+forces
+much
+strength
+left
+therefore
+cannot
+both
+west
+benefits
+myself
+also
+lost
+completely
+destroy
+north
+bear
+presently
+russian
+american
+totally
+understand
+opposition
+think
+well
+during
+two
+republic
 than
-import
+make
+three
+countries
+reading
+topic
+owner
+post
+very
+example
+basically
+;
+obviously
+into
+different
+curse
+floor
+achieve
+national
+interests
+were
+middle
+indeed
+americans
+whether
+depends
+intelligence
+group
 chinese
-bank
+leaders
+saying
+because
+horse
 an
-loans
-funded
+man
+god
+debt
+stupid
+mistake
+they
+made
+lie
+bother
+doing
+right
+rather
+instead
+course
+internal
+affairs
+(
+)
+necessary
+seek
+past
+guys
+things
+head
+government
+office
+police
+officers
+emperor
+having
+order
+better
+protection
+black
+white
+brothers
+protect
+no
+me
+am
+red
+guard
+words
+fast
+river
+style
+work
+fundamental
+personality
+look
+pathetic
+official
+boat
+even
+little
+way
+safety
+needs
+send
+men
+all
+something
+taking
+money
+sigh
+case
+oneself
+own
+cost
+damn
+out
+play
+personnel
 high
-insurance
-zone
+help
+00th
+war
+false
+report
+form
+security
+total
+most
+area
+guarantee
+responsibility
+immediately
+control
+water
+cause
+troops
+law
+when
+attention
+media
+pay
+any
+shot
+model
+person
+forward
+television
+revealed
+areas
+according
+aircraft
+says
+damage
+used
+weapons
+invasion
+strike
+back
+nato
+afghanistan
+week
+while
+flying
+western
+part
+officials
+been
+deal
+although
+admit
+everyone
+absolutely
+truth
+otherwise
+would
+contrary
+talented
+usually
+ask
+believe
+go
+gets
+problem
+couple
+days
+ago
+until
+night
+finally
+means
+my
+correct
+thanks
+forum
+however
+please
+continue
+land
+due
+interference
+agree
+point
+view
+regarding
+position
+blame
+ill
+anger
+called
+mentioned
+similar
+said
+changing
+light
+best
+same
+sides
+loss
+strategy
+making
+thinking
+comes
+dogs
+makes
+picture
+learn
+previous
+turn
+lies
+hands
+old
+his
+[
+serve
+]
+next
+him
+pretty
+world
+enemies
+pure
+asked
+saw
+admire
+short
+lower
+body
+asking
+beautiful
+beauty
+love
+mind
+sentence
+truly
+act
+often
+off
+civil
+rights
+come
+discuss
+actual
+rules
+mr.
+enemy
+dragon
+forget
+father
+friend
+always
+argue
+together
+ca
+heart
+enough
+another
+rare
+put
+'m
+here
+talk
+humanity
+besides
+save
+try
+life
+difference
+piece
+history
+shameless
+show
+rule
+someone
+double
+color
+year
+doubt
+face
+early
+facts
+looks
+probably
+true
+these
+anyone
+companies
+popular
+came
+which
+society
+word
+yours
+lot
+day
+selling
+buy
+raise
+crowd
+#00
+cheat
+common
+everybody
+market
+deserve
+spirit
+professor
+beijing
+thousand
+saint
+appear
+zhou
+future
+mankind
+animals
+hope
+holy
+normal
+feeling
+kong
+fool
+without
+conscience
+theory
+li
+second
+type
+confucius
+civilians
+perfect
+saints
+number
+warm
+using
+political
+ignorant
+foolish
+working
+modern
+sage
+ancient
+culture
+within
+could
+thoughts
+alien
+logic
+fraud
+wise
+least
+cultural
+book
+inside
+'
+principles
+understanding
+lao
+teacher
+looking
+six
+years
+considered
+third
+huang
+prophets
+known
+reasons
+science
+experience
+etc
+represent
+disaster
+coming
+birth
+dark
+created
+other
+/
+line
+space
+etc.
+morality
+evil
+research
+idea
+selfish
+current
+situation
+wu
+bring
+reform
+thank
+top
+ground
+online
+place
+prosperity
+provinces
+cities
+front
+ah
+ha
+explain
+root
+passed
+nonsense
+universal
+where
+lead
+class
+sun
+mao
+emotions
+training
+escape
+family
+almost
+avoid
+none
+around
+so-called
+fact
+process
+eventually
+friends
+respect
+small
+pressure
+through
+carefully
+live
+environment
+become
+outside
+thing
+quite
+rational
+reach
+naturally
+realize
+advantage
+nature
+complete
+#0
+equal
+died
+fall
+families
+japanese
+forever
+giving
+clearly
+corruption
+crime
+rate
+social
+boring
+fairness
+democracy
+weak
+woman
+strong
+fair
+extremely
+labor
+including
+leader
+sorry
+protecting
+entire
+race
+socialism
+yourself
+necessarily
+generation
+she
+wealth
+find
+housing
+capitalism
+earth
+feel
+living
+yes
+phoenix
+progress
+originally
+posts
+impossible
+done
+keep
+serious
+went
+revolution
+justice
+knowledge
+whoever
+everywhere
+hand
+message
+discussion
+harmony
+goal
+attitude
+himself
+heaven
+themselves
+citizens
+belong
+home
+happiness
+changed
+deep
+wisdom
+further
+whole
+determined
+today
+wish
+opinions
+important
+proper
+legal
+beings
+creating
+lots
+mistakes
+experiences
+express
+never
+kindness
+knowing
+reason
+allowed
+her
+greed
+caused
+beginning
+foundation
+limit
+thus
+worse
+population
+growth
+becoming
+severe
+knows
+changes
+feelings
+gone
+honest
+sacrifice
+talent
+abilities
+asia
+major
+issues
+read
+worth
+qing
+dynasty
+corrupted
+stay
+perspective
+developed
+era
+destroyed
+gang
+four
+deleted
+road
+groups
+revolutionary
+certain
+english
+foreign
+became
+talents
+policy
+dead
+death
+salary
+several
+higher
+international
+follow
+stop
+increase
+cat
+biggest
+anyway
+general
+wife
+competition
+economy
+capital
+main
+european
+crisis
+differences
+ability
+cut
+personal
+reasonable
+develop
+enterprises
+related
+individual
+clear
+majority
+speech
+value
+ideology
+global
+stage
+under
+objective
+laws
+bigger
+secret
+banks
+economical
+price
+historical
+ideas
+age
+possible
+lives
+happy
+hundreds
+billions
+dollar
+action
+purpose
+party
+car
+sold
+paper
+europe
+exchange
+simply
+falling
+alone
+subject
+running
+equality
+hate
+half
+wild
+bird
+mess
+soviet
+union
+everything
+firmly
+masters
+yang
+authority
+times
+department
+college
+school
+army
+question
+students
+train
+level
+nobody
+illness
+medicine
+enjoy
+rural
+wind
+intention
+thousands
+green
+seen
+greetings
+material
+spring
+large
+reality
+easily
+hehe
+city
+away
+return
+gold
+daily
+guy
+questions
+industry
+ones
+exposed
+taken
+game
+speed
+kill
+walk
+stick
+bright
+noun
+lady
+write
+poem
+easy
+male
+female
+simple
+classic
+poems
+sex
+stock
+sell
+product
+practice
+born
+die
+later
+happened
+bottom
+reasoning
+except
+close
+sleep
+employees
+dumb
+beneficial
+either
+killed
+famous
+comment
+sure
+ma
+angry
+achievements
+greedy
+0.0
+billion
+supporting
+reveal
+method
+external
+force
+assets
+amount
+punish
+mountain
+fish
+imperialism
+singing
+children
+song
+corrupt
+behind
+places
+deeds
+comfortable
+scholar
+told
+scientific
+japan
+carrier
+golden
+speaking
+integrity
+workers
+capitalist
+company
+among
+certainly
+kinds
+break
+kids
+treat
+marriage
+few
+oh
+civilization
+private
+else
+object
+yi
+energy
+blue
+helping
+cold
+yesterday
+seeing
+story
+set
+moon
+useless
+open
+allow
+various
+enter
+broken
+demand
+run
+mean
+low
+content
+regulations
+weird
+advanced
+farmers
+behavior
+spend
+drunk
+dirty
+oil
+difficult
+since
+rmb
+compared
+trade
+disease
+enterprise
+scholars
+standing
+harm
+hurt
+itself
+principle
+tiger
+found
+gecko
+lord
+language
+speak
+'d
+relationship
+wrong
+watching
+fun
+honesty
+hold
+likes
+mouth
+far
+peasants
+dare
+drink
+wine
+answer
+haha
+showing
+users
+xiang
+less
+whatever
+name
+exist
+fame
+move
+generations
+eight
+values
+accept
+capitalists
+lang
+xianping
+meaning
+owned
+welfare
+university
+moral
+zedong
+communist
+conditions
+across
+dog
+meat
+young
+mainland
+taiwan
+trend
+korea
+opinion
+youth
+trying
+fly
+heard
+hometown
+status
+scientists
+ignorance
+schools
+might
+illegal
+ethics
+condition
+judge
+crazy
+air
+bandits
+regulation
+management
+leave
+publicly
+religious
+constitution
+feudalism
+ancestor
+mainstream
+influence
+feudal
+resolved
+pretend
+basic
+free
+sick
+brain
+eating
+especially
+pattern
+chongqing
+special
+beat
+build
+pot
+per
+month
+visit
+becomes
+fighting
+raised
+station
+iron
+hu
+wing
+wolf
+eat
+xi
+shanghai
+jiangsu
+field
+cheap
+province
+festival
+sichuan
+mom
+everyday
+boss
+tried
+abroad
+navy
+carriers
+resources
+building
+bomb
+dream
+facilities
+accomplished
+watch
+bureau
+website
+opening
+servants
+given
+anti
+ancestors
+parents
+lu
+girl
+ways
+following
+guangdong
+increased
+masses
+stamp
+elected
+'re
+fuck
+job
+pan
+vote
+soong
+president
+cai
+wen
+women
+votes
+mother
+donkey
+idiot
+obvious
+defeat
+island
+traitor
+prostitute
+alive
+daughter
+son
+eyes
+traditions
+decline
+provide
+standard
+bone
+hospital
+listen
+specialty
+quickly
+gave
+longer
+practical
+service
+cases
+punishment
+upon
+professional
+lack
+petroleum
+survive
+recently
+appropriate
+girls
+direction
+gaddafi
+posted
+welcome
+playing
+busy
+negative
+jiang
+traitors
+xun
+dignity
+administrative
+sha
+brought
+oversea
+funny
+took
+gdp
+argentina
+islands
+britain
+missiles
+holding
+ordinary
+reunification
+helped
+organization
+ii
+servant
+*
+promoting
+survival
+caught
+bank
+ass
+commoners
+supreme
+success
+blindly
+rape
+foreigner
+path
+germany
+grow
+korean
+receive
+leftists
+rightists
+hong
+hunan
+dad
+withdraw
+domestic
+central
+electricity
+tons
+liberation
+privilege
+participate
+pakistan
+center
+remember
+solved
+village
+burma
+certificates
+nanfang
+monk
+definition
+citizen
+treated
+diplomatic
+00s
+cars
+willing
+poetry
+guan
+notary
+signature
+greffier
+offices
+greffiers
+criminal
+seal
+sign
+relations
+abortion
+assad
+arab
+israel
+aids
+cuba
+ahmadinejad
+khamenei
+nuclear
 <s>
 </s>
+用
+财政
+消费
+津贴
+直接
 <unk>
-电
-（
-、
-）
-了
-经济
-等
-的
-，
-。
-开放
-是
-一
-工程
-新
-去年
-中国
-家
-元
-年
-有
-公司
-个
-在
-上
-区
-外商
+:
+可以
 投资
-企业
-进出口
-达
-全
-为
 和
-对外
-据
-已
-日本
-银行
-贷款
+!
+好
+国民
+收入
+建设
+内需
+。
+的
+0
+国
+通过
+转移
+方式
+资金
+全
+后
+或
+向
+不
+每
+,
+作
+ten
+元
+000
+范围
+教
+货币
+只
+其
+新
+...
+住
+行
+八
+大
+奖
+一
+五
+以上
+老外
+聊天
+伊朗
+无
+人
+有
+可能
+还
+处
+在
+?
+真
+~
+掉
+能
+这样
+事
+啊
+国家
+利益
+情况
+下
+喊
+"
+美国
+我们
+先
+打
+他
+会
+本事
+他们
+做
+南海
+问题
+太
+多
+让
+少
+时间
+常
+了
+可是
+之间
+人民
+经济
 发展
+不断
+强大
+是
+根本
+心
+再
+要
+发
+就
+鸟
+着
+现在
+民主
+政治
+谁
+更
+笑
+到
+最后
+国内
+-
+生
+乱
+但是
+肯定
+中
+关键
+人家
+你
+家
+我
+假
+以
+应
+科技
+能力
+美
+欲
+俄
+选举
+对
+中国
+福
+还是
+上
+已
+故
+也
+如果
+无法
+奥巴马
+战略
+又
+次
+放弃
+如
+小
+思想
+被
+一样
+凤凰
+]
+俄罗斯
+掠夺
+00
+million
+平方公里
+领土
+专家
+放
+声
+普京
+将
+走向
+真正
+自由
+同时
+与
+两
+个
+超级
+军事
+吗
 高
+呀
+看
+结果
+才
+知道
+影响
+若
+俄国
+必
+可
+解决
+回复
+楼
+帖子
+这
+手
+里
+跟
+0000
+一定
+呢
+长
+和平
+不管
+已经
+开始
+去
+一下
+资料
+什么
+概念
+原
+因素
+产生
+但
+为
+只要
+斗
+即
+主
+所
+说
+看来
+目前
+老
+极
+来
+心态
+决定
+所以
+得
+支持
+则
+恐怕
+而已
+难
+把
+彻底
+机会
+完全
+死
+尽
+呵
+三
+足
+年
+出
+当今
+成
+及
+觉得
+些
+比如
+自己
+有些
+;
+而
+明显
+各
+认为
+实现
+中东
+多少
+那
+边
+却
+早
+美国人
+对于
+领导
+群
+智慧
+嘛
+算
+天
+…
+种
+搞
+债务
+很
+愚蠢
+蠢
+知
+今日
+继续
+内政
+同
+(
+)
+难道
+围堵
+必须
+过去
+今天
+坏
+差
+佬
+秩序
+没
+这个
+需要
+保护
+黑
+白
+兄弟
+说话
+快
+神
+合作
+成功
+人类
+基础
+者
+看看
+船
+猫
+样
+你们
+别
+事情
+保证
+安全
+必要
+人员
+派
+地
+代价
+反正
+都
+责任
+付出
+大家
+滴
+起
+开
+玩
+养
+过
+硬
+帮
+工作
+哦
+哈
+网
+消息
+总
+左右
+由于
+几
+其他
+为了
+控制
+等
+正常
+民
+关注
+媒体
+变化
+称
+美军
+参与
+条
+号
+地区
+飞机
+一般
+武器
+行为
+不仅
+北约
+阿富汗
+份
+周
+时
+官员
+表示
+没有
+事件
+文章
+虽然
+承认
+告诉
+one
+thousand
+事实
+怎么
+相反
+应该
+站
+二
+问
+有关
+道
+而且
+确实
+由
+进
+入
+该
+前
+一直
+直
+说明
+正确
+谢谢
+吧
+并
+不过
+罢
+请
+西方
+看法
+提出
+必然
+是否
+叫
+或者
+说法
+意思
+差不多
+换
+双方
+目标
+方
+存在
+反
+这么
+想
+从
 技术
+重新
+变成
+消灭
+狗
+中华
+道理
+具体
+接受
+教育
+非
+`
+服务
+帽子
+'
+破
+四
+百姓
+甚至
+作为
+敌人
+唯一
+为什么
+看到
+身
+别人
+喜欢
+句
+真的
+戏
+人物
+只是
+烂
+甚
+下来
+见
+热
+办
+忘
+老爸
+话
+朋友
+管
+一起
+兄
+时候
+意义
+够
+给
+造
+顶
+头
+上去
+然后
+救
+生活
+人们
+为何
+何
+张
+最
+无耻
+注意
+吃
+规则
+刚
+数
+双
+今年
+也许
+贴
+发生
+实在
+挺
+过来
+敢
+这些
+公司
+中国人
+岁
+那样
+东西
+留
+楼主
+很多
+天天
+卖
+倒
+靠
+买
+钱
+起来
+猪
+骗
+老百姓
+当
+缺
+夜
+几乎
+人人
+巨大
+市场
+不然
+输
+里面
+们
+自
+找
+精神
+北京
+位
+教授
+讲
+圣人
+出现
+先生
+能够
+未来
+认识
+动物
+希望
+总是
+所谓
+孔
+灭
+此
+良心
+符合
+理论
+人性
+按
+正
+第二
+代
+水
+深
+否则
+像
+本
+民族
+世界
+逻辑
+词
+伪
+至少
+穷
+文化
+先知
+天下
+道德
+经
+进行
+懂得
+之
+规律
+清楚
+历史
+人文
+第一
+老子
+--
+超过
+学
+哪里
+/
+真理
+科学
+经验
+代表
+听
+灾难
+皇帝
+创造
+人才
+那些
+认可
+共识
+法治
+文
+宗教
+研究
+错误
+准备
+自然
+自私
+.
+变
+字
+改变
+其它
+省
+市
+带
+富裕
+随着
+发表
+意见
+出来
+忽悠
+归
+众
+阶级
+......
+太阳
+红
+毛
+感性
+即使
+培养
+离
+面
+表现
+因为
+实际
+好处
+骂
+名
+做到
+理性
+实际上
+过程
+之后
+感觉
+失去
+所有
+以后
+尊重
+少数
+受
+日子
+环境
+现实
+越来越
+块
+方面
+永远
+只有
+于是
+比较
+达到
+天生
+明白
+本身
+更加
+法律
+#
+虚
+权力
+平等
+保障
+分配
+合理
+解放
+战争
+牺牲
+当然
+后代
+如此
+本人
+于
+那里
+低
+劳动
+社会
+制度
+公平
+弱
+女性
+她
+男人
+包括
+整
+....
+以前
+富
+十分
+社会主义
+事业
+象
+资本主义
+富人
+理解
+官
+工
+比
+价值
+拿
+房
+区别
+进步
+本来
+知识
+可惜
+件
+那么
+干
+至
+革命
+懂
+到底
+到处
+爱
+和谐
+共
+态度
+腐败
+回
+现象
+谈
+点
+步
+愿
+欢迎
+各位
+重要
+哪
+有的
+其实
+任何
+善良
+了解
+否定
+贪婪
+导致
+晚
+错
+恶
+便
+人口
+增长
+避免
+自身
+言
+部分
+占
+诚信
+非常
+回答
+鬼
+一些
+法案
+未
+怎样
+保持
+以为
+财
+时代
+内
+要求
+删
+走
+泛滥
+改革
+开放
+某些
+矛盾
+侵略
+洋
+档
+受到
+外
+臭
+路
+享受
+维护
+下去
+国际
+困难
+提高
+强
+怕
+民众
+左
+监督
+右
+相
+相信
+信
+有点
+活
+帖
+[
+且
+竞争
+平衡
+主要
+资本
+性
+形成
+more
+than
+昨天
+危机
+叙利亚
+造成
+个人
+产业
+就业
+明确
+总统
+伟大
+大多数
+言论
+值得
+它们
+发挥
+作用
+它
+权利
+上帝
+客观
+使
+银行
+trillion
+美元
+手段
+发达
+面对
+成为
+幸福
+原来
+several
+hundred
+billion
+政府
+当年
+本质
+德国
+of
+欧洲
+子
+好像
+绝对
+地方
+的话
+苏联
+选择
+证明
+一切
+最终
+大学
+学校
+部
+意
+学生
+水平
+求
+许多
+难以
+健康
+农村
+风
+山
+现代
+追求
+病毒
+自我
+明
+身份
+论坛
+破坏
+真心
+容易
+呵呵
+信息
+短
+毫
+外交
+日
+么
+压
+企业
+今
+dozens
+如何
+衣纱
+游戏
+治
+咋
+=
+名词
+写
+票
+女人
+花
+好好
+连
+眼
+车
+马
+女
+吹牛
+胡说
+起码
+办法
+发现
+上面
+除了
+赚
+网络
+近
+干部
+您
+爱情
+福利
+忘记
+卡扎菲
+流氓
+简单
+势力
+贪官
+分子
+成果
+稳定
+咱
+*
+0.0
+军
+仍
+管管
+方法
+全部
+财产
+贪
+提
+油
+公正
+全民
+财富
+美帝
+亡
+网友
+俺
+唱
+得到
+一旦
+实话
+领袖
+战
+日本
+航母
+大战
+曾
+盛世
+工人
+资本家
+实
+类
+分
+段
+曾经
+孩子
+婚姻
+酒
+老婆
+文明
+内容
+首先
+大量
+感谢
+通
+另
+家庭
+冷
+故事
+活动
+六
+这里
+进入
+政策
+那时
+劳
+令
+树
+先进
+农民
+论
+送
+垃圾
+处理
+偶
+皆
+醉
+房子
+农民工
+人民币
+00%
+贸易
+砸
+逼
+沙发
+报告
+美女
+跑
+壁
+虎
+俩
+啦
+关系
+翻
+坚持
+愿意
+操
+怎么样
+啥
+嘴
+回来
+喝
+表达
+无关
+装
+专业
+弄
+倍
+聪明
+不同
+学习
+改
+至于
+讨论
+价值观
+贵
+因此
+既
+模式
+原因
+资产
+郎咸平
+观点
+果
+无论
+越
+底线
+毛泽东
+关于
+条件
+狗肉
+特色
+反对
+大陆
+台湾
+思维
+韩国
+片
+无知
+不错
+因
+严格
+遵守
+哪些
+规矩
+发祥
+毁灭
+地球
+掌握
+私学
+他人
+主义
+垄断
+私
+犯罪
+生存
+绝
+管理
+法
+道法
+病
+意识
+当先
+封建
+不如
+某
+主流
+贡献
+当时
+估计
+成就
+解释
+纸
+脑子
+观
+特别是
+半
+建立
+重庆
+狼牙
+工资
+月
+香溪
+工匠
+度
+资格
+傻
+远
+高兴
+基地
+左派
+奴
+首
+考虑
+上海
+国企
+老板
+无聊
+随
+免费
+满
+拉
+完
+选
+家乡
+报
+00s
+国外
+权
+其中
+完成
+理
+公务员
+考试
+==
+·
+行动
+坚决
+加
+说说
+产物
+毁
+书
+应当
+死亡
+失败
+竟然
+节
+足球
+帮助
+跳
+参加
+广东
+春
+地位
+群众
+蔡英文
+岸
+实力
+党
+包
+投
+统一
+合法
+海军
+驴
+孙子
+公开
+时期
+重
+饭
+肉
+汉奸
+脸
+副
+女儿
+儿子
+狼
+祖宗
+传统
+既然
+单位
+优秀
+台
+部门
+理由
+要么
+骨
+医院
+告
+发动
+提供
+需
+资源
+基本
+力量
+精英
+儿
+国人
+王
+目的
+坐
+底
+金融
+主人
+舒服
+例
+不少
+从来
+拍
+照
+抢
+罪
+鲁迅
+生命
+严重
+全球
+违法
+蛋
+级
+组织
+恐怖
+炸
+最近
+开心
+d
+阿根廷
+英国
+武力
+统治
+智商
+帝国主义
+凭
+想法
+奇怪
+真金
+谎言
+爹
+爱国
+打击
+自胜
+尚
+排
+收
+使用
+钱币
+之一
+利用
+看爷
+b
+妈
+石油
+瞎
+牛
+下面
+人生
+强奸
+幼女
+幼幼
+弹指
+老师
+朝鲜
+举
+黄世仁
+文革
+奸
+民企
+设施
+干涉
+出于
+一点
+科学家
+普通
+宋
+竞选
+巴基斯坦
+中心
+外国
+杀
+伤害
+屁
+随便
+缅甸
+调查
+仅仅
+南
+报系
+正在
+公民
+标准
+暴力
+共同
+移民
+行业
+动武
+口
+海外
+铁
+怎
+惩罚
+诗
+司法局
+兼职
+公证
+公证员
+签名章
+工勤
+出租
+出借
+出具
+公证书
+签名
+胡作
+洒
+吨
+阿萨德
+阿盟
+以色列
+哎
+人权
+右派
+艾滋病
+古巴
+内贾德
+全面
+哈梅内伊
+核
 <s>
 </s>
 
 \output_vocab
-the
-development
-of
+use
+finance
 <unk>
-'s
-is
-in
-with
-,
-00
-by
+directly
+support
+spending
+:
+can
+over
+investment
 and
-years
-has
-to
-as
+production
+!
+financial
+improve
+people
+'s
 construction
+of
+self
+nation
 .
-opening
-up
-a
-for
-this
-new
-that
-have
+system
+core
 are
-was
-china
-which
-last
-year
-region
-000
-million
+0
+distribution
+local
+being
+with
+tax
+to
+health
+benefit
+real
+time
+in
+full
+community
+or
+not
+based
+products
+every
+,
+after
+ten
+dollars
+hundred
+food
+travel
+education
+change
+powerful
+currency
+only
+promote
+its
+side
+effect
+actually
+limited
+each
+balance
+00
+new
+...
+house
+natural
+compensation
+transportation
+public
+internet
 yuan
-all
-enterprises
-foreign
-"
+000
 %
-billion
+term
+points
+big
+one
+five
+foreigners
+the
+unmanned
+iran
+got
+may
+still
+on
+state
+nothing
+?
+so
+fallen
 from
-export
+sky
+this
+kind
+good
+stuff
+interest
+as
+a
+basis
+call
+united
+states
+brother
+india
+we
+do
+n't
+attack
+them
+first
+he
+wo
+us
+if
+able
+business
+their
+south
+china
+sea
+problems
+too
+many
+be
+stable
+let
+america
+gain
+some
+it
+goes
+by
+there
+will
+human
+win
+winning
+is
+satisfied
+economic
+development
+military
+getting
+stronger
+base
+again
+just
+lose
+your
+now
+battle
+afraid
+democratic
+politics
+developing
+continuously
+who
 more
+stand
+laugh
+till
+end
+facing
+huge
+between
+rich
+poor
+-
+create
+but
+must
+key
+though
+others
+you
+master
+really
+i
+fake
+should
+technology
+power
+u.s.
+wants
+get
+involved
+russia
+election
+bad
+for
+has
+already
+had
+syria
+issue
+that
+great
+ever
+hard
+'ll
+super
+fortune
+obama
+strategic
+east
+was
+once
+forced
+give
+up
+like
+thought
+down
+hot
+news
+million
+square
+our
+why
+did
+those
+experts
+shit
+putin
+freedom
+want
+need
+see
+results
+before
+know
+country
+definitely
+step
+towards
+take
+opportunity
+solve
+replying
+non
+sense
+fight
+against
+then
+maybe
+0000
+tell
+going
+whom
+yet
+care
+about
+how
+long
+peaceful
+period
+last
+reply
+0th
+thread
+above
+does
+matter
+usa
+peace
+count
+expert
+kilometers
+territory
+say
+anything
+information
+what
+original
+such
+wait
+result
+soon
+start
+have
+positive
+poster
+talking
+seems
+started
+at
+present
+join
+forces
+much
+strength
+left
+therefore
+cannot
+both
+west
+benefits
+myself
+also
+lost
+completely
+destroy
+north
+bear
+presently
+russian
+american
+totally
+understand
+opposition
+think
+well
+during
+two
+republic
 than
-import
+make
+three
+countries
+reading
+topic
+owner
+post
+very
+example
+basically
+;
+obviously
+into
+different
+curse
+floor
+achieve
+national
+interests
+were
+middle
+indeed
+americans
+whether
+depends
+intelligence
+group
 chinese
-bank
+leaders
+saying
+because
+horse
 an
-loans
-funded
+man
+god
+debt
+stupid
+mistake
+they
+made
+lie
+bother
+doing
+right
+rather
+instead
+course
+internal
+affairs
+(
+)
+necessary
+seek
+past
+guys
+things
+head
+government
+office
+police
+officers
+emperor
+having
+order
+better
+protection
+black
+white
+brothers
+protect
+no
+me
+am
+red
+guard
+words
+fast
+river
+style
+work
+fundamental
+personality
+look
+pathetic
+official
+boat
+even
+little
+way
+safety
+needs
+send
+men
+all
+something
+taking
+money
+sigh
+case
+oneself
+own
+cost
+damn
+out
+play
+personnel
 high
-insurance
-zone
+help
+00th
+war
+false
+report
+form
+security
+total
+most
+area
+guarantee
+responsibility
+immediately
+control
+water
+cause
+troops
+law
+when
+attention
+media
+pay
+any
+shot
+model
+person
+forward
+television
+revealed
+areas
+according
+aircraft
+says
+damage
+used
+weapons
+invasion
+strike
+back
+nato
+afghanistan
+week
+while
+flying
+western
+part
+officials
+been
+deal
+although
+admit
+everyone
+absolutely
+truth
+otherwise
+would
+contrary
+talented
+usually
+ask
+believe
+go
+gets
+problem
+couple
+days
+ago
+until
+night
+finally
+means
+my
+correct
+thanks
+forum
+however
+please
+continue
+land
+due
+interference
+agree
+point
+view
+regarding
+position
+blame
+ill
+anger
+called
+mentioned
+similar
+said
+changing
+light
+best
+same
+sides
+loss
+strategy
+making
+thinking
+comes
+dogs
+makes
+picture
+learn
+previous
+turn
+lies
+hands
+old
+his
+[
+serve
+]
+next
+him
+pretty
+world
+enemies
+pure
+asked
+saw
+admire
+short
+lower
+body
+asking
+beautiful
+beauty
+love
+mind
+sentence
+truly
+act
+often
+off
+civil
+rights
+come
+discuss
+actual
+rules
+mr.
+enemy
+dragon
+forget
+father
+friend
+always
+argue
+together
+ca
+heart
+enough
+another
+rare
+put
+'m
+here
+talk
+humanity
+besides
+save
+try
+life
+difference
+piece
+history
+shameless
+show
+rule
+someone
+double
+color
+year
+doubt
+face
+early
+facts
+looks
+probably
+true
+these
+anyone
+companies
+popular
+came
+which
+society
+word
+yours
+lot
+day
+selling
+buy
+raise
+crowd
+#00
+cheat
+common
+everybody
+market
+deserve
+spirit
+professor
+beijing
+thousand
+saint
+appear
+zhou
+future
+mankind
+animals
+hope
+holy
+normal
+feeling
+kong
+fool
+without
+conscience
+theory
+li
+second
+type
+confucius
+civilians
+perfect
+saints
+number
+warm
+using
+political
+ignorant
+foolish
+working
+modern
+sage
+ancient
+culture
+within
+could
+thoughts
+alien
+logic
+fraud
+wise
+least
+cultural
+book
+inside
+'
+principles
+understanding
+lao
+teacher
+looking
+six
+years
+considered
+third
+huang
+prophets
+known
+reasons
+science
+experience
+etc
+represent
+disaster
+coming
+birth
+dark
+created
+other
+/
+line
+space
+etc.
+morality
+evil
+research
+idea
+selfish
+current
+situation
+wu
+bring
+reform
+thank
+top
+ground
+online
+place
+prosperity
+provinces
+cities
+front
+ah
+ha
+explain
+root
+passed
+nonsense
+universal
+where
+lead
+class
+sun
+mao
+emotions
+training
+escape
+family
+almost
+avoid
+none
+around
+so-called
+fact
+process
+eventually
+friends
+respect
+small
+pressure
+through
+carefully
+live
+environment
+become
+outside
+thing
+quite
+rational
+reach
+naturally
+realize
+advantage
+nature
+complete
+#0
+equal
+died
+fall
+families
+japanese
+forever
+giving
+clearly
+corruption
+crime
+rate
+social
+boring
+fairness
+democracy
+weak
+woman
+strong
+fair
+extremely
+labor
+including
+leader
+sorry
+protecting
+entire
+race
+socialism
+yourself
+necessarily
+generation
+she
+wealth
+find
+housing
+capitalism
+earth
+feel
+living
+yes
+phoenix
+progress
+originally
+posts
+impossible
+done
+keep
+serious
+went
+revolution
+justice
+knowledge
+whoever
+everywhere
+hand
+message
+discussion
+harmony
+goal
+attitude
+himself
+heaven
+themselves
+citizens
+belong
+home
+happiness
+changed
+deep
+wisdom
+further
+whole
+determined
+today
+wish
+opinions
+important
+proper
+legal
+beings
+creating
+lots
+mistakes
+experiences
+express
+never
+kindness
+knowing
+reason
+allowed
+her
+greed
+caused
+beginning
+foundation
+limit
+thus
+worse
+population
+growth
+becoming
+severe
+knows
+changes
+feelings
+gone
+honest
+sacrifice
+talent
+abilities
+asia
+major
+issues
+read
+worth
+qing
+dynasty
+corrupted
+stay
+perspective
+developed
+era
+destroyed
+gang
+four
+deleted
+road
+groups
+revolutionary
+certain
+english
+foreign
+became
+talents
+policy
+dead
+death
+salary
+several
+higher
+international
+follow
+stop
+increase
+cat
+biggest
+anyway
+general
+wife
+competition
+economy
+capital
+main
+european
+crisis
+differences
+ability
+cut
+personal
+reasonable
+develop
+enterprises
+related
+individual
+clear
+majority
+speech
+value
+ideology
+global
+stage
+under
+objective
+laws
+bigger
+secret
+banks
+economical
+price
+historical
+ideas
+age
+possible
+lives
+happy
+hundreds
+billions
+dollar
+action
+purpose
+party
+car
+sold
+paper
+europe
+exchange
+simply
+falling
+alone
+subject
+running
+equality
+hate
+half
+wild
+bird
+mess
+soviet
+union
+everything
+firmly
+masters
+yang
+authority
+times
+department
+college
+school
+army
+question
+students
+train
+level
+nobody
+illness
+medicine
+enjoy
+rural
+wind
+intention
+thousands
+green
+seen
+greetings
+material
+spring
+large
+reality
+easily
+hehe
+city
+away
+return
+gold
+daily
+guy
+questions
+industry
+ones
+exposed
+taken
+game
+speed
+kill
+walk
+stick
+bright
+noun
+lady
+write
+poem
+easy
+male
+female
+simple
+classic
+poems
+sex
+stock
+sell
+product
+practice
+born
+die
+later
+happened
+bottom
+reasoning
+except
+close
+sleep
+employees
+dumb
+beneficial
+either
+killed
+famous
+comment
+sure
+ma
+angry
+achievements
+greedy
+0.0
+billion
+supporting
+reveal
+method
+external
+force
+assets
+amount
+punish
+mountain
+fish
+imperialism
+singing
+children
+song
+corrupt
+behind
+places
+deeds
+comfortable
+scholar
+told
+scientific
+japan
+carrier
+golden
+speaking
+integrity
+workers
+capitalist
+company
+among
+certainly
+kinds
+break
+kids
+treat
+marriage
+few
+oh
+civilization
+private
+else
+object
+yi
+energy
+blue
+helping
+cold
+yesterday
+seeing
+story
+set
+moon
+useless
+open
+allow
+various
+enter
+broken
+demand
+run
+mean
+low
+content
+regulations
+weird
+advanced
+farmers
+behavior
+spend
+drunk
+dirty
+oil
+difficult
+since
+rmb
+compared
+trade
+disease
+enterprise
+scholars
+standing
+harm
+hurt
+itself
+principle
+tiger
+found
+gecko
+lord
+language
+speak
+'d
+relationship
+wrong
+watching
+fun
+honesty
+hold
+likes
+mouth
+far
+peasants
+dare
+drink
+wine
+answer
+haha
+showing
+users
+xiang
+less
+whatever
+name
+exist
+fame
+move
+generations
+eight
+values
+accept
+capitalists
+lang
+xianping
+meaning
+owned
+welfare
+university
+moral
+zedong
+communist
+conditions
+across
+dog
+meat
+young
+mainland
+taiwan
+trend
+korea
+opinion
+youth
+trying
+fly
+heard
+hometown
+status
+scientists
+ignorance
+schools
+might
+illegal
+ethics
+condition
+judge
+crazy
+air
+bandits
+regulation
+management
+leave
+publicly
+religious
+constitution
+feudalism
+ancestor
+mainstream
+influence
+feudal
+resolved
+pretend
+basic
+free
+sick
+brain
+eating
+especially
+pattern
+chongqing
+special
+beat
+build
+pot
+per
+month
+visit
+becomes
+fighting
+raised
+station
+iron
+hu
+wing
+wolf
+eat
+xi
+shanghai
+jiangsu
+field
+cheap
+province
+festival
+sichuan
+mom
+everyday
+boss
+tried
+abroad
+navy
+carriers
+resources
+building
+bomb
+dream
+facilities
+accomplished
+watch
+bureau
+website
+opening
+servants
+given
+anti
+ancestors
+parents
+lu
+girl
+ways
+following
+guangdong
+increased
+masses
+stamp
+elected
+'re
+fuck
+job
+pan
+vote
+soong
+president
+cai
+wen
+women
+votes
+mother
+donkey
+idiot
+obvious
+defeat
+island
+traitor
+prostitute
+alive
+daughter
+son
+eyes
+traditions
+decline
+provide
+standard
+bone
+hospital
+listen
+specialty
+quickly
+gave
+longer
+practical
+service
+cases
+punishment
+upon
+professional
+lack
+petroleum
+survive
+recently
+appropriate
+girls
+direction
+gaddafi
+posted
+welcome
+playing
+busy
+negative
+jiang
+traitors
+xun
+dignity
+administrative
+sha
+brought
+oversea
+funny
+took
+gdp
+argentina
+islands
+britain
+missiles
+holding
+ordinary
+reunification
+helped
+organization
+ii
+servant
+*
+promoting
+survival
+caught
+bank
+ass
+commoners
+supreme
+success
+blindly
+rape
+foreigner
+path
+germany
+grow
+korean
+receive
+leftists
+rightists
+hong
+hunan
+dad
+withdraw
+domestic
+central
+electricity
+tons
+liberation
+privilege
+participate
+pakistan
+center
+remember
+solved
+village
+burma
+certificates
+nanfang
+monk
+definition
+citizen
+treated
+diplomatic
+00s
+cars
+willing
+poetry
+guan
+notary
+signature
+greffier
+offices
+greffiers
+criminal
+seal
+sign
+relations
+abortion
+assad
+arab
+israel
+aids
+cuba
+ahmadinejad
+khamenei
+nuclear
 <s>
 </s>
 
 \input_embeddings
--0.00516322	0.00855826
-0.00742694	0.00383025
--0.00265806	-0.00302073
-0.00775863	0.0032431
-0.00899744	0.000435788
-0.00745527	0.00966107
--0.00255903	0.00118051
-0.00291709	0.000142621
--0.00134609	-0.00431493
-0.00461204	-0.00195367
-0.0039789	0.00313666
--0.0013945	-0.00248826
--0.00192255	0.00625812
-0.00202215	-0.00390416
-0.00297785	-0.00418648
--0.00771833	0.00264758
-0.00410706	-0.0071867
--0.00280542	-0.00230691
--0.0015413	-2.18759e-05
--0.00372916	-0.0071907
-0.00136608	0.00716671
--0.00932868	0.00290965
-0.00953672	0.00524094
-0.00941176	0.00515881
--0.00435456	0.00327615
-0.00315639	0.00425873
-0.0055417	-0.00321641
-0.00891007	0.00446471
-0.00336202	0.00325338
--0.000989565	0.00547838
-0.00680498	0.00375967
-0.00645048	-0.00947709
-0.00860365	-0.00869783
-0.00404105	-0.00735103
-0.00601254	0.00396521
-0.00917888	-0.00774029
--0.00228227	0.000934378
-0.00465018	0.00466027
--0.00742951	0.000814079
--0.00589327	-0.00383911
-0.00766365	0.00403775
-0.00391648	-0.000800985
-0.00421811	-0.00623077
--0.00260409	-0.000999156
-0.00156559	0.001731
--0.00832385	-8.98472e-05
-0.00188365	0.00206922
--0.00646052	0.00786595
--0.00158262	-0.00696721
--0.00520247	-0.00671251
--0.00744939	0.00806456
-0.00791204	0.00713282
-0.00820152	0.00199383
-0.00257761	-0.00747102
--0.00684876	-0.0023438
-0.00461163	0.00318704
-0.00978193	0.00414339
-0.00559316	0.00348153
-0.00959069	0.0058237
-0.00609892	-0.00865931
--0.00160574	0.00854905
--0.000698834	0.00632924
-0.00512788	-0.00215494
-0.00620307	-0.00882271
--0.00717313	0.0085679
--0.00837749	0.000197559
--0.00284974	-0.00742708
-0.00937568	0.00675399
-0.00383451	-0.0012189
--0.00954729	2.67346e-05
--0.00574362	0.00371641
-0.00452489	0.00157883
-0.00346433	-0.00861166
--0.00923216	-0.00497915
--0.00282639	0.00511692
-0.00502278	0.00225594
-0.00731341	0.000758265
-0.00908419	-0.00908894
-0.00759126	-0.000588815
-0.00731927	0.000130103
-0.00424112	-0.00812432
-0.00327538	-0.00750164
--0.00230413	-0.00669412
--0.00641386	-0.0039995
-0.00489069	-0.00157264
-0.00534063	-0.00614785
--0.00686909	-0.000817238
--0.00995401	0.00655086
-0.000433889	-0.00204497
-0.00517142	-0.00859417
--0.00117667	-0.00705238
-0.00777107	-0.000153045
-0.000586378	0.00179402
-0.00769985	-0.00168567
--0.000946489	-0.00821106
-0.00367818	0.00301442
--0.00877601	-0.00336904
-0.00481062	0.00410269
-0.00345188	-0.0087955
--0.00979207	0.00372008
-0.00346444	0.00871073
-0.00579822	-0.00156105
-0.0066153	0.00675347
+-0.00675369	-0.00359494
+0.00237326	0.00423708
+-0.00529959	0.00886988
+-0.00883472	0.000790657
+-0.00354016	-0.00607831
+-0.00308127	-0.00166677
+-0.00984092	0.00500841
+0.00730362	-0.00711328
+-0.000687196	0.00411408
+0.00462461	0.00325755
+0.0097916	0.00829771
+0.00737437	0.00562593
+0.00809527	-0.00976324
+-0.000801885	0.000520803
+-0.00854712	-0.00935369
+0.00529354	0.00388311
+-0.00579128	-0.00245921
+0.00371128	0.00763109
+0.000918469	0.00130649
+-0.0039739	-0.000156724
+0.00567617	-0.000575606
+0.00400378	-0.00477326
+-0.00689281	-0.00934577
+-0.00582161	0.00608056
+-0.00775647	0.0021422
+-2.6865e-05	-0.00630716
+-0.0045992	0.00941178
+-0.00854973	0.0040152
+0.00585831	0.00119189
+0.00090255	0.00420549
+-0.00445271	0.00887524
+0.000188749	-0.00912589
+-0.00759497	0.00999379
+-0.00790052	-0.00558069
+0.00403271	0.00159299
+-0.00106917	-0.00395861
+0.00179445	0.00736783
+0.000724199	-0.00233092
+-0.00882779	0.0065469
+-0.00363355	-0.000263823
+-0.0050308	-0.00757164
+-0.00980317	-0.00185853
+0.00563885	-0.00901139
+-0.00564065	0.00216587
+0.00792202	0.00644234
+-0.00662428	-0.00708867
+-0.00955173	-0.00014538
+-0.00554662	0.00531601
+0.00651347	0.00553998
+0.00271029	0.000764801
+-0.00997663	0.00596734
+-0.00389018	-0.0034013
+0.00540529	-0.00578529
+0.00845925	-0.000950776
+0.00140063	-0.00663651
+-0.00421644	-0.00521702
+0.00071296	0.00853014
+-0.00978088	0.00990772
+-0.00624327	0.00779798
+-0.00705544	-0.00519258
+0.00934575	-0.00341783
+0.00883939	0.000337158
+-0.0089809	-0.00613281
+0.00800473	0.00684819
+-0.00807113	0.00933305
+0.00569086	0.00887356
+0.000888395	-0.00106807
+0.00499025	-6.60977e-05
+0.00437368	0.00768455
+-0.00691844	-0.00325018
+-0.00892611	0.000320552
+0.00540579	-0.0026741
+0.00499018	-0.00528375
+0.00538585	0.00257029
+0.00375405	0.00268455
+-0.00531824	0.00182093
+-0.00942481	-0.000259115
+-0.00761868	-0.00055832
+0.00826968	0.00323321
+-0.00482696	-0.00876566
+-0.00569681	0.000426683
+-0.00821981	-0.00999236
+-0.00166912	0.00570549
+0.00131941	-0.0083288
+-0.00865412	0.00787576
+0.00374036	-0.00785159
+-0.00709018	0.00012595
+-0.00362685	0.00563503
+-0.00536264	0.00913968
+0.00757499	0.00996766
+0.00283914	0.00238972
+-0.00156954	0.00225012
+0.00585959	-0.00357207
+0.00135548	-0.00759609
+0.0052887	-0.0052005
+0.00499827	-0.00686287
+0.00754862	-0.00538482
+0.00438326	0.00726549
+-0.00779491	-0.00867312
+0.00475511	0.00286623
+-0.00848095	-0.00182432
+-0.00905581	0.00840002
+0.00255543	0.00185751
+0.0047783	0.001899
+0.00102617	-0.00822781
+-0.00764271	-0.00443086
+0.00353435	0.00513387
+0.00259365	0.00604288
+0.0086631	-0.00546513
+0.00282679	0.000318612
+0.00299928	-0.0039802
+-0.00668648	-0.00924004
+0.00355925	-0.0097695
+0.00397347	0.00568114
+-0.00459461	-0.00188886
+-0.00642959	0.00556759
+-0.00984652	0.00496671
+0.00358642	0.0031185
+0.00802148	-0.000182656
+-0.00382696	-0.00206429
+0.0008869	-0.0024197
+0.00418918	0.00211645
+0.00770533	-0.00497323
+0.00556664	0.000254756
+0.00547874	0.00102869
+0.000287153	0.000583848
+0.00457822	0.00221924
+-0.00802263	-0.00550088
+0.00530822	-0.0037581
+-0.000747387	0.00825727
+-0.00135671	0.00920412
+-0.00611236	-0.00959018
+-0.00250261	0.00581622
+0.00907602	-0.00984358
+-0.00890626	0.00519941
+-0.00643074	0.000849314
+-0.00642687	0.00457603
+7.86838e-05	-0.0008017
+0.0071846	-0.00749223
+0.00767117	-0.00925815
+-0.00110911	0.00584453
+-0.00965068	0.00117733
+-0.00866293	-0.00348584
+-0.00631318	0.00356573
+-0.00164485	-0.00561307
+-0.00782608	-0.00753544
+0.00709618	0.00822813
+-0.00696176	0.00089777
+0.0069783	-0.00953976
+0.00868446	-0.00760193
+0.00223628	0.00108837
+-0.00396216	-0.0020884
+0.00237455	-0.00520475
+0.00622052	0.00374064
+0.00267273	0.00304499
+0.00593675	-0.00655876
+-0.00156639	0.00656087
+0.00264894	-0.00266428
+-0.00345543	-0.00713551
+0.00263477	-0.00705842
+0.00643117	-0.00752672
+0.000947328	-0.00520345
+-0.0086292	0.00636009
+0.00582068	0.0018623
+-0.00475334	-0.00251644
+0.00527022	0.00191537
+0.0015402	-0.00838367
+-0.00714606	-0.00426264
+0.00487292	0.00471114
+-0.0002603	-0.00906622
+0.00704571	-0.00378531
+-0.00703302	-3.12127e-05
+-0.00884689	0.00469961
+-0.00928852	-0.00882631
+-0.00284181	-0.00119492
+-0.000800915	0.00920509
+-0.00229991	-0.00738898
+0.00519082	-0.00703553
+0.00584027	0.00875025
+0.00620705	-0.00739718
+-0.0066906	0.0035056
+-0.000245747	0.00234863
+0.00255241	-0.000543429
+0.00706142	-0.00846414
+0.00881907	0.00359781
+-0.00271487	0.00116229
+0.00914077	-0.00629506
+-0.00216841	-0.00665736
+-0.00946143	-0.00614195
+0.00961873	-0.00124272
+-0.00302623	-0.00764807
+-0.00137335	0.00346139
+-0.00787883	0.00535164
+0.00584932	0.00614465
+-5.35717e-05	0.00108311
+-0.00174913	-0.00995427
+-0.0035477	0.00757152
+0.00447296	-0.000972573
+-0.00836317	0.00404812
+0.0028755	-0.00300007
+-0.00532218	0.0050844
+-0.00204254	0.00729118
+0.00399064	-0.00360439
+0.00370338	-0.00928909
+0.00326357	-0.00542927
+-0.00394968	0.00677816
+-0.00595228	0.00328222
+0.00564534	0.00143956
+0.00546647	-0.00575681
+-0.0035901	-0.00294062
+0.00204801	0.00705299
+-0.0081049	0.00154079
+-0.00605423	0.000179304
+0.00419856	0.00578268
+-0.00959489	0.00817485
+-0.00841764	-0.00325434
+-0.00085137	-0.00161599
+0.00365764	0.00271403
+-0.00246902	0.00969043
+-0.000203959	-0.00889466
+-0.00758048	0.00824838
+0.00714981	-0.00909105
+0.00795283	-0.00816572
+0.00806238	-0.00587158
+0.00693331	-0.00184212
+-0.0097275	0.00803485
+0.00383473	-0.00911444
+-0.00882759	0.00131132
+-0.00146468	0.0096206
+-0.0019188	0.0063707
+0.000276049	0.00523807
+0.00221131	-0.00393044
+0.00287114	0.00699377
+0.00785979	-0.00173822
+0.00702373	0.000414545
+-0.00482509	-0.000316741
+0.00731909	-0.00308446
+-0.00164934	-0.00262766
+-0.00932679	-0.00064257
+-0.00930371	0.00409728
+0.00360695	0.00713541
+0.00306561	-0.00189527
+-0.000899123	0.00507902
+0.00219058	-0.0071639
+0.00715184	-0.00476704
+0.00792366	-0.000876192
+0.00797862	-0.00382254
+-0.000721367	0.0050279
+0.00278864	0.00389366
+0.00908757	-0.000813289
+0.00647947	0.00823632
+0.00707962	0.00808307
+-0.00812701	-0.00249958
+0.000358271	-0.00141456
+-0.00743012	0.0096955
+0.00612382	0.00848859
+0.00247694	0.00159028
+-0.00888883	0.00371624
+-0.00140681	-0.00346287
+-0.0099933	0.00461197
+-0.00508533	0.00401617
+0.00615014	-0.0031296
+0.000264654	0.00408803
+0.00457345	-0.00147055
+0.000735456	-0.00614506
+-0.00653004	-0.000708544
+-0.00377329	-0.000368747
+-0.000147723	-0.00100241
+0.00127032	-0.00784552
+-0.00889381	0.00124462
+0.00807382	-0.00322244
+-0.00886517	0.0024004
+0.00250701	0.00852165
+-0.00134134	-0.00253293
+-0.00626949	0.0075405
+-0.000162946	0.00293811
+-0.00510318	0.00962884
+0.00182108	0.00557536
+-0.00684434	-0.00887594
+-0.0061657	-0.00317479
+0.0032776	0.00366059
+0.00283524	0.00483266
+-7.43424e-05	-0.0045964
+0.00725566	-0.00287981
+0.000759104	0.00866032
+0.00203802	-0.00773046
+0.00676494	0.000872043
+0.00737066	0.00666804
+-0.00133742	-0.0056846
+0.00252147	-0.00864898
+0.000408071	-0.00262406
+-0.00472355	0.00907097
+-0.0094296	-0.00163679
+0.00539865	0.00455972
+0.000142601	-0.00506848
+0.00809066	-0.00267927
+0.0067865	-0.0023605
+-0.0058138	0.00638159
+-0.000710424	-0.00791014
+-0.00985062	-0.00670222
+-0.00786821	-0.00323516
+-0.0014946	-0.00756561
+0.0023711	-0.00723722
+-0.00900915	-0.0032659
+0.00216231	-0.000590988
+0.00556219	-0.0072853
+0.00861341	0.000981476
+-0.00809765	0.000881855
+0.0066129	-0.00725853
+-0.000916033	-0.00946748
+-0.00485575	-0.0035199
+-0.00836586	-0.009628
+0.00400775	-0.00834114
+-0.000130691	-0.00889017
+-0.00516597	-0.0060653
+0.00570131	-0.00899931
+0.00322882	0.000446544
+0.00996912	-0.00785903
+-0.00816017	-0.00649143
+-0.00404434	-0.00278491
+0.000115995	-0.00864001
+-0.00958627	0.00376487
+0.00257838	0.00747037
+0.00660014	0.000153722
+-0.00185141	-0.00997222
+-0.00286781	0.00803798
+0.00247202	0.00948478
+0.00445109	0.00990123
+-0.000537458	-0.00874146
+0.00546387	-0.00557527
+-0.00677357	0.00906732
+-0.00728933	-0.00568051
+0.00381097	-0.0098147
+-0.000223408	0.0024856
+0.00792771	-0.0064847
+0.00940401	-0.00365717
+-0.00589075	-0.00563524
+-0.00551895	0.000281273
+-0.00878091	0.000891062
+-0.00417924	0.00667444
+-0.00110659	-0.00687987
+0.0064003	0.00365409
+-0.00519967	0.000838998
+-0.00275648	-0.00411706
+0.00690698	0.00443046
+-0.00618864	0.000695233
+0.0097744	-0.00632101
+0.00219433	-0.00967685
+0.00194677	-0.00253348
+0.0087207	0.00755303
+-0.00760154	0.00586025
+0.000155981	-0.00428378
+0.00496867	-0.00394474
+-0.00947608	0.00917951
+0.00975903	-0.000305085
+0.00530983	0.00406004
+-0.00246153	-0.00745574
+-0.00295677	-0.00190496
+-0.00996807	0.00618557
+0.00577618	0.00979611
+0.00847218	0.00600405
+0.00394804	0.00313929
+-0.00403733	0.00541199
+-0.00301253	0.00777592
+-0.000798137	0.00599609
+0.00707478	0.00958404
+0.00875915	-0.00392917
+0.00535834	0.00969624
+-0.000963368	-0.00371113
+0.0025573	-0.00635401
+-0.00202155	0.00413527
+-0.0076512	-0.00471431
+-0.00754559	0.00858967
+0.0061073	-0.00468551
+-0.000982687	-0.00959262
+-0.00913253	-0.00898821
+0.00412832	0.00838124
+0.00322167	0.00905901
+0.0082284	0.00319655
+-0.00698881	-0.00092302
+-0.00531954	0.00115208
+0.00223339	0.00203942
+0.000802046	-0.00344602
+0.0026307	-0.00111866
+-0.0029394	0.00249697
+-0.00984662	0.000192852
+0.00835827	0.00259334
+0.00886372	-0.00520236
+-0.0087635	0.00184427
+-0.00921755	0.00930068
+0.00435466	-0.00383037
+-0.00437484	0.00147296
+-0.00217061	-0.000472715
+-2.77894e-05	0.00825861
+0.00676283	0.00349437
+0.000327164	0.00961097
+-0.0063052	-0.00367534
+-0.00907659	-0.00512727
+0.00322678	0.00120354
+0.00143306	0.00256538
+-0.00997432	-0.00896619
+-0.00763098	-0.00909885
+0.00498071	-0.000828019
+0.00283747	0.00104351
+-0.00948805	0.00579601
+-0.000255941	0.00538556
+0.00982534	-0.00658093
+-0.00471586	0.00859462
+-0.00383829	-0.00275863
+0.00595251	0.00368643
+0.00389884	-0.00831407
+-0.00186842	0.00486416
+-0.00240242	-0.000864262
+0.00953186	0.00959593
+0.00415378	0.0068899
+0.00134461	0.00990685
+0.00725951	-0.00344023
+-0.00742042	-0.00509417
+-0.00523436	0.00551754
+0.00162343	-0.00164773
+0.00922714	-0.00777361
+0.000685076	-0.000240462
+-0.00963716	-0.00597033
+-0.00426794	-0.000765174
+0.00715924	-0.00643708
+-0.00790028	0.00908032
+0.00303012	0.00212745
+0.00322827	-0.00698277
+0.00503119	-0.00221389
+0.0045092	-0.00614638
+-0.00611715	0.00140725
+-0.0057409	-0.00800699
+-0.000523386	-0.00306664
+-0.00450384	0.00802147
+0.00721754	-0.00531442
+0.00137466	-0.00100566
+0.00639266	0.00878835
+-0.00825457	0.00546245
+0.0032398	-0.00480264
+-0.00047894	-0.000649348
+-0.00509955	0.00411177
+-0.00282789	-0.00995136
+0.00397503	0.00719814
+0.00892737	-0.00864419
+-0.00210629	-0.00623813
+0.00221341	0.00178244
+0.00247766	0.00595009
+0.00563959	-0.00591917
+-0.00456332	-0.00352346
+0.00775548	0.00240368
+0.00565985	0.00113696
+0.00220675	-0.0012452
+0.00785162	-0.00247791
+-0.00241967	-0.00806572
+0.00634965	0.00298403
+0.00290314	-0.00399186
+0.00614237	-0.0019862
+0.0081153	0.00527102
+-0.00671417	-0.00980402
+0.00435717	-0.00300489
+0.00578906	-0.00361769
+-0.00302634	0.00581762
+0.000452771	-0.00931124
+-0.00778647	0.00182387
+0.00541661	-0.00144566
+0.00582558	0.00980146
+-0.00348957	0.00496975
+-0.0077734	0.00330822
+-0.00663692	-0.000388254
+-0.00451654	0.000752965
+0.00570387	0.00682117
+-0.00231534	0.00276162
+-0.00951827	-0.00750579
+9.68846e-05	-0.00384414
+0.00386905	-0.00964841
+-0.00331579	0.00311405
+-0.00361091	0.00457405
+-0.00688067	0.000773405
+0.00360186	-0.0023361
+-0.000194654	-0.00904112
+-0.00380816	0.00712917
+0.00357954	-0.00281545
+0.00655222	0.00333248
+0.00311196	-0.00934474
+0.000465995	-0.00599646
+-0.00858397	2.69323e-05
+-0.00843589	-0.00574796
+-0.00670329	0.00355742
+0.00227359	0.00779711
+-0.000572505	-0.00869309
+0.00487538	-0.00175723
+0.00136612	0.00876633
+0.00724248	0.000706962
+0.00577298	0.00949123
+0.000986512	-0.0015405
+-0.00502361	0.00772659
+-0.00509131	-0.00315129
+0.00144217	0.00479066
+-0.00246465	-0.00964397
+-0.00369818	-0.00063709
+-0.00767598	-0.0021803
+-0.00471102	0.0017522
+0.00902079	-0.00513556
+0.00576973	-0.00940234
+0.00931371	-0.0082602
+-0.00162848	-0.00478714
+-0.00343545	-0.00318948
+0.00660065	-0.00190971
+-0.00777519	-0.000884939
+0.00846275	0.00273913
+0.00633691	-0.00438418
+0.00656521	0.00717573
+0.00458121	0.0058057
+-0.00579145	-0.00686418
+0.00572588	-0.00718229
+0.000734021	-0.00193449
+0.00629518	0.0020457
+-0.00285576	0.000112052
+6.77236e-05	-0.00104149
+-0.00262068	0.00786605
+-0.00769642	-0.00509954
+-0.00582027	0.000613411
+0.00925778	0.00533131
+-0.00566713	-0.0021681
+0.00204315	-0.00774436
+-0.00340376	-0.00616118
+-0.00778696	0.00359418
+-0.00289302	0.00521766
+0.00778032	-0.000558171
+0.00397164	-0.00281615
+0.000561503	-0.00630689
+-0.00923809	-0.00792768
+0.00430813	0.00757309
+0.00936939	-0.00684377
+-0.002191	-8.62413e-05
+0.00346716	-0.00405066
+0.00203329	-0.00984197
+-0.00687671	0.00652457
+0.0087268	-0.00841226
+-0.00986632	-0.0034296
+-0.00736407	0.00686837
+0.00625988	-0.00960577
+0.00949864	-0.00236765
+0.00618041	-0.00735658
+0.00576487	0.00479709
+-0.00489414	0.00240709
+0.00651602	-0.00403165
+-0.00155729	-0.00860213
+0.00148126	-0.00167737
+-0.00351653	-0.00257285
+-0.00620207	-0.000516819
+-0.00843227	0.00902318
+-0.008222	0.00659001
+-0.00799832	-0.00566218
+-0.00917108	-0.00740339
+0.00192109	-0.00260809
+-0.00986907	0.00425288
+-0.00503948	0.00755189
+-0.000627349	-0.00236936
+0.00147699	-0.00460888
+-0.00331252	-0.000568011
+0.00219289	-0.0088899
+0.00937929	-0.000644463
+-0.00259096	0.00397509
+-0.000941117	0.00704372
+0.00657331	0.00775878
+0.00209797	0.00663257
+-0.00965132	-0.00207769
+-0.00198104	-0.0022725
+0.00755101	-0.00877499
+-0.00551988	0.00599019
+-0.00413128	0.00515399
+-0.00920585	-0.00391471
+0.00674401	0.00316274
+-0.00519551	-0.00173373
+0.00900367	0.00262627
+0.00942825	0.000175742
+-0.00968705	0.00458515
+-0.00265131	-0.00584455
+-2.74762e-05	-0.00928398
+-0.00608423	0.000495505
+-0.00434506	0.00923432
+0.00106666	0.00627476
+-0.00907794	-0.0061353
+0.00966671	-0.000111502
+-0.000930007	0.00950118
+-0.00356808	0.0075063
+0.00249344	0.00345652
+0.00448466	0.00785558
+-0.00324854	0.00886297
+-0.00653354	0.00949077
+-0.00718147	-0.00327226
+0.00175375	0.00495436
+-0.00469632	-0.00527643
+0.00531225	-0.00387444
+0.00459213	0.00563486
+-0.000450657	0.00904509
+-0.00453112	-0.00547837
+-0.00561186	0.00166938
+-0.00109986	0.00508839
+0.000566354	0.00273109
+-0.00309927	0.00810847
+0.00900389	-0.00378558
+0.00104723	-0.00765203
+0.00272758	0.0084543
+0.0044849	0.00250735
+0.00837504	0.00423152
+-0.00192978	0.00817918
+0.00485521	0.00398235
+-0.00285568	-0.0093271
+0.00454446	0.00912201
+0.009969	0.00658297
+0.00765095	0.00872638
+-0.00401747	-0.00762262
+0.00205011	-0.00754639
+0.00158974	0.00864897
+-0.000301026	-0.00956294
+0.00171189	0.00701713
+-0.00872992	-0.00616762
+0.0089418	-0.00329076
+-0.00104686	-0.00411411
+0.00845104	0.00446556
+0.00455752	-0.00351307
+-0.00843386	0.00052389
+0.00978339	-0.00121102
+-0.00872749	-0.00934059
+-0.000318495	0.00664756
+-0.0055229	-0.00829541
+0.00447905	0.00460477
+-0.000735479	-0.00678905
+0.00861399	0.00286768
+-0.00698644	0.0082758
+0.00662654	-0.00915658
+0.00532253	0.00764106
+0.00372052	0.0033835
+0.00468852	-0.00342301
+-0.00226743	-0.000967877
+0.00316953	-0.00351904
+0.0093934	0.00133114
+-0.00987159	0.0023039
+-0.00634263	-0.00871575
+-0.00378069	-0.000688865
+0.00947729	-0.00704598
+0.00914749	0.00740903
+0.00353572	-0.00318702
+-0.00939728	-0.00320581
+0.00990553	-0.00763272
+0.00836933	-0.00923965
+-0.00324143	-0.00670207
+-0.00306748	0.00111898
+-0.00781625	0.00261212
+-0.00650211	-0.00526473
+0.00857479	0.00741981
+0.00767959	-0.00459173
+-0.00695029	-0.00141578
+0.00543186	-0.000714674
+0.00815154	0.00918998
+0.00432682	0.00995033
+0.00405884	0.00338201
+0.00593927	-0.00391658
+-0.005685	-0.00349921
+-0.00504718	0.00889672
+0.00911945	-0.00987729
+0.00445004	-0.00129465
+-0.0009129	0.00922578
+-0.00156403	0.00630371
+0.0096035	0.00516259
+0.00135721	0.00148844
+0.00257903	0.00509242
+-0.00971607	0.00355124
+0.00239428	-0.0074841
+0.00473372	-0.00977108
+-0.00364368	0.00498066
+0.00124884	0.00678549
+0.00192685	-0.00405211
+-0.00295568	0.00847944
+-0.00442514	0.00302215
+-0.00450892	0.00926842
+0.0063478	0.00954215
+-0.00622564	0.00627662
+0.00792367	0.00269001
+0.00391339	0.00246687
+0.00602892	-0.00234359
+0.00925396	-0.00355582
+0.00866388	-0.00786893
+0.00807425	0.00110704
+0.00639284	-0.00534749
+0.00969319	0.00172226
+-0.00670476	0.00804231
+-0.00721492	0.0027922
+-0.00354828	-0.00397469
+0.000443052	0.00528019
+-0.000448588	0.00930028
+-0.00236739	0.00446283
+-0.00760099	0.00961747
+-0.00322245	0.00762033
+0.00781019	0.00953944
+-0.00518664	0.00528319
+0.00425059	0.00400305
+-0.00517952	-0.00276724
+-0.00926476	-0.00485255
+-0.00978772	0.00489825
+0.00489242	0.00187891
+-0.00248255	0.0039218
+-0.00875019	-0.00445423
+0.00315897	-0.00513192
+0.00992251	0.00380782
+0.000349161	0.00889028
+-0.00430541	0.00746971
+0.000738296	0.00254638
+-0.0048862	-0.00651869
+-0.00950967	-0.00543307
+0.00303476	0.00343571
+0.0057252	-0.00931155
+-0.00410763	-0.00412892
+-0.000371445	-0.00599478
+-0.00913643	-0.00734425
+0.00594751	0.00922864
+-0.0067587	-0.00487077
+0.00369376	0.00886972
+0.00618693	-0.00858989
+0.0054863	0.00846178
+-0.00878757	0.00921657
+-0.00123838	-0.00690747
+0.00997267	-0.00701589
+0.00591372	0.00316373
+0.00714092	-0.00298799
+0.00731305	0.00102655
+-0.00375566	-0.00589648
+-0.00138866	-0.00761683
+-0.00525117	0.00135156
+-0.00999877	-0.00081332
+-0.00448954	0.00148154
+-0.00532112	0.00820964
+-0.00192169	-0.00282706
+-0.00866529	-0.00185587
+0.000921212	-0.00259113
+-0.00859761	0.00331305
+0.00652234	-0.00252162
+0.00274418	0.00572458
+-0.000393226	-0.00607955
+0.00980008	-0.00138076
+0.00284671	-0.00685559
+-0.00872278	-0.00906276
+0.00062907	-0.00473414
+-0.00965736	-0.00413395
+-0.000942469	-0.00321118
+0.00396936	0.00295953
+0.00479261	0.00821599
+-0.00262854	-0.0031643
+-0.000504696	-0.00547305
+-0.00751948	0.0066589
+-0.00136606	-0.000379516
+0.00010359	0.00566195
+0.00375846	-0.0080285
+0.00307189	0.00415141
+0.00655382	-0.00371764
+0.00676564	-0.00635341
+-0.000312684	-0.00529049
+-0.00841897	0.0040805
+-0.00126369	-3.9161e-05
+0.00688625	0.00490722
+0.00264834	-0.00621431
+-0.00667192	-0.00853368
+-0.0048755	0.00909649
+-0.00450716	-0.00519135
+-0.00505296	-0.00698114
+0.00671962	0.00948463
+0.00968523	-0.00556684
+-0.0091904	-0.000838973
+-0.00133447	-0.00900214
+0.00424449	0.00214963
+-0.000246678	0.00742356
+-0.0096178	0.0025094
+-0.00747933	0.0053598
+0.00888493	0.00844431
+-0.00966128	0.0038248
+0.0069692	-0.0091837
+-0.000795789	-0.00642077
+-0.00733611	0.00468981
+0.0088827	0.00679882
+-0.00100332	0.00855085
+-0.00800476	-0.00910647
+-0.000169609	-0.00585914
+-0.00566296	-0.00605506
+-0.007957	-0.00549302
+-0.00346225	0.00739228
+-0.00704117	-0.00791249
+0.000108892	-0.00333937
+-0.00818603	-0.00278403
+-0.00838119	-0.0008557
+-0.000508516	0.00666178
+-0.00085394	-0.00539477
+0.000365825	0.00163533
+-0.0023787	0.00876775
+-0.00889934	-0.00332399
+0.00195252	-0.00476725
+-0.00131986	-0.0015633
+-0.00489609	-0.00771638
+-0.000537447	0.00368155
+-0.00611379	0.00304485
+-0.00856131	-0.00656317
+0.00949443	0.000296593
+-0.00618781	0.00965364
+-0.00658821	0.00259915
+-0.00827531	-0.00365825
+0.00157811	-0.000438953
+-0.00640941	0.00412296
+0.00998446	0.000116905
+-0.00179832	-0.00631324
+-0.00752285	0.0048625
+-0.00777374	-0.000366613
+0.00103286	-0.00754402
+0.00914688	-0.0070899
+0.00420052	0.001016
+0.00322668	0.00581922
+0.00610919	0.00954115
+0.00143338	0.00131251
+-0.00676038	-0.00245206
+0.00218143	0.00100514
+-0.00437856	0.00846736
+0.00212245	0.00953718
+0.0025512	-0.00480566
+-0.00212326	0.000644142
+-0.00943564	0.00219964
+0.00227357	0.00456295
+-0.00387243	0.00840348
+0.00753588	0.00684035
+-0.00152669	-0.00905685
+0.00331687	-0.00825095
+0.0077796	-0.00113393
+-0.00146637	0.00865597
+0.00752487	0.00634503
+-0.00218694	0.00776425
+-0.00977176	-0.00428758
+-0.00842284	0.00291644
+0.000970786	-0.00316293
+-0.00505692	-0.00577163
+-0.00967415	-0.00231431
+-0.00303666	-0.00726789
+-0.0080565	0.00542341
+0.00327211	0.00943344
+-0.00943059	0.00650847
+0.00628548	0.00763116
+0.00183873	0.00382047
+0.00341911	-0.00174067
+0.00792167	-0.00877856
+-0.00956479	0.0081579
+0.00274036	-7.12204e-05
+-0.0084206	-0.00924285
+0.00561722	0.00585082
+0.00192539	0.00653471
+-0.0072605	-0.00336812
+-0.00380691	0.00687484
+-0.00165858	0.00448248
+0.00904113	0.00177877
+-0.00774777	-0.00817566
+-0.0019644	-0.00601728
+-0.00827546	0.00360961
+0.00135282	-0.00875939
+-0.00754546	0.00553911
+0.00735995	-0.00370633
+-0.0018448	-0.000388972
+-0.00691126	-0.00215246
+0.00170414	0.00562003
+0.00452397	0.00625473
+-0.000633189	-0.00378902
+0.000353101	0.00766379
+0.00714001	-0.000893224
+-0.00654763	-0.00881317
+-0.00744814	-0.00468367
+0.00490798	-0.00581041
+0.00203052	-0.00931106
+0.00465844	0.0013303
+0.0024528	-0.0029282
+0.00645892	-0.00997531
+0.00851426	0.00251753
+-0.000931804	-0.00297628
+0.00590185	0.00626496
+-0.00815546	-0.00989155
+-0.00373821	-0.000395403
+0.00153165	0.00549614
+0.00609882	0.00995035
+-0.0095652	0.00163602
+-0.00476078	0.000660919
+-0.000495128	-0.0048519
+-0.00983993	0.00774909
+-0.00505464	-0.00950125
+-0.000670264	-0.00053557
+-0.000611022	0.00566028
+0.00625647	0.00597314
+-0.00882417	-0.00669618
+0.00234324	0.00288251
+0.00180065	0.00306422
+0.00194477	-0.00323982
+-0.00992635	0.00779851
+-0.00597669	0.00351468
+-0.00597524	0.00204948
+-0.00244416	0.00148256
+-0.00363157	0.00954617
+-0.00753111	-0.00636255
+0.0071729	-0.00398222
+0.00795336	-0.000834701
+0.00209545	0.00882505
+0.00756428	-0.00330387
+0.00318669	0.00258418
+-0.00557913	0.00179553
+0.00176817	0.00296579
+-0.00227919	-0.00472371
+0.00215871	0.00413199
+-0.0023556	-0.00134514
+0.00491103	-0.000136881
+-0.00665478	0.00312769
+-0.00316718	-0.00854674
+0.00438141	-0.00237656
+0.0094069	0.00684008
+0.00387993	-0.00161316
+0.00671559	-0.00245538
+0.00751895	-0.00154276
+-0.00761305	-0.00849838
+0.00926049	-0.00567993
+-0.00656186	0.00474281
+0.00474546	-0.00455562
+-0.00855735	-0.00956975
+0.0029641	0.00740526
+-0.00311952	-0.00336818
+0.00181802	0.00990001
+-0.00210987	0.00933351
+0.00466894	-0.00820442
+0.00968967	-0.00822673
+0.00873298	0.00489298
+-0.00720666	-0.0023923
+-0.00222521	-0.00145419
+0.00835391	0.00223052
+0.00596935	-0.00739023
+-0.00377017	0.00513843
+0.00586294	0.00820591
+-0.00164547	0.0011019
+-0.00516074	0.00336592
+0.00330702	0.00468339
+0.00893873	-0.00602489
+0.00431223	-0.00621683
+0.00672116	-0.00324167
+0.00239336	-0.00667521
+0.00794752	0.000144644
+-0.00788839	0.000490234
+-0.00106551	0.0051273
+-0.00874024	-0.00493711
+-0.00235418	0.00705907
+0.00190793	0.0055084
+-0.0027916	0.00550283
+-0.00781388	0.00373185
+0.00549983	-0.00055503
+0.00220687	0.00894682
+0.0057725	0.00827144
+0.00548003	0.0030189
+0.00710327	0.00575602
+0.00492022	-0.00917755
+0.00669714	-0.0022665
+0.00186282	-0.00144987
+0.0010811	-0.0044725
+-0.00901741	0.00943151
+-0.00336147	-0.00988898
+0.00267906	0.00170766
+0.00415804	-0.0044915
+0.00325854	-0.00544388
+0.00957294	0.00867406
+4.16904e-05	-0.00410939
+-0.00681281	0.00385778
+0.00214577	-0.000812021
+0.00124095	0.0010147
+-0.00579456	0.00868718
+0.00564594	-0.000892023
+-0.0022624	-0.007862
+-0.000779303	-0.00237887
+-0.00350595	0.00986583
+0.00256338	-0.00916268
+-0.00716546	0.00304658
+0.00264279	0.000750355
+-0.00750442	0.0067503
+0.00604883	0.00101865
+-0.00895185	-0.000631321
+0.00646403	-0.00113436
+0.00430435	0.00721679
+-0.00883996	0.00112796
+0.00114246	0.0065133
+0.00584055	0.00474321
+-0.00899952	-0.0035901
+-0.00241237	-0.0007849
+0.000105709	0.00544459
+-0.00363111	0.00725769
+0.00930999	-0.00222214
+-0.00238596	-0.00758863
+-0.00561228	0.00646159
+-0.00122864	0.00514274
+-0.00311998	-0.00850899
+-0.00573102	-0.00686939
+0.00760909	-0.00210078
+0.00350781	0.00147103
+0.00819585	0.00842704
+0.0091179	0.009889
+0.00128796	0.00432847
+-0.00464564	-0.00496495
+-0.00525688	0.0030259
+0.00791336	0.00732917
+-0.00486691	0.00384948
+0.00572899	0.00151524
+-0.00934552	-0.00527529
+0.00707633	0.000641069
+0.000560134	-0.00132195
+0.00569625	0.00709093
+0.00127233	-0.00517461
+0.00365461	-0.00986405
+-0.00936438	-0.00651717
+-0.00647037	-0.00567895
+0.00168914	-0.00937288
+0.00324903	0.00910836
+-0.00509535	-0.00859619
+0.00960879	-0.00216835
+-0.00263909	-0.00285321
+-0.00901761	-0.00117498
+0.00192517	-0.00520337
+-0.000361618	-0.00648826
+-0.00203616	0.00747151
+-0.00200937	0.000176512
+0.000208857	0.00675371
+-0.00120572	0.00876206
+-0.00676707	-0.00567833
+-0.001519	-0.00542113
+-0.00842307	0.0071304
+0.00979102	0.00277179
+-0.00391543	0.00800178
+0.00279068	0.00202247
+-0.00273895	0.0025743
+-0.0071981	-0.00752607
+-0.000819936	0.00603429
+0.0047588	0.00415773
+0.000143198	-0.00691987
+-0.00430726	0.00328658
+-0.00609247	0.00471163
+0.00173195	0.00956795
+0.00100842	0.00811114
+0.00101791	-0.00201593
+0.00436394	0.00650207
+-0.00231621	0.000174687
+0.00588631	0.00313049
+0.00169616	-0.00948425
+0.00211204	0.00941987
+-0.00952179	0.00217906
+0.00453506	0.00183294
+-0.00374871	0.00514176
+-0.00959087	0.00794223
+-0.00642364	0.00146629
+-0.00614082	-0.00646838
+-0.00742148	-0.00178977
+0.00940643	-0.00239806
+-0.00695172	0.00936155
+0.00779008	-0.000189829
+-0.00768848	-0.00139133
+-0.00783716	0.00228477
+-0.00207958	0.00037196
+0.00955267	-0.00671056
+0.00702238	0.00727428
+0.00808835	-0.00591911
+0.00457461	0.00547647
+-0.00622154	0.00919164
+-0.00824828	0.00378551
+-0.00550096	0.000220938
+0.000746473	-0.00905413
+0.00403467	0.00887126
+0.00405007	-0.00484759
+0.00755875	0.00119665
+-0.00931147	0.00685788
+0.0071446	0.00620494
+0.00117297	0.00648712
+0.00358133	-0.00964347
+0.000492505	0.00169217
+-0.00497867	-0.00799958
+-0.00742821	-0.000128268
+0.00408066	0.0072879
+0.000342293	-0.000733395
+-0.00382944	0.00697614
+0.00902382	-0.00906499
+-0.00810723	-0.00730902
+-0.00249133	0.00659718
+0.00601825	0.0046254
+0.00779892	0.00540871
+0.00372148	-0.00969956
+0.00910511	0.00556311
+0.00532063	0.00705003
+-0.00192233	-0.00262856
+-0.00857066	0.00972928
+0.0020745	-0.00756104
+-0.00268883	-0.00120451
+0.00285983	0.00260797
+-0.00729596	-0.00428391
+0.00992982	-0.00536586
+0.00776319	-0.00347444
+-0.0081059	-0.00389598
+0.00138894	0.00642256
+-0.00740878	0.0019506
+-0.00211796	0.00784528
+-0.00780973	0.00797519
+-0.000587581	0.0073739
+0.00457818	-0.00828134
+-0.00524213	-0.000433407
+0.00336771	0.00781417
+0.00963631	-0.00499084
+0.0060491	-0.00697518
+-0.00616069	-0.00878882
+-0.00221383	0.00306899
+0.00778515	-0.0089224
+7.13373e-05	-0.00592559
+0.00919878	0.00971254
+-0.00406891	0.00729648
+0.00904315	0.00264308
+0.000900569	0.00475043
+0.00784161	-0.0028986
+0.000363316	0.00771827
+-0.00244154	0.00573083
+0.00659413	-0.00979274
+0.00116972	-0.00553927
+0.00820668	0.0069139
+0.00860729	0.0028208
+-0.00794384	0.00552025
+-0.00755306	0.00145769
+-0.00442937	0.00890783
+0.00220119	-0.000555073
+-0.00892218	-0.00247157
+-0.000138301	-0.00302724
+0.00741053	0.00205877
+-0.00125846	0.00561023
+-0.00726126	-0.00448766
+-0.00214368	0.00716899
+-0.00628262	-0.00749322
+-0.00419396	0.00113964
+0.00836881	-0.00131432
+0.00526901	0.00709641
+-0.00577705	-0.00648431
+0.000972152	-0.00579439
+-0.00885632	0.00463896
+-0.00796266	0.0020892
+-0.00387409	0.00511432
+-0.00451784	0.0076913
+-0.00994853	-0.00775932
+-0.00577757	-0.00378687
+0.00515955	-0.00929077
+0.00516859	0.0024272
+0.00402852	-0.00263187
+0.00685722	0.0053437
+0.0070159	0.00295313
+0.00440139	-0.00266876
+0.00880759	-0.00635932
+0.00126359	-0.00732694
+-0.000513561	-0.00886716
+-0.00143684	-0.0091708
+0.00537356	-0.0056693
+-0.00221287	-0.00515977
+0.00766242	0.000916583
+0.00813204	0.00888616
+-0.00539286	-0.00495313
+-0.00705012	0.00474324
+0.00630344	-0.000100016
+-0.00133899	-0.00127925
+-0.00265929	-0.00573171
+-0.00740691	-0.00955529
+0.00390737	0.00555236
+-0.00686852	-0.00338302
+-0.00933281	-0.00145737
+0.00698924	0.00690008
+0.00198902	-0.00835372
+0.00234716	-0.00977113
+0.00313796	0.00145709
+-0.00104027	-0.00100927
+0.00549695	0.00548537
+-0.000614239	0.00582868
+-0.00012549	0.00512236
+-0.00352603	-0.00625714
+0.00648734	0.00460141
+-0.00769848	0.00799028
+0.000194595	0.00323319
+0.00107297	-0.00514644
+0.00370957	0.00985957
+-0.00720035	-0.00620849
+0.00469681	0.0096593
+-0.00334936	0.00293252
+0.00471925	0.00865463
+-0.00867381	-0.00935638
+-0.00538443	-0.00571385
+0.00525975	-0.0045362
+0.000356201	0.00731288
+-0.00841529	0.00449704
+-0.00564868	-0.00782381
+-0.00612098	0.00142517
+0.00132827	0.00109793
+-0.00163043	0.00516732
+0.00564199	0.00313366
+0.00997719	0.000765063
+0.00544339	-0.00809193
+0.00294085	-0.00144383
+-0.00563176	0.00683493
+-0.00998929	0.00128558
+-0.00607353	0.00656785
+-0.00396047	0.00801828
+-0.00160323	0.00887901
+-0.00202436	0.00415137
+0.00176218	0.00239638
+0.00695164	0.00645876
+-0.00816232	0.00133756
+-0.000611481	0.00106044
+-0.00420479	0.00968113
+-0.00237387	-0.00896096
+-0.00639038	-0.00362069
+-0.00702944	-0.00888657
+-0.00432981	-0.00204975
+0.0024748	-0.00373888
+0.000902618	-0.00974591
+0.00287472	-0.00614359
+-0.00258308	0.00784433
+0.000995262	-0.000604158
+0.00897144	0.00377179
+-0.00701413	0.00509672
+0.00321545	-0.00179604
+-0.00503125	-0.00558511
+0.00471436	0.00827101
+-0.00697246	-0.00443617
+0.00783082	-0.00760139
+0.00445865	0.00263635
+-0.00987043	-0.00491661
+0.00281851	-0.000596705
+-0.00885692	0.00237246
+-0.00139326	-0.00249044
+-0.00487699	0.00326053
+0.00241331	0.00987734
+-0.00497973	-0.00541241
+-0.00656168	-0.00732597
+-0.00970583	0.00392046
+0.00242521	0.00988465
+-0.00832788	-0.00324086
+-0.00462688	0.00558275
+0.00260603	-0.00405649
+-0.000233347	-0.00781112
+-0.00426824	-0.000144689
+0.00868631	0.00344872
+-0.000641462	0.000805787
+0.00112469	-0.00209396
+-0.00547295	-0.00469418
+0.00724618	-0.00217319
+0.00838358	0.00537804
+-0.00696512	0.000644131
+0.00539738	0.00927455
+0.0031039	0.0050759
+0.00692422	0.00985931
+0.00093506	0.00349638
+-0.00381161	-0.000596719
+-0.00721032	-0.00593463
+0.00294067	0.00278586
+0.00663909	-0.00821907
+0.00706625	0.00838392
+-4.1046e-05	-0.00368742
+0.0012026	0.000706783
+-0.00594538	-0.00273377
+-0.00911287	0.00132276
+0.00423335	-0.00731552
+-0.00386548	-0.00851798
+0.00532856	-0.00212248
+-0.00855661	0.00918809
+0.00442523	-0.000760165
+-0.00160898	-0.00506688
+0.00694333	-0.00113379
+0.00945022	0.00965182
+0.00256721	-0.00830748
+0.00756126	0.00684651
+-0.00285855	-0.00478137
+0.00304701	-0.00587212
+-0.00779698	-0.00670723
+-0.00246941	0.00603996
+0.00567857	-0.00836703
+-0.0046135	-0.000591062
+0.000121861	0.00999495
+0.00646434	0.00102875
+0.00217179	0.00988761
+-0.00749145	-0.00559706
+0.00139493	0.00741612
+0.00978028	-0.00283729
+-0.000582646	-0.00871765
+0.00679966	0.00386512
+0.00531947	-0.00626874
+0.000355698	-0.00739219
+-0.00472522	0.00985335
+-0.000596741	-0.00477722
+-0.00434754	0.00300612
+-0.00975759	0.00818711
+0.00547158	0.00483088
+0.00410775	0.00852591
+0.00401183	0.00860678
+0.00214835	-0.00433733
+0.00707255	0.00036762
+-0.00840431	-0.00287706
+0.00965769	-0.0020908
+-0.00615088	-0.00261995
+-0.00362524	0.00548686
+0.00994162	-0.00645339
+-0.00380793	0.00215275
+-0.00966922	-0.00731337
+-0.00868125	-0.00893473
+0.000898333	-0.00744244
+-0.00530979	-0.00353545
+0.00672552	-0.0043743
+0.00747718	0.0095941
+0.00539026	0.0097783
+-0.00407416	0.00988784
+0.00964795	0.00640345
+-0.0090007	0.0088175
+0.00897002	0.00632716
+0.00336973	-0.00825703
+0.00838555	0.00269153
+0.00520582	0.0078
+-0.00113034	-0.00363909
+0.000798266	-0.00997419
+-0.00545638	-0.00148241
+-0.00997755	0.00118585
+0.004271	0.00413898
+0.00958538	0.000944395
+0.00414631	-0.00183566
+0.00508413	0.00369412
+0.0054447	-0.000286743
+-0.00659588	-0.00192326
+-0.00664902	0.00609616
+0.000518471	0.00186678
+0.00452843	-0.00765661
+-2.30375e-05	-0.00455457
+-0.00112787	0.00886314
+0.0077257	0.00187128
+-0.00481167	0.00586846
+0.00593525	0.00160418
+-0.00769561	-0.00985631
+-0.000606455	-0.00875392
+0.00304333	0.00528647
+-0.00339562	-0.00161929
+-0.00679684	-0.00312841
+-0.00189201	-0.00425315
+-0.00958494	0.00832022
+-0.00481843	-0.00271323
+-0.00423426	-0.00904786
+-0.00893991	-0.0021199
+-0.00730277	0.00121142
+0.00633397	0.00654877
+0.00885185	0.00195361
+-0.00461963	-0.000492214
+-0.00135596	0.000939065
+-0.00405734	0.00589055
+0.00303542	0.00215404
+-0.00722148	0.00221364
+-0.00332082	-0.00974403
+-0.00393269	-0.00561066
+-0.00414042	0.000618978
+0.000204978	-0.00500253
+0.000485486	0.00858868
+0.000375441	0.00668004
+0.0059424	-0.00416159
+0.00587637	-0.00581367
+0.000439302	0.00995694
+0.00775104	0.00742035
+-0.0080673	0.00422365
+-0.00781111	-0.00869654
+-0.000453147	-0.00497284
+0.000621274	-0.00747112
+0.00579777	7.05686e-05
+0.00479352	0.00355745
+-0.00637277	-0.00375325
+-0.00712133	-0.00676002
+0.00120723	-0.00422393
+-0.00654148	0.00961056
+-0.00073843	-0.00412559
+-0.00776649	-0.00359095
+-0.00600386	-0.0033104
+-0.00248009	-0.000866754
+-0.00833256	0.0041185
+-0.00404091	-0.00769816
+-0.00345272	0.00548175
+-0.00940284	0.00414218
+0.00484186	0.00528917
+0.00294435	-0.0071398
+-0.00945208	-0.00164983
+0.00127377	0.00152003
+0.00217138	-0.0087054
+0.00442276	-0.00331987
+0.0021381	-0.00751896
+0.00133604	0.00999319
+-0.00996709	-0.00813058
+-0.00405768	-0.00541616
+-0.00878483	0.00246708
+0.000475585	-0.00667743
+0.00324613	0.000666757
+-0.00193303	-0.00108042
+0.00712746	0.000622938
+-0.0050463	-0.00682201
+-0.00440117	-0.0093235
+0.00392459	-0.00849957
+0.000689006	-0.000844388
+-0.00256224	-0.00112107
+-0.00471554	-0.00546418
+-0.00527547	0.00294439
+0.0019297	0.00489886
+0.00504894	0.00464238
+0.00986751	0.00381705
+0.00631953	0.00549828
+-0.00457626	-0.00791305
+-0.00767673	-0.00771841
+-0.00499664	-0.00379109
+-0.00893725	-0.00516377
+0.00692154	0.00681139
+0.00260642	-0.00236092
+0.00205718	0.00729232
+0.00214913	-0.00195237
+-0.00964344	0.00342413
+-0.00824507	0.00028317
+0.00408528	-0.00111363
+0.0001916	-0.00301759
+-0.00636656	-0.000489321
+0.000335519	0.00173628
+0.00325078	-0.00165894
+0.00864454	-0.00704401
+0.0046462	-0.000916574
+0.00472848	-0.00823624
+0.00659666	0.00531541
+0.0046701	-0.00842396
+0.0021157	0.00750693
+-0.00436525	-0.0058171
+-4.43826e-06	-0.00502553
+-0.00296758	0.00565005
+-0.00507923	-0.00917559
+0.00382968	-0.00832955
+-0.00114027	-0.00313734
+0.00921143	-0.00238665
+-0.00786487	-0.00513307
+0.00958683	0.00859394
+-0.0026875	0.007527
+-0.00392002	0.00521303
+-0.00519757	0.000380053
+-0.00719888	0.00885698
+0.00731231	0.00923785
+0.00364437	0.00299391
+-0.000266994	0.00704627
+0.00612971	0.00352457
+0.00668721	-0.00855538
+0.00957032	0.00552197
+-0.0049721	0.00604242
+-0.00488091	0.00100568
+-0.00216922	-0.00417658
+-0.00339105	0.00764943
+-0.00655987	0.00281139
+-0.00655565	0.00161883
+-0.00882515	-0.00290548
+-0.00941721	-0.00222617
+-0.00872792	0.00875505
+-0.00919874	-0.00207867
+-0.00546569	0.000600599
+0.00520444	-0.00977519
+-0.0029487	-0.00789965
+-0.00350724	-0.00219434
+-0.00418836	-0.00847184
+-0.000807343	-0.00381073
+0.0055116	0.00577034
+-0.00854043	0.00130166
+0.00159661	0.00569259
+-0.00366468	-0.00671556
+0.00754037	0.00583738
+0.00883329	0.00667833
+-0.00963972	0.00112831
+0.00436272	-0.00972077
+-0.00425406	0.00997245
+0.0019394	-0.0088088
+-0.00896634	-0.00841878
+-0.00544958	0.00892535
+0.00392326	-0.00638163
+0.00803213	-0.000973698
+-0.000672746	0.00246134
+0.00326264	0.00374614
+0.00172604	-0.00739032
+-0.00378158	0.00340279
+0.00955024	0.00577712
+0.00414408	-0.00213683
+-0.00365349	0.001063
+0.00321703	0.00953513
+0.00168719	-0.00302383
+-0.00044575	0.000576118
+-0.00901091	0.00535052
+-0.00407051	0.00649558
+-0.00750301	-0.00630148
+0.00283875	0.00200807
+0.00145884	-0.00189843
+-0.0071264	-0.00097142
+0.00537175	-0.0073646
+0.00327234	0.00534044
+0.0080444	-0.00302528
+0.00546212	0.00694351
+0.00210233	0.00237819
+-0.00205214	0.00169456
+-0.00480048	0.00488179
+-0.00433637	0.00496158
+0.00168204	0.0075678
+-0.00474482	0.00825153
+-0.00861629	0.00452127
+-0.00263425	0.00492933
+-0.000156171	0.00565467
+0.0069166	-0.00487405
+0.00121947	0.00921744
+0.00552704	-0.00426518
+0.00504218	0.002494
+0.00892522	0.00509919
+-0.00484255	-8.04262e-05
+-0.00554808	-0.00127539
+-0.00343039	0.0019229
+0.00245859	-0.00462227
+0.00504964	0.00432183
+-0.00704915	0.00828373
+0.00313267	-0.00956727
+0.00869654	-0.00723629
+-0.00638605	-0.00704738
+-0.00718578	-0.00710154
+0.00611664	0.00407414
+0.00304963	-0.00321364
+-0.00821311	0.00291791
+-0.00197337	-0.00640163
+0.00430875	-0.00120743
+0.0082816	0.00712496
+-0.00230164	-0.00279722
+-0.00810645	-0.0056274
+0.00186184	-0.00501185
+0.00400359	-0.0067497
+0.00593718	0.00539186
+-0.000613009	-0.00656563
+0.00857044	-0.00309823
+-0.00712387	-0.00960689
+-0.00273637	-0.00236723
+0.00275843	0.00424941
+-0.00148149	-0.00773793
+-0.00757413	0.00495847
+0.00103556	0.00664404
+-0.00391724	-0.00763783
+0.00586034	0.000498459
+-0.00299975	-0.00664599
+-0.00691576	-0.00484139
+-0.00504859	0.00920898
+0.00314454	0.000594799
+-0.00956791	0.0030257
+-0.00918343	0.00989546
+0.00297941	-0.0097554
+-0.00705368	0.00511512
+-0.00474223	-0.00315609
+0.00104491	-0.00562743
+-0.00510008	-0.00062548
+-0.00558401	-0.00779104
+-0.00863062	-0.00441121
+0.00207065	-5.3638e-05
+-0.000720566	-0.0087335
+-0.00795125	-0.000191801
+0.00147432	0.00159532
+-0.00830493	0.00580496
+0.0085188	0.00903047
+0.000318327	-0.00413697
+0.00435283	0.00403591
+0.00778107	-0.00483476
+-0.00894298	0.00794015
+-0.000346395	0.00924239
+0.00139762	-0.00156113
+0.00963802	-0.000145979
+-0.00560913	0.00711425
+-0.00430586	-0.00859464
+0.000897355	0.00881836
+-0.00162365	-0.00511702
+0.00539536	0.00693402
+0.00426345	-0.00681045
+0.00818233	-0.000974532
+0.00697473	-0.00455378
+-0.00120472	-0.00251242
+0.00721417	0.00519743
+0.00886519	-0.00613016
+-0.00586585	0.000225785
+0.00489674	0.00413007
+-0.00381772	-0.00573366
+-0.00409778	-0.000936381
+-0.00355618	0.00231898
+0.00633439	-0.00621577
+0.00703131	-0.00465527
+0.00814564	-0.0071749
+0.00242444	-0.00888065
+-0.00559788	0.00238337
+0.00836174	0.00633044
+0.00142514	0.000761074
+0.0053992	-0.0027106
+-0.00304831	0.00433149
+0.001247	-0.0026777
+-0.00745726	-0.00547531
+0.00577595	0.00195428
+0.00278475	0.0071705
+0.000823966	0.0065187
+-0.00786874	0.00904005
+2.08508e-05	0.00158581
+-0.00698504	-0.00551067
+-0.00243988	0.000878082
+-0.00459555	0.00394036
+0.00419218	0.00280871
+-0.00122377	-0.00966815
+0.0033392	0.00811617
+0.00804907	-0.00355445
+0.00394557	0.009968
+0.0018202	0.00886038
+-0.000310484	-0.00321622
+0.00182429	0.00589738
+0.000512225	-0.0063183
+-0.0077905	-0.00558368
+0.00841993	-0.0035107
+-0.0076732	0.00855881
+-0.007588	-0.00367492
+0.00740547	0.00756122
+0.00833015	0.00431477
+0.00415348	-0.00723832
+-0.00025634	1.22828e-05
+-0.0063998	-0.00827236
+-0.000951728	0.00777887
+-0.0044352	-0.00633823
+0.00318378	0.000699239
+-0.0026467	0.00888237
+0.00656405	-0.0060701
+0.00170875	0.00514209
+-0.00245944	-0.00254628
+-0.00323864	-0.00201616
+0.00215657	0.00282506
+0.00832635	0.00496999
+0.00603154	-0.00486258
+0.000928674	0.000553397
+-0.000277549	-0.00625513
+-0.00229005	0.000127107
+0.00163411	-0.00286874
+-0.00733731	0.00520386
+-0.00521782	0.00404849
+0.000707038	-0.00363776
+-0.00899745	-0.00045988
+-5.81539e-05	0.00564446
+0.00518451	-0.00773435
+0.00750858	0.00886239
+0.00966002	-0.00440035
+-0.00479562	0.00789266
+0.00468278	-0.0029832
+-0.00798928	0.00581061
+4.274e-05	0.00703289
+0.00291909	-0.00697191
+0.00163256	-0.00552817
+0.00267515	-0.00460034
+0.00464998	0.00136399
+-0.00668042	-0.0039444
+-0.00318436	0.00431491
+0.00902145	-0.00280895
+-0.00924807	0.00489371
+0.00962987	0.00764538
+0.00014712	-0.00454022
+0.00313732	-0.00678981
+0.0048212	-0.00729807
+0.0050306	-0.00348542
+0.00225649	0.00991913
+0.00619033	-0.00446939
+0.00852402	-0.00291446
+0.005728	-0.00573025
+0.000349459	0.00157869
+0.00788898	-0.00795482
+-0.00649995	0.000443076
+-0.00410757	-0.00223316
+-0.00235358	0.0046835
+0.00569001	-0.00966621
+-0.00643482	-0.00717693
+0.00466077	0.00319383
+-0.0010689	-0.00293765
+-0.00791269	0.00389052
+0.00948167	-0.00355496
+0.00307038	-0.00811915
+-0.00678847	0.00612737
+-0.00578806	-0.00667253
+0.0073733	-0.00286417
+-0.00599988	-0.00258647
+0.00417657	0.00635265
+9.41005e-05	-0.000792469
+0.00639006	0.00552332
+-0.00393519	0.00183082
+-0.00361886	-0.00801311
+-0.00937519	0.00772776
+0.000298618	0.00748668
+0.00897428	0.00506511
+0.00403839	0.00120045
+0.00380241	-0.00571934
+-0.00766159	0.0034128
+0.00302507	0.00155473
+0.00254155	0.00882782
+0.000520004	-0.00551197
+0.00695418	-0.000428272
+-0.0082525	0.00369916
+-0.00153369	0.00504728
+0.00838373	0.00733886
+-0.00702992	0.000422391
+-0.0011322	0.00526295
+0.00207323	0.00488523
+0.0075174	0.00710156
+-0.00994724	0.00270591
+0.0055858	0.00956118
+-0.00938853	0.00599798
+0.00613248	0.00690346
+-0.000963298	0.00361095
+-0.00860186	-0.00342663
+0.00115378	-0.00854436
+0.00396608	0.00351385
+0.00987654	0.00171873
+-0.000777396	-0.00374461
+0.000765584	-0.00325798
+0.00204477	-0.00163749
+-0.00474932	-0.00393483
+0.00659966	0.00739427
+0.00947892	-0.00769813
+0.0040616	0.00157622
+0.00516155	-0.00727585
+0.00852075	-0.0015284
+0.0028669	-0.0063038
+0.0060423	-0.00775355
+-0.00482813	0.00425166
+-0.00354948	-0.00518168
+-0.00345485	0.00549697
+-0.00550506	0.0070189
+-0.00277877	0.00305044
+-0.00957388	-0.00788414
+0.00119327	-0.00868095
+-0.00426474	-0.00273062
+-0.00303844	-0.00271707
+-0.0080251	0.00590759
+0.00770719	-0.00538627
+-0.00244994	-0.000780156
+0.00496891	0.00169967
+0.00798334	-0.00724835
+0.00145858	-0.00141557
+-0.00958601	0.00678584
+-0.00408799	-7.3834e-05
+-0.00524074	-0.00287763
+0.00530869	0.00469187
+0.00146594	-0.00901028
+-0.00156473	0.00748009
+-0.00627885	-0.00462811
+-0.00840237	-0.0022868
+0.00272955	0.00238113
+-0.00016611	0.00750867
+-0.00277345	-0.00650076
+-0.0081342	-0.00603343
+0.009377	0.000295305
+-0.00844522	-0.000138232
+0.00825836	-0.00774451
+0.00927036	0.00780328
+-0.00325282	0.0018832
+-0.00859657	0.00411105
+-0.00812983	-0.00676354
+0.00816142	0.0083081
+0.00389214	0.00756381
+0.000713766	-0.0045484
+0.00603896	-0.00383414
+-0.00869074	-0.00250642
+-0.00308601	-0.00657667
+-0.00259953	-0.0024679
+0.0070221	-0.00956958
+-0.000513603	-0.00247203
+-0.00975813	-0.00665446
+0.00167568	0.00100471
+0.00828319	-0.00231327
+-0.00909892	-0.00877976
+-0.00608265	-0.00880051
+0.0092444	0.0033097
+-0.00839568	0.00729321
+0.000104455	-0.00909
+-0.0017922	-0.00164385
+0.00926888	-0.00850863
+-0.00202702	0.00871216
+-0.00321727	-0.00812203
+7.29121e-05	-0.00941399
+-0.00840224	-0.00376211
+0.000365295	-0.0055043
+-0.00417472	0.00361357
+-0.00711576	0.00918335
+0.0053471	0.0025998
+0.00600362	-0.00270611
+-0.00734139	-0.00766556
+0.00783084	0.00970404
+-0.00543006	0.00150007
+-0.00224269	-0.00854753
+0.000808774	-0.0012605
+-0.00198528	0.00792212
+0.00818361	-0.00170085
+0.000141496	-0.00711623
+0.00122928	-0.00362405
+0.00656998	0.00424614
+-0.00750547	0.000213186
+0.00352924	-0.00163961
+0.00988576	-0.00583505
+-0.00278315	-0.001222
+0.009271	-0.00174309
+-0.00381754	-0.00547788
+0.00956041	0.000793957
+-0.00498266	-0.00195281
+0.00622538	0.00808329
+-0.00741562	0.00965204
+0.00565328	0.00386663
+-0.000564754	0.00112563
+-0.00211288	0.000131662
+0.00311568	-0.00406878
+-0.00648127	-0.00435669
+0.00768586	0.000312852
+-0.00362747	0.00457148
+-4.42647e-05	0.00149724
+0.00415706	-0.00583276
+-0.0092481	-0.00560668
+-0.00194708	-0.00608651
+-0.000454258	-0.00347569
+-0.00241103	-0.00558775
+-0.0002241	-0.00134127
+-0.00402252	0.00729612
+0.0015151	0.00897881
+0.00830255	-0.00711622
+-0.0024879	0.0088651
+-0.00738905	0.00499066
+0.00587408	-0.00927254
+-0.0074846	0.00242733
+0.00966252	-0.00301645
+0.00434859	-0.00810447
+0.00356126	-0.00453028
+-0.00395625	-0.00382868
+0.000424786	0.00423683
+-0.00807862	0.00334658
+-0.00905606	0.0046133
+0.000647642	-0.00705894
+0.000190871	0.00617138
+0.00687553	0.00878006
+0.00146051	0.00758193
+0.00293581	-0.00451096
+0.00410247	-0.009484
+-0.00157389	0.00941141
+0.00904908	-0.00363231
+-0.000125219	-0.00451032
+0.00313703	0.00518824
+-0.00446836	0.00889757
+-0.00809048	3.95665e-05
+-0.00714919	0.000255173
+-0.00909942	0.00281935
+0.00128644	-0.00721933
+-0.004155	-0.00210413
+0.00185613	-0.00451439
+-0.00210245	-0.00294945
+0.0030324	0.00775417
+-0.0011706	-2.96369e-05
+0.00756964	-0.00699838
+0.00527598	-0.00970584
+-0.004329	-0.00717543
+0.00379989	0.00606916
+0.009314	-0.0095057
+-0.00360214	-0.00188908
+-0.005638	-0.0084559
+0.00414098	-0.00518157
+0.005224	0.00801146
+-0.00991376	0.000252624
+-0.00862003	0.00146357
+-0.00285262	0.00163361
+0.00192999	0.00310677
+0.00114586	-0.00491117
+0.00211938	0.00849154
+-0.0089956	0.0039983
+-0.0099036	0.00624724
+-0.0065088	-0.00848419
+0.00295239	0.00993763
+0.00478129	-0.003826
+-0.00569529	0.00868877
+-0.00196208	-0.00833807
+-0.00975693	0.00441672
+0.00325107	-0.00251861
+0.00932698	-0.00674173
+-0.00689056	-0.00957869
+0.000334185	-0.00336944
+-0.00739385	-0.00519891
+-0.00104346	0.00941842
+0.00253954	-0.0031787
+-0.00825745	-0.00238302
+-3.9288e-05	0.00409295
+-0.00150494	0.00539834
+-0.00985279	0.00265313
+0.00424908	-0.00748318
+-0.0027329	-0.00650228
+-0.00741313	0.00870416
+0.00573657	0.00238297
+-0.00890669	-0.00405914
+-0.00435984	0.00508272
+-0.000828109	-0.00782053
+-0.00854049	0.000955742
+0.00750662	0.00478232
+0.00335538	0.00938609
+0.00808847	0.000920917
+-0.00692144	0.00546041
+0.00521204	0.00689575
+-0.00787914	-9.96837e-05
+0.00388983	-0.00483422
+0.00263125	-0.00187925
+-0.00736319	0.00990427
+-0.00736763	0.000876502
+0.000964673	0.00766982
+0.000120417	-0.000855702
+0.00406306	0.0022664
+-0.00228785	0.00407653
+-0.00535829	-0.000306705
+-0.00998573	-0.00262724
+0.0071923	0.00623197
+0.0045242	-0.000437354
+0.00772192	-0.005574
+0.0077321	0.00821603
+0.00592271	0.00976396
+-0.0083188	0.00403104
+0.00571494	0.00999083
+5.12827e-06	0.00929389
+0.00855683	0.00554709
+0.00846226	-0.00424553
+0.00845183	0.0047887
+0.00640783	0.00178686
+-0.00554337	-1.33922e-05
+-7.55288e-05	0.00228356
+0.0028514	0.00789055
+-0.00776588	0.00102567
+-0.00557898	0.00774192
+-0.002537	-0.0058075
+-0.00372772	-0.00678445
+0.00330725	-0.0086222
+0.00953271	0.00026407
+-0.00606695	-0.00440938
+0.00163148	0.00508303
+0.00638259	0.00483059
+-0.00935956	-0.00329367
+0.00710598	0.00918167
+0.00146131	-0.00996635
+0.00637828	0.00730107
+-0.00182758	0.00909625
+-0.00599362	0.00136057
+0.0037586	0.00709242
+-0.000198051	0.00760091
+0.00417672	0.00409855
+-0.00496122	-0.00106775
+-0.00395997	0.00790214
+0.00435744	0.00985968
+-0.00265676	0.00160628
+-0.00554375	-0.00680113
+-0.00742431	-0.00892834
+-0.00166263	0.00821236
+-0.00133581	-0.000113393
+-0.00175639	0.00942845
+-0.00792453	0.00387945
+-0.00538537	0.000210235
+-0.00808662	0.00261139
+-0.0048265	0.00135077
+0.00726704	-0.00708225
+-0.0066928	0.00477276
+-0.00849388	-0.00380929
+-5.63801e-06	-0.00471114
+0.00688002	0.00223719
+-0.00338117	-0.00398687
+-0.00949583	-0.00581475
+-0.00863847	0.00966577
+-0.00695086	0.00616553
+-0.00621384	-0.00725651
+-0.0016211	0.00392811
+-0.0035913	0.0070748
+-0.0038514	-0.00419739
+0.00780914	0.00853186
+0.00799646	-0.00781197
+0.00936549	0.00167788
+0.00418464	-0.00698825
+-0.00868368	0.000997595
+-0.00933965	0.00714118
+0.00278507	-0.00636887
+-0.00540826	-0.00520441
+0.0011896	0.00454749
+-0.00991116	-0.00704219
+-0.00661237	-0.00904039
+-0.00283959	-0.00500286
+-0.00220179	0.00940667
+0.00940398	-0.0076315
+-0.00337775	0.00111704
+0.00785525	0.00460256
+0.00215853	0.00546661
+-0.00902901	0.00646388
+0.00644532	0.00857832
+-0.00114078	-0.00104511
+0.00121856	-0.00770596
+0.00142957	0.00807451
+-0.00626001	-0.00545744
+0.00023456	0.00772362
+0.00163577	0.00674832
+0.00574716	-0.00509369
+0.00530631	-0.00483335
+0.000569791	0.00201749
+-0.00932773	0.00561555
+-0.00248351	-0.00855729
+0.00663917	-0.00397798
+-0.0052914	0.00410505
+-0.00885161	-0.00595773
+0.00366961	0.0050902
+-0.00600375	0.000823225
+-0.00610815	-0.00491325
+-0.00260559	-0.00346021
+0.00934938	0.00300344
+0.00462057	0.00531758
+-0.00577366	0.00202758
+0.000233754	-0.00447906
+-0.00514995	0.00435502
+0.00083933	0.00612448
+0.00511582	0.0041204
+0.00892815	-0.00839293
+0.00618977	0.00600104
+-0.00243173	-0.00832921
+0.0065856	0.00434116
+-0.00079354	0.000472995
+0.00441794	-0.00171868
+0.00579705	-0.00832232
+-0.00164286	0.00419663
+-0.000852104	-0.00851465
+-0.000724798	-0.00581884
+0.00707457	-0.00227904
+0.00861078	0.00368035
+-0.00302697	0.00391515
+-0.00385266	0.00106067
+-0.00725084	0.00788553
+0.00995177	0.00602259
+-0.00220857	0.00902182
+0.00825678	0.00630421
+0.00474568	-0.00682525
+-0.00278831	0.00672031
+0.000939198	-0.00465525
+0.00197546	-0.00649778
+0.00852549	-0.00452734
+-0.00585515	-0.000707995
+-0.00404215	-0.00239091
+-0.000890049	-0.00343292
+-0.0024077	0.00580858
+0.00165349	0.00356116
+-0.00140802	0.00540146
+-0.00697754	0.0075218
+-0.008382	0.000591873
+-0.00858194	0.00555653
+0.00525429	-0.00341587
+-0.00478006	0.00917276
+0.00671813	-0.00461734
+-0.00129728	0.0047504
+-0.00733307	0.00839463
+0.00519627	0.00133194
+-0.00759953	-0.00787773
+0.00121425	0.00747095
+0.00968819	0.00996332
+-0.00687214	0.0026861
+-0.000484231	0.00979032
+0.00201584	0.00418338
+0.0072621	-0.00211099
+0.000592153	0.00286454
+0.00916925	-0.00874157
+-0.00986527	0.00745957
+0.0056412	0.00263912
+0.00603176	0.008442
+-0.00546738	-0.0096393
+-0.00833049	-0.00201101
+0.000742754	-0.0054306
+-0.00546412	0.00812789
+-0.00840157	0.00527608
+-0.00686613	-0.00875048
+0.00258168	-0.00354146
+0.00209497	0.00014807
+-0.00168213	-0.00768594
+0.00530045	-0.00373727
+-0.00538255	0.00935868
+0.00580261	-0.00704575
+-0.00465814	-0.00474859
+0.00386627	0.00294611
+-0.00839974	-0.00708154
+0.00721326	-0.00616306
+-0.00512344	0.00174272
+0.00108168	0.00932721
+0.00130033	0.00240108
+0.00224527	-0.00220607
+0.00625531	-0.00582397
+0.00477697	-0.00534212
+0.00317568	0.00892766
+6.95781e-05	-0.003136
+0.00263624	-0.00503935
+0.00774282	0.00146933
+-0.00659167	-0.00862534
+-0.000340172	-0.00749627
+0.00854378	0.00583879
+0.00170327	-0.00052997
+5.65406e-05	-0.00976908
+0.00830819	-0.00448988
+0.00928248	-0.00873753
+0.00274102	-0.00212292
+-0.00655188	-0.0054662
+0.00797524	-0.00614022
+0.0050705	-0.00797071
+-0.0058889	0.00354529
+-0.00784132	-0.00720331
+-0.00706974	-0.00823994
+-0.000340877	0.0094878
+0.00476686	0.000880985
+-0.00961602	0.00746096
+-0.00381008	0.00143206
+-0.00400447	0.00243457
+0.000791077	-0.00853909
+-0.00894865	0.00989616
+-0.00606127	0.00453627
+-0.00785461	0.00313446
+0.00243461	0.00754559
+-0.0069287	0.0025985
+-0.00619719	0.00903686
+-0.00270221	-0.00790258
+-0.00495708	0.00100949
+-0.00708112	0.00909691
+-0.00699829	0.00217434
+0.00206542	-0.00708297
+-0.00369532	0.00914412
+0.00378463	0.00121297
+-0.00408361	-0.00456798
+0.00641712	0.00835791
+-0.00623906	0.00144318
+-0.00757739	0.00578967
+0.00381592	0.00750792
+0.00191638	-0.0071225
+-0.0094095	0.00302376
+-0.00983967	-0.00859927
+0.00290627	0.00404707
+0.00142807	0.00430097
+0.00418726	0.0067789
+0.00389138	0.00989043
+0.00130894	-0.00492609
+0.00651163	0.00393956
+-0.00500998	0.0061291
+0.000152509	-0.00958775
+0.00736198	-0.00881866
+-0.0015575	0.003432
+0.00986974	0.00479256
+-0.00798989	0.00119241
+-0.00855908	0.00619906
+0.00179232	-0.00689388
+-0.00801198	-0.00657002
+0.0028275	0.00647448
+-0.00253826	-0.00852493
+0.00220279	0.00696135
+0.00568776	0.00030145
+0.00182076	-0.00939243
+0.00713145	-0.000533379
+0.00506418	0.00305141
+-0.00821649	0.00156711
+-0.000263657	-0.00815657
+-0.00303892	-0.00342249
+-0.00207082	0.00879531
+-0.00227629	0.00923213
+-0.0039895	0.0026523
+0.000778465	-0.00180478
+-0.00624192	0.000948556
+-0.00596056	0.000821053
+0.00612199	-0.00438928
+0.00698848	0.0061306
+0.00564754	-0.00976431
+0.000362907	0.00818402
+-0.00631817	0.00690424
+-0.0043983	0.0092045
+-0.00962655	0.00528841
+-0.00596609	0.00799365
+0.0066748	-0.0075513
+-0.008979	-0.00557316
+-0.00760666	0.00391074
+-0.00961701	-0.00242969
+0.00914469	0.00202452
+-0.00988917	0.00821775
+0.00309818	-0.000982196
+-0.00970325	-0.00353498
+-0.000566246	0.00996776
+-0.00860166	0.00595743
+0.00199866	0.00644149
+0.00971202	0.0026233
+0.00480089	-0.00332586
+0.000688961	-0.00153199
+-0.00954128	-0.00990683
+-0.0092283	0.00482886
+0.00073562	-0.00569009
+0.00541595	0.00542017
+-0.00530095	-0.0032575
+0.00186274	-0.00639546
+0.00243743	-0.00564995
+0.00647932	0.00722305
+0.00891893	0.000882233
+0.00964084	0.00164316
+-0.00163326	0.00546658
+0.00890798	0.006513
+0.00896998	0.00766084
+-0.00123662	-0.00156909
+0.00599723	0.00382467
+-4.78853e-06	-0.00389253
+0.00318665	0.00913257
+-0.00557788	-0.00011811
+-0.00275375	-0.00758427
+-0.00543476	-0.00869539
+-0.00405146	-0.00547009
+0.00893874	0.00502801
+0.004182	-0.0091784
+-0.00419963	0.00859029
+-0.00930583	0.000995036
+-0.00491869	-0.00864143
+-0.00699767	-0.00701013
+-0.00291853	-0.00317517
+-0.00269191	0.00334178
+0.00874095	-0.00432419
+-0.00186237	0.00450608
+-0.00847813	0.00544349
+-0.000884733	-0.004001
+0.00783748	0.000497321
+-0.00336793	0.00974803
+-0.00283863	-0.00478547
+0.000226378	0.00893252
+-0.00230812	-0.00828303
+-9.06467e-05	-0.000861692
+0.00374281	0.00862728
+-0.00402175	0.00714456
+-0.00782461	-0.0056015
+-0.000502581	-0.00178148
+-0.00613166	-0.00894981
+0.00254903	-0.00726014
+-0.00211419	0.00289757
+0.00302312	-0.00445483
+0.00750295	-0.00144865
+-0.00547936	-0.00685546
+0.00180532	0.00291829
+-0.0036777	-0.00758975
+-0.00462949	-0.00228073
+-0.00607184	0.00608157
+-0.00435167	-0.00825384
+0.00887735	0.00601901
+0.00654317	0.00757882
+-0.00222322	0.00794409
+0.00296439	-0.00905607
+0.00975821	0.00547164
+0.00514941	0.00760944
+-0.00490476	-0.0037166
+-0.00848767	-0.00865522
+-0.00431862	0.00866368
+0.00894594	0.00834566
+-0.0038502	0.00560954
+-0.0095037	0.00575896
+-0.00283396	-0.00257073
+-0.00233608	0.00758033
+-0.00521945	-0.00821391
+0.00519511	-0.00707817
+-0.00981627	-0.00469665
+0.00992427	-0.00779526
+0.00245666	-0.00889294
+-0.00458517	0.00476581
+-0.00815768	0.00355909
+0.003873	0.00441861
+0.00642775	-0.00470995
+-0.00860427	-0.0051199
+0.00226648	0.00828595
+0.00373778	0.0036183
+-0.0046944	-0.00269058
+-0.00137066	-0.00234439
+0.00277415	0.00957568
+0.009239	0.00545811
+0.0031848	0.00440938
+-0.00133141	0.00684052
+0.00508512	0.000332728
+-0.00399767	-0.00902825
+-0.00228155	-0.000189244
+-0.00180214	-0.00808619
+-0.00987934	0.00955946
+0.00184043	0.00152611
+0.000861834	-0.00581582
+0.00865573	-0.000160329
+0.00148558	-0.00378427
+-0.0061266	0.00245753
+0.00542577	-0.00677449
+0.0030193	0.00130372
+-0.00416175	-0.00698523
+-0.00542605	0.00933702
+-0.0084896	-0.0085302
+0.00289289	0.00248416
+-0.00614872	0.00254901
+-0.00414026	-0.00477189
+-1.91679e-05	0.00509086
+-0.00584972	0.00114754
+0.00638613	0.00461247
+0.00554625	-0.00636045
+0.00751309	-0.00109476
+0.000319484	0.0016045
+-0.00869077	-0.00725342
+-0.00922064	-0.00747352
+0.00213085	0.00766094
+0.00392629	0.00224994
+-0.0056486	0.0020979
+0.00060136	-0.00975481
+-0.00591782	0.00717625
+-0.00880666	0.00982472
+-0.00356837	-0.00616489
+0.0032331	-0.00183151
+-0.00885195	0.0080366
+-0.00934448	0.00207807
+0.00909589	0.002181
+0.00553528	-0.00403332
+-0.0043817	-0.00409452
+-0.00626071	-0.00239323
+0.00712844	-0.00475457
+-0.00684689	0.00819488
+-0.00138807	-0.00223662
+0.00692124	0.00260418
+0.00578765	-0.0027838
+-0.00226144	0.00485915
+0.00109131	-0.00756692
+-0.00285662	-0.00786328
+-0.000229924	-0.00346113
+-0.00605142	0.00747226
+-0.00839161	-0.00173146
+-0.00197053	-0.00605625
+-0.00319585	0.00703764
+-0.00111846	0.00826945
+0.00953316	-0.00235865
+-0.0048903	0.00211264
+-0.00253635	-0.00608478
+0.00483108	-0.000594465
+-0.00660714	0.0091878
+0.00758627	-0.00424189
+-0.00987611	0.00928683
+-0.00784752	0.00631287
+0.000940485	-0.000781672
+0.00303467	0.00259103
+0.00137602	0.00535683
+-0.00420874	-0.00548671
+0.00315532	-0.00205377
+0.00647667	0.0079007
+0.00913202	-0.00302958
+0.0021558	-0.00491087
+0.00760993	-0.00614688
+-0.00742227	0.00336899
+-0.00520594	0.00526335
+-0.00748933	-0.00312467
+-0.000123686	-0.00751316
+0.00636525	0.00208218
+0.000434377	-0.000615041
+0.00564052	0.00505993
+-0.00830395	-0.000586963
+-0.00741714	0.00837149
+-0.0095491	-0.00449367
+-0.00148623	0.00339826
+-0.00653554	0.00616697
+0.00771077	0.00550022
+-0.00953554	0.00455171
+0.00537682	-0.00431504
+-0.00622401	0.00599266
+0.00876571	0.00727852
+0.000698265	-0.00495738
+0.00896258	-0.00101962
+0.00197546	0.000726809
+-0.000332711	-0.00270012
+0.00679007	-0.00959808
+0.00248774	-0.00274718
+-0.00220253	0.00557455
+-0.00642386	-0.00145538
+0.00471877	0.00482104
+-0.00995407	-0.00766366
+0.00255349	0.000173545
+-0.00369481	-0.00351934
+0.00256839	0.00145045
+0.00148302	-0.00971044
+-0.00223404	-0.000278089
+0.00549888	-0.00900236
+0.00714212	-0.00488314
+0.00658094	-0.00209507
+0.0014111	0.00654335
+0.00448024	-0.000952648
+-0.00291661	0.00911343
+-0.0093509	-0.00660091
+-0.00413221	-0.00808109
+0.00248256	-0.00440919
+-0.00294206	0.00233803
+-0.00752715	0.00916866
+0.00929519	-0.00741049
+-0.000405767	0.00992806
+0.0074598	-0.000296079
+-0.00746188	0.00597778
+0.00436753	-0.00137891
+0.00697062	0.00820813
+0.00524773	0.00198079
+0.00487822	0.00129479
+-0.00352285	-0.00298442
+-0.00943224	0.00567355
+-0.0018293	0.000362284
+0.00133909	-0.00980481
+-0.00971494	0.00046645
+0.00706812	-0.00946733
+0.00309185	-0.00559528
+0.00657416	0.0097793
+0.000692256	-0.00413089
+-0.00870803	-0.00183471
+0.00983909	0.00298399
+-0.00829903	0.00942718
+-0.00568917	0.00826391
+-0.00448892	-0.00866241
+0.00407663	-0.00721482
+-0.00261933	-0.00938732
+-0.00536996	0.00869332
+0.00357638	-0.00517162
+-0.00556306	-0.00350587
+-0.00909578	-0.00963017
+0.00467249	-0.00614959
+-0.00861302	0.00557464
+-0.00726407	-0.000331413
+-0.00166515	0.00696406
+0.000801517	-0.00377585
+0.00999957	-0.00353025
+0.00328422	0.00882046
+0.00311132	-0.00653813
+0.000589648	-0.00154191
+-0.00358006	0.000248418
+-0.00604747	-0.00176085
+-0.0042941	-0.00599827
+0.000581244	0.00139602
+-0.00105486	0.00249736
+0.00424641	0.00393558
+-0.00306697	0.00100849
+-0.00206855	-0.00645486
+-0.00508825	-0.00532883
+-0.00234956	-0.00995587
+-0.00830578	0.00795203
+-0.00238547	0.00295683
+-0.00320569	0.00322306
+-0.00906363	0.00816423
+-0.00855012	0.00202765
+-0.00522002	0.00385275
+-0.00291408	0.00768079
+-0.00263919	0.00972522
+-0.00726158	0.000615243
+-0.00624667	-0.00484208
+-0.00783674	-0.000683045
+-0.00313526	0.00412297
+-0.00884151	-0.00240181
+0.00303069	-0.00823936
+-0.00312986	0.00130283
+-0.00809897	-0.00337892
+-0.00973471	-0.000628434
+0.00384167	-0.00166729
+0.00451535	0.00848046
+-0.00311801	-0.00419703
+-0.00643894	-0.00599141
+0.00244715	9.57244e-05
+-0.00598179	-0.00945382
+-0.00701797	0.00427281
+-0.00878175	-0.00507871
+-0.0046713	-0.00530725
+-0.00247165	-0.00418894
+-0.00389705	0.00283825
+0.00224278	0.00858929
+-0.00589794	0.00488628
+-0.0033532	0.00532548
+0.00485093	-0.00605619
+0.00290602	0.00515836
+0.00896524	-0.00437934
+-0.00362714	0.00681611
+0.00734369	0.000515123
+-0.00439136	0.000488306
+-0.00278476	0.00140671
+0.00324285	0.00912766
+0.0011307	-0.00536079
+8.75266e-06	-0.00214298
+0.00930238	0.00170668
+-0.000928175	0.000292712
+-0.00263541	0.00046758
+0.00692568	0.00247227
+-0.00849535	-0.00969127
+0.00490833	-0.00365118
+-0.00126739	-0.00982567
+0.00999125	-0.00329581
+0.00163188	0.00984877
+0.00166687	-0.00355863
+-0.00502019	0.00893036
+0.00125935	0.00094555
+0.00828702	0.0030106
+0.00348067	-0.00438635
+0.00674741	0.00195664
+-0.00663467	-0.00293865
+0.0036721	0.00431248
+-0.00733585	0.00717867
+-6.32062e-05	-0.00807155
+-0.00661553	-0.00324141
+0.00647945	0.00644106
+0.00350083	-0.00870085
+-0.00373103	-0.00954949
+0.00477482	0.00345556
+0.00834059	0.00726786
+-0.0067691	-0.00385262
+-0.003812	-0.00519333
+0.00827506	-0.00835639
+0.00262028	0.000269542
+0.00477756	0.00613247
+0.000679091	-0.000588267
+-0.00911406	0.00486728
+-0.00394565	0.00597781
+0.00390265	0.00151234
+-0.00913751	0.00279008
+-0.00859904	-0.00139697
+0.000802231	-0.00262115
+-0.00404668	0.00303844
+-0.00569162	-0.00684258
+0.00505763	0.00238971
+-0.00400956	-0.00344316
+-0.00368655	-0.004774
+0.00859486	-0.00796298
+-0.00832231	0.00984301
+0.000579932	-0.000568014
+0.00952633	-0.00360385
+0.00616737	-0.00925409
+0.00745257	0.00694126
+0.00042108	-0.00295917
+-0.00762373	-0.00657266
+0.00933008	0.00508783
+-0.00817417	-0.0048148
+-0.00207146	0.00500615
+0.00189231	0.00601948
+0.004986	-0.0077504
+-0.00194703	0.00485112
+0.00448698	-0.00657464
+0.00660906	-0.00531291
+-0.00351096	-0.00404218
+-0.00985612	-0.00736856
+0.000975858	-0.00804509
+-0.00217368	-0.00746501
+0.00175722	-0.00973264
+0.00689853	0.00406765
+0.00164599	-0.00814052
+0.0055344	-0.00523166
+-0.00145867	0.00439456
+-0.0085344	0.00926919
+-0.00703769	0.00236867
+-0.00161548	0.00561079
+0.00151336	-0.00995018
+0.00412777	0.0076346
+0.00617855	0.00611475
+-0.00752467	0.00730493
+0.00323623	0.00211657
+0.00587519	0.00936018
+0.00364416	0.00582968
+-0.000647684	0.00186845
+0.00498061	0.0056748
+0.00387416	-0.000832343
+0.00840498	-0.000130591
+0.00555936	0.00177529
+-0.000106245	0.00446391
+-0.00625448	-0.00406982
+-0.00554258	0.00256953
+0.00230771	0.00425274
+-0.0055658	-0.00186878
+0.00961044	0.0032314
+-0.00926331	0.00676774
+-0.00152095	0.00115644
+0.00520547	-0.0026278
+0.000197927	-0.00190676
+-0.00154213	-0.00789502
+0.0084805	0.00747429
+-0.00691593	-9.22245e-06
+-0.000235846	0.00608134
+-0.00409728	0.00592251
+-0.00618504	-0.00710603
+-0.00189078	-0.00585191
+-0.00668437	-0.00721057
+-0.000887477	0.0085162
+-0.000132469	0.0090463
+-0.00959215	-0.00183585
+0.0047423	-0.00729823
+0.00518775	-0.00697227
+-0.00524175	0.00278203
+-0.00545089	0.000249139
+0.00700171	0.00892493
+0.00570559	0.00715118
+-0.00506213	-0.00320028
+-0.00972669	-0.00363733
+-0.00365801	-0.00888854
+-0.0092666	-0.00777138
+-0.00272914	0.00956785
+0.00508509	-0.00279641
+0.00544683	0.00596199
+0.00216275	-0.000839689
+0.00734608	0.00268084
+0.0057559	-0.000532344
+0.00185674	-0.00110358
+0.00299464	0.00709861
+-0.0055087	-0.00461188
+0.00419278	0.00643455
+0.00966232	0.00790591
+0.00636803	-0.00376324
+-0.00455742	0.000317448
+-0.00359832	0.00524904
+-0.000764097	-0.00196555
+0.00924591	0.00164219
+-0.00378753	0.00836661
+0.00091147	0.00797519
+-0.00622484	-0.0035319
+-0.0028424	0.00671589
+0.00605337	-0.00639629
+-0.00217397	-0.00813554
+0.00792325	0.00174509
+-0.0073121	-0.00856579
+0.00440264	-0.00754579
+0.00355779	0.00981565
+-0.00443626	0.00744547
+-0.00383893	-0.0022298
+-0.0024982	-0.0042216
+0.00216945	0.0051695
+0.00297568	0.00883582
+-0.00180875	-0.00845793
+0.00720228	0.00558857
+0.0079307	0.00226099
+0.00128217	0.00791617
+-0.00474381	-0.00702132
+-0.00465391	-0.0075198
+-0.00606917	-0.00677545
+0.00470496	-0.00219995
+0.0068447	0.000789009
+-0.00819533	0.00887958
+-0.00865473	0.00358818
+-0.00322724	-0.00759212
+-0.000733195	0.00829352
+0.00512076	0.00278188
+0.0013359	0.00874827
+-0.0014208	-0.00430402
+-0.00498169	0.0056049
+0.00711798	-0.00208814
+0.00912063	-0.00964543
+0.0046196	0.00829408
+-0.00477714	0.00378242
+0.00848551	0.00789846
+0.000836673	0.00570457
+0.000877767	-0.00730444
+0.00151819	0.00964691
+0.00861509	0.00938625
+3.1889e-05	0.0074995
+-0.00376887	-0.00711023
+-0.00896413	-0.00912167
+7.24939e-05	-0.00856116
+0.00317983	0.00656073
+0.003183	0.00159222
+-0.00239541	-0.000958097
+0.00475714	0.00459313
+-0.00631423	-0.00741265
+0.00346227	0.00561711
+-0.00434632	0.00249811
+-0.00102213	0.00969957
+-0.00352048	0.00336336
+0.00530086	0.00733348
+0.00822249	0.000930623
+-0.00541243	0.000584865
+-0.00791347	-0.00259712
+-0.00359004	-0.00851956
+0.00474229	-0.0051108
+-0.00853456	0.00575718
+-0.00863661	-0.0026585
+0.00263798	-0.00695456
+-0.00596408	0.000894125
+-0.00335008	-0.0038971
+-0.00998523	0.00629059
+-0.0043843	-0.00539429
+0.00333915	0.000983922
+-0.00789711	-0.00420059
+-0.00134122	-0.00478916
+-0.0010546	0.00317212
+0.00415043	0.0085195
+-0.00409154	0.00820684
+0.0039363	0.00146312
+0.00378191	0.00428452
+-0.00773381	0.00945452
+-0.00914994	-0.00485844
+0.00282134	-0.00376522
+-0.00659731	-0.00393628
+0.00354194	-0.00315227
+0.00185928	0.00272899
+-0.0054699	-0.00228768
+-0.00386962	-0.00879033
+-0.00267502	-0.00194536
+0.00709891	0.00385049
+0.00321049	-0.00236584
+0.00560434	0.00347919
+-0.00443395	0.000872085
+0.00982123	-0.00634957
+-0.00573203	-0.00738584
+0.00932641	-0.00198678
+-0.00798297	-0.00688653
+-0.000434827	-0.00231642
+0.00494645	-0.00639737
+0.00500976	-0.00905536
+0.00536898	0.00784994
+-0.00824682	0.00334873
+-0.0088476	0.00743116
+-0.00572715	-0.0067766
+-0.00681735	0.00817936
+0.00240548	-0.0072748
+-0.0080329	0.00175108
+0.0071025	0.00219821
+0.00375462	0.00375497
+0.00454582	-0.00078162
+-0.00449241	0.00970395
+0.00728307	-0.00610596
+0.008632	0.00847401
+-0.000114841	-0.000269419
+0.00571772	-0.00203717
+0.00505564	0.0040486
+0.00455964	0.00925551
+0.00220668	-0.00546764
+0.00929562	-0.00149433
+0.00521939	0.00900085
+-0.000562028	-0.000306141
+0.00138959	0.00718916
+0.00127907	0.00403672
+-0.0011732	0.00550588
+0.00483392	0.00650977
+0.00572918	0.00289596
+-0.00488667	0.0081115
+0.00504854	-0.00828518
+0.00817422	0.0090317
+-0.000206899	-0.00876195
+-0.0018913	-0.00803935
+0.00327517	0.00065253
+-0.00638827	0.00443033
+-0.00462431	0.00835552
+0.00831791	0.00596841
+-0.00105397	-0.00424354
+-0.00130664	-0.00987377
+0.00107794	0.00218582
+-0.00139208	0.00608647
+0.00999429	0.00987421
+-0.00731392	-0.00622463
+0.00991665	0.00274442
+-0.00841721	-0.00179538
+-0.00553392	0.00738061
+-0.00930977	-0.00568053
+0.00571229	-0.00376931
+-0.00153387	0.00301183
+-0.000730951	-0.0068736
+0.00541937	-0.000383745
+0.00993488	0.000376858
+-0.00626611	-0.0070283
+0.00618886	-0.00862559
+-0.00722211	-0.00106225
+0.00399671	0.00787039
+0.00233274	-0.00295112
+0.000525348	-0.000294184
+-0.00867858	0.00571256
+0.00576053	-0.00838358
+0.00807684	-0.0028299
+-0.0010777	-0.00572312
+-0.00475509	0.00273508
+0.0057059	0.00208933
+-0.000415613	0.00844321
+-0.000691098	0.00763938
+0.005017	0.00236403
+0.00481547	-0.00884058
+0.00812965	0.0088337
+-0.00205685	0.0078308
+0.0091518	0.0092108
+0.000567994	-0.0086034
+0.00341724	0.000547839
+-0.00385042	-0.00611377
+0.00559034	0.0092527
+-0.00401827	0.00183792
+-0.00294703	0.00748059
+0.000596535	0.00390468
+-0.00199496	0.00693793
+0.00127631	-0.00560991
+-0.0011119	-0.00816562
+0.00800571	0.00861607
+0.00864563	-0.00686715
+0.00675817	0.00361802
+-0.00256575	0.00414847
+-0.00939736	0.00177651
+0.00644349	0.00446087
+-0.00588211	-0.0087076
+-0.00222578	-0.00179825
+0.00456546	0.00699741
+-0.00829622	0.00373646
+0.00466028	-0.00834653
+-0.00100478	0.00755497
+-0.00676085	0.00139351
 
 \hidden_weights 1
--0.00895218	0.00295887	-0.0034285	0.00227206	0.00119568	-0.00104998	0.0067552	0.00486505	-0.00887783	-0.0046751	0.00789856	-0.0043917	0.00791568	0.000401593
--0.000955608	0.00541296	0.00809787	0.0003648	-0.00693944	-0.00373245	0.00472842	0.00896039	-0.000506728	-0.00200872	0.00947983	0.00913576	0.000513978	-0.00714744
-0.0071614	-0.00271548	0.00637592	0.00531212	0.00676967	-0.0076024	-0.00623294	-0.00579609	0.0084964	0.000301067	0.00412531	0.00235431	-0.00882454	-0.00997466
+0.0036799	0.00699119	-0.00930409	0.00568722	0.00750411	-0.00503587	-0.00643298	0.0092827	0.00354957	-0.000484384	-0.0041098	-0.00579051	0.00449109	-0.000724847
+-0.00141591	0.00237938	0.000164879	0.00367704	-0.00395759	-0.00631528	-0.0092925	-0.00982215	0.00257474	0.00868822	-0.00274451	-0.00997677	0.00147295	-0.000656095
+-0.00966179	0.00320506	-0.00519668	-0.0041478	-0.000737977	0.00278095	-0.00773111	0.00362624	-0.00186298	0.00674031	-0.0028	0.0046732	-0.00978798	0.00216349
 
 \hidden_weights 2
-0.00767326	-0.00807784	-0.00324537
-0.00435253	0.00991634	0.00710299
--0.000759278	0.00883243	0.00621715
-0.0061402	0.00406778	0.00656908
+0.00533379	0.00818507	0.00917508
+0.00452143	-0.00711048	0.00273057
+0.00109051	0.00999827	-0.00296741
+0.00150353	-0.000792645	-0.0046266
 
 \output_weights
-0.00988775	-0.00357913	0.00134296	0.00456271
-0.00723119	-0.00193039	-0.00817692	-0.00488178
--0.00662172	0.00919037	-0.00338744	-0.00277845
-0.00909506	-0.00588832	-0.00792321	0.0042885
--5.53465e-05	0.00718467	0.00978136	-0.00533053
-0.00231065	-0.000335657	0.00113856	-0.00657446
--0.0052513	0.0054156	-0.000632165	-0.0099113
--0.000623077	0.00847505	0.00126216	0.00891026
--0.00176671	0.00192421	-0.00644744	-0.00362945
--0.00695345	0.00928136	0.00499224	0.00902696
--0.000222915	0.00542868	0.00458536	0.00689072
--0.00150058	-0.00524018	0.00451296	0.00457344
-0.0017601	-0.00523555	-0.00725906	-0.000388928
-0.0012949	0.00448707	-0.00411074	0.00430031
-0.00267992	0.00528258	0.0028649	-0.00214093
-0.00105001	0.00528375	-0.00219985	-0.00368188
--0.0046576	-0.00457796	0.00604287	-0.00525981
-0.00799269	0.003169	-0.00796803	-0.00647615
--0.00092445	-0.00669183	-0.00211994	0.00620281
-0.00343285	-0.00850665	0.00107547	-0.00562808
-0.00685817	0.00801387	-0.00988096	0.00235296
-0.00291812	-0.00534452	-0.00770323	0.00627086
-0.00512748	0.00362226	-0.00543963	0.00987578
--0.0056293	-0.00420829	-0.00177351	0.00766101
--0.00863014	0.00736547	-0.000625292	-0.00318774
--0.00291129	-0.00162109	-0.00834635	0.00943911
--0.00728347	-0.00076029	0.00825365	-0.0025481
-0.00743851	-0.00311191	0.00567284	-0.00306454
-0.0042967	-0.00351838	0.00340646	0.00875584
-0.00268377	0.0098048	-0.00218689	0.00218637
-0.00533301	-0.00162651	-0.00556603	0.00799325
-0.00413513	0.00706405	-0.00390935	-0.00567589
-0.00567439	-0.00204233	0.0021195	-0.00308612
-0.00743495	-0.00374682	-0.00828172	-0.00858906
-0.000912993	-0.00516781	0.0083105	0.000572522
-0.00225319	-0.00544133	0.00118634	-0.00842321
--0.00342196	-0.00189995	0.00665168	0.00851409
--0.00509672	0.0010275	-0.00423987	-0.00281881
-0.00205215	-0.00228781	-0.00221422	0.00652632
--0.00175383	-0.0030546	0.00065661	0.00860196
-0.00751848	0.00518829	0.00528577	-0.00602631
-0.00703431	0.00540134	0.00679899	0.0077465
-0.00094176	-0.00665647	0.000894339	-0.00664836
--0.00982375	-0.00443145	0.00239358	-0.00225334
-0.00824737	0.00206339	-0.00574853	-0.00581596
--0.00355702	0.00766128	-0.00476754	0.00370823
-0.00786718	-0.00854177	0.00644859	0.000391394
--0.00476705	0.00439608	-0.00586276	-0.000625831
-0.000527345	-0.00118531	-0.00965184	0.00123985
--0.00165233	-0.00973995	-0.00821986	0.00258759
-0.00974557	-0.000162273	0.0089893	-0.00874395
-0.00504309	-0.000108125	0.00280486	0.00625502
--0.0058325	0.00324144	-0.00664314	-0.0071617
--0.00712564	0.00359648	-0.000943596	0.00660929
--0.00991062	-0.00480282	-0.00370488	-0.0070235
-0.00220909	-0.00782231	0.00987787	0.00268425
-0.000431604	-0.0069593	-0.00794646	-0.00414377
+-0.00589175	0.00793323	-0.00995227	-0.00150566
+0.00501055	-0.00424312	0.00373249	-0.00082011
+-0.00406229	0.00125865	-0.00365268	0.00662544
+-0.00769789	0.00601889	0.00707455	-0.00401466
+0.00873282	-0.00662732	0.00679356	-0.00924799
+0.00279319	0.0058867	-0.0097976	-0.0041051
+-0.00899998	0.00375232	0.00532731	-0.00267615
+-0.00287423	-0.00858499	-0.00919988	-0.00995001
+0.00219236	-0.00822846	0.00430483	0.00181339
+-0.0062816	-0.00865209	-0.00805328	-0.00390579
+-0.00970016	0.00684536	-0.00870354	-0.00659326
+-0.00165212	-0.00811006	0.00898781	-0.00221981
+-0.00474034	0.00425721	0.00976126	-0.0093456
+-0.00767197	0.00976431	-0.00847468	-0.000481275
+0.00443186	0.00837353	-0.00827915	-0.0015122
+0.00890395	-0.00577483	-0.00839508	0.00734479
+-0.00732518	-0.00729247	0.000207402	-0.003976
+-0.00894732	0.00097914	-0.00722945	0.00416752
+0.00282214	-0.00246629	-0.0090501	0.00204516
+-0.00224446	-0.000870989	-0.00166951	0.000253523
+-0.00320116	0.00463638	-0.00952917	-0.00315655
+-0.00223563	0.00838357	0.00147635	-0.000456716
+0.00992645	0.00133762	-0.00176284	-0.00429892
+-0.00861249	0.00351024	-0.0087718	0.00735065
+-0.00327227	0.00900303	-0.00701992	0.00528494
+-0.00811044	0.000880997	0.00137622	-0.00870465
+0.0070543	-0.0011712	0.00588066	-0.00822423
+-0.005242	0.000775429	-0.000499839	0.000738717
+0.00415938	-0.00733144	0.0051243	8.78055e-05
+-0.00792504	0.00213691	-0.00987134	-5.19265e-05
+0.000827734	-0.00443473	0.00516066	0.00793114
+0.0065977	-0.00285938	0.00582131	-0.0069579
+-0.005996	-0.00341096	0.00917113	0.00848109
+-0.000305825	0.00803525	0.00209602	-0.00862237
+0.00228196	-0.0057116	0.00890269	-0.00758296
+-0.00329127	0.0072934	-0.00731381	-0.00166757
+-0.00447857	0.00086654	-0.00444233	0.00628274
+0.00056445	0.00495625	0.00753178	-0.00378731
+-0.00038774	0.00027016	-0.000844561	-0.00965267
+0.00500613	0.00816557	0.00749911	0.00110907
+0.00330523	0.00207514	0.00126116	0.00862575
+0.00225275	0.0076488	-0.00796587	-0.0043687
+-0.00798995	0.00628956	0.00697044	-0.00145051
+0.00958145	-0.00398079	-0.00272608	0.00163002
+-0.00837308	-0.000211103	0.00898743	-0.00488387
+-0.00622399	0.00860078	0.0048594	0.00923151
+-0.00850635	0.00936701	-0.00108639	0.00311722
+0.00469322	-0.00499155	0.00133879	-0.00539949
+-0.00184962	-0.00768957	-0.0025418	0.0068081
+0.00260494	0.00746628	0.00154456	0.00511791
+0.00966116	0.00858409	0.00912329	-0.0044342
+0.00273349	-0.000455159	0.00650288	0.00110578
+-0.00108134	-0.00551784	0.00285644	0.00485848
+-0.00514996	-0.00641926	-0.00536959	0.00978517
+-0.00188383	-0.00959926	0.000807062	-0.00807964
+-0.00950599	-0.00871588	0.00558042	-0.00850336
+0.00865811	0.00658263	-0.00682739	-0.00472155
+-0.000542816	-0.00628473	-0.00212087	0.0091515
+-0.00593527	0.00137909	-0.00531228	0.00256898
+0.000218371	0.00682173	-0.00664156	-0.00808921
+-0.00873338	0.000837047	0.00719911	0.000365955
+-0.00829998	0.00506944	0.000670696	-0.000126044
+-0.00271511	-0.00721625	0.00246666	0.00939025
+-0.00577574	-0.0084524	-0.00588889	-0.00840707
+-0.00784159	-0.00961554	0.00545311	-0.00965758
+0.0098528	5.13923e-05	0.00340517	0.000643068
+-0.00847246	-0.0031141	-0.00340881	0.000805829
+-0.0066313	0.00809724	0.00200879	-0.00209083
+-0.000146054	0.00843968	9.64339e-05	0.00644069
+-0.00814354	0.00224237	-0.00428737	-0.00445381
+0.00395945	-0.00386179	-0.00139089	0.000867367
+0.00511585	0.00771023	-0.00668047	-0.00916755
+0.00389709	0.00864182	0.00713201	-0.0058686
+0.00684134	0.00739985	0.00878694	0.000987309
+-0.000534188	0.00572238	-0.00481696	-0.00489843
+-0.000481269	-0.00865128	0.00859147	-0.00981552
+-0.00347605	0.0062756	-0.00563269	0.00617144
+0.00677178	-0.00541905	-2.7089e-05	-0.00304437
+0.00398123	0.00627218	0.00146423	0.00291338
+0.0034286	0.00346449	0.00940718	0.00462693
+0.000991156	-0.00717278	0.0089432	-0.00826821
+-0.00622025	-0.00564055	0.00633257	0.00377177
+0.00519189	0.00408353	-0.00162151	0.00310461
+0.0053985	0.00302783	-0.00593426	-0.00730524
+0.00170643	-0.00531742	-0.00148829	-0.00574359
+-0.00629264	-0.00633101	0.000985481	0.00549128
+0.00479514	-0.00784177	-0.00203976	0.00925523
+-0.00460983	0.00365733	-0.00647466	0.000827119
+0.00512414	-0.00596814	0.000583776	-0.00338144
+-0.00993844	-0.00196195	-0.00496256	0.00135037
+0.00749517	0.00340971	-0.00341708	0.00819358
+-0.0017783	0.0043076	-4.52593e-05	0.00778065
+-0.00443958	0.00290223	-0.00724556	-0.00349152
+-0.00762308	0.0077962	-0.00552316	-0.00308649
+-0.00325055	-0.00511629	0.00272734	0.00946657
+-0.00217198	-0.00384808	0.00805448	-0.00335734
+0.00932496	-0.00394336	-0.00586539	0.00669545
+-0.00297199	-0.00969585	0.00578738	-0.00503975
+-0.00725168	0.00554021	-0.00664902	-0.00753912
+-0.00976527	0.00649742	-0.00306079	-0.00500814
+0.000576617	0.00299714	0.00816	0.00155576
+0.000722956	-0.00933067	0.00915006	-0.00850248
+-0.00949682	0.00868046	-0.00162526	-0.00924134
+-0.00769788	0.0010979	0.00312427	-0.00687737
+0.00405223	-0.00445861	-0.00241291	0.000406495
+0.00541412	-0.00195791	0.0022955	-0.000812807
+0.0038407	-0.00147208	-0.00912317	-0.00367924
+0.00773005	0.00603404	0.00169572	0.000885941
+-0.00328004	-0.000298284	-0.00688643	-0.00672483
+-0.00728542	-0.00703771	0.00663245	-0.00629396
+-0.00415485	-0.00843977	-0.00248026	0.00273087
+-0.00182048	0.00649572	0.000444462	-0.00207455
+-0.00259761	-0.00298842	0.007444	-0.00234239
+-0.0016021	-0.00771889	0.009129	0.00818999
+0.00138385	0.00184902	0.00687677	-0.00883121
+0.00606948	-0.00158356	0.00397606	-0.00388842
+-0.00229762	-0.00963918	0.00826251	0.00468412
+0.00599121	0.00358482	0.00297752	0.00123511
+0.00198472	0.00936654	0.00848008	0.00371459
+-0.0043868	0.00797671	0.00648883	0.00251537
+0.00450796	-0.00718686	-0.00345915	0.00397478
+-0.00620594	0.0076297	-0.00538664	-0.00926388
+-0.00635023	-0.00241133	-0.00881644	0.00519997
+-0.00509013	0.00351716	0.00537927	-0.00188065
+0.00264215	-0.00760955	0.00356879	0.00434474
+0.00619267	0.00104672	0.00034524	-0.00633594
+0.00960587	-0.00757524	0.00194987	-0.00679507
+0.00430451	-0.00963202	-0.00506074	-0.00441403
+-0.00435594	0.00593921	1.59268e-05	0.00404678
+-0.00383272	-0.00360999	0.00743296	0.00533681
+0.00134283	-0.00921062	-0.00306246	-0.00216699
+-0.00319442	-0.00863489	0.00989228	0.00965991
+0.0036088	0.00924098	-1.94546e-05	0.00414775
+-0.00344915	-0.00557619	-0.00857474	-0.00999129
+0.00824466	-0.00599212	-0.00208146	-0.00592278
+-0.00295998	-0.000280733	-0.0039445	-0.00525556
+0.00897561	-0.000603943	-0.0095368	-0.002609
+-0.00488419	0.00268596	0.00813085	-0.00278874
+-0.00403215	-0.00674289	-0.00736405	0.00257276
+0.00785912	0.00912472	0.00884917	-0.00667262
+-0.00655304	0.00879423	0.000299057	-0.0020251
+0.00207739	-0.00147228	-0.000410726	0.0016393
+-0.00906338	0.00805956	-0.0093326	-0.00117153
+0.00932129	-0.00234857	0.00596452	-0.0024347
+0.00627692	-0.00642053	0.0057581	0.00387151
+0.00439337	0.00659634	0.00448174	0.00230973
+0.00640477	-0.00366398	-0.00747777	0.00662359
+-0.00672413	-0.00864498	-0.00657977	0.009048
+-0.00358819	0.00902719	-0.00539089	0.00804251
+0.00185157	-0.0073251	0.00690617	-8.96229e-05
+0.00048077	0.00834871	-0.00421847	0.00251462
+0.00513993	0.000977292	0.00706304	0.000356693
+-0.00265896	-0.00726129	-0.00019023	0.00709726
+-0.00370876	-0.00266439	0.00129347	0.00665824
+-0.00431457	0.000668628	0.00608138	-0.00657391
+0.00260599	0.000276436	-0.00202996	-0.00955981
+-0.00589863	-0.00704158	0.00436561	-0.00997263
+0.0080266	-0.00533932	-0.00997091	-0.00318545
+-0.00587366	-0.00387581	0.00997985	-0.00483712
+0.00487785	0.000355398	0.00134687	0.00220187
+-0.00455655	0.0051666	-0.0087478	0.00323685
+0.00424941	-0.00660866	0.00405968	0.00879586
+0.00534782	0.00423126	-0.00884788	0.00194108
+0.00815659	-0.00552837	0.00348799	0.00365255
+0.00274954	-0.0075567	-0.00687139	0.00713249
+0.000487556	0.00782602	0.00674673	-0.00959769
+-0.00476313	-0.00995066	0.0068272	0.00138656
+0.00553763	-0.0079198	0.0019537	-0.000935229
+0.00112641	0.00162157	-0.00141075	5.65183e-05
+0.0046965	-0.00717229	-0.00699896	0.00362251
+0.00445541	-0.00391386	0.00114589	-0.000633333
+-0.00762288	0.00360563	0.00554714	-0.000479758
+-0.00137375	-0.00545564	-0.00499359	0.000206011
+0.0031434	-0.00439386	0.00292792	0.00618113
+-0.00996198	0.00189073	0.00364662	0.00968729
+0.00873682	0.00146806	0.00319685	-0.00927319
+0.00557428	-0.00128062	0.00422612	-0.000651129
+-0.00461666	-0.00339722	-0.0098606	0.00403703
+0.00549885	-0.00135609	0.00557204	0.00381964
+-0.00549025	-0.0058075	-0.00791883	0.00501838
+0.00454382	0.00727456	-0.0096958	0.00625002
+0.0079159	-0.00185728	-0.000598054	-0.00508183
+-0.00322708	0.00426095	0.00426829	-0.0041713
+0.00648475	-0.00911554	-0.00506474	-0.00091608
+0.00489333	0.000107625	0.00805513	-0.00353897
+-0.00738271	-0.00943964	0.00865916	-0.00465606
+0.00687569	-0.00878816	-0.00923885	-0.00664993
+0.00665491	-0.00488972	-0.00660541	0.00638877
+0.00435761	0.000712354	-0.00136904	-0.00111907
+-0.00360727	0.00849385	-0.0089667	0.00529946
+0.00512767	0.00434988	0.00851526	-0.00221021
+-0.00533073	0.00858173	-0.00789542	0.00514952
+-0.00397911	-0.00884979	-0.000952138	0.00280727
+0.0028732	0.00844101	-0.00552703	0.0012285
+0.00590431	0.00739929	-0.00346713	-0.00518419
+-0.00252521	-0.00252369	-0.00362051	-0.00207404
+0.0041526	0.00488077	0.00680958	-0.00110714
+0.00592985	-0.0074507	0.00172546	-0.00688836
+0.00569576	-0.00886406	0.00385769	-0.00518933
+-0.00632188	0.000571999	-0.00758307	-0.0017924
+0.00491933	-0.00501905	0.000977593	0.000424086
+0.00604338	-0.00460528	0.00558835	0.00334217
+0.0066909	-0.00723513	-0.00308465	-0.00415004
+0.0074978	0.00269509	-0.00939484	0.00183682
+0.00723689	0.00663507	-0.00862136	0.00678777
+-0.000373494	-0.00373688	-0.00791437	-0.00548341
+0.000770577	-0.00391576	-0.00509206	-0.00415301
+-0.000349593	-0.00423422	-0.00996344	0.00355945
+-0.00907872	-0.00136337	0.0083705	0.00743893
+-0.00759431	0.00739766	0.00513215	-0.00178245
+0.00873716	-0.00496855	0.00558696	0.00464794
+-0.00321257	0.00513976	0.00737004	0.0083628
+-0.00781009	-0.00612708	0.00576078	0.00919765
+0.00743932	0.00627018	0.00748138	0.000311315
+0.00904118	0.00219679	-0.00877739	-0.00418687
+-0.00179522	0.00997361	0.00870634	-0.00958662
+0.00402192	-0.00400857	0.00945202	-0.00630585
+0.00148567	-0.00286243	-0.00457154	-0.00627215
+0.00462861	-0.000768271	-0.00551853	0.00905917
+0.00218306	-0.00943538	-0.00105081	0.00138252
+-0.000567043	-0.00629708	-0.0028034	0.0021567
+0.0007785	0.00878292	-0.00509541	0.000261378
+-0.00122743	0.00699367	0.00894737	0.00374514
+-0.00124694	-0.000113909	0.00205971	0.000586932
+0.00838196	0.0072306	-0.00588352	0.00861892
+-0.000953815	0.00359192	-0.00656408	-0.00489462
+-0.00772134	-0.0024113	0.00796642	0.00968436
+-0.00812528	-0.00157814	-0.00452257	-0.00533946
+0.00307243	-0.00762121	0.00186982	-0.00119621
+0.000337888	0.00148353	-0.0092543	0.00617564
+-0.00628427	0.000356862	0.00767549	0.00266915
+-0.0075462	-0.00644162	-0.00114024	-0.00566545
+0.00393411	0.0034924	-0.00643301	-0.00321243
+-0.00779321	0.00814485	0.00457818	0.00330981
+0.00393116	0.00584052	-0.0051547	0.000747596
+-0.00923808	-0.0032492	0.00923188	0.00934093
+-0.00594256	0.00279019	-0.00948341	-0.0073087
+-0.00065871	-0.00547464	-0.00277161	-0.00980922
+0.00207884	0.00402617	-0.00730797	-0.00152313
+0.00674168	-0.0020312	0.00429076	0.00513503
+-0.00202088	0.00761629	-0.00276505	-0.00934485
+0.00159637	0.00626136	-0.00167973	-0.00452061
+-0.000349269	0.000174319	-0.00953369	-0.0039022
+-0.00150666	0.00894836	0.00302489	0.00906621
+-0.00781723	-0.00262462	0.00392076	0.000119116
+-0.00388922	0.00687531	0.00322422	-0.00877334
+0.000488272	0.00965125	0.00973745	-0.00122013
+0.00889383	-0.00273944	0.00379504	-0.00254841
+0.00891361	-0.00294369	-0.00737048	-0.00883496
+0.00327078	0.00139358	0.00195083	0.0057627
+0.00558607	-0.00891857	-0.00359644	-0.00260999
+0.00894765	-0.00199208	0.00853531	-0.00563688
+0.00676608	-0.00173072	0.00430826	-0.00717294
+0.00973039	0.0046916	-0.00222454	0.00700878
+-0.0073745	0.00863799	-0.00106848	0.00783736
+-0.00830377	-0.00651428	0.00314423	-0.00845053
+0.00841362	0.000885047	-0.00662265	0.00341897
+-0.00800404	0.0022081	0.00491835	0.00280579
+-0.0028449	-0.00307264	0.000320441	-0.00971027
+-0.00460011	-0.00504285	0.00200558	0.000225009
+-0.000567543	-0.000727427	-0.00238611	0.00807794
+0.00435063	-0.000869014	-0.00228727	-0.00411374
+-0.00362764	0.00954744	0.00302985	0.00145692
+-0.00582706	-0.00345789	0.00906287	-0.00187017
+0.00216545	0.00520095	-0.0067534	0.00196789
+-0.00766211	0.00359835	0.00981118	0.00361498
+-0.00168156	0.00773989	0.00702715	-0.00555436
+-0.000602735	-0.00404431	-0.0013597	0.00527445
+0.00319911	0.000182976	-0.00742602	-0.00548301
+-0.00542213	-0.00201971	-0.00724577	-0.00629034
+-0.00607688	-0.00967387	-0.00548647	-0.00888974
+-0.00825701	-0.00336577	-0.00985945	-0.00626249
+-0.00351807	0.00414413	-0.0099023	0.00137594
+0.00143461	0.00419245	-0.00416911	0.00750887
+-0.00755825	0.0090047	-0.000442985	0.00716465
+0.00109757	0.0027773	0.00441045	0.00290909
+-0.00848237	0.00404542	0.00537763	0.00213246
+-0.00765509	0.00144179	-0.00505307	0.00437089
+-0.00282848	0.00493887	-0.0074008	-0.00387432
+-0.00499373	0.00483916	-0.0010364	0.00924763
+-0.000776221	0.00811383	0.00511338	0.00197664
+0.000658674	-0.00536155	0.00140929	0.0094825
+0.00878022	-0.00659289	0.00392397	0.000220774
+-0.00158097	-0.00799261	0.00864928	0.00678649
+-0.000879107	-0.00684865	-0.00581603	0.000881267
+-0.00939798	-4.65679e-05	0.00166476	0.00360031
+-0.00121781	-0.00631778	-0.00891094	0.00823644
+0.00189227	0.00576779	0.00788946	7.47706e-05
+0.00180171	-0.00992169	0.00243314	-0.00456301
+0.00792277	-0.000796204	0.00438513	0.00923447
+0.00705042	0.00766849	0.0066169	0.00511651
+-0.000160207	-0.00769021	-0.00654056	-0.00265736
+-0.00603187	0.00655908	-0.00297332	-0.00946885
+0.00331335	0.00688012	0.00639551	-0.000459957
+-0.00915471	0.0077485	0.0068366	-0.00171354
+-0.000996791	0.00174352	0.0056394	0.00803604
+-0.00906324	-0.00772936	-0.0094337	-0.00612567
+0.00535341	0.00178612	0.00916971	-0.000162525
+-0.0013687	0.0095544	0.00674409	-0.00754792
+0.00977563	0.00510421	0.000587324	0.000450868
+-0.00214603	-0.00280888	0.00480088	0.00745964
+0.00158226	-0.00481886	0.00947913	-0.00986716
+0.00639647	0.001577	-0.00380874	0.00628147
+-0.00291973	-0.00671873	0.000813651	-0.00216346
+-0.00225518	0.00459704	-0.00383135	0.00414299
+-0.00336303	-0.00704286	0.00112672	0.00937312
+0.00908948	0.00312558	-0.00399879	0.00261738
+0.000801888	-0.00324152	0.00275119	0.0028217
+0.00884976	0.0069739	0.00779346	-0.0091012
+-0.00902343	0.00657944	-0.00109042	-0.00314774
+-0.00787177	-0.00687813	-0.00928167	0.00546703
+-0.00499514	0.00531042	0.00684585	-0.00443261
+-0.00162662	0.00859837	-0.00257193	-0.00721722
+-0.00660903	-0.00708883	-0.00282735	-0.00437399
+0.00461559	0.00623601	-0.00292165	0.00385178
+-0.00362106	-0.00108868	-0.00789622	-0.00917943
+0.00879396	0.00708172	0.00892424	-0.00938755
+0.00640331	-0.00691383	-0.000458129	-0.000967015
+-0.00149448	-0.00802106	0.00458721	0.00829089
+-0.000294948	0.0066792	0.00800978	0.00182492
+0.00178451	0.0095278	0.00755287	0.000340113
+-0.000572067	-0.0051431	0.00663638	0.00704561
+-0.00590367	-0.0056755	0.0083285	0.00957896
+-0.00526593	0.00537352	-0.00966668	0.00544735
+0.00151866	-0.00330954	0.00428984	0.00019277
+-0.00435757	0.00471568	0.00142697	0.00791433
+0.00776783	-0.00407386	-0.00458448	0.00689834
+-0.00227624	-0.00426671	0.00489259	-0.00570667
+0.00436131	-0.00721168	0.00283323	-0.00297618
+-0.00363713	0.00907142	-0.00757025	0.00174415
+0.0031883	-0.005988	0.00639282	-0.00950308
+0.00373872	0.00472566	-0.00258664	-0.00806224
+0.00600091	-0.0075286	0.00935242	-0.00790487
+0.00518795	-0.0027381	-0.00594794	0.00612568
+0.00891393	0.00949036	0.00393963	0.000940394
+-0.00498412	0.00050728	0.00376045	-0.00800832
+-0.00910903	0.00716298	-0.00286553	0.00210333
+0.00616714	-0.00448176	-0.00158021	-0.00521532
+0.00759524	-0.0036998	-0.00850035	-0.0016844
+0.00425335	0.00467194	0.00696096	0.00311128
+-0.00367237	0.00991813	-0.0059199	0.00926649
+-0.0043043	0.000441675	0.00870417	-0.00292159
+-0.000373186	-0.00723498	0.00101765	0.00663646
+-0.00833099	0.000618661	0.00151763	0.00966221
+-0.0097153	-0.00207115	0.000178033	0.00778449
+-0.00329998	-0.00510526	0.00204083	0.00108456
+-0.00505123	0.0088793	0.00460306	-0.00998094
+-0.000427029	0.00805584	0.00850983	0.00491333
+0.00357649	-0.00420994	0.00457964	-0.00265559
+0.00610443	0.00674786	-0.00139242	0.00954225
+0.00637737	-0.00964866	-0.00995598	-0.000530844
+-0.000980066	0.00447372	0.006265	-0.000541895
+-0.00823621	0.00934006	0.00345217	-0.00548442
+-0.00311399	0.000714849	0.0012826	0.00461034
+0.00112888	0.00191991	0.00176827	0.00020606
+0.00482449	-0.0027448	0.000988104	-0.00806737
+0.00606055	-0.00363736	-0.00861504	0.00607856
+0.00447838	-0.00840158	0.00620851	-0.00145018
+0.00606215	0.000428376	-0.00256393	0.00952316
+-0.00213168	-0.00171479	-0.00383401	-0.00642316
+0.00976775	0.00505173	-0.00662256	-0.00948383
+0.000771952	-0.00489698	-0.00453763	-0.00252688
+0.00213045	0.00599791	-0.00443791	0.00734162
+0.0045466	0.000862347	-0.0012429	-0.0072075
+-0.000566859	-0.000438698	-0.00702472	-0.00428692
+0.00871734	-0.00746905	0.00640888	-0.00705063
+-0.00581661	-0.00640046	-0.00265626	-0.000736023
+0.00222602	0.00784644	-0.00502216	-0.00830942
+-0.0070204	-0.00188679	0.00793254	-0.00208097
+-0.00228831	-0.00434883	0.00322762	0.00748872
+-0.00215937	-0.000688393	0.00659007	-0.00344123
+-0.00966892	0.00255008	0.00852507	0.00646317
+-0.00774294	-0.0051722	0.00400471	-0.00731163
+-0.00448412	0.00316629	0.00605163	-0.00828643
+0.00997289	0.00556186	-0.0095852	-0.00198902
+-0.00169046	0.00325122	0.00785897	0.00598324
+-0.00545199	0.00130106	0.00192514	-0.00692785
+-0.00258463	-0.00188795	-0.00950936	0.00961069
+-0.00435353	-0.00643812	-0.00838575	0.00365857
+-0.00987094	-0.00124019	-0.00561288	0.00663545
+0.00196985	0.00992661	0.00269199	-0.00398489
+0.0035426	0.000588444	-0.00804356	-0.00602024
+0.00446949	-0.00206605	-0.00472236	0.0077883
+-0.00614722	0.00981167	-0.00260145	-0.00323336
+-0.00666829	-0.00858575	0.00858412	-0.00798016
+0.00406908	-0.0099977	0.000267218	-0.00240988
+0.00348276	-0.00216179	0.00293009	-0.00827813
+0.00184854	-0.00860849	-0.00729449	0.00638824
+-0.00789012	0.00868137	0.00455229	0.000971096
+-0.000368921	-0.00497221	-0.00202215	-0.00579934
+-0.00585418	-0.00926928	0.00501598	-0.0076683
+0.000183678	-0.00460552	0.00146111	0.00665904
+0.000234466	-0.0073857	-0.00855121	0.00156921
+-0.000231522	0.00261019	-0.00546566	-0.00625379
+-0.000681287	-0.0054132	0.00239891	3.62904e-05
+0.00338805	0.00758263	0.00328868	-0.00934541
+-0.0044313	-0.000482059	-0.00201872	0.00793488
+0.00215609	0.00849046	0.000767489	0.00527492
+0.00149938	0.00465775	-0.00619317	0.00902395
+0.00183375	-0.00117724	-0.00701136	0.00581751
+0.00981203	-0.00286004	0.00129214	0.000732863
+-0.00132435	0.0011848	0.00455348	-0.00985832
+-0.00733911	1.30914e-05	0.00100058	0.00198372
+-0.00744016	-0.00883184	-0.00169954	0.0083226
+-0.00972318	-0.00674678	0.00104432	0.00525907
+-0.00404545	-0.00517864	0.00289158	-0.000769237
+-0.00988674	0.00588169	0.00201665	-0.00733134
+-0.0073898	-0.00761935	0.00246389	-0.0034057
+-0.00263505	-0.00231238	0.00479641	0.00634693
+-0.00361326	0.00726326	0.00429482	0.00328749
+6.25296e-05	-0.00807488	0.00674044	0.00756591
+0.00582294	-0.00162563	0.0066703	-0.00766944
+-0.00683016	0.000911974	0.00444377	0.00379811
+-0.00291657	-0.00256909	-0.00876081	-0.00948147
+9.61152e-05	-0.00700961	-0.00806761	-0.00344827
+-0.00378561	0.00359941	0.00760363	0.00253372
+-0.0065966	-0.00122691	-0.00464405	-0.00152961
+-0.000928028	-0.000398857	-0.00718949	-0.00175349
+-0.000122681	0.00103309	0.0062713	0.00318627
+0.00406898	0.00679404	0.00813676	-0.00237893
+0.00911039	0.00616371	-0.000111905	-0.00979648
+-0.00232416	0.00971369	-0.00707848	-0.00406029
+0.00290904	-0.00640072	0.000943298	-0.0065913
+-0.00330074	0.00795246	0.00891481	-0.00983587
+-0.00505987	-0.00659468	0.0034117	0.00987712
+0.00107367	-0.00960004	-0.0079734	-0.00513238
+-0.00685059	0.00817497	-0.00336153	0.00670806
+-5.99529e-05	0.000154916	0.00098664	-0.00536524
+0.0039601	-0.00705403	0.000420708	0.00787483
+-0.00441983	-0.00887314	-0.00264544	-0.00142773
+-0.00306635	0.00269841	0.00345751	-0.00499164
+0.00355707	0.000608834	-0.00551767	-0.00940916
+-0.000424102	-0.00689492	0.00817774	0.00954072
+-0.00295783	-0.00963278	-0.00744707	-0.000317741
+-0.00504991	-0.0084325	0.00844442	-0.00904754
+0.000966639	-0.00095539	0.00425221	-0.00396139
+0.00682574	0.00915595	0.00972297	-0.00218535
+0.00321904	-0.00967655	-0.00248948	-0.00577971
+-0.00471627	-0.00195853	-0.00544746	0.00928033
+0.00251558	0.00490765	-0.0084832	0.00782338
+-0.00789675	0.00627048	0.00326469	-0.000695212
+-0.00817149	-0.00679564	0.00650218	-0.00644267
+0.00481991	0.00274677	0.00559148	0.00309119
+0.00512431	-0.00580698	0.00202555	0.00286553
+0.00264987	0.00692071	0.0093385	0.00808465
+-0.00754471	-0.00801584	0.00289699	0.00502176
+0.00650797	0.00822606	-0.00921207	-0.00678554
+-0.00440683	-0.00998777	-0.00142747	0.00319754
+0.00685685	0.00429624	0.00316564	-1.37937e-07
+0.00287901	0.00410547	-0.00277347	0.00028805
+-0.00244311	-0.00867106	0.00725753	-0.00862698
+0.000629071	-0.000271398	0.00611028	0.000604418
+0.00725892	-0.00593274	-0.00979598	0.00896769
+0.00170584	0.00708088	0.00868601	0.00334448
+-0.00741568	0.000198111	0.00403545	-0.000506909
+-0.00651237	0.00677271	0.00199926	0.00392268
+-0.00278361	0.00496714	-0.00622849	-0.0079805
+-0.00198773	0.00723989	0.00781519	0.00581176
+-0.00662097	-0.00110233	0.00628591	0.00469226
+0.0020101	-0.00367183	-0.00131218	-0.00283023
+-0.00381319	-0.00686698	0.00201637	0.00577978
+-0.00616315	0.0069724	0.00740593	-0.00841952
+-0.00383124	-0.00787537	-0.00336032	-0.00585105
+-0.00385487	0.00273338	0.00688157	0.00796267
+0.00694112	-0.00856135	0.00421451	-0.00824613
+-0.00898032	0.00737201	0.00235784	-0.00551857
+0.006229	-0.000688813	0.0046882	0.000585905
+-0.000648502	0.000201309	0.00885365	-0.0017768
+0.000930268	0.00430085	0.00995752	0.00584316
+0.00119474	-0.00443048	-0.00437125	0.00310474
+0.000283665	-0.00332352	0.00783115	0.00261315
+0.00723275	0.0021565	-0.00188117	0.00568678
+-0.0046504	-0.00887938	0.00330034	0.00362018
+0.000557758	0.0069041	0.00140329	0.00562607
+0.00940321	0.00532006	-0.000326286	0.00232093
+0.00125766	-0.00246693	0.0026901	-0.00286844
+-0.00387128	0.00786209	-0.00265847	0.0043842
+-0.00626004	-0.000743428	0.000595882	-0.00490376
+0.0037578	-0.00657071	0.00225284	0.00461496
+-0.000365166	-0.00578501	0.00263855	0.00165308
+0.00898491	0.00200343	-0.00733512	0.00986434
+-0.00795544	-0.00435339	-0.00784162	-0.00918645
+-0.0062936	0.00566326	-0.00630865	-0.00216159
+0.00383954	0.00424674	-0.000768456	-0.00711267
+0.00824491	0.00789982	0.00943915	-0.00111061
+-0.00885662	0.00807559	0.00323245	-0.00657756
+0.00431373	0.00447343	0.00445806	0.00830463
+0.00405775	-0.009647	0.00295538	-0.00294301
+0.00319448	0.00662998	0.00920408	0.00388061
+-0.00640487	-0.00560512	0.00643846	0.00154935
+0.00294376	0.00630051	0.00536355	0.00934961
+0.00501183	0.00316463	0.00202025	0.000131743
+-0.00708931	-0.00704763	0.00639405	-0.000504797
+0.000315038	0.00215111	-0.00424275	-0.00971446
+0.00252923	-0.0080128	0.0017686	0.00957921
+0.00754284	0.00711576	-0.00721932	0.0046679
+0.00066633	0.00423698	-0.000336098	-0.00511722
+0.00178226	-0.00289588	-0.00957209	0.00271314
+0.00314863	-0.0037559	-0.00549438	-0.00132837
+-0.00990265	0.00810906	0.00762409	-0.0064238
+-0.000823078	-0.00719244	0.0017315	-0.00964731
+0.00928665	-0.00340779	-0.00718893	0.00973773
+-0.00698112	-0.00865241	0.00101397	0.00621647
+0.000397054	-0.00405587	-0.00833438	-0.00819131
+0.00451765	-0.00761432	-0.00386207	0.00603831
+0.00389676	0.00494272	-0.00563499	0.00937771
+0.00995964	-0.000442687	0.000592927	-0.0098585
+0.0017758	0.00287685	0.00667657	0.00201634
+0.00234831	-0.00569321	-0.00474727	0.00990401
+-0.00302067	0.00579904	0.00832958	0.00478284
+0.00198432	0.0037599	0.00349052	-0.00193717
+0.00930623	-0.00738452	0.00457586	-0.00742374
+-0.00675798	-0.00398893	0.00282923	0.00656518
+-0.00490039	-0.00807436	0.00830927	-0.00844393
+-0.00477209	0.00881727	-0.00447477	0.00634276
+0.00458918	-0.00941811	-0.00494625	-0.00977476
+0.000673178	-0.00131784	0.00758408	-0.00232387
+0.00838649	0.00237968	-0.00671324	0.00165881
+-0.00775106	0.00945388	-0.00600669	0.00613926
+-0.00386247	0.00509689	0.00174575	-0.00886749
+0.000595182	0.0029244	-0.00613098	-0.00865822
+-0.00451453	-0.00865494	0.00461724	-0.00324151
+-0.00187255	0.00743758	-0.00315559	0.00904506
+-0.00369543	-0.00416635	-0.00661387	0.00231068
+-0.00923247	0.00693195	-0.00647958	0.00888051
+0.00988008	0.00669193	0.00226863	0.00515188
+-0.00705401	0.00405999	0.00520625	0.00320355
+-0.00667884	-0.00701865	-0.000382761	0.00709607
+0.00496383	0.00682055	0.0005943	0.0092106
+-0.00200666	-0.00240299	-0.00385464	-0.00747243
+0.00682205	0.000481053	-0.00720126	-0.00388234
+0.00392524	0.000792579	0.00753621	-0.00264513
+-0.00218464	0.00789782	0.00628646	0.00365136
+-0.00750051	0.00131244	-0.00771974	0.000623954
+0.00186952	0.00590613	-0.000179952	-0.00186433
+-0.0045293	-0.00259392	-0.00524876	0.00977437
+0.00250473	-0.00600416	-0.00445612	0.00743614
+-0.00752333	-0.000252944	-0.00642695	-0.00128424
+-0.00443206	0.00085525	-0.00447596	0.00130972
+0.00250027	0.00750382	-0.00509404	-0.00228761
+-0.000330986	0.00410452	0.00177029	0.00681276
+0.00149151	0.00972244	0.00451795	-0.00774237
+0.00358497	-0.00939677	0.00720343	0.00678745
+-0.00348326	-0.0038759	0.00435209	0.0043344
+0.00702575	-0.00616246	-0.00159044	0.00997115
+0.000442864	-0.00923107	-0.00588041	0.00934353
+-0.00699848	-0.00298239	-0.00141392	-0.00529203
+-0.00172567	0.000780201	-0.00796811	0.0073915
+-0.00334665	0.00854489	-0.00499959	0.00901148
+-0.00331764	-0.000603003	-0.00121554	0.00125035
+0.00220956	0.00244369	-0.00257983	-0.00682464
+0.00729621	0.0010427	0.00175538	0.00445756
+-0.00270363	-0.00512983	0.00458306	-0.00242695
+-0.00996324	-0.00277648	0.00315905	0.00613189
+-0.00342128	-0.00645142	-0.00160108	0.00870941
+0.0021462	-0.00895843	0.00499538	-0.00973546
+-0.00672951	-0.00337366	0.00489458	0.00700973
+-0.00169163	0.00615157	0.00231979	0.00894137
+-0.00195668	-0.0054303	-0.00556873	-0.00386234
+0.00210853	0.00776608	-0.00249324	-0.00395181
+0.00906801	0.00584372	-0.00981429	0.000235013
+0.000797456	-0.00867393	-0.00054963	0.00902928
+0.00927436	0.0037082	0.00745	0.00211933
+-0.000569552	0.00786073	-0.009187	-0.00392331
+0.00614754	-0.00200104	0.00538977	0.0085011
+0.00403976	-0.00742303	0.000257416	0.00589735
+0.00900389	-0.00820397	-0.00564549	0.00360331
+-0.00929993	-0.00526959	-0.00552822	0.000786127
+0.00847021	-0.00148548	0.00732597	-0.00371307
+-0.00409831	-0.00552975	0.0018639	0.00189224
+-0.00490978	-0.0078135	-0.00119191	0.00776694
+0.00300881	0.009796	-0.00425135	-0.00982548
+0.00465285	0.00426864	0.00389425	-0.00732518
+-0.00440922	-0.000675066	-0.0041029	-0.00728537
+-0.00903471	0.00947033	-0.00904471	0.000381225
+0.0042313	0.00674155	-0.00633017	0.00751972
+0.00450047	-0.00354622	0.00041933	-0.00695067
+0.00821576	-0.00189845	-0.00977007	0.00909027
+-0.00676689	0.00719571	0.00324175	0.0081407
+0.000372905	-0.00690221	-0.000271176	0.00553193
+0.00268656	0.00996713	0.00750429	-0.00657613
+-0.00682854	-0.00885846	-0.00295986	0.00223398
+-0.00464358	-0.00813488	-0.00128751	0.00507145
+0.00918461	0.00753361	-0.00714472	-0.00208572
+-0.00869411	0.0036332	-0.00863141	-0.00833244
+0.00266856	0.00858924	-0.0045537	0.00392464
+-0.00710291	0.00544224	-0.0012744	-0.00485838
+-0.00679822	0.00881006	-0.00228461	0.00936648
+0.006683	-0.00746722	0.00830253	0.0072315
+0.00512529	-0.00955756	9.15268e-05	0.00427326
+-0.000505407	0.0097646	0.00768222	-0.00914321
+0.00904143	-0.00503428	-0.000846462	-0.00588808
+-0.00836692	0.00641017	0.00800131	0.00330778
+0.00298025	-0.00920542	-0.00482584	-0.000364199
+0.00413417	0.00462941	-0.00645647	-0.00964853
+-0.00271028	-0.0024257	-0.00224887	0.00704402
+-0.00383189	-0.006325	-0.00037231	-0.00345218
+-0.00143648	-0.00599278	-0.00270559	-0.00983242
+0.00591364	-0.00187693	0.00960293	-0.00226956
+-0.000276028	0.00959066	-0.00332425	-0.00934246
+0.00838366	-0.00372564	0.00256233	-0.0028695
+0.0037003	0.00761563	0.00506549	0.00659269
+0.00984197	0.00703837	-0.00121779	-0.00815571
+0.00761584	-0.00160683	-0.00659404	0.00310756
+0.00178875	0.00651588	-0.00393521	-0.00640207
+-0.00320371	0.00264246	-9.97656e-05	-0.00311049
+-0.0059219	0.00505225	-0.00562987	0.00633338
+0.00753994	-0.00236508	-0.00166225	0.00802988
+0.00319231	0.00307533	0.0041908	-0.00521663
+-0.00658497	0.00469054	-0.00847307	-0.00564105
+-0.00370014	-0.00797978	-0.00111017	0.0043864
+0.00328101	0.00924527	-0.00625273	-0.0015517
+-0.0040831	0.00115814	0.00272473	-0.000619448
+0.00160324	0.00775114	0.00779971	0.0082363
+0.00191975	-0.00924978	-0.00555022	-9.31208e-05
+0.00418678	0.00923147	-0.00775297	-0.00951476
+0.00160536	-0.00138459	-0.000852183	0.00408015
+0.0027397	0.00580549	0.00775001	0.00585458
+0.00779763	-0.00976059	-0.00398766	0.00191466
+-0.00625314	-0.00502395	0.00319521	-0.00815295
+-0.00472657	-0.0077198	7.85603e-06	0.00575209
+-0.00325908	0.00503693	-0.00998773	-0.00646092
+0.00110455	-0.00173656	-0.00399575	-0.0025724
+0.000530786	0.0068299	-0.00205896	0.00584212
+0.00287959	-0.00435598	-0.00433401	-0.00184769
+0.00342546	-0.0085262	-0.00628276	-0.00979347
+-0.00273134	0.00330342	0.00350226	0.00175077
+0.00119102	-4.03874e-05	-0.000474582	-0.0097976
+-0.00129427	0.00285188	0.00895448	-0.00609188
+0.00333507	-0.0072706	-0.00577863	0.00231789
+0.00688349	0.00955287	0.00677597	-0.00430714
+-0.000223865	0.00314583	0.00283686	0.00432991
+0.00774605	0.0076496	0.00774	0.00319263
+-0.00717997	-0.0034726	-0.00209706	-0.00404941
+0.00130371	0.00940793	-0.000257992	0.00893399
+0.00533207	0.00716665	0.00565704	0.00195979
+0.00265059	-0.00401665	0.00858386	-0.00824021
+-0.0045018	-0.00447412	0.00877884	-0.00637749
+0.00511498	-0.00597471	-0.00142193	-0.00198837
+0.00682722	0.00609098	0.0062396	-0.00486932
+-0.00560187	-0.00312773	-0.00731875	-0.00964095
+-0.00481061	-0.00122021	0.0076197	0.00341129
+-0.0095729	0.00667363	0.00709805	-0.00958817
+-0.000135874	-0.00369474	0.004335	-0.00840676
+-0.00394718	-0.00377756	0.0014792	-0.00185373
+0.00112833	0.00808351	-0.00474637	-0.0078045
+-0.00100374	0.00774708	-0.00604113	-0.00101445
+-0.00102001	-0.00217194	0.00416626	0.00411349
+0.00553086	-0.00408023	-0.00228114	-0.00459453
+-0.00141317	0.00554608	-0.00049317	0.000829359
+0.00162947	0.00189107	-0.00778147	-0.00784369
+-0.00483381	-0.0087474	0.00691315	-0.00863726
+-0.00799316	0.00756372	-0.00911595	0.00727463
+-0.00407428	-0.00194784	0.00127036	-0.00888319
+0.00459541	0.00810063	0.00871182	-0.004509
+-0.00776655	0.00600105	-0.00353039	0.0038194
+0.00493611	0.00214897	0.00169239	-0.00702986
+0.000277864	0.00452388	-0.00106879	-0.00560769
+0.00244053	0.00118484	0.00523264	0.00501547
+-0.00593376	-0.00551086	0.00937715	0.00664494
+-0.00648608	0.0039327	-0.00688784	0.000167998
+0.00131978	-0.00732828	-0.00821146	-0.00458418
+-0.00880335	0.00794369	-0.00601609	-0.00192159
+0.00354857	0.00340875	0.00161911	-0.000610348
+-0.00497287	-0.00657686	0.00832087	0.00997931
+0.00658692	-0.0085441	0.00635656	-0.00335471
+0.00718694	-0.00150465	-0.00315235	-0.00171312
+-0.00296077	-0.00771007	0.00316395	-0.00298418
+-0.00579451	-0.00944076	0.00390381	-0.00891982
+0.00218366	-0.00707106	0.00795314	-0.00310187
+0.000752853	-0.00749204	-0.00812419	0.00771161
+-0.0095007	0.00370929	-0.00670369	0.00916178
+0.00115539	0.00319761	-0.00493138	0.00467759
+0.00366398	0.00409921	-0.00817584	-0.00372081
+0.002824	0.00753933	-0.00749524	-0.00720058
+-0.00137558	-0.00981984	0.00784254	-0.00597977
+0.00581123	0.00695696	0.00785891	-0.00882893
+0.00578461	-0.00509119	0.00293853	0.0015809
+4.55864e-05	0.000734707	0.000503231	0.00442307
+0.00620148	-0.00989966	-0.000328603	0.00035542
+0.00128022	0.00668715	0.00177559	-0.00534104
+-0.00812429	0.00335602	-0.00911543	0.00420561
+0.00797565	-0.00883795	-0.00721955	0.00492556
+0.00052069	0.0066897	-0.00280514	-0.00953406
+-0.00639111	0.00863639	0.00136774	-0.00489952
+-0.00885092	-3.78524e-05	-0.00154273	-0.00256302
+0.00723603	0.00156468	-0.00619895	-0.00496034
+0.00988491	0.00872211	-0.00332219	-0.00868006
+-0.00507878	0.00784993	-0.000286524	-0.0029783
+-0.00503996	0.00230642	0.0016118	-0.00867866
+0.00217191	-0.00263365	-0.00216878	-0.00262105
+-0.00594558	-0.00967216	0.00026286	0.000664929
+0.0030938	-0.00221522	0.00407166	0.0049875
+0.00317325	0.000566047	0.00725684	-0.0026714
+-0.00333733	0.00672771	-0.00824255	0.00906891
+-0.00843758	-0.00311663	0.00274611	-0.00837037
+-0.00981094	-0.00773675	0.00431655	-0.00725513
+-0.00706827	-0.00435137	0.00743018	-0.00537258
+0.00316585	0.00823242	-0.00871036	-0.00815102
+0.00837579	0.00146042	0.00559164	-0.000592302
+-0.000950307	-0.00955453	0.00110674	-0.00936704
+-0.00325278	0.000594981	-0.00340244	0.00127973
+0.00345008	0.00269956	0.000732237	0.00888128
+-0.00891948	-0.00891201	-0.000873282	-0.00961961
+0.00166098	-0.00649709	-0.00712824	0.00645315
+-0.00124504	-0.00645059	0.00315651	-0.0092055
+-0.00164503	-0.00204995	-0.00674749	-0.00945921
+0.00618812	-0.00573233	-0.000530803	0.000394661
+0.0040707	0.00877149	0.00837816	0.00933096
+0.00332184	0.00477556	-0.00409591	-0.000433118
+0.00764564	0.00669583	-0.00806782	-0.00595132
+-0.000113188	0.00836551	0.00810352	0.00111798
+-0.0099941	-0.00560264	0.00893288	-0.0048365
+-0.00361013	0.00053285	0.00108776	0.00955249
+-0.00184869	0.00928555	0.00919418	-0.00475092
+0.0072252	-0.0025097	0.00576069	-0.00798738
+0.00559543	0.00548362	0.00535975	0.00183842
+-0.00934572	0.00681515	0.00160565	-0.00504139
+-0.00423833	0.000837252	0.00722979	-0.00664994
+0.00644801	0.00791954	-0.0030911	-0.00555502
+-0.00801185	0.000938104	-0.000345623	-0.00597065
+-0.00436459	-0.00907206	0.00787143	0.0067068
+-0.00247939	-0.0017279	-0.00310863	0.00741723
+0.00671943	-0.00883232	0.00926541	-0.00481387
+-0.0043026	0.00519884	0.0062237	-0.00179394
+-0.00914249	-0.00526154	0.00404503	0.00894467
+-0.0017448	0.00845265	0.00403577	-0.00273923
+-0.00830733	-0.00898547	0.00625521	-0.000716366
+-0.00685865	-0.00244692	0.00157395	0.00751532
+0.00708463	0.00484866	0.00223799	-0.00670828
+-0.00615747	0.00435544	-0.00359237	-0.00787809
+0.0040735	-0.00729719	0.00368225	0.00738843
+-0.00308325	-0.00328329	0.00617335	-0.00156999
+-0.00199024	-0.00630908	-0.00363335	-0.00177658
+-0.00788982	0.00392747	-0.00599379	0.00283505
+-0.00594098	0.00577435	-0.00748575	-0.00581733
+0.00332275	0.0041385	-0.00909467	-0.00172292
+0.00764066	-0.00297149	0.00141927	0.00503435
+-0.00145178	-0.00570314	-0.00336132	-0.00612555
+-0.00810798	-0.00487352	0.000600235	-0.00440225
+-0.00786443	0.00114401	0.00478242	-0.00718541
+-0.00868567	-0.00451184	0.00541093	0.00513482
+0.00446926	0.0052754	0.0071309	0.00822727
+-0.00396187	-0.00957288	0.0079393	0.00310587
+-0.00651555	-0.000684571	0.0093718	0.00850877
+-0.0080887	0.0060951	-0.00127819	-0.00409509
+0.00760761	-0.00241973	0.0017454	-0.00466101
+0.00138384	-0.00166957	0.00708184	0.00643982
+0.000986476	0.00943879	-0.00849034	0.00282378
+-0.0049304	0.00671469	0.00154295	0.00381743
+-0.0087371	0.00448273	-0.00231711	-0.00283363
+-0.00557454	0.00304406	0.00048374	0.00436897
+-0.00440096	-0.00120417	-0.00371822	0.0081777
+-0.00452934	-0.00454398	0.00724569	0.000689242
+-0.00493708	-0.00761828	0.00298885	-0.00807525
+-0.00538556	-0.000333943	0.00863045	-0.00645852
+-0.00286932	-0.00671488	0.00217868	-0.00727963
+0.00950647	-0.00439307	0.00443008	-0.00715523
+-0.00709665	-0.00888965	0.00871651	0.0064934
+0.00888921	0.00586293	-0.00148824	-0.0007555
+0.00448368	-0.005104	-0.00329019	0.00781474
+0.00269172	-2.41969e-05	-0.00559279	0.00270332
+-0.00365178	8.59025e-05	0.00652055	-0.0059815
+0.0099209	0.00121023	-0.00832118	0.00599987
+0.00114626	-0.00463079	-0.00435779	0.00670353
+-0.00839235	0.00942286	0.00305523	-0.00223673
+-0.00478947	0.00892293	-0.00935313	0.00556225
+-0.00392095	-0.00563241	-0.000653674	0.00875213
+0.00634837	0.00928739	0.00675597	0.00494831
+-0.00326038	0.0091916	-0.00715117	0.00248816
+0.00102352	-0.00631509	0.00896237	0.00412714
+0.0094903	-0.00974181	-0.00155441	0.00721269
+-0.00641381	-0.00566511	0.00187391	-0.00454746
+0.0072694	-0.00194309	-0.00561574	-0.0033403
+0.00561232	0.00124261	-0.00571854	0.00853117
+-0.00658468	-0.00185565	0.00441962	0.00527665
+0.00371757	0.00752346	-0.00569385	0.00103581
+-0.00129788	-0.00333384	-0.00213316	0.00946742
+-0.00749713	0.00265918	0.00336409	0.00786479
+0.00170054	0.00619384	-0.0076028	-0.00905791
+0.0028177	-0.00512764	0.000188139	-0.00652572
+0.00367358	0.00976134	-0.00146017	-0.00865003
+0.00297245	-0.00184413	0.00772748	0.000201233
+0.00514355	-0.00411689	-0.00362535	-0.0046424
+0.00160515	0.00158598	0.00141855	0.0022219
+-0.000781557	-0.00357313	-0.00908552	-0.000591787
+0.00256494	0.00612907	9.30322e-05	0.00805043
+-0.00364136	-0.00317694	-0.00246877	0.00327506
+0.00958031	0.0020786	-0.00613276	0.00932165
+0.00120593	-0.00529811	-0.00475417	0.00997886
+0.00468717	-0.00248208	-0.00853321	-0.00549466
+0.00748732	-0.00856563	-0.000964599	0.00589237
+-0.00493834	0.00253758	0.00224801	-0.00795382
+-0.00325654	-0.0063894	0.00349764	0.0092085
+-0.00644085	-0.00969533	0.000588835	0.00585133
+0.00948578	-0.00266668	-0.0050896	0.0087704
+0.00654371	-0.00865194	-0.00473279	0.0041372
+-0.00924428	0.00270699	-0.00637571	-0.00012977
+0.00529006	0.0046512	-0.00656043	0.000145097
+-0.00353187	-0.00324866	0.00190134	0.00846497
+-0.00349754	0.00805496	0.00726305	-0.00641981
+-0.00519537	-0.000956007	-0.0093885	-0.00570602
+0.0080763	-0.000710124	-0.00506078	-0.00858236
+-0.00664224	0.00888783	0.00738965	-0.00663521
+-0.00183193	0.00781738	-0.00600358	0.000840092
+-0.0099746	-0.00473706	0.000760464	-0.00129042
+-0.000775404	6.78698e-05	-0.00236273	-0.0008151
+0.00530632	-0.0056156	0.00141038	-0.000750464
+0.00398382	0.0044306	-0.00677941	-0.00205029
+0.00813351	0.00610989	-0.00715913	0.00603185
+-0.00831252	-0.00951419	-0.00717555	-0.00633101
+0.00525272	-0.0027608	0.00237857	0.00262077
+-0.00918101	0.00735877	-0.00594827	0.00745514
+0.0099961	-0.00139891	-0.00565128	-0.00211934
+0.00437264	0.00183992	-0.0040319	-0.00139454
+-0.000727968	-0.00430768	-0.00278736	-0.00464619
+0.00603899	-0.00814458	0.00961331	-0.00762164
+0.00566029	-0.00740218	-0.00359885	-0.00232651
+0.00815343	0.00509686	0.00256569	-0.00222374
+-0.00366464	-0.00459007	-0.00385998	0.00398193
+-0.0063828	-0.00720208	-0.0093088	-0.008832
+0.00728925	-0.00712934	-0.000542957	0.00612349
+-0.00441791	0.00374341	0.00221283	-0.00757979
+0.000144958	0.00708451	-0.0026297	-0.00167889
+0.00456229	-0.00709381	-0.000457971	0.00012707
+0.00615835	-0.00357608	0.000210436	0.000421567
+0.00933239	0.00517278	-0.00344745	0.00062391
+-0.00154979	-0.00189937	0.0062074	-0.0032966
+-0.00904562	-0.000391193	0.0082635	-0.00787021
+-0.00221032	-0.00501865	0.00140672	0.0014979
+-0.00490833	0.00875345	0.00760652	0.00953348
+0.000816218	0.00230228	0.00230606	0.00276296
+-0.00244964	-0.00213996	-0.00266829	0.00677256
+0.00069041	-0.00964017	-0.00407874	-0.00150259
+-0.000265451	0.00329883	0.00881721	-0.00333271
+0.00324562	-0.00449327	0.00690346	0.00876491
+-0.00644268	-0.00153958	0.00320659	0.00230307
+-0.00840213	-0.00572882	0.00382103	0.00641183
+0.00299323	0.00668406	0.0053769	0.00514944
+0.00805469	0.00132598	0.00700976	-0.00261758
+0.00913047	-0.00591056	-0.00322635	0.00954427
+0.00954388	0.00644662	-0.00801242	0.000689632
+-0.00554571	-0.00439922	0.0029673	0.00668947
+0.00423822	0.00328321	0.00394841	-0.00452435
+0.00859893	0.00154703	0.00771155	-0.00977949
+0.000239467	-0.00553934	0.00105916	0.00844166
+0.0056984	-0.00981038	0.00897463	0.00843291
+-0.00125048	-0.00807728	0.000599076	-0.00870436
+0.00609231	0.00380876	0.00773231	0.00276561
+-0.00381542	-0.00998193	-0.000772993	-0.00874157
+0.00614026	0.00648429	0.00581179	0.00886395
+0.00852461	-0.00589743	-0.00556893	0.00748194
+0.00651214	-0.00409857	0.00254257	0.00979464
+0.00252547	-0.00273746	0.00637524	-0.00871156
+0.00801172	0.0085615	0.00280131	-0.0069423
+-0.00542888	-0.00981162	0.00610923	0.00830391
+-0.00865058	-0.00553221	0.008964	-0.00314928
+0.00714742	0.00813828	0.00222075	-0.00206261
+-7.91343e-05	0.00498752	0.00886615	-0.00107687
+-0.00159847	0.000867878	0.00209581	-0.00126665
+0.00500672	0.00907621	-0.00812299	-0.00983253
+-0.00118209	0.00232162	0.00489478	-0.00430988
+-0.00238386	0.00982563	-0.00643756	-0.000408888
+0.00428865	-0.00623899	0.000481231	0.00593405
+-0.00851488	-0.00766169	0.00397405	0.0081475
+0.00850044	0.00735	-0.00485892	-0.00251155
+0.00858647	-0.0030689	-0.00462553	-0.00797724
+-0.00311207	-0.00525544	-0.00355221	0.00281352
+0.00685108	-0.00200362	-0.000507487	0.00817282
+-0.00929209	0.00747488	0.00370059	-0.00566268
+-0.00323014	-0.00434209	0.00843593	-0.00852675
+0.0028381	0.00638933	-0.0020453	0.00486937
+-0.00899917	0.00937842	-0.00468332	0.000624182
+0.00366531	0.00131903	-0.0080513	0.000598918
+0.00527758	-0.00247911	-0.00482956	-0.00102957
+0.00977897	-0.000901598	0.00937977	0.00232081
+0.00854821	-0.00900991	-0.000416958	-0.0076829
+-0.00840359	0.00159766	0.00158204	-0.00521198
+-0.00679336	-0.00252513	-0.00049762	-0.0091296
+0.0053056	-0.00595138	-0.00360285	0.00359075
+-0.00964225	0.00639294	-0.00956045	0.0027506
+0.00828736	0.00770595	-0.00157386	0.00198826
+0.0045953	-0.00952346	0.00157181	-0.00126545
+-5.5641e-05	-0.0044319	-0.00120232	0.00536312
+0.00595262	-0.00251986	-0.00274427	-0.00402268
+-0.00116864	-0.00859567	0.000397364	0.00640901
+0.00744409	0.00334621	-0.000683754	0.00128204
+0.00595821	0.000488413	0.00508978	-0.0017448
+-0.0015095	-0.000635097	0.00724879	0.00376886
+-0.00190324	-0.000676088	0.00382394	0.00600409
+0.0089059	0.00175026	0.00273372	0.00923088
+-0.00119921	0.000122452	0.00767272	0.0057524
+-0.00951541	-0.00951602	0.00856487	-0.00884661
+-0.00199358	-0.00274982	0.00792824	0.000356161
+-0.00703424	0.00366053	0.000711141	0.00338247
+-0.00253112	-0.000379136	-0.00835749	0.00607136
+-0.00250421	0.00329153	-0.00572244	-0.00618778
+-0.00570464	-0.00913383	0.00721085	0.00393738
+-0.00483819	-0.00178173	-0.0046321	-0.00865295
+0.00949218	0.00750097	-0.00604596	0.00726849
+0.00502139	-0.00731019	-0.000169606	-0.00500558
+-0.00782594	0.00417231	-0.000641844	0.00635612
+0.00913938	0.00105492	-0.00149944	0.00685936
+-0.00791647	0.00417806	-0.0034209	-0.00409022
+0.0057028	-0.00425981	0.00800307	-4.72136e-05
+-0.0092717	-0.00371648	0.00213982	-0.00274786
+-0.00181794	0.0086287	0.0080625	-0.00363486
+0.00302122	0.00187277	-0.00925032	0.00392461
+-0.00732571	-0.00454388	-0.000691608	0.0062965
+-0.000483856	0.00117747	0.00632997	-0.00712014
+-0.00971795	0.00422029	0.00810899	0.00490474
+-0.00362703	0.00667339	0.0060729	0.00204171
+0.00096486	-0.00924597	0.00495453	0.0067823
+-0.00517961	0.000669133	-0.00527678	0.000483897
+-0.00964058	0.00405581	-0.00157699	0.002327
+0.00977036	0.00600567	0.00755162	-0.00603485
+0.00815102	0.00574672	0.00794386	-0.00642117
+0.00142114	-0.00398468	0.00586472	-0.00292881
+-0.00488515	-0.0069046	0.00107203	0.00898889
+-0.00350106	0.00196447	-0.00498631	0.00856297
+0.00369155	0.00908512	0.00366266	-0.000259145
+-0.0086203	0.000542814	-0.0047421	0.00522671
+-0.00974803	-0.00435545	0.00406089	0.00976067
+0.00853353	-0.00713101	-0.0096411	-0.00631469
+-0.00328384	0.00215303	0.0058025	0.00555125
+-0.000459075	-9.39055e-05	0.00212482	0.00225231
+-0.000748081	0.00876178	-0.00437989	-0.0066101
+-0.00253081	-0.00613616	0.0026612	-0.00524359
+0.00599501	0.00588777	0.00469305	-0.00936982
+0.00722761	0.00418942	0.005557	-0.00563212
+-0.00738477	-0.00313275	0.00494249	0.0049708
+-0.00166722	0.00166712	-0.00513025	-0.00736772
+-0.00141644	-0.00224202	0.00360665	-0.00704106
+-0.00668277	0.00222495	-0.000514888	-0.00550051
+0.00939295	0.00853154	-0.00854756	-0.000782187
+-0.00281479	-0.00819406	0.00928066	-0.00383396
+0.00635713	-0.00395245	0.00980241	0.000879074
+-0.00720951	-0.00693625	0.00428637	-0.00930946
+-0.00787287	0.00316115	-0.00503291	0.00268928
+0.00100407	0.00884128	-0.00703956	-0.00908447
+0.00244804	0.000962588	0.00719243	-0.00716349
+-0.00176355	0.000537395	0.000518419	-0.00861536
+0.00371443	-0.00617338	-0.00983276	-0.007333
+0.00447648	0.00285699	0.000863552	-0.00942743
+0.000304373	-0.00912245	0.00314558	0.00344719
+0.00264015	-0.00679237	-0.00323779	0.00970477
+0.00310982	-0.00592349	0.00678158	0.00485372
+-0.00532156	0.00471905	0.00711105	0.00972309
+-0.00510827	0.00260616	-0.00916734	-0.00367494
+-0.0012566	0.00260835	-0.0062231	0.0061992
+0.00895822	0.00292828	-0.000195214	-0.0062478
+0.00622888	-0.00352789	-0.00329651	0.00298075
+-0.00330933	0.00244825	0.00247351	-0.00401746
+-0.00280158	-0.00144483	0.00788385	-0.00793803
+-0.0041303	-0.00961119	0.00240041	-0.0021175
+0.00395279	0.00542123	-0.00223788	0.00526085
+-0.00924493	-0.00042882	-0.00995823	-0.00642967
+0.00691904	-0.00875803	-0.0013563	-0.00940861
+-0.00543209	0.00790057	0.00488949	-0.00960016
+-0.00592568	-0.0015752	0.000353454	-0.00225312
+0.00956073	-0.00625443	0.0033494	-0.00377971
+-0.00572391	-0.00524049	0.00116831	-0.00516634
+0.00831364	0.00294331	-0.00871258	0.00206414
+-0.00175424	0.00542623	-0.00644887	0.00335305
+-0.0077034	-0.00320739	-0.00782101	-0.0044469
+0.00339669	0.00825647	-0.00509806	-0.00518901
+0.00173411	0.00394714	0.00577439	0.00339564
+-0.0066079	0.000642244	0.00624067	-0.00218735
+0.0072872	0.00550399	-0.00372179	0.00838255
+0.00772881	-0.00645865	0.0070851	0.00533448
+-0.00814802	-0.000764686	0.00814642	-0.00454888
+0.00139695	0.00204187	0.00654902	0.00509315
+0.00163095	-0.00496174	0.00037881	0.00849105
+-0.0094203	0.00437706	0.00955407	-0.00409106
+0.00787023	0.00911818	-0.00763289	0.00273999
+-0.00233681	0.00824374	-0.00838385	-0.00594404
+0.00429291	0.00823016	-0.00714494	0.00856933
+-0.00609132	-0.00880171	-0.00317071	0.000936603
+0.00547671	0.00761895	0.00585733	-0.00944305
+-0.00774165	0.00374537	-0.00953035	-0.00539376
+0.00948397	-0.00561406	-0.00333495	-0.00552384
+0.00939548	-0.00447932	-0.0025645	0.00388822
+-0.00458413	0.00431557	0.00552121	-0.00404621
+0.00217897	-0.000515868	-0.00962615	-0.00873002
+0.0030292	0.0092305	-0.00186028	0.00401359
+0.00505603	-0.00286537	0.00346113	-0.00829797
+-0.00360486	-0.00114828	0.00393946	0.00426815
+0.0064326	0.00907803	0.00265742	0.00700054
+-0.00254653	-0.00308231	0.00708416	-0.00853402
+-0.0087561	-0.00375086	0.00352686	-0.00824555
+0.00885529	0.00236052	-0.0053113	-0.00372429
+0.00331983	-0.00775086	0.00488603	-0.00503872
+0.00376729	-0.00721348	-0.00394673	-0.000984607
+0.00831472	0.00375826	-0.00443252	0.00710352
+-0.00721988	-0.00398598	0.00858161	-0.000916472
+0.00804847	-0.00290083	-0.00372133	0.00368753
+-0.00714187	0.00357572	-0.00879507	0.00669611
+-0.00250015	0.00603206	-0.00491215	-0.00760162
+0.00651091	0.00921801	0.000645669	0.00811662
+0.00193429	0.00396642	-0.00862085	0.00215219
+-0.00357715	-0.00625015	0.0020952	-0.00504213
+-0.00386205	-0.00460295	-0.00700754	-0.00950319
+-0.0031096	0.00216205	-0.0050471	-0.00921606
+-0.000999155	-0.00228247	0.00483766	0.00957084
+-0.00352311	-0.00592911	0.000214621	0.00812699
+-0.0024935	0.00980468	-0.00763513	0.00168582
+-0.00711474	-0.00891026	-0.00838388	0.0036658
+0.00202724	0.00386128	-0.00558603	-0.000769392
+-0.00296862	-0.00105129	-0.000793887	-0.0015819
+-0.00439473	0.000561904	0.00428428	-0.00230467
+0.00897832	0.00891814	0.00516005	-0.00764981
+0.00645256	0.00870545	0.00992895	-0.00202925
+0.00936022	-0.00720966	0.00276019	-0.00659667
+-0.00264527	-0.00374353	-0.00530028	-0.00779151
+-0.00735212	0.00429158	-0.00360898	-0.00559041
+0.00512224	0.00836936	-0.00562323	-0.00928129
+0.00999582	0.00606011	0.00242026	0.00962826
+0.00167031	0.00968075	0.0090254	0.00907154
+-0.000352866	0.00574638	0.00936518	0.00935069
+-0.00463475	0.00207676	-0.00558234	-0.00494388
+0.0081496	-0.0079899	0.000348585	-0.00471509
+-0.0074899	-0.00644967	0.000838579	0.000301204
+0.00952852	0.00843655	0.00548688	-0.00898942
+0.00506378	0.00587967	0.00740402	0.00788776
+0.00952418	0.00365469	0.00536945	0.00485292
+0.000748795	-0.00837545	-0.00428257	-0.000809844
+0.00414181	-0.00814565	-0.00784515	-0.00677866
+-0.002127	0.00587887	0.009973	0.00874723
+0.00261841	-0.00348005	-0.00616964	-0.00476419
+-0.0075537	-0.00763658	0.000580756	-0.00871436
+0.00854386	0.00985915	-0.0021426	-0.00181327
+-0.0047819	-0.00415055	-0.00389397	-0.000102638
+0.00486308	0.000629479	-8.3438e-05	-0.00847067
+0.00980747	0.00168089	0.00219376	-0.00681241
+0.00567428	-0.0066004	-0.00481396	0.00413784
+-0.00486871	-0.00295283	5.57554e-05	-0.00614403
+0.00370107	-0.0030414	-0.00454787	0.0019503
+0.00590358	0.000374559	0.00477062	-0.000819463
+-0.00501173	-0.00714776	0.00287933	0.00127575
+0.00868744	-0.000180967	-0.00206558	0.00777907
+-0.00230692	0.00873888	-0.000856393	0.00740223
+-0.00885775	-0.000510389	-0.00876515	-0.00733695
+0.00733881	-0.0052481	-0.00951099	0.00541941
+0.00262527	0.00578994	-0.000495846	-0.00396548
+-0.0026449	-0.00465728	0.00266622	-0.00641969
+-0.00782367	-0.00693997	0.00213056	-0.00500776
+-0.00340627	0.00480336	0.00237648	0.00336465
+0.00618638	0.00134725	-0.00670881	0.00185145
+-0.00862747	0.00274497	-0.00890591	0.00659787
+-0.00945296	-0.00744511	0.00573646	0.00585918
+0.000720303	0.00429934	-0.00199489	-0.00899361
+-0.0089252	-0.00311999	0.00730945	0.000325175
+-0.000870249	0.00625518	0.00424267	-0.00676763
+-0.00025625	0.00436901	0.000814211	-0.00136074
+0.00126232	-0.00556361	-0.0058015	0.00499829
+0.00708982	-0.00992052	0.00773642	-0.0075722
+0.00503574	0.00239267	0.00542876	-0.00535719
+-0.00407614	-0.00349075	0.00886611	0.00507809
+0.00592053	-0.00427806	-0.00344509	-0.00529397
+0.0028547	0.00488881	-0.00333466	-0.00298501
+-0.00529837	0.00473315	0.00602568	0.00583055
+-0.00717976	0.0016771	0.00471379	0.00957776
+-0.00461577	0.00996213	0.00596387	-0.000233689
+0.0070816	0.00078563	0.00900445	-0.00404703
+-0.0001931	-0.00209189	5.9435e-05	-0.00812774
+0.0036188	0.00924993	-0.00142724	0.00384931
+-0.00691062	-0.0026565	-0.00634202	0.00282479
+0.00528883	-0.00790283	0.0095325	-0.00985267
+0.00540003	-0.00452265	0.00675077	0.00873556
+0.00222177	-0.00155355	-0.00696033	0.00757783
+-0.00701284	0.00472604	-0.00868267	-0.004294
+0.00415288	0.004782	0.00202451	0.00750727
+-0.00816261	0.00617925	0.00895281	0.00324497
+0.00947234	-0.0078481	0.0045825	-0.00863113
+0.00739652	0.00901932	-0.00635085	0.00340317
+-0.00344798	-0.00802965	0.00232759	0.00157685
+0.00355692	-0.00507434	0.00250726	0.00527415
+0.00412547	0.00814001	0.00365318	0.00515107
+0.00433493	-0.0069873	-0.00988892	-0.00260184
+-0.00724059	-0.00135651	0.0037867	-0.00285032
+0.00687651	-0.00329206	0.00303664	0.00779828
+0.00414423	-0.00146742	0.00488675	0.00173199
+0.00541217	-0.00238883	-0.00541341	0.00850312
+0.000862589	-0.00643604	0.00689315	0.00248973
+0.0062403	-0.00673274	0.00699841	0.00265648
+-0.00281788	-0.00388373	-0.00674987	0.0052343
+-0.000944686	-0.00132837	-0.00657782	-0.00962719
+0.00709801	-0.0034966	0.00729822	-0.00679984
+-0.0082912	0.00759351	0.0023332	0.00535852
+-0.00551831	0.00237441	-0.00996742	-0.00785797
+-0.00500859	-0.00994487	0.00774787	0.00970617
+-0.00245715	-0.00369683	0.00492939	0.0062234
+-5.24212e-05	0.00521171	-0.00230272	-5.72491e-05
+-0.00131495	-0.0021649	0.00291468	0.00139131
+-0.00538547	-0.00353751	0.00449316	-0.00969401
+-0.00785884	0.00441213	0.00314905	-0.00325339
+-0.00212842	0.000952714	-0.00895702	0.00979627
+0.00821201	0.000871244	0.00358672	0.00111069
+0.00664449	0.00162456	-0.00884742	0.00923267
+-0.00696039	0.00512253	-0.00250316	0.00162282
+-0.000310303	0.00914047	-0.00508586	0.00864075
+-0.00193268	0.00136561	-0.00944327	-0.000845975
+-0.00813676	0.000980666	-0.00438628	-0.00419205
+-0.00592768	-0.00266336	0.00402968	0.00146074
+0.0010589	-0.00356767	-0.0036456	0.00193982
+-0.00391766	-0.0095959	-0.00793381	0.006438
+0.00308909	-0.00322802	-0.000803013	0.00781227
+-0.00704539	0.00466742	-0.00378653	0.00755279
+-0.00231467	0.000948375	-0.00283255	-0.00487555
+0.00729205	0.00768112	-0.00722005	0.00322942
+0.00826685	-0.00802521	-0.000519222	-0.000375482
+-0.00784559	0.00717838	-0.000959623	-0.00133252
+0.00362376	0.00848903	-0.0033358	0.00791898
+0.00163126	-0.00683621	0.00519854	-0.0033336
+0.0050179	0.00708918	0.00431356	0.00920104
+0.00978078	-0.00452146	-0.008497	-0.00385866
+-0.00474302	-0.00661634	-0.007432	-0.00544398
+-0.00984588	0.00881862	-0.00470094	4.49826e-05
+-0.00197207	0.00214735	0.000812101	0.00778584
+-0.00790118	-0.00363073	0.00228159	0.00586129
+-0.000187821	-0.000373878	-0.00841195	0.00475142
+0.000226971	0.00281255	0.00403172	0.00981008
+-0.00665313	-0.00770626	-0.00389966	-0.00507777
+0.00654085	0.00204145	-0.0092022	0.000595806
+0.00520313	0.00461839	0.00182008	0.000817469
+0.00626795	0.00710155	0.00753104	-0.00840058
+-0.00714379	0.00351799	-0.00252425	0.00848726
+-0.00772059	0.00938508	0.00039505	0.00959765
+-0.00846138	0.00936986	0.00803581	-0.00318862
+-0.000979139	-0.00866601	0.00410972	-0.00455804
+-0.00751805	-0.00272977	0.00643692	0.000793437
+-0.0079121	-0.00831054	-0.00531916	0.00295283
+0.00232889	0.00437478	-0.00700962	0.00392322
+0.00629887	-0.00233453	0.00781251	0.00941846
+0.0016983	0.00989109	0.00309004	0.00378079
+-0.00787336	0.00268659	0.00800464	0.00151255
+0.00716479	-0.00111582	0.00748359	-0.00281247
+0.00546775	-0.00469779	-0.00490849	-0.00698578
+7.53954e-05	-0.00414504	-0.00423512	-0.00455442
+-0.00724138	-0.000413883	0.0037937	0.00264697
+0.00158661	-0.000157579	-0.00419485	-0.00426944
+0.00295359	0.00668127	0.0055579	-0.00632182
+0.00421447	-0.00150153	0.0037088	-0.00163952
+-0.00425896	-0.00874672	0.000571916	0.0060481
+0.00703182	-0.00342135	-0.00125084	0.00695251
+0.00534882	0.00809656	0.00595558	0.00494765
+0.00142983	0.00504439	0.00926963	0.00891636
+0.00283436	-0.00563417	-0.00121039	0.00366918
+-0.00381496	-0.000302051	0.00623049	-0.00434099
+0.00431855	-0.00730628	0.00698042	0.0014093
+0.00445836	-0.00920382	-0.00281873	-0.00288561
+0.00522864	0.00539371	0.00412952	0.00867573
+0.0077998	0.00443167	0.00136527	-0.0028292
+-0.00264377	0.00970004	-0.00644038	0.00126272
+0.0093841	0.000478429	-0.00913525	-0.00979715
+-0.00824088	0.00853708	-0.00483779	0.00353039
+-0.00012473	-0.00617397	0.00521274	-0.00683501
+-0.00487631	0.00495391	-6.5918e-05	-0.00283317
+0.00662003	0.00473041	-0.00891543	-0.00163545
+-0.00559363	0.00741296	-0.00767767	0.00300392
+-0.00619902	-0.00772098	-0.00847673	-0.00503809
+-0.00587677	0.00740589	-0.00257666	0.00983049
+-0.00466009	0.00316016	-0.000495484	0.00114191
+0.00164122	-0.0078946	-0.00452707	-0.00837636
+0.00865035	-0.00529744	-0.0038677	-0.00575991
+0.000343106	0.00547187	-0.00663548	0.00550882
+0.00148212	0.00846682	-0.0083411	0.00796981
+0.00939539	-0.0056884	-0.00102293	0.000895062
+0.00946736	-0.00603426	-0.00635749	-0.00176637
+-0.00435865	0.000407732	-0.00768781	0.0063496
+-0.00789468	5.21001e-05	0.00721099	0.00410142
+0.00801649	0.00536223	-0.00672771	0.00608792
+-0.00789605	-0.00249596	0.00744582	0.00609339
+0.00975075	0.00949279	-0.00378566	-0.00989486
+-0.00222629	0.00309712	-0.00710943	0.00654709
+-0.0079699	0.00388063	-0.00133822	0.00643082
+0.00283605	0.00587419	-0.00871808	0.00857471
+-0.00783361	0.00257244	0.0092327	-0.00162653
+0.0054993	-0.00449618	-0.00787244	0.0041848
+0.00224104	-0.00493236	-0.00890073	-0.00533779
+-0.00964172	-0.0092366	0.00926704	-0.00119093
+-0.00501092	0.00181412	-0.00991083	0.000134456
+0.00428313	0.00996739	-0.00452567	-0.00149539
+0.00111691	-0.00977164	0.00102574	0.00145184
+-0.00276083	0.00431378	-0.00421475	0.00315046
+0.00680555	0.00850052	-0.00195917	0.00997487
+-0.0065823	0.00545919	-0.00596595	-0.0069709
+0.00441881	0.00912213	-0.00469312	-0.00181184
+-0.00809523	-0.00123394	0.0010908	0.00802809
+-0.0065301	0.00948593	0.00232303	0.00611514
+0.00967459	0.00703997	-0.00772135	-0.000942252
+-0.000803487	0.00899171	0.000366226	-0.00356705
+-0.00274977	-0.00187916	0.0056089	0.000936772
+-0.00751215	-0.00453389	-0.00334769	-0.00675732
+0.00949497	-0.00106293	0.00340946	-0.00965753
+0.00838495	-0.000711296	0.00685787	-0.00620699
+0.00364716	0.00778602	0.00122689	0.00461774
+0.00997605	0.00740066	-0.000464968	-0.000694702
+-0.00912768	-0.00142667	-0.0028043	0.00526133
+-0.00599286	0.00204794	-0.000185424	-0.00506428
+-0.000622458	0.00248406	-0.000329658	-0.00612941
+0.00644892	0.00807695	-0.000853417	0.0052629
+-0.00661132	-0.00509181	-0.000143552	-0.00504644
+-0.00951284	0.00960401	-0.00337244	-0.00566814
+-0.00494146	0.00496805	0.00958153	0.000643974
+0.00858657	0.00758473	-0.00941854	-0.000758688
+0.00659496	-0.00357215	-0.00616613	0.00558537
+-0.000149014	0.00278756	0.000148496	-0.00274451
+0.00810956	0.00464191	-0.000788189	-0.00146903
+-0.00683293	-0.00292198	0.00105149	0.000124484
+-0.00479527	0.0066686	-0.00939653	-0.000738208
+-0.00898815	-0.00514093	-0.00519622	-0.00740465
+-0.00238298	-0.00947283	0.0029629	-0.00986868
+-1.64728e-05	0.00121677	0.00231041	-0.00701554
+0.00835522	0.00670151	0.0017912	8.11556e-05
+-0.00136009	0.0085227	-0.000844363	-0.00694806
+-0.00794442	-0.000180931	-0.00227545	0.00422822
+0.00635366	-0.00116529	-0.00244886	-0.00624832
+0.000479785	-0.00284638	0.00418519	0.0052288
+-0.00479304	-0.00789968	0.00295788	-0.00961734
+0.00750363	0.0027401	0.00867092	0.00076142
+0.00586902	0.00371237	-0.00916398	0.00177197
+-0.00941759	0.00392725	0.00395702	0.000369873
+0.00176336	0.00419213	-0.0056899	-0.00696732
+-0.00505775	-0.00161584	-0.00687093	-0.00326404
+-0.00245724	-0.00270651	0.00973644	0.00355411
+-0.00732556	0.00326208	-0.0097797	0.00215744
+-0.00079517	-0.00846256	0.00174899	-8.27237e-05
+-0.00961818	0.00227719	0.00692051	0.00522656
+-0.00782985	0.000413428	-0.0094515	0.00256866
+0.00494146	0.00655868	0.0024851	-0.00143871
+0.00491369	0.00707884	-0.0025573	-0.00903226
+-0.00173376	0.00470884	-0.00610587	-0.00840721
+-0.00454877	-0.0088944	0.0073423	0.00271926
+0.00391934	-0.00318557	0.00127503	0.00537739
+-0.00300711	0.00975728	-0.00910451	0.00132976
+0.00688915	0.00327491	-0.00242025	0.00153661
+-0.000887813	-0.000559068	-0.00558767	0.0014014
+0.0072619	0.0041751	-0.00702648	-0.00962458
+-0.00979877	-0.00526826	0.00900205	-0.00513587
+0.00348806	-0.00354541	0.00087221	-0.00497589
+-0.00227565	-0.00882441	-0.00972295	-0.00684703
+-0.00803109	0.00334965	-0.00277805	0.00996224
+-0.00934933	-0.00800474	-0.00184757	-0.00126367
+0.00804241	0.00129325	0.00995222	0.0084172
+-0.00966554	-0.00773153	-0.000555275	0.00130159
+-0.00999768	0.00195257	-0.00728135	-0.00249439
+-0.00784191	0.00635372	-0.000172063	-0.0086774
+-0.000534161	-0.00834685	-0.00597051	-0.00398983
+-0.00654723	-0.00773015	0.00135767	0.00868061
+-0.00274686	0.00135054	-0.00800543	0.000169967
+-0.00916681	-0.00675361	-0.00425595	0.00882093
+0.00706176	0.00293321	0.00871959	0.00989991
+-0.00617887	-0.00316181	-0.00251978	-0.00581235
+0.00903056	-0.00390526	0.00810639	-0.00602029
+0.00190308	0.00252109	-0.00748253	-0.00326244
+-0.00536108	0.00617876	0.00103852	0.00693842
+-0.0014266	0.00620973	-0.00294141	0.00239043
+0.00526601	-0.00187333	-0.00688402	0.00752622
+-0.00794416	-0.00486695	-0.00935501	0.00560729
+0.00297102	0.00263988	0.00151155	0.00892123
+-0.00388442	0.00222293	-0.00357192	0.00302976
+-0.00681208	0.00792376	-0.00857192	0.00493472
+0.00244774	-0.000201492	0.000679818	0.00836568
+0.0077694	-0.00350437	0.00854121	0.000971413
+0.00310745	-0.00239438	0.00459293	-0.0039171
+-0.00523154	-0.00144712	0.00446881	-0.00498136
+0.00386405	-0.00633907	0.00696707	-0.000879126
+0.00523723	0.00737066	-0.00917289	-0.00746553
+0.00153655	0.00213426	0.00385892	-0.00789343
+-0.003134	-0.00887612	-0.00561922	-0.00628038
+0.00576354	0.00597656	0.000560317	-0.00844446
+0.0072632	0.00426931	3.97155e-05	0.00696923
+-0.00324241	-0.00333662	-0.0034423	-0.00752251
+-0.00526487	-0.00442721	-0.00711187	0.00364453
+-0.000731141	0.000871463	0.00408927	-0.000915431
+0.00332081	0.00909274	-0.00919857	-0.00209306
+0.00159919	-0.00776893	-0.00215415	0.00901234
+-0.00628314	-0.00180661	-0.00183242	0.00254009
+-0.00586656	0.00224854	-0.00535806	0.000191121
+0.00317493	0.00143132	-0.00288485	-0.000141227
+0.0092999	-0.00357174	0.00313112	-0.000435883
+-0.00073174	0.00570496	0.00979058	0.00812175
+0.00678756	0.00551231	0.00699747	-0.00953123
+-0.00475051	0.00613971	0.000337414	-0.0044535
+-0.00872686	0.000407416	-0.00128691	-0.00608552
+-0.00124377	-0.00787916	-0.000523079	0.00334817
+-0.0039453	0.00605003	0.00554454	0.000191976
+-0.00999464	0.00188567	-0.00484855	0.00453038
+0.0043105	0.00681466	-0.00532022	-0.0093156
+-0.00114055	0.00506372	-0.00516714	-0.00487306
+-0.0091806	-0.00370807	-0.00748355	-0.00448813
+-0.00764967	-0.00973621	-0.00819659	0.00312519
+0.00424923	0.00020738	0.00289572	0.0013894
+-0.00522476	0.00854416	0.00568179	0.00582771
+-0.00563499	-0.0047575	-0.00490047	0.000416561
+-0.008737	-0.00129711	-0.00581313	0.00974438
+-0.00672385	0.00390517	0.00896184	0.00244649
+-0.00518077	-0.00101579	0.00407906	0.00401722
+0.00399303	8.44201e-05	-0.00836436	-0.00496719
+0.00618852	-0.00712504	-5.23445e-05	-0.00212755
+-0.00504593	-0.00110396	0.00342541	-0.0034887
+0.0051921	-0.00210499	-0.00976541	-0.00103962
+-0.00743332	-0.00524864	0.00569423	0.00324501
+-0.00253736	-0.00752457	-0.0050024	-0.00189131
+-0.00900353	-0.00180407	0.00115388	0.00480703
+-0.00916931	0.00566604	0.00472007	-0.0047117
+-0.00011787	0.00233191	-0.00100236	-0.00990354
+-0.00515299	-0.00676862	0.0067165	0.00604449
+-0.00302237	0.00172105	0.00517649	-0.00608404
+0.00185674	-0.000231058	-0.0024388	-0.00459405
+-0.00245642	-0.00354609	-0.00792616	0.00260631
+-0.00814419	0.0011901	-0.00446252	0.00326701
+-0.0061986	0.00934334	-0.000717881	-0.00677277
+0.00229963	-0.00883199	0.00403176	-0.00347945
+-0.00332906	0.00974294	-0.00464191	0.00897163
+-0.00616514	-0.00126353	0.00970337	-0.00169137
+0.00345699	-0.00794913	-0.00626327	-0.0073217
+0.00777268	-0.00822666	-0.00938586	0.00991776
+-0.00313345	0.00496185	-0.00638896	0.00733696
+0.000511674	-0.00894028	0.0016342	-0.00101207
+0.00400243	-0.00457265	-0.00278877	-0.00876356
+0.0060915	-0.00138721	0.00575506	-0.00200313
+0.00819371	0.00366762	0.00154801	-0.0092817
+0.00586348	-0.00967109	-0.00605408	0.00690164
+0.00973813	-5.51576e-05	-0.00697743	-0.00087469
+-0.0074471	0.00101767	-0.00468901	-0.00174455
+-0.0052594	0.00885487	0.00529148	-0.00671285
+-0.00649719	0.00119559	-0.00410653	-0.000174827
+0.00140986	-0.00866021	0.00667492	-0.000281065
+0.00373295	0.00778614	0.00806486	0.00617675
+0.00483473	0.00983952	-0.00776115	0.00915355
+0.00196338	0.00685846	-0.00774968	0.00898494
+0.00984607	-0.0011778	0.00562941	-0.00145671
+-0.00684643	0.0080284	-0.00348916	-0.00824351
+0.00951015	0.000879698	-0.00631347	0.00870316
+0.00598135	-0.00288321	-0.00979655	-0.00267847
+-0.00690409	0.00465583	0.0071736	-0.00173123
+0.00312441	0.00340523	0.00207473	-0.00964495
+0.00899417	-0.00823289	0.00287329	-0.00288069
+-0.00940331	-0.00353509	0.00782826	-0.0051502
+-0.00167479	0.00506119	0.00981742	0.000166243
+0.00684109	0.00278253	0.0095913	0.00305063
+-0.00389923	-0.000584839	-0.00649811	-0.00421828
+0.004859	-0.00227526	-0.00655581	0.00341603
+0.00385291	0.00929849	-0.00914335	-0.00725391
+0.00660811	-0.00373327	-0.00430162	0.00516155
+0.00351234	-0.00108509	0.00953387	9.45423e-05
+0.000252582	-0.00180416	0.00860416	-0.00812479
+0.00795715	0.00809346	0.00764208	-0.00850166
+0.00812338	0.00696828	9.70556e-05	-0.00413874
+0.00160709	-0.00197789	-0.00640371	0.000845034
+0.000576929	0.00824906	-0.00486782	-0.0049808
+-0.00792939	0.0088993	0.00102585	0.00560743
+-0.00992467	0.00826932	0.00453106	0.000418967
+-0.00337137	0.00765752	0.00688402	-0.00335318
+0.00781709	-0.00429739	-0.00382976	-0.00116135
+-0.00424266	-9.43454e-05	0.00150938	-0.00338209
+0.00267064	0.00740604	0.00273897	0.00778997
+-0.00905623	0.00597365	0.00190127	0.00792617
+0.00270855	-0.00114453	-0.00542658	-0.00209612
+-0.00393348	0.00363813	-0.00711049	0.00691703
+0.00384717	0.00105835	-0.00931952	0.00451377
+-0.00714718	0.00867092	-0.00967074	-0.0015071
+-0.0098326	-0.00838975	0.00953864	-0.0063125
+-0.00416055	-0.00374376	0.0017838	0.0030271
+-0.00868394	-0.000734397	-0.00366125	0.00412303
+0.00588285	0.000280779	-0.00368247	0.00333441
+-0.00333896	-0.00212502	-0.00813174	-0.00051948
+0.00327988	0.00450486	0.00763406	0.00716503
+0.00643316	0.00100472	0.000981961	-0.00675698
+-0.00445901	0.00700006	-0.00467169	-0.00438448
+0.00795106	-0.0096721	0.000573728	-0.00419604
+-0.00930065	-0.00823528	-0.00254353	-0.0084505
+-0.00328429	0.00975305	0.00126533	0.00352057
+-0.0010852	-0.00204842	0.00694715	-0.00669752
+-0.0022147	0.00165026	0.00442489	0.000952715
+0.00849754	-0.00507816	-0.00767972	-0.00823765
+0.00212946	-0.00720395	-0.00247015	-0.00802607
+0.00929779	-0.00824905	-0.00708269	-0.00546108
+-0.00015836	0.00904515	-0.00669585	0.00539672
+-0.00614215	-0.00628125	0.00843952	0.000892604
+-0.00142814	0.00688587	0.00712116	0.00805302
+0.00703629	0.00826449	0.00139904	-0.00972124
+0.000495842	0.00926478	0.000786499	-0.00949365
+0.00508699	-0.00815107	-0.00134276	-0.00919679
+0.00513257	0.0059125	0.0057687	-0.00448827
+-0.00531065	0.00289171	0.00742592	0.00646617
+0.00978087	0.00754698	0.00636576	0.00544082
+0.00709515	-0.00728192	0.00297141	-0.00954587
+0.00144029	-0.0076954	-0.00654719	-0.00872058
+-0.00365786	0.00798546	-0.00243058	-0.00879689
+0.00392878	0.0039807	-0.000958	0.00219313
+-0.000238165	0.00627882	-0.00469115	0.00268713
+-0.00086097	0.00715819	-0.00839414	0.003015
+-0.00849299	-0.00904138	-0.0089969	-0.00476453
+0.00552724	-0.000926944	-0.00335871	-0.00205656
+0.00219773	-0.00946867	-0.00613867	0.00641515
+-0.00805107	0.00412863	0.00520499	0.00774246
+-0.00424647	-0.00406616	0.0068058	0.00541136
+0.00212084	0.00594674	-0.00486226	0.00840535
+-0.00388695	-0.00117358	0.0076605	0.00147058
+0.00974464	0.00871366	0.00379563	-0.00566672
+0.00130859	-0.00285081	0.00650021	-0.00614485
+-0.000340652	-0.00792091	-6.7893e-05	-0.00287869
+0.00705491	-0.00728343	-0.00460405	0.00230375
+-0.00524889	-0.00909826	-0.00540115	-3.79175e-05
+-0.0084086	0.00705641	0.00920008	-0.00775787
+0.00056962	0.00840898	0.0097211	0.00542514
+0.00510619	0.00466781	-0.00947814	0.00117211
+-0.00580509	0.00267316	-0.00309367	-0.00520175
+-0.00650105	-0.00166471	-0.00601063	0.00343329
+-0.00822264	-0.00696429	0.00607122	-0.00354546
+0.00642257	-0.00388535	0.00288127	-0.00789213
+0.00171051	0.00468461	0.000757592	-0.00429243
+-0.00202462	0.00859493	0.00815601	0.00221245
+0.00770868	7.74293e-05	-3.58894e-05	0.00138143
+-0.0076328	-0.00740548	0.00195144	-0.00571206
+0.00209968	0.00600068	0.00500991	-0.000857964
+0.00728519	0.00329772	-2.45533e-05	-0.00597898
+0.00805181	0.00108651	0.00269585	-0.00173514
+0.00668414	0.00921088	0.00398436	-0.00913116
+-0.00320295	0.0029647	-0.0027965	-0.00781286
+-0.00342052	-0.00754953	-0.00139496	-0.000151313
+-0.00375112	0.00411377	-0.00206245	-0.00346543
+0.00424372	0.00897432	-0.00868715	0.00946896
+0.00621059	-0.00889171	0.00248473	0.00421649
+0.000832198	-0.00811419	-0.00826703	-0.00164744
+0.00138832	-0.00285609	-0.00330917	-0.00551335
+-0.00436507	0.00556142	0.00156634	-0.00859252
+-0.00906345	-0.00556302	0.00537998	0.00857742
+-0.00182854	-0.00145681	-0.00363133	-0.00193289
+-0.00798475	5.74614e-05	-0.00354453	0.00643632
+0.00838219	0.00818304	0.00749452	0.00994676
+0.00631988	-0.00419812	0.00339125	-0.00727701
+0.00887511	-0.00365107	0.00452894	0.00223692
+0.00693655	-0.00918712	-0.00805411	0.00368955
+-0.00744174	0.00641635	0.0016666	-0.00393669
+-0.00292307	0.0025779	0.00676683	0.00599371
+-0.0052339	-0.00416587	-0.00163594	0.00733926
+-0.00961951	0.00447714	-0.00755969	0.00946376
+0.000877883	-0.000728385	0.00510872	-0.00293882
+-0.000215287	-0.0012329	0.00686748	-0.00230327
+-0.00628311	0.00961846	-0.00765201	0.00140449
 
 \output_biases
--3.00547
--4.40715
--3.38275
--0.767296
--4.27506
--4.31745
--3.81285
--4.4018
--2.87866
--4.38074
--4.30597
--3.63216
--4.4625
--4.31075
--3.88204
--4.29154
--4.42411
--3.82288
--4.43088
--4.33613
--4.258
--4.38617
--4.41135
--4.42847
--4.39756
--4.36306
--4.46307
--4.45176
--4.20057
--4.47104
--4.40738
--4.36326
--4.46633
--4.42259
--4.46444
--4.36988
--4.45564
--4.27661
--4.284
--4.40153
--4.44363
--4.38075
--4.45918
--4.42924
--4.45213
--4.45366
--4.47359
--4.46875
--4.39918
--4.42094
--4.44942
--4.45472
--4.4464
--4.45684
--4.45661
--4.04305
--4.04305
+-6.96402
+-7.83313
+-1.81072
+-7.83798
+-7.20946
+-7.78317
+-6.30668
+-5.32679
+-7.29019
+-7.80838
+-4.05132
+-7.75186
+-4.80759
+-7.79998
+-7.82874
+-4.99516
+-4.6773
+-7.82659
+-4.01482
+-7.30664
+-7.60678
+-3.54456
+-7.53566
+-7.83469
+-4.70874
+-7.10821
+-7.76144
+-7.79323
+-7.18809
+-5.50415
+-7.83119
+-3.65742
+-7.82367
+-7.78235
+-7.3262
+-6.50905
+-4.46115
+-7.71589
+-7.77925
+-5.99576
+-4.76925
+-7.42817
+-7.80532
+-7.29711
+-2.91611
+-7.03628
+-7.65405
+-7.72761
+-7.59352
+-7.62647
+-7.84441
+-7.62114
+-7.58122
+-7.73117
+-7.67563
+-5.98658
+-7.79233
+-7.06436
+-7.50214
+-7.8288
+-7.371
+-7.83293
+-7.58186
+-7.80052
+-6.54211
+-7.37602
+-6.80104
+-7.77887
+-7.62551
+-7.82352
+-7.83868
+-7.27604
+-7.7854
+-7.64901
+-7.40719
+-7.51185
+-7.78853
+-7.81368
+-7.11335
+-5.6702
+-7.7049
+-7.79033
+-3.1445
+-7.77331
+-7.36373
+-7.69099
+-7.52623
+-6.70302
+-5.35953
+-7.76387
+-7.36096
+-4.56057
+-6.14257
+-7.83862
+-5.75042
+-7.7057
+-5.10025
+-7.1458
+-6.32079
+-7.74444
+-7.6092
+-5.72623
+-4.18428
+-7.78433
+-7.78059
+-6.79037
+-6.82942
+-7.6787
+-7.83292
+-6.23893
+-5.13712
+-5.08246
+-7.76666
+-7.01527
+-6.80666
+-6.22137
+-7.55087
+-6.49326
+-5.47503
+-7.53621
+-7.76233
+-6.58011
+-7.56692
+-5.40446
+-7.64589
+-7.67586
+-6.93363
+-6.87474
+-4.81824
+-7.81952
+-6.97624
+-7.38304
+-7.79066
+-6.7439
+-4.43412
+-7.83832
+-5.6827
+-5.68169
+-5.2309
+-6.85598
+-7.76792
+-7.72322
+-3.7312
+-7.84149
+-7.54827
+-7.36518
+-7.25831
+-7.65418
+-7.82124
+-7.81123
+-7.43388
+-6.20651
+-7.74982
+-6.08902
+-6.84177
+-7.79549
+-7.35527
+-7.51139
+-7.68773
+-7.84638
+-7.84143
+-5.769
+-6.33149
+-7.738
+-7.8132
+-7.75504
+-7.48805
+-7.80715
+-7.76829
+-7.43888
+-7.22574
+-7.45825
+-6.36381
+-7.77084
+-5.65099
+-6.96787
+-7.80257
+-7.81374
+-7.17974
+-4.52114
+-7.65287
+-6.975
+-4.99913
+-7.5645
+-6.14022
+-7.67273
+-7.14081
+-7.67367
+-7.58576
+-6.94592
+-7.81279
+-7.16446
+-7.61322
+-7.36158
+-5.19935
+-5.81784
+-7.30576
+-7.34698
+-7.39247
+-7.53505
+-4.97231
+-7.19615
+-7.7299
+-7.40804
+-7.76808
+-7.72904
+-7.84241
+-7.66496
+-7.78766
+-7.6538
+-6.22406
+-7.52638
+-7.73559
+-7.22945
+-6.49988
+-6.34405
+-7.65502
+-7.38643
+-7.79525
+-7.77234
+-7.56825
+-7.79075
+-6.91039
+-6.53411
+-6.62488
+-6.32473
+-7.79688
+-7.82907
+-7.68272
+-7.71626
+-6.88756
+-6.71182
+-7.14103
+-7.83238
+-7.48202
+-6.7587
+-6.31479
+-7.60457
+-7.7167
+-7.66807
+-7.19813
+-7.72678
+-7.76246
+-7.70106
+-7.78571
+-7.67835
+-7.52236
+-7.29812
+-6.47779
+-7.68951
+-7.07756
+-7.56372
+-7.56294
+-7.83828
+-7.76744
+-7.64649
+-6.41234
+-6.12712
+-7.12995
+-7.77027
+-7.77033
+-7.66548
+-6.62039
+-7.74774
+-7.36842
+-7.68582
+-6.47023
+-7.36402
+-7.74682
+-7.60788
+-7.83185
+-7.7959
+-7.7596
+-7.81782
+-6.68935
+-7.6704
+-7.80145
+-5.7482
+-7.59683
+-7.11314
+-7.69916
+-7.60211
+-7.63947
+-7.56956
+-5.16787
+-7.7728
+-7.61934
+-7.62563
+-7.65427
+-7.72928
+-5.89719
+-7.72384
+-7.81415
+-7.7787
+-7.23975
+-7.78777
+-7.51509
+-7.57711
+-6.52852
+-7.59063
+-7.76448
+-7.72074
+-7.75693
+-6.33009
+-7.63889
+-7.69568
+-7.56877
+-7.65482
+-7.81092
+-7.82112
+-7.77147
+-7.23379
+-7.72774
+-7.27397
+-7.83957
+-6.85813
+-7.45746
+-7.62132
+-7.01193
+-7.76559
+-6.97149
+-6.9072
+-7.42426
+-7.05114
+-7.83752
+-7.73703
+-7.44709
+-6.21739
+-6.89117
+-7.68062
+-7.82243
+-7.58542
+-7.77849
+-7.20007
+-7.57168
+-7.75999
+-7.42331
+-7.811
+-7.55065
+-7.68114
+-7.03974
+-7.6897
+-7.63262
+-7.42822
+-7.6825
+-7.82601
+-7.82378
+-7.59123
+-5.93934
+-7.68928
+-7.6213
+-6.5984
+-7.84342
+-6.5152
+-7.44495
+-7.67807
+-7.66579
+-7.57911
+-7.83776
+-5.67329
+-7.43396
+-7.83939
+-7.8257
+-7.56256
+-6.84383
+-7.79972
+-7.80327
+-7.49134
+-7.77125
+-7.68866
+-6.95508
+-6.9535
+-7.81259
+-7.81637
+-7.67241
+-7.7437
+-7.08285
+-7.70851
+-7.02178
+-7.75448
+-7.83756
+-7.84313
+-7.64713
+-7.572
+-7.56913
+-7.40037
+-7.80865
+-7.76182
+-7.78182
+-7.8041
+-7.75932
+-5.78789
+-6.92514
+-7.19408
+-7.66869
+-7.81717
+-7.39098
+-7.81294
+-7.78585
+-7.81746
+-7.42953
+-7.80465
+-7.83354
+-7.23253
+-7.83878
+-7.53762
+-7.79577
+-6.54702
+-7.26204
+-6.97566
+-7.82154
+-7.52412
+-7.72968
+-7.63338
+-5.71742
+-7.50904
+-7.78639
+-6.86549
+-7.8174
+-7.64345
+-7.73562
+-7.17806
+-7.76486
+-7.75677
+-6.82082
+-7.69666
+-7.83089
+-7.35419
+-7.5693
+-7.37839
+-7.24772
+-7.78381
+-7.74984
+-7.76248
+-7.82567
+-7.80015
+-6.94605
+-7.75503
+-7.83105
+-7.81883
+-7.79718
+-7.71496
+-7.74644
+-7.73979
+-7.81963
+-6.88319
+-6.37369
+-7.8021
+-7.72045
+-7.67851
+-7.17601
+-7.80422
+-7.78212
+-7.00507
+-7.83372
+-7.83649
+-7.83917
+-7.81983
+-7.70898
+-7.68332
+-7.7114
+-7.83705
+-7.53493
+-7.78352
+-7.82516
+-7.74524
+-7.17842
+-7.71698
+-7.81961
+-7.83508
+-7.64135
+-7.83853
+-7.65417
+-7.78086
+-7.12658
+-7.11874
+-7.77153
+-7.72637
+-7.81672
+-7.26629
+-7.74538
+-7.47973
+-7.64816
+-6.75136
+-7.82435
+-7.82078
+-7.83339
+-7.45545
+-7.56538
+-6.79605
+-7.79876
+-7.35294
+-7.8087
+-7.66281
+-7.69468
+-7.79117
+-7.74096
+-7.76123
+-7.64261
+-6.52917
+-7.62279
+-7.77238
+-7.6234
+-7.51744
+-7.57131
+-7.74324
+-7.70748
+-7.82432
+-7.79838
+-7.81239
+-7.51311
+-7.6904
+-7.75525
+-7.78588
+-7.81154
+-7.82234
+-7.84029
+-7.52304
+-7.8114
+-7.79285
+-7.07613
+-7.81244
+-7.80372
+-7.67752
+-7.21812
+-7.78854
+-7.80018
+-7.77527
+-7.61606
+-7.65909
+-7.71972
+-7.77967
+-7.55581
+-7.83739
+-7.66906
+-7.72163
+-7.75918
+-7.76504
+-7.78098
+-7.11915
+-6.86322
+-7.75066
+-7.81381
+-7.76709
+-7.72157
+-7.27453
+-7.82762
+-6.38695
+-7.82987
+-7.83559
+-7.83838
+-7.80625
+-7.82723
+-7.75913
+-7.82767
+-7.73271
+-7.83119
+-7.73794
+-7.82303
+-7.32515
+-7.56492
+-7.73762
+-7.82172
+-7.63417
+-7.76569
+-7.58616
+-7.77702
+-7.68442
+-7.24323
+-7.80926
+-7.81764
+-7.71131
+-7.78259
+-7.76682
+-7.83275
+-7.79216
+-7.74495
+-7.81807
+-7.39164
+-7.83055
+-7.63738
+-7.21294
+-7.46574
+-7.50393
+-7.65783
+-7.82751
+-7.64241
+-7.56272
+-7.3022
+-7.48111
+-7.67962
+-7.81513
+-7.73391
+-7.72089
+-7.12152
+-7.7029
+-7.7632
+-7.3021
+-7.70097
+-7.63721
+-7.66658
+-7.57252
+-7.82685
+-7.83836
+-7.37106
+-7.82878
+-7.66519
+-7.8455
+-7.79062
+-7.73206
+-7.82782
+-7.52473
+-7.07753
+-7.80295
+-7.8187
+-7.8266
+-7.79852
+-6.81392
+-6.97556
+-7.66449
+-7.82936
+-7.64961
+-7.448
+-7.82254
+-7.73053
+-7.80295
+-7.83534
+-7.34138
+-7.83464
+-7.46497
+-7.74228
+-7.52545
+-7.82967
+-7.72125
+-7.72817
+-7.81687
+-7.39704
+-7.82553
+-7.79487
+-7.82788
+-7.57749
+-7.82452
+-7.80535
+-7.60647
+-7.78807
+-7.59307
+-7.83134
+-7.68786
+-7.82748
+-7.30136
+-7.84137
+-7.76701
+-7.78523
+-7.64243
+-7.78659
+-7.82405
+-7.82372
+-7.80876
+-7.82152
+-7.52364
+-7.82677
+-7.61869
+-7.54445
+-7.77211
+-7.82715
+-7.75055
+-7.69631
+-7.77572
+-7.7776
+-7.1884
+-7.77785
+-7.05366
+-7.73579
+-7.83235
+-7.81335
+-7.75741
+-7.81932
+-7.5733
+-7.65809
+-7.7727
+-7.76338
+-7.52007
+-7.7794
+-7.68964
+-7.7698
+-7.78193
+-7.69886
+-7.82602
+-6.82376
+-7.79486
+-7.78514
+-7.78174
+-7.80896
+-7.75673
+-7.79689
+-7.75245
+-7.83121
+-7.69166
+-7.78247
+-7.7851
+-7.71401
+-7.78032
+-7.79945
+-7.80946
+-6.73468
+-7.3552
+-7.62633
+-7.82979
+-7.78554
+-7.48939
+-7.43819
+-7.76347
+-7.79621
+-7.73781
+-7.63191
+-7.72114
+-7.80388
+-7.77756
+-7.76179
+-7.75633
+-7.65759
+-7.80669
+-7.78578
+-7.59399
+-7.83124
+-7.83631
+-7.83634
+-7.76635
+-7.78962
+-7.62575
+-7.7573
+-7.83136
+-7.79234
+-7.60722
+-7.79834
+-7.36858
+-7.75559
+-7.68477
+-7.80166
+-7.36911
+-7.83211
+-7.82666
+-7.82237
+-7.52018
+-7.79498
+-7.76333
+-7.83441
+-7.70167
+-7.76697
+-7.61698
+-7.76384
+-7.83235
+-7.70756
+-7.71131
+-7.57072
+-7.79461
+-7.63089
+-7.80687
+-7.52854
+-7.75225
+-7.20973
+-7.78717
+-7.38733
+-7.71129
+-7.8205
+-7.81374
+-7.8266
+-7.81028
+-7.81914
+-7.62155
+-7.81977
+-7.82397
+-7.7743
+-7.78207
+-7.82244
+-7.79384
+-7.73952
+-7.79734
+-7.8017
+-7.76303
+-7.68738
+-7.69041
+-7.75231
+-7.54354
+-7.79029
+-7.83088
+-7.50116
+-7.76984
+-7.79073
+-7.62183
+-7.72386
+-7.82948
+-7.81953
+-7.79458
+-7.62494
+-7.83375
+-7.82096
+-7.72647
+-7.81207
+-7.74518
+-7.56907
+-7.81688
+-7.73172
+-7.39834
+-7.64609
+-7.61499
+-7.80499
+-7.70367
+-7.63789
+-7.62908
+-7.65805
+-7.76868
+-7.78595
+-7.80397
+-7.74235
+-7.69608
+-7.80648
+-7.66793
+-7.62804
+-7.82077
+-7.73451
+-7.59716
+-7.58474
+-7.65957
+-7.81447
+-7.74897
+-7.58988
+-7.80419
+-7.83133
+-7.79043
+-7.79435
+-7.82052
+-7.78421
+-7.81368
+-7.69688
+-7.78502
+-7.82993
+-7.64171
+-7.82533
+-7.74712
+-7.83899
+-7.81689
+-7.81655
+-7.62045
+-7.83742
+-7.47978
+-7.79614
+-7.8175
+-7.50069
+-7.82025
+-7.60559
+-7.82857
+-7.83434
+-7.78093
+-7.79136
+-7.8365
+-7.8044
+-7.31758
+-7.80217
+-7.82865
+-7.5221
+-7.77886
+-7.63295
+-7.80229
+-7.76032
+-7.83031
+-7.78689
+-7.81862
+-7.80365
+-7.80995
+-7.79671
+-7.79038
+-7.77851
+-7.80185
+-7.67129
+-7.8362
+-7.80001
+-7.77301
+-7.72612
+-7.83681
+-7.77783
+-7.82565
+-7.82552
+-7.7909
+-7.59468
+-7.72994
+-7.80669
+-7.78522
+-7.76959
+-7.7111
+-7.83302
+-7.80743
+-7.77753
+-7.72493
+-7.659
+-7.83761
+-7.81558
+-7.77525
+-7.76711
+-7.83995
+-7.81176
+-7.82892
+-7.78799
+-7.34271
+-7.79931
+-7.74064
+-7.76207
+-7.73978
+-7.62124
+-7.81466
+-7.62739
+-7.82231
+-7.59599
+-7.64981
+-7.6646
+-7.75264
+-7.83532
+-7.81058
+-7.82711
+-7.80036
+-7.75934
+-7.7943
+-7.57164
+-7.77781
+-7.72365
+-7.79529
+-7.701
+-7.82603
+-7.75708
+-7.83442
+-7.67461
+-7.77574
+-7.82762
+-7.7448
+-7.75616
+-7.7546
+-7.58889
+-7.81788
+-7.6954
+-7.60956
+-7.84006
+-7.82714
+-7.80015
+-7.55786
+-7.82389
+-7.76277
+-7.82804
+-7.83007
+-7.79808
+-7.82835
+-7.64693
+-7.7441
+-7.83372
+-7.78786
+-7.65759
+-7.77418
+-7.71249
+-7.82668
+-7.82653
+-7.78679
+-7.77569
+-7.81911
+-7.39574
+-7.82501
+-7.84084
+-7.79542
+-7.80328
+-7.81038
+-7.82195
+-7.83204
+-7.70829
+-7.83937
+-7.71694
+-7.81808
+-7.82782
+-7.8053
+-7.76371
+-7.83378
+-7.80311
+-7.75832
+-7.65917
+-7.49332
+-7.82608
+-7.83644
+-7.77694
+-7.81783
+-7.67414
+-7.76758
+-7.8211
+-7.61247
+-7.64882
+-7.6238
+-7.81791
+-7.81497
+-7.69767
+-7.7609
+-7.80842
+-7.83315
+-7.76485
+-7.79798
+-7.77585
+-7.83793
+-7.71121
+-7.79764
+-7.69383
+-7.83
+-7.83752
+-7.7609
+-7.74309
+-7.75209
+-7.82031
+-7.67704
+-7.7791
+-7.52993
+-7.68446
+-7.70912
+-7.83647
+-7.82288
+-7.83339
+-7.73807
+-7.82129
+-7.82201
+-7.81969
+-7.7197
+-7.8377
+-7.76853
+-7.82959
+-7.80881
+-7.8397
+-7.83586
+-7.83739
+-7.82104
+-7.6864
+-7.69421
+-7.7766
+-7.68164
+-7.71572
+-7.83925
+-7.81026
+-7.7982
+-7.72977
+-7.72897
+-7.77096
+-7.83999
+-7.74276
+-7.73335
+-7.74045
+-7.83762
+-7.78224
+-7.83372
+-7.83574
+-7.80111
+-7.84214
+-7.81777
+-7.81587
+-7.81678
+-7.65694
+-7.83998
+-7.78544
+-7.83372
+-7.80006
+-7.49081
+-7.83803
+-7.79665
+-7.79557
+-7.77718
+-7.73835
+-7.80875
+-7.83658
+-7.75479
+-7.83446
+-7.50778
+-7.8321
+-7.81455
+-7.84018
+-7.805
+-7.84059
+-7.75238
+-7.83724
+-7.65268
+-7.71763
+-7.73726
+-7.76815
+-7.82648
+-7.82232
+-7.84115
+-7.84353
+-7.83372
+-7.76662
+-7.55831
+-7.81213
+-7.83994
+-7.7879
+-7.83044
+-7.5175
+-7.82736
+-7.70434
+-7.79048
+-7.83273
+-7.8264
+-7.82276
+-7.82769
+-7.71871
+-7.78683
+-7.41343
+-7.76473
+-7.72216
+-7.71743
+-7.72196
+-7.82794
+-7.825
+-7.84029
+-7.82144
+-7.82123
+-7.73063
+-7.83657
+-7.78809
+-7.77343
+-7.78664
+-7.84329
+-7.80616
+-7.71358
+-7.83206
+-7.7713
+-7.82461
+-7.82468
+-7.84472
+-7.78467
+-7.7731
+-7.69649
+-7.82374
+-7.8057
+-7.84693
+-7.78588
+-7.81124
+-7.72177
+-7.79948
+-7.8315
+-7.81943
+-7.81016
+-7.82826
+-7.60842
+-7.80185
+-7.827
+-7.77028
+-7.82365
+-7.83342
+-7.83439
+-7.83916
+-7.79033
+-7.81328
+-7.75879
+-7.75819
+-7.77687
+-7.80727
+-7.72744
+-7.82234
+-7.7794
+-7.67378
+-7.85176
+-7.71509
+-7.58606
+-7.78169
+-7.79911
+-7.82435
+-7.73919
+-7.80385
+-7.81115
+-7.73033
+-7.8372
+-7.69194
+-7.8371
+-7.78477
+-7.76246
+-7.70718
+-7.83405
+-7.84357
+-7.78555
+-7.72489
+-7.73739
+-7.63961
+-7.81879
+-7.81238
+-7.8008
+-7.83317
+-7.83389
+-7.83317
+-7.80886
+-7.80774
+-7.78147
+-7.84011
+-7.82148
+-7.82249
+-7.81758
+-7.75908
+-7.7777
+-7.79785
+-7.79487
+-7.82698
+-7.82406
+-7.60796
+-7.79048
+-7.7564
+-7.73426
+-7.2156
+-7.82807
+-7.70489
+-7.77259
+-7.74843
+-7.72042
+-7.83793
+-7.83093
+-7.80877
+-7.82166
+-7.71299
+-7.8345
+-7.82886
+-7.84456
+-7.80715
+-7.77965
+-7.82642
+-7.74657
+-7.83066
+-7.80035
+-7.83641
+-7.83077
+-7.82436
+-7.81912
+-7.83615
+-7.80237
+-7.81331
+-7.82641
+-7.83416
+-7.81788
+-7.83626
+-7.78052
+-7.84705
+-7.80351
+-7.71341
+-7.59663
+-7.81022
+-7.82107
+-7.78433
+-7.77118
+-7.77876
+-7.70022
+-7.78445
+-7.80119
+-7.8183
+-7.8361
+-7.82805
+-7.83834
+-7.84259
+-7.69057
+-7.77934
+-7.81952
+-7.80743
+-7.82301
+-7.78627
+-7.80142
+-7.77984
+-7.61541
+-7.81915
+-7.76549
+-7.82023
+-7.8078
+-7.83843
+-7.80098
+-7.84386
+-7.8359
+-7.82794
+-7.78475
+-7.79494
+-7.8375
+-7.79013
+-7.83153
+-7.80422
+-7.71768
+-7.80664
+-7.7999
+-7.83112
+-7.83931
+-7.82645
+-7.81354
+-7.82441
+-7.82813
+-7.81668
+-7.78045
+-7.77318
+-7.71977
+-7.76893
+-7.80318
+-7.79106
+-7.81008
+-7.80231
+-7.79551
+-7.83199
+-7.8341
+-7.79095
+-7.79771
+-7.8205
+-7.83517
+-7.81804
+-7.79079
+-7.84223
+-7.81423
+-7.7606
+-7.71613
+-7.81125
+-7.84364
+-7.67516
+-7.80795
+-7.82043
+-7.79944
+-7.80513
+-7.82171
+-7.8394
+-7.80468
+-7.6301
+-7.81095
+-7.83252
+-7.83874
+-7.72206
+-7.80439
+-7.84778
+-7.84218
+-7.79008
+-7.74976
+-7.81129
+-7.81863
+-7.83143
+-7.8477
+-7.83745
+-7.78395
+-7.7657
+-7.82494
+-7.81901
+-7.84437
+-7.83093
+-7.78769
+-7.81888
+-7.79311
+-7.83068
+-7.84278
+-7.79119
+-7.83013
+-7.82722
+-7.83532
+-7.82315
+-7.8222
+-7.79617
+-7.82354
+-7.8167
+-7.78164
+-7.7392
+-7.61338
+-7.81784
+-7.83597
+-7.83498
+-7.83679
+-7.84047
+-7.82592
+-7.83054
+-7.82258
+-7.82829
+-7.80604
+-7.76974
+-7.82698
+-7.8277
+-7.80606
+-7.7682
+-7.81987
+-7.81294
+-7.83383
+-7.83344
+-7.80921
+-7.78774
+-7.83125
+-7.81344
+-7.84475
+-7.80287
+-7.81532
+-7.84344
+-7.82261
+-7.82398
+-7.83498
+-7.80162
+-7.82612
+-7.82343
+-7.83729
+-7.7917
+-7.84121
+-7.83158
+-7.82821
+-7.83218
+-7.82885
+-7.83407
+-7.75183
+-7.83439
+-7.77103
+-7.83439
+-7.78513
+-7.81744
+-7.82023
+-7.84059
+-7.82361
+-7.50948
+-7.82307
+-7.81577
+-7.81359
+-7.80673
+-7.81874
+-7.82475
+-7.82964
+-7.79932
+-7.833
+-7.81515
+-7.79623
+-7.81425
+-7.83845
+-7.82792
+-7.7641
+-7.80341
+-7.83394
+-7.58094
+-7.73512
+-7.73188
+-7.83826
+-7.82682
+-7.82669
+-7.84049
+-7.81515
+-7.81924
+-7.82816
+-7.82796
+-7.82803
+-7.8289
+-7.82726
+-7.82136
+-7.79616
+-7.82945
+-7.70127
+-7.27517
+-7.27517
 
 \end

@@ -132,6 +132,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
     int numExtracted = 0;
+    long nbestId = 0;
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
@@ -187,7 +188,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
       
       translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
-          goalHyp.score, FeatureValues.combine(goalHyp), goalHypId));
+          goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
       if (translations.size() >= size) {
         break;
       }

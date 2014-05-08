@@ -1,4 +1,5 @@
 import logging
+import re
 from django import forms
 from django.forms.util import ErrorList
 from django.utils.safestring import mark_safe
@@ -6,6 +7,9 @@ from models import Language,DemographicData,ExitSurveyData,TranslationSession
 from django.forms import ModelForm
 
 logger = logging.getLogger(__name__)
+
+# Strip whitespace in freeform text fields.
+normalize_whitespace = lambda x : re.sub(r'\s+', ' ', x.strip(), re.U)
 
 class DivErrorList(ErrorList):
     """
@@ -22,6 +26,23 @@ class ExitSurveyForm(ModelForm):
     """
     Final questionnaire after the experiment completes.
     """
+    def clean_exit_technical_comparison(self):
+        data = self.cleaned_data['exit_technical_comparison']
+        logger.debug(data)
+        return normalize_whitespace(self.cleaned_data['exit_technical_comparison'])
+    def clean_exit_hardest_source(self):
+        return normalize_whitespace(self.cleaned_data['exit_hardest_source'])
+    def clean_exit_hardest_target(self):
+        return normalize_whitespace(self.cleaned_data['exit_hardest_target'])
+    def clean_exit_cat_strength_weakness(self):
+        return normalize_whitespace(self.cleaned_data['exit_cat_strength_weakness'])
+    def clean_exit_itm_strength_weakness(self):
+        return normalize_whitespace(self.cleaned_data['exit_itm_strength_weakness'])
+    def clean_exit_itm_missing_aid(self):
+        return normalize_whitespace(self.cleaned_data['exit_itm_missing_aid'])
+    def clean_exit_comments(self):
+        return normalize_whitespace(self.cleaned_data['exit_comments'])
+    
     class Meta:
         model=ExitSurveyData
         exclude=['user']
@@ -59,16 +80,16 @@ class ExitSurveyForm(ModelForm):
             'exit_more_efficient' : 'In which interface did you feel most productive?',
             'exit_itm_most_useful' : 'In the interactive interface: Which interactive aid did you find most useful?',
             'exit_itm_least_useful' : 'In the interactive interface: Which interactive aid did you find least useful?',
-            'exit_useful_src_lookup' : 'In the interactive interface: Source text lookup with mouse was generally useful.',
-            'exit_useful_tgt_inlined' : 'In the interactive interface: Inlined target translation (gray text in the typing area) was generally useful.',
+            'exit_useful_src_lookup' : 'In the interactive interface: Source text lookup with the mouse was generally useful.',
+            'exit_useful_tgt_inlined' : 'In the interactive interface: Inlined target translations (gray text in the typing area) were generally useful.',
             'exit_useful_tgt_suggestions' : 'In the interactive interface: Drop-down target suggestions were generally useful.',
-            'exit_useful_tgt_completion' : 'In the interactive interface: Suggestions about the current word in the target text were generally useful.',
+            'exit_useful_tgt_completion' : 'In the interactive interface: Highlighting of the source coverage during translation was generally useful.',
             'exit_useful_tgt_chunking' : 'In the interactive interface: Suggestions of phrases (groups of words longer than two) were generally useful.',
-            'exit_useful_tgt_anywhere' : 'In the interactive interface: Suggestions about the words anywhere in the target text were generally useful.',
-            'exit_cat_strength_weakness' : 'Please describe major strengths and weaknesses of your current CAT tool.',
-            'exit_itm_strength_weakness' : 'Please describe major strengths and weaknesses of interactive translation in general.',
+            'exit_useful_tgt_anywhere' : 'In the interactive interface: Bringing any gray text into the drop-down suggestion box by typing its prefix was generally useful.',
+            'exit_cat_strength_weakness' : 'Please describe major strengths and weaknesses of the post-edit mode in general.',
+            'exit_itm_strength_weakness' : 'Please describe major strengths and weaknesses of the interactive translation mode in general.',
             'exit_itm_missing_aid' : 'Was there an aid not present in the current interactive interface that would have been helpful?',
-            'exit_prefer_itm' : 'I would use an interactive translation interface tool like this one instead of my existing translation workbench (assuming that support for translation workflow, translation memories, formatting, etc. were added).',
+            'exit_prefer_itm' : 'I would use interactive translation features if they were integrated into a CAT product that included other standard features such as translation workflow, translation memories, formatting, etc.',
             'exit_got_better_at_itm' : 'I got better at using the interactive interface with practice/experience.',
             'exit_comments' : 'Any other feedback on the interfaces or experiment?'
         }

@@ -40,11 +40,14 @@ class ExperimentAdminForm(admin.ModelAdmin):
             # Create and save the translation sessions
             for i,session_spec in enumerate(spec['sessions']):
                 doc_url = session_spec[0]
-                ui = session_spec[1]
+                doc_domain = session_spec[1]
+                ui = session_spec[2]
                 try:
                     src_doc = SourceDocument.objects.get(url=doc_url)
                 except SourceDocument.DoesNotExist:
-                    src_doc = SourceDocument.objects.create(url=doc_url,language=src_lang)
+                    src_doc = SourceDocument.objects.create(url=doc_url,
+                                                            domain=doc_domain,
+                                                            language=src_lang)
                     src_doc.save()
                 session = TranslationSession.objects.create(user=user,src_document=src_doc,
                                                             tgt_language=tgt_lang,interface=ui,
@@ -54,11 +57,14 @@ class ExperimentAdminForm(admin.ModelAdmin):
             # Create and save the training sessions
             for i,session_spec in enumerate(spec['training']):
                 doc_url = session_spec[0]
-                ui = session_spec[1]
+                doc_domain = session_spec[1]
+                ui = session_spec[2]
                 try:
                     src_doc = SourceDocument.objects.get(url=doc_url)
                 except SourceDocument.DoesNotExist:
-                    src_doc = SourceDocument.objects.create(url=doc_url,language=src_lang)
+                    src_doc = SourceDocument.objects.create(url=doc_url,
+                                                            domain=doc_domain,
+                                                            language=src_lang)
                     src_doc.save()
                 session = TranslationSession.objects.create(user=user,src_document=src_doc,
                                                             tgt_language=tgt_lang,interface=ui,

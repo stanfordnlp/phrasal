@@ -23,7 +23,9 @@ import edu.stanford.nlp.util.Generics;
  * 
  */
 public class SignificanceTest {
-  static public final int SAMPLES = 1000;
+  
+  // Smallest possible p-value is 1/5000, which is well below p<0.001
+  static public final int SAMPLES = 5000;
 
   static double scoreList(List<Sequence<IString>> transList,
       EvaluationMetric<IString, String> eval) {

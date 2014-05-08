@@ -12,16 +12,19 @@ import sys
 import codecs
 from argparse import ArgumentParser
 import os
-from os.path import join
+import glob
+import math
+from os.path import join,basename
 import json
 import string
 import random
 import itertools
-from collections import defaultdict
+from collections import defaultdict,Counter
 
 # UI conditions for UIST14 experiments
 UI_CONDITIONS = ['pe','imt']
 OUT_FILENAME = 'experiment.json'
+TRAIN_DOMAIN_NAME = 'train'
 
 def pw_generator(size=8, chars=string.ascii_uppercase + string.digits + string.ascii_lowercase):
     """
@@ -32,91 +35,118 @@ def pw_generator(size=8, chars=string.ascii_uppercase + string.digits + string.a
     """
     return ''.join(random.choice(chars) for x in xrange(size))
 
-def index_to_list(index):
+def load_source_dict(source_paths, url_prefix):
     """
-    Convert a newline-delimited file index to a list.
+    """
+    source_to_paths = {}
+    url_list = []
+    for path in source_paths:
+        domain_name = basename(path)
+        file_list = [join(url_prefix,domain_name,basename(x)) for x in glob.glob(path + '/*.json')]
+        file_list.sort()
+        url_list.extend(file_list)
+        source_to_paths[domain_name] = file_list
+    assert TRAIN_DOMAIN_NAME in source_to_paths
+    return source_to_paths,url_list
+
+def make_layout(num_users, num_conditions, source_dict):
+    """
+    Make the experimental design, randomizing documents per condition
+    and the order of genres.
+    """
+    print 'Generating randomized layout...'
+    # First, assign documents to conditions
+    document_condition_cnt = Counter()
+    user_to_condition = defaultdict(dict)
+    domains = source_dict.keys()
+    domains.remove(TRAIN_DOMAIN_NAME)
+    for i in xrange(num_users):
+        # Bookkeeping for ensuring that each document is only
+        # shown to each user once
+        assignments_per_condition = (i / num_conditions) + 1
+        all_user_urls = set()
+        for j in xrange(num_conditions):
+            condition = UI_CONDITIONS[j]
+            random.shuffle(domains)
+            for domain in domains:
+                url_list = source_dict[domain]
+                max_docs = len(url_list) / 2
+                if len(url_list) % 2 != 0:
+                    max_docs += (i+j) % 2
+                random.shuffle(url_list)
+                sample_urls = []
+                for url in url_list:
+                    k = '%s:%s' % (condition,url)
+                    if not url in all_user_urls and document_condition_cnt[k] < assignments_per_condition:
+                        all_user_urls.add(url)
+                        sample_urls.append((url,domain))
+                        document_condition_cnt[k] += 1
+                    if len(sample_urls) == max_docs:
+                        break
+                sample_urls.sort()
+                print 'User: %d Condition %s domain: %s #docs %d' % (i,UI_CONDITIONS[j], domain, len(sample_urls))
+                if condition in user_to_condition[i]:
+                    user_to_condition[i][condition].extend(sample_urls)
+                else:
+                    user_to_condition[i][condition] = sample_urls
+    return user_to_condition
+
+def make_experiment(user_prefix, num_users, src_lang,
+                    tgt_lang, url_prefix, source_paths):
+    """
+    """
+
+    source_dict,url_list = load_source_dict(source_paths, url_prefix)
+
+    num_conditions = len(UI_CONDITIONS)
+    assert num_conditions == 2
     
-    """
-    with open(index) as infile:
-        return [x.strip() for x in infile]
+    user_to_condition = make_layout(num_users, num_conditions, source_dict)
 
-def make_pilot_layout():
-    """
-    Generates a Latin square layout for the pilot experiment. Assumes 4 subjects, 2 data sources,
-    2 splits per source, and 2 UI conditions
-
-    Output format is a dict->list[tuple] with
-    the following format:
-
-    0 -> [(0,0,1),(1,1,0)...]
-
-    Where the tuple format is (source,split,ui).
-    
-    """
-
-    #TODO(spenceg): This is hand-picked for a small experiment. But the way to generalize this process
-    # is to construct the experiment from two basic structures: Latin squares and permutations. A Latin square
-    # ensures that all treatments are randomized. A permutation contains all permutations of the input factors.
-    user_to_layout = {}
-    user_to_layout[0] = [(0,0,0),(1,0,0), (0,1,1),(1,1,1)]
-    user_to_layout[1] = [(1,0,1),(0,1,1), (1,1,0),(0,0,0)]
-    user_to_layout[2] = [(1,1,0),(0,1,0), (1,0,1),(0,0,1)]
-    user_to_layout[3] = [(1,1,1),(0,1,1), (0,0,0),(1,0,0)]
-    return user_to_layout
-
-    
-def make_experiment(user_prefix, num_users, num_splits, src_lang,
-                    tgt_lang, source_a_index, a_url_prefix,
-                    source_b_index, b_url_prefix,
-                    source_train_index, train_url_prefix):
-    """
-    Generate a simple 2x|docs| experiment. 
-    """
-    source_dict = defaultdict(dict)
-
-    # Partition the source documents
-    # TODO(spenceg) Move this to a separate section
-    source_a = index_to_list(source_a_index)
-    split_a_size = int(len(source_a)/num_splits)
-    source_b = index_to_list(source_b_index)
-    split_b_size = int(len(source_b)/num_splits)
-    source_dict[0][0] = source_a[0:split_a_size]
-    source_dict[0][1] = source_a[split_a_size:len(source_a)]
-    source_dict[1][0] = source_b[0:split_b_size]
-    source_dict[1][1] = source_b[split_b_size:len(source_b)]
-    source_train = index_to_list(source_train_index)
-    
-    exp_design = make_pilot_layout()
     spec = defaultdict(dict)
-    
-    for i in sorted(exp_design.keys()):
+    document_count = defaultdict(list)
+    print
+    print 'Users:'
+    for i in xrange(num_users):
+        # Flip the condition for this subject
+        UI_CONDITIONS.reverse()
+        
         username = user_prefix + str(i)
         password = pw_generator()
-        print username,password
         spec[username]['password'] = password
         spec[username]['src_lang'] = src_lang
         spec[username]['tgt_lang'] = tgt_lang
         sessions = []
-        for layout in exp_design[i]:
-            source_id = layout[0]
-            split_id = layout[1]
-            condition_id = layout[2]
-            url_prefix = a_url_prefix if source_id == 0 else b_url_prefix
-            for filename in source_dict[source_id][split_id]:
-                url = join(url_prefix, filename)
-                sessions.append((url,UI_CONDITIONS[condition_id]))
+        docs_per_condition = Counter()
+        seen_urls = {}
+        for condition in UI_CONDITIONS:
+            for url,domain in user_to_condition[i][condition]:
+                assert not url in seen_urls
+                k = '%s:%s' % (url,condition)
+                seen_urls[url] = 1
+                document_count[url].append(username+':'+condition)
+                sessions.append((url,domain,condition))
+                docs_per_condition[condition] += 1
         spec[username]['sessions'] = sessions
 
+        # Sanity checking
+        print username,password,str(UI_CONDITIONS)
+        print ' #docs pe: %d imt: %d' % (docs_per_condition['pe'], docs_per_condition['imt'])
+        
         # Training documents alternate between post-editing
-        increment = lambda x,y: x+1 if x < (y-1) else 0
         ui_id = 0
         training = []
-        for filename in source_train:
-            url = join(train_url_prefix, filename)
-            training.append((url,UI_CONDITIONS[ui_id]))
-            ui_id = increment(ui_id, len(UI_CONDITIONS))
+        for url in source_dict[TRAIN_DOMAIN_NAME]:
+            training.append((url,'train',UI_CONDITIONS[ui_id]))
+            ui_id = 1 if ui_id == 0 else 0
         spec[username]['training'] = training
-        
+
+    # Sanity checking
+    print
+    print 'Document assignments:'
+    for url in url_list:
+        print '%s\t%s' % (url,str(document_count[url]))
+    
     # Serialize to json
     with open(OUT_FILENAME,'w') as out_file:
         out_file.write(json.dumps(spec))
@@ -134,38 +164,24 @@ def main():
     parser.add_argument('num_users',
                         type=int,
                         help='Number of user profiles to generate.')
-    parser.add_argument('num_splits',
-                        type=int,
-                        help='Number of splits per source.')
     parser.add_argument('src_lang',
                         help='Source language.')
     parser.add_argument('tgt_lang',
                         help='Target language.')
-    parser.add_argument('source_a_index',
-                        help='Index of files for source domain A.')
-    parser.add_argument('source_a_url_prefix',
-                        help='URL prefix to add to A files.')
-    parser.add_argument('source_b_index',
-                        help='Index of files for source domain B.')
-    parser.add_argument('source_b_url_prefix',
-                        help='URL prefix to add to B files.')
-    parser.add_argument('source_train_index',
-                        help='Index of files for training.')
-    parser.add_argument('train_url_prefix',
-                        help='URL prefix to add to train files.')
+    parser.add_argument('url_prefix',
+                        help='URL prefix for files e.g. /static/data/fren.')
+    parser.add_argument('source_paths',
+                        metavar='source_path',
+                        nargs='+',
+                        help='Path to data source with json files.')
     args = parser.parse_args()
 
     make_experiment(args.user_prefix,
                     args.num_users,
-                    args.num_splits,
                     args.src_lang,
                     args.tgt_lang,
-                    args.source_a_index,
-                    args.source_a_url_prefix,
-                    args.source_b_index,
-                    args.source_b_url_prefix,
-                    args.source_train_index,
-                    args.train_url_prefix)
+                    args.url_prefix,
+                    args.source_paths)
     
 if __name__ == '__main__':
     main()

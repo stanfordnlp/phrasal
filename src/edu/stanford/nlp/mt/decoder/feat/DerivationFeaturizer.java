@@ -20,7 +20,6 @@ import edu.stanford.nlp.mt.base.Sequence;
  * @param <FV>
  */
 public abstract class DerivationFeaturizer<TK, FV> implements Featurizer<TK,FV> {
-  
   /**
    * This call is made *before* decoding a new input begins.
    * 
