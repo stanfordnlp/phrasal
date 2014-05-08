@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
 
-import edu.stanford.nlp.mt.util.FixedLengthIntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
@@ -96,14 +96,13 @@ public class ARPALanguageModel implements LanguageModel<IString> {
         maxOrder = ngramOrder;
     }
 
-    tables = new FixedLengthIntegerArrayRawIndex[maxOrder];
+    tables = new ProbingIntegerArrayRawIndex[maxOrder];
     probs = new float[maxOrder][];
     bows = new float[maxOrder - 1][];
     for (int i = 0; i < maxOrder; i++) {
       int tableSz = Integer
           .highestOneBit((int) (ngramCounts[i] * LOAD_MULTIPLIER)) << 1;
-      tables[i] = new FixedLengthIntegerArrayRawIndex(i + 1,
-          Integer.numberOfTrailingZeros(tableSz));
+      tables[i] = new ProbingIntegerArrayRawIndex();
       probs[i] = new float[tableSz];
       if (i + 1 < maxOrder)
         bows[i] = new float[tableSz];
