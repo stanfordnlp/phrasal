@@ -7,12 +7,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash.Status;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.util.Generics;
 
 /**

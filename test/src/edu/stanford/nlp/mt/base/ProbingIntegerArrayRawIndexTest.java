@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
+
 public class ProbingIntegerArrayRawIndexTest {
   @Test
   public void testInserts() {

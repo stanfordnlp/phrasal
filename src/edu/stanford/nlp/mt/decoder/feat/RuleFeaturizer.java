@@ -2,8 +2,8 @@ package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
 
 /**
  * Extract features from a translation rule (phrase pair) independent of a derivation.

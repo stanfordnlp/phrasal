@@ -6,11 +6,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
@@ -21,6 +16,11 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.Generics;
 
 /**

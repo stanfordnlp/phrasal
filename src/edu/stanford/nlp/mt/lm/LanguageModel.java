@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Interface for language models.

@@ -10,14 +10,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
@@ -35,7 +27,15 @@ import edu.stanford.nlp.mt.lm.NNLM;
 import edu.stanford.nlp.mt.lm.PseudoNNLM;
 import edu.stanford.nlp.mt.lm.TargetNNLM;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.NNLMUtil;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**

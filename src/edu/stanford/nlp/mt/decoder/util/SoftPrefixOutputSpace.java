@@ -2,16 +2,16 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Constrained output space for prefix decoding. Uses the phrase table

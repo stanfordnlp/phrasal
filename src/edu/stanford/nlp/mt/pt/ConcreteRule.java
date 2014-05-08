@@ -3,14 +3,14 @@ package edu.stanford.nlp.mt.pt;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUFeaturizable;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.DTUFeaturizable;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.util.Generics;
 

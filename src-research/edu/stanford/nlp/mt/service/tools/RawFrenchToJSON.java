@@ -10,12 +10,12 @@ import java.util.TreeMap;
 import com.google.gson.Gson;
 
 import edu.stanford.nlp.ling.Label;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.process.fr.FrenchPreprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.tregex.TregexMatcher;

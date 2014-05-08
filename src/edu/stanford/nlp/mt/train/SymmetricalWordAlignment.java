@@ -6,10 +6,10 @@ import java.util.*;
 
 import edu.stanford.nlp.io.IOUtils;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * Sentence pair with symmetrical word alignment (i.e., if e_i aligns to f_j in

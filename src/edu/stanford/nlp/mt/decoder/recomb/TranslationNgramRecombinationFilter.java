@@ -2,13 +2,13 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.lm.LMState;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
 
 /**

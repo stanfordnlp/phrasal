@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
 
 /**

@@ -7,10 +7,10 @@ import java.util.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.pt.DTUTable;
+import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

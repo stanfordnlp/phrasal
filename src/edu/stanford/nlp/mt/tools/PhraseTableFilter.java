@@ -9,13 +9,13 @@ import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.RawSequence;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.pt.Rule;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable.IntArrayTranslationOption;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.RawSequence;
 
 /**
  * @author Michel Galley

@@ -8,10 +8,10 @@ import java.util.List;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
 import edu.stanford.nlp.lm.NPLM;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TokenUtils;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 
 
 /**

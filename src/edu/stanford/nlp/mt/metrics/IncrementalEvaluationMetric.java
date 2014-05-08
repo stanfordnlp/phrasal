@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.metrics;
 
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
  * A metric that returns a score based on the current point in the evaluation

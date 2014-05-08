@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.SortedSet;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Abstract class representing a set of word alignments for one sentence pair.

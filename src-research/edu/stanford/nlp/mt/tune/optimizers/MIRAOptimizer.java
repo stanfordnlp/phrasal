@@ -5,10 +5,10 @@ import java.util.List;
 
 import edu.stanford.nlp.classify.MIRAWeightUpdater;
 import edu.stanford.nlp.classify.CounterWeightUpdater;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.MERT;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;

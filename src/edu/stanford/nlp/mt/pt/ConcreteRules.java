@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.pt;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.util.Generics;
 
 

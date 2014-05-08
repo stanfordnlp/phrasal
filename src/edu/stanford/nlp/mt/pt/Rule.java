@@ -2,8 +2,8 @@ package edu.stanford.nlp.mt.pt;
 
 import java.util.Arrays;
 
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * A translation rule.

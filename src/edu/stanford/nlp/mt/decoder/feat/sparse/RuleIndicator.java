@@ -3,15 +3,15 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 import java.util.List;
 import java.util.Properties;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InputProperty;
-import edu.stanford.nlp.mt.base.SourceClassMap;
-import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.InputProperty;
+import edu.stanford.nlp.mt.util.SourceClassMap;
+import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 

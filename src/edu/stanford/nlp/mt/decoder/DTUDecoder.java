@@ -36,6 +36,9 @@ import edu.stanford.nlp.mt.decoder.util.*;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.mt.pt.DTURule;
 import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.Sequence;
 
 import edu.stanford.nlp.stats.ClassicCounter;
 

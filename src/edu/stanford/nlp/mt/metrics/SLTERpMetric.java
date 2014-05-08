@@ -14,9 +14,9 @@ import com.bbn.mt.terp.TERalignment;
 import com.bbn.mt.terp.TERcost;
 import com.bbn.mt.terp.TERcalc;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Sentence Level TERp Metric for use in online tuning.

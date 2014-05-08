@@ -2,8 +2,8 @@ package edu.stanford.nlp.mt.parser;
 
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.tools.PrefixTagger;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.util.Pair;
 

@@ -3,13 +3,13 @@ package edu.stanford.nlp.mt.pt;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.HasIntegerIdentity;
-import edu.stanford.nlp.mt.base.IntegerArrayIndex;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.RawSequence;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.TokenUtils;
+import edu.stanford.nlp.mt.util.HasIntegerIdentity;
+import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.RawSequence;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 
 /**

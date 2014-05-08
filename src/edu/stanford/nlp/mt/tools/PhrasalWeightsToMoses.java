@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.mt.base.IOTools;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;
 

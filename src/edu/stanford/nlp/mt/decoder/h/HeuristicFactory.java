@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.h;
 
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.util.IString;
 
 /**
  * 

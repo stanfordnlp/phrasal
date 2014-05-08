@@ -7,6 +7,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+
 /**
  * @author Thang Luong
  *
@@ -14,7 +16,7 @@ import org.junit.Test;
 public class PhraseAlignmentTest {
 
   /**
-   * Test method for {@link edu.stanford.nlp.mt.base.PhraseAlignment#findSrcAvgPos(int)}.
+   * Test method for {@link edu.stanford.nlp.mt.util.PhraseAlignment#findSrcAvgPos(int)}.
    */
   @Test
   public final void testFindSrcAvgPos() {

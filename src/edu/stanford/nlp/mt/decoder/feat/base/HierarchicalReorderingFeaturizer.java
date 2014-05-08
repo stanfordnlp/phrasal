@@ -3,11 +3,6 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
@@ -15,6 +10,11 @@ import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.mt.pt.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.pt.ExtendedLexicalReorderingTable.ReorderingTypes;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Featurizer for a lexicalized re-ordering model that uses hierarchical

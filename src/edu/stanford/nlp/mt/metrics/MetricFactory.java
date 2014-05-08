@@ -5,8 +5,8 @@ import java.lang.reflect.Constructor;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * 

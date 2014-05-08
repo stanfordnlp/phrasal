@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.io.IOException;
 import java.util.Collection;
 
-import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.DenseFeatureValueCollection;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.IOTools;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.HashIndex;

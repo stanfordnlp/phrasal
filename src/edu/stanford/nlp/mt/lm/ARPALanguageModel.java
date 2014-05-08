@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
 
-import edu.stanford.nlp.mt.base.FixedLengthIntegerArrayRawIndex;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IntegerArrayRawIndex;
-import edu.stanford.nlp.mt.base.RawSequence;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.TokenUtils;
+import edu.stanford.nlp.mt.util.FixedLengthIntegerArrayRawIndex;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
+import edu.stanford.nlp.mt.util.RawSequence;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
  * A pure Java implementation of an n-gram language model loaded from

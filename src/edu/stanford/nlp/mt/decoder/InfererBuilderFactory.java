@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.decoder;
 
 import java.util.Map;
 
-import edu.stanford.nlp.mt.base.FactoryUtil;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.util.FactoryUtil;
+import edu.stanford.nlp.mt.util.IString;
 
 /**
  * Creates an approximate search procedure.

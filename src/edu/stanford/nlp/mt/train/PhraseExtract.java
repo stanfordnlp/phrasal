@@ -51,7 +51,7 @@ import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 
 /**
  * Loads multiple feature extractors and writes the output to user-specified

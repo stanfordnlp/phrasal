@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.train;
 
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.IBMModel1;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.util.IBMModel1;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * This class makes use of the GIZA++ style alignment information in

@@ -2,10 +2,9 @@ package edu.stanford.nlp.mt.tune;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.NBestListContainer;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.*;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
  * 

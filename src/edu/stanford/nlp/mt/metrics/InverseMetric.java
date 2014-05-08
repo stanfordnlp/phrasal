@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.metrics;
 
-import edu.stanford.nlp.mt.base.NBestListContainer;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 public class InverseMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private final EvaluationMetric<TK, FV> emetric;

@@ -7,7 +7,7 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.StreamGobbler;
 import edu.stanford.nlp.io.IOUtils;
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 
 /**
  * @deprecated Use METEORMetric instead.

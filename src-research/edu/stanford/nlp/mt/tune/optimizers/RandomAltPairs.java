@@ -2,14 +2,14 @@ package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.mt.tune.MultiTranslationMetricMax;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 

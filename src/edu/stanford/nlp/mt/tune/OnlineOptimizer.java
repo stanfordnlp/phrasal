@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.tune;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
+import edu.stanford.nlp.mt.util.RichTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.Counter;
 
 /**

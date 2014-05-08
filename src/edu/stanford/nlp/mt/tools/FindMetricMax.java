@@ -6,6 +6,11 @@ import java.util.*;
 import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.metrics.*;
 import edu.stanford.nlp.mt.tune.*;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ListTopMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
  * 

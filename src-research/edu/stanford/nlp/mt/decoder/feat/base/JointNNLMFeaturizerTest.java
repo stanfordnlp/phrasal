@@ -9,10 +9,10 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.lm.NNLMState;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * @author Thang Luong

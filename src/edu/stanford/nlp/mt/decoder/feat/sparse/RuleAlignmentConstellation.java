@@ -2,10 +2,10 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
 
 /**

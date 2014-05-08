@@ -47,6 +47,12 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalNBestEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Minimum Error Rate Training (MERT).

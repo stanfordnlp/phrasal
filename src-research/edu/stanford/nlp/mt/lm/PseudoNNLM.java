@@ -8,10 +8,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.lm.KenLM;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TokenUtils;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
  * Pretend like an NNLM but is backed by KenLM. For debugging purposes.

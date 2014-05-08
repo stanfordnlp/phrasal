@@ -12,8 +12,6 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.service.Messages.MessageType;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.handlers.RequestHandler;
@@ -23,6 +21,8 @@ import edu.stanford.nlp.mt.service.handlers.ServiceResponse;
 import edu.stanford.nlp.mt.service.handlers.TranslationRequestHandler;
 import edu.stanford.nlp.mt.service.handlers.TranslationRequestHandlerMock;
 import edu.stanford.nlp.mt.service.handlers.UnknownRequestHandler;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.Pair;
 
 /**

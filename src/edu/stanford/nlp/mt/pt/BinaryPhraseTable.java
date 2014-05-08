@@ -19,11 +19,11 @@ import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.RawSequence;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.RawSequence;
+import edu.stanford.nlp.mt.util.Sequence;
 
 public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> {
   private String name;

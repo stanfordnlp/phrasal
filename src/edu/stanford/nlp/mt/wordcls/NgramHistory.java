@@ -3,11 +3,11 @@ package edu.stanford.nlp.mt.wordcls;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.HasIntegerIdentity;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.IntegerArrayIndex;
-import edu.stanford.nlp.mt.base.ProbingIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.HasIntegerIdentity;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 
 /**
  * An (semi!)-efficient implementation of n-gram history storage.
