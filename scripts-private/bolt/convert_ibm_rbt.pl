@@ -15,6 +15,23 @@ use strict;
 use warnings;
 use Getopt::Long;
 
+my $usage_string = 
+    "Usage: $0 (--keepTrans|--keepOrig) (--removeFFFA|--keepFFFA) [--applyLowerCase] [--rbtBitext BitextFile] < IBMRuleBasedTransFile  > PlainTextFile\n".
+    "\n".
+    "  Note that exactly one of the following options must be invoked:\n".
+    "  --keepTrans: When script encounters an IBM rule based translation, it will keep the translation and discard the original string. \n".
+    "  --keepOrig: When script encounters an IBM rule based translation, it will discard the translation and keep the original string. \n".
+    "\n".
+    "  Similarly, exactly one of the following options must be invoked:\n".
+    "  --removeFFFA: Remove IBM's \\xFFFA characters, which are used to make rule-based translations a single token.\n".
+    "  --keepFFFA: Keep IBM's \\xFFFA characters\n".
+    "\n".
+    "  Optional parameters:\n".
+    "  --applyLowerCase: lower case output\n".
+    "  --rbtBitext: As a hack, produce a mini-bitext consisting of all rule-based translations in this file. This can be used to augment the main bitext.\n";
+
+
+
 # declare the perl command line flags/options we want to allow
 my %options=();
 
@@ -47,7 +64,7 @@ if(
     (!$use_translation && !$use_original)
     )
 {
-    die "You must specify exactly one of: --keepTrans, --keepOrig";
+    die $usage_string;
 }
 
 if(
@@ -55,7 +72,7 @@ if(
     (!$remove_fffa && !$keep_fffa)
     )
 {
-    die "You must specify exactly one of: --removeFFFA, --keepFFFA";
+    die $usage_string;
 }
 
 binmode STDIN, ":utf8";
