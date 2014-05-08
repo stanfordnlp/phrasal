@@ -1,83 +1,36 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.Featurizable;
 import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.TokenUtils;
-import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.lm.NNLMState;
 import edu.stanford.nlp.mt.lm.TargetNNLM;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.PropertiesUtils;
+
 
 /**
- * Featurizer for source-conditioned Neural Probabilistic Language Models (NPLMs).
- * Based on the NGramLanguageModelFeaturizer code.
+ * Featurizer for Target NNLM.
  * 
  * @author Thang Luong
  */
-public class TargetNNLMFeaturizer extends DerivationFeaturizer<IString, String> implements
-RuleFeaturizer<IString, String> {
+public class TargetNNLMFeaturizer extends NNLMFeaturizer {
   private static final boolean DEBUG = false;
-  public static final String DEFAULT_FEATURE_NAME = "TargetNNLM";
-
-  // in srilm -99 is -infinity
-  //  private static final double MOSES_LM_UNKNOWN_WORD_SCORE = -100;
-
-  private final IString startToken;
-  private final IString endToken;
-
-  private final String featureName;
-  private final TargetNNLM targetNNLM;
-  private final KenLanguageModel kenlm;
-  private Sequence<IString> srcSent;
-
-  // orders
-  private final int tgtOrder;
-
-  public String helpMessage(){
-    return "NPLMFeaturizer(nplm=<string>,cache=<int>,kenlm=<string>,id=<string>). kenlm is optional, for back-off LM.";
-  }
+  
   /**
-   * Constructor called by Phrasal when NPLMFeaturizer appears in
+   * Constructor called by Phrasal when TargetNNLMFeaturizer appears in
    * [additional-featurizers].
    */
   public TargetNNLMFeaturizer(String...args) throws IOException {
-    Properties options = FeatureUtils.argsToProperties(args);
-    String nnlmFile = PropertiesUtils.getString(options, "nnlm", null);
-    int cacheSize = PropertiesUtils.getInt(options, "cache", 0);
-    String kenlmFile = PropertiesUtils.getString(options, "kenlm", null); // backoff language model
-    featureName = PropertiesUtils.getString(options, "id", null);
-
-    if(nnlmFile==null || featureName==null) {
-      throw new RuntimeException(
-          "At least 2 arguments are needed: nplm and id. " + helpMessage());
-    }
-
-    // load back-off KenLM (if any)
-    if (kenlmFile!=null){
-      System.err.println("# NPLMFeaturizer back-off KenLM: " + kenlmFile);
-      kenlm = new KenLanguageModel(kenlmFile);
-    } else { kenlm = null; }
-
-
-    // load NPLM
-    targetNNLM = new TargetNNLM(nnlmFile, cacheSize, 1); // miniBatchSize=1
-    this.tgtOrder = targetNNLM.getTgtOrder(); // to store state
-
-    this.startToken = TokenUtils.START_TOKEN;
-    this.endToken = TokenUtils.END_TOKEN;
+    super(args);
+    
+    // load TargetNNLM
+    nnlm = new TargetNNLM(nnlmFile, cacheSize, 1); // miniBatchSize=1
+    this.tgtOrder = nnlm.getTgtOrder(); // to store state
   }
 
   /**
@@ -95,13 +48,13 @@ RuleFeaturizer<IString, String> {
     int[] ngramIds = null;
     
     for (int pos = tgtStartPos; pos < tgtSent.size(); pos++) {
-      ngramIds = targetNNLM.extractNgram(pos, null, tgtSent, null, -1, tgtStartPos);
-      double ngramScore = targetNNLM.scoreNgram(ngramIds);
-      if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngramIds) + "\t" + ngramScore); }
+      ngramIds = nnlm.extractNgram(pos, null, tgtSent, null, -1, tgtStartPos);
+      double ngramScore = nnlm.scoreNgram(ngramIds);
+      if(DEBUG) { System.err.println("  ngram " + nnlm.toIString(ngramIds) + "\t" + ngramScore); }
       
       if (ngramScore == Double.NEGATIVE_INFINITY || ngramScore != ngramScore) {
         throw new RuntimeException("! Infinity or Nan NPLM score: " + 
-            targetNNLM.toIString(ngramIds) + "\t" + ngramScore);
+            nnlm.toIString(ngramIds) + "\t" + ngramScore);
       }
       lmSumScore += ngramScore;
     }
@@ -126,14 +79,14 @@ RuleFeaturizer<IString, String> {
    */
   public NNLMState getScoreMulti(int tgtStartPos, Sequence<IString> tgtSent){
 
-    int[][] ngrams = targetNNLM.extractNgrams(null, tgtSent, null, -1, tgtStartPos);
+    int[][] ngrams = nnlm.extractNgrams(null, tgtSent, null, -1, tgtStartPos);
     double score = 0.0;
     NNLMState state = null;
     int numNgrams = ngrams.length; 
     if(numNgrams>0){
-      double[] ngramScores = targetNNLM.scoreNgrams(ngrams);
+      double[] ngramScores = nnlm.scoreNgrams(ngrams);
       for (int i = 0; i < numNgrams; i++) {
-        if(DEBUG) { System.err.println("  ngram " + targetNNLM.toIString(ngrams[i]) + "\t" + ngramScores[i]); }
+        if(DEBUG) { System.err.println("  ngram " + nnlm.toIString(ngrams[i]) + "\t" + ngramScores[i]); }
         score += ngramScores[i];
       }
 
@@ -184,35 +137,6 @@ RuleFeaturizer<IString, String> {
     if (DEBUG) { System.err.println("Final score: " + score + "\n==================="); }
 
     return features;
-  }
-
-  @Override
-  public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    assert (f.targetPhrase != null);
-    double lmScore = 0.0;
-
-    //    if (kenlm!=null) { // score if back-off LM is specified
-    //    	lmScore = kenlm.score(f.targetPhrase, 0, null).getScore();
-    //    }
-
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(featureName, lmScore));
-    return features;
-  }
-
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
-    this.srcSent = foreign;
-    if (DEBUG) { System.err.println("# Source sent: " + srcSent); }
-  }
-
-  @Override
-  public void initialize() {}
-
-  @Override
-  public boolean isolationScoreOnly() {
-    return true;
   }
 }
 

@@ -23,15 +23,12 @@ import edu.stanford.nlp.mt.util.NNLMUtil;
  * @author Thang Luong
  *
  */
-public class TargetNNLM implements NNLM {
+public class TargetNNLM extends AbstractNNLM {
 	protected NPLM nplm;
-  //protected KenLM kenlm;
 	
   protected final String INPUT_VOCAB_SIZE = "input_vocab_size";
   protected final String OUTPUT_VOCAB_SIZE = "output_vocab_size";
   
-  protected String name;
-  protected int order;
   protected int tgtOrder;
 	
 	// vocabulary	
@@ -48,15 +45,9 @@ public class TargetNNLM implements NNLM {
   protected int tgtUnkNPLMId;
   protected int tgtStartNPLMId;
   
-  // we're not handling <null> right now so does NPLM
-//  protected String NULL = "<null>";
-//  protected int tgtNullNPLMId;
-	
   // caching
   protected long cacheHit=0, cacheLookup = 0;
   protected ConcurrentLinkedHashMap<Long, Float> cacheMap = null;
-//  protected ConcurrentHashMap<Long, Float> cacheMap = null;
-//  LinkedList<Long> lruKeys = null; // keep recent keys at the end
   protected int cacheSize;
   
   private boolean DEBUG = true;
@@ -75,16 +66,12 @@ public class TargetNNLM implements NNLM {
   	nplm = new NPLM(filename, 0, miniBatchSize);
   	order = nplm.order();
   	tgtOrder = order;
-  	//kenlm = new KenLM(filename, 1<<20);
-  	//order = kenlm.order();
   	
   	// cache
   	this.cacheSize = cacheSize;
   	if (cacheSize>0){
       if(DEBUG) { System.err.println("  Use global caching, size=" + cacheSize); }
       cacheMap = new ConcurrentLinkedHashMap.Builder<Long, Float>().maximumWeightedCapacity(cacheSize).build();
-//  		cacheMap = new ConcurrentHashMap<Long, Float>(cacheSize);
-//  		lruKeys = new LinkedList<Long>();
   	}
 
   	// load src-conditioned info
@@ -167,12 +154,10 @@ public class TargetNNLM implements NNLM {
     	  score = scoreFloat;
     		if(++cacheHit % (cacheSize/10) == 0) {
     		  System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
-//    		  clearCache(); 
     		}
     	} else { // cache miss
     	  score = nplm.scoreNgram(ngramIds);
     	  cacheMap.putIfAbsent(key, (float) score);
-//    	  lruKeys.addLast(key);
     	}
     } else {
       score = nplm.scoreNgram(ngramIds);
@@ -211,7 +196,6 @@ public class TargetNNLM implements NNLM {
           scores[i] = scoreFloat;
           if(++cacheHit % (cacheSize/10) == 0) { 
             System.err.println("cache hit=" + cacheHit + ", cache lookup=" + cacheLookup + ", cache size=" + cacheMap.size());
-//            clearCache(); 
           }
         } else { // cache miss
           remainedIndices.add(i);
@@ -228,7 +212,6 @@ public class TargetNNLM implements NNLM {
         key = remainedHashKeys.get(i);
         scores[remainedIndices.get(i)] =  remainedScores[i];
         cacheMap.putIfAbsent(key, (float) remainedScores[i]);
-//        lruKeys.add(key);
       }
     } else {
       scores = nplm.scoreNgrams(ngrams);
@@ -236,25 +219,7 @@ public class TargetNNLM implements NNLM {
 
     return scores;
   }
-  
-
-//  private synchronized void clearCache(){
-//    if(cacheMap.size()>cacheSize) {
-//      // empty half
-//      int count = 0;
-//      Iterator<Long> it = lruKeys.iterator();
-//      while(it.hasNext()){
-//        long key = it.next();
-//        
-//        // remove key
-//        it.remove(); 
-//        cacheMap.remove(key);
-//        if (count++ > 0.5*cacheSize) { break; }
-//      }
-//      System.err.println("new cache size = " + cacheMap.size());
-//    }
-//  }
-  
+    
   /**
    * Score a sequence of IString
    * 
@@ -289,30 +254,6 @@ public class TargetNNLM implements NNLM {
     }
     return IString.getIStringSequence(istringIndices);
   }
-  
-	/**
-   * Extract ngrams that we want to score after adding a phrase pair. 
-   * 
-   * @param srcSent
-   * @param tgtSent
-   * @param alignment -- alignment of the recently added phrase pair
-   * @param srcStartPos -- src start position of the recently added phrase pair. 
-   * @param tgtStartPos -- tgt start position of the recently added phrase pair.
-   * @return list of ngrams, each of which consists of NPLM ids.
-   */
-  @Override
-  public int[][] extractNgrams(Sequence<IString> srcSent, Sequence<IString> tgtSent, 
-      PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
-    int tgtLen = tgtSent.size();
-    int[][] ngrams = new int[tgtLen-tgtStartPos][];
-    
-    int i = 0;
-    for (int pos = tgtStartPos; pos < tgtLen; pos++) {
-      ngrams[i++] = extractNgram(pos, srcSent, tgtSent, alignment, srcStartPos, tgtStartPos);
-    }
-    
-    return ngrams;
-  }
       
   /**
    * Extract an ngram. 
@@ -325,6 +266,7 @@ public class TargetNNLM implements NNLM {
    * @param tgtStartPos -- tgt start position of the recently added phrase pair.
    * @return list of ngrams, each of which consists of NPLM ids.
    */
+  @Override
   public int[] extractNgram(int pos, Sequence<IString> srcSent, Sequence<IString> tgtSent, 
       PhraseAlignment alignment, int srcStartPos, int tgtStartPos){
     /* we don't use srcSent, alignment, srcStartPos */
@@ -358,6 +300,7 @@ public class TargetNNLM implements NNLM {
   	return tgtWords.get(i);
   }
 
+  @Override
 	public int getTgtOrder() {
 		return tgtOrder;
 	}
@@ -377,16 +320,6 @@ public class TargetNNLM implements NNLM {
   public int getTgtVocabSize(){
     return tgtVocabSize;
   }
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public int order() {
-		return order;
-	}
 }
 
 ///**
@@ -415,3 +348,20 @@ public class TargetNNLM implements NNLM {
 // * @return list of ngrams, each of which consists of NPLM ids.
 // */
 //public int[] extractNgram(int pos, Sequence<IString> tgtSent, int tgtStartPos){
+
+//private synchronized void clearCache(){
+//if(cacheMap.size()>cacheSize) {
+//// empty half
+//int count = 0;
+//Iterator<Long> it = lruKeys.iterator();
+//while(it.hasNext()){
+//  long key = it.next();
+//  
+//  // remove key
+//  it.remove(); 
+//  cacheMap.remove(key);
+//  if (count++ > 0.5*cacheSize) { break; }
+//}
+//System.err.println("new cache size = " + cacheMap.size());
+//}
+//}

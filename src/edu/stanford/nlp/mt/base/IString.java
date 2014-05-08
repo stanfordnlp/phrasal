@@ -222,6 +222,9 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     }
     return new SimpleSequence<IString>(istringList);
   }
+  public static Sequence<IString> getIStringSequence(String string){
+    return getIStringSequence(string.split("\\s+"));
+  }
   
   /**
    * Get a sequence of IString from an array of IString indices.

@@ -805,30 +805,18 @@ public class Phrasal {
       int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
       int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
       ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
-      if (config.get(SEARCH_ALGORITHM).size()==6){ // use the same kenlm for the second layer, for debugging purpose only
-        String kenlmFile = config.get(SEARCH_ALGORITHM).get(5).trim();
-        ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadKenLanguageModel(kenlmFile);
-      }
     }
     
     for (int i = 0; i < numThreads; i++) {
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder
-            .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
-                .clone());
-        infererBuilder
-            .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
-                .clone());
+        infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
+        infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
-        infererBuilder
-            .setSearchHeuristic((SearchHeuristic<IString, String>) heuristic
-                .clone());
-        infererBuilder
-            .setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter
-                .clone());
+        infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
+        infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
