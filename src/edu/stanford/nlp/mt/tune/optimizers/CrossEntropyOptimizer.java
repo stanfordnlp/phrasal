@@ -21,7 +21,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
 
-  private static final int K_BEST = 5;
+  private static final int K_BEST = 20;
   
   private static final int INITIAL_CAPACITY = 2000;
 
@@ -62,22 +62,23 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     }
     
     // Compute the model and the label distributions
-    List<GoldScoredTranslation> scoredList = Generics.newArrayList(translations.size());
+    List<GoldScoredTranslation> metricScoredList = Generics.newArrayList(translations.size());
     double qNormalizer = 0.0;
     for (RichTranslation<IString,String> translation : translations) {
       qNormalizer += Math.exp(translation.score);
       double labelScore = scoreMetric.score(sourceId, source, references, translation.translation);
-      double scaledScore = scaleScore(labelScore, minLength);
-      scoredList.add(new GoldScoredTranslation(translation, scaledScore));
+      // D. Chiang transformation
+      double scaledScore = labelScore * minLength;
+      metricScoredList.add(new GoldScoredTranslation(translation, scaledScore));
     }
-    Collections.sort(scoredList);
+    Collections.sort(metricScoredList);
 
     double pNormalizer = 0.0;
     double lastScore = Double.NEGATIVE_INFINITY;
     int rank = 0;
     int id = 1;
     Map<Long,GoldScoredTranslation> items = Generics.newHashMap();
-    for (GoldScoredTranslation g : scoredList) {
+    for (GoldScoredTranslation g : metricScoredList) {
       if (g.goldScore != lastScore) {
         rank = id;
       }
@@ -96,7 +97,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     
     if (DEBUG) {
       System.err.printf("%d #items %d max: %.3f / %d%n", sourceId, 
-          items.size(), scoredList.get(0).goldScore, scoredList.get(0).t.latticeSourceId);
+          items.size(), metricScoredList.get(0).goldScore, metricScoredList.get(0).t.latticeSourceId);
     }
     
     Counter<String> gradient = new ClassicCounter<String>(INITIAL_CAPACITY);
@@ -117,23 +118,6 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     
     return gradient;
   }
-
-  /**
-   * Transform the sentence level score.
-   * 
-   * @param translation
-   * @param labelScore
-   * @param minRefLength
-   * @return
-   */
-  private double scaleScore(double labelScore, int minRefLength) {
-    if (labelScore == 0.0 || minRefLength == 0.0) return 0.0;
-    // Convex transform
-    labelScore *= labelScore;
-    // Scale by min reference length
-    return labelScore * minRefLength;
-  }
-  
   
   private static class GoldScoredTranslation implements Comparable<GoldScoredTranslation> {
     public final RichTranslation<IString,String> t;
