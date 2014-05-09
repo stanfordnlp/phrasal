@@ -21,7 +21,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
 
-  private static final int K_BEST = 20;
+  private static final int K_BEST = 40;
   
   private static final int INITIAL_CAPACITY = 2000;
 
