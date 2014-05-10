@@ -3,12 +3,15 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;
@@ -21,11 +24,13 @@ import edu.stanford.nlp.util.Generics;
  */
 public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
 
-  private static final int K_BEST = 40;
-  
   private static final int INITIAL_CAPACITY = 2000;
 
-  private static final boolean DEBUG = true;
+  private static final int DEFAULT_TOPK = 200;
+  private int topK = DEFAULT_TOPK;
+  private boolean printDebugOutput = false;
+
+  private final Logger logger;
   
   /**
    * Constructor.
@@ -36,6 +41,24 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
    */
   public CrossEntropyOptimizer(int tuneSetSize, int expectedNumFeatures, String[] args) {
     super(tuneSetSize, expectedNumFeatures, args);
+    logger = Logger.getLogger(CrossEntropyOptimizer.class.getName());
+    SystemLogger.attach(logger, LogName.ONLINE);
+    
+    // Process optimizer specific arguments
+    for (String arg : args) {
+      if (arg.startsWith("ceTopk")) {
+        String[] fields = arg.split("=");
+        if (fields.length != 2) throw new RuntimeException("Invalid argument: " + arg);
+        topK = Integer.valueOf(args[1]);
+        
+      } else if (arg.startsWith("ceDebug")) {
+        String[] fields = arg.split("=");
+        if (fields.length != 2) throw new RuntimeException("Invalid argument: " + arg);
+        printDebugOutput = Boolean.valueOf(args[1]);
+      }
+    }
+    logger.info("Top K: " + String.valueOf(topK));
+    logger.info("Debug mode: " + String.valueOf(printDebugOutput));
   }	
 
   @Override
@@ -53,23 +76,14 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
       return new ClassicCounter<String>();
     }
     
-    // Get the minimum reference length
-    int minLength = Integer.MAX_VALUE;
-    for (Sequence<IString> ref : references) {
-      if (ref.size() < minLength) {
-        minLength = ref.size();
-      }
-    }
-    
-    // Compute the model and the label distributions
+    // Compute the score for everything in the n-best list
+    // Don't know where the top K are yet.
     List<GoldScoredTranslation> metricScoredList = Generics.newArrayList(translations.size());
     double qNormalizer = 0.0;
     for (RichTranslation<IString,String> translation : translations) {
       qNormalizer += Math.exp(translation.score);
       double labelScore = scoreMetric.score(sourceId, source, references, translation.translation);
-      // D. Chiang transformation
-      double scaledScore = labelScore * minLength;
-      metricScoredList.add(new GoldScoredTranslation(translation, scaledScore));
+      metricScoredList.add(new GoldScoredTranslation(translation, labelScore));
     }
     Collections.sort(metricScoredList);
 
@@ -83,7 +97,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
         rank = id;
       }
       lastScore = g.goldScore;
-      if (rank > K_BEST) break;
+      if (rank > topK) break;
       g.goldScore = g.goldScore / Math.log(rank + 1);
       pNormalizer += g.goldScore;
       items.put(g.t.latticeSourceId, g);
@@ -95,7 +109,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
       return new ClassicCounter<String>();
     }
     
-    if (DEBUG) {
+    if (printDebugOutput) {
       System.err.printf("%d #items %d max: %.3f / %d%n", sourceId, 
           items.size(), metricScoredList.get(0).goldScore, metricScoredList.get(0).t.latticeSourceId);
     }
