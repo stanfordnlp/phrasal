@@ -63,7 +63,7 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  * @author Spence Green
  *
  */
-public class OnlineTuner {
+public final class OnlineTuner {
   
   // Tuning set
   private List<Sequence<IString>> tuneSource;
@@ -116,7 +116,7 @@ public class OnlineTuner {
    * @param randomizeStartWeights
    * @param expectedNumFeatures
    */
-  public OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
+  private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
       boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures) {
     logger = Logger.getLogger(OnlineTuner.class.getName());
