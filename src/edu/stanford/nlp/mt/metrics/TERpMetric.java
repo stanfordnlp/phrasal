@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.decoder.util.State;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -25,6 +24,15 @@ import com.bbn.mt.terp.WordNet;
 import com.bbn.mt.terp.TERpara;
 import com.bbn.mt.terp.NormalizeText;
 
+/**
+ * Implementation of the TERp metric (Snover et al., 2009). Applies NIST tokenization
+ * to the input before computing the score.
+ * 
+ * @author Daniel Cer
+ *
+ * @param <TK>
+ * @param <FV>
+ */
 public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
 
@@ -285,7 +293,8 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
           .println("Usage:\n\tjava TERpMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
+    boolean doNIST = true;
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, doNIST);
 
     TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
         referencesList, false, System.getProperty("terpa") != null);
@@ -296,11 +305,8 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null;) {
-      // line = NISTTokenizer.tokenize(line);
-      line = line.replaceAll("\\s+$", "");
-      line = line.replaceAll("^\\s+", "");
-      Sequence<IString> translation = new RawSequence<IString>(
-          IStrings.toIStringArray(line.split("\\s+")));
+      if (doNIST) line = NISTTokenizer.tokenize(line);
+      Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
       incMetric.add(tran);
@@ -308,7 +314,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     reader.close();
 
-    System.out.printf("TER = %.3f\n", 100 * incMetric.score());
+    System.out.printf("TER = %.3f%n", 100 * incMetric.score());
   }
 
 }
