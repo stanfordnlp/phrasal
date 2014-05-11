@@ -256,6 +256,12 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       if (sourceGovIndex == null)
         continue; 
 
+      //force 1:1 alignments, if the source token is already aligned to some other target token
+      //then ignore the current token
+      if (state.alignedSourceIndices.contains(sourceDepIndex)) {
+        continue;
+      }
+      
       //check for root
       if (sourceGovIndex == -1) {
         double rootScore = rootLM.score(f.targetPhrase.subsequence(i, i+1), 0, null).getScore();
@@ -282,7 +288,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           if (subState.getRightLMState() == null) {
             seq = Sequences.wrapStart(seq, new IString(subState.headToken.word() + "<HEAD>"));
             seq = Sequences.wrapStart(seq, rightLM.getStartToken());
-            start = 1;
+            start = 2;
           }
           LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
           double rightScore = lmState.getScore();
@@ -307,9 +313,9 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
           seq = Sequences.wrapStart(seq, new IString(token.word() + "<HEAD>"));
           seq = Sequences.wrapStartEnd(seq, leftLM.getStartToken(), leftLM.getEndToken());
-          double leftScore = leftLM.score(seq, 1, null).getScore();
+          double leftScore = leftLM.score(seq, 2, null).getScore();
           features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
-          features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+          features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * subState.getLeftChildren().size()));
           subState.getLeftChildren().clear();
         }
       } else if (this.forwardDependencies.get(sourceDepIndex) != null && !this.forwardDependencies.get(sourceDepIndex).isEmpty()) {
@@ -353,10 +359,11 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   public static class DepLMState extends FeaturizerState {
 
     private HashMap<Integer, DepLMSubState> subStates;
-    
+    private SortedSet<Integer> alignedSourceIndices;
     
     public DepLMState() {
       this.subStates = new HashMap<Integer, DepLMSubState>();
+      this.alignedSourceIndices = Generics.newTreeSet();
     }
     
     @Override
@@ -369,6 +376,14 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         return false;
 
       DepLMState oState = (DepLMState) other;
+      
+      if (oState.alignedSourceIndices.size() != this.alignedSourceIndices.size())
+        return false;
+
+      for (Integer i : this.alignedSourceIndices) {
+        if (!oState.alignedSourceIndices.contains(i))
+          return false;
+      }
       
       for (Integer i : this.subStates.keySet()) {
         if ((oState.getSubState(i) == null || this.getSubState(i) == null)) {
@@ -407,7 +422,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     @Override
     public int hashCode() {
       SortedSet<Integer> keys = new TreeSet<Integer>(this.getSubStates().keySet());
-      int sz = 0;
+      int sz = this.alignedSourceIndices.size();
       for (int i : keys) {
         if (this.getSubState(i) != null)
           sz++;
@@ -417,9 +432,14 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         return 0;
       int arr[] = new int[sz];
       int j = 0;
+      for (int i: this.alignedSourceIndices) {
+        arr[j] = i;
+        j++;
+      }
       for (int i : keys) {
         if (this.getSubState(i) != null) {
           arr[j] = this.getSubState(i).hashCode();
+          j++;
         }
       }
       return arr.hashCode();
@@ -430,6 +450,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       for (Integer i : this.subStates.keySet()) {
         copy.setSubState(i, this.subStates.get(i) != null ? this.subStates.get(i).clone() : null);
       }
+      copy.alignedSourceIndices.addAll(this.alignedSourceIndices);
       return copy;
     }
   }

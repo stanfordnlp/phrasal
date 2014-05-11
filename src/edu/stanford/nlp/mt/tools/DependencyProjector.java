@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +33,13 @@ import java.util.TreeSet;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
+import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
@@ -141,45 +147,41 @@ public class DependencyProjector {
     }
   }
   
-  public static void printLeftAndRightDependency(Map<Integer, NavigableSet<Integer>> dependencies, int idx, Sequence<IString> tokens) throws IOException {
-    if (dependencies.get(idx) != null && !dependencies.get(idx).isEmpty()) {
-      if (idx >= 0) {
-          NavigableSet<Integer> leftNodes =  dependencies.get(idx).headSet(idx, false);
-          NavigableSet<Integer> rightNodes =  dependencies.get(idx).tailSet(idx, false);
-
-          if (!leftNodes.isEmpty()) {
-            leftDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
-            leftDepLMWriter.write(" ");
-            for (Integer child : leftNodes.descendingSet()) {
-              leftDepLMWriter.write(tokens.get(child).word());
+  public static void printLeftAndRightDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens) throws IOException {
+    for (Integer idx : dependencies.keySet()) {
+      if (dependencies.get(idx) != null && !dependencies.get(idx).isEmpty()) {
+        if (idx >= 0) {
+            NavigableSet<Integer> leftNodes =  dependencies.get(idx).headSet(idx, false);
+            NavigableSet<Integer> rightNodes =  dependencies.get(idx).tailSet(idx, false);
+  
+            if (!leftNodes.isEmpty()) {
+              leftDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
               leftDepLMWriter.write(" ");
+              for (Integer child : leftNodes.descendingSet()) {
+                leftDepLMWriter.write(tokens.get(child).word());
+                leftDepLMWriter.write(" ");
+              }
+              leftDepLMWriter.write("\n");
             }
-            leftDepLMWriter.write("\n");
-          }
-          
-          if (!rightNodes.isEmpty()) {
-            rightDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
-            rightDepLMWriter.write(" ");
-            for (Integer child : rightNodes) {
-              rightDepLMWriter.write(tokens.get(child).word());
+            
+            if (!rightNodes.isEmpty()) {
+              rightDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
               rightDepLMWriter.write(" ");
-            }
-            rightDepLMWriter.write("\n");
-          }          
-      } else {
-        headDepLMWriter.write(tokens.get(dependencies.get(idx).first()).word());
-        headDepLMWriter.write("\n");
+              for (Integer child : rightNodes) {
+                rightDepLMWriter.write(tokens.get(child).word());
+                rightDepLMWriter.write(" ");
+              }
+              rightDepLMWriter.write("\n");
+            }          
+        } else {
+          headDepLMWriter.write(tokens.get(dependencies.get(idx).first()).word());
+          headDepLMWriter.write("\n");
+        }
       }
-      
-      
-      for (Integer child: dependencies.get(idx)) {
-        printLeftAndRightDependency(dependencies, child, tokens);
-      }
-      
     }
   }
   
-  
+ /* 
   public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment) {
     Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
 
@@ -271,6 +273,95 @@ public class DependencyProjector {
    
     
     
+    return projectedDependencies;
+  }
+ */
+ 
+  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment) {
+    Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
+    
+    //source to target token aligment (we force 1:1)
+    Map<Integer, Integer> alignedSourceTokens = Generics.newHashMap();
+    
+    //left dependencies indexed by source head index
+    Map<Integer, SortedSet<Integer>> leftDependencies = Generics.newHashMap();
+    
+    SemanticGraph semanticGraph = annotation.get(BasicDependenciesAnnotation.class);
+
+    Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
+    HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
+    HashMap<Integer, Set<Integer>> forwardDependencies = new HashMap<Integer, Set<Integer>>();
+    
+    for (TypedDependency dep : dependencies) {
+      int govIndex = dep.gov().index() - 1;
+      int depIndex = dep.dep().index() - 1;
+      if (!forwardDependencies.containsKey(govIndex)) {
+        forwardDependencies.put(govIndex, new HashSet<Integer>());
+      }
+      reverseDependencies.put(depIndex, govIndex);
+      forwardDependencies.get(govIndex).add(depIndex);
+    }
+    
+
+    int len = alignment.eSize();
+
+    for (int i = 0; i < len; i++) {
+      IString token = alignment.e().get(i);
+      if (token.word().length() < 1 || !Character.isAlphabetic(token.word().charAt(0)))
+        continue;
+      if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1)
+        continue;
+      
+      Integer sourceGovIndex = null;
+      int sourceDepIndex = -1;
+      for (int j : alignment.e2f(i)) {
+        sourceDepIndex = j;
+        if ((sourceGovIndex = reverseDependencies.get(sourceDepIndex)) != null)
+          break;
+      }
+      
+      //check if the current word has a head
+      if (sourceGovIndex == null)
+        continue; 
+
+      //force 1:1 alignment
+      if (alignedSourceTokens.containsKey(sourceDepIndex))
+        continue;
+      
+      alignedSourceTokens.put(sourceDepIndex, i);
+      //check for root
+      if (sourceGovIndex == -1) {
+        if (projectedDependencies.get(-1) == null)
+          projectedDependencies.put(-1, new TreeSet<Integer>());
+        //add root dependency
+        projectedDependencies.get(-1).add(i);
+      } else {
+          if (alignedSourceTokens.containsKey(sourceGovIndex)) {
+            int targetGovIndex = alignedSourceTokens.get(sourceGovIndex);
+            if (!projectedDependencies.containsKey(targetGovIndex)) {
+              projectedDependencies.put(targetGovIndex, new TreeSet<Integer>());
+            }
+            //add right dependency
+            projectedDependencies.get(targetGovIndex).add(i);
+        } else {
+          if (!leftDependencies.containsKey(sourceGovIndex))
+            leftDependencies.put(sourceGovIndex, new TreeSet<Integer>());
+          leftDependencies.get(sourceGovIndex).add(i);
+        }
+      }
+      
+      
+      //add all the left dependents 
+      if (leftDependencies.containsKey(sourceDepIndex)) {
+        if (!projectedDependencies.containsKey(i))
+          projectedDependencies.put(i, new TreeSet<Integer>());
+
+        for (int j : leftDependencies.get(sourceDepIndex)) {
+          projectedDependencies.get(i).add(j);
+        }
+      }
+    }
+
     return projectedDependencies;
   }
   
@@ -503,7 +594,7 @@ public class DependencyProjector {
 
         //}
         //printDependencyString(dependencies, -1, alignment.e(), "");
-        printLeftAndRightDependency(dependencies, -1, alignment.e());
+        printLeftAndRightDependencies(dependencies, alignment.e());
         //System.err.println("---------------------------");
       //} catch (Exception e) {
       //  e.printStackTrace();
