@@ -26,7 +26,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
 
   private static final int INITIAL_CAPACITY = 2000;
 
-  private static final int DEFAULT_TOPK = 200;
+  private static final int DEFAULT_TOPK = 40;
   private int topK = DEFAULT_TOPK;
   private boolean printDebugOutput = false;
 
