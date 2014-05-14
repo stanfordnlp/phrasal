@@ -29,7 +29,6 @@ import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
 import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
-import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer2;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
@@ -428,14 +427,12 @@ public final class OnlineTuner {
   /**
    * Run an optimization algorithm with a specified loss function. Implements asynchronous updating
    * per Langford et al. (2009).
-   * @param batchSize 
    * 
-   * @param scoreMetric 
-   * @param doExpectedBleu 
-   * @param randomizeStartingWeights 
-   * @param optimizerAlg
-   * @param optimizerFlags 
-   * @param nThreads
+   * @param numEpochs
+   * @param batchSize
+   * @param scoreMetric
+   * @param doExpectedBleu
+   * @param weightWriteOutInterval
    */
   public void run(int numEpochs, int batchSize, SentenceLevelMetric<IString, String> scoreMetric, 
       boolean doExpectedBleu, int weightWriteOutInterval) {
@@ -506,7 +503,7 @@ public final class OnlineTuner {
       
       // Write the intermediate weights for this epoch
       IOTools.writeWeights(String.format("%s.%d.binwts", outputWeightPrefix, epoch), currentWts);
-
+      
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
@@ -723,12 +720,6 @@ public final class OnlineTuner {
        Counters.normalize(wtsAccumulator);
        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
      
-    } else if (optimizerAlg.equals("expectedBLEU2")) {
-      assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
-      assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
-      Counters.normalize(wtsAccumulator);
-      return new ExpectedBLEUOptimizer2(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-    
     } else if (optimizerAlg.equals("crossentropy")) {
       assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
       assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
