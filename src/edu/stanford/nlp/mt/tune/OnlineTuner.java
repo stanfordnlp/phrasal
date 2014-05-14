@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -53,7 +52,6 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.Triple;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
@@ -460,8 +458,6 @@ public final class OnlineTuner {
       updater.setState(initialState);
       logger.info("Warm restart: loaded updater state for weights file: " + initialWtsFileName);
     }
-    final List<Triple<Double,Integer,Counter<String>>> epochWeights = 
-        new ArrayList<Triple<Double,Integer,Counter<String>>>(numEpochs);
     final Runtime runtime = Runtime.getRuntime();
 
     // Threadpool for decoders. Create one per epoch so that we can wait for all jobs
@@ -476,7 +472,8 @@ public final class OnlineTuner {
     logger.info("Number of threads: " + numThreads);
     logger.info("Number of references: " + numReferences);
     int updateId = 0;
-    
+    double maxExpectedBLEU = Double.NEGATIVE_INFINITY;
+    int maxExpectedBLEUEpoch = -1;
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
       final long startTime = System.nanoTime();
       logger.info("Start of epoch: " + epoch);
@@ -526,16 +523,13 @@ public final class OnlineTuner {
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
       logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
-      double expectedBleu = 0.0;
       if (doExpectedBleu) {
-        expectedBleu = approximateBLEUObjective(nbestLists, epoch);
+        double expectedBLEU = approximateBLEUObjective(nbestLists, epoch);
+        if (expectedBLEU > maxExpectedBLEU) maxExpectedBLEUEpoch = epoch;
       }
-      // Purge history if we're not picking the best weight vector
-      if ( ! returnBestDev) epochWeights.clear();
-      epochWeights.add(new Triple<Double,Integer,Counter<String>>(expectedBleu, epoch, new ClassicCounter<String>(currentWts)));
     }
     
-    saveFinalWeights(epochWeights);
+    saveFinalWeights(currentWts, maxExpectedBLEUEpoch, numEpochs);
   }
 
   /**
@@ -774,24 +768,24 @@ public final class OnlineTuner {
     }
   }
 
-
-
   /**
-   * Select the final weights from epochResults and save to file.
+   * Save the final weight vector. This is either the output of the last epoch,
+   * or it is the best model if expected BLEU has been computed.
    * 
-   * @param epochResults 
+   * @param lastWeights
+   * @param maxExpectedBLEUEpoch
+   * @param numEpochs
    */
-  private void saveFinalWeights(List<Triple<Double, Integer, Counter<String>>> epochResults) {
-    if (returnBestDev) {
-      // Maximize BLEU (training objective)
-      Collections.sort(epochResults);
+  private void saveFinalWeights(Counter<String> lastWeights, int maxExpectedBLEUEpoch, int numEpochs) {
+    Counter<String> finalWeights = lastWeights;
+    if (returnBestDev && maxExpectedBLEUEpoch >= 0 && ! (maxExpectedBLEUEpoch == numEpochs-1)) {
+      String bestWeightsFile = String.format("%s.%d%s", outputWeightPrefix, maxExpectedBLEUEpoch, IOTools.WEIGHTS_FILE_EXTENSION);
+      lastWeights = IOTools.readWeights(bestWeightsFile);
     } 
-    Triple<Double, Integer, Counter<String>> selectedEpoch = epochResults.get(epochResults.size()-1);
-    Counter<String> finalWeights = selectedEpoch.third();
-    String filename = String.format("%s.final%s", outputWeightPrefix, IOTools.WEIGHTS_FILE_EXTENSION);
-    IOTools.writeWeights(filename, finalWeights);
-    logger.info("Wrote final weights to " + filename);
-    logger.info(String.format("Final weights from epoch %d: BLEU: %.2f", selectedEpoch.second(), selectedEpoch.first()));
+    String finalFilename = String.format("%s.final%s", outputWeightPrefix, IOTools.WEIGHTS_FILE_EXTENSION);
+    IOTools.writeWeights(finalFilename, finalWeights);
+    logger.info(String.format("Final weights from epoch %d to: %s", returnBestDev ? maxExpectedBLEUEpoch : numEpochs-1,
+        finalFilename));
     logger.info(String.format("Non-zero final weights: %d", finalWeights.keySet().size()));
   }
 
