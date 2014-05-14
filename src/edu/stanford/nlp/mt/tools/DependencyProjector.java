@@ -273,7 +273,6 @@ public class DependencyProjector {
 
     Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
     HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
-    HashMap<Integer, Set<Integer>> forwardDependencies = new HashMap<Integer, Set<Integer>>();
     
     for (TypedDependency dep : dependencies) {
       int govIndex = dep.gov().index() - 1;
@@ -291,15 +290,6 @@ public class DependencyProjector {
       }
       reverseDependencies.put(depIndex, govIndex);
     }
-    
-    for (int depIndex : reverseDependencies.keySet()) {
-      int govIndex = reverseDependencies.get(depIndex);
-      if (!forwardDependencies.containsKey(govIndex)) {
-        forwardDependencies.put(govIndex, new HashSet<Integer>());
-      }
-      forwardDependencies.get(govIndex).add(depIndex);
-    }
-    
 
     int len = alignment.eSize();
 
