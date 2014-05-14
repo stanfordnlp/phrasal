@@ -283,10 +283,10 @@ public class DependencyProjector {
     
     //delete all nodes that are not aligned and make things transitive
     for (int depIndex : reverseDependencies.keySet()) {
-      int govIndex = reverseDependencies.get(depIndex);
-      if (govIndex == -1)
+      Integer govIndex = reverseDependencies.get(depIndex);
+      if (govIndex == null || govIndex == -1)
         continue;
-      while (govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
+      while (govIndex != null && govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
         govIndex = reverseDependencies.get(govIndex);
       }
       reverseDependencies.put(depIndex, govIndex);
@@ -593,7 +593,7 @@ public class DependencyProjector {
 
         //}
         //printDependencyString(dependencies, -1, alignment.e(), "");
-        System.out.println(dependencies);
+        //System.out.println(dependencies);
         printLeftAndRightDependencies(dependencies, alignment.e());
         //System.err.println("---------------------------");
       //} catch (Exception e) {
