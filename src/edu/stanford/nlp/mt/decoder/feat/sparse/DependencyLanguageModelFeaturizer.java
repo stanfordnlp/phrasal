@@ -305,6 +305,14 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
                 }
                 oSubState.getLeftChildren().clear();
               }
+              
+              //Score current token as a root
+              Sequence<IString> seq = new SimpleSequence<IString>(token);
+              double rootScore = rootLM.score(seq, 0, null).getScore();
+              features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
+              features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+
+              
               //go to next token
               continue tokfor;
             } else {
@@ -312,12 +320,14 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
               //check if the transitive head was already put down
               if (f.derivation.sourceCoverage.get(sourceGovIndex)) {
                 if (subState == null || subState.headToken == null) {
-                  //also the parent is unaligned, go one further level up the tree
+                  //also the parent is unaligned, go one level further up the tree
                   continue;
                 }
                 
                 
                 //if left children exist, score them before breaking
+                //they will now be right tokens relative to the new head 
+                //under the assumption that there are no crossing arcs
                 if (oSubState != null && !oSubState.getLeftChildren().isEmpty()) {
                   Sequence<IString> seq = new SimpleSequence<IString>(oSubState.getLeftChildren());
                   int start = 0;
@@ -340,7 +350,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
                 
                 
               } else {
-                //add it to the list of left children
+                //add it to the list of left children of the parent
                 if (oSubState != null) {
                   if (subState == null) {
                     subState = state.addSubState(sourceGovIndex);
@@ -354,6 +364,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
             }
           }
       
+          
+          //score current token as a right token
           Sequence<IString> seq = f.targetPhrase.subsequence(i, i+1);
           //add start and end tokens
           int start = 0;
@@ -367,7 +379,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           state.getSubState(sourceGovIndex).setRightLMState(lmState);
           features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
           features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
-          //figure out how to score end token
+
         } else {
           //add the current token to the list that should be scored on the left
           DepLMSubState subState =  state.getSubState(sourceGovIndex);
@@ -378,6 +390,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         }
           
       }
+      
+      //score left children of current token
       DepLMSubState subState =  state.getSubState(sourceDepIndex);
       if (subState != null) {
         if (subState.getLeftChildren().size() > 0) {
@@ -398,7 +412,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         subState.setHeadToken(token);
       }     
     }
-    
+
+    //check which substates can be deleted
     for (Integer i: state.getSubStates().keySet()) {
       if (state.getSubState(i) == null)
         continue;
@@ -612,9 +627,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     public DepLMSubState clone() {
       DepLMSubState copy = new DepLMSubState();
       copy.setRightLMState(this.rightLMState);
-      for (IString child : this.getLeftChildren()) {
-        copy.getLeftChildren().add(child);
-      }
+      copy.getLeftChildren().addAll(this.getLeftChildren());
       copy.setHeadToken(this.headToken);
       return copy;
     }
