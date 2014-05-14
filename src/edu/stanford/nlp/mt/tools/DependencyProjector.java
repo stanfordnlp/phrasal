@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,29 +16,12 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 
-
-
-
-
-
-
-
-
-
-
-
 import java.util.TreeSet;
 
-import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
-import edu.stanford.nlp.mt.base.FeatureValue;
 import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
 import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
@@ -48,7 +30,6 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Triple;
@@ -174,8 +155,10 @@ public class DependencyProjector {
               rightDepLMWriter.write("\n");
             }          
         } else {
-          headDepLMWriter.write(tokens.get(dependencies.get(idx).first()).word());
-          headDepLMWriter.write("\n");
+          for (int headIdx : dependencies.get(idx)) {
+            headDepLMWriter.write(tokens.get(headIdx).word());
+            headDepLMWriter.write("\n");
+          }
         }
       }
     }
@@ -295,10 +278,25 @@ public class DependencyProjector {
     for (TypedDependency dep : dependencies) {
       int govIndex = dep.gov().index() - 1;
       int depIndex = dep.dep().index() - 1;
+      reverseDependencies.put(depIndex, govIndex);
+    }
+    
+    //delete all nodes that are not aligned and make things transitive
+    for (int depIndex : reverseDependencies.keySet()) {
+      int govIndex = reverseDependencies.get(depIndex);
+      if (govIndex == -1)
+        continue;
+      while (govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
+        govIndex = reverseDependencies.get(govIndex);
+      }
+      reverseDependencies.put(depIndex, govIndex);
+    }
+    
+    for (int depIndex : reverseDependencies.keySet()) {
+      int govIndex = reverseDependencies.get(depIndex);
       if (!forwardDependencies.containsKey(govIndex)) {
         forwardDependencies.put(govIndex, new HashSet<Integer>());
       }
-      reverseDependencies.put(depIndex, govIndex);
       forwardDependencies.get(govIndex).add(depIndex);
     }
     
@@ -359,6 +357,7 @@ public class DependencyProjector {
         for (int j : leftDependencies.get(sourceDepIndex)) {
           projectedDependencies.get(i).add(j);
         }
+        leftDependencies.remove(sourceDepIndex);
       }
     }
 
@@ -594,6 +593,7 @@ public class DependencyProjector {
 
         //}
         //printDependencyString(dependencies, -1, alignment.e(), "");
+        System.out.println(dependencies);
         printLeftAndRightDependencies(dependencies, alignment.e());
         //System.err.println("---------------------------");
       //} catch (Exception e) {
