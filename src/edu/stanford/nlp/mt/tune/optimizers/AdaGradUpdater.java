@@ -50,4 +50,30 @@ public class AdaGradUpdater implements OnlineUpdateRule<String> {
       weights.remove(feature);
     }
   }
+
+  @Override
+  public UpdaterState getState() {
+    return new AdaGradState(sumGradSquare);
+  }
+
+  @Override
+  public void setState(UpdaterState state) {
+    if (state instanceof AdaGradState) {
+      sumGradSquare = ((AdaGradState) state).gradHistory;
+    }
+  }
+  
+  /**
+   * State of this update rule.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class AdaGradState implements UpdaterState {
+    private static final long serialVersionUID = -2897336366656446234L;
+    private final Counter<String> gradHistory;
+    public AdaGradState(Counter<String> h) {
+      this.gradHistory = h;
+    }
+  }
 }

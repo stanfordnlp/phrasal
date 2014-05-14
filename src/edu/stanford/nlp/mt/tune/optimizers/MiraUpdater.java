@@ -17,4 +17,14 @@ public class MiraUpdater implements OnlineUpdateRule<String> {
       Counter<String> gradient, int timeStep, boolean endOfEpoch) {
     Counters.addInPlace(weights, gradient);
   }
+
+  @Override
+  public UpdaterState getState() {
+    return new UpdaterState() {
+      private static final long serialVersionUID = -8445509678339427061L;
+    };
+  }
+
+  @Override
+  public void setState(UpdaterState state) {}
 }

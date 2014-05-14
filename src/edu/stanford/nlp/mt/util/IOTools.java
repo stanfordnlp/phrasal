@@ -45,6 +45,8 @@ public final class IOTools {
   // OnlineTuner, PhraseExtract, etc.)
   public static final String DEFAULT_ENCODING = "UTF-8";
   
+  public static final String WEIGHTS_FILE_EXTENSION = ".binwts";
+  
   private IOTools() {}
 
   /**
@@ -233,7 +235,7 @@ public final class IOTools {
    */
   public static void writeWeights(String filename, Counter<String> wts) {
     try {
-      if (filename.endsWith(".binwts")) {
+      if (filename.endsWith(WEIGHTS_FILE_EXTENSION)) {
         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
             filename));
         oos.writeObject(wts);

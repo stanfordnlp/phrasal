@@ -20,6 +20,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
@@ -28,6 +29,7 @@ import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
 import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
@@ -64,6 +66,8 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public final class OnlineTuner {
   
+  private static final String STATE_FILE_EXTENSION = ".ostate";
+  
   // Tuning set
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
@@ -73,6 +77,8 @@ public final class OnlineTuner {
   private boolean returnBestDev = false;
   private boolean doParameterAveraging = false;
   
+  private final boolean discardInitialWeightState;
+  private final String initialWtsFileName;
   private Counter<String> wtsAccumulator;
   private final int expectedNumFeatures;
 
@@ -124,6 +130,8 @@ public final class OnlineTuner {
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
+    this.initialWtsFileName = initialWtsFile;
+    this.discardInitialWeightState = uniformStartWeights || randomizeStartWeights;
     wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
     logger.info("Initial weights: " + wtsAccumulator.toString());
 
@@ -447,6 +455,11 @@ public final class OnlineTuner {
     final int[] indices = ArrayMath.range(0, tuneSetSize);
     final int numBatches = (int) Math.ceil((double) indices.length / (double) batchSize);
     final OnlineUpdateRule<String> updater = optimizer.newUpdater();
+    final UpdaterState initialState = OnlineTuner.loadUpdaterState(initialWtsFileName);
+    if (initialState != null && ! discardInitialWeightState) {
+      updater.setState(initialState);
+      logger.info("Warm restart: loaded updater state for weights file: " + initialWtsFileName);
+    }
     final List<Triple<Double,Integer,Counter<String>>> epochWeights = 
         new ArrayList<Triple<Double,Integer,Counter<String>>>(numEpochs);
     final Runtime runtime = Runtime.getRuntime();
@@ -501,8 +514,14 @@ public final class OnlineTuner {
         Counters.divideInPlace(currentWts, (epoch+1)*numBatches);
       }
       
-      // Write the intermediate weights for this epoch
-      IOTools.writeWeights(String.format("%s.%d.binwts", outputWeightPrefix, epoch), currentWts);
+      // Write the intermediate state for this epoch
+      String epochFilePrefix = String.format("%s.%d", outputWeightPrefix, epoch);
+      IOTools.writeWeights(epochFilePrefix + IOTools.WEIGHTS_FILE_EXTENSION, currentWts);
+      try {
+        IOUtils.writeObjectToFile(updater.getState(), epochFilePrefix + STATE_FILE_EXTENSION);
+      } catch (IOException e) {
+        logger.warning("Could not write online updater state to: " + epochFilePrefix + STATE_FILE_EXTENSION);
+      }
       
       // Debug info for this epoch
       long elapsedTime = System.nanoTime() - startTime;
@@ -694,6 +713,30 @@ public final class OnlineTuner {
     }
     return weights;
   }
+  
+  /**
+   * Load the online updater state that accompanies this weight file.
+   * 
+   * @param wtsInitialFile The name of a weights file.
+   * @return An UpdaterState instance or null if the state file does not exist.
+   */
+  private static UpdaterState loadUpdaterState(String wtsInitialFile) {
+    int delim = wtsInitialFile.lastIndexOf('.');
+    String fileName = wtsInitialFile.substring(0, delim) + STATE_FILE_EXTENSION;
+    File file = new File(fileName);
+    if (file.exists()) {
+      try {
+        UpdaterState state = (UpdaterState) IOUtils.readObjectFromFile(file);
+        return state;
+        
+      } catch (ClassNotFoundException e) {
+        throw new RuntimeException(e);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    } 
+    return null;
+  }
 
   /**
    * Configure the tuner for the specific tuning algorithm. Return the optimizer object.
@@ -745,7 +788,7 @@ public final class OnlineTuner {
     } 
     Triple<Double, Integer, Counter<String>> selectedEpoch = epochResults.get(epochResults.size()-1);
     Counter<String> finalWeights = selectedEpoch.third();
-    String filename = outputWeightPrefix + ".final.binwts";
+    String filename = String.format("%s.final%s", outputWeightPrefix, IOTools.WEIGHTS_FILE_EXTENSION);
     IOTools.writeWeights(filename, finalWeights);
     logger.info("Wrote final weights to " + filename);
     logger.info(String.format("Final weights from epoch %d: BLEU: %.2f", selectedEpoch.second(), selectedEpoch.first()));
