@@ -15,7 +15,7 @@ from datetime import datetime
 from collections import namedtuple,defaultdict
 from csv_unicode import UnicodeReader
 import imt_utils
-from imt_utils import segment_times_from_log,url2doc,initial_translations_from_imt_log,initial_translations_from_pe_log,load_references,load_sources
+from imt_utils import segment_times_from_log,url2doc,initial_translations_from_imt_log,initial_translations_from_pe_log,load_references,load_sources,str2bool
 
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
@@ -48,7 +48,7 @@ def get_fd(fd_dict, key, filepath):
     fd_dict[key] = fd
     return fd
             
-def output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, username_set):
+def output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, doc_to_user_valid, username_set):
     """
     """
     if exists(SYSTEM_DIR):
@@ -77,10 +77,11 @@ def output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, username_set):
                 filepath = join(SYSTEM_DIR, username+'.trans')
                 fd = get_fd(fd_dict, username, filepath)
                 tgt_txt = doc_to_user_txt[doc_id][user_id]
+                is_valid = doc_to_user_valid[doc_id][user_id]
                 fd.write(tgt_txt.strip() + os.linesep)
                 props_path = join(SYSTEM_DIR, username+'.props')
                 fd = get_fd(fd_dict, username+'_prop', props_path)
-                fd.write('Domain=%s%s' % (interface,os.linesep))
+                fd.write('Domain=%s IsValid=%s%s' % (interface, str(is_valid).lower(), os.linesep))
         missing_users = username_set - seen_username_set
         if len(missing_users) > 0:
             stderr('%s missing %s' % (ref_doc, str(missing_users)))
@@ -111,6 +112,7 @@ def extract_translations(dump_file,
     stderr('Loading database dump...')
     doc_to_user_txt = defaultdict(dict)
     doc_to_user_time = defaultdict(dict)
+    doc_to_user_valid = defaultdict(dict)
     dump_row_list = imt_utils.load_middleware_dump(dump_file, target_lang)
     username_set = set()
     for row in dump_row_list:
@@ -127,16 +129,18 @@ def extract_translations(dump_file,
             mt_id = 'MT:mt'
             doc_to_user_txt[doc_id][user_id] = segment_to_tgt_txt[line_id]
             doc_to_user_time[doc_id][user_id] = segment_to_time[line_id]
+            doc_to_user_valid[doc_id][user_id] = str2bool(row.valid)
             if line_id in segment_to_mt:
                 doc_to_user_txt[doc_id][mt_id] = segment_to_mt[line_id]
                 doc_to_user_time[doc_id][mt_id] = 0.0
+                doc_to_user_valid[doc_id][mt_id] = True
             else:
                 stderr('WARNING: No MT for %s %s %d' % (row.username,
                                                         doc_id,
                                                         line_id))
 
     # Output the results
-    output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, username_set)
+    output_system_files(doc_to_ref, doc_to_src, doc_to_user_txt, doc_to_user_valid, username_set)
     if output_to_console:
         console_dump(doc_to_ref, doc_to_src, doc_to_user_txt, doc_to_user_time)
 

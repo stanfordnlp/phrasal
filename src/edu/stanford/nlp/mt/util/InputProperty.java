@@ -19,5 +19,8 @@ public enum InputProperty {
   
   // Indicator feature index from PhraseExtract to trigger
   // various templates in the feature API.
-  RuleFeatureIndex
+  RuleFeatureIndex,
+  
+  // Generic flag for indicating a "validity" condition of the input
+  IsValid,
 }
