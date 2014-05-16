@@ -2,10 +2,10 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Interface for data structures that query and score rules

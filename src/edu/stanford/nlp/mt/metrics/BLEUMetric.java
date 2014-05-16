@@ -3,9 +3,14 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 

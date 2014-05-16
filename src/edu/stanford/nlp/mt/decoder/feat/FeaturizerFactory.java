@@ -5,15 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.mt.base.FactoryUtil;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.PhraseTableScoresFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.SourceGapFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TargetGapFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.util.FactoryUtil;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -99,7 +99,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer(numPhraseFeatures);
+      phraseTableScoresFeaturizer = new TranslationModelFeaturizer(numPhraseFeatures);
       baselineFeaturizers.add(phraseTableScoresFeaturizer);
 
       // Linear distortion
@@ -122,7 +122,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new PhraseTableScoresFeaturizer(numPhraseFeatures);
+      phraseTableScoresFeaturizer = new TranslationModelFeaturizer(numPhraseFeatures);
       pharaohFeaturizers.add(phraseTableScoresFeaturizer);
 
       // Linear distortion

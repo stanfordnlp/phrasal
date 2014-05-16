@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.tune;
 
+import java.io.Serializable;
+
 import edu.stanford.nlp.stats.Counter;
 
 /**
@@ -12,6 +14,10 @@ import edu.stanford.nlp.stats.Counter;
  */
 public interface OnlineUpdateRule<FV> {
 
+  interface UpdaterState extends Serializable {
+    
+  }
+  
   /**
    * Take a weight vector and a gradient and update the weight vector in place.
    * 
@@ -21,5 +27,19 @@ public interface OnlineUpdateRule<FV> {
    * @param endOfEpoch
    * @return
    */
-  public void update(Counter<FV> weights, Counter<FV> gradient, int timeStep, boolean endOfEpoch);
+  void update(Counter<FV> weights, Counter<FV> gradient, int timeStep, boolean endOfEpoch);
+  
+  /**
+   * Get the state of this update rule.
+   * 
+   * @return
+   */
+  UpdaterState getState();
+  
+  /**
+   * Set the state of this update rule.
+   * 
+   * @param state
+   */
+  void setState(UpdaterState state);
 }

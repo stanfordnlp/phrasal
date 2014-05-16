@@ -6,14 +6,14 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * 

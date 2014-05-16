@@ -10,14 +10,14 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.RichTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 

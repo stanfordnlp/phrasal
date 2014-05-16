@@ -3,13 +3,13 @@ package edu.stanford.nlp.mt.tools;
 import java.util.List;
 import java.util.Random;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -23,7 +23,9 @@ import edu.stanford.nlp.util.Generics;
  * 
  */
 public class SignificanceTest {
-  static public final int SAMPLES = 1000;
+  
+  // Smallest possible p-value is 1/5000, which is well below p<0.001
+  static public final int SAMPLES = 5000;
 
   static double scoreList(List<Sequence<IString>> transList,
       EvaluationMetric<IString, String> eval) {

@@ -6,10 +6,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.berkeley.nlp.util.CollectionUtils;
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.util.StringUtils;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Constrains the output space such that the

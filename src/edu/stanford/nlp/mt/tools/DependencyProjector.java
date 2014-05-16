@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -20,8 +19,8 @@ import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;

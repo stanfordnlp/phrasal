@@ -4,15 +4,15 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.ArrayList;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUTable;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ConcreteRule;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTUTable;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * 

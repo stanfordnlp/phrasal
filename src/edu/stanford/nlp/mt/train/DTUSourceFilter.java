@@ -1,11 +1,11 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
 
 import java.util.Arrays;
 import java.util.BitSet;

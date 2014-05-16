@@ -1,10 +1,10 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IntegerArrayIndex;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.Sequences;
 
 import java.io.IOException;
 import java.io.LineNumberReader;

@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.LineIndexedCorpus;
+import edu.stanford.nlp.mt.util.LineIndexedCorpus;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Triple;

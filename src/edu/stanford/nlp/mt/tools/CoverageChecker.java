@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import edu.stanford.nlp.mt.base.LineIndexedCorpus;
+import edu.stanford.nlp.mt.util.LineIndexedCorpus;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 

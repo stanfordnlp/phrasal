@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 
 import java.io.IOException;
 import java.io.LineNumberReader;

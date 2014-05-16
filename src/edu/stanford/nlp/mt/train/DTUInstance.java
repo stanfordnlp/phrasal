@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
+import edu.stanford.nlp.mt.util.CoverageSet;
 
 import java.util.*;
 

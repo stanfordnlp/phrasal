@@ -6,8 +6,8 @@ import java.util.*;
 import java.io.PrintStream;
 import java.io.IOException;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.util.*;
 
 /**

@@ -18,8 +18,8 @@ public interface FeatureExtractor {
   public boolean needAlGrid();
 
   /**
-   * Extract features from sentence word alignment. Note that it is implicitely
-   * assumed that each class implementing FeatureExtractor is mainining its own
+   * Extract features from sentence word alignment. Note that it is implicitly
+   * assumed that each class implementing FeatureExtractor is maintaining its own
    * data structures in order to assign scores with
    * {@link #score(AlignmentTemplate)}. Hence, extract is returning void. As
    * opposed to
@@ -31,8 +31,8 @@ public interface FeatureExtractor {
 
   /**
    * Extract features from phrase pair f-e and sentence word alignment. Note
-   * that it is implicitely assumed that each class implementing
-   * FeatureExtractor is mainining its own data structures in order to assign
+   * that it is implicitly assumed that each class implementing
+   * FeatureExtractor is maintaining its own data structures in order to assign
    * scores with {@link #score(AlignmentTemplate)}. Hence, extract is returning
    * void.
    * 

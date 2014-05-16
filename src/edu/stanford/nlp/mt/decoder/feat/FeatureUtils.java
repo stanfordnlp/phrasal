@@ -1,8 +1,15 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
+import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 
+import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -19,26 +26,31 @@ public final class FeatureUtils {
   
   // Baseline dense configuration from edu.stanford.nlp.mt.decoder.feat.base
   // Extended phrase table, hierarchical reordering, one language model 
-  public static final Set<String> BASELINE_DENSE_FEATURES = Generics.newHashSet();
+  public static final Set<String> BASELINE_DENSE_FEATURES;
   static {
-    BASELINE_DENSE_FEATURES.add("LM");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithNext"); 
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuous2WithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:discontinuousWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:monotoneWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LexR:swapWithNext");
-    BASELINE_DENSE_FEATURES.add("LexR:swapWithPrevious");
-    BASELINE_DENSE_FEATURES.add("LinearDistortion");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.0");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.1");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.2");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.3");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.4");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.5");
-    BASELINE_DENSE_FEATURES.add("TM:FPT.6");
-    BASELINE_DENSE_FEATURES.add("WordPenalty");
+    Set<String> features = Generics.newHashSet();
+    features.add(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
+    features.add(LinearFutureCostFeaturizer.FEATURE_NAME);
+    features.add(WordPenaltyFeaturizer.FEATURE_NAME);
+    features.add(UnknownWordFeaturizer.FEATURE_NAME);
+    
+    // Lexical reordering scores
+    features.add("LexR:discontinuous2WithNext"); 
+    features.add("LexR:discontinuous2WithPrevious");
+    features.add("LexR:discontinuousWithNext");
+    features.add("LexR:discontinuousWithPrevious");
+    features.add("LexR:monotoneWithNext");
+    features.add("LexR:monotoneWithPrevious");
+    features.add("LexR:swapWithNext");
+    features.add("LexR:swapWithPrevious");
+    
+    // 7 translation model scores described in Green et al. (2013).
+    for (int i = 0; i < 7; ++i) {
+      String fName = String.format("%s:%s.%d", TranslationModelFeaturizer.FEATURE_PREFIX,
+          FlatPhraseTable.FEATURE_PREFIX, i);
+      features.add(fName);
+    }
+    BASELINE_DENSE_FEATURES = Collections.unmodifiableSet(features);
   }
   
   /**

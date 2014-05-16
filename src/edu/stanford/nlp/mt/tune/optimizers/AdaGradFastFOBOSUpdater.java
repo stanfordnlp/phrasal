@@ -4,9 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;
@@ -31,10 +31,14 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private final double eps = 1e-3;
   private double L1lambda;
   
-  private final Counter<String> sumGradSquare;
-  private final Counter<String> lastUpdated;
-  private final Counter<String> customL1;
+  private Counter<String> sumGradSquare;
+  private Counter<String> lastUpdated;
+  private Counter<String> customL1;
 
+  // Fields needed for warm restarts
+  private int timeStepOffset = 0;
+  private int lastTimeStep = 0;
+  
   private final Logger logger;
 
   public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
@@ -52,7 +56,10 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   @Override
   public void update(Counter<String> weights,
       Counter<String> gradient, int timeStep, boolean endOfEpoch) {
-
+    // Warm restart fields
+    timeStep += timeStepOffset;
+    lastTimeStep = timeStep;
+    
     // Special case: the weight vector is empty (initial update)
     // Special case: gradient is non-zero where the weight is 0
     Set<String> featuresToUpdate = gradient.keySet();
@@ -106,6 +113,42 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     logger.info("Nullified features: " + String.valueOf(featuresToRemove.size()));
     for (String feature : featuresToRemove) {
       weights.remove(feature);
+    }
+  }
+  
+  @Override
+  public UpdaterState getState() {
+    return new AdaGradFastFOBOSState(sumGradSquare, customL1, lastUpdated, lastTimeStep);
+  }
+
+  @Override
+  public void setState(UpdaterState state) {
+    if (state instanceof AdaGradFastFOBOSState) {
+      AdaGradFastFOBOSState adaGradState = (AdaGradFastFOBOSState) state;
+      sumGradSquare = adaGradState.gradHistory;
+      customL1 = adaGradState.customReg;
+      lastUpdated = adaGradState.lastUp;
+      timeStepOffset = adaGradState.timeStep + 1;
+    }
+  }
+  
+  /**
+   * State of this update rule.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class AdaGradFastFOBOSState implements UpdaterState {
+    private static final long serialVersionUID = 5395903981292983859L;
+    private final Counter<String> gradHistory;
+    private final Counter<String> customReg;
+    private final Counter<String> lastUp;
+    private final int timeStep;
+    public AdaGradFastFOBOSState(Counter<String> h, Counter<String> r, Counter<String> u, int t) {
+      this.gradHistory = h;
+      this.customReg = r;
+      this.lastUp = u;
+      this.timeStep = t;
     }
   }
 }

@@ -8,6 +8,7 @@ urlpatterns = patterns('tmapp.views',
     url(r'^training/(?P<step_id>\d+)/$', 'training'),
     url(r'^training/ui/$', 'training_ui'),
     url(r'^translate/$', 'translate'),
+    url(r'^demo/(?P<lang_pair>\w+)/$', 'demo'),
     url(r'^demographic/$', 'form_demographic'),
     url(r'^exit/$', 'form_exit'),
 )

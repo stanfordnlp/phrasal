@@ -2,7 +2,7 @@
 # Wrappers around common queries
 #
 import logging
-from models import Language,DemographicData,ExitSurveyData,TrainingRecord,UserConfiguration
+from models import Language,DemographicData,ExitSurveyData,TrainingRecord,UserConfiguration,SourceDocument
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,16 @@ def get_language(code_str):
         logger.error('Language code not found in database: ' + code_str)
         raise RuntimeError
 
+def get_source_docs_for_lang(src_lang_code):
+    """
+    """
+    src_language = get_language(src_lang_code)
+    try:
+        return SourceDocument.objects.filter(language=src_language)
+    except:
+        logger.error('No source documents for language: ' + src_lang_code)
+        raise RuntimeError
+    
 def get_demographic_data(user):
     """
 

@@ -94,4 +94,10 @@
 		<relative-module-src project-related="jar://$PROJECT_DIR$/projects/mt/libsrc/jopt-simple-4.3-sources.jar!/"/>
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jopt-simple.jar!/"/>
 	</lib>
+	<lib name="concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar!/"/>
+	</lib>
+	<lib name="jsr305.jar" scope="COMPILE">
+		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jsr305.jar!/"/>
+	</lib>
 </component>

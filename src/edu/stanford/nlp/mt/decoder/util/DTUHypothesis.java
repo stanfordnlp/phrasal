@@ -2,9 +2,15 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTURule;
+import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.DTUFeaturizable;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.Pair;
 

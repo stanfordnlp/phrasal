@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 
 /**
  * Evaluate the perplexity of an input file under a language model.
@@ -21,8 +21,6 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  */
 public final class LanguageModelPerplexity {
   
-  private LanguageModelPerplexity() {}
-
   /**
    * 
    * @param args
@@ -42,7 +40,7 @@ public final class LanguageModelPerplexity {
         new LineNumberReader(new InputStreamReader(System.in)) :
           IOTools.getReaderFromFile(args[1]);
     
-    double logSum = 0;
+    double logSum = 0.0;
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
       Sequence<IString> seq = IStrings.tokenize(sent);

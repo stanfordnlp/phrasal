@@ -1,10 +1,10 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUTable;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TrieIntegerArrayIndex;
+import edu.stanford.nlp.mt.pt.DTUTable;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
 import edu.stanford.nlp.util.Triple;
 
 import java.util.*;

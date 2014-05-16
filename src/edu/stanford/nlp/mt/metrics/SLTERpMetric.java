@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.metrics;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.Arrays;
 
 import java.io.BufferedReader;
@@ -14,9 +14,9 @@ import com.bbn.mt.terp.TERalignment;
 import com.bbn.mt.terp.TERcost;
 import com.bbn.mt.terp.TERcalc;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Sentence Level TERp Metric for use in online tuning.
@@ -30,7 +30,6 @@ import edu.stanford.nlp.mt.base.Sequence;
  */
 public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
-  static final int EJECTION_HASH_SIZE = 100000;
   public static final int DEFAULT_BEAM_SIZE = 20;
   public static final boolean VERBOSE = false;
 
@@ -46,61 +45,39 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     terCost = new TERcost();
     this.beamSize = beamSize; 
   }
- 
-  String[] ejectionHashStrings = new String[EJECTION_HASH_SIZE];
-  double[] ejectionHashValues  = new double[EJECTION_HASH_SIZE];
 
-  /**
-    * Warning refWeights[] is ignored since this has no obvious interpretation for TER
-    */
   @Override
   public double score(int sourceId, Sequence<TK> source, List<Sequence<TK>> references, Sequence<TK> translation) {
     TERcalc terCalc = new TERcalc(terCost);
     terCalc.BEAM_WIDTH = beamSize;
-    Set<String> refs = new TreeSet<String>();
-
-    // Take the min reference length
-    int minLength = Integer.MAX_VALUE;
-    for (Sequence<TK> sentence : references) {
-      if (sentence.size() < minLength) {
-        minLength = sentence.size();
-      }
-    }
-
-    // don't score against duplicated references
-    for (Sequence<TK> ref : references) {
-       refs.add(ref.toString());
-    }
-
-    String hyp = translation.toString();
+    
+    // uniq references to prevent (expensive) redundant calculation.
+    Set<Sequence<TK>> uniqRefs = new HashSet<Sequence<TK>>(references);
+    
+    final String hyp = translation.toString();
     double bestTER = Double.POSITIVE_INFINITY;
-    for (String ref : refs) {
-      String key = hyp + "|||" + ref;
-      int hashIdx = key.hashCode() % EJECTION_HASH_SIZE;
-      hashIdx = (hashIdx < 0 ? -hashIdx : hashIdx);
-      synchronized(ejectionHashStrings) { 
-        if (ejectionHashStrings[hashIdx] != null &&
-            key.equals(ejectionHashStrings[hashIdx])) {
-           double ter = ejectionHashValues[hashIdx];
-           if (ter < bestTER) bestTER = ter; 
-           continue;
-        }
+    int lengthScale = Integer.MAX_VALUE;
+    for (Sequence<TK> refSeq : uniqRefs) {
+      double ter;
+      if (refSeq.size() == 0) {
+        ter = translation.size();
+      } else {
+        String ref = refSeq.toString();
+        TERalignment align = terCalc.TER(hyp, ref);
+        ter = align.numEdits / align.numWords;
+        if (VERBOSE) {
+          System.err.printf("ref: %s%n", ref);
+          System.err.printf("numEdits: %f%n", align.numEdits);
+          System.err.printf("numWords: %f%n", align.numWords);
+        }        
       }
-      TERalignment align = terCalc.TER(hyp, ref);
-      double ter = align.numEdits / align.numWords;
-      if (VERBOSE) {
-        System.err.printf("ref: %s\n", ref);
-        System.err.printf("numEdits: %f\n", align.numEdits);
-        System.err.printf("numWords: %f\n", align.numWords);
-      }
-      if (ter < bestTER) bestTER = ter; 
-      synchronized(ejectionHashStrings) { 
-         ejectionHashStrings[hashIdx] = key;
-         ejectionHashValues[hashIdx] = ter;
+      if (ter < bestTER) {
+        bestTER = ter;
+        lengthScale = refSeq.size() == 0 ? 1 : refSeq.size();
       }
     }
-
-    return -bestTER*minLength;
+    
+    return -bestTER*lengthScale;
   }
 
   @Override
@@ -113,6 +90,12 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     return true;
   } 
 
+  /**
+   * For debugging.
+   * 
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     SLTERpMetric slTERp = new SLTERpMetric();

@@ -6,15 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTURule;
-import edu.stanford.nlp.mt.base.FeatureValues;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Rule;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
@@ -24,6 +15,15 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTURule;
+import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.FeatureValues;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.RichTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -132,6 +132,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
     int numExtracted = 0;
+    long nbestId = 0;
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
@@ -187,7 +188,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
       
       translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
-          goalHyp.score, FeatureValues.combine(goalHyp), goalHypId));
+          goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
       if (translations.size() >= size) {
         break;
       }

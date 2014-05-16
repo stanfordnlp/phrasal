@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.NBestListContainer;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
  * 

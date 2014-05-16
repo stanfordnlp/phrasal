@@ -12,12 +12,12 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.mt.base.FlatNBestList;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Minimum Bayes Risk decoding.

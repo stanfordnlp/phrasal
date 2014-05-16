@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.feat.sparse.PreorderingAgreement;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Factory for OutputSpace objects, which define the decoder output space.

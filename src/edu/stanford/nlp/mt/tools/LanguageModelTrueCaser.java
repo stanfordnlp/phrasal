@@ -4,14 +4,6 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.AbstractPhraseGenerator;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.PhraseAlignment;
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Rule;
 import edu.stanford.nlp.mt.decoder.CubePruningDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
@@ -25,6 +17,14 @@ import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.pt.AbstractPhraseGenerator;
+import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.RichTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 import edu.stanford.nlp.util.Generics;
 

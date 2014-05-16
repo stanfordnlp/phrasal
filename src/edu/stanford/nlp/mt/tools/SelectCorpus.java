@@ -8,7 +8,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import edu.stanford.nlp.mt.base.LineIndexedCorpus;
+
+import edu.stanford.nlp.mt.util.LineIndexedCorpus;
 
 /**
  * Select a subset of lines from a corpus.

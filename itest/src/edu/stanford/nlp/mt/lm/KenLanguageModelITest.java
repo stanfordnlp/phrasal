@@ -4,10 +4,10 @@ import java.io.IOException;
 
 import junit.framework.TestCase;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 
 /**

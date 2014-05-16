@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.decoder;
 
 import java.util.Map;
 
-import edu.stanford.nlp.mt.base.FactoryUtil;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.util.FactoryUtil;
+import edu.stanford.nlp.mt.util.IString;
 
 /**
  * Creates an approximate search procedure.
@@ -17,6 +17,7 @@ public class InfererBuilderFactory {
   public static final String MULTIBEAM_DECODER = "multibeam";
   public static final String DTU_DECODER = "dtu";
   public static final String CUBE_PRUNING_DECODER = "cube";
+  public static final String CUBE_PRUNING_NNLM_DECODER = "cube_nnlm"; // Thang Apr14
 //  public static final String DEFAULT_INFERER = MULTIBEAM_DECODER;
   public static final String DEFAULT_INFERER = CUBE_PRUNING_DECODER;
   public static final String BEAM_SIZE_OPT = "beamcapacity";
@@ -68,6 +69,16 @@ public class InfererBuilderFactory {
       return builder;
     }
 
+    // Thang Apr14
+    if (infererName.equals(CUBE_PRUNING_NNLM_DECODER)) {
+      CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder<IString, String> builder = CubePruningNNLMDecoder.builder();
+      if (beamSize != -1)
+        builder.setBeamCapacity(beamSize);
+      if (beamType != null)
+        builder.setBeamType(beamType);
+      return builder;
+    }
+    
     if (infererName.equals(DTU_DECODER)) {
       DTUDecoder.DTUDecoderBuilder<IString, String> builder = DTUDecoder
           .builder();

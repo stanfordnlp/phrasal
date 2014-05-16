@@ -26,14 +26,13 @@ import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.RVFDatum;
-import edu.stanford.nlp.movetrees.TreeUtils;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
+
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.semgraph.SemanticGraphFactory;

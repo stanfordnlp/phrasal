@@ -18,10 +18,10 @@ import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.InputProperties;
 import edu.stanford.nlp.mt.process.en.EnglishPreprocessor;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.trees.Tree;
@@ -214,6 +214,10 @@ public final class CoreNLPToJSON {
       int lastIndex = -1;
       for (Tree leaf : leaves) {
         int index = ((HasIndex) leaf.label()).index() - 1;
+        if (index < 0 || index >= iobVector.length) {
+          System.err.println("ERROR: Mangled subtree: " + match.toString());
+          continue;
+        }
         if (lastIndex > 0 && index - lastIndex != 1) break;
         if ( ! iobVector[index].equals("O")) break;
         iobVector[index] = seenStart ? "I" : "B";

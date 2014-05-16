@@ -7,17 +7,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.NBestListContainer;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 import com.bbn.mt.ter.TERcalc;
 import com.bbn.mt.ter.TERalignment;
 
+/**
+ * Implementation of the TER metric (Snover et al., 2006). Applies NIST tokenization
+ * to the input before computing the score.
+ * 
+ * @author Daniel Cer
+ *
+ * @param <TK>
+ * @param <FV>
+ */
 public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   final List<List<Sequence<TK>>> referencesList;
@@ -249,16 +258,22 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     }
   }
 
+  /**
+   * Run the TER metric.
+   * 
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
-
     if (args.length == 0) {
       System.err
           .println("Usage:\n\tjava TERMetric (ref 1) (ref 2) ... (ref n) < candidateTranslations\n");
       System.exit(-1);
     }
-    VERBOSE = true;
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
-
+    final boolean doNIST = true;
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, doNIST);
+    System.out.printf("Metric: TER with %d references (lower is better)%n", args.length);
+    
     TERMetric<IString, String> ter = new TERMetric<IString, String>(
         referencesList);
     TERMetric<IString, String>.TERIncrementalMetric incMetric = ter
@@ -275,6 +290,7 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null;) {
+      if (doNIST) line = NISTTokenizer.tokenize(line);
       Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);
@@ -283,7 +299,12 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
     reader.close();
 
-    System.out.printf("TER = %.3f\n", 100 * incMetric.score());
+    // TODO(spenceg) This score is negative because of how it is used in the optimization
+    // code. Apply abs() so as to not break anything. Should really refactor this so that
+    // the optimization code applies its own transformations.
+    double score = 100 * incMetric.score();
+    score = Math.abs(score);
+    System.out.printf("TER = %.3f%n", score);
   }
 
   @Override

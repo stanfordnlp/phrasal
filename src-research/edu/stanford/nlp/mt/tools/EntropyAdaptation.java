@@ -9,13 +9,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.FlatNBestList;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.optimization.DiffFunction;
 import edu.stanford.nlp.optimization.GDMinimizer;
 import edu.stanford.nlp.stats.ClassicCounter;

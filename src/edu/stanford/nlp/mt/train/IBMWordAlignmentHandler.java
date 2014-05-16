@@ -6,10 +6,10 @@ import java.util.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * @author Michel Galley

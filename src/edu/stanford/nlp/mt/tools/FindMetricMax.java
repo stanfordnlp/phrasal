@@ -3,9 +3,19 @@ package edu.stanford.nlp.mt.tools;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.metrics.*;
-import edu.stanford.nlp.mt.tune.*;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.BLEUMetric;
+import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.tune.AgendaMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.tune.BeamMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.tune.GreedyMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.tune.HillClimbingMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.tune.MultiTranslationMetricMax;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ListTopMultiTranslationMetricMax;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
  * 

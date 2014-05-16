@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.ling.Sentence;
 
 /**
- * A result of a query for a rule.
+ * The result of a rule query.
  * 
  * @author Spence Green
  *
@@ -17,10 +17,10 @@ public class RuleQuery extends ScoredQuery {
   
   /**
    * Constructor.
+   * 
    * @param target
    * @param alignment
    * @param score
-   * @param source
    */
   public RuleQuery(List<String> target, List<String> alignment, double score) {
     super(score);

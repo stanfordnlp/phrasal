@@ -2,20 +2,22 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Configure and return a recombination filter.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  */
 public final class RecombinationFilterFactory {
-  public static final String CLASSIC_RECOMBINATION = "classic";
+  public static final String PHAROAH_RECOMBINATION = "pharoah";
   public static final String DTU_RECOMBINATION = "dtu";
   public static final String EXACT_RECOMBINATION = "exact";
   
@@ -38,7 +40,7 @@ public final class RecombinationFilterFactory {
         msdRecombination = true;
     }
 
-    if (recombinationMode.equals(CLASSIC_RECOMBINATION)) {
+    if (recombinationMode.equals(PHAROAH_RECOMBINATION)) {
       List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
       // maintain uniqueness of hypotheses that will result in different linear
       // distortion scores when extended

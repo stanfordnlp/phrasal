@@ -86,6 +86,8 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   }
 
   class DefaultHashMap extends HashMap<String,Set<String>> {
+    private static final long serialVersionUID = 8802635722798100944L;
+
     @Override
     public Set<String> get(Object k) {
       Set<String> v = super.get(k);
@@ -184,5 +186,34 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 
   private double pospart(double number) {
     return number > 0.0 ? number : 0.0;
+  }
+
+  @Override
+  public UpdaterState getState() {
+    return new AdaGradFOBOSState(sumGradSquare, customL1);
+  }
+
+  @Override
+  public void setState(UpdaterState state) {
+    if (state instanceof AdaGradFOBOSState) {
+      sumGradSquare = ((AdaGradFOBOSState) state).gradHistory;
+      customL1 = ((AdaGradFOBOSState) state).customReg;
+    }
+  }
+  
+  /**
+   * State of this update rule.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class AdaGradFOBOSState implements UpdaterState {
+    private static final long serialVersionUID = -7994685877722145964L;
+    private final Counter<String> gradHistory;
+    private final Counter<String> customReg;
+    public AdaGradFOBOSState(Counter<String> h, Counter<String> r) {
+      this.gradHistory = h;
+      this.customReg = r;
+    }
   }
 }

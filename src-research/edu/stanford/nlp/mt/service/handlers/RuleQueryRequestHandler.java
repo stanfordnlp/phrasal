@@ -13,25 +13,25 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.Rule;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.Rule;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -120,6 +120,9 @@ public class RuleQueryRequestHandler implements RequestHandler {
           break;
         } else if (rule.abstractRule.target == null || rule.abstractRule.target.size() == 0) {
           // Ignore deletion rules from the unknown word model
+          continue;
+        } else if (source.equals(rule.abstractRule.target)) {
+          // Ignore identity translation rules when drop-unknown-words is disabled.
           continue;
         }
 

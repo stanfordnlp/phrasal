@@ -1,13 +1,12 @@
 package edu.stanford.nlp.mt.lm;
 
-import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.lm.KenLM;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.TokenUtils;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
  * KenLM language model support via JNI.
@@ -133,6 +132,27 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
+  }
+  
+  // Thang Apr14
+  /**
+   * @param istringSeq: words in normal order (the number of words should be equal to the LM order.
+   * @return score the ngram
+   */
+  public double score(Sequence<IString> istringSeq) {
+    int size = istringSeq.size(); 
+    assert(size==order());
+    
+    int[] ngramIds = new int[size];
+    int i = 0;
+    for (IString iString : istringSeq) {
+      // Notice: ngramids are in reverse order vv. the Sequence
+      ngramIds[size-1-i] = toKenLMId(iString);
+      i++;
+    }
+    
+    // Execute the query (via JNI) and return the score only
+    return model.score(ngramIds);
   }
   
   /**

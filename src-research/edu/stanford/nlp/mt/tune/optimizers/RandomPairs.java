@@ -3,10 +3,10 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import java.util.List;
 import java.util.Random;
 
-import edu.stanford.nlp.mt.base.FeatureValues;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.tune.MERT;
+import edu.stanford.nlp.mt.util.FeatureValues;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.base;
 
+import edu.stanford.nlp.mt.util.FeatureValue;
 import junit.framework.TestCase;
 
 public class FeatureValueTest extends TestCase  {

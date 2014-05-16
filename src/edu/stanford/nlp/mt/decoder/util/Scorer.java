@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.io.IOException;
 import java.util.Collection;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
 
 /**

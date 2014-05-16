@@ -51,7 +51,7 @@ import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 
 /**
  * Loads multiple feature extractors and writes the output to user-specified
@@ -257,7 +257,7 @@ public class PhraseExtract {
       } catch (IOException e) {
         usage();
         throw new RuntimeException(String.format(
-            "I/O error while reading configuration file: %s\n", configFile));
+            "I/O error while reading configuration file: %s%n", configFile));
       }
     }
 
@@ -296,7 +296,7 @@ public class PhraseExtract {
       missingFields.removeAll(prop.keySet());
       usage();
       throw new RuntimeException(String.format(
-          "The following required fields are missing: %s\n", missingFields));
+          "The following required fields are missing: %s%n", missingFields));
     }
 
     if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
@@ -304,7 +304,7 @@ public class PhraseExtract {
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       usage();
       throw new RuntimeException(String.format(
-          "The following fields are unrecognized: %s\n", extraFields));
+          "The following fields are unrecognized: %s%n", extraFields));
     }
 
     // Analyze props:
@@ -574,7 +574,7 @@ public class PhraseExtract {
           System.err
               .println("Some feature extractor needs an additional pass over the data.");
         System.err.printf(
-            "Pass %d on training data (max phrase len: %d,%d)...\nLine",
+            "Pass %d on training data (max phrase len: %d,%d)...%nLine",
             passNumber + 1, AbstractPhraseExtractor.maxPhraseLenF,
             AbstractPhraseExtractor.maxPhraseLenE);
         LineNumberReader aInvReader = null, fReader = IOTools
@@ -602,14 +602,14 @@ public class PhraseExtract {
             // startStepTimeMillis = System.currentTimeMillis();
             System.err.printf(" %d (mem=%dm)...", lineNb, freeMemory);
             // if (verbose)
-            // System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...\n",
+            // System.err.printf("line %d (secs = %.3f, totalmem = %dm, freemem = %dm, %s)...%n",
             // lineNb, totalStepSecs, totalMemory, freeMemory,
             // alTemps.getSizeInfo());
           }
 
           if (done) {
             if (startAtLine >= 0 || endAtLine >= 0)
-              System.err.printf("\nRange done: [%d-%d], current line is %d.\n",
+              System.err.printf("%nRange done: [%d-%d], current line is %d.%n",
                   startAtLine, endAtLine - 1, lineNb);
             break;
           }
@@ -659,9 +659,9 @@ public class PhraseExtract {
           if (lineNb < startAtLine)
             continue;
           if (DETAILED_DEBUG) {
-            System.err.printf("e(%d): %s\n", lineNb, eLine);
-            System.err.printf("f(%d): %s\n", lineNb, fLine);
-            System.err.printf("a(%d): %s\n", lineNb, aLine);
+            System.err.printf("e(%d): %s%n", lineNb, eLine);
+            System.err.printf("f(%d): %s%n", lineNb, fLine);
+            System.err.printf("a(%d): %s%n", lineNb, aLine);
           }
           if (lowercase) {
             fLine = fLine.toLowerCase();
@@ -696,7 +696,7 @@ public class PhraseExtract {
         }
 
         double totalTimeSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-        System.err.printf("\nDone with pass %d. Seconds: %.3f.\n",
+        System.err.printf("%nDone with pass %d. Seconds: %.3f.%n",
             passNumber + 1, totalTimeSecs);
       }
 
@@ -829,39 +829,39 @@ public class PhraseExtract {
 
   static void usage() {
     System.err
-        .print("Usage: java edu.stanford.nlp.mt.train.PhraseExtract [ARGS]\n"
-            + "Sets of mandatory arguments (user must select either set 1, 2, or 3):\n"
-            + "Set 1:\n"
-            + " -fCorpus <file> : source-language corpus\n"
-            + " -eCorpus <file> : target-language corpus\n"
-            + " -align <file> : alignment file (Moses format)\n"
-            + "Set 2:\n"
-            + " -fCorpus <file> : source-language corpus\n"
-            + " -eCorpus <file> : target-language corpus\n"
-            + " -feAlign <file> : f-e alignment file (GIZA format)\n"
-            + " -efAlign <file> : e-f alignment file (GIZA format)\n"
-            + "Set 3:\n"
-            + " -inputDir <directory> : alignment directory created by Berkeley aligner v2.1\n"
-            + "Set 4:\n"
-            + " -tripleFile <file> : source ||| target ||| alignment triple format\n"
-            + "Optional arguments:\n"
-            + " -symmetrization <type> : alignment symmetrization heuristic (expects -feAlign and -efAlign)\n"
-            + " -extractors <class1>[:<class2>:...:<classN>] : feature extractors\n"
-            + " -fFilterCorpus <file> : filter against a specific dev/test set\n"
-            + " -fFilterList <file> : phrase extraction restricted to this list\n"
-            + " -split <N> : split filter list into N chunks\n"
-            + "  (divides memory usage by N, but multiplies running time by N)\n"
-            + " -refFile <file> : check features against a Moses phrase table\n"
-            + " -maxLen <n> : max phrase length\n"
-            + " -maxLenF <n> : max phrase length (source-language)\n"
-            + " -maxLenE <n> : max phrase length (target-language)\n"
-            + " -numLines <n> : number of lines to process (<0 : all)\n"
-            + " -startAtLine <n> : start at line <n> (<0 : all)\n"
-            + " -endAtLine <n> : end at line <n> (<0 : all)\n"
-            + " -noAlign : do not specify alignment in phrase table\n"
-            + " -verbose : enable verbose mode\n"
-            + " -minCount <n> : Retain only phrases that occur >= n times\n"
-            + " -outputDir path : Output files to <path>\n");
+        .printf("Usage: java edu.stanford.nlp.mt.train.PhraseExtract [ARGS]%n"
+            + "Sets of mandatory arguments (user must select either set 1, 2, or 3):%n"
+            + "Set 1:%n"
+            + " -fCorpus <file> : source-language corpus%n"
+            + " -eCorpus <file> : target-language corpus%n"
+            + " -align <file> : alignment file (Moses format)%n"
+            + "Set 2:%n"
+            + " -fCorpus <file> : source-language corpus%n"
+            + " -eCorpus <file> : target-language corpus%n"
+            + " -feAlign <file> : f-e alignment file (GIZA format)%n"
+            + " -efAlign <file> : e-f alignment file (GIZA format)%n"
+            + "Set 3:%n"
+            + " -inputDir <directory> : alignment directory created by Berkeley aligner v2.1%n"
+            + "Set 4:%n"
+            + " -tripleFile <file> : source ||| target ||| alignment triple format%n"
+            + "Optional arguments:%n"
+            + " -symmetrization <type> : alignment symmetrization heuristic (expects -feAlign and -efAlign)%n"
+            + " -extractors <class1>[:<class2>:...:<classN>] : feature extractors%n"
+            + " -fFilterCorpus <file> : filter against a specific dev/test set%n"
+            + " -fFilterList <file> : phrase extraction restricted to this list%n"
+            + " -split <N> : split filter list into N chunks%n"
+            + "  (divides memory usage by N, but multiplies running time by N)%n"
+            + " -refFile <file> : check features against a Moses phrase table%n"
+            + " -maxLen <n> : max phrase length%n"
+            + " -maxLenF <n> : max phrase length (source-language)%n"
+            + " -maxLenE <n> : max phrase length (target-language)%n"
+            + " -numLines <n> : number of lines to process (<0 : all)%n"
+            + " -startAtLine <n> : start at line <n> (<0 : all)%n"
+            + " -endAtLine <n> : end at line <n> (<0 : all)%n"
+            + " -noAlign : do not specify alignment in phrase table%n"
+            + " -verbose : enable verbose mode%n"
+            + " -minCount <n> : Retain only phrases that occur >= n times%n"
+            + " -outputDir path : Output files to <path>%n");
   }
 
   /**

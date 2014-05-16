@@ -3,14 +3,14 @@ package edu.stanford.nlp.mt.train;
 import java.io.*;
 import java.util.regex.*;
 
-import edu.stanford.nlp.mt.base.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.mt.base.IntegerArrayIndex;
-import edu.stanford.nlp.mt.base.IOTools;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Sequences;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 
 public class PosTaggedSourceFilter extends AbstractSourceFilter {
 

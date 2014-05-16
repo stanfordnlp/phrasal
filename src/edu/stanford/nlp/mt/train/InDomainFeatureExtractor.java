@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.util.Generics;
 
 /**
