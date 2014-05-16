@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
@@ -19,8 +17,8 @@ import com.bbn.mt.ter.TERcalc;
 import com.bbn.mt.ter.TERalignment;
 
 /**
- * Implementation of the TER metric (Snover et al., 2006). Applies NIST tokenization
- * to the input before computing the score.
+ * Implementation of the TER metric (Snover et al., 2006). If invoked from the command line,
+ * applies NIST tokenization to the input before computing the score.
  * 
  * @author Daniel Cer
  *
@@ -71,48 +69,34 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
     return 0.0;
   }
 
-  Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
-
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
       int idx, double[] editCounts) {
+
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
-    // String[] refs = new String[refsSeq.size()];
-    String key = String.format("%d|||%s", idx, trans.translation.toString());
-    TERalignment bestAl = terCache.get(key);
+    TERalignment bestAl = null;
 
-    if (bestAl == null) {
-      double best = Double.POSITIVE_INFINITY;
-      String hyp = trans.translation.toString();
-      // for (int i = 0; i < refs.length; i++) {
-      // refs[i] = refsSeq.get(i).toString();
-      // }
-      // System.err.printf("Hyp: %s\n", hyp);
-
-      int totalWords = 0;
-      for (Sequence<TK> ref : refsSeq) {
-        TERalignment terAl = TERcalc.TER(hyp, ref.toString());
-        totalWords += terAl.numWords;
-        // System.err.printf("ter: %f\n", ter);
-        // System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits,
-        // terAl.numWords);
-        if (terAl.numEdits < best) {
-          best = terAl.numEdits;
-          bestAl = terAl;
-        }
+    double best = Double.POSITIVE_INFINITY;
+    String hyp = trans.translation.toString();
+    int totalWords = 0;
+    for (Sequence<TK> ref : refsSeq) {
+      TERalignment terAl = TERcalc.TER(hyp, ref.toString());
+      totalWords += terAl.numWords;
+      if (terAl.numEdits < best) {
+        best = terAl.numEdits;
+        bestAl = terAl;
       }
-      assert (bestAl != null);
-      bestAl.numWords = totalWords / (double) refsSeq.size();
-      terCache.put(key, bestAl);
-
-      // Member variables no longer needed; free some memory:
-      bestAl.hyp = null;
-      bestAl.ref = null;
-      bestAl.allshifts = null;
-      bestAl.aftershift = null;
-      bestAl.bestRef = null;
-      if (editCounts != null)
-        bestAl.alignment = null;
     }
+    assert (bestAl != null);
+    bestAl.numWords = totalWords / (double) refsSeq.size();
+
+    // Member variables no longer needed; free some memory:
+    bestAl.hyp = null;
+    bestAl.ref = null;
+    bestAl.allshifts = null;
+    bestAl.aftershift = null;
+    bestAl.bestRef = null;
+    if (editCounts != null)
+      bestAl.alignment = null;
 
     if (editCounts != null) {
       bestAl.scoreDetails();

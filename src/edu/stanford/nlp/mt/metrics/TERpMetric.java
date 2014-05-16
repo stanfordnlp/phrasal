@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
@@ -25,8 +23,8 @@ import com.bbn.mt.terp.TERpara;
 import com.bbn.mt.terp.NormalizeText;
 
 /**
- * Implementation of the TERp metric (Snover et al., 2009). Applies NIST tokenization
- * to the input before computing the score.
+ * Implementation of the TERp metric (Snover et al., 2009). If invoked from the command line,
+ * applies NIST tokenization to the input before computing the score.
  * 
  * @author Daniel Cer
  *
@@ -113,47 +111,34 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   PhraseTable phrasetable;
 
-  Map<String, TERalignment> terCache = new HashMap<String, TERalignment>();
-
   TERcost costfunc = new TERcost();
 
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
       int idx, double[] editCounts) {
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
     String[] refs = new String[refsSeq.size()];
-    String key = String.format("%d|||%s", idx, trans.translation.toString());
-    TERalignment bestAl = terCache.get(key);
+    TERalignment bestAl = null;
 
-    if (bestAl == null) {
-      double best = Double.POSITIVE_INFINITY;
-      String hyp = trans.translation.toString();
-      for (int i = 0; i < refs.length; i++) {
-        refs[i] = refsSeq.get(i).toString();
-      }      
-      TERcalc calc = new TERcalc(costfunc);
-      costfunc.setPhraseTable(phrasetable);     
-      calc.BEAM_WIDTH = beamWidth;
-      calc.setShiftSize(maxShiftDist);
-      // System.err.println(calc.get_info());
-      // System.err.printf("Hyp: %s\n", hyp);
-
-      int totalWords = 0;
-      for (Sequence<TK> ref : refsSeq) {
-        TERalignment terAl = calc.TER(hyp, ref.toString());
-        totalWords += terAl.numWords;
-        // System.err.printf("ter: %f\n", ter);
-        // System.err.printf(":Edits: %s Len: %s\n", terAl.numEdits,
-        // terAl.numWords);
-        if (terAl.numEdits < best) {
-          best = terAl.numEdits;
-          bestAl = terAl;
-        }
+    double best = Double.POSITIVE_INFINITY;
+    String hyp = trans.translation.toString();
+    for (int i = 0; i < refs.length; i++) {
+      refs[i] = refsSeq.get(i).toString();
+    }      
+    TERcalc calc = new TERcalc(costfunc);
+    costfunc.setPhraseTable(phrasetable);     
+    calc.BEAM_WIDTH = beamWidth;
+    calc.setShiftSize(maxShiftDist);
+    int totalWords = 0;
+    for (Sequence<TK> ref : refsSeq) {
+      TERalignment terAl = calc.TER(hyp, ref.toString());
+      totalWords += terAl.numWords;
+      if (terAl.numEdits < best) {
+        best = terAl.numEdits;
+        bestAl = terAl;
       }
-      assert (bestAl != null);
-      bestAl.numWords = totalWords / (double) refs.length;
-      terCache.put(key, bestAl);
-      // System.err.printf("Cache size: %d\n", terCache.size());
     }
+    assert (bestAl != null);
+    bestAl.numWords = totalWords / (double) refs.length;
 
     if (editCounts != null) {
       bestAl.scoreDetails();
@@ -241,7 +226,6 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public double score() {
-      System.err.printf("(%s/%s)\n", editsTotal, numWordsTotal);
       return -editsTotal / (numWordsTotal);
     }
 
@@ -295,6 +279,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
     boolean doNIST = true;
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, doNIST);
+    System.out.printf("Metric: TERp with %d references (lower is better)%n", args.length);
 
     TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
         referencesList, false, System.getProperty("terpa") != null);
@@ -314,7 +299,11 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     reader.close();
 
-    System.out.printf("TER = %.3f%n", 100 * incMetric.score());
+    // TODO(spenceg) This score is negative because of how it is used in the optimization
+    // code. Apply abs() so as to not break anything. Should really refactor this so that
+    // the optimization code applies its own transformations.
+    double score = 100 * incMetric.score();
+    score = Math.abs(score);
+    System.out.printf("TERp = %.3f%n", score);
   }
-
 }
