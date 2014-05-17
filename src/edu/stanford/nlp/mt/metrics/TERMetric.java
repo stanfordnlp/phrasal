@@ -31,8 +31,6 @@ public class TERMetric<TK, FV> extends AbstractTERMetric<TK, FV> {
 
   public static boolean VERBOSE = false;
 
-  public final TERcalc calc = new TERcalc();
-
   enum EditType {
     ins, del, sub, sft
   }

@@ -23,8 +23,6 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
-  public static final boolean VERBOSE = false;
-
   final List<SentenceLevelMetric<TK,FV>> metrics; 
   final double wts[];
 
@@ -36,21 +34,9 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
   @Override
   public double score(int sourceId, Sequence<TK> source, List<Sequence<TK>> references, Sequence<TK> translation) {
-
-    int minLength = Integer.MAX_VALUE;
-    for (Sequence<TK> sentence : references) {
-      if (sentence.size() < minLength) {
-        minLength = sentence.size();
-      }
-    }
-
     double score = 0; 
     for (int i = 0; i < wts.length; i++) {
        double mscore = metrics.get(i).score(sourceId, null, references, translation);
-       if (VERBOSE) {
-         System.err.printf("+= %.2f * %.3f (/%d = %.3f)\n", wts[i], mscore*100,
-           minLength, (mscore/minLength)*100);
-       } 
        score += wts[i] * mscore;
     }
     return score;

@@ -110,6 +110,6 @@ RUNNAME="$DECODE_SET_NAME"."$TUNERUNNAME"
 # Log some info about this run
 bookmark
 
-step-status "$step -- Run tuning"
+step-status "Tuning"
 tune-online
 
