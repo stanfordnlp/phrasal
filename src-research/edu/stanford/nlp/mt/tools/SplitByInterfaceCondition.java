@@ -26,10 +26,12 @@ public class SplitByInterfaceCondition {
     public final Sequence<IString> humanHyp;
     public final Sequence<IString> machineHyp;
     public final Sequence<IString> ref;
-    public SentencePair(Sequence<IString> humanHyp, Sequence<IString> machineHyp, Sequence<IString> ref) {
+    public final Sequence<IString> src;
+    public SentencePair(Sequence<IString> humanHyp, Sequence<IString> machineHyp, Sequence<IString> ref, Sequence<IString> src) {
       this.humanHyp = humanHyp;
       this.machineHyp = machineHyp;
       this.ref = ref;
+      this.src = src;
     }
   }
   
@@ -37,18 +39,20 @@ public class SplitByInterfaceCondition {
    * @param args
    */
   public static void main(String[] args) {
-    if (args.length < 3) {
-      System.err.printf("Usage: java %s ref mt_file file [file]%n", SplitByInterfaceCondition.class.getName());
+    if (args.length < 4) {
+      System.err.printf("Usage: java %s src ref mt_file file [file]%n", SplitByInterfaceCondition.class.getName());
       System.err.println("Assumes that for every input file there is an associated .props file with the InputProperties");
       System.exit(-1);
     }
-    final String refFilename = args[0];
-    final String mtFilename = args[1];
+    final String srcFilename = args[0];
+    final String refFilename = args[1];
+    final String mtFilename = args[2];
+    final List<Sequence<IString>> srcList = IStrings.tokenizeFile(srcFilename);
     final List<Sequence<IString>> refList = IStrings.tokenizeFile(refFilename);
     final List<Sequence<IString>> mtList = IStrings.tokenizeFile(mtFilename);
     
     Map<String,List<SentencePair>> domainToSentencePairs = Generics.newHashMap();
-    for (int i = 2; i < args.length; ++i) {
+    for (int i = 3; i < args.length; ++i) {
       String transFileName = args[i];
       System.err.println("Reading: " + transFileName);
       List<Sequence<IString>> hypList = IStrings.tokenizeFile(transFileName);
@@ -66,7 +70,8 @@ public class SplitByInterfaceCondition {
         if ( ! domainToSentencePairs.containsKey(domain)) {
           domainToSentencePairs.put(domain, new ArrayList<SentencePair>());
         }
-        domainToSentencePairs.get(domain).add(new SentencePair(hypList.get(j), mtList.get(j), refList.get(j)));
+        domainToSentencePairs.get(domain).add(new SentencePair(hypList.get(j), mtList.get(j), 
+            refList.get(j), srcList.get(j)));
       }
     }
     
@@ -74,15 +79,18 @@ public class SplitByInterfaceCondition {
       PrintStream refWriter = IOTools.getWriterFromFile(domain + ".ref");
       PrintStream machineWriter = IOTools.getWriterFromFile(domain + ".mt");
       PrintStream hypWriter = IOTools.getWriterFromFile(domain + ".trans");
+      PrintStream srcWriter = IOTools.getWriterFromFile(domain + ".src");
       System.err.printf("Writing %d segments for domain %s%n", domainToSentencePairs.get(domain).size(), domain);
       for (SentencePair pair : domainToSentencePairs.get(domain)) {
         refWriter.println(pair.ref.toString());
         machineWriter.println(pair.machineHyp.toString());
         hypWriter.println(pair.humanHyp.toString());
+        srcWriter.println(pair.src.toString());
       }
       refWriter.close();
       machineWriter.close();
       hypWriter.close();
+      srcWriter.close();
     }
   }
 }
