@@ -56,6 +56,7 @@ public class DependencyProjector {
     optionArgDefs.put("alignment", 1);
     optionArgDefs.put("annotations", 1);
     optionArgDefs.put("outdir", 1);
+    optionArgDefs.put("transitive", 0);
 
     return optionArgDefs;
   }
@@ -259,7 +260,7 @@ public class DependencyProjector {
   }
  */
  
-  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment) {
+  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment, boolean transitive) {
     Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
     
     //source to target token aligment (we force 1:1)
@@ -273,21 +274,24 @@ public class DependencyProjector {
     Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
     HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
     
+    
     for (TypedDependency dep : dependencies) {
       int govIndex = dep.gov().index() - 1;
       int depIndex = dep.dep().index() - 1;
       reverseDependencies.put(depIndex, govIndex);
     }
     
-    //delete all nodes that are not aligned and make things transitive
-    for (int depIndex : reverseDependencies.keySet()) {
-      Integer govIndex = reverseDependencies.get(depIndex);
-      if (govIndex == null || govIndex == -1)
-        continue;
-      while (govIndex != null && govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
-        govIndex = reverseDependencies.get(govIndex);
+    if (transitive) {
+      //delete all nodes that are not aligned and make things transitive
+      for (int depIndex : reverseDependencies.keySet()) {
+        Integer govIndex = reverseDependencies.get(depIndex);
+        if (govIndex == null || govIndex == -1)
+          continue;
+        while (govIndex != null && govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
+          govIndex = reverseDependencies.get(govIndex);
+        }
+        reverseDependencies.put(depIndex, govIndex);
       }
-      reverseDependencies.put(depIndex, govIndex);
     }
 
     int len = alignment.eSize();
@@ -558,6 +562,8 @@ public class DependencyProjector {
 
     
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
+    boolean transitive = PropertiesUtils.getBool(options, "transitive", false);
+
     File sourceSentences = new File(sourceTokens);
     File targetSentences = new File(targetTokens);
     File alignmentFile = new File(alignments);
@@ -575,7 +581,7 @@ public class DependencyProjector {
         //System.err.println("alignment = \"" + alignmentString + "\";");
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
         //projectSentence(sentence, alignment);
-        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(sentence, alignment);
+        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(sentence, alignment, transitive);
         //if (i == 0) {
         //  System.err.println(dependencies.get(-1));
         //  System.err.println(dependencies.get(1));
