@@ -212,6 +212,46 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
 
 */
   
+  /*
+   * Returns true if a source token was already translated
+   * and has been scored
+   */
+  private boolean isSourceTokenTranslated(int sourceIndex, 
+      int currentTargetIndex, Featurizable<IString, String> f,
+      SortedSet<Integer> alignedSourceIndices) {
+    
+    if (!f.derivation.sourceCoverage.get(sourceIndex))
+      return false;
+    
+    if (alignedSourceIndices.contains(sourceIndex))
+      return true;
+    
+    //check if the sourceIndex lies within the boundaries
+    //of the current rule
+    //if not, then the token was already translated as
+    //it is in the source coverage set
+    if (sourceIndex < f.sourcePosition || sourceIndex >= (f.sourcePosition + f.sourcePhrase.size()))
+      return true;
+    
+    
+    int ruleTargetIndex = currentTargetIndex - f.targetPosition;
+    
+    //the target index token should always be aligned
+    //if this is not the case, return false
+    if (f.rule.abstractRule.alignment.t2s(ruleTargetIndex) == null 
+        || f.rule.abstractRule.alignment.t2s(ruleTargetIndex).length < 1)
+    return false;
+     
+   
+   int currentSourceIndex = f.rule.abstractRule.alignment.t2s(ruleTargetIndex)[0];
+   
+   if (sourceIndex <= currentSourceIndex)
+     return true;
+   
+   return false;
+
+  }
+  
   private Set<Integer> reachableNodes(int root) {
     Set<Integer> reachableNodes = Generics.newHashSet();
     reachableNodes.add(root);
@@ -256,6 +296,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     int targetLength = f.targetPhrase.size();
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     tokfor: for (int i = 0; i < targetLength; i++) {
+      int currentTargetIndex = i + f.targetPosition;
       IString token = f.targetPhrase.get(i);
       if (token.word().length() < 1 || !Character.isAlphabetic(token.word().charAt(0)))
         continue;
@@ -280,6 +321,9 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         continue;
       }
       
+      //mark the source token as being aligned
+      state.alignedSourceIndices.add(sourceDepIndex);
+      
       //check for root
       if (sourceGovIndex == -1) {
         double rootScore = rootLM.score(f.targetPhrase.subsequence(i, i+1), 0, null).getScore();
@@ -287,7 +331,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
       } else {
         //check if head was already put down
-        if (f.derivation.sourceCoverage.get(sourceGovIndex)) {
+        if (isSourceTokenTranslated(sourceGovIndex, currentTargetIndex, f, state.alignedSourceIndices)) {
           //try to score right
           DepLMSubState oSubState = state.getSubState(sourceGovIndex);
           DepLMSubState subState = oSubState;
@@ -320,7 +364,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
             } else {
               subState = state.getSubState(sourceGovIndex);
               //check if the transitive head was already put down
-              if (f.derivation.sourceCoverage.get(sourceGovIndex)) {
+              if (isSourceTokenTranslated(sourceGovIndex, currentTargetIndex, f, state.alignedSourceIndices)) {
                 if (subState == null || subState.headToken == null) {
                   //also the parent is unaligned, go one level further up the tree
                   continue;
