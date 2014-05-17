@@ -7,8 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.bbn.mt.ter.TERalignment;
-import com.bbn.mt.ter.TERcalc;
+import com.bbn.mt.terp.TERalignment;
+import com.bbn.mt.terp.TERcalc;
+import com.bbn.mt.terp.TERcost;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -23,6 +24,11 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class SLTERGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
+  public static final int DEFAULT_BEAM_SIZE = 20;
+
+  private final TERcost terCost = new TERcost();
+  private final int beamSize = DEFAULT_BEAM_SIZE;
+  
   @Override
   public double score(int sourceId, Sequence<TK> source,
       List<Sequence<TK>> references, Sequence<TK> translation) {
@@ -38,15 +44,14 @@ public class SLTERGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
      * absolute edits is required. Combining these two recommendations amounts to
      * simply ignoring the denominator for the TER calculation.
      */
+    TERcalc terCalc = new TERcalc(terCost);
+    terCalc.BEAM_WIDTH = beamSize;
     final String hyp = translation.toString();
     double bestTER = Double.POSITIVE_INFINITY;
     int refLen = 0;
     for (Sequence<TK> refSeq : uniqRefs) {
       String ref = refSeq.toString();
-      TERalignment align;
-      synchronized(TERcalc.class) {
-        align = TERcalc.TER(hyp, ref);
-      }
+      TERalignment align = terCalc.TER(hyp, ref);
       //        ter = align.numEdits / align.numWords;
       double ter = align.numEdits;
       if (ter < bestTER) {
