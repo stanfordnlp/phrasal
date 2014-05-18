@@ -1,7 +1,8 @@
-#!/bin/sh
-
+#!/usr/bin/env bash
+#
+# Run the BLEU metric
+#
 MEM=1g
-BASEDIR=`dirname $0`
-JAVA_OPTS="-XX:+UseCompressedOops -Xmx$MEM -Xms$MEM"
+JAVA_OPTS="-ea -Xmx$MEM -Xms$MEM"
 
 java $JAVA_OPTS edu.stanford.nlp.mt.metrics.BLEUMetric $@

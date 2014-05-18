@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#
+# Run the TER metric
+#
+MEM=1g
+JAVA_OPTS="-ea -Xmx$MEM -Xms$MEM"
+
+java $JAVA_OPTS edu.stanford.nlp.mt.metrics.TERMetric $@
