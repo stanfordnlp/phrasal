@@ -238,30 +238,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     return toString(e2f, false);
   }
 
-  static public SymmetricalWordAlignment[] readFromIBMWordAlignment(
-      String xmlFile) {
-    InputStream in = null;
-    IBMWordAlignmentHandler h = null;
-    try {
-      h = new IBMWordAlignmentHandler();
-      in = new BufferedInputStream(new FileInputStream(new File(xmlFile)));
-      h.readXML(in);
-    } catch (Throwable t) {
-      t.printStackTrace();
-    } finally {
-      if (in != null) {
-        try {
-          in.close();
-        } catch (IOException ioe) {
-          ioe.printStackTrace();
-        }
-      }
-    }
-    if (h == null)
-      throw new RuntimeException("Error in alignment file");
-    return h.getIBMWordAlignment();
-  }
-
   public static void main(String[] args) throws IOException {
     List<String> fLines = IOUtils.linesFromFile(args[0]), eLines = IOUtils
         .linesFromFile(args[1]), aLines = IOUtils.linesFromFile(args[2]);
