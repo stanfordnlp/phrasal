@@ -37,5 +37,6 @@
 	<classpathentry kind="lib" path="lib-research/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
 	<classpathentry kind="lib" path="lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib-research/jsr305.jar"/>
+	<classpathentry kind="lib" path="lib-research/opencsv-2.3.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
