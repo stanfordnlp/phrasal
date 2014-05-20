@@ -54,12 +54,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr,
-      boolean s2t, boolean oneIndexed) throws IOException {
+      boolean s2t, boolean oneIndexed) {
     init(fStr, eStr, aStr, s2t, oneIndexed);
   }
 
-  public SymmetricalWordAlignment(String fStr, String eStr, String aStr)
-      throws IOException {
+  public SymmetricalWordAlignment(String fStr, String eStr, String aStr) {
     init(fStr, eStr, aStr);
   }
 
@@ -75,12 +74,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr, eStr, aStr, reverse, oneIndexed);
   }
 
-  public void init(String fStr, String eStr, String aStr) throws IOException {
+  public void init(String fStr, String eStr, String aStr) {
     init(fStr, eStr, aStr, false);
   }
 
-  public void init(String fStr, String eStr, String aStr, boolean reverse)
-      throws IOException {
+  public void init(String fStr, String eStr, String aStr, boolean reverse) {
     init(fStr, eStr, aStr, reverse, false);
   }
 
@@ -96,7 +94,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse,
-      boolean oneIndexed) throws IOException {
+      boolean oneIndexed) {
     if (VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     initSentPair(fStr, eStr);
@@ -121,10 +119,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
           ++epos;
         }
         if (0 > fpos || fpos >= f.size())
-          throw new IOException("f has index out of bounds (fsize=" + f.size()
+          throw new RuntimeException("f has index out of bounds (fsize=" + f.size()
               + ",esize=" + e.size() + ") : " + fpos);
         if (0 > epos || epos >= e.size())
-          throw new IOException("e has index out of bounds (esize=" + e.size()
+          throw new RuntimeException("e has index out of bounds (esize=" + e.size()
               + ",fsize=" + f.size() + ") : " + epos);
         f2e[fpos].add(epos);
         e2f[epos].add(fpos);
@@ -175,7 +173,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
    * @param hyp
    *          hypothesis alignment
    */
-  static double computeAER(SymmetricalWordAlignment[] ref,
+  public static double computeAER(SymmetricalWordAlignment[] ref,
       SymmetricalWordAlignment[] hyp) {
     int tpC = 0, refC = 0, hypC = 0;
     double totalPrec = 0.0, totalRecall = 0.0, totalF = 0.0;
