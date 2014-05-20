@@ -43,11 +43,13 @@ public class FeatureValue<T> {
   @Override
   @SuppressWarnings("unchecked")
   public boolean equals(Object o) {
-    if (o == this)
+    if (o == this) {
       return true;
-    if (o == null || o.getClass() != getClass())
+    } else if ( ! (o instanceof FeatureValue)) {
       return false;
-    FeatureValue<T> fv = (FeatureValue<T>) o;
-    return (fv.value == this.value && fv.name.equals(this.name));
+    } else {
+      FeatureValue<T> fv = (FeatureValue<T>) o;
+      return (fv.value == this.value && fv.name.equals(this.name));
+    }
   }
 }
