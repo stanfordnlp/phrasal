@@ -107,7 +107,6 @@ public final class IOTools {
     PrintStream output = null;
     try {
       if (fileName != null) {
-        System.err.println("output file: " + fileName);
         if (fileName.endsWith(".gz")) {
           output = new PrintStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
               fileName))), false, encoding);

@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.tools;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -14,7 +13,6 @@ import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
-import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -27,21 +25,6 @@ import edu.stanford.nlp.util.StringUtils;
  */
 public class MakePTMPhrasalInput {
 
-  private static Map<String,String> slurpSrcFile(String filename) {
-    Map<String,String> idToSrc = Generics.newHashMap();
-    LineNumberReader reader = IOTools.getReaderFromFile(filename);
-    try {
-      for (String line; (line = reader.readLine()) != null;) {
-        String[] fields = line.trim().split("\\t");
-        assert fields.length == 2;
-        idToSrc.put(fields[0], fields[1]);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return idToSrc;
-  }
-  
   private static String usage() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
@@ -75,6 +58,7 @@ public class MakePTMPhrasalInput {
     Preprocessor srcPreproc = ProcessorFactory.getPreprocessor(srcLang);
     Preprocessor tgtPreproc = ProcessorFactory.getPreprocessor(tgtLang);
     
+    System.out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s%n", "doc_id", "seg_id", "username", "mt_tok", "user_tok", "s2mt_tok", "src_tok");
     CSVReader reader = new CSVReader(new FileReader(sqlFile));
     // Skip header
     boolean seenHeader = false;
@@ -106,7 +90,7 @@ public class MakePTMPhrasalInput {
           }
         }
       }
-      System.out.printf("%s\t%s\t%s\t%s\t%s\t%s%n", fields[0], fields[1], fields[2], t2tPrime.e().toString(), userTextTok, Sentence.listToString(alignmentList));
+      System.out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s%n", fields[0], fields[1], fields[2], t2tPrime.e().toString(), userTextTok, Sentence.listToString(alignmentList), s2sPrime.e().toString());
     }
     reader.close();
   }
