@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat;
+package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.List;
 
