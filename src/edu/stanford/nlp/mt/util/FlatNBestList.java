@@ -166,7 +166,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
             featureNameStored = feature;
           }
           featureValuesTmp.add(new FeatureValue<String>(featureNameStored,
-              values.get(0), true));
+              values.get(0)));
         } else {
           for (int i = 0; i < values.size(); i++) {
             String composedName = feature + "_" + i;
@@ -176,7 +176,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
               featureNameStored = composedName;
             }
             featureValuesTmp.add(new FeatureValue<String>(featureNameStored,
-                values.get(i), true));
+                values.get(i)));
           }
         }
       }

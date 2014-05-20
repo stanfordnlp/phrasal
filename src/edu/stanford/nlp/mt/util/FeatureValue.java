@@ -1,9 +1,8 @@
 package edu.stanford.nlp.mt.util;
 
-import java.lang.ref.WeakReference;
-import java.util.*;
-
 /**
+ * A feature key/value pair.
+ * 
  * @author danielcer
  * 
  * @param <T>
@@ -16,31 +15,12 @@ public class FeatureValue<T> {
   // instructs those featurizers not to cache this feature value.
   public boolean doNotCache = false;
 
-  static WeakHashMap<Object, WeakReference<Object>> nameCache = new WeakHashMap<Object, WeakReference<Object>>();
-
   /**
-	 */
-  @SuppressWarnings("unchecked")
-  public FeatureValue(T name, double value, boolean cacheFeatureName) {
-    if (name == null) {
-      throw new RuntimeException("Feature name cannot be null");
-    }
-    this.value = value;
-    if (cacheFeatureName) {
-      synchronized(nameCache) {
-        WeakReference<Object> nameSub = nameCache.get(name);
-        if (nameSub == null) {
-          this.name = name;
-          nameCache.put(name, new WeakReference<Object>(name));
-        } else {
-          this.name = (T) nameSub.get();
-        }
-      }
-    } else {
-      this.name = name;
-    }
-  }
-
+   * Constructor.
+   * 
+   * @param name
+   * @param value
+   */
   public FeatureValue(T name, double value) {
     if (name == null) {
       throw new RuntimeException("Feature name cannot be null");
