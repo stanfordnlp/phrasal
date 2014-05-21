@@ -1,37 +1,28 @@
 package edu.stanford.nlp.mt.tools;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Properties;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.util.Triple;
 
 public class DependencyProjectorCoNLL {
 
@@ -40,13 +31,7 @@ public class DependencyProjectorCoNLL {
 
   private static int skippedSentences = 0;
   private static int processedSentences = 0;
-  
-  private static BufferedWriter leftDepLMWriter;
-  private static BufferedWriter rightDepLMWriter;
-  private static BufferedWriter headDepLMWriter;
-
-  private static String HEAD_SUFFIX = "<HEAD>";
-  
+    
   
   /**
    * Command-line option specification.
@@ -66,7 +51,7 @@ public class DependencyProjectorCoNLL {
   
   
   
-  public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens, List<String> posTags) {
+  public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens) {
     Map<Integer,Integer> reverseDependencies = Generics.newHashMap();
     
     for (int head : dependencies.keySet()) {
@@ -94,15 +79,24 @@ public class DependencyProjectorCoNLL {
     }
     
     for (int i = 0; i < tokens.size(); i++) {
+      String token = tokens.get(i).word();
+      String parts[] = token.split("_");
+      String pos = "POS";
+      String word = token;
+      if (parts.length > 1) {
+        word = token.substring(0, token.lastIndexOf("_"));
+        pos = parts[parts.length -1];
+      }
+      
       System.out.print((i + 1)); //index
       System.out.print("\t");
-      System.out.print(tokens.get(i).word()); //form
+      System.out.print(word); //form
       System.out.print("\t");  
       System.out.print("_"); //lemma
       System.out.print("\t"); 
-      System.out.print(posTags.get(i)); //pos tag
+      System.out.print(pos); //pos tag
       System.out.print("\t");
-      System.out.print(posTags.get(i)); //pos tag
+      System.out.print(pos); //pos tag
       System.out.print("\t");
       System.out.print("_"); //feats
       System.out.print("\t");
@@ -166,9 +160,15 @@ public class DependencyProjectorCoNLL {
         if (govIndex == null || govIndex == -1)
           continue;
         boolean changed = false;
+        int i = 0;
         while (govIndex != null && govIndex > -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
+          if (i >= 2) {
+            govIndex = -2;
+            break;
+          }  
           govIndex = reverseDependencies.get(govIndex);
           changed = true;
+          i++;
         }
         
         if (changed && govIndex == -1)
@@ -317,13 +317,8 @@ public class DependencyProjectorCoNLL {
         //}
         //printDependencyString(dependencies, -1, alignment.e(), "");
         //System.out.println(dependencies);
-        
-        List<String> posTags = Generics.newArrayList();
-        for (IString s : alignment.e()) {
-          posTags.add("POS");
-        }
-        
-        printDependencies(dependencies, alignment.e(), posTags);
+     
+        printDependencies(dependencies, alignment.e());
         //System.err.println("---------------------------");
       //} catch (Exception e) {
       //  e.printStackTrace();
