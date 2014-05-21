@@ -42,7 +42,7 @@ public class PhraseAlignmentTest {
     assertEquals(3, tgtPA.findSrcAvgPos(3));
     tgtAlignment = "(0,3) (1) () (2,4)";
     
-    tgtAlignment = "I-I";
+    tgtAlignment = PhraseAlignment.MONOTONE_ALIGNMENT;
     tgtPA = PhraseAlignment.getPhraseAlignment(tgtAlignment);
     assertEquals(0, tgtPA.findSrcAvgPos(0));
   }

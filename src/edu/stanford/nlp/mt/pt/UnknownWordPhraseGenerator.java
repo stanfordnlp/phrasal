@@ -26,9 +26,8 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
   public static final String PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
   public static final String UNK_FEATURE_NAME = "TM.UNK";
 
-  // do we need to account for "(0) (1)", etc?
-  public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
-      .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
+  private static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
+      .getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
 
   private final boolean dropUnknownWords;
   private final RawSequence<TK> empty = new RawSequence<TK>();
