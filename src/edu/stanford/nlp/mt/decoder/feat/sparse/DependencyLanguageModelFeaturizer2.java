@@ -297,10 +297,19 @@ public class DependencyLanguageModelFeaturizer2 extends DerivationFeaturizer<ISt
       Integer sourceGovIndex = null;
       int sourceDepIndex = -1;
       for (int j = 0; j < alignment.t2s(i).length; j++) {
-        sourceDepIndex = alignment.t2s(i)[j] + f.sourcePosition;
-        if ((sourceGovIndex = this.reverseDependencies.get(sourceDepIndex)) != null)
-          break;
+        int k = alignment.t2s(i)[j] + f.sourcePosition;
+        if (sourceGovIndex == null &&  this.reverseDependencies.get(k) != null) {
+          sourceGovIndex = this.reverseDependencies.get(k);
+          sourceDepIndex = k;
+        } else if (this.reverseDependencies.get(k) != null) {
+          //in case of multiple alignments get the head token
+          if (sourceGovIndex == k) {
+            sourceGovIndex = this.reverseDependencies.get(k);
+            sourceDepIndex = k;
+          }
+        }
       }
+      
       
       //check if the current word has a head
       if (sourceGovIndex == null)

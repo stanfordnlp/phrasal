@@ -306,9 +306,16 @@ public class DependencyProjector {
       Integer sourceGovIndex = null;
       int sourceDepIndex = -1;
       for (int j : alignment.e2f(i)) {
-        sourceDepIndex = j;
-        if ((sourceGovIndex = reverseDependencies.get(sourceDepIndex)) != null)
-          break;
+        int k = j;
+        if (sourceGovIndex == null &&  reverseDependencies.get(k) != null) {
+          sourceGovIndex = reverseDependencies.get(k);
+          sourceDepIndex = k;
+        } else if (reverseDependencies.get(k) != null) {
+          if (sourceGovIndex == k) {
+            sourceGovIndex = reverseDependencies.get(k);
+            sourceDepIndex = k;
+          }
+        }
       }
       
       //check if the current word has a head
