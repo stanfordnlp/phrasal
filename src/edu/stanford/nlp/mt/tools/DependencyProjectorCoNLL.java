@@ -171,7 +171,7 @@ public class DependencyProjectorCoNLL {
           i++;
         }
         
-        if (changed && govIndex == -1)
+        if (govIndex != null && changed && govIndex == -1)
           govIndex = -2;
         
         reverseDependencies.put(depIndex, govIndex);
