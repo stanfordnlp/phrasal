@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.mt.metrics.BLEUMetric;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
+import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -32,20 +35,24 @@ public class OnlineLearningCurve {
    * @throws IOException 
    */
   public static void main(String[] args) throws IOException {
-    if (args.length < 4) {
-      System.err.printf("Usage: java %s ini_file input_file ref_csv_list wts [wts]%n", 
+    if (args.length < 5) {
+      System.err.printf("Usage: java %s ini_file input_file ref_csv_list sl_metric wts [wts]%n", 
           OnlineLearningCurve.class.getName());
       System.exit(-1);
     }
     String iniFile = args[0];
     String sourceFile = args[1];
     String[] refFiles = args[2].split(",");
+    String slMetricStr = args[3];
+    String clMetricStr = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(slMetricStr);
+    System.err.printf("Evaluation metric: %s%n", clMetricStr.toUpperCase());
+    
     // Read the references and apply NIST tokenization
     final List<List<Sequence<IString>>> references = Metrics.readReferences(refFiles, true);
     
     // Read the list of weights
     List<String> wts = new ArrayList<String>();
-    for (int i = 3; i < args.length; ++i) {
+    for (int i = 4; i < args.length; ++i) {
       wts.add(args[i]);
     }
 
@@ -80,9 +87,8 @@ public class OnlineLearningCurve {
       }
       
       // Corpus-level evaluation
-      BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(references, false);
-      BLEUMetric<IString, String>.BLEUIncrementalMetric incMetric = 
-          bleu.getIncrementalMetric();
+      EvaluationMetric<IString,String> metric = CorpusLevelMetricFactory.newMetric(clMetricStr, references);
+      IncrementalEvaluationMetric<IString,String> incMetric = metric.getIncrementalMetric();
       for (RichTranslation<IString,String> translation : translations) {
         // Apply NIST tokenization so that the learning curve accurately reflects
         // the BLEUMetric evaluation (see the main() method of that class).
