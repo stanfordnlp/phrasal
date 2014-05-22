@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.BitSet;
@@ -66,6 +67,11 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     Properties options = FeatureUtils.argsToProperties(args);
     String derivationFile = options.getProperty("file", null);
     if (derivationFile == null) {
+      throw new RuntimeException("Derivation file parameter is required");
+    }
+    File derivFile = new File(derivationFile);
+    if ( ! derivFile.exists()) {
+      System.err.println("PTMFeaturizer: derivation file unspecified; entering test mode");
       isTestMode = true;
       return;
     }
