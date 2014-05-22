@@ -48,6 +48,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleu-cherry")) {
       return "bleu";
     
+    } else if (scoreMetricStr.equals("tergain")) {
+      return "terp";
+      
     } else if (scoreMetricStr.equals("terp")) {
       return scoreMetricStr;
     
