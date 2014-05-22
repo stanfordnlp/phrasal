@@ -11,6 +11,7 @@ import com.bbn.mt.terp.TERalignment;
 import com.bbn.mt.terp.TERcalc;
 import com.bbn.mt.terp.TERcost;
 
+import edu.stanford.nlp.mt.tools.NISTTokenizer;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
