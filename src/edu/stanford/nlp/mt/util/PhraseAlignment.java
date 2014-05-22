@@ -29,8 +29,8 @@ public class PhraseAlignment {
 
   public static final String MONOTONE_ALIGNMENT = "I-I";
   
-  final IString str;
-  public final int[][] t2s;
+  private final IString str;
+  private final int[][] t2s;
 
   private PhraseAlignment(String s) {
     // System.err.println("align: "+s);

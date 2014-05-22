@@ -118,12 +118,15 @@ public class AbstractWordAlignment implements WordAlignment {
   }
 
   static String toString(Set<Integer>[] align, boolean zeroIndexed) {
-    int o = zeroIndexed ? 0 : 1;
-    StringBuilder str = new StringBuilder();
-    for (int i = 0; i < align.length; ++i)
-      for (int j : align[i])
-        str.append(i + o).append("-").append(j + o).append(" ");
-    return str.toString();
+    final int o = zeroIndexed ? 0 : 1;
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < align.length; ++i) {
+      for (int j : align[i]) {
+        if (sb.length() > 0) sb.append(" ");
+        sb.append(i + o).append("-").append(j + o);
+      }
+    }
+    return sb.toString();
   }
 
   /**

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -44,17 +45,17 @@ public class SplitByInterfaceCondition {
   private static class UserDerivation {
     public final String mt;
     public final String user;
-    public final String s2t;
+    public final SymmetricalWordAlignment s2t;
     public final String src;
     public UserDerivation(String mt, String user, String s2t, String src) {
       this.mt = mt;
       this.user = user;
-      this.s2t = s2t;
+      this.s2t = new SymmetricalWordAlignment(src, mt, s2t);
       this.src = src;
     }
     @Override
     public String toString() {
-      return String.format("%s\t%s\t%s\t%s", mt, user, s2t, src);
+      return String.format("%s\t%s\t%s\t%s", mt, user, s2t.toString(), src);
     }
   }
   
