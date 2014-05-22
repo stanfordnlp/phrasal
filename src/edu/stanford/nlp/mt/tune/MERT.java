@@ -42,7 +42,7 @@ import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalNBestEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
@@ -131,7 +131,7 @@ public class MERT extends Thread {
     references = Metrics.readReferences(
         referenceList.split(","));
     this.evalMetric = evalMetric;
-    this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
+    this.emetric = CorpusLevelMetricFactory.newMetric(evalMetric, references);
   }
 
   public double mcmcTightExpectedEval(FlatNBestList nbest,

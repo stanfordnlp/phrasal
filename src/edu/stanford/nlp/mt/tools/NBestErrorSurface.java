@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.Metrics;
 
 /**
@@ -44,7 +44,7 @@ public class NBestErrorSurface {
     Index<String> featureIndex = new HashIndex<String>();
 
     List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(refsFn));
-    EvaluationMetric<IString, String> eval = EvaluationMetricFactory.newMetric(evalMetricFn, references);
+    EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricFn, references);
     
     FlatNBestList nbest = new FlatNBestList(nbestFn, featureIndex);
     Counter<String> wts = IOTools.readWeights(weightsFn, featureIndex);

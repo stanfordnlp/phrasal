@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.tune.GreedyMultiTranslationMetricMax;
@@ -51,7 +51,7 @@ public class NBestArgmax {
     if (evalArg != null) {
       String[] fields = evalArg.split(":");
       List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(fields[1]));
-      eval = EvaluationMetricFactory.newMetric(fields[0], references);
+      eval = CorpusLevelMetricFactory.newMetric(fields[0], references);
     }
     GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
         new ScorerWrapperEvaluationMetric<IString, String>(wts));

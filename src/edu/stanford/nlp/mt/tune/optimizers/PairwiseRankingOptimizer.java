@@ -12,7 +12,7 @@ import edu.stanford.nlp.classify.LogisticClassifierFactory;
 import edu.stanford.nlp.classify.RVFDataset;
 import edu.stanford.nlp.ling.RVFDatum;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
@@ -119,7 +119,7 @@ public class PairwiseRankingOptimizer extends AbstractBatchOptimizer {
       System.err.printf("Creating Eval Metric for list %d...\n", i);
       
       EvaluationMetric<IString, String> evalMetric = 
-          EvaluationMetricFactory.newMetric(mert.evalMetric, mert.references.subList(i, i+1), true);
+          CorpusLevelMetricFactory.newMetric(mert.evalMetric, mert.references.subList(i, i+1));
       
       System.err.printf("Sampling n-best list: %d\n", i);
       
