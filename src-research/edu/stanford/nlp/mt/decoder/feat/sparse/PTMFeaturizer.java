@@ -66,7 +66,8 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     Properties options = FeatureUtils.argsToProperties(args);
     String derivationFile = options.getProperty("file", null);
     if (derivationFile == null) {
-      throw new RuntimeException("Derivation file is required.");
+      isTestMode = true;
+      return;
     }
     sourceIdToDerivation = Collections.unmodifiableList(load(derivationFile));
     System.err.printf("PTMFeaturizer: Loaded %d derivations%n", sourceIdToDerivation.size());
@@ -122,6 +123,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+    if (isTestMode) return;
     derivation = sourceIdToDerivation.get(sourceInputId);
     if (derivation != null) {
       // Mark source OOVs
@@ -139,6 +141,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    if (isTestMode) return features;
     List<Set<Integer>> s2t = null;
     
     // TODO: Didn't record data for some derivations
