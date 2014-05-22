@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -275,5 +276,28 @@ public final class IOTools {
       sb.append(nl);
     }
     nbestListWriter.append(sb.toString());
+  }
+  
+  /**
+   * Return a list of files given a path prefix, e.g., passing the path
+   *  /home/me/ref  will return all files in /home/me that begin with ref.
+   * 
+   * @param pathPrefix
+   * @return
+   */
+  public static String[] fileNamesFromPathPrefix(String pathPrefix) {
+    File p = new File(pathPrefix);
+    final String filePrefix = p.getName();
+    File folder = new File(p.getParent());
+    if (folder.exists()) {
+      return folder.list(new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+          return name.startsWith(filePrefix);
+        }
+      });
+    } else {
+      return new String[0];
+    }
   }
 }

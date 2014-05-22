@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.metrics;
+package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
 import java.io.BufferedReader;

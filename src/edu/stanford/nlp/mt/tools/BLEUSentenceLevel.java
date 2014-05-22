@@ -7,7 +7,6 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;

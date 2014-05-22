@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Random;
 
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
-import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
@@ -50,8 +52,8 @@ public class SignificanceTest {
     String system2TransFilename = args[3];
 
     // Load everything we need
-    EvaluationMetric<IString, String> eval = MetricFactory.metric(
-        evalMetricName, referencePrefix);
+    List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix));
+    EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricName, references);
     List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename);
     List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename);
 

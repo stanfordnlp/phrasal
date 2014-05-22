@@ -19,7 +19,6 @@ import java.util.Set;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
-import edu.stanford.nlp.mt.metrics.NISTTokenizer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;

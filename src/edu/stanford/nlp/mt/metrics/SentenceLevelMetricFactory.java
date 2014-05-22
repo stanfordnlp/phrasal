@@ -8,6 +8,8 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Factory for sentence-level scoring metrics.
  * 
+ * TODO(spenceg) Make the string specifications static final string constants.
+ * 
  * @author Spence Green
  *
  */
@@ -16,6 +18,64 @@ public final class SentenceLevelMetricFactory {
   private static final int DEFAULT_ORDER = 4;
   
   private SentenceLevelMetricFactory() {}
+  
+  /**
+   * Return the corresponding corpus-level specification from
+   * <code>CorpusLevelMetricFactory</code>.
+   * 
+   * TODO(spenceg): These string constants should be static final variables
+   * in CorpusLevelMetricFactory.
+   * 
+   * @param scoreMetricStr Sentence-level metric specification.
+   * @return
+   */
+  public static String sentenceLevelToCorpusLevel(String scoreMetricStr) {
+    if (scoreMetricStr.equals("bleu-smooth")) {
+      return "bleu";
+
+    } else if (scoreMetricStr.equals("bleu-smooth-unscaled")) {
+      return "bleu";
+      
+    } else if (scoreMetricStr.equals("bleu-nakov")) {
+      return "bleu";
+    
+    } else if (scoreMetricStr.equals("bleu-nakov-unscaled")) {
+      return "bleu";
+    
+    } else if (scoreMetricStr.equals("bleu-chiang")) {
+      return "bleu";
+
+    } else if (scoreMetricStr.equals("bleu-cherry")) {
+      return "bleu";
+    
+    } else if (scoreMetricStr.equals("terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("2bleu-terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("bleu-terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("bleu-2terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("bleusmooth-2terp")) {
+      return "bleu-2terp";
+    
+    } else if (scoreMetricStr.equals("bleuX2terp")) {
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+    
+    } else if (scoreMetricStr.equals("bleuXterp")) {
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+    
+    } else if (scoreMetricStr.equals("bleu-2fastterp")) {
+      return "bleu-2terp";
+      
+    } else {
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+    }
+  }
   
   /**
    * Load a scoring metric from a string key.

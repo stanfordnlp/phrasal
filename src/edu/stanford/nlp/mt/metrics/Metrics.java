@@ -6,6 +6,7 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.stanford.nlp.mt.tools.NISTTokenizer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;

@@ -5,6 +5,7 @@ import java.io.*;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.tools.NISTTokenizer;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
