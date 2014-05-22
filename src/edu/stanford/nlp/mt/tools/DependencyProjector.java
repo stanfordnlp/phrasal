@@ -14,7 +14,6 @@ import java.util.NavigableSet;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
-
 import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.Label;
@@ -62,6 +61,13 @@ public class DependencyProjector {
   }
   
   
+  /*
+   * returns true if token is a word 
+   * (starts with a letter or a digit)
+   */
+  private static boolean isWord(String token) {
+    return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
+  }
   
 
   public static void printJSONHeader() {
@@ -298,7 +304,7 @@ public class DependencyProjector {
 
     for (int i = 0; i < len; i++) {
       IString token = alignment.e().get(i);
-      if (token.word().length() < 1 || !Character.isAlphabetic(token.word().charAt(0)))
+      if (token.word().length() < 1 || !isWord(token.word()))
         continue;
       if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1)
         continue;

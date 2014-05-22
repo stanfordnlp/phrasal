@@ -49,7 +49,13 @@ public class DependencyProjectorCoNLL {
     return optionArgDefs;
   }
   
-  
+  /*
+   * returns true if token is a word 
+   * (starts with a letter or a digit)
+   */
+  private static boolean isWord(String token) {
+    return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
+  }
   
   public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens) {
     Map<Integer,Integer> reverseDependencies = Generics.newHashMap();
@@ -62,7 +68,7 @@ public class DependencyProjectorCoNLL {
     int fragmentCount = 1;
     for (int i = 0; i < tokens.size(); i++) {
       if (reverseDependencies.get(i) == null) {
-        if (tokens.get(i).word().length() > 0 && Character.isAlphabetic(tokens.get(i).word().charAt(0))) {
+        if (tokens.get(i).word().length() > 0 && isWord(tokens.get(i).word())) {
           reverseDependencies.put(i, -2);
           fragmentCount++;
         } else {
@@ -182,7 +188,7 @@ public class DependencyProjectorCoNLL {
 
     for (int i = 0; i < len; i++) {
       IString token = alignment.e().get(i);
-      if (token.word().length() < 1 || !Character.isAlphabetic(token.word().charAt(0)))
+      if (token.word().length() < 1 || !isWord(token.word()))
         continue;
       if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1)
         continue;
@@ -290,7 +296,7 @@ public class DependencyProjectorCoNLL {
 
     
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
-    boolean transitive = PropertiesUtils.getBool(options, "transitive", true);
+    boolean transitive = PropertiesUtils.getBool(options, "transitive", false);
 
     File sourceSentences = new File(sourceTokens);
     File targetSentences = new File(targetTokens);

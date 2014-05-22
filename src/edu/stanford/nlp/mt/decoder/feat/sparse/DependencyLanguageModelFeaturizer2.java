@@ -27,7 +27,6 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.trees.TypedDependency;
@@ -93,6 +92,14 @@ public class DependencyLanguageModelFeaturizer2 extends DerivationFeaturizer<ISt
 
   }
        
+  /*
+   * returns true if token is a word 
+   * (starts with a letter or a digit)
+   */
+  private boolean isWord(String token) {
+    return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
+  }
+  
 
   /*private SymmetricalWordAlignment partialAlignment(Featurizable<IString, String> f) {
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(f.sourceSentence, f.targetPrefix);
@@ -289,7 +296,7 @@ public class DependencyLanguageModelFeaturizer2 extends DerivationFeaturizer<ISt
     tokfor: for (int i = 0; i < targetLength; i++) {
       int currentTargetIndex = i + f.targetPosition;
       IString token = f.targetPhrase.get(i);
-      if (token.word().length() < 1 || !Character.isAlphabetic(token.word().charAt(0)))
+      if (token.word().length() < 1 || isWord(token.word()))
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1)
         continue;
