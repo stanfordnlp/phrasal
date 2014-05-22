@@ -178,6 +178,7 @@ function create-learn-curve {
 	$RUNNAME.ini \
 	$DECODE_FILE \
 	$REFS \
+        $METRIC \
 	$TUNERUNNAME.online.*.binwts > $RUNNAME.learn-curve.tmp \
 	2>logs/$RUNNAME.learn-curve.log"
 
