@@ -8,6 +8,8 @@ import edu.stanford.nlp.mt.util.Sequence;
 /**
  * Corpus-level evaluation metrics.
  * 
+ * TODO(spenceg) Make the string specifications static final string constants.
+ * 
  * @author Spence Green
  *
  */
@@ -29,19 +31,17 @@ public final class CorpusLevelMetricFactory {
     AbstractMetric<IString,String> emetric = null;
 
     if (evalMetric.equals("smoothbleu")) {
-      return new BLEUMetric<IString,String>(references, true);
+      emetric = new BLEUMetric<IString,String>(references, true);
 
     } else if (evalMetric.equals("bleu:3-2terp")) {
       int BLEUOrder = 3;
-      double terW = 2.0;
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          1.0, terW }, new BLEUMetric<IString, String>(references, BLEUOrder), new TERpMetric<IString,String>(references));
+          1.0, 2.0 }, new BLEUMetric<IString, String>(references, BLEUOrder), new TERpMetric<IString,String>(references));
 
     } else if (evalMetric.equals("bleu:3-terp")) {
       int BLEUOrder = 3;
-      double terW = 1.0;
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          1.0, terW }, new BLEUMetric<IString, String>(references, BLEUOrder), 
+          1.0, 1.0 }, new BLEUMetric<IString, String>(references, BLEUOrder), 
           new TERpMetric<IString, String>(references));
 
     } else if (evalMetric.equals("terp")) {
@@ -59,16 +59,24 @@ public final class CorpusLevelMetricFactory {
     } else if (evalMetric.equals("nist")) {
       emetric = new NISTMetric<IString, String>(references);
 
-    } else if (evalMetric.startsWith("bleu-2terp")) {
-      double terW = 2.0;
+    } else if (evalMetric.startsWith("bleu-terp")) {
+        emetric = new LinearCombinationMetric<IString, String>(new double[] {
+            1.0, 1.0 }, new BLEUMetric<IString, String>(references),
+            new TERpMetric<IString, String>(references));
+    
+    } else if (evalMetric.startsWith("2bleu-terp")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          1.0, terW }, new BLEUMetric<IString, String>(references),
+          2.0, 1.0 }, new BLEUMetric<IString, String>(references),
+          new TERpMetric<IString, String>(references));
+      
+    } else if (evalMetric.startsWith("bleu-2terp")) {
+      emetric = new LinearCombinationMetric<IString, String>(new double[] {
+          1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references));
 
     } else if (evalMetric.startsWith("bleu-2terpa")) {
-      double terW = 2.0;
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          1.0, terW }, new BLEUMetric<IString, String>(references),
+          1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references, false, true));
 
     } else if (evalMetric.equals("(ter-bleu)/2")) {
@@ -77,10 +85,9 @@ public final class CorpusLevelMetricFactory {
           0.5, 0.5 }, termetric, new BLEUMetric<IString, String>(references));
 
     } else if (evalMetric.startsWith("bleu-ter")) {
-      double terW = 1.0;
       AbstractTERMetric<IString, String> termetric = new TERMetric<IString, String>(references);
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          1.0, terW }, new BLEUMetric<IString, String>(references),
+          1.0, 1.0 }, new BLEUMetric<IString, String>(references),
           termetric);
 
     } else if (evalMetric.equals("wer")) {
