@@ -98,7 +98,8 @@ public class OnlineLearningCurve {
                 translation.features, translation.score);
         incMetric.add(tr);
       }
-      System.out.printf("%s\t%.2f%n",wtsFile,100.0*incMetric.score());
+      double scorePseudoPercentage = Math.abs(incMetric.score()) * 100.0;
+      System.out.printf("%s\t%.2f%n", wtsFile, scorePseudoPercentage);
     }
   }
 }
