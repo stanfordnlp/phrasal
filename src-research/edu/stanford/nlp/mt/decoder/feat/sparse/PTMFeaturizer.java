@@ -329,7 +329,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         }
         if (leftContext.length() > 0 || rightContext.length() > 0) {
           features.add(new FeatureValue<String>(String.format("%s.%s<%s>%s", OOV_BLANKET_FEATURE, leftContext, srcToken, rightContext), 1.0));
-          features.add(new FeatureValue<String>(String.format("%sc.%s<%s>%s", OOV_BLANKET_FEATURE, leftClassContext, srcToken, rightClassContext), 1.0));
+          features.add(new FeatureValue<String>(String.format("%sc.%s<%s>%s", OOV_BLANKET_FEATURE, leftClassContext, srcTokenClass, rightClassContext), 1.0));
         }
       }
     }
