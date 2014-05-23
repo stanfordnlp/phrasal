@@ -56,15 +56,14 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
    */
   public DiscriminativeAlignments(String...args) {
     Properties options = FeatureUtils.argsToProperties(args);
-    // Thang Mar14: use PropertiesUtils.getBool
-    this.addSourceDeletions = PropertiesUtils.getBool(options, "sourceDeletionFeature"); //options.containsKey("sourceDeletionFeature");
-    this.addTargetInsertions = PropertiesUtils.getBool(options, "targetInsertionFeature"); //options.containsKey("targetInsertionFeature");
-    this.useClasses = PropertiesUtils.getBool(options, "useClasses"); //options.containsKey("useClasses");
+    this.addSourceDeletions = options.containsKey("sourceDeletionFeature");
+    this.addTargetInsertions = options.containsKey("targetInsertionFeature");
+    this.useClasses = options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = PropertiesUtils.getBool(options, "domainFeature"); //options.containsKey("domainFeature");
+    this.addDomainFeatures = options.containsKey("domainFeature");
   }
 
   @Override

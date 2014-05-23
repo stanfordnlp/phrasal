@@ -74,8 +74,7 @@ public class LexicalReorderingFeaturizer extends
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     Properties options = FeatureUtils.argsToProperties(args);
     
-    // Thang Mar14: use PropertiesUtils.getBool
-    this.useAlignmentConstellations = PropertiesUtils.getBool(options, "conditionOnConstellations"); //options.containsKey("conditionOnConstellations");
+    this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     // Which reordering classes to extract
     if (options.containsKey("classes")) {
@@ -86,13 +85,13 @@ public class LexicalReorderingFeaturizer extends
       }
     }
     // Use class-based feature representations
-    this.useClasses = PropertiesUtils.getBool(options, "useClasses"); //options.containsKey("useClasses");
+    this.useClasses = options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
     // Add domain-specific features
-    this.addDomainFeatures = PropertiesUtils.getBool(options, "domainFeature"); //options.containsKey("domainFeature");
+    this.addDomainFeatures = options.containsKey("domainFeature");
     mlrt = null;
     featureTags = null;
   }
