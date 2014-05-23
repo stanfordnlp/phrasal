@@ -134,27 +134,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
   
-  // Thang Apr14
-  /**
-   * @param istringSeq: words in normal order (the number of words should be equal to the LM order.
-   * @return score the ngram
-   */
-  public double score(Sequence<IString> istringSeq) {
-    int size = istringSeq.size(); 
-    assert(size==order());
-    
-    int[] ngramIds = new int[size];
-    int i = 0;
-    for (IString iString : istringSeq) {
-      // Notice: ngramids are in reverse order vv. the Sequence
-      ngramIds[size-1-i] = toKenLMId(iString);
-      i++;
-    }
-    
-    // Execute the query (via JNI) and return the score only
-    return model.score(ngramIds);
-  }
-  
   /**
    * Convert a Sequence and an optional state to an input for KenLM.
    * 
