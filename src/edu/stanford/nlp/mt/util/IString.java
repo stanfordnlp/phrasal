@@ -207,24 +207,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   public int compareTo(IString o) {
     return index.get(id).compareTo(index.get(o.id));
   }
-
-  /**
-   * Get a sequence of IString from an array of strings.
-   * 
-   * @param tokens
-   * @return
-   */
-  // Thang Apr14
-  public static Sequence<IString> getIStringSequence(String[] tokens){
-    List<IString> istringList = new ArrayList<IString>();
-    for (String token : tokens) {
-      istringList.add(new IString(token));
-    }
-    return new SimpleSequence<IString>(istringList);
-  }
-  public static Sequence<IString> getIStringSequence(String string){
-    return getIStringSequence(string.split("\\s+"));
-  }
   
   /**
    * Get a sequence of IString from an array of IString indices.

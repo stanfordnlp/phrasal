@@ -45,14 +45,14 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
   @Override
   public void update(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {
-      for (SentenceLevelMetric metric : metrics) {
+      for (SentenceLevelMetric<TK, FV> metric : metrics) {
          metric.update(sourceId, references, translation);
       }
   }
 
   @Override
   public boolean isThreadsafe() {
-    for (SentenceLevelMetric metric : metrics) {
+    for (SentenceLevelMetric<TK, FV> metric : metrics) {
       if (!metric.isThreadsafe()) return false;
     }
     return true;
@@ -60,7 +60,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
   public static void main(String[] args) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    SentenceLevelMetric metric = SentenceLevelMetricFactory.getMetric(args[0], null);
+    SentenceLevelMetric<IString, String> metric = SentenceLevelMetricFactory.getMetric(args[0], null);
 
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       String[] fields = line.split("\\|\\|\\|");

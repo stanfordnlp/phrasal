@@ -4,11 +4,13 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 
 /**
@@ -26,7 +28,7 @@ public class TargetNNLMTest {
 //		System.err.println(System.getProperty("user.dir"));
 		
 		String[] tokens = new String[]{"a", "b", "c"};
-		Sequence<IString> sequence = IString.getIStringSequence(tokens);
+		Sequence<IString> sequence = IStrings.toIStringSequence(Arrays.asList(tokens));
 		
 		TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		double score = nplm.scoreNgram(sequence);
@@ -41,7 +43,7 @@ public class TargetNNLMTest {
 	@Test
 	public void testInVocab() throws IOException {
 		String[] tokens = new String[]{"a", "chinese", "bank"};
-		Sequence<IString> sequence = IString.getIStringSequence(tokens);
+		Sequence<IString> sequence = IStrings.toIStringSequence(Arrays.asList(tokens));
 		
 		TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		double score = nplm.scoreNgram(sequence);
@@ -55,7 +57,7 @@ public class TargetNNLMTest {
 	@Test
 	public void testMixVocab() throws IOException {
 		String[] tokens = new String[]{"d", "chinese", "enterprises"};
-		Sequence<IString> sequence = IString.getIStringSequence(tokens);
+		Sequence<IString> sequence = IStrings.toIStringSequence(Arrays.asList(tokens));
 		
 		TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		double score = nplm.scoreNgram(sequence);
@@ -70,7 +72,7 @@ public class TargetNNLMTest {
 	public void testExtractNgrams() throws IOException{
 	  TargetNNLM nplm = new TargetNNLM(nplmFile, 0, 1);
 		String tgtStr = "<s> construction if so law government ,";
-		Sequence<IString> tgtSent = IString.getIStringSequence(tgtStr.split("\\s+"));
+		Sequence<IString> tgtSent = IStrings.tokenize(tgtStr);
 		int tgtPos = 5; // 
 		
 		int[][] ngrams = nplm.extractNgrams(null, tgtSent, null, -1, tgtPos);

@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import edu.stanford.nlp.mt.lm.NNLMState;
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -27,9 +28,9 @@ public class JointNNLMFeaturizerTest {
   public void test() throws IOException {
     JointNNLMFeaturizer nplmFeat = new JointNNLMFeaturizer("nnlm="+nplmFile, "cache=0", "id=srcNPLM");
     String srcStr = "建设 法治 政府 , 就 是 为了 使 行政 权力 授予 有 据 , 行使 有规 , 监督 有效 , 做到 依法 治官 , 依法 治权 , 防止 行政 权力 的 缺失 和 滥用 , 带动 全 社会 尊重 法律 , 遵守 法律 , 维护 法律 \" 。";
-    Sequence<IString> srcSent = IString.getIStringSequence(srcStr.split("\\s+"));
+    Sequence<IString> srcSent = IStrings.tokenize(srcStr);
     String tgtStr = "<s> construction if so law government ,";
-    Sequence<IString> tgtSent = IString.getIStringSequence(tgtStr.split("\\s+"));
+    Sequence<IString> tgtSent = IStrings.tokenize(tgtStr);
     
     // f=政府 , ||| government , ||| (0) (1)
     int srcStartPos = 2, tgtStartPos = 5; // 

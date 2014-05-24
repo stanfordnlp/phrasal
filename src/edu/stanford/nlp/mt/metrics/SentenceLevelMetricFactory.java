@@ -47,11 +47,14 @@ public final class SentenceLevelMetricFactory {
 
     } else if (scoreMetricStr.equals("bleu-cherry")) {
       return "bleu";
-    
+
     } else if (scoreMetricStr.equals("tergain")) {
       return "terp";
       
     } else if (scoreMetricStr.equals("terp")) {
+      return scoreMetricStr;
+      
+    } else if (scoreMetricStr.equals("ter") || scoreMetricStr.equals("terp")) {
       return scoreMetricStr;
     
     } else if (scoreMetricStr.equals("2bleu-terp")) {
@@ -63,8 +66,14 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleu-2terp")) {
       return scoreMetricStr;
     
-    } else if (scoreMetricStr.equals("bleusmooth-2terp")) {
+    } else if (scoreMetricStr.equals("bleus-2terp")) {
       return "bleu-2terp";
+    
+    } else if (scoreMetricStr.equals("bleu-terp/2") || scoreMetricStr.equals("bleus-terp/2")) {
+      return "bleu-terp/2";
+    
+    } else if (scoreMetricStr.equals("bleu-ter/2") || scoreMetricStr.equals("bleus-ter/2")) {
+      return "bleu-ter/2";
     
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
@@ -114,9 +123,15 @@ public final class SentenceLevelMetricFactory {
       // Cherry and Foster (2012)
       return new BLEUOracleCost<IString,String>(DEFAULT_ORDER, true);
     
+<<<<<<< HEAD
     } else if (scoreMetricStr.equals("tergain")) {
       return new SLTERGain<IString,String>();
       
+=======
+    } else if (scoreMetricStr.equals("ter")) {
+      return new SLTERMetric<IString,String>();
+    
+>>>>>>> master
     } else if (scoreMetricStr.equals("terp")) {
       return new SLTERpMetric<IString,String>();
     
@@ -141,13 +156,41 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-s-2terp")) {
+    } else if (scoreMetricStr.equals("bleus-2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERpMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
+    } else if (scoreMetricStr.equals("bleu-terp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>(true));
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+    
+    } else if (scoreMetricStr.equals("bleus-terp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+      
+    } else if (scoreMetricStr.equals("bleu-ter/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>(true));
+      metrics.add(new SLTERMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+    
+    } else if (scoreMetricStr.equals("bleus-ter/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>());
+      metrics.add(new SLTERMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+      
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
