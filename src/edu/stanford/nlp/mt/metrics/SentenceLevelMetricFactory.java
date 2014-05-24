@@ -60,8 +60,11 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleu-2terp")) {
       return scoreMetricStr;
     
-    } else if (scoreMetricStr.equals("bleusmooth-2terp")) {
+    } else if (scoreMetricStr.equals("bleus-2terp")) {
       return "bleu-2terp";
+    
+    } else if (scoreMetricStr.equals("bleu-terp/2") || scoreMetricStr.equals("bleus-terp/2")) {
+      return "bleu-terp/2";
     
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
@@ -135,13 +138,27 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-s-2terp")) {
+    } else if (scoreMetricStr.equals("bleus-2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERpMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
+    } else if (scoreMetricStr.equals("bleu-terp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>(true));
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+    
+    } else if (scoreMetricStr.equals("bleus-terp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+      
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));

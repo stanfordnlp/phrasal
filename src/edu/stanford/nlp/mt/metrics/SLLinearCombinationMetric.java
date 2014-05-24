@@ -36,21 +36,9 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
   @Override
   public double score(int sourceId, Sequence<TK> source, List<Sequence<TK>> references, Sequence<TK> translation) {
-
-    int minLength = Integer.MAX_VALUE;
-    for (Sequence<TK> sentence : references) {
-      if (sentence.size() < minLength) {
-        minLength = sentence.size();
-      }
-    }
-
     double score = 0; 
     for (int i = 0; i < wts.length; i++) {
        double mscore = metrics.get(i).score(sourceId, null, references, translation);
-       if (VERBOSE) {
-         System.err.printf("+= %.2f * %.3f (/%d = %.3f)\n", wts[i], mscore*100,
-           minLength, (mscore/minLength)*100);
-       } 
        score += wts[i] * mscore;
     }
     return score;
@@ -59,14 +47,14 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
   @Override
   public void update(int sourceId, List<Sequence<TK>> references,
       Sequence<TK> translation) {
-      for (SentenceLevelMetric metric : metrics) {
+      for (SentenceLevelMetric<TK, FV> metric : metrics) {
          metric.update(sourceId, references, translation);
       }
   }
 
   @Override
   public boolean isThreadsafe() {
-    for (SentenceLevelMetric metric : metrics) {
+    for (SentenceLevelMetric<TK, FV> metric : metrics) {
       if (!metric.isThreadsafe()) return false;
     }
     return true;
@@ -74,7 +62,7 @@ public class SLLinearCombinationMetric<TK,FV> implements SentenceLevelMetric<TK,
 
   public static void main(String[] args) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    SentenceLevelMetric metric = SentenceLevelMetricFactory.getMetric(args[0], null);
+    SentenceLevelMetric<IString, String> metric = SentenceLevelMetricFactory.getMetric(args[0], null);
 
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       String[] fields = line.split("\\|\\|\\|");
