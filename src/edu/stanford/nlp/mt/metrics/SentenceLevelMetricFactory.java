@@ -123,15 +123,12 @@ public final class SentenceLevelMetricFactory {
       // Cherry and Foster (2012)
       return new BLEUOracleCost<IString,String>(DEFAULT_ORDER, true);
     
-<<<<<<< HEAD
     } else if (scoreMetricStr.equals("tergain")) {
       return new SLTERGain<IString,String>();
       
-=======
     } else if (scoreMetricStr.equals("ter")) {
       return new SLTERMetric<IString,String>();
     
->>>>>>> master
     } else if (scoreMetricStr.equals("terp")) {
       return new SLTERpMetric<IString,String>();
     
