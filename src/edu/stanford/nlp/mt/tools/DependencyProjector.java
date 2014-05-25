@@ -56,7 +56,10 @@ public class DependencyProjector {
     optionArgDefs.put("annotations", 1);
     optionArgDefs.put("outdir", 1);
     optionArgDefs.put("transitive", 0);
+    optionArgDefs.put("maxDepth", 1);
 
+    
+    
     return optionArgDefs;
   }
   
@@ -170,103 +173,9 @@ public class DependencyProjector {
     }
   }
   
- /* 
-  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment) {
-    Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
 
-    SemanticGraph semanticGraph = annotation.get(BasicDependenciesAnnotation.class);
-
-    Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
-    HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
-        
-    for (TypedDependency dep : dependencies) {
-      int govIndex = dep.gov().index() - 1;
-      int depIndex = dep.dep().index() - 1;
-      reverseDependencies.put(depIndex, govIndex);
-    }
-    
-
-    int len = alignment.eSize();
-
-    Integer tSentenceHeadIdx = -1;
-    //add root
-    Collection<IndexedWord> sentenceHeads = semanticGraph.getRoots();
-    NavigableSet<Integer> tHeadIndices = null;
-    if (!sentenceHeads.isEmpty()) {
-      IndexedWord sentenceHead = semanticGraph.getFirstRoot();
-      int sHeadIndex = sentenceHead.index() - 1;
-      tHeadIndices = Generics.newTreeSet(alignment.f2e(sHeadIndex));
-      if (tHeadIndices.size() == 1) {
-        tSentenceHeadIdx = tHeadIndices.last();
-        projectedDependencies.put(-1, tHeadIndices);
-      } else if (tHeadIndices.size() > 1) {
-        //make the right-most word the sentence head and make all the other words dependent of the head
-        tSentenceHeadIdx = tHeadIndices.last();
-        NavigableSet<Integer> depSet = Generics.newTreeSet();
-        projectedDependencies.put(tSentenceHeadIdx, depSet);
-
-        for (Integer idx : tHeadIndices ) {
-          if (idx != tSentenceHeadIdx)
-          projectedDependencies.get(tSentenceHeadIdx).add(idx);
-        }
-        
-        NavigableSet<Integer> headSet = Generics.newTreeSet();
-        headSet.add(tSentenceHeadIdx);
-        projectedDependencies.put(-1, headSet);
-      }
-    }
-    
-    
-    for (int j = 0; j < len; j++) {
-      String word = alignment.e().get(j).word();
-      //ignore garbage collection alignments to punction marks
-      if (!Character.isAlphabetic(word.charAt(0))) 
-        continue;
-
-      //don't add dependencies for sentence heads
-      if (tHeadIndices != null && tHeadIndices.contains(j))
-        continue;
-      
-      SortedSet<Integer> sIdxs = alignment.e2f(j);
-      Pair<Integer, Integer> dep = null; 
-      //one-to-*      
-      if (sIdxs.size() > 0) {
-        //SortedSet<Integer> tIdxs = alignment.f2e(sIdxs.first());
-        //one-to-1+
-        //if (tIdxs.size()  > 0) {
-          int depSIdx = sIdxs.first();
-          int headIdx;
-          while((reverseDependencies.get(depSIdx) != null) 
-              && (headIdx = reverseDependencies.get(depSIdx)) > -1) {
-            SortedSet<Integer> headTIdxs = alignment.f2e(headIdx);
-            //one-to-one and one-to-many
-            if (headTIdxs.size() > 0 && (headTIdxs.first() !=  j || sIdxs.size() < 2)) {
-              //prevent self loops and that the sentence head depends on any other word
-              if (headTIdxs.first() !=  j && tSentenceHeadIdx != j) {
-                dep = Generics.newPair(headTIdxs.last(), j);
-              } 
-              break;
-            } else { //unaligned, try to map to transitive head
-              depSIdx = headIdx;
-            }
-          }
-      }
-    
-      if (dep != null) {
-        if (projectedDependencies.get(dep.first()) == null) 
-          projectedDependencies.put(dep.first(), new TreeSet<Integer>());
-        projectedDependencies.get(dep.first()).add(dep.second());
-      }
-    }
-    
-   
-    
-    
-    return projectedDependencies;
-  }
- */
  
-  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment, boolean transitive) {
+  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment, boolean transitive, int maxDepth) {
     Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
     
     //source to target token aligment (we force 1:1)
@@ -293,8 +202,10 @@ public class DependencyProjector {
         Integer govIndex = reverseDependencies.get(depIndex);
         if (govIndex == null || govIndex == -1)
           continue;
-        while (govIndex != null && govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
+        int i = 0;
+        while (i < maxDepth && govIndex != null && govIndex != -1 && (alignment.f2e(govIndex) == null || alignment.f2e(govIndex).size() < 1)) {
           govIndex = reverseDependencies.get(govIndex);
+          i++;
         }
         reverseDependencies.put(depIndex, govIndex);
       }
@@ -577,6 +488,9 @@ public class DependencyProjector {
     boolean annotationsSplit = PropertiesUtils.getBool(options, "annotationsSplit", false);
     boolean transitive = PropertiesUtils.getBool(options, "transitive", false);
 
+    int maxDepth = PropertiesUtils.getInt(options, "maxDepth", 2);
+
+    
     File sourceSentences = new File(sourceTokens);
     File targetSentences = new File(targetTokens);
     File alignmentFile = new File(alignments);
@@ -594,7 +508,7 @@ public class DependencyProjector {
         //System.err.println("alignment = \"" + alignmentString + "\";");
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
         //projectSentence(sentence, alignment);
-        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(sentence, alignment, transitive);
+        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(sentence, alignment, transitive, maxDepth);
         //if (i == 0) {
         //  System.err.println(dependencies.get(-1));
         //  System.err.println(dependencies.get(1));
