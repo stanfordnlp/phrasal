@@ -129,17 +129,14 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
   @Override
   public void initialize(int sourceInputId,
       List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
-    if (isTestMode) return;
-    derivation = sourceIdToDerivation.get(sourceInputId);
-    if (derivation != null) {
-      // Mark source OOVs
-      isSourceOOV = new BitSet();
-      int[] srcArr = new int[1];
-      for (int i = 0, sz = source.size(); i < sz; ++i) {
-        srcArr[0] = source.get(i).id;
-        if (FlatPhraseTable.sourceIndex.indexOf(srcArr) < 0) {
-          isSourceOOV.set(i);
-        }
+    derivation = isTestMode ? sourceIdToDerivation.get(sourceInputId) : null;
+    // Mark source OOVs
+    isSourceOOV = new BitSet();
+    int[] srcArr = new int[1];
+    for (int i = 0, sz = source.size(); i < sz; ++i) {
+      srcArr[0] = source.get(i).id;
+      if (FlatPhraseTable.sourceIndex.indexOf(srcArr) < 0) {
+        isSourceOOV.set(i);
       }
     }
   }
