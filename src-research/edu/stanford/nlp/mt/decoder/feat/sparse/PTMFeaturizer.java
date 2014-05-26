@@ -147,14 +147,8 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    if (isTestMode) return features;
     List<Set<Integer>> s2t = null;
     
-    // TODO: Didn't record data for some derivations
-    // Could still use the string features for recombination
-    if (derivation == null) return features;
-    
-//    try {
     if (oovBlanket) {
       if (s2t == null) s2t = s2tFromRule(f.rule);
       features.addAll(oovBlanketFeatures(f, s2t));
@@ -163,13 +157,9 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
       if (s2t == null) s2t = s2tFromRule(f.rule);
       features.addAll(alignmentFeatures(f, s2t));
     }
-    if (recombinationFeature) {
+    if (recombinationFeature && ! isTestMode) {
       // TODO
     }
-//    } catch (Exception e) {
-//      e.printStackTrace();
-//      throw new RuntimeException(e);
-//    }
     return features;
   }
 
@@ -202,9 +192,12 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         // Extract user aligned tokens
         // TODO(spenceg): Many-to-one right now, but there could be many-to-many alignments
         Set<IString> userAlignedTokens = Generics.newHashSet();
-        int srcIndex = f.sourcePosition + i;
-        for (int jUser : derivation.s2t.f2e(srcIndex)) {
-          userAlignedTokens.add(derivation.mt.get(jUser));
+        final int srcIndex = f.sourcePosition + i;
+        if (derivation != null) {
+          // Some segments don't have user derivations
+          for (int jUser : derivation.s2t.f2e(srcIndex)) {
+            userAlignedTokens.add(derivation.mt.get(jUser));
+          }
         }
        
         // Fire features
@@ -212,14 +205,14 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
           // Tuning
           alignedTargetWords.retainAll(userAlignedTokens);
         }
-        String tgtAligned = setToString(alignedTargetWords);
+        String tgtAligned = targetSetToString(alignedTargetWords);
         String tgtClassAligned = targetSetToString(alignedTargetWords, true);
         IString oovSource = f.sourceSentence.get(srcIndex);
         String srcToken = oovSource.toString();
         IString oovClass = sourceMap.get(oovSource);
         String srcTokenClass = oovClass.toString();
-        features.add(new FeatureValue<String>(String.format("%s.%s>%s", ALIGNMENT_FEATURE, srcToken, tgtAligned), 1.0));
-        features.add(new FeatureValue<String>(String.format("%sc.%s>%s", ALIGNMENT_FEATURE, srcTokenClass, tgtClassAligned), 1.0));
+        if (tgtAligned.length() > 0) features.add(new FeatureValue<String>(String.format("%s.%s>%s", ALIGNMENT_FEATURE, srcToken, tgtAligned), 1.0));
+        if (tgtClassAligned.length() > 0) features.add(new FeatureValue<String>(String.format("%sc.%s>%s", ALIGNMENT_FEATURE, srcTokenClass, tgtClassAligned), 1.0));
       }
     }
     return features;
@@ -265,17 +258,20 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         Set<IString> leftUserContext = Generics.newHashSet();
         Set<IString> userAlignedTokens = Generics.newHashSet();
         Set<IString> rightUserContext = Generics.newHashSet();
-        for (int jUser : derivation.s2t.f2e(srcIndex)) {
-          userAlignedTokens.add(derivation.mt.get(jUser));
-          if (jUser-1 >= 0) {
-            leftUserContext.add(derivation.mt.get(jUser-1));
-          } else {
-            leftUserContext.add(TokenUtils.START_TOKEN);
-          }
-          if (jUser+1 < derivation.mt.size()) {
-            rightUserContext.add(derivation.mt.get(jUser+1));
-          } else {
-            rightUserContext.add(TokenUtils.END_TOKEN);
+        if (derivation != null) {
+          // Some segments don't have user derivations
+          for (int jUser : derivation.s2t.f2e(srcIndex)) {
+            userAlignedTokens.add(derivation.mt.get(jUser));
+            if (jUser-1 >= 0) {
+              leftUserContext.add(derivation.mt.get(jUser-1));
+            } else {
+              leftUserContext.add(TokenUtils.START_TOKEN);
+            }
+            if (jUser+1 < derivation.mt.size()) {
+              rightUserContext.add(derivation.mt.get(jUser+1));
+            } else {
+              rightUserContext.add(TokenUtils.END_TOKEN);
+            }
           }
         }
         
@@ -310,9 +306,9 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         }
         
         // Extract features
-        String leftContext = setToString(leftMTContext);
+        String leftContext = targetSetToString(leftMTContext);
         String leftClassContext = targetSetToString(leftMTContext, true);
-        String rightContext = setToString(rightMTContext);
+        String rightContext = targetSetToString(rightMTContext);
         String rightClassContext = targetSetToString(rightMTContext, true);
         IString oovSource = f.sourceSentence.get(srcIndex);
         String srcToken = oovSource.toString();
@@ -336,7 +332,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     return features;
   }
 
-  private String setToString(Set<IString> set) {
+  private String targetSetToString(Set<IString> set) {
     return targetSetToString(set, false);
   }
 
