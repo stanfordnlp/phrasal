@@ -211,8 +211,8 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         String srcToken = oovSource.toString();
         IString oovClass = sourceMap.get(oovSource);
         String srcTokenClass = oovClass.toString();
-        if (tgtAligned.length() > 0) features.add(new FeatureValue<String>(String.format("%s.%s>%s", ALIGNMENT_FEATURE, srcToken, tgtAligned), 1.0));
-        if (tgtClassAligned.length() > 0) features.add(new FeatureValue<String>(String.format("%sc.%s>%s", ALIGNMENT_FEATURE, srcTokenClass, tgtClassAligned), 1.0));
+        features.add(new FeatureValue<String>(String.format("%s.%s>%s", ALIGNMENT_FEATURE, srcToken, tgtAligned), 1.0));
+        features.add(new FeatureValue<String>(String.format("%sc.%s>%s", ALIGNMENT_FEATURE, srcTokenClass, tgtClassAligned), 1.0));
       }
     }
     return features;
@@ -315,18 +315,18 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         IString oovClass = sourceMap.get(oovSource);
         String srcTokenClass = oovClass.toString();
         
-        if (leftContext.length() > 0) {
+//        if (leftContext.length() > 0) {
           features.add(new FeatureValue<String>(String.format("%s.%s<%s", OOV_BLANKET_FEATURE, srcToken, leftContext), 1.0));
           features.add(new FeatureValue<String>(String.format("%sc.%s<%s", OOV_BLANKET_FEATURE, srcTokenClass, leftClassContext), 1.0));
-        }
-        if (rightContext.length() > 0) {
+//        }
+//        if (rightContext.length() > 0) {
           features.add(new FeatureValue<String>(String.format("%s.%s>%s", OOV_BLANKET_FEATURE, srcToken, rightContext), 1.0));
           features.add(new FeatureValue<String>(String.format("%sc.%s>%s", OOV_BLANKET_FEATURE, srcTokenClass, rightClassContext), 1.0));
-        }
-        if (leftContext.length() > 0 || rightContext.length() > 0) {
+//        }
+//        if (leftContext.length() > 0 || rightContext.length() > 0) {
           features.add(new FeatureValue<String>(String.format("%s.%s<%s>%s", OOV_BLANKET_FEATURE, leftContext, srcToken, rightContext), 1.0));
           features.add(new FeatureValue<String>(String.format("%sc.%s<%s>%s", OOV_BLANKET_FEATURE, leftClassContext, srcTokenClass, rightClassContext), 1.0));
-        }
+//        }
       }
     }
     return features;
