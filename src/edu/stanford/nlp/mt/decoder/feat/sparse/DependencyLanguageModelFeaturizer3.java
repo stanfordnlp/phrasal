@@ -265,15 +265,13 @@ public class DependencyLanguageModelFeaturizer3 extends DerivationFeaturizer<ISt
           DepLMSubState subState = oSubState;
           
           //if the substate exists but has no head token, then the head is not aligned
-          //try to align it to the parent of the head until you reach the root
+          //try to align it to the parent of the head until you reach the root or
+          //maximum depth
           int depth = 0;
           while (subState == null || subState.headToken == null) {
-            if (depth >= this.maxDepth)
-              continue tokfor;
-            depth++;
             sourceGovIndex = this.reverseDependencies.get(sourceGovIndex);
             //score all left children as roots
-            if (sourceGovIndex == -1) {
+            if (sourceGovIndex == -1 || depth >= this.maxDepth) {
               if (oSubState != null && oSubState.getLeftChildren().size() > 0) {
                 for (IString child : oSubState.getLeftChildren()) {
                   Sequence<IString> seq = new SimpleSequence<IString>(child);
@@ -342,6 +340,7 @@ public class DependencyLanguageModelFeaturizer3 extends DerivationFeaturizer<ISt
                 }
               }
             }
+            depth++;
           }
       
           
