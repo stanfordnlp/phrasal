@@ -65,6 +65,18 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
    */
   public PTMFeaturizer(String...args) {
     Properties options = FeatureUtils.argsToProperties(args);
+    // Options required for all modes
+    System.err.println("PTMFeaturizer mode: " + (isTestMode ? "test" : "tune"));
+    oovBlanket = PropertiesUtils.getBool(options, "oovBlanket", false);
+    alignmentFeature = PropertiesUtils.getBool(options, "alignmentFeature", false);
+    recombinationFeature = PropertiesUtils.getBool(options, "recombinationFeature", false);
+    if (oovBlanket || alignmentFeature) {
+      targetMap = TargetClassMap.getInstance();
+      sourceMap = SourceClassMap.getInstance();
+    }
+
+    // Test mode options
+    isTestMode = PropertiesUtils.getBool(options, "testMode", false);
     String derivationFile = options.getProperty("file", null);
     if (derivationFile == null) {
       throw new RuntimeException("Derivation file parameter is required");
@@ -77,15 +89,6 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     }
     sourceIdToDerivation = Collections.unmodifiableList(load(derivationFile));
     System.err.printf("PTMFeaturizer: Loaded %d derivations%n", sourceIdToDerivation.size());
-    isTestMode = PropertiesUtils.getBool(options, "testMode", false);
-    System.err.println("PTMFeaturizer mode: " + (isTestMode ? "test" : "tune"));
-    oovBlanket = PropertiesUtils.getBool(options, "oovBlanket", false);
-    alignmentFeature = PropertiesUtils.getBool(options, "alignmentFeature", false);
-    recombinationFeature = PropertiesUtils.getBool(options, "recombinationFeature", false);
-    if (oovBlanket || alignmentFeature) {
-      targetMap = TargetClassMap.getInstance();
-      sourceMap = SourceClassMap.getInstance();
-    }
   }
   
   @Override
