@@ -1,12 +1,8 @@
-package edu.stanford.nlp.mt.decoder.util;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.pt.BinaryPhraseTable;
-import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.pt.DTUTable;
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.util.IString;
 
 /**

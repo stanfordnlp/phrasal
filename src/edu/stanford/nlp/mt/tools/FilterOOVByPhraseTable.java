@@ -7,11 +7,11 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
-import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
 import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.pt.PhraseGenerator;
+import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
 import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;

@@ -14,12 +14,12 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.gson.reflect.TypeToken;
 
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
-import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.PhraseGenerator;
 import edu.stanford.nlp.mt.pt.Rule;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
