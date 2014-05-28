@@ -76,19 +76,18 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     }
 
     // Test mode options
-    isTestMode = PropertiesUtils.getBool(options, "testMode", false);
     String derivationFile = options.getProperty("file", null);
     if (derivationFile == null) {
       throw new RuntimeException("Derivation file parameter is required");
     }
     File derivFile = new File(derivationFile);
-    if ( ! derivFile.exists()) {
+    if (derivFile.exists()) {
+      sourceIdToDerivation = Collections.unmodifiableList(load(derivationFile));
+      System.err.printf("PTMFeaturizer: Loaded %d derivations%n", sourceIdToDerivation.size());
+    } else {
       System.err.println("PTMFeaturizer: derivation file unspecified; entering test mode");
-      isTestMode = true;
-      return;
     }
-    sourceIdToDerivation = Collections.unmodifiableList(load(derivationFile));
-    System.err.printf("PTMFeaturizer: Loaded %d derivations%n", sourceIdToDerivation.size());
+    isTestMode = sourceIdToDerivation == null;
   }
   
   @Override
