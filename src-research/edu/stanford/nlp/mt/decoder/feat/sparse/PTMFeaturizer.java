@@ -358,7 +358,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         
         if ( ! isTestMode) {
           // Tuning
-          if ( leftMTContext != null && (rightUserContext == null || ! leftMTContext.equals(leftUserContext))) leftMTContext = null;
+          if ( leftMTContext != null && (leftUserContext == null || ! leftMTContext.equals(leftUserContext))) leftMTContext = null;
           if ( rightMTContext != null && (rightUserContext == null || ! rightMTContext.equals(rightUserContext))) rightMTContext = null;
 //          if ( ! mtAlignedToken.equals(userAlignedToken)) mtAlignedToken = null;
         }
@@ -370,7 +370,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         String srcTokenClass = oovClass.toString();
         if (leftMTContext != null) {
           String leftMTClass = targetMap.get(leftMTContext).toString();
-          features.add(new FeatureValue<String>(String.format("%s.%s<<%s", OOV_BLANKET_FEATURE, srcToken, leftMTContext.toString()), 1.0));
+          features.add(new FeatureValue<String>(String.format("%s.%s<%s", OOV_BLANKET_FEATURE, srcToken, leftMTContext.toString()), 1.0));
           features.add(new FeatureValue<String>(String.format("%sc.%s<%s", OOV_BLANKET_FEATURE, srcTokenClass, leftMTClass), 1.0));
         }
         if (rightMTContext != null) {
