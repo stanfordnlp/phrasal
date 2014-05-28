@@ -145,7 +145,7 @@ public class Phrasal {
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
       .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [pharoah,exact,dtu] (default: exact).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
-      .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
+      .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" filename [filename] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
       .append("  -").append(PREPROCESSOR_FILTER).append(" language [opts] : Pre-processor to apply to source input.").append(nl)
       .append("  -").append(POSTPROCESSOR_FILTER).append(" language [opts] : Post-processor to apply to target output.").append(nl)
@@ -188,7 +188,7 @@ public class Phrasal {
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
   public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
-  public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
+  public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generators";
   public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
   public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
   public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
@@ -569,14 +569,9 @@ public class Phrasal {
        List<PhraseGenerator<IString,String>> pgens = Generics.newLinkedList();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-          PhraseGenerator<IString,String> pgen;
-          try {
-             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-                getConstructor().newInstance();
-          } catch (ClassNotFoundException e) {
-             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
-          }
-          pgens.add(pgen);
+         PhraseGenerator<IString,String> pgen = 
+             PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, pgenClasspath, optionLimit); 
+         pgens.add(pgen);
        }
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }

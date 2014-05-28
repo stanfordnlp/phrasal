@@ -34,6 +34,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   public static final boolean TRIE_INDEX = Boolean.parseBoolean(System
       .getProperty(TRIE_INDEX_PROPERTY, "false"));
 
+  private static final int INITIAL_CAPACITY = 50000;
+  
   public static final String FIELD_DELIM = "|||";
   public static final String FEATURE_PREFIX = "FPT";
 
@@ -87,7 +89,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     name = String.format("FlatPhraseTable(%s)", f.getName());
     // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
     // DynamicIntegerArrayIndex();
-    translations = new ArrayList<List<IntArrayTranslationOption>>();
+    translations = Generics.newArrayList(INITIAL_CAPACITY);
     int countScores = init(f, reverse);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
@@ -164,7 +166,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatPhraseTable.FIELD_DELIM);
       
       // The standard format has five fields
-      assert fields.size() == 5 : String.format("n-best list line %d has %d fields", 
+      assert fields.size() == 5 : String.format("phrase table line %d has %d fields", 
           reader.getLineNumber(), fields.size());
       Sequence<IString> source = IStrings.toIStringSequence(fields.get(0));
       Sequence<IString> target = IStrings.toIStringSequence(fields.get(1));
@@ -243,7 +245,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
     int[] foreignInts = Sequences.toIntArray(foreignSequence);
     int fIndex = sourceIndex.indexOf(foreignInts);
-    if (fIndex == -1)
+    if (fIndex == -1 || fIndex >= translations.size())
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
     List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(

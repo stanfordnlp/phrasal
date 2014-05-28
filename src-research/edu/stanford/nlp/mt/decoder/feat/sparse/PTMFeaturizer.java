@@ -338,10 +338,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
         IString leftMTContext = null;
 //        IString mtAlignedToken = null;
         IString rightMTContext = null;
-        if (tgtAlignments.size() > 0) {
-          if (tgtAlignments.size() > 1) {
-            throw new RuntimeException(String.format("%d: # target alignments %d", f.sourceInputId, tgtAlignments.size()));
-          }
+        if (tgtAlignments.size() == 1) {
           final int jMT = tgtAlignments.iterator().next() + f.targetPosition;
           //        mtAlignedToken = f.targetPrefix.get(jMT);
           if (jMT-1 >= 0) {
