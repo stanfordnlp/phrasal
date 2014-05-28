@@ -248,6 +248,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     if (fIndex == -1 || fIndex >= translations.size())
       return null;
     List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
+    if (intTransOpts == null)
+      return null;
     List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     // int intTransOptsSize = intTransOpts.size();
