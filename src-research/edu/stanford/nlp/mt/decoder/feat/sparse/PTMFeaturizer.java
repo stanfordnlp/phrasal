@@ -16,6 +16,7 @@ import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -42,6 +43,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
   public static final String FEATURE_PREFIX = "PTM";
   private static final String OOV_BLANKET_FEATURE = String.format("%s.oovb", FEATURE_PREFIX);
   private static final String ALIGNMENT_FEATURE = String.format("%s.algn", FEATURE_PREFIX);
+  private static final String SOURCE_DELETION_FEATURE = String.format("%s.srcd", FEATURE_PREFIX);
   
   private static List<UserDerivation> sourceIdToDerivation;
   private static SourceClassMap sourceMap;
@@ -168,7 +170,13 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
 
     // Source-side alignments
+    BitSet mtSrcCoverage = new BitSet();
+    BitSet userSrcCoverage = new BitSet();
     for (int i = 0, srcLength = f.sourcePhrase.size(); i < srcLength; ++i) {
+      if (mtSrcCoverage.get(i)) continue;
+      mtSrcCoverage.set(i);
+      Set<Integer> alignedSourceIndices = Generics.newHashSet();
+      alignedSourceIndices.add(i);
       Set<Integer> alignments = s2t.get(i);
       IString srcWord = f.sourcePhrase.get(i);
       if (alignments.size() > 0) {
@@ -182,40 +190,89 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
           if (jAlignments != null & jAlignments.length > 0) {
             int[] srcIndices = alignment.t2s(j);
             for (int sIndex : srcIndices) {
+              mtSrcCoverage.set(sIndex);
+              alignedSourceIndices.add(sIndex);
               IString srcToken = f.sourcePhrase.get(sIndex);
               alignedSourceWords.add(srcToken);
             }
           }
         }
+        
+        // At this point I have the MT clique
+        
+        // Extract the user clique, taking into account the full MT coverage
+        if (isTestMode) {
+          features.addAll(createAlignmentFeatures(alignedSourceWords, alignedTargetWords));
+        
+        } else {
+          Set<IString> userAlignedSourceTokens = Generics.newHashSet();
+          Set<IString> userAlignedTargetTokens = Generics.newHashSet();
+          Set<Integer> userAlignedTargetIndices = Generics.newHashSet();
+          
+          for (int srcI : alignedSourceIndices) {
+            if (userSrcCoverage.get(f.sourcePosition + srcI)) continue;
+            for (int userJ : derivation.s2t.f2e(f.sourcePosition + srcI)) {
+              userAlignedTargetTokens.add(derivation.mt.get(userJ));
+              userAlignedTargetIndices.add(userJ);
+            }
+          }
+          for (int userJ : userAlignedTargetIndices) {
+            for (int userI : derivation.s2t.e2f(userJ)) {
+              userSrcCoverage.set(userI);
+              userAlignedSourceTokens.add(f.sourceSentence.get(userI));
+            }
+          }
 
-        // Extract user aligned tokens
-        // TODO(spenceg): Many-to-one right now, but there could be many-to-many alignments
-        Set<IString> userAlignedTokens = Generics.newHashSet();
-        final int srcIndex = f.sourcePosition + i;
-        if (derivation != null) {
-          // Some segments don't have user derivations
-          for (int jUser : derivation.s2t.f2e(srcIndex)) {
-            userAlignedTokens.add(derivation.mt.get(jUser));
+          // Fire only if the cliques match exactly...high precision
+          if (alignedSourceWords.equals(userAlignedSourceTokens) &&
+              alignedTargetWords.equals(userAlignedTargetTokens)) {
+            features.addAll(createAlignmentFeatures(alignedSourceWords, alignedTargetWords));
           }
         }
-       
-        // Fire features
-        if ( ! isTestMode) {
-          // Tuning
-          alignedTargetWords.retainAll(userAlignedTokens);
+        
+      } else {
+        // Source deletion feature
+        if (isTestMode || derivation.s2t.f2e(f.sourcePosition + i).size() == 0) {
+          IString srcClass = targetMap.get(srcWord);
+          features.add(new FeatureValue<String>(String.format("%s.%s", SOURCE_DELETION_FEATURE, srcWord.toString()), 1.0));
+          features.add(new FeatureValue<String>(String.format("%sc.%s", SOURCE_DELETION_FEATURE, srcClass.toString()), 1.0));
         }
-        String tgtAligned = targetSetToString(alignedTargetWords);
-        String tgtClassAligned = targetSetToString(alignedTargetWords, true);
-        IString oovSource = f.sourceSentence.get(srcIndex);
-        String srcToken = oovSource.toString();
-        IString oovClass = sourceMap.get(oovSource);
-        String srcTokenClass = oovClass.toString();
-        features.add(new FeatureValue<String>(String.format("%s.%s>%s", ALIGNMENT_FEATURE, srcToken, tgtAligned), 1.0));
-        features.add(new FeatureValue<String>(String.format("%sc.%s>%s", ALIGNMENT_FEATURE, srcTokenClass, tgtClassAligned), 1.0));
       }
     }
     return features;
   }
+
+  private List<FeatureValue<String>> createAlignmentFeatures(
+      Set<IString> alignedSourceWords, Set<IString> alignedTargetWords) {
+    
+    String srcLex = setToString(alignedSourceWords);
+    String srcClass = setToString(alignedSourceWords, sourceMap);
+    String tgtLex = setToString(alignedTargetWords);
+    String tgtClass = setToString(alignedTargetWords, targetMap);
+    
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(String.format("%s.%s>%s", ALIGNMENT_FEATURE, srcLex, tgtLex), 1.0));
+    features.add(new FeatureValue<String>(String.format("%sc.%s>%s", ALIGNMENT_FEATURE, srcClass, tgtClass), 1.0));
+    return features;
+  }
+  
+
+  private String setToString(Set<IString> set) {
+    return setToString(set, null);
+  }
+
+  private String setToString(Set<IString> set, AbstractWordClassMap classMap) {
+    List<String> tokens = Generics.newArrayList(set.size());
+    for (IString token : set) tokens.add(classMap == null ? token.toString() : classMap.get(token).toString());
+    Collections.sort(tokens);
+    StringBuilder sb = new StringBuilder();
+    for (String s : tokens) {
+      if (sb.length() > 0) sb.append("_");
+      sb.append(s);
+    }
+    return sb.toString();
+  }
+
 
   /**
    * Get s2t alignments from a rule.
@@ -249,102 +306,87 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
    */
   private List<FeatureValue<String>> oovBlanketFeatures(Featurizable<IString, String> f, List<Set<Integer>> s2t) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    final int srcStart = f.sourcePosition;
     for (int i = 0, sz = f.sourcePhrase.size(); i < sz; ++i) {
-      int srcIndex = srcStart + i;
+      int srcIndex = f.sourcePosition + i;
       if (isSourceOOV.get(srcIndex)) {
         // Extract user features
-        Set<IString> leftUserContext = Generics.newHashSet();
-        Set<IString> userAlignedTokens = Generics.newHashSet();
-        Set<IString> rightUserContext = Generics.newHashSet();
-        if (derivation != null) {
-          // Some segments don't have user derivations
-          for (int jUser : derivation.s2t.f2e(srcIndex)) {
-            userAlignedTokens.add(derivation.mt.get(jUser));
+        IString leftUserContext = null;
+//        IString userAlignedToken = null;
+        IString rightUserContext = null;
+        if ( ! isTestMode) {
+          Set<Integer> tgtAlignments = derivation.s2t.f2e(srcIndex);
+          if (tgtAlignments.size() == 1) {
+            // TODO: Can't handle multiple alignments from the user
+            final int jUser = tgtAlignments.iterator().next();
+            //          userAlignedToken = derivation.mt.get(jUser);
             if (jUser-1 >= 0) {
-              leftUserContext.add(derivation.mt.get(jUser-1));
+              leftUserContext = derivation.mt.get(jUser-1);
             } else {
-              leftUserContext.add(TokenUtils.START_TOKEN);
+              leftUserContext = TokenUtils.START_TOKEN;
             }
             if (jUser+1 < derivation.mt.size()) {
-              rightUserContext.add(derivation.mt.get(jUser+1));
+              rightUserContext = derivation.mt.get(jUser+1);
             } else {
-              rightUserContext.add(TokenUtils.END_TOKEN);
+              rightUserContext = TokenUtils.END_TOKEN;
             }
           }
         }
         
         // Extract machine features
         Set<Integer> tgtAlignments = s2t.get(i);
-        Set<IString> leftMTContext = Generics.newHashSet();
-        Set<IString> mtAlignedTokens = Generics.newHashSet();
-        Set<IString> rightMTContext = Generics.newHashSet();
+
+        IString leftMTContext = null;
+//        IString mtAlignedToken = null;
+        IString rightMTContext = null;
         if (tgtAlignments.size() > 0) {
-          // Aligned
-          for (int jMT : tgtAlignments) {
-            jMT += f.targetPosition;
-            mtAlignedTokens.add(f.targetPrefix.get(jMT));
-            if (jMT-1 >= 0) {
-              leftMTContext.add(f.targetPrefix.get(jMT-1));
-            } else {
-              leftMTContext.add(TokenUtils.START_TOKEN);
-            }
-            if (jMT+1 < f.targetPrefix.size()) {
-              rightMTContext.add(f.targetPrefix.get(jMT+1));
-            } else if (f.done) {
-              rightMTContext.add(TokenUtils.END_TOKEN);
-            }
+          if (tgtAlignments.size() > 1) {
+            throw new RuntimeException(String.format("%d: # target alignments %d", f.sourceInputId, tgtAlignments.size()));
+          }
+          final int jMT = tgtAlignments.iterator().next() + f.targetPosition;
+          //        mtAlignedToken = f.targetPrefix.get(jMT);
+          if (jMT-1 >= 0) {
+            leftMTContext = f.targetPrefix.get(jMT-1);
+          } else {
+            leftMTContext = TokenUtils.START_TOKEN;
+          }
+          if (jMT+1 < f.targetPrefix.size()) {
+            rightMTContext = f.targetPrefix.get(jMT+1);
+          } else if (f.done) {
+            rightMTContext = TokenUtils.END_TOKEN;
           }
         }
         
         if ( ! isTestMode) {
           // Tuning
-          leftMTContext.retainAll(leftUserContext);
-          mtAlignedTokens.retainAll(userAlignedTokens);
-          rightMTContext.retainAll(rightUserContext);
+          if ( leftMTContext != null && (rightUserContext == null || ! leftMTContext.equals(leftUserContext))) leftMTContext = null;
+          if ( rightMTContext != null && (rightUserContext == null || ! rightMTContext.equals(rightUserContext))) rightMTContext = null;
+//          if ( ! mtAlignedToken.equals(userAlignedToken)) mtAlignedToken = null;
         }
         
-        // Extract features
-        String leftContext = targetSetToString(leftMTContext);
-        String leftClassContext = targetSetToString(leftMTContext, true);
-        String rightContext = targetSetToString(rightMTContext);
-        String rightClassContext = targetSetToString(rightMTContext, true);
+        // Create the features
         IString oovSource = f.sourceSentence.get(srcIndex);
         String srcToken = oovSource.toString();
         IString oovClass = sourceMap.get(oovSource);
         String srcTokenClass = oovClass.toString();
-        
-        if (leftContext.length() > 0) {
-          features.add(new FeatureValue<String>(String.format("%s.%s<%s", OOV_BLANKET_FEATURE, srcToken, leftContext), 1.0));
-          features.add(new FeatureValue<String>(String.format("%sc.%s<%s", OOV_BLANKET_FEATURE, srcTokenClass, leftClassContext), 1.0));
+        if (leftMTContext != null) {
+          String leftMTClass = targetMap.get(leftMTContext).toString();
+          features.add(new FeatureValue<String>(String.format("%s.%s<<%s", OOV_BLANKET_FEATURE, srcToken, leftMTContext.toString()), 1.0));
+          features.add(new FeatureValue<String>(String.format("%sc.%s<%s", OOV_BLANKET_FEATURE, srcTokenClass, leftMTClass), 1.0));
         }
-        if (rightContext.length() > 0) {
-          features.add(new FeatureValue<String>(String.format("%s.%s>%s", OOV_BLANKET_FEATURE, srcToken, rightContext), 1.0));
-          features.add(new FeatureValue<String>(String.format("%sc.%s>%s", OOV_BLANKET_FEATURE, srcTokenClass, rightClassContext), 1.0));
+        if (rightMTContext != null) {
+          String rightMTClass = targetMap.get(rightMTContext).toString();
+          features.add(new FeatureValue<String>(String.format("%s.%s>%s", OOV_BLANKET_FEATURE, srcToken, rightMTContext.toString()), 1.0));
+          features.add(new FeatureValue<String>(String.format("%sc.%s>%s", OOV_BLANKET_FEATURE, srcTokenClass, rightMTClass), 1.0));
         }
-        if (leftContext.length() > 0 || rightContext.length() > 0) {
-          features.add(new FeatureValue<String>(String.format("%s.%s<%s>%s", OOV_BLANKET_FEATURE, leftContext, srcToken, rightContext), 1.0));
-          features.add(new FeatureValue<String>(String.format("%sc.%s<%s>%s", OOV_BLANKET_FEATURE, leftClassContext, srcTokenClass, rightClassContext), 1.0));
+        if (leftMTContext != null && rightMTContext != null) {
+          String leftMTClass = targetMap.get(leftMTContext).toString();
+          String rightMTClass = targetMap.get(rightMTContext).toString();
+          features.add(new FeatureValue<String>(String.format("%s.%s<%s>%s", OOV_BLANKET_FEATURE, leftMTContext.toString(), srcToken, rightMTContext.toString()), 1.0));
+          features.add(new FeatureValue<String>(String.format("%sc.%s<%s>%s", OOV_BLANKET_FEATURE, leftMTClass, srcTokenClass, rightMTClass), 1.0));
         }
       }
     }
     return features;
-  }
-
-  private String targetSetToString(Set<IString> set) {
-    return targetSetToString(set, false);
-  }
-
-  private String targetSetToString(Set<IString> set, boolean classBased) {
-    List<String> tokens = Generics.newArrayList(set.size());
-    for (IString token : set) tokens.add(classBased ? targetMap.get(token).toString() : token.toString());
-    Collections.sort(tokens);
-    StringBuilder sb = new StringBuilder();
-    for (String s : tokens) {
-      if (sb.length() > 0) sb.append("_");
-      sb.append(s);
-    }
-    return sb.toString();
   }
 
   private static class UserDerivation {
