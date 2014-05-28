@@ -51,6 +51,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
   private static boolean isTestMode;
   private static boolean oovBlanket;
   private static boolean alignmentFeature;
+  private static String altPTName;
 
   // TODO(spenceg): This will shape the space during tuning. Bind this to IMT features so that post-edit can't
   // do it?
@@ -72,6 +73,12 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     oovBlanket = PropertiesUtils.getBool(options, "oovBlanket", false);
     alignmentFeature = PropertiesUtils.getBool(options, "alignmentFeature", false);
     recombinationFeature = PropertiesUtils.getBool(options, "recombinationFeature", false);
+    if (options.containsKey("ptName")) {
+      // See PTMRuleIndicator
+      altPTName = String.format("FlatPhraseTable(%s)", options.getProperty("ptName"));
+    } else {
+      altPTName = "";
+    }
     if (oovBlanket || alignmentFeature) {
       targetMap = TargetClassMap.getInstance();
       sourceMap = SourceClassMap.getInstance();
@@ -154,7 +161,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
       if (s2t == null) s2t = s2tFromRule(f.rule);
       features.addAll(oovBlanketFeatures(f, s2t));
     }
-    if (alignmentFeature) {
+    if (alignmentFeature && ! f.rule.phraseTableName.equals(altPTName)) {
       if (s2t == null) s2t = s2tFromRule(f.rule);
       features.addAll(alignmentFeatures(f, s2t));
     }
