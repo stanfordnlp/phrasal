@@ -269,9 +269,18 @@ public class DependencyLanguageModelFeaturizer3 extends DerivationFeaturizer<ISt
           //maximum depth
           int depth = 0;
           while (subState == null || subState.headToken == null) {
+            if (depth >= this.maxDepth) {
+              if (oSubState != null) {
+                oSubState.getLeftChildren().clear();
+                state.setSubState(sourceGovIndex, null);
+              }
+              continue tokfor;
+            }
+            depth++;
+            
             sourceGovIndex = this.reverseDependencies.get(sourceGovIndex);
             //score all left children as roots
-            if (sourceGovIndex == -1 || depth >= this.maxDepth) {
+            if (sourceGovIndex == -1) {
               if (oSubState != null && oSubState.getLeftChildren().size() > 0) {
                 for (IString child : oSubState.getLeftChildren()) {
                   Sequence<IString> seq = new SimpleSequence<IString>(child);
@@ -340,7 +349,6 @@ public class DependencyLanguageModelFeaturizer3 extends DerivationFeaturizer<ISt
                 }
               }
             }
-            depth++;
           }
       
           
