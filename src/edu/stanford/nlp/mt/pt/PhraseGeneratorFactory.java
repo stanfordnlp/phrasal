@@ -18,7 +18,6 @@ public class PhraseGeneratorFactory {
   public static final String DYNAMIC_GENERATOR = "dpt";
   public static final String PHAROAH_PHRASE_TABLE = "pharaohphrasetable";
   public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
-  public static final String NEW_DYNAMIC_GENERATOR = "newdg";
 
   static public <FV> PhraseGenerator<IString,FV> factory(
       Boolean dropUnknownWords,

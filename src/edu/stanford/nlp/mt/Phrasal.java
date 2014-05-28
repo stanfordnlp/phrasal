@@ -551,13 +551,7 @@ public class Phrasal {
     String optionLimit = String.valueOf(this.translationOptionLimit);
     System.err.println("Phrase table option limit: " + optionLimit);
 
-    if (phraseTable.startsWith("bitext:")) {
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
-          false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable.replaceFirst("^bitext:", ""),
-          optionLimit));
-    } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
-
+    if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
       System.err.printf("Dyanamic pt%n========================");
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
           false, PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
