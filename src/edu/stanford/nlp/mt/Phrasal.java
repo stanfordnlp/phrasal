@@ -556,6 +556,7 @@ public class Phrasal {
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
           false, PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
           phraseTable, optionLimit));
+
     } else {
       String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
           : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
