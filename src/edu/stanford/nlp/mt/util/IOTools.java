@@ -290,12 +290,18 @@ public final class IOTools {
     final String filePrefix = p.getName();
     File folder = new File(p.getParent());
     if (folder.exists()) {
-      return folder.list(new FilenameFilter() {
+      String[] fileNames = folder.list(new FilenameFilter() {
         @Override
         public boolean accept(File dir, String name) {
           return name.startsWith(filePrefix);
         }
       });
+      for (int i = 0; i < fileNames.length; ++i) {
+        File path = new File(folder, fileNames[i]);
+        fileNames[i] = path.getPath();
+      }
+      return fileNames;
+    
     } else {
       return new String[0];
     }
