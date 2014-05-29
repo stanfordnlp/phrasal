@@ -18,39 +18,33 @@ import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
- * 
+ *
  * @author danielcer
- * 
+ *
  */
 public class FindMetricMax {
-  static public String BLEU_METRIC_OPT = "bleu";
-  static public String GREEDY_SEARCH_OPT = "greedy";
-  static public String TOP_LIST_OPT = "toplist";
-  static public String HILLCLIMBING_OPT = "hillclimbing";
-  static public String AGENDA_OPT = "agenda";
-  static public String BEAM_OPT = "beam";
 
-  /**
-	 * 
-	 */
-  private FindMetricMax() {
-  }
+  public static final String BLEU_METRIC_OPT = "bleu";
+  public static final String GREEDY_SEARCH_OPT = "greedy";
+  public static final String TOP_LIST_OPT = "toplist";
+  public static final String HILLCLIMBING_OPT = "hillclimbing";
+  public static final String AGENDA_OPT = "agenda";
+  public static final String BEAM_OPT = "beam";
 
-  /**
-	 * 
-	 */
-  static public void main(String[] args) throws IOException {
+  private FindMetricMax() {  }
+
+  public static void main(String[] args) throws IOException {
     if (args.length != 3) {
       System.err
-          .printf("Usage:\n\tjava ...FindMetricMax (metric) (search algorithm) (n-best list)\n");
+          .printf("Usage:%n\tjava ...FindMetricMax (metric) (search algorithm) (n-best list)%n");
 
-      System.err.printf("\nSupported Metrics:\n");
-      System.err.printf("\t%s:ref0,ref1,ref2...\n", BLEU_METRIC_OPT);
+      System.err.printf("%nSupported Metrics:%n");
+      System.err.printf("\t%s:ref0,ref1,ref2...%n", BLEU_METRIC_OPT);
 
-      System.err.printf("\nSupported Search Algorithms:\n");
-      System.err.printf("\t%s\n", GREEDY_SEARCH_OPT);
-      System.err.printf("\t%s\n", TOP_LIST_OPT);
-      System.err.printf("\t%s\n", HILLCLIMBING_OPT);
+      System.err.printf("%nSupported Search Algorithms:%n");
+      System.err.printf("\t%s%n", GREEDY_SEARCH_OPT);
+      System.err.printf("\t%s%n", TOP_LIST_OPT);
+      System.err.printf("\t%s%n", HILLCLIMBING_OPT);
       System.exit(-1);
     }
 
@@ -110,6 +104,7 @@ public class FindMetricMax {
     }
 
     double score = metric.score(maxFeaturizedTranslations);
-    System.err.printf("Best score: %.3f (x100: %.3f)\n", score, score * 100.0);
+    System.err.printf("Best score: %.3f (x100: %.3f)%n", score, score * 100.0);
   }
+
 }
