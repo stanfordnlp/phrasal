@@ -289,7 +289,10 @@ public final class IOTools {
     File p = new File(pathPrefix);
     final String filePrefix = p.getName();
     File folder = new File(p.getParent());
-    if (folder.exists()) {
+    if ( ! (folder.exists() || folder.isDirectory())) {
+      folder = new File(".");
+    }
+    if (folder.exists() && folder.isDirectory()) {
       String[] fileNames = folder.list(new FilenameFilter() {
         @Override
         public boolean accept(File dir, String name) {
@@ -301,6 +304,9 @@ public final class IOTools {
         fileNames[i] = path.getPath();
       }
       return fileNames;
+    
+    } else if (p.exists()) {
+      return new String[] { p.getPath() };
     
     } else {
       return new String[0];
