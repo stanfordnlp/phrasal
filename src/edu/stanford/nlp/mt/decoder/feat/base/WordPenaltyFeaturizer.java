@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Word penalty feature: count of the target side of a rule.
  * 
  * @author danielcer
  * 
@@ -24,7 +25,7 @@ public class WordPenaltyFeaturizer<TK> implements
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<TK, String> f) {
-    if (f.targetPhrase == null) {
+    if (f.targetPhrase == null || f.targetPhrase.size() == 0) {
       return null;
     } else {
       List<FeatureValue<String>> features = Generics.newLinkedList();

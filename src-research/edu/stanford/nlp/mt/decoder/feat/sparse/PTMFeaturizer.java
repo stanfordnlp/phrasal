@@ -161,7 +161,7 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
       if (s2t == null) s2t = s2tFromRule(f.rule);
       features.addAll(oovBlanketFeatures(f, s2t));
     }
-    if (alignmentFeature && ! f.rule.phraseTableName.equals(altPTName)) {
+    if (alignmentFeature) {
       if (s2t == null) s2t = s2tFromRule(f.rule);
       features.addAll(alignmentFeatures(f, s2t));
     }

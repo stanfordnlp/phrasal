@@ -68,9 +68,9 @@ public class MakePTMPhrasalInput {
         continue;
       }
 //      String segId = String.format("%s:%s", fields[0], fields[1]).replace(".src.json", ".tgt");
-      String tgtLine = fields[3];
-      String alignStr = extend(fields[5]);
-      String srcLine = fields[6];
+      String tgtLine = fields[3].trim();
+      String alignStr = extend(fields[5]).trim();
+      String srcLine = fields[6].trim();
       SymmetricalWordAlignment s2t = new SymmetricalWordAlignment(srcLine, tgtLine, alignStr);
       SymmetricalWordAlignment s2sPrime = srcPreproc.processAndAlign(srcLine);
       SymmetricalWordAlignment t2tPrime = tgtPreproc.processAndAlign(tgtLine);

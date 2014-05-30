@@ -40,10 +40,15 @@ public class SignificanceTest {
     return incEval.score();
   }
 
+  /**
+   * 
+   * @param args
+   * @throws Exception
+   */
   static public void main(String[] args) throws Exception {
     if (args.length != 4) {
       System.err
-          .printf("Usage: java %s [bleu|ter] reference_prefix system1 system2%n", SignificanceTest.class.getName());
+          .printf("Usage: java %s metric_name reference_prefix system1 system2%n", SignificanceTest.class.getName());
       System.exit(-1);
     }
     String evalMetricName = args[0];
@@ -52,6 +57,8 @@ public class SignificanceTest {
     String system2TransFilename = args[3];
 
     // Load everything we need
+    // TODO(spenceg): Need to incorporate NIST tokenization for evaluation
+    boolean doNIST = true;
     List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix));
     EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricName, references);
     List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename);
@@ -102,7 +109,7 @@ public class SignificanceTest {
         matchedOrExceededDiffs++;
     }
     double p = (matchedOrExceededDiffs + 1.0) / (SAMPLES + 1.0);
-    System.out.printf("\np = %f (%d+1)/(%d+1)%n", p, matchedOrExceededDiffs,
+    System.out.printf("%np = %f (%d+1)/(%d+1)%n", p, matchedOrExceededDiffs,
         SAMPLES);
   }
 }
