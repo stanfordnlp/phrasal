@@ -41,6 +41,7 @@ public class SignificanceTest {
   }
 
   /**
+   * Runs the significance test, applying NIST tokenization to the input.
    * 
    * @param args
    * @throws Exception
@@ -57,7 +58,6 @@ public class SignificanceTest {
     String system2TransFilename = args[3];
 
     // Load everything we need
-    // TODO(spenceg): Need to incorporate NIST tokenization for evaluation
     boolean doNIST = true;
     List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix), doNIST);
     EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricName, references);
