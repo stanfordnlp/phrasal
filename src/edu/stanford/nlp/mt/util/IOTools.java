@@ -288,10 +288,7 @@ public final class IOTools {
   public static String[] fileNamesFromPathPrefix(String pathPrefix) {
     File p = new File(pathPrefix);
     final String filePrefix = p.getName();
-    File folder = new File(p.getParent());
-    if ( ! (folder.exists() || folder.isDirectory())) {
-      folder = new File(".");
-    }
+    File folder = p.getParent() == null ? new File(".") : new File(p.getParent());
     if (folder.exists() && folder.isDirectory()) {
       String[] fileNames = folder.list(new FilenameFilter() {
         @Override
