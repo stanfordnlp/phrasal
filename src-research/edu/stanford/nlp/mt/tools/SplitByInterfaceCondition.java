@@ -139,7 +139,7 @@ public class SplitByInterfaceCondition {
       PrintStream machineWriter = IOTools.getWriterFromFile(domain + ".mt");
       PrintStream hypWriter = IOTools.getWriterFromFile(domain + ".trans");
       PrintStream srcWriter = IOTools.getWriterFromFile(domain + ".src");
-      PrintStream userWriter = idToUserDerivation == null ? null : IOTools.getWriterFromFile(domain + ".user");
+      PrintStream userWriter = IOTools.getWriterFromFile(domain + ".user");
       System.err.printf("Writing %d segments for domain %s%n", domainToSentencePairs.get(domain).size(), domain);
       for (SentencePair pair : domainToSentencePairs.get(domain)) {
         indexWriter.println(pair.provenance);
@@ -147,7 +147,7 @@ public class SplitByInterfaceCondition {
         machineWriter.println(pair.machineHyp.toString());
         hypWriter.println(pair.humanHyp.toString());
         srcWriter.println(pair.src.toString());
-        if (userWriter != null && domain.equals(targetDomain)) {
+        if (domain.equals(targetDomain)) {
           UserDerivation d = idToUserDerivation.get(pair.provenance);
           if (d != null) {
             userWriter.printf("%s\t%s%n", pair.provenance, d.toString());
@@ -155,6 +155,8 @@ public class SplitByInterfaceCondition {
             System.err.printf("Missing derivation: %s%n", pair.provenance);
             userWriter.println();
           }
+        } else {
+          userWriter.println(pair.provenance);
         }
       }
       indexWriter.close();
@@ -162,7 +164,7 @@ public class SplitByInterfaceCondition {
       machineWriter.close();
       hypWriter.close();
       srcWriter.close();
-      if (userWriter != null) userWriter.close();
+      userWriter.close();
     }
   }
 

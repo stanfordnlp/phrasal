@@ -59,10 +59,10 @@ public class SignificanceTest {
     // Load everything we need
     // TODO(spenceg): Need to incorporate NIST tokenization for evaluation
     boolean doNIST = true;
-    List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix));
+    List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix), doNIST);
     EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricName, references);
-    List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename);
-    List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename);
+    List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename, doNIST);
+    List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename, doNIST);
 
     if (system1Trans.size() != system2Trans.size()) {
       System.err

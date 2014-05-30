@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.*;
 
+import edu.stanford.nlp.mt.tools.NISTTokenizer;
+
 
 /**
  * Utility functions for working with {@link IString}s.
@@ -24,10 +26,23 @@ public final class IStrings {
    * @return the list of Sequences represented by the file
    */
   static public List<Sequence<IString>> tokenizeFile(String filename) {
+    return tokenizeFile(filename, false);
+  }
+  
+  /**
+   * Convert a newline-delimited file to a list of Sequences, optionally
+   * applying NIST tokenization.
+   * 
+   * @param filename
+   * @param doNIST
+   * @return
+   */
+  static public List<Sequence<IString>> tokenizeFile(String filename, boolean doNIST) {
     List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
       for (String line; (line = reader.readLine()) != null;) {
+        if (doNIST) line = NISTTokenizer.tokenize(line);
         sequences.add(IStrings.tokenize(line));
       }
       reader.close();
@@ -36,6 +51,8 @@ public final class IStrings {
     }
     return sequences;
   }
+  
+  
 
   /**
    * Apply whitespace tokenization then convert to a Sequence
