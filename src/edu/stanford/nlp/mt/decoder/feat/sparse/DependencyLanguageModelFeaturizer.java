@@ -27,10 +27,12 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.PropertiesUtils;
 
 
 /**
@@ -46,8 +48,13 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   private static LanguageModel<IString> rightLM;
   private static LanguageModel<IString> rootLM;
 
+  private boolean useClasses = false;
   
+  private TargetClassMap targetClassMap;
+
   
+  private int maxDepth = 0;
+  private HashMap<Integer, Set<Integer>> reachableNodesCache;
   private HashMap<Integer, HashSet<Integer>> forwardDependencies;
   private HashMap<Integer, Integer> reverseDependencies;
   
@@ -77,6 +84,15 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
             this.getClass().getName() + ": ERROR No dependency annotations file was specified!");
     }
     
+    if (options.contains("maxDepth")) {
+      this.maxDepth = Integer.parseInt(options.getProperty("maxDepth"));
+    }
+    
+    this.useClasses = PropertiesUtils.getBool(options, "classBased", false);
+    this.targetClassMap = useClasses ? TargetClassMap.getInstance() : null;
+    
+     
+    
     assert leftLM == null;
     leftLM = LanguageModelFactory.load(options.getProperty("leftLM"));
     assert rightLM == null;
@@ -100,124 +116,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   }
   
 
-  /*private SymmetricalWordAlignment partialAlignment(Featurizable<IString, String> f) {
-    SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(f.sourceSentence, f.targetPrefix);
-    
-    Featurizable<IString, String> prev = f;
-    while (prev != null) {
-      PhraseAlignment localAlignment = prev.rule.abstractRule.alignment;
-      int sourceStart = prev.sourcePosition;
-      int targetStart = prev.targetPosition;
-      int targetPLen = prev.targetPhrase.size();
-      for (int t = 0; t < targetPLen; t++) {
-        for (int s : localAlignment.t2s(t)) {
-          alignment.addAlign(sourceStart + s, targetStart + t);
-        }
-      }
-      prev = prev.prior;
-    }
-    
-    return alignment;
-  }
-  */
-  /*private Map<Integer, NavigableSet<Integer>> partialDependencyProjection(CoreMap annotation, SymmetricalWordAlignment alignment, Featurizable<IString, String> f) {
-    Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
-
-    SemanticGraph semanticGraph = annotation.get(BasicDependenciesAnnotation.class);
-
-    Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
-    HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
-        
-    for (TypedDependency dep : dependencies) {
-      int govIndex = dep.gov().index() - 1;
-      int depIndex = dep.dep().index() - 1;
-      reverseDependencies.put(depIndex, govIndex);
-    }
-    
-
-    int len = alignment.eSize();
-
-    Integer tSentenceHeadIdx = -1;
-    //add root
-    Collection<IndexedWord> sentenceHeads = semanticGraph.getRoots();
-    NavigableSet<Integer> tHeadIndices = null;
-    if (!sentenceHeads.isEmpty()) {
-      IndexedWord sentenceHead = semanticGraph.getFirstRoot();
-      int sHeadIndex = sentenceHead.index() - 1;
-      tHeadIndices = Generics.newTreeSet(alignment.f2e(sHeadIndex));
-      if (tHeadIndices.size() == 1) {
-        tSentenceHeadIdx = tHeadIndices.last();
-        projectedDependencies.put(-1, tHeadIndices);
-      } else if (tHeadIndices.size() > 1) {
-        //make the right-most word the sentence head and make all the other words dependent of the head
-        tSentenceHeadIdx = tHeadIndices.last();
-        NavigableSet<Integer> depSet = Generics.newTreeSet();
-        projectedDependencies.put(tSentenceHeadIdx, depSet);
-
-        for (Integer idx : tHeadIndices ) {
-          if (idx != tSentenceHeadIdx)
-          projectedDependencies.get(tSentenceHeadIdx).add(idx);
-        }
-        
-        NavigableSet<Integer> headSet = Generics.newTreeSet();
-        headSet.add(tSentenceHeadIdx);
-        projectedDependencies.put(-1, headSet);
-      }
-    }
-    
-    
-    for (int j = 0; j < len; j++) {
-      String word = alignment.e().get(j).word();
-      //ignore garbage collection alignments to punction marks
-      if (!Character.isAlphabetic(word.charAt(0))) 
-        continue;
-
-      //don't add dependencies for sentence heads
-      if (tHeadIndices != null && tHeadIndices.contains(j))
-        continue;
-      
-      SortedSet<Integer> sIdxs = alignment.e2f(j);
-      Pair<Integer, Integer> dep = null; 
-      //one-to-*      
-      if (sIdxs.size() > 0) {
-        //SortedSet<Integer> tIdxs = alignment.f2e(sIdxs.first());
-        //one-to-1+
-        //if (tIdxs.size()  > 0) {
-          int depSIdx = sIdxs.first();
-          
-          
-          int headIdx;
-          while((reverseDependencies.get(depSIdx) != null) 
-              && (headIdx = reverseDependencies.get(depSIdx)) > -1) {
-            
-            //check if this portion of the source sentence was already translated, otherwise stop
-            if (!f.derivation.sourceCoverage.get(headIdx))
-              break;
-
-            SortedSet<Integer> headTIdxs = alignment.f2e(headIdx);
-            //one-to-one and one-to-many
-            if (headTIdxs.size() > 0 && (headTIdxs.first() !=  j || sIdxs.size() < 2)) {
-              //prevent self loops and that the sentence head depends on any other word
-              if (headTIdxs.first() !=  j && tSentenceHeadIdx != j) {
-                dep = Generics.newPair(headTIdxs.last(), j);
-              } 
-              break;
-            } else { //unaligned, try to map to transitive head
-              depSIdx = headIdx;
-            }
-          }
-      }
-    
-      if (dep != null) {
-        if (projectedDependencies.get(dep.first()) == null) 
-          projectedDependencies.put(dep.first(), new TreeSet<Integer>());
-        projectedDependencies.get(dep.first()).add(dep.second());
-      }
-    }
-    return projectedDependencies;
-  }  
-
-*/
+ 
   
   /*
    * Returns true if a source token was already translated
@@ -259,19 +158,27 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
 
   }
   
-  private Set<Integer> reachableNodes(int root) {
+  private Set<Integer> reachableNodes(int root, int depth) {
     Set<Integer> reachableNodes = Generics.newHashSet();
     reachableNodes.add(root);
     Set<Integer> children = this.forwardDependencies.get(root);
-    if (children == null)
+    if (children == null || depth > this.maxDepth)
       return reachableNodes;
     
     for (int i : children) {
-      reachableNodes.addAll(reachableNodes(i));
+      reachableNodes.addAll(reachableNodes(i, depth + 1));
     }
  
     return reachableNodes;
     
+  }
+  
+  private Set<Integer> reachableNodes(int root) {
+    if (!this.reachableNodesCache.containsKey(root)) {
+      this.reachableNodesCache.put(root, this.reachableNodes(root, 0));
+    }
+    
+    return this.reachableNodesCache.get(root);
   }
   
 
@@ -282,6 +189,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     SemanticGraph semanticGraph = CoreNLPCache.get(sourceInputId).get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
     this.forwardDependencies = new HashMap<Integer, HashSet<Integer>>();
     this.reverseDependencies = new HashMap<Integer, Integer>() ;
+    this.reachableNodesCache = new HashMap<Integer, Set<Integer>>();
     for (TypedDependency dep : semanticGraph.typedDependencies()) {
       int govIndex = dep.gov().index() - 1;
       int depIndex = dep.dep().index() - 1;
@@ -309,6 +217,11 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1)
         continue;
+      
+      
+      if (this.useClasses)
+        token = this.targetClassMap.get(token);
+      
       
       Integer sourceGovIndex = null;
       int sourceDepIndex = -1;
@@ -340,7 +253,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       
       //check for root
       if (sourceGovIndex == -1) {
-        double rootScore = rootLM.score(f.targetPhrase.subsequence(i, i+1), 0, null).getScore();
+        Sequence<IString> seq = new SimpleSequence<IString>(token);
+        double rootScore = rootLM.score(seq, 0, null).getScore();
         features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
         features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
       } else {
@@ -351,8 +265,19 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           DepLMSubState subState = oSubState;
           
           //if the substate exists but has no head token, then the head is not aligned
-          //try to align it to the parent of the head until you reach the root
+          //try to align it to the parent of the head until you reach the root or
+          //maximum depth
+          int depth = 0;
           while (subState == null || subState.headToken == null) {
+            if (depth >= this.maxDepth) {
+              if (oSubState != null) {
+                oSubState.getLeftChildren().clear();
+                state.setSubState(sourceGovIndex, null);
+              }
+              continue tokfor;
+            }
+            depth++;
+            
             sourceGovIndex = this.reverseDependencies.get(sourceGovIndex);
             //score all left children as roots
             if (sourceGovIndex == -1) {
@@ -367,6 +292,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
               }
               
               //Score current token as a root
+              
+              
               Sequence<IString> seq = new SimpleSequence<IString>(token);
               double rootScore = rootLM.score(seq, 0, null).getScore();
               features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
@@ -398,7 +325,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
                   }
                   LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
                   double rightScore = lmState.getScore();
-                  state.getSubState(sourceGovIndex).setRightLMState(lmState);
+                  subState.setRightLMState(lmState);
                   features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
                   features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
                   oSubState.getLeftChildren().clear();
@@ -426,7 +353,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       
           
           //score current token as a right token
-          Sequence<IString> seq = f.targetPhrase.subsequence(i, i+1);
+          Sequence<IString> seq = new SimpleSequence<IString>(token);
           //add start and end tokens
           int start = 0;
           if (subState.getRightLMState() == null) {
@@ -436,7 +363,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           }
           LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
           double rightScore = lmState.getScore();
-          state.getSubState(sourceGovIndex).setRightLMState(lmState);
+          subState.setRightLMState(lmState);
           features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
           features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
 
@@ -492,6 +419,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         state.setSubState(i, null);
       }
     }
+    
     
     f.setState(this, state);
     
