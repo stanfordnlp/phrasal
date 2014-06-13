@@ -67,7 +67,7 @@ public class MinimumBayesRisk {
     final double scale = PropertiesUtils.getDouble(options, "s", DEFAULT_SCALE);
     final String orientation = options.getProperty("o", "utility");
     final boolean risk = "risk".equals(orientation);
-    final String metricName = options.getProperty("m", "bleu");
+    final String metricName = options.getProperty("m", DEFAULT_METRIC);
 
     final String filename = options.getProperty("");
     System.err.print("Loading n-best list...");
