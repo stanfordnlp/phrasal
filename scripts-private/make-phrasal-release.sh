@@ -193,9 +193,6 @@ if [ "$expectedBranch" = "master" ]; then
   fi
 fi
 
-# Remove intermediate directories from the get-dependencies.sh script
-rm -rf phrasal.$version/{terp,jetty-}*
-
 tar -czf phrasal.$version.tar.gz phrasal.$version
 
 if [ $? = 0 ]; then
