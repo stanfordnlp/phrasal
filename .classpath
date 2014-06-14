@@ -14,28 +14,28 @@
 	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
-	<classpathentry kind="lib" path="lib-research/jetty-annotations-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-client-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-continuation-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-deploy-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-http-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-io-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jaas-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jmx-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jndi-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-plus-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-proxy-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-rewrite-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-security-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-server-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-servlet-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-servlets-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-util-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-webapp-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-xml-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
 	<classpathentry kind="lib" path="lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib-research/jsr305.jar"/>
 	<classpathentry kind="lib" path="lib-research/opencsv-2.3.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-annotations.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-client.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-continuation.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-deploy.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-http.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-io.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jaas.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jmx.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-jndi.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-plus.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-proxy.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-rewrite.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-security.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-server.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-servlet.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-servlets.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-util.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-webapp.jar"/>
+	<classpathentry kind="lib" path="lib-research/jetty-xml.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
