@@ -5,9 +5,6 @@
 # the location $JAVANLP_HOME/projects/more/src-cc. In the script below,
 # src-cc has not been updated. Not sure what to do.
 #
-# TODO(spenceg) Need to promote the Phrasal service from src-research,
-# but that means we'll need to distribute jetty and gson.
-#
 echo "See TODO in this file for things to fix before release!"
 exit -1
 
@@ -196,7 +193,8 @@ if [ "$expectedBranch" = "master" ]; then
   fi
 fi
 
-rm -rf phrasal.$version/terp*
+# Remove intermediate directories from the get-dependencies.sh script
+rm -rf phrasal.$version/{terp,jetty-}*
 
 tar -czf phrasal.$version.tar.gz phrasal.$version
 
