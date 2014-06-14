@@ -206,9 +206,9 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
-    TERMetric<IString, String> ter = new TERMetric<IString, String>(
+    TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
         referencesList);
-    TERMetric<IString, String>.TERIncrementalMetric terIncMetric = ter
+    TERpMetric<IString, String>.TERpIncrementalMetric terIncMetric = ter
         .getIncrementalMetric();
 
     BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(

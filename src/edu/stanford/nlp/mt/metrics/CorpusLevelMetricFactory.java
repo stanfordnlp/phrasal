@@ -50,9 +50,6 @@ public final class CorpusLevelMetricFactory {
     } else if (evalMetric.equals("terpa")) {
       emetric = new TERpMetric<IString, String>(references, false, true);
 
-    } else if (evalMetric.equals("ter")) {
-      emetric = new TERMetric<IString,String>(references);
-
     } else if (evalMetric.equals("bleu")) {
       emetric = new BLEUMetric<IString, String>(references);
 
@@ -79,21 +76,10 @@ public final class CorpusLevelMetricFactory {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references, false, true));
 
-    } else if (evalMetric.equals("bleu-ter/2")) {
-      TERMetric<IString, String> termetric = new TERMetric<IString, String>(references);
-      emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          0.5, 0.5 }, termetric, new BLEUMetric<IString, String>(references));
-
     } else if (evalMetric.equals("bleu-terp/2")) {
       TERpMetric<IString, String> termetric = new TERpMetric<IString, String>(references);
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           0.5, 0.5 }, termetric, new BLEUMetric<IString, String>(references));
-
-    } else if (evalMetric.startsWith("bleu-ter")) {
-      AbstractTERMetric<IString, String> termetric = new TERMetric<IString, String>(references);
-      emetric = new LinearCombinationMetric<IString, String>(new double[] {
-          1.0, 1.0 }, new BLEUMetric<IString, String>(references),
-          termetric);
 
     } else if (evalMetric.equals("wer")) {
       emetric = new WERMetric<IString, String>(references);

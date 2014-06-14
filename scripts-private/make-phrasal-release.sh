@@ -196,7 +196,6 @@ if [ "$expectedBranch" = "master" ]; then
   fi
 fi
 
-rm -rf phrasal.$version/tercom*
 rm -rf phrasal.$version/terp*
 
 tar -czf phrasal.$version.tar.gz phrasal.$version
