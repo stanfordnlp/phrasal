@@ -4,14 +4,10 @@
 	<classpathentry kind="src" path="src-research"/>
 	<classpathentry kind="src" path="test/src"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP-more"/>
-	<classpathentry kind="lib" path="lib/tokyocabinet.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/create_phrasedb.jar" sourcepath="C:/cygwin/home/daniel/terp.v1/src"/>
-	<classpathentry kind="lib" path="lib/meteor.jar"/>
-	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/terp.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
-	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
 	<classpathentry kind="lib" path="lib-research/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
