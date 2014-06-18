@@ -29,16 +29,11 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   /**
    * Constructor.
-   * 
-   * @param string
    */
   public IString(String string) {
     id = index.indexOf(string, true);
   }
 
-  /**
-   *
-   */
   public IString(int id) {
     this.id = id;
   }
@@ -110,9 +105,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   private static class WrapperIndex implements Index<IString> {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 2718L;
 
     @Override
@@ -210,11 +202,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   
   /**
    * Get a sequence of IString from an array of IString indices.
-   * 
-   * @param indices
-   * @return
    */
-  // Thang Apr14
   public static Sequence<IString> getIStringSequence(int[] indices){
     List<IString> istringList = new ArrayList<IString>();
     for (int id : indices) {

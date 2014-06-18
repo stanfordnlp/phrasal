@@ -368,14 +368,6 @@ public final class OnlineTuner {
 
   /**
    * Asynchronous template from Langford et al. (2009). Get gradients from the threadpool and update the weight vector.
-   * 
-   * @param threadpool
-   * @param updater 
-   * @param nbestLists 
-   * @param endOfEpoch
-   * @param timeStep 
-   * @param decoderWts 
-   * @return
    */
   private int update(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
@@ -586,11 +578,8 @@ public final class OnlineTuner {
 
   /**
    * Sort the list of 1-best translations and score with a corpus-level evaluation metric.
-   * 
-   * @param nbestLists
-   * @param epoch
+   *
    * @param scoreMetricStr A string specifying the metric to be passed to <code>CorpusLevelMetricFactory</code>.
-   * @return
    */
   private double approximateObjective(Map<Integer, Sequence<IString>> nbestLists, int epoch, String scoreMetricStr) {
     assert nbestLists.keySet().size() == references.size();
@@ -609,11 +598,6 @@ public final class OnlineTuner {
 
   /**
    * Make a batch from an array of indices.
-   * 
-   * @param indices
-   * @param t
-   * @param batchSize
-   * @return
    */
   private int[] makeBatch(int[] indices, int t, int batchSize) {
     final int start = t*batchSize;
@@ -626,12 +610,6 @@ public final class OnlineTuner {
 
   /**
    * Make a ProcessorInput object for the thread pool from this mini batch.
-   * 
-   * @param batch
-   * @param featureWhitelist 
-   * @param randomizeWeights 
-   * @param epoch 
-   * @return
    */
   private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights) {
     List<Sequence<IString>> sourceList = new ArrayList<Sequence<IString>>(batch.length);
@@ -676,11 +654,6 @@ public final class OnlineTuner {
 
   /**
    * Configure weights stored on file.
-   * 
-   * @param wtsInitialFile
-   * @param uniformStartWeights
-   * @param randomizeStartWeights 
-   * @return
    */
   private static Counter<String> loadWeights(String wtsInitialFile,
       boolean uniformStartWeights, boolean randomizeStartWeights) {
@@ -734,10 +707,6 @@ public final class OnlineTuner {
 
   /**
    * Configure the tuner for the specific tuning algorithm. Return the optimizer object.
-   * 
-   * @param optimizerAlg
-   * @param optimizerFlags
-   * @return
    */
   private OnlineOptimizer<IString, String> configureOptimizer(String optimizerAlg, String[] optimizerFlags) {
     assert optimizerAlg != null;
@@ -795,8 +764,6 @@ public final class OnlineTuner {
 
   /**
    * Command-line parameter specification.
-   * 
-   * @return
    */
   private static Map<String,Integer> optionArgDefs() {
     Map<String,Integer> optionMap = new HashMap<String,Integer>();
@@ -823,8 +790,6 @@ public final class OnlineTuner {
 
   /**
    * Usage string for the main method.
-   * 
-   * @return
    */
   private static String usage() {
     StringBuilder sb = new StringBuilder();

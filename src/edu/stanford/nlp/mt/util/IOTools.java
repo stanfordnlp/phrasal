@@ -52,9 +52,7 @@ public final class IOTools {
 
   /**
    * Converts a string list of scores to float.
-   * 
-   * @param scoreList
-   * @return
+   *
    * @throws NumberFormatException
    */
   public static float[] stringListToNumeric(List<String> scoreList) throws NumberFormatException {
@@ -281,9 +279,6 @@ public final class IOTools {
   /**
    * Return a list of files given a path prefix, e.g., passing the path
    *  /home/me/ref  will return all files in /home/me that begin with ref.
-   * 
-   * @param pathPrefix
-   * @return
    */
   public static String[] fileNamesFromPathPrefix(String pathPrefix) {
     File p = new File(pathPrefix);
