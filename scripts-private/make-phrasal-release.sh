@@ -1,16 +1,9 @@
 #!/bin/sh
 
-#
-# TODO(spenceg) We moved src-cc from mt to more. Many scripts hardcode
-# the location $JAVANLP_HOME/projects/more/src-cc. In the script below,
-# src-cc has not been updated. Not sure what to do.
-#
-echo "See TODO in this file for things to fix before release!"
-exit -1
-
 echo "Making Phrasal release tar ball"
 echo "JAVANLP_HOME set to $JAVANLP_HOME"
 
+basedir=$PWD
 cd $JAVANLP_HOME
 
 expectedBranch="master"
@@ -101,23 +94,28 @@ else
   echo "FAIL: repository has build errors"
   exit -1
 fi 
-cd -
+cd $basedir
 
 rm -rf phrasal.$version
 mkdir phrasal.$version || exit
 
-cp -r src src-cc scripts example README.txt LICENSE.txt phrasal.$version || exit
+cp -r src scripts example README.txt LICENSE.txt phrasal.$version || exit
 cp userbuild.xml  phrasal.$version/build.xml || exit
+
+cd $JAVANLP_HOME
+cp -r projects/more/src-cc $basedir/phrasal.$version/src-cc || exit
+cd $basedir
 
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
     edu.stanford.nlp.classify.LogisticClassifierFactory \
     edu.stanford.nlp.trees.DependencyScoring \
+    edu.stanford.nlp.util.concurrent.ConcurrentHashIndex \
     
 mkdir -p phrasal.$version/src || exit
 cd phrasal.$version/src || exit
 jar xf ../../src.jar edu || exit
-cd -
+cd $basedir
 
 # TODO: if these dependencies start getting more complicated, find an
 # automatic way to solve them (would need to make gen-dependencies
@@ -134,7 +132,11 @@ cp ../more/src/edu/stanford/nlp/classify/Regressor.java phrasal.$version/src/edu
 cp ../more/src/edu/stanford/nlp/classify/RegressionFactory.java phrasal.$version/src/edu/stanford/nlp/classify || exit
 cp ../more/src/edu/stanford/nlp/classify/CorrelationLinearRegressionObjectiveFunction.java phrasal.$version/src/edu/stanford/nlp/classify || exit
 
+mkdir -p phrasal.$version/src/edu/stanford/nlp/lm
+cp ../more/src/edu/stanford/nlp/lm/KenLM.java phrasal.$version/src/edu/stanford/nlp/lm || exit
+
 mkdir -p phrasal.$version/lib || exit
+cp ../core/lib/javax.servlet.jar phrasal.$version/lib || exit
 cp ../core/lib/junit.jar phrasal.$version/lib || exit
 cp ../core/lib/commons-lang3-3.1.jar phrasal.$version/lib || exit
 cp ../more/lib/fastutil.jar phrasal.$version/lib || exit
