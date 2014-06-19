@@ -372,7 +372,7 @@ public class ChineseInfiniteZeroClassifier {
 				System.out.println(lineNumber++);
 				System.out.println(strLine);
 				System.out.println(posLine);
-				for (Dependency<Label, Label, Object> dep : deps.dependencies()) {
+				for (TypedDependency dep : deps.allTypedDependencies()) {
 					System.out.println(dep.toString());
 				}
 			}
