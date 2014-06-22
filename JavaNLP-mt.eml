@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component inheritJdk="true">
-	<output-test url="file://$MODULE_DIR$/classes"/>
 	<exclude-output/>
 	<contentEntry url="file://$MODULE_DIR$">
 		<testFolder url="file://$MODULE_DIR$/test/src"/>
