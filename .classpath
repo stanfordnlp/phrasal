@@ -14,6 +14,7 @@
 	<classpathentry kind="lib" path="lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib-research/jsr305.jar"/>
 	<classpathentry kind="lib" path="lib-research/opencsv-2.3.jar"/>
+	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-annotations.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-client.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-continuation.jar"/>
@@ -33,6 +34,5 @@
 	<classpathentry kind="lib" path="lib/jetty-util.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-webapp.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-xml.jar"/>
-	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
