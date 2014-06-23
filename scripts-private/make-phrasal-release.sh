@@ -158,8 +158,8 @@ fi
 
 jar -cf phrasal.$version/phrasal.$version.jar -C phrasal.$version/classes edu || exit
 
-rm -rf phrasal.$1/classes/
-rm -rf phrasal.$1/lib-nodistrib/
+rm -rf phrasal.$version/classes/
+rm -rf phrasal.$version/lib-nodistrib/
 
 if [ "$expectedBranch" = "master" ]; then 
   # This time, look without excluding make-phrasal-release so that we can stash it if needed
