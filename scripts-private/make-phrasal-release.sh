@@ -138,7 +138,6 @@ cp ../more/src/edu/stanford/nlp/lm/KenLM.java phrasal.$version/src/edu/stanford/
 mkdir -p phrasal.$version/lib || exit
 cp ../core/lib/javax.servlet.jar phrasal.$version/lib || exit
 cp ../core/lib/junit.jar phrasal.$version/lib || exit
-cp ../core/lib/commons-lang3-3.1.jar phrasal.$version/lib || exit
 cp ../more/lib/fastutil.jar phrasal.$version/lib || exit
 
 mkdir `pwd`/phrasal.$version/classes
