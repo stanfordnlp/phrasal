@@ -31,7 +31,7 @@ echo "GIT branch: " $gitBranch
 if [ "$gitBranch" = "$expectedBranch" ]; then
     echo "PASS: GIT branch " $gitBranch
 else
-    echo "FAIL: GIT should be on branch master, is on " $gitBranch
+    echo "FAIL: GIT should be on branch " $expectedBranch ", is on " $gitBranch
     exit -1
 fi
 
@@ -140,7 +140,6 @@ cp ../core/lib/javax.servlet.jar phrasal.$version/lib || exit
 cp ../core/lib/junit.jar phrasal.$version/lib || exit
 cp ../core/lib/commons-lang3-3.1.jar phrasal.$version/lib || exit
 cp ../more/lib/fastutil.jar phrasal.$version/lib || exit
-cp ../more/lib/je.jar phrasal.$version/lib || exit
 
 mkdir `pwd`/phrasal.$version/classes
 mkdir `pwd`/phrasal.$version/lib-nodistrib
