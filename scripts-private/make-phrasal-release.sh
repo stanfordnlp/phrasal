@@ -141,7 +141,6 @@ cp ../core/lib/junit.jar phrasal.$version/lib || exit
 cp ../core/lib/commons-lang3-3.1.jar phrasal.$version/lib || exit
 cp ../more/lib/fastutil.jar phrasal.$version/lib || exit
 cp ../more/lib/je.jar phrasal.$version/lib || exit
-cp ../more/lib/google-guava.jar phrasal.$version/lib || exit
 
 mkdir `pwd`/phrasal.$version/classes
 mkdir `pwd`/phrasal.$version/lib-nodistrib
