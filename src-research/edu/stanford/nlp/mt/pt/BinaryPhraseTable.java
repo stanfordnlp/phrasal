@@ -14,8 +14,10 @@ import com.sleepycat.bind.tuple.IntegerBinding;
 import com.sleepycat.je.Database;
 import com.sleepycat.je.DatabaseConfig;
 import com.sleepycat.je.DatabaseEntry;
+import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
+import com.sleepycat.je.EnvironmentLockedException;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
@@ -33,7 +35,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   final Environment dbEnv;
   final Database db;
   
-  public BinaryPhraseTable(String filename) throws IOException {
+  public BinaryPhraseTable(String filename) throws IOException, DatabaseException {
     super(null);
     name = String.format("BinaryPhraseTable(%s)", filename);
     EnvironmentConfig envConfig = new EnvironmentConfig();
@@ -78,7 +80,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
     meta.close();  
   }
   
-  static public void convertToBinaryPhraseTable(String flatPhraseTableName, String binaryPhraseTableName) throws IOException {
+  static public void convertToBinaryPhraseTable(String flatPhraseTableName, String binaryPhraseTableName) throws IOException, EnvironmentLockedException, DatabaseException {
      File bf = new File(binaryPhraseTableName);
      if (bf.exists()) {
         bf.delete();
@@ -162,8 +164,13 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   public List<Rule<IString>> query(Sequence<IString> foreign) {
     DatabaseEntry key = new DatabaseEntry(foreign.toString().getBytes());
     DatabaseEntry value = new DatabaseEntry();
-    if (db.get(null, key, value, LockMode.DEFAULT) != OperationStatus.SUCCESS) {
-      return null;
+    try {
+      if (db.get(null, key, value, LockMode.DEFAULT) != OperationStatus.SUCCESS) {
+        return null;
+      }
+    } catch (DatabaseException e1) {
+      // TODO Auto-generated catch block
+      e1.printStackTrace();
     }
     ByteArrayInputStream bistrm = new ByteArrayInputStream(value.getData());
     DataInputStream distrm = new DataInputStream(bistrm);
@@ -198,7 +205,7 @@ public class BinaryPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV> 
   public int longestSourcePhrase() {
     return longestSourcePhrase;
   }
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, EnvironmentLockedException, DatabaseException {
     if (args.length != 2) {
       System.err.println("Usage:\n\tjava ..BinaryPhraseTable (flat phrase-table) (binary phrase-table)");      
       System.err.println("\nDescription: Converts a flat phrase-table to a binary phrase-table");

@@ -107,11 +107,11 @@ public class PhraseGeneratorFactory {
         if (withGaps)
           pharoahList.add(new DTUTable<FV>(filename));
         else
-          if (new File(filename).isDirectory()) {
-             pharoahList.add(new BinaryPhraseTable<FV>(filename)); 
-          } else {
+//          if (new File(filename).isDirectory()) {
+//             pharoahList.add(new BinaryPhraseTable<FV>(filename)); 
+//          } else {
             pharoahList.add(new FlatPhraseTable<FV>(filename));
-          }
+//          }
       }
 
       finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList,
