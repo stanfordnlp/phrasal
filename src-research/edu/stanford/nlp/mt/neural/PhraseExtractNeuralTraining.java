@@ -74,11 +74,13 @@ public class PhraseExtractNeuralTraining {
   static public final String HELP_OPT = "help";
   
   // Thang Feb14
-  static public final String NGRAM_OPT = "ngram";
+  static public final String TGT_NGRAM_OPT = "tgtNgram";
   static public final String SRC_WINDOW_OPT = "srcWindow";
+  static public final String EXTRACT_OPT = "extractOpt";
   static public final String SRC_START_TOKEN_OPT = "srcStartToken";
   static public final String SRC_END_TOKEN_OPT = "srcEndToken";
   static public final String TGT_START_TOKEN_OPT = "tgtStartToken";
+  static public final String SRC_UNK_TOKEN_OPT = "srcUnkToken";
   static public final String OUTPUT_FILE = "outputFile";
   
   static public final String LOWERCASE_OPT = "lowercase";
@@ -91,8 +93,8 @@ public class PhraseExtractNeuralTraining {
   static final Set<String> ALL_RECOGNIZED_OPTS = Generics.newHashSet();
 
   static {
-    REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT, NGRAM_OPT, SRC_WINDOW_OPT, 
-        SRC_START_TOKEN_OPT, SRC_END_TOKEN_OPT, TGT_START_TOKEN_OPT, OUTPUT_FILE));
+    REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT, TGT_NGRAM_OPT, SRC_WINDOW_OPT, EXTRACT_OPT, 
+        SRC_START_TOKEN_OPT, SRC_END_TOKEN_OPT, TGT_START_TOKEN_OPT, SRC_UNK_TOKEN_OPT, OUTPUT_FILE));
     OPTIONAL_OPTS.addAll(Arrays.asList(A_CORPUS_OPT, A_EF_CORPUS_OPT,
         A_FE_CORPUS_OPT, SYMMETRIZE_OPT, INPUT_DIR_OPT, THREADS_OPT, HELP_OPT, VERBOSE_OPT
         , MEM_USAGE_FREQ_OPT, LOWERCASE_OPT, TRIPLE_FILE));
@@ -118,8 +120,8 @@ public class PhraseExtractNeuralTraining {
   private boolean lowercase;
   
   // Thang Feb14
-  int ngram, srcWindow;
-  String srcStartToken, srcEndToken, tgtStartToken;
+  int tgtNgram, srcWindow, extractOpt;
+  String srcStartToken, srcEndToken, tgtStartToken, srcUnkToken;
   PrintStream writer;
   String outputFile;
   
@@ -202,11 +204,12 @@ public class PhraseExtractNeuralTraining {
     eCorpus = prop.getProperty(E_CORPUS_OPT);
 
     // Thang Feb14
-    ngram = Integer.parseInt(prop.getProperty(NGRAM_OPT));
+    tgtNgram = Integer.parseInt(prop.getProperty(TGT_NGRAM_OPT));
     srcWindow = Integer.parseInt(prop.getProperty(SRC_WINDOW_OPT));
     srcStartToken = prop.getProperty(SRC_START_TOKEN_OPT);
     srcEndToken = prop.getProperty(SRC_END_TOKEN_OPT);
     tgtStartToken = prop.getProperty(TGT_START_TOKEN_OPT);
+    srcUnkToken = prop.getProperty(SRC_UNK_TOKEN_OPT);
     outputFile = prop.getProperty(OUTPUT_FILE);
     
     // Alignment arguments:
@@ -242,6 +245,7 @@ public class PhraseExtractNeuralTraining {
     Extractor.srcStartToken = srcStartToken;
     Extractor.srcEndToken = srcEndToken;
     Extractor.tgtStartToken = tgtStartToken;
+    Extractor.srcUnkToken = srcUnkToken;
   }
 
   /**
@@ -283,20 +287,24 @@ public class PhraseExtractNeuralTraining {
    *
    */
   private static class Extractor implements ThreadsafeProcessor<ExtractorInput,ExtractorOutput> {
+    // Thang Feb14
     public static String srcStartToken;
     public static String srcEndToken;
     public static String tgtStartToken;
+    public static String srcUnkToken;
     
     private final SymmetricalWordAlignment sent;
     private final Properties properties;
-    private int ngram;
+    private int tgtNgram;
     private int srcWindow;
+    private int extractOpt;
     
-    public Extractor(Properties properties, int ngram, int srcWindow) {
+    public Extractor(Properties properties, int tgtNgram, int srcWindow, int extractOpt) {
       sent = new SymmetricalWordAlignment(properties);
       this.properties = properties;
-      this.ngram = ngram;
+      this.tgtNgram = tgtNgram;
       this.srcWindow = srcWindow;
+      this.extractOpt = extractOpt;
     }
 
     @Override
@@ -314,30 +322,29 @@ public class PhraseExtractNeuralTraining {
           while (true){
             int leftE = i-distance;
             int rightE = i+distance;
-
-            // search right (like Jacob did)
-            if (rightE<esize) fIndices = sent.e2f(rightE);
             
-            // search left if no alignment
-            if (fIndices.isEmpty() && leftE!= rightE && leftE>0) fIndices = sent.e2f(leftE);
+            if (extractOpt==0) { // Jacob: search right, then left
+              // search current/right
+              if (rightE<esize) fIndices = sent.e2f(rightE);
+              
+              // search left
+              if (fIndices.isEmpty() && leftE!= rightE && leftE>0) fIndices = sent.e2f(leftE);
+            } else if (extractOpt==1) { // search within ngram
+              // search current/left, don't go beyond ngram
+              if (fIndices.isEmpty() && leftE>0 && distance<tgtNgram) fIndices = sent.e2f(leftE);              
+            }
             
             // either found or distance is too large now
             if(!fIndices.isEmpty() || (leftE<0 && rightE>=esize)) break; 
             else distance++;
           }
           
-          if(!fIndices.isEmpty()){
+          StringBuilder sb = new StringBuilder();
+          if(!fIndices.isEmpty()){ // found alignments
             // find avg fIndex
             int avgF = 0;
             for (Integer integer : fIndices) avgF += integer;
             avgF = avgF/fIndices.size();
-            
-            StringBuilder sb = new StringBuilder();
-            // build target ngram e_(i-ngram+1) : e_i
-            for (int j = (i-ngram+1); j <= i; j++) { 
-              if(j<0) sb.append(tgtStartToken + " ");
-              else  sb.append(sent.e().get(j) + " ");
-            }
             
             // build source ngram f_(avgF-srcWindow) : f_(avgF+srcWindow)
             for (int j = (avgF-srcWindow); j <= (avgF+srcWindow); j++) { 
@@ -345,9 +352,19 @@ public class PhraseExtractNeuralTraining {
               else if (j>=fsize) sb.append(srcEndToken + " ");
               else sb.append(sent.f().get(j) + " ");
             }
-            
-            outputStrs.add(sb.toString());
+          } else { // no alignment
+            for (int j = 0; j <= 2*srcWindow; j++) { // use unk token for the src side
+              sb.append(srcUnkToken + " ");
+            }
           }
+          
+          // build target ngram e_(i-ngram+1) : e_i
+          for (int j = (i-tgtNgram+1); j <= i; j++) { 
+            if(j<0) sb.append(tgtStartToken + " ");
+            else  sb.append(sent.e().get(j) + " ");
+          }
+          
+          outputStrs.add(sb.toString());
         }
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -358,7 +375,7 @@ public class PhraseExtractNeuralTraining {
 
     @Override
     public ThreadsafeProcessor<ExtractorInput, ExtractorOutput> newInstance() {
-      return new Extractor(this.properties, this.ngram, this.srcWindow);
+      return new Extractor(this.properties, this.tgtNgram, this.srcWindow, this.extractOpt);
     }
   }
 
@@ -371,7 +388,7 @@ public class PhraseExtractNeuralTraining {
 
       MulticoreWrapper<ExtractorInput,ExtractorOutput> wrapper = 
           new MulticoreWrapper<ExtractorInput,ExtractorOutput>(nThreads, 
-              new Extractor(prop, ngram, srcWindow), false);
+              new Extractor(prop, tgtNgram, srcWindow, extractOpt), false);
 
       boolean useGIZA = alignInvCorpus != null;
 
