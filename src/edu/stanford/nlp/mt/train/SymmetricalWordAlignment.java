@@ -6,10 +6,10 @@ import java.util.*;
 
 import edu.stanford.nlp.io.IOUtils;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * Sentence pair with symmetrical word alignment (i.e., if e_i aligns to f_j in
@@ -54,12 +54,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public SymmetricalWordAlignment(String fStr, String eStr, String aStr,
-      boolean s2t, boolean oneIndexed) throws IOException {
+      boolean s2t, boolean oneIndexed) {
     init(fStr, eStr, aStr, s2t, oneIndexed);
   }
 
-  public SymmetricalWordAlignment(String fStr, String eStr, String aStr)
-      throws IOException {
+  public SymmetricalWordAlignment(String fStr, String eStr, String aStr) {
     init(fStr, eStr, aStr);
   }
 
@@ -75,12 +74,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     init(fStr, eStr, aStr, reverse, oneIndexed);
   }
 
-  public void init(String fStr, String eStr, String aStr) throws IOException {
+  public void init(String fStr, String eStr, String aStr) {
     init(fStr, eStr, aStr, false);
   }
 
-  public void init(String fStr, String eStr, String aStr, boolean reverse)
-      throws IOException {
+  public void init(String fStr, String eStr, String aStr, boolean reverse) {
     init(fStr, eStr, aStr, reverse, false);
   }
 
@@ -96,7 +94,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse,
-      boolean oneIndexed) throws IOException {
+      boolean oneIndexed) {
     if (VERBOSE_DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     initSentPair(fStr, eStr);
@@ -121,10 +119,10 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
           ++epos;
         }
         if (0 > fpos || fpos >= f.size())
-          throw new IOException("f has index out of bounds (fsize=" + f.size()
+          throw new RuntimeException("f has index out of bounds (fsize=" + f.size()
               + ",esize=" + e.size() + ") : " + fpos);
         if (0 > epos || epos >= e.size())
-          throw new IOException("e has index out of bounds (esize=" + e.size()
+          throw new RuntimeException("e has index out of bounds (esize=" + e.size()
               + ",fsize=" + f.size() + ") : " + epos);
         f2e[fpos].add(epos);
         e2f[epos].add(fpos);
@@ -165,66 +163,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     e2f[e].add(f);
   }
 
-  /**
-   * Compute alignment error rate. Since there is (currently) no S vs. P
-   * distinction alignment in this class, AER is 1 minus F-measure.
-   * 
-   * @return alignment error rate
-   * @param ref
-   *          reference alignment
-   * @param hyp
-   *          hypothesis alignment
-   */
-  static double computeAER(SymmetricalWordAlignment[] ref,
-      SymmetricalWordAlignment[] hyp) {
-    int tpC = 0, refC = 0, hypC = 0;
-    double totalPrec = 0.0, totalRecall = 0.0, totalF = 0.0;
-    if (ref.length != hyp.length)
-      throw new RuntimeException("Not same number of aligned sentences!");
-    for (int i = 0; i < ref.length; ++i) {
-      int _tpC = 0, _refC = 0, _hypC = 0;
-      SymmetricalWordAlignment r = ref[i], h = hyp[i];
-      assert (r.f().equals(h.f()));
-      assert (r.e().equals(h.e()));
-      for (int j = 0; j < r.fSize(); ++j) {
-        for (int k : r.f2e(j)) {
-          if (h.f2e(j).contains(k))
-            ++_tpC;
-        }
-        _refC += r.f2e(j).size();
-        _hypC += h.f2e(j).size();
-      }
-      tpC += _tpC;
-      refC += _refC;
-      hypC += _hypC;
-      double _prec = (_hypC > 0) ? _tpC * 1.0 / _hypC : 0;
-      double _recall = (_refC > 0) ? _tpC * 1.0 / _refC : 0;
-      double _f = (_prec + _recall > 0) ? 2 * _prec * _recall
-          / (_prec + _recall) : 0.0;
-      totalPrec += _prec;
-      totalRecall += _recall;
-      totalF += _f;
-      if (DEBUG) {
-        int len = r.f().size() + r.e().size();
-        System.err.printf("sent\t%d\t%g\t%g\t%g\n", len, _prec, _recall, _f);
-      }
-    }
-    double prec = tpC * 1.0 / hypC;
-    double recall = tpC * 1.0 / refC;
-    double fMeasure = 2 * prec * recall / (prec + recall);
-    if (DEBUG) {
-      System.err
-          .printf(
-              "micro: Precision = %.3g, Recall = %.3g, F = %.3g (TP=%d, HC=%d, RC=%d)\n",
-              prec, recall, fMeasure, tpC, hypC, refC);
-      System.err
-          .printf("macro: Precision = %.3g, Recall = %.3g, F = %.3g\n",
-              totalPrec / ref.length, totalRecall / ref.length, totalF
-                  / ref.length);
-    }
-    return 1 - fMeasure;
-  }
-
   @Override
   public String toString() {
     return toString(f2e);
@@ -236,30 +174,6 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
   
   public String toReverseString1() {
     return toString(e2f, false);
-  }
-
-  static public SymmetricalWordAlignment[] readFromIBMWordAlignment(
-      String xmlFile) {
-    InputStream in = null;
-    IBMWordAlignmentHandler h = null;
-    try {
-      h = new IBMWordAlignmentHandler();
-      in = new BufferedInputStream(new FileInputStream(new File(xmlFile)));
-      h.readXML(in);
-    } catch (Throwable t) {
-      t.printStackTrace();
-    } finally {
-      if (in != null) {
-        try {
-          in.close();
-        } catch (IOException ioe) {
-          ioe.printStackTrace();
-        }
-      }
-    }
-    if (h == null)
-      throw new RuntimeException("Error in alignment file");
-    return h.getIBMWordAlignment();
   }
 
   public static void main(String[] args) throws IOException {

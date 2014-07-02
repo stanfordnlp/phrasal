@@ -3,11 +3,11 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.NBestListContainer;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 public class ScorerWrapperEvaluationMetric<TK, FV> implements
     EvaluationMetric<TK, FV> {

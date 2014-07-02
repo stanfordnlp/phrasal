@@ -36,16 +36,16 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
+import edu.stanford.nlp.mt.decoder.CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
@@ -56,14 +56,31 @@ import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
-import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
-import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
+import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.DTUTable;
+import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.pt.LexicalReorderingTable;
+import edu.stanford.nlp.mt.pt.PhraseGenerator;
+import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
+import edu.stanford.nlp.mt.util.RichTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SourceClassMap;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.TargetClassMap;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -119,7 +136,6 @@ public class Phrasal {
       .append("  -").append(DISTORTION_FILE).append(" model_type filename : Lexicalized re-ordering model.").append(nl)
       .append("  -").append(HIER_DISTORTION_FILE).append(" model_type filename : Hierarchical lexicalized re-ordering model.").append(nl)
       .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
-      .append("  -").append(CONFIG_FILE).append(" filename : Configuration file.").append(nl)
       .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
       .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
       .append("  -").append(DISTORTION_LIMIT).append(" num : Hard distortion limit.").append(nl)
@@ -127,9 +143,9 @@ public class Phrasal {
       .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
-      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [classic,exact,dtu] (default: classic).").append(nl)
+      .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [pharoah,exact,dtu] (default: exact).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
-      .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" class [class] : List of additional phrase tables.").append(nl)
+      .append("  -").append(ADDITIONAL_PHRASE_GENERATOR).append(" filename [filename] : List of additional phrase tables.").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
       .append("  -").append(PREPROCESSOR_FILTER).append(" language [opts] : Pre-processor to apply to source input.").append(nl)
       .append("  -").append(POSTPROCESSOR_FILTER).append(" language [opts] : Post-processor to apply to target output.").append(nl)
@@ -147,43 +163,42 @@ public class Phrasal {
     return sb.toString();
   }
 
-  private static final String TRANSLATION_TABLE_OPT = "ttable-file";
-  private static final String LANGUAGE_MODEL_OPT = "lmodel-file";
-  private static final String OPTION_LIMIT_OPT = "ttable-limit";
+  public static final String TRANSLATION_TABLE_OPT = "ttable-file";
+  public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
+  public static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
-  private static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
-  private static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
-  private static final String FORCE_DECODE = "force-decode";
-  private static final String BEAM_SIZE = "stack";
-  private static final String SEARCH_ALGORITHM = "search-algorithm";
-  private static final String DISTORTION_FILE = "distortion-file";
-  private static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
-  private static final String WEIGHTS_FILE = "weights-file";
-  private static final String CONFIG_FILE = "config-file";
-  private static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
-  private static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
-  private static final String DISTORTION_LIMIT = "distortion-limit";
-  private static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
-  private static final String DISABLED_FEATURIZERS = "disabled-featurizers";
-  private static final String NUM_THREADS = "threads";
-  private static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
-  private static final String RECOMBINATION_MODE = "recombination-mode";
-  private static final String GAPS_OPT = "gaps";
-  private static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
-  private static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
-  private static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
-  private static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
-  private static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generator";
-  private static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
-  private static final String PREPROCESSOR_FILTER = "preprocessor-filter";
-  private static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
-  private static final String SOURCE_CLASS_MAP = "source-class-map";
-  private static final String TARGET_CLASS_MAP = "target-class-map";
-  private static final String PRINT_MODEL_SCORES = "print-model-scores";
-  private static final String LOG_PREFIX = "log-prefix";
-  private static final String LOG_LEVEL = "log-level";
-  private static final String INPUT_PROPERTIES = "input-properties";
-  private static final String DOMAIN_PROPERTIES = "domain-properties";
+  public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
+  public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
+  public static final String FORCE_DECODE = "force-decode";
+  public static final String BEAM_SIZE = "stack";
+  public static final String SEARCH_ALGORITHM = "search-algorithm";
+  public static final String DISTORTION_FILE = "distortion-file";
+  public static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
+  public static final String WEIGHTS_FILE = "weights-file";
+  public static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
+  public static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
+  public static final String DISTORTION_LIMIT = "distortion-limit";
+  public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
+  public static final String DISABLED_FEATURIZERS = "disabled-featurizers";
+  public static final String NUM_THREADS = "threads";
+  public static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
+  public static final String RECOMBINATION_MODE = "recombination-mode";
+  public static final String GAPS_OPT = "gaps";
+  public static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
+  public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
+  public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
+  public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
+  public static final String ADDITIONAL_PHRASE_GENERATOR = "additional-phrase-generators";
+  public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
+  public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
+  public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
+  public static final String SOURCE_CLASS_MAP = "source-class-map";
+  public static final String TARGET_CLASS_MAP = "target-class-map";
+  public static final String PRINT_MODEL_SCORES = "print-model-scores";
+  public static final String LOG_PREFIX = "log-prefix";
+  public static final String LOG_LEVEL = "log-level";
+  public static final String INPUT_PROPERTIES = "input-properties";
+  public static final String DOMAIN_PROPERTIES = "domain-properties";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -295,7 +310,7 @@ public class Phrasal {
   /**
    * Recombination configuration.
    */
-  private String recombinationMode = RecombinationFilterFactory.CLASSIC_RECOMBINATION;
+  private String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
 
   /**
    * Pre/post processing filters.
@@ -536,17 +551,12 @@ public class Phrasal {
     String optionLimit = String.valueOf(this.translationOptionLimit);
     System.err.println("Phrase table option limit: " + optionLimit);
 
-    if (phraseTable.startsWith("bitext:")) {
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
-          false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.NEW_DYNAMIC_GENERATOR,
-          phraseTable.replaceFirst("^bitext:", ""),
-          optionLimit));
-    } else if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
-
+    if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
       System.err.printf("Dyanamic pt%n========================");
       phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
           false, PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
           phraseTable, optionLimit));
+
     } else {
       String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
           : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
@@ -559,14 +569,9 @@ public class Phrasal {
        List<PhraseGenerator<IString,String>> pgens = Generics.newLinkedList();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-          PhraseGenerator<IString,String> pgen;
-          try {
-             pgen = (PhraseGenerator<IString,String>)Class.forName(pgenClasspath).
-                getConstructor().newInstance();
-          } catch (ClassNotFoundException e) {
-             throw new RuntimeException("Invalid PhraseGenerator: "+pgenClasspath);
-          }
-          pgens.add(pgen);
+         PhraseGenerator<IString,String> pgen = 
+             PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, pgenClasspath, optionLimit); 
+         pgens.add(pgen);
        }
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }
@@ -788,6 +793,7 @@ public class Phrasal {
 
     String searchAlgorithm = config.containsKey(SEARCH_ALGORITHM) ?
       config.get(SEARCH_ALGORITHM).get(0).trim() : InfererBuilderFactory.DEFAULT_INFERER;
+     
     if (dtuDecoder) {
       searchAlgorithm = InfererBuilderFactory.DTU_DECODER;
     }
@@ -795,24 +801,27 @@ public class Phrasal {
     // Configure InfererBuilder
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
+    
+    
+    // Thang Apr14: cube pruning with NNLM reranking
+    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
+      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
+      String nnlmType = config.get(SEARCH_ALGORITHM).get(2).trim(); // joint or target
+      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
+      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
+      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
+    }
+    
     for (int i = 0; i < numThreads; i++) {
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder
-            .setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer
-                .clone());
-        infererBuilder
-            .setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator
-                .clone());
+        infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
+        infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
-        infererBuilder
-            .setSearchHeuristic((SearchHeuristic<IString, String>) heuristic
-                .clone());
-        infererBuilder
-            .setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter
-                .clone());
+        infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
+        infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
@@ -899,11 +908,13 @@ public class Phrasal {
     public final Sequence<IString> source;
     public final InputProperties inputProps;
     public final int sourceInputId;
+    public final List<Sequence<IString>> targets;
 
-    public DecoderInput(Sequence<IString> seq, int sourceInputId, InputProperties inputProps) {
+    public DecoderInput(Sequence<IString> seq, int sourceInputId, List<Sequence<IString>> targets, InputProperties inputProps) {
       this.source = seq;
       this.sourceInputId = sourceInputId;
       this.inputProps = inputProps;
+      this.targets = targets;
     }
   }
 
@@ -952,7 +963,7 @@ public class Phrasal {
     public DecoderOutput process(DecoderInput input) {
       // Generate n-best list
       List<RichTranslation<IString, String>> translations = 
-          decode(input.source, input.sourceInputId, infererId, nbestListSize, null, input.inputProps);
+          decode(input.source, input.sourceInputId, infererId, nbestListSize, input.targets, input.inputProps);
       
       // Select and process the best translation
       Sequence<IString> bestTranslation = null;
@@ -1053,10 +1064,11 @@ public class Phrasal {
 
       final InputProperties inputProps = inputPropertiesList != null && sourceInputId < inputPropertiesList.size() ? 
           inputPropertiesList.get(sourceInputId) : new InputProperties();
+      final List<Sequence<IString>> targets = 
+          forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
       
-      wrapper.put(new DecoderInput(source, sourceInputId, inputProps));
-      while(wrapper.peek()) {
-        DecoderOutput result = wrapper.poll();
+      wrapper.put(new DecoderInput(source, sourceInputId, targets, inputProps));
+      for (DecoderOutput result; (result = wrapper.poll()) != null;) {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
         } else {
@@ -1173,28 +1185,22 @@ public class Phrasal {
   /**
    * Read a combination of config file and other command line arguments.
    * Command-line arguments supercede those specified in the config file.
-   *
+   * 
+   * @param configFile 
    * @param options
    * @return
    * @throws IOException
    */
-  private static Map<String, List<String>> readArgs(Properties options) throws IOException {
-    Map<String, List<String>> configArgs = Generics.newHashMap();
-    Map<String, List<String>> configFile = Generics.newHashMap();
+  private static Map<String, List<String>> getConfigurationFrom(String configFile, Properties options) throws IOException {
+    Map<String, List<String>> config = configFile == null ? new HashMap<String,List<String>>() :
+      IOTools.readConfigFile(configFile);
+    // Command-line options supercede config file options
     for (Map.Entry<Object, Object> e : options.entrySet()) {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
-      if (CONFIG_FILE.equals(key)) {
-        configFile.putAll(IOTools.readConfigFile(value));
-      } else {
-        configArgs.put(key, Arrays.asList(value.split("\\s+")));
-      }
+      config.put(key, Arrays.asList(value.split("\\s+")));
     }
-    // Command-line args supercede the config file.
-    Map<String, List<String>> configFinal = Generics.newHashMap();
-    configFinal.putAll(configFile);
-    configFinal.putAll(configArgs);
-    return configFinal;
+    return config;
   }
 
   /**
@@ -1257,6 +1263,7 @@ public class Phrasal {
   public static void main(String[] args) throws Exception {
     Properties options = StringUtils.argsToProperties(args);
     String configFile = options.containsKey("") ? (String) options.get("") : null;
+    options.remove("");
     if ((options.size() == 0 && configFile == null) ||
         options.containsKey("help") || options.containsKey("h")) {
       System.err.println(usage());
@@ -1274,9 +1281,8 @@ public class Phrasal {
           }
         });
 
-    Map<String, List<String>> config = configFile == null ? readArgs(options) :
-      IOTools.readConfigFile(configFile);
-    Phrasal p = Phrasal.loadDecoder(config);
+    Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
+    Phrasal p = Phrasal.loadDecoder(configuration);
     p.decode(System.in, true);
   }
 }

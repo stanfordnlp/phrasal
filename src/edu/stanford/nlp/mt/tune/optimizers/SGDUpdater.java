@@ -31,4 +31,13 @@ public class SGDUpdater implements OnlineUpdateRule<String> {
     Counters.retainNonZeros(weights);
   }
 
+  @Override
+  public UpdaterState getState() {
+    return new UpdaterState() {
+      private static final long serialVersionUID = -6444662670854629411L;
+    };
+  }
+
+  @Override
+  public void setState(UpdaterState state) {}
 }

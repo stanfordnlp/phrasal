@@ -3,6 +3,9 @@ package edu.stanford.nlp.mt.base;
 import java.util.Collection;
 import java.io.*;
 
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+
 import junit.framework.TestCase;
 
 /**

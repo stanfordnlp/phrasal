@@ -20,7 +20,13 @@ TRAINING_BUTTON_TEXT = [_('Next: Browser Check'),
                         _('Next: Interface Tutorial'),
                         _('Next: Open the practice UI'),
                         _('Try another document')]
-                        
+
+SRC_DOMAIN_DESCRIPTIONS = {'med' : _('Medical'),
+                           'nw' : _('Newswire'),
+                           'sw' : _('Software')}
+UI_DESCRIPTIONS = {'pe' : 'Post-edit',
+                   'imt' : 'Interactive'}
+
 # UI Idle timout
 IDLE_TIME = 180
 TRAINING_IDLE_TIME = 9999
@@ -36,6 +42,10 @@ def index(request):
     Return the main index template.
     """
     status = controller.get_user_app_status(request.user)
+    if 'ui_mode' in status:
+        status['ui_mode'] = UI_DESCRIPTIONS[status['ui_mode']]
+    if 'src_domain' in status:
+        status['src_domain'] = SRC_DOMAIN_DESCRIPTIONS[status['src_domain']]
     return render_to_response('index.html',
                               {'page_title' : 'Overview',
                                'status' : status},
@@ -140,17 +150,34 @@ def translate(request):
         # Will raise a runtime error in the event of
         # a problem on the backend.
         try:
-            last_condition = controller.save_translation_session(request.user, request.POST)
+            last_session = controller.save_translation_session(request.user, request.POST)
         except RuntimeError:
-            logger.error('User submitted a translation twice: %s' % (user.username))
+            logger.error('User submitted a translation twice: %s' % (request.user.username))
 
         # If the user is about to switch UI conditions, then allow a break.
-        conf,_ = controller.get_translate_configuration_for_user(request.user,last_condition=last_condition)
+        conf,_ = controller.get_translate_configuration_for_user(request.user,
+                                                                 last_session=last_session)
         if conf == None or conf['show_break']:
             return redirect('/tm/')
         else:
             return redirect('/tm/translate/')
 
+@never_cache
+def demo(request,lang_pair):
+    """
+    Return the translation UI and static content.
+    """
+    if request.method == 'GET':
+        # Parse the language pair
+        # Get a random document from the backend
+        conf = controller.get_demo_configuration(lang_pair)
+        if conf:
+            return render_to_response('translate_demo.html',
+                                      {'conf' : conf},
+                                      context_instance=RequestContext(request))
+    raise Http404
+
+        
 @login_required
 def form_demographic(request):
     form = None

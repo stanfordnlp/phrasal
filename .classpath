@@ -4,36 +4,35 @@
 	<classpathentry kind="src" path="src-research"/>
 	<classpathentry kind="src" path="test/src"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP-more"/>
-	<classpathentry kind="lib" path="lib/tokyocabinet.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/create_phrasedb.jar" sourcepath="C:/cygwin/home/daniel/terp.v1/src"/>
-	<classpathentry kind="lib" path="lib/meteor.jar"/>
-	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/terp.jar"/>
-	<classpathentry kind="lib" path="lib/tercom.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
-	<classpathentry kind="lib" path="lib/JDBM-3.0-alpha2.jar"/>
 	<classpathentry kind="lib" path="lib-research/pinyin4j-2.5.0.jar" sourcepath="libsrc/pinyin4j-2.5.0.zip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
-	<classpathentry kind="lib" path="lib-research/jetty-annotations-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-client-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-continuation-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-deploy-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-http-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-io-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jaas-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jmx-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-jndi-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-plus-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-proxy-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-rewrite-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-security-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-server-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-servlet-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-servlets-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-util-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-webapp-9.0.4.v20130625.jar"/>
-	<classpathentry kind="lib" path="lib-research/jetty-xml-9.0.4.v20130625.jar"/>
 	<classpathentry kind="lib" path="lib-research/jopt-simple.jar" sourcepath="libsrc/jopt-simple-4.3-sources.jar"/>
+	<classpathentry kind="lib" path="lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib-research/jsr305.jar"/>
+	<classpathentry kind="lib" path="lib-research/opencsv-2.3.jar"/>
+	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-annotations.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-client.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-continuation.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-deploy.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-http.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-io.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-jaas.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-jmx.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-jndi.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-plus.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-proxy.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-rewrite.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-security.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-server.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-servlet.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-servlets.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-util.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-webapp.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-xml.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

@@ -153,7 +153,7 @@ function make-ini-from-online-run {
 #
 function decode {
     execute "java $JAVA_OPTS $DECODER_OPTS edu.stanford.nlp.mt.Phrasal \
-	-config-file $RUNNAME.ini -log-prefix $RUNNAME \
+	$RUNNAME.ini -log-prefix $RUNNAME \
 	< $DECODE_FILE > $RUNNAME.trans 2> logs/$RUNNAME.log"
 }
 
@@ -178,6 +178,7 @@ function create-learn-curve {
 	$RUNNAME.ini \
 	$DECODE_FILE \
 	$REFS \
+        $METRIC \
 	$TUNERUNNAME.online.*.binwts > $RUNNAME.learn-curve.tmp \
 	2>logs/$RUNNAME.learn-curve.log"
 

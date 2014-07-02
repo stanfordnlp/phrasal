@@ -3,8 +3,8 @@ package edu.stanford.nlp.mt.train;
 import java.util.BitSet;
 import java.util.SortedSet;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Interface to word alignments for one sentence pair.

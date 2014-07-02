@@ -3,15 +3,15 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 import java.util.List;
 import java.util.Properties;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.InputProperty;
-import edu.stanford.nlp.mt.base.SourceClassMap;
-import edu.stanford.nlp.mt.base.TargetClassMap;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.InputProperty;
+import edu.stanford.nlp.mt.util.SourceClassMap;
+import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
@@ -55,16 +55,15 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
    */
   public RuleIndicator(String... args) {
     Properties options = FeatureUtils.argsToProperties(args);
-    // Thang Mar14: use PropertiesUtils.getBool so that we can set, e.g., addLexicalized=false
-    this.addLexicalizedRule = PropertiesUtils.getBool(options, "addLexicalized"); //options.containsKey("addLexicalized");
-    this.addClassBasedRule = PropertiesUtils.getBool(options, "addClassBased"); //options.containsKey("addClassBased");
+    this.addLexicalizedRule = options.containsKey("addLexicalized");
+    this.addClassBasedRule = options.containsKey("addClassBased");
 
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     if (addClassBasedRule) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = PropertiesUtils.getBool(options, "domainFeature"); //options.containsKey("domainFeature");
+    this.addDomainFeatures = options.containsKey("domainFeature");
     this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
   }
 

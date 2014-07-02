@@ -1,27 +1,17 @@
 package edu.stanford.nlp.mt.metrics;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Set;
-import java.util.TreeSet;
-import java.util.Arrays;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
 
 import com.bbn.mt.terp.TERalignment;
 import com.bbn.mt.terp.TERcost;
 import com.bbn.mt.terp.TERcalc;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
- * Sentence Level TERp Metric for use in online tuning.
- *
- * Possible todo: merge this with TERpMetric
+ * Sentence-level TERp metric for use in online tuning.
  *
  * @author danielcer
  *
@@ -30,7 +20,6 @@ import edu.stanford.nlp.mt.base.Sequence;
  */
 public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
-  static final int EJECTION_HASH_SIZE = 100000;
   public static final int DEFAULT_BEAM_SIZE = 20;
   public static final boolean VERBOSE = false;
 
@@ -46,61 +35,41 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
     terCost = new TERcost();
     this.beamSize = beamSize; 
   }
- 
-  String[] ejectionHashStrings = new String[EJECTION_HASH_SIZE];
-  double[] ejectionHashValues  = new double[EJECTION_HASH_SIZE];
 
-  /**
-    * Warning refWeights[] is ignored since this has no obvious interpretation for TER
-    */
   @Override
   public double score(int sourceId, Sequence<TK> source, List<Sequence<TK>> references, Sequence<TK> translation) {
     TERcalc terCalc = new TERcalc(terCost);
     terCalc.BEAM_WIDTH = beamSize;
-    Set<String> refs = new TreeSet<String>();
+    
+    // uniq references to prevent (expensive) redundant calculation.
+    Set<Sequence<TK>> uniqRefs = new HashSet<Sequence<TK>>(references);
 
-    // Take the min reference length
-    int minLength = Integer.MAX_VALUE;
-    for (Sequence<TK> sentence : references) {
-      if (sentence.size() < minLength) {
-        minLength = sentence.size();
-      }
-    }
-
-    // don't score against duplicated references
-    for (Sequence<TK> ref : references) {
-       refs.add(ref.toString());
-    }
-
-    String hyp = translation.toString();
+    /**
+     * This implements TERp with length scaling per Chiang's standard
+     * transformation of BLEU (see <code>BLEUGain</code>). We also follow
+     * Snover et al. (2009) recommendation (p. 3) for how to compute TER with multiple
+     * references, namely to select the reference for which the least number of
+     * absolute edits is required. Combining these two recommendations amounts to
+     * simply ignoring the denominator for the TER calculation.
+     */
+    final String hyp = translation.toString();
     double bestTER = Double.POSITIVE_INFINITY;
-    for (String ref : refs) {
-      String key = hyp + "|||" + ref;
-      int hashIdx = key.hashCode() % EJECTION_HASH_SIZE;
-      hashIdx = (hashIdx < 0 ? -hashIdx : hashIdx);
-      synchronized(ejectionHashStrings) { 
-        if (ejectionHashStrings[hashIdx] != null &&
-            key.equals(ejectionHashStrings[hashIdx])) {
-           double ter = ejectionHashValues[hashIdx];
-           if (ter < bestTER) bestTER = ter; 
-           continue;
-        }
-      }
+    for (Sequence<TK> refSeq : uniqRefs) {
+      String ref = refSeq.toString();
       TERalignment align = terCalc.TER(hyp, ref);
-      double ter = align.numEdits / align.numWords;
+      //        ter = align.numEdits / align.numWords;
+      double ter = align.numEdits;
+      if (ter < bestTER) {
+        bestTER = ter;
+      }
       if (VERBOSE) {
-        System.err.printf("ref: %s\n", ref);
-        System.err.printf("numEdits: %f\n", align.numEdits);
-        System.err.printf("numWords: %f\n", align.numWords);
-      }
-      if (ter < bestTER) bestTER = ter; 
-      synchronized(ejectionHashStrings) { 
-         ejectionHashStrings[hashIdx] = key;
-         ejectionHashValues[hashIdx] = ter;
-      }
+        System.err.printf("ref: %s%n", ref);
+        System.err.printf("numEdits: %f%n", align.numEdits);
+        System.err.printf("numWords: %f%n", align.numWords);
+      }        
     }
-
-    return -bestTER*minLength;
+    
+    return -bestTER;
   }
 
   @Override
@@ -112,21 +81,4 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   public boolean isThreadsafe() {
     return true;
   } 
-
-  public static void main(String[] args) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    SLTERpMetric slTERp = new SLTERpMetric();
-
-    for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-      String[] fields = line.split("\\|\\|\\|");
-      Sequence<IString> hyp = IStrings.tokenize(fields[0]);
-      List<Sequence<IString>> refs = new ArrayList<Sequence<IString>>();
-      for (int i = 1; i < fields.length; i++) {
-        refs.add(IStrings.tokenize(fields[i]));
-      }
-      double[] rWeights = new double[refs.size()];
-      Arrays.fill(rWeights, 1); 
-      System.out.printf("ter: %.3f\n", slTERp.score(0, null, refs, hyp)*100);
-    }
-  }
 }

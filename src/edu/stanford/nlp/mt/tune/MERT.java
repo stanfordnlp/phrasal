@@ -30,9 +30,6 @@ package edu.stanford.nlp.mt.tune;
 import java.io.*;
 import java.util.*;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.util.*;
-
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -41,12 +38,20 @@ import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.Pair;
 
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalNBestEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Minimum Error Rate Training (MERT).
@@ -126,7 +131,7 @@ public class MERT extends Thread {
     references = Metrics.readReferences(
         referenceList.split(","));
     this.evalMetric = evalMetric;
-    this.emetric = EvaluationMetricFactory.newMetric(evalMetric, references);
+    this.emetric = CorpusLevelMetricFactory.newMetric(evalMetric, references);
   }
 
   public double mcmcTightExpectedEval(FlatNBestList nbest,
@@ -1026,12 +1031,7 @@ public class MERT extends Thread {
         optTransFile = args[++argi];
       } else if (arg.equals("-f")) {
         String fixedWtsFile = args[++argi];
-        try {
-          fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
-        } catch (IOException e) {
-          System.err.println("Fixed weight file missing: " + fixedWtsFile);
-          fixedWts = null;
-        }
+        fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
       } else if (arg.equals("-t")) {
         nThreads = Integer.parseInt(args[++argi]);
       } else {

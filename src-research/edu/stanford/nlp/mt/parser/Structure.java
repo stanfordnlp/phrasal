@@ -12,11 +12,11 @@ import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.mt.base.IString;
 import edu.stanford.nlp.mt.parser.Actions.Action;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.parser.lexparser.Lexicon;
 import edu.stanford.nlp.process.Morphology;
-import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.common.Tagger;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.GrammaticalStructure;
@@ -127,8 +127,8 @@ public class Structure {
 
     // padding EOS token to guarantee every word has the right word
     CoreLabel cl = new CoreLabel();
-    cl.set(TextAnnotation.class, TaggerConstants.EOS_WORD);
-    cl.set(PartOfSpeechAnnotation.class, TaggerConstants.EOS_TAG);
+    cl.set(TextAnnotation.class, Tagger.EOS_WORD);
+    cl.set(PartOfSpeechAnnotation.class, Tagger.EOS_TAG);
     cl.set(IndexAnnotation.class, input.size()+1);
     input.push(cl);
   }

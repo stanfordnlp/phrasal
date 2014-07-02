@@ -3,9 +3,14 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.*;
 import java.io.*;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.tools.NISTTokenizer;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
@@ -444,8 +449,10 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
           .println("Usage:\n\tjava NISTMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
-
+    boolean doNIST = true;
+    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, doNIST);
+    System.out.printf("Metric: NIST metric with %d references (lower is better)%n", args.length);
+    
     NISTMetric<IString, String> bleu = new NISTMetric<IString, String>(
         referencesList);
     NISTMetric<IString, String>.NISTIncrementalMetric incMetric = bleu
@@ -455,7 +462,7 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
         System.in));
 
     for (String line; (line = reader.readLine()) != null;) {
-      line = NISTTokenizer.tokenize(line);
+      if (doNIST) line = NISTTokenizer.tokenize(line);
       Sequence<IString> translation = IStrings.tokenize(line);
       ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
           translation, null, 0);

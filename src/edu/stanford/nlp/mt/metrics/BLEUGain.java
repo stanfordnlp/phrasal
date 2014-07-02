@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Reference implementation of smoothed BLEU for sanity checking.

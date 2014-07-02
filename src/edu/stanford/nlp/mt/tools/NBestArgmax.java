@@ -1,13 +1,19 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.mt.base.*;
-import edu.stanford.nlp.mt.decoder.util.*;
+import java.util.List;
+
+import edu.stanford.nlp.mt.decoder.util.DenseScorer;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
+import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.metrics.ScorerWrapperEvaluationMetric;
 import edu.stanford.nlp.mt.tune.GreedyMultiTranslationMetricMax;
-
-import java.util.*;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * NBestArgmax utility - a command line tool for extracting the argmax
@@ -44,7 +50,8 @@ public class NBestArgmax {
 
     if (evalArg != null) {
       String[] fields = evalArg.split(":");
-      eval = MetricFactory.metric(fields[0], fields[1]);
+      List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(fields[1]));
+      eval = CorpusLevelMetricFactory.newMetric(fields[0], references);
     }
     GreedyMultiTranslationMetricMax<IString, String> argmaxByScore = new GreedyMultiTranslationMetricMax<IString, String>(
         new ScorerWrapperEvaluationMetric<IString, String>(wts));

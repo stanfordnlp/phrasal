@@ -4,23 +4,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.InputProperty;
-import edu.stanford.nlp.mt.base.LexicalReorderingTable;
-import edu.stanford.nlp.mt.base.Rule;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SimpleSequence;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.SourceClassMap;
-import edu.stanford.nlp.mt.base.TargetClassMap;
-import edu.stanford.nlp.mt.base.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.LexicalReorderingTable;
+import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.InputProperty;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.SourceClassMap;
+import edu.stanford.nlp.mt.util.TargetClassMap;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
@@ -74,8 +74,7 @@ public class LexicalReorderingFeaturizer extends
     discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     Properties options = FeatureUtils.argsToProperties(args);
     
-    // Thang Mar14: use PropertiesUtils.getBool
-    this.useAlignmentConstellations = PropertiesUtils.getBool(options, "conditionOnConstellations"); //options.containsKey("conditionOnConstellations");
+    this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     // Which reordering classes to extract
     if (options.containsKey("classes")) {
@@ -86,13 +85,13 @@ public class LexicalReorderingFeaturizer extends
       }
     }
     // Use class-based feature representations
-    this.useClasses = PropertiesUtils.getBool(options, "useClasses"); //options.containsKey("useClasses");
+    this.useClasses = options.containsKey("useClasses");
     if (useClasses) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
     // Add domain-specific features
-    this.addDomainFeatures = PropertiesUtils.getBool(options, "domainFeature"); //options.containsKey("domainFeature");
+    this.addDomainFeatures = options.containsKey("domainFeature");
     mlrt = null;
     featureTags = null;
   }

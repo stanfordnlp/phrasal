@@ -53,7 +53,7 @@ import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.mt.train.GIZAWordAlignment;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 
 /**
  * Extract data for neural LM training based on PhraseExtract code by Michel Galley and Spence Green.

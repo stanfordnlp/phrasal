@@ -82,12 +82,12 @@ def main():
                         dest='max_tokens',
                         type=int,
                         default=100,
-                        help='Maximum line length (in tokens).')
+                        help='Maximum line length in tokens (default: 100).')
     parser.add_argument('-m','--length-min',
                         dest='min_chars',
                         type=int,
                         default=1,
-                        help='Minimum line length (in characters).')
+                        help='Minimum line length in characters (default: 1)')
     args = parser.parse_args()
     
     clean_corpus(args.file1, args.file2, args.min_chars, args.max_tokens)

@@ -7,13 +7,13 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.FlatNBestList;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * NbestEvaluatationAnnotation is a utility for annotating 
@@ -56,7 +56,7 @@ public class NbestEvaluationAnnotation {
     for (int id = 0; id < nbestLists.size(); id++) {
       List<ScoredFeaturizedTranslation<IString, String>> nbestList = nbestLists.get(id);
       
-      EvaluationMetric<IString,String> emetric = EvaluationMetricFactory.newMetric(metricName, refs.subList(id, id+1));
+      EvaluationMetric<IString,String> emetric = CorpusLevelMetricFactory.newMetric(metricName, refs.subList(id, id+1));
       for (ScoredFeaturizedTranslation<IString, String> tran : nbestList) {
         List<ScoredFeaturizedTranslation<IString,String>> trans = 
             new ArrayList<ScoredFeaturizedTranslation<IString,String>>(1);

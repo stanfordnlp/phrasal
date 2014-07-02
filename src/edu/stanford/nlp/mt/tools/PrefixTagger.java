@@ -7,10 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.stanford.nlp.math.ArrayMath;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.common.Tagger;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.tagger.maxent.TestSentence;
 import edu.stanford.nlp.util.Pair;
@@ -154,7 +154,7 @@ public class PrefixTagger extends TestSentence {
     for (String line : ObjectBank.getLineIterator(new File(textFile))) {
 
       line = line.replaceAll("$", " ");
-      line = line + TaggerConstants.EOS_WORD;
+      line = line + Tagger.EOS_WORD;
       IString[] in = IStrings.toIStringArray(line.split("\\s+"));
 
       // System.err.println("sent: "+Arrays.toString(in));

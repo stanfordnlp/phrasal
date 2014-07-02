@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.Iterator;
 
+import edu.stanford.nlp.mt.util.CoverageSet;
+
 import junit.framework.TestCase;
 
 public class CoverageSetTest  extends TestCase {

@@ -3,19 +3,19 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.stanford.nlp.mt.base.ConcreteRule;
-import edu.stanford.nlp.mt.base.CoverageSet;
-import edu.stanford.nlp.mt.base.DTUFeaturizable;
-import edu.stanford.nlp.mt.base.EmptySequence;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.Featurizable;
-import edu.stanford.nlp.mt.base.InputProperties;
-import edu.stanford.nlp.mt.base.RawSequence;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.Rule;
-import edu.stanford.nlp.mt.base.Sequences;
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
+import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.DTUFeaturizable;
+import edu.stanford.nlp.mt.util.EmptySequence;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.RawSequence;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 
 /**
  * A derivation that maps a source input to a target output.
@@ -33,13 +33,15 @@ State<Derivation<TK, FV>> {
 
   // primitives
   public final long id;
-  public final double score;
   public final double h;
   public final int insertionPosition;
   public final int untranslatedTokens;
   public final int depth;
   public final int linearDistortion;
   public final int length;
+  
+  // Thang Apr14: remove the final modifier so we can update during NPLM reranking.
+  public double score;
   
   public final InputProperties sourceInputProperties;
 

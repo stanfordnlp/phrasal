@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.io.IOException;
 import java.util.Collection;
 
-import edu.stanford.nlp.mt.base.DenseFeatureValueCollection;
-import edu.stanford.nlp.mt.base.FeatureValue;
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.DenseFeatureValueCollection;
+import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.IOTools;
 
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.HashIndex;
@@ -28,14 +28,8 @@ public class DenseScorer implements Scorer<String> {
   public DenseScorer(String filename) {
     sharedFeatureIndex = false;
     featureIndex = new HashIndex<String>();
-    try {
-      Counter<String> wts = IOTools.readWeights(filename, featureIndex);
-      updateWeights(wts);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
-    }
+    Counter<String> wts = IOTools.readWeights(filename, featureIndex);
+    updateWeights(wts);
   }
 
   public DenseScorer(Counter<String> featureWts) {

@@ -51,54 +51,6 @@ LAST UPDATE BY: who last updated it
 
 
 -----------------------------------------------------------------------
-bsh.jar
-
-ORIGINAL JAR NAME: bsh-2.0b4.jar
-
-VERSION: 2.0b4
-
-RELEASE DATE: 2005/05/23
-
-SOURCE AVAILABLE: yes, bsh-2.0b4-src.zip
-
-DESCRIPTION: "BeanShell is a small, free, embeddable Java source
-interpreter with object scripting language features, written in Java.
-BeanShell dynamically executes standard Java syntax and extends it
-with common scripting conveniences such as loose types, commands, and
-method closures like those in Perl and JavaScript."
-Sample usages: add custom Java code to command-line or configuration files.
-
-URL: http://www.beanshell.org/
-
-USED BY:
-mt.train.CombinedFeatureExtractor
-
-LAST UPDATE: 2008/07/12
-
-LAST UPDATE BY: Michel Galley
-
------------------------------------------------------------------------
-jopt-simple.jar
-
-ORIGINAL JAR NAME: jopt-simple-3.1.jar
-
-VERSION: 3.1
-
-RELEASE DATE: 2009-04-26
-
-SOURCE AVAILABLE: Yes
-
-DESCRIPTION: GNU getopt() style command line parser
-
-URL: http://jopt-simple.sourceforge.net/
-
-USED BY: mt.visualize.phrase.PhraseViewer
-
-LAST UPDATE: 2009-07-13
-
-LAST UPDATE BY: Spence Green
-
------------------------------------------------------------------------
 foo.jar
 
 ORIGINAL JAR NAME:

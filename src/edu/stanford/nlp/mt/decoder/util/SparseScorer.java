@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.io.IOException;
 import java.util.Collection;
 
-import edu.stanford.nlp.mt.base.FeatureValue;
+import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Index;
 
@@ -58,5 +58,14 @@ public class SparseScorer implements Scorer<String> {
   public boolean hasNonZeroWeight(String featureName) {
     // Axiomatic for sparse weight vectors
     return true;
+  }
+  
+  // Thang Apr14
+  public double getWeight(String featureName){
+    return weights.getCount(featureName);
+  }
+  
+  public Counter<String> getWeightVector(){
+    return weights;
   }
 }

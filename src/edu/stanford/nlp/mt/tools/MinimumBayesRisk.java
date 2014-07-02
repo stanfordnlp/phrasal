@@ -12,12 +12,12 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
-import edu.stanford.nlp.mt.base.FlatNBestList;
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Minimum Bayes Risk decoding.
@@ -67,7 +67,7 @@ public class MinimumBayesRisk {
     final double scale = PropertiesUtils.getDouble(options, "s", DEFAULT_SCALE);
     final String orientation = options.getProperty("o", "utility");
     final boolean risk = "risk".equals(orientation);
-    final String metricName = options.getProperty("m", "bleu");
+    final String metricName = options.getProperty("m", DEFAULT_METRIC);
 
     final String filename = options.getProperty("");
     System.err.print("Loading n-best list...");
@@ -85,7 +85,7 @@ public class MinimumBayesRisk {
         List<List<Sequence<IString>>> fakeRef = Arrays.asList(
             Arrays.asList(refTrans.translation));
         EvaluationMetric<IString,String> metric =
-            EvaluationMetricFactory.newMetric(metricName,fakeRef);
+            CorpusLevelMetricFactory.newMetric(metricName,fakeRef);
 
         int hypI = -1;
         for (ScoredFeaturizedTranslation<IString,String> hyp : nbestlist) 

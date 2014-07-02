@@ -1,8 +1,12 @@
 package edu.stanford.nlp.mt.metrics;
 
-import edu.stanford.nlp.mt.base.*;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -21,15 +25,10 @@ import java.util.Map;
  */
 public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
-  enum MetricType {
-    full, bp, precision
-  }
-
   final boolean DEBUG = System.getProperty("debugLinearCombination") != null;
 
   final double[] weights;
   final EvaluationMetric<TK, FV>[] metrics;
-  final MetricType[] metricTypes;
   final Map<TK, FV>[] metricProperties;
   static final boolean VERBOSE = false;
 
@@ -45,10 +44,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
     this.weights = weights;
     this.metrics = metrics;
     int sz = metrics.length;
-    this.metricTypes = new MetricType[sz];
     this.metricProperties = new Map[sz];
-    for (int i = 0; i < sz; ++i)
-      metricTypes[i] = MetricType.full;
   }
 
   public void setWeights(double[] w) {
@@ -64,14 +60,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
   }
 
   private double maxScore(int i) {
-    switch (metricTypes[i]) {
-    case full:
-      return metrics[i].maxScore();
-    case bp:
-    case precision:
-    default:
-      return 1.0;
-    }
+    return metrics[i].maxScore();
   }
 
   @Override
@@ -150,14 +139,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     private double score(int i) {
       IncrementalEvaluationMetric<TK, FV> m = iems.get(i);
-      switch (metricTypes[i]) {
-      case full:
-        return m.score();
-      case bp:
-      case precision:
-      default:
-        throw new RuntimeException("Not yet implemented.");
-      }
+      return m.score();
     }
 
     public double partialScore() {
@@ -180,14 +162,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     private double maxScore(int i) {
-      switch (metricTypes[i]) {
-      case full:
-        return iems.get(i).maxScore();
-      case bp:
-      case precision:
-      default:
-        return 1.0;
-      }
+      return iems.get(i).maxScore();
     }
 
     private boolean checkSize(int size) {
@@ -231,9 +206,9 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
     List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
 
-    TERMetric<IString, String> ter = new TERMetric<IString, String>(
+    TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
         referencesList);
-    TERMetric<IString, String>.TERIncrementalMetric terIncMetric = ter
+    TERpMetric<IString, String>.TERpIncrementalMetric terIncMetric = ter
         .getIncrementalMetric();
 
     BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(

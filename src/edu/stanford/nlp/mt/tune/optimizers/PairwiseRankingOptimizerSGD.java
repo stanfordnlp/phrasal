@@ -12,14 +12,14 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.RichTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
-import edu.stanford.nlp.mt.base.SystemLogger;
-import edu.stanford.nlp.mt.base.SystemLogger.LogName;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.RichTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SystemLogger;
+import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -124,13 +124,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Select PRO samples from a single instance.
-   *
-   * @param sourceId
-   * @param source 
-   * @param scoreMetric
-   * @param translations
-   * @param references
-   * @return
    */
   private List<Datum> sampleNbestList(int sourceId,
       Sequence<IString> source, SentenceLevelMetric<IString, String> scoreMetric,
@@ -149,13 +142,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Select PRO samples from a batch.
-   *
-   * @param sourceIds
-   * @param sources
-   * @param scoreMetric
-   * @param translationList
-   * @param referenceList
-   * @return
    */
   private List<Datum> sampleNbestLists(int[] sourceIds, List<Sequence<IString>> sources,
       SentenceLevelMetric<IString, String> scoreMetric, List<List<RichTranslation<IString, String>>> translationList, List<List<Sequence<IString>>> referenceList) {
@@ -221,13 +207,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Sampling algorithm of Hopkins and May (2011).
-   *
-   * @param translations
-   * @param references
-   * @param sourceId
-   * @param source 
-   * @param scoreMetric
-   * @return
    */
   private List<Triple<Double, Integer, Integer>> sample(List<RichTranslation<IString, String>> translations,
       List<Sequence<IString>> references, int sourceId, Sequence<IString> source, SentenceLevelMetric<IString, String> scoreMetric) {
@@ -322,11 +301,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   
   /**
    * Compute the gradient for the specified set of PRO samples.
-   *
-   * @param dataset
-   * @param weights
-   * @param batchSize
-   * @return
    */
   private Counter<String> computeGradient(List<Datum> dataset, Counter<String> weights,
       int batchSize) {

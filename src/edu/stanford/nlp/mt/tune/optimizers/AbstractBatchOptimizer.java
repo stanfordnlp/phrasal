@@ -3,8 +3,8 @@ package edu.stanford.nlp.mt.tune.optimizers;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.tune.MERT;
 import edu.stanford.nlp.mt.tune.BatchOptimizer;
-import edu.stanford.nlp.mt.base.FlatNBestList;
-import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.IString;
 
 import java.util.Random;
 

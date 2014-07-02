@@ -3,6 +3,7 @@
 echo "Making Phrasal release tar ball"
 echo "JAVANLP_HOME set to $JAVANLP_HOME"
 
+basedir=$PWD
 cd $JAVANLP_HOME
 
 expectedBranch="master"
@@ -30,7 +31,7 @@ echo "GIT branch: " $gitBranch
 if [ "$gitBranch" = "$expectedBranch" ]; then
     echo "PASS: GIT branch " $gitBranch
 else
-    echo "FAIL: GIT should be on branch master, is on " $gitBranch
+    echo "FAIL: GIT should be on branch " $expectedBranch ", is on " $gitBranch
     exit -1
 fi
 
@@ -93,23 +94,28 @@ else
   echo "FAIL: repository has build errors"
   exit -1
 fi 
-cd -
+cd $basedir
 
 rm -rf phrasal.$version
 mkdir phrasal.$version || exit
 
-cp -r src src-cc scripts example README.txt LICENSE.txt phrasal.$version || exit
+cp -r src scripts example README.txt LICENSE.txt phrasal.$version || exit
 cp userbuild.xml  phrasal.$version/build.xml || exit
+
+cd $JAVANLP_HOME
+cp -r projects/more/src-cc $basedir/phrasal.$version/src-cc || exit
+cd $basedir
 
 perl ../../bin/gen-dependencies.pl -depdump depdump -srcjar src.jar -classdir ../core/classes -srcdir ../core/src \
     edu.stanford.nlp.classify.LogisticClassifier \
     edu.stanford.nlp.classify.LogisticClassifierFactory \
     edu.stanford.nlp.trees.DependencyScoring \
+    edu.stanford.nlp.util.concurrent.ConcurrentHashIndex \
     
 mkdir -p phrasal.$version/src || exit
 cd phrasal.$version/src || exit
 jar xf ../../src.jar edu || exit
-cd -
+cd $basedir
 
 # TODO: if these dependencies start getting more complicated, find an
 # automatic way to solve them (would need to make gen-dependencies
@@ -126,12 +132,13 @@ cp ../more/src/edu/stanford/nlp/classify/Regressor.java phrasal.$version/src/edu
 cp ../more/src/edu/stanford/nlp/classify/RegressionFactory.java phrasal.$version/src/edu/stanford/nlp/classify || exit
 cp ../more/src/edu/stanford/nlp/classify/CorrelationLinearRegressionObjectiveFunction.java phrasal.$version/src/edu/stanford/nlp/classify || exit
 
+mkdir -p phrasal.$version/src/edu/stanford/nlp/lm
+cp ../more/src/edu/stanford/nlp/lm/KenLM.java phrasal.$version/src/edu/stanford/nlp/lm || exit
+
 mkdir -p phrasal.$version/lib || exit
+cp ../core/lib/javax.servlet.jar phrasal.$version/lib || exit
 cp ../core/lib/junit.jar phrasal.$version/lib || exit
-cp ../core/lib/commons-lang3-3.1.jar phrasal.$version/lib || exit
 cp ../more/lib/fastutil.jar phrasal.$version/lib || exit
-cp ../more/lib/je.jar phrasal.$version/lib || exit
-cp ../more/lib/google-guava.jar phrasal.$version/lib || exit
 
 mkdir `pwd`/phrasal.$version/classes
 mkdir `pwd`/phrasal.$version/lib-nodistrib
@@ -150,8 +157,8 @@ fi
 
 jar -cf phrasal.$version/phrasal.$version.jar -C phrasal.$version/classes edu || exit
 
-rm -rf phrasal.$1/classes/
-rm -rf phrasal.$1/lib-nodistrib/
+rm -rf phrasal.$version/classes/
+rm -rf phrasal.$version/lib-nodistrib/
 
 if [ "$expectedBranch" = "master" ]; then 
   # This time, look without excluding make-phrasal-release so that we can stash it if needed
@@ -184,9 +191,6 @@ if [ "$expectedBranch" = "master" ]; then
     git stash pop
   fi
 fi
-
-rm -rf phrasal.$version/tercom*
-rm -rf phrasal.$version/terp*
 
 tar -czf phrasal.$version.tar.gz phrasal.$version
 

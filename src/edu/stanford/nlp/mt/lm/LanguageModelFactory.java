@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
 
-import edu.stanford.nlp.mt.base.IString;
+import edu.stanford.nlp.mt.util.IString;
 
 /**
  * Factory for loading n-gram language models. Also includes a main method for scoring

@@ -3,18 +3,30 @@
 # Download external dependencies for Phrasal.
 #
 
-# Download TER and TERp, since BBN's license 
+# Download TERp, since BBN's license 
 # won't let us redistribute it with Phrasal 
-wget http://www.cs.umd.edu/~snover/tercom/tercom-0.7.25.tgz
+echo Downloading TERp...
 wget http://www.umiacs.umd.edu/~snover/terp/downloads/terp.v1.tgz
-
-tar -xvf tercom-0.7.25.tgz --wildcards --no-anchored '*.jar'
-tar -xvf terp.v1.tgz --wildcards --no-anchored '*.jar'
+tar -xzf terp.v1.tgz
 
 mkdir -p lib-nodistrib
 mv terp.v1/dist/lib/*.jar lib-nodistrib
-mv tercom-0.7.25/tercom.7.25.jar lib-nodistrib
+
+# Download jetty for the web service
+#
+echo Downloading Jetty...
+JETTY_VERSION=9.2.1.v20140609
+wget http://download.eclipse.org/jetty/$JETTY_VERSION/dist/jetty-distribution-$JETTY_VERSION.tar.gz
+tar -xzf jetty-distribution-$JETTY_VERSION.tar.gz
+mv jetty-distribution-$JETTY_VERSION/lib/jetty-*jar lib-nodistrib
+
+# Download gson for the web service
+#
+echo Downloading Gson...
+wget http://google-gson.googlecode.com/files/google-gson-2.2.4-release.zip
+unzip google-gson-2.2.4-release.zip
+mv google-gson-2.2.4/gson-2.2.4.jar lib-nodistrib
 
 # Cleanup
-rm -rf tercom* terp*
+rm -rf terp* jetty-* google-*
 

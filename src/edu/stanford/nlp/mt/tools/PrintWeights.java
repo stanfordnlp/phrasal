@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.tools;
 
-import edu.stanford.nlp.mt.base.IOTools;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.stats.Counters;
 
 /**

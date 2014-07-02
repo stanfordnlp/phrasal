@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.lm;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.Sequence;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * Result of an ARPALanguageModel query.

@@ -19,7 +19,7 @@ if [ $# -le 3 ]; then
     exit
 fi
 
-KENLM_BIN=$JAVANLP_HOME/projects/mt/src-cc/kenlm/bin
+KENLM_BIN=$JAVANLP_HOME/projects/more/src-cc/kenlm/bin
 MAKELM=${KENLM_BIN}/lmplz
 MAKEBIN=${KENLM_BIN}/build_binary
 TEMPDIR=kenlm_tmp

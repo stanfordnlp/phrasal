@@ -6,14 +6,14 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.base.IString;
-import edu.stanford.nlp.mt.base.IStrings;
-import edu.stanford.nlp.mt.base.ScoredFeaturizedTranslation;
-import edu.stanford.nlp.mt.base.Sequence;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * 
@@ -35,7 +35,7 @@ public class Evaluate {
     List<List<Sequence<IString>>> references = Metrics.readReferences(refFn);
     
     if (!perLine) {
-      EvaluationMetric<IString,String> metric = EvaluationMetricFactory.newMetric(evalMetric, references);
+      EvaluationMetric<IString,String> metric = CorpusLevelMetricFactory.newMetric(evalMetric, references);
       IncrementalEvaluationMetric<IString,String> incMetric = metric.getIncrementalMetric();
   
       LineNumberReader reader = new LineNumberReader(new InputStreamReader(
@@ -56,7 +56,7 @@ public class Evaluate {
           System.in));
   
       for (String line; (line = reader.readLine()) != null; ) {
-        EvaluationMetric<IString,String> metric = EvaluationMetricFactory.newMetric(evalMetric, 
+        EvaluationMetric<IString,String> metric = CorpusLevelMetricFactory.newMetric(evalMetric, 
             Arrays.asList(references.get(reader.getLineNumber()-1)));        
         IncrementalEvaluationMetric<IString,String> incMetric = metric.getIncrementalMetric();
         Sequence<IString> translation = IStrings.tokenize(line);
