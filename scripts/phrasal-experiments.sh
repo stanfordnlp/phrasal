@@ -42,7 +42,6 @@ INI_FILE=$3
 SYS_NAME=$4
 
 VERBOSE=0
-
 shift 4
 
 if [ "$1" = "-verbose" ]
@@ -161,5 +160,8 @@ case "$PARAM_LOCATION" in
     vars)
         run-vars-parameter-experiments $PARAM_NAME $PARAM_SHORT_NAME "$*"
         ;;
+    *)
+        echo "Invalid location parameter. Specify ini for a parameter in the ini\
+or vars for a parameter in the vars file."
 
 esac
