@@ -583,15 +583,12 @@ public class ChineseInfiniteZeroClassifier {
 				
 				for (List<Datum<String,String>> sentence : testData) {
 					PriorityQueue<Datum<String,String>> pq = new PriorityQueue<Datum<String,String>>(sentence.size(),
-							new Comparator<Datum<String,String>>() {
-						
-							@Override
-							public int compare(Datum<String,String> d1, Datum<String,String> d2) {
-								if (classifier.probabilityOf(d1).getCount("IS_ZERO") > classifier.probabilityOf(d2).getCount("IS_ZERO")) {
-									return -1;
-								} else { return 1; }
-							}	
-					});
+              (d1, d2) -> {
+                if (classifier.probabilityOf(d1).getCount("IS_ZERO") > classifier.probabilityOf(d2).getCount("IS_ZERO")) {
+                  return -1;
+                } else { return 1; }
+              }
+          );
 					for (Datum<String, String> test: sentence) {
 						pq.add(test);
 					}

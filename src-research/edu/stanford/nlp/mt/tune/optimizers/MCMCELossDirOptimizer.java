@@ -36,12 +36,12 @@ public class MCMCELossDirOptimizer extends AbstractBatchOptimizer {
       double ssd = MERT.wtSsd(wts, newWts);
 
       eval = MERT.evalAtPoint(nbest, newWts, emetric);
-      System.err.printf("line opt %d: eval: %e ssd: %e\n", iter, eval, ssd);
+      System.err.printf("line opt %d: apply: %e ssd: %e\n", iter, eval, ssd);
       if (ssd < MERT.NO_PROGRESS_SSD)
         break;
       wts = newWts;
     }
-    System.err.printf("Last eval: %e\n", eval);
+    System.err.printf("Last apply: %e\n", eval);
     return wts;
   }
 }

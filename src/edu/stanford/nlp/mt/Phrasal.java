@@ -1272,13 +1272,10 @@ public class Phrasal {
 
     // by default, exit on uncaught exception
     Thread
-        .setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-          @Override
-          public void uncaughtException(Thread t, Throwable ex) {
-            System.err.println("Uncaught exception from thread: " + t.getName());
-            ex.printStackTrace();
-            System.exit(-1);
-          }
+        .setDefaultUncaughtExceptionHandler((t, ex) -> {
+          System.err.println("Uncaught exception from thread: " + t.getName());
+          ex.printStackTrace();
+          System.exit(-1);
         });
 
     Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);

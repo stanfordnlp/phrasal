@@ -91,12 +91,7 @@ public class BLEUSorter {
         // Only print sentence if difference is significant enough:
         scores.add(new Pair<Double, Integer>(score2 - score1, sentId));
     }
-    Collections.sort(scores, new Comparator<Pair<Double, Integer>>() {
-      @Override
-      public int compare(Pair<Double, Integer> el1, Pair<Double, Integer> el2) {
-        return el1.first().compareTo(el2.first());
-      }
-    });
+    Collections.sort(scores, (el1, el2) -> el1.first().compareTo(el2.first()));
     List<Integer> sentIds = new ArrayList<Integer>();
     for (Pair<Double, Integer> el : scores) {
       sentIds.add(el.second());

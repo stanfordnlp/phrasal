@@ -44,14 +44,17 @@ public class PhraseGeneratorFactory {
         }
         String type = fields[0].toLowerCase();
         String filename = fields[1];
-        if (type.equals(PHAROAH_PHRASE_TABLE)
-            || type.equals(PHAROAH_PHRASE_TABLE_ALT)) {
-          phraseTables.add((new FlatPhraseTable<FV>(filename)));
-        } else if (type.equals(DTU_GENERATOR)) {
-          phraseTables.add(new DTUTable<FV>(filename));
-        } else {
-          throw new RuntimeException(String.format(
-              "Unknown phrase table type: '%s'\n", type));
+        switch (type) {
+          case PHAROAH_PHRASE_TABLE:
+          case PHAROAH_PHRASE_TABLE_ALT:
+            phraseTables.add((new FlatPhraseTable<FV>(filename)));
+            break;
+          case DTU_GENERATOR:
+            phraseTables.add(new DTUTable<FV>(filename));
+            break;
+          default:
+            throw new RuntimeException(String.format(
+                "Unknown phrase table type: '%s'\n", type));
         }
       }
       if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)) {

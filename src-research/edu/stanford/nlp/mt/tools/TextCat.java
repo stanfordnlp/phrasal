@@ -137,13 +137,10 @@ public class TextCat {
 
   private static ObjectBank<List<String>> getWebData(Collection<String> dirPath) {
 
-    IteratorFromReaderFactory<List<String>> ifrf = new IteratorFromReaderFactory<List<String>>() {
-
-      public Iterator<List<String>> getIterator(Reader r) {
-        String doc = IOUtils.slurpReader(r);
-        List<String> words = Arrays.asList(doc.split("\\s+"));
-        return Collections.singleton(words).iterator();
-      }
+    IteratorFromReaderFactory<List<String>> ifrf = r -> {
+      String doc = IOUtils.slurpReader(r);
+      List<String> words = Arrays.asList(doc.split("\\s+"));
+      return Collections.singleton(words).iterator();
     };
 
     FileSequentialCollection files = new FileSequentialCollection(dirPath,

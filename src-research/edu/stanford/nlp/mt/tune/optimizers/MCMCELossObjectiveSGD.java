@@ -59,7 +59,7 @@ public class MCMCELossObjectiveSGD extends AbstractBatchOptimizer {
       eval = MERT.evalAtPoint(nbest, wts, emetric);
       System.err
           .printf(
-              "sgd step %d: eval: %e wts ssd: %e E(Eval): %e delta E(Eval): %e obj: %e (delta: %e)\n",
+              "sgd step %d: apply: %e wts ssd: %e E(Eval): %e delta E(Eval): %e obj: %e (delta: %e)\n",
               iter, eval, ssd, expectedEval.doubleValue(), expectedEvalDiff,
               objValue.doubleValue(), objDiff);
       if (iter > objDiffWin.length) {
@@ -68,7 +68,7 @@ public class MCMCELossObjectiveSGD extends AbstractBatchOptimizer {
       if (MERT.MIN_OBJECTIVE_CHANGE_SGD > Math.abs(winObjDiff))
         break;
     }
-    System.err.printf("Last eval: %e\n", eval);
+    System.err.printf("Last apply: %e\n", eval);
     return wts;
   }
 }

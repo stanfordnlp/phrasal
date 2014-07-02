@@ -225,7 +225,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     Counter<String> labelCorrect = new ClassicCounter<String>();
     int total = 0;
     int correct = 0;
-    PrintWriter pw = new PrintWriter(IOTools.getWriterFromFile("eval.out"));
+    PrintWriter pw = new PrintWriter(IOTools.getWriterFromFile("apply.out"));
     for (List<CoreLabel> line : lines) {
       line = classifier.classify(line);
       pw.println(Sentence.listToString(ProcessorTools.toPostProcessedSequence(line)));

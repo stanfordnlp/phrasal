@@ -129,14 +129,19 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
       numModels = 1;
       break;
     case 3:
-      if ("bidirectional".equals(tokens[1])) {
-        directionType = DirectionTypes.bidirectional;
-        numModels = 2;
-      } else if ("joint".equals(tokens[1])) {
-        directionType = DirectionTypes.joint;
-        numModels = 1;
-      } else
-        fail = true;
+      switch (tokens[1]) {
+        case "bidirectional":
+          directionType = DirectionTypes.bidirectional;
+          numModels = 2;
+          break;
+        case "joint":
+          directionType = DirectionTypes.joint;
+          numModels = 1;
+          break;
+        default:
+          fail = true;
+          break;
+      }
       break;
     default:
       fail = true;
@@ -144,14 +149,20 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
 
     // Get language:
     String lang = tokens[tokens.length - 1];
-    if ("fe".equals(lang))
-      languageType = LanguageTypes.fe;
-    else if ("f".equals(lang))
-      languageType = LanguageTypes.f;
-    else if ("e".equals(lang))
-      languageType = LanguageTypes.e;
-    else
-      fail = true;
+    switch (lang) {
+      case "fe":
+        languageType = LanguageTypes.fe;
+        break;
+      case "f":
+        languageType = LanguageTypes.f;
+        break;
+      case "e":
+        languageType = LanguageTypes.e;
+        break;
+      default:
+        fail = true;
+        break;
+    }
     if (languageType != LanguageTypes.fe)
       throw new UnsupportedOperationException(
           "LexicalReorderingFeatureExtractor: model currently not supported.");

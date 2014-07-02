@@ -116,80 +116,90 @@ public class MandarinNumberPhraseGenerator extends AbstractPhraseGenerator<IStri
        // takes a string that is assumed to be a well-formed raw counting number in Chinese, using Chinese or Arabic numerals
        // returns its English equivalent as a long
        long enNum = 0;
-       for (int i = chStr.length() - 1; i >= 0; i--) {
-           String charAtI = chStr.substring(i, i+1);
-           int prev = 1; // represents the modifying value of characters to the left of a special number character (10, 100, 1000, 10000, 100 million)
-           if (charAtI.equals("十")) {
-               if (usesArabic && i > 0 && !specialNumberChars.containsKey(chStr.substring(i-1, i))) {
-                   prev = Integer.parseInt(chStr.substring(i-1,i));
-                   i--;
-               } else if (i > 0 && basicNumberChars.containsKey(chStr.substring(i-1, i))) {
-                   prev = basicNumberChars.get(chStr.substring(i-1, i));
-                   i--;
-               }
-               enNum += (prev * 10);
-           } else if (charAtI.equals("百")) {
-               if (usesArabic && i > 0 && !specialNumberChars.containsKey(chStr.substring(i-1,i))) {
-                   prev = Integer.parseInt(chStr.substring(i-1,i));
-                   i--;
-               } else if (i > 0 && basicNumberChars.containsKey(chStr.substring(i-1, i))) {
-                   prev = basicNumberChars.get(chStr.substring(i-1, i));
-                   i--;
-               }
-               enNum += (prev * 100);
-           } else if (charAtI.equals("千")) {
-               if (usesArabic && i > 0 && !specialNumberChars.containsKey(chStr.substring(i-1,i))) {
-                   prev = Integer.parseInt(chStr.substring(i-1,i));
-                   i--;
-               } else if (i > 0 && basicNumberChars.containsKey(chStr.substring(i-1, i))) {
-                   prev = basicNumberChars.get(chStr.substring(i-1, i));
-                   i--;
-               }
-               enNum += (prev * 1000);
-           } else if (charAtI.equals("万")) { // wan (10,000) is slightly complicated - take note here
-               if (chStr.substring(0, chStr.indexOf("万")).contains("亿")) {// if there is an yi (100 million) anywhere earlier in the string
-                   prev = (int)getRawNumber(chStr.substring(chStr.indexOf("亿") + 1, chStr.indexOf("万")), usesArabic);
-                   i = chStr.indexOf("亿");
-               } else if (chStr.indexOf("万") != 0) {
-                   prev = (int)getRawNumber(chStr.substring(0, chStr.indexOf("万")), usesArabic);
-                   i = 0;
-               }
-               enNum += (prev * 10000);
-           } else if (charAtI.equals("亿")) {
-               if (i > 0) {
-                   prev = (int)getRawNumber(chStr.substring(0, i), usesArabic);
-                   i = 0;
-               }
-               enNum += ((long)prev * 100000000);
-           } else {
-               if (usesArabic) {
-                   int j = i;
-                   while (j > 0) {  // find the index of the next special number char if it exists
-                       String charAtJ = chStr.substring(j, j+1);
-                       if (specialNumberChars.containsKey(charAtJ)) break;
-                       j--;
-                   }
-                   if (i == 0) {
-                       enNum += Long.parseLong(chStr.substring(0,1));
-                       break;
-                   } else if (j == 0) enNum += Long.parseLong(chStr.substring(0, i+1)); // at the beginning of the number
-                   else enNum += Long.parseLong(chStr.substring(++j, i+1)); // we're still somewhere in the number
-                   i = j;
-               } else {
-                   if (i > 0 && basicNumberChars.containsKey(chStr.substring(i-1,i))) {
-                       // if both this character and the one to the left are basicNumberChars
-                       // we'll assume it's a written-out number in Chinese (relatively rare)
-                       int j = 0;
-                       while(basicNumberChars.containsKey(charAtI) && i >= 0) {
-                           charAtI = chStr.substring(i, i+1);
-                           enNum += basicNumberChars.get(charAtI) * (Math.pow(10,j));
-                           i--;
-                           j++;
-                       }
-                   } else enNum += basicNumberChars.get(chStr.substring(i, i+1));
-               }
+     label:
+     for (int i = chStr.length() - 1; i >= 0; i--) {
+       String charAtI = chStr.substring(i, i + 1);
+       int prev = 1; // represents the modifying value of characters to the left of a special number character (10, 100, 1000, 10000, 100 million)
+       switch (charAtI) {
+         case "十":
+           if (usesArabic && i > 0 && !specialNumberChars.containsKey(chStr.substring(i - 1, i))) {
+             prev = Integer.parseInt(chStr.substring(i - 1, i));
+             i--;
+           } else if (i > 0 && basicNumberChars.containsKey(chStr.substring(i - 1, i))) {
+             prev = basicNumberChars.get(chStr.substring(i - 1, i));
+             i--;
            }
+           enNum += (prev * 10);
+           break;
+         case "百":
+           if (usesArabic && i > 0 && !specialNumberChars.containsKey(chStr.substring(i - 1, i))) {
+             prev = Integer.parseInt(chStr.substring(i - 1, i));
+             i--;
+           } else if (i > 0 && basicNumberChars.containsKey(chStr.substring(i - 1, i))) {
+             prev = basicNumberChars.get(chStr.substring(i - 1, i));
+             i--;
+           }
+           enNum += (prev * 100);
+           break;
+         case "千":
+           if (usesArabic && i > 0 && !specialNumberChars.containsKey(chStr.substring(i - 1, i))) {
+             prev = Integer.parseInt(chStr.substring(i - 1, i));
+             i--;
+           } else if (i > 0 && basicNumberChars.containsKey(chStr.substring(i - 1, i))) {
+             prev = basicNumberChars.get(chStr.substring(i - 1, i));
+             i--;
+           }
+           enNum += (prev * 1000);
+           break;
+         case "万":  // wan (10,000) is slightly complicated - take note here
+           if (chStr.substring(0, chStr.indexOf("万")).contains("亿")) {// if there is an yi (100 million) anywhere earlier in the string
+             prev = (int) getRawNumber(chStr.substring(chStr.indexOf("亿") + 1, chStr.indexOf("万")), usesArabic);
+             i = chStr.indexOf("亿");
+           } else if (chStr.indexOf("万") != 0) {
+             prev = (int) getRawNumber(chStr.substring(0, chStr.indexOf("万")), usesArabic);
+             i = 0;
+           }
+           enNum += (prev * 10000);
+           break;
+         case "亿":
+           if (i > 0) {
+             prev = (int) getRawNumber(chStr.substring(0, i), usesArabic);
+             i = 0;
+           }
+           enNum += ((long) prev * 100000000);
+           break;
+         default:
+           if (usesArabic) {
+             int j = i;
+             while (j > 0) {  // find the index of the next special number char if it exists
+               String charAtJ = chStr.substring(j, j + 1);
+               if (specialNumberChars.containsKey(charAtJ)) break;
+               j--;
+             }
+             if (i == 0) {
+               enNum += Long.parseLong(chStr.substring(0, 1));
+               break label;
+             } else if (j == 0) enNum += Long.parseLong(chStr.substring(0, i + 1)); // at the beginning of the number
+
+             else enNum += Long.parseLong(chStr.substring(++j, i + 1)); // we're still somewhere in the number
+
+             i = j;
+           } else {
+             if (i > 0 && basicNumberChars.containsKey(chStr.substring(i - 1, i))) {
+               // if both this character and the one to the left are basicNumberChars
+               // we'll assume it's a written-out number in Chinese (relatively rare)
+               int j = 0;
+               while (basicNumberChars.containsKey(charAtI) && i >= 0) {
+                 charAtI = chStr.substring(i, i + 1);
+                 enNum += basicNumberChars.get(charAtI) * (Math.pow(10, j));
+                 i--;
+                 j++;
+               }
+             } else enNum += basicNumberChars.get(chStr.substring(i, i + 1));
+           }
+           break;
        }
+     }
        return enNum;
    }
 

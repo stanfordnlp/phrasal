@@ -711,29 +711,30 @@ public final class OnlineTuner {
   private OnlineOptimizer<IString, String> configureOptimizer(String optimizerAlg, String[] optimizerFlags) {
     assert optimizerAlg != null;
 
-    if (optimizerAlg.equals("mira-1best")) {
-      return new MIRA1BestHopeFearOptimizer(optimizerFlags);
+    switch (optimizerAlg) {
+      case "mira-1best":
+        return new MIRA1BestHopeFearOptimizer(optimizerFlags);
 
-    } else if (optimizerAlg.equals("pro-sgd")) {
-      assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
-      assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
-      Counters.normalize(wtsAccumulator);
-      return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+      case "pro-sgd":
+        assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
+        assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
+        Counters.normalize(wtsAccumulator);
+        return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
-    } else if (optimizerAlg.equals("expectedBLEU")) {
-       assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
-       assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
-       Counters.normalize(wtsAccumulator);
-       return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-     
-    } else if (optimizerAlg.equals("crossentropy")) {
-      assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
-      assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
-      Counters.normalize(wtsAccumulator);
-      return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-    
-    } else {
-      throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
+      case "expectedBLEU":
+        assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
+        assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
+        Counters.normalize(wtsAccumulator);
+        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+
+      case "crossentropy":
+        assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
+        assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
+        Counters.normalize(wtsAccumulator);
+        return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+
+      default:
+        throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
   }
 
