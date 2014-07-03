@@ -216,24 +216,22 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       lex_e_f = getLexScoreInv(alTemp);
     }
     double lexPMI = getLexPmiScore(alTemp, normalizePmi);
-    // Set phrase penalty:
-    double phrasePen = 2.718;
     // Determine if need to filter phrase:
     if (lexFilter > lex_e_f)
       return null;
 
     if (PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
-      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen,
+      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, 
           feCounts.get(idx), eCounts.get(idxE), fCounts.get(idxF) };
     } else if (onlyPhi) {
       // -- only two features: relative freq. in both directions:
       return new double[] { phi_f_e, phi_e_f };
     } else if (usePmi) {
-      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen, pmi, lexPMI };
+      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, pmi, lexPMI };
     } else {
-      // -- 5 basic features functions of Moses:
-      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, phrasePen };
+      // -- 4 basic features functions of Moses:
+      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f };
     }
   }
 
