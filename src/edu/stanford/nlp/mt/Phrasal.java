@@ -692,7 +692,7 @@ public class Phrasal {
     CombinedFeaturizer<IString, String> featurizer;
     if (lgModel != null) {
       featurizer = FeaturizerFactory.factory(
-        FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
+        FeaturizerFactory.MOSES_DENSE_FEATURES,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
             linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
@@ -700,7 +700,7 @@ public class Phrasal {
         makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
     } else {
       featurizer = FeaturizerFactory.factory(
-          FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
+          FeaturizerFactory.MOSES_DENSE_FEATURES,
           makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
               linearDistortion),
           makePair(FeaturizerFactory.GAP_PARAMETER, gapType),

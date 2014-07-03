@@ -173,7 +173,7 @@ public class TargetNNLMFeaturizerTest {
     String gapType = FeaturizerFactory.GapType.none.name();
     int numPhraseFeatures = Integer.MAX_VALUE;
     CombinedFeaturizer<IString, String> featurizer = FeaturizerFactory.factory(
-        FeaturizerFactory.PSEUDO_PHARAOH_GENERATOR,
+        FeaturizerFactory.MOSES_DENSE_FEATURES,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER, linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
         makePair(FeaturizerFactory.ARPA_LM_PARAMETER, "kenlm:" + lgModel),
