@@ -27,9 +27,6 @@
 	<lib name="jsr305.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/jsr305.jar!/"/>
 	</lib>
-	<lib name="opencsv-2.3.jar" scope="COMPILE">
-		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib-research/opencsv-2.3.jar!/"/>
-	</lib>
 	<lib name="optimize_terp.jar" scope="COMPILE">
 		<relative-module-cls project-related="jar://$PROJECT_DIR$/projects/mt/lib/optimize_terp.jar!/"/>
 	</lib>
