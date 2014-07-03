@@ -27,9 +27,10 @@ distortion-limit dlimit 5 6 7 8 9 10"
     echo "  -verbose (optional): output detailed commands that get executed"
     echo "  location: ini or vars, the location of the parameter"
     echo "  parameter: the name of the parameter that should be replaced"
-    echo "  short_name: a name for the parameter that will be used for the \
+    echo "  short_name: a name that will be used for the \
 system name and the file name of the parameter files"
-    echo "  possible values: a space separated list of possible values for the parameter"
+    echo "  possible values: a space separated list of possible values for \
+the parameter"
     echo
     exit 0
 fi
