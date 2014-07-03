@@ -65,10 +65,12 @@ import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
 import edu.stanford.nlp.mt.pt.DTUTable;
+import edu.stanford.nlp.mt.pt.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.pt.LexicalReorderingTable;
 import edu.stanford.nlp.mt.pt.PhraseGenerator;
 import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.pt.PhraseTable;
 import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
@@ -96,6 +98,7 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -133,8 +136,7 @@ public class Phrasal {
       .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).").append(nl)
       .append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl)
       .append("  -").append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
-      .append("  -").append(DISTORTION_FILE).append(" model_type filename : Lexicalized re-ordering model.").append(nl)
-      .append("  -").append(HIER_DISTORTION_FILE).append(" model_type filename : Hierarchical lexicalized re-ordering model.").append(nl)
+      .append("  -").append(REORDERING_MODEL).append(" type filename : Lexicalized re-ordering model where type is [classic|hierarchical] (default: classic).").append(nl)
       .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
       .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
       .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
@@ -172,8 +174,7 @@ public class Phrasal {
   public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
   public static final String SEARCH_ALGORITHM = "search-algorithm";
-  public static final String DISTORTION_FILE = "distortion-file";
-  public static final String HIER_DISTORTION_FILE = "hierarchical-distortion-file";
+  public static final String REORDERING_MODEL = "reordering-model";
   public static final String WEIGHTS_FILE = "weights-file";
   public static final String MAX_SENTENCE_LENGTH = "max-sentence-length";
   public static final String MIN_SENTENCE_LENGTH = "min-sentence-length";
@@ -206,11 +207,11 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT));
     OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE,
-        DISTORTION_FILE, DISTORTION_LIMIT, 
+        REORDERING_MODEL, DISTORTION_LIMIT, 
         ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
         OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
-        RECOMBINATION_MODE, HIER_DISTORTION_FILE, SEARCH_ALGORITHM,
+        RECOMBINATION_MODE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
@@ -357,7 +358,7 @@ public class Phrasal {
     }
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
-    FlatPhraseTable.createIndex(withGaps);
+//    FlatPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
@@ -493,20 +494,13 @@ public class Phrasal {
     String gapType = gapT.name();
     System.err.println("Gap type: " + gapType);
 
-    // Phrase table(s)
-    String phraseTable;
+    // Phrase table(s), which is a required parameter
+    List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
+    String phraseTable = ptOpts.get(0);
     int numPhraseFeatures = Integer.MAX_VALUE;
-    if (config.get(TRANSLATION_TABLE_OPT).size() <= 2) {
-      List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
-      phraseTable = ptOpts.get(0);
-      if (ptOpts.size() == 2) {
-        numPhraseFeatures = Integer.valueOf(ptOpts.get(1));
-        System.err.printf("Number of features for %s: %d%n", phraseTable, numPhraseFeatures);
-      }
-      
-    } else {
-      throw new RuntimeException("Unsupported configuration "
-          + config.get(TRANSLATION_TABLE_OPT));
+    if (ptOpts.size() == 2) {
+      numPhraseFeatures = Integer.valueOf(ptOpts.get(1));
+      System.err.printf("Number of features for %s: %d%n", phraseTable, numPhraseFeatures);
     }
 
     if (withGaps) {
@@ -551,73 +545,69 @@ public class Phrasal {
     String optionLimit = String.valueOf(this.translationOptionLimit);
     System.err.println("Phrase table option limit: " + optionLimit);
 
-    if (phraseTable.endsWith(".db") || phraseTable.contains(".db:")) {
-      System.err.printf("Dyanamic pt%n========================");
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
-          false, PhraseGeneratorFactory.DYNAMIC_GENERATOR, phraseTable) : PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.DYNAMIC_GENERATOR,
-          phraseTable, optionLimit));
-
-    } else {
-      String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
-          : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
-      phraseGenerator = (optionLimit == null ? PhraseGeneratorFactory.<String>factory(
-          false, generatorName, phraseTable)
-          : PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable,
-              optionLimit));
-    }
+    // Create the phrase table(s) 
+    String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
+        : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
+    
+    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
+        optionLimit == null ? PhraseGeneratorFactory.<String>factory(
+        false, generatorName, phraseTable)
+        : PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable,
+            optionLimit);
+    phraseGenerator = phraseTablePair.first();
+    
+    // Load additional phrase tables that do not have associated lexicalized reordering models
     if (config.get(ADDITIONAL_PHRASE_GENERATOR) != null) {
        List<PhraseGenerator<IString,String>> pgens = Generics.newLinkedList();
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
-         PhraseGenerator<IString,String> pgen = 
+         Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> generatorPair =  
              PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, pgenClasspath, optionLimit); 
-         pgens.add(pgen);
+         pgens.add(generatorPair.first());
        }
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
     }
 
-    // TODO(spenceg) For better or worse, all phrase tables use the source index in FlatPhraseTable
-    // Pass it to the UnknownWord generator. Would be better for the source index to be located
-    // in a common place.
+    // Add the OOV model
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords, FlatPhraseTable.sourceIndex)),
+             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
-    
-    FlatPhraseTable.lockIndex();
 
-    System.err.printf("Phrase table limit (ttable-limit): %d%n",
-        ((CombinedPhraseGenerator<IString,String>) phraseGenerator).getPhraseLimit());
-
-    // Lexicalized reordering model
-    DerivationFeaturizer<IString, String> lexReorderFeaturizer = null;
-
-    if (config.containsKey(DISTORTION_FILE)
-        || config.containsKey(HIER_DISTORTION_FILE)) {
-      if (config.containsKey(DISTORTION_FILE)
-          && config.containsKey(HIER_DISTORTION_FILE))
-        throw new UnsupportedOperationException(
-            "Two distortion files instead of one. "
-                + "To use more than one, please use " + ADDITIONAL_FEATURIZERS
-                + " field.");
-      boolean stdDistFile = config.containsKey(DISTORTION_FILE);
-      List<String> strDistortionFile = stdDistFile ? config
-          .get(DISTORTION_FILE) : config.get(HIER_DISTORTION_FILE);
-      String modelType;
-      String modelFilename;
-      if (strDistortionFile.size() == 2) {
-        modelType = strDistortionFile.get(0);
-        modelFilename = strDistortionFile.get(1);
-
-      } else {
-        throw new RuntimeException(
-            String
-                .format(
-                    "Parameter '%s' takes two arguments: distortion-model-type & model-filename)",
-                    DISTORTION_FILE));
+    // Load the lexicalized reordering model(s) and associated featurizers
+    List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = null;
+    if (config.containsKey(REORDERING_MODEL)) {
+      lexReorderFeaturizers = Generics.newLinkedList();
+      List<PhraseTable<IString>> phraseTables = phraseTablePair.second();
+      
+      List<String> parameters = config.get(REORDERING_MODEL);
+      if (parameters.size() < 3) {
+        throw new RuntimeException(REORDERING_MODEL + " parameter requires at least three arguments");
       }
-      lexReorderFeaturizer = stdDistFile ? new LexicalReorderingFeaturizer(
-          new LexicalReorderingTable(modelFilename, modelType))
-          : new HierarchicalReorderingFeaturizer(modelFilename, modelType);
+      String modelType = parameters.get(0);
+      String[] modelFilenames = parameters.get(1).split(PhraseGeneratorFactory.FILENAME_SEPARATOR);
+      String modelSpecification = parameters.get(2);
+      parameters = parameters.subList(3, parameters.size());
+      if (modelFilenames.length != phraseTables.size()) {
+        // Constraint: each phrase table must have an associated lexicalized reordering model
+        throw new RuntimeException("Each phrase table must have an associated reordering model: " + phraseTable +
+            " ||| " + parameters.get(1));
+      }
+      
+      for (int i = 0, sz = modelFilenames.length; i < sz; ++i) {
+        String modelFilename = modelFilenames[i];
+        
+        if (modelType.equals("classic")) {
+          LexicalReorderingTable lrt = new LexicalReorderingTable(modelFilename, phraseTables.get(i), modelSpecification);
+          lexReorderFeaturizers.add(new LexicalReorderingFeaturizer(lrt));
+
+        } else if (modelType.equals("hierarchical")) {
+          ExtendedLexicalReorderingTable mlrt = new ExtendedLexicalReorderingTable(modelFilename, phraseTables.get(i), modelSpecification);
+          lexReorderFeaturizers.add(new HierarchicalReorderingFeaturizer(mlrt, parameters));
+
+        } else {
+          throw new RuntimeException("Unsupported reordering model type: " + modelType);
+        }
+      }
     }
 
     List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
@@ -725,8 +715,8 @@ public class Phrasal {
       featurizer.deleteFeaturizers(disabledFeaturizers);
     }
 
-    if (lexReorderFeaturizer != null) {
-      additionalFeaturizers.add(lexReorderFeaturizer);
+    if (lexReorderFeaturizers != null) {
+      additionalFeaturizers.addAll(lexReorderFeaturizers);
     }
 
     if (!additionalFeaturizers.isEmpty()) {
@@ -1284,5 +1274,6 @@ public class Phrasal {
     Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
     Phrasal p = Phrasal.loadDecoder(configuration);
     p.decode(System.in, true);
+//    p.decode(new FileInputStream(new File("mt05.prep")), true);
   }
 }

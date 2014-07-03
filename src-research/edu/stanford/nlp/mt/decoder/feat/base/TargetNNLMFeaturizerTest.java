@@ -31,9 +31,9 @@ import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.lm.NNLMState;
 import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
 import edu.stanford.nlp.mt.pt.PhraseGenerator;
 import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.pt.PhraseTable;
 import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -43,6 +43,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * @author Thang Luong
@@ -182,11 +183,12 @@ public class TargetNNLMFeaturizerTest {
     // phrase generator
     String generatorName = PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
     String optionLimit = "20";
-    boolean withGaps = false;
-    FlatPhraseTable.createIndex(withGaps); // initialized in Phrasal.initStaticMembers
-    PhraseGenerator<IString,String> phraseGenerator = PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable, optionLimit);
-    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-        Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords, FlatPhraseTable.sourceIndex)),
+//    boolean withGaps = false;
+//    FlatPhraseTable.createIndex(withGaps); // initialized in Phrasal.initStaticMembers
+    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair = 
+        PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable, optionLimit);
+    PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
+        Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
         CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
     infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
     

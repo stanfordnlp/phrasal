@@ -151,26 +151,29 @@ public class HierarchicalReorderingFeaturizer extends
   final ExtendedLexicalReorderingTable mlrt;
   private BitSet tmpCoverage = new BitSet();
 
-  public HierarchicalReorderingFeaturizer(String... args) throws IOException {
+  public HierarchicalReorderingFeaturizer(ExtendedLexicalReorderingTable mlrt, List<String> args) throws IOException {
 
-    if (args.length < 2 || args.length > 6)
-      throw new RuntimeException(
-          "Usage: HierarchicalReorderingFeaturizer(ordering_table_file,model_type,feature_prefix?,forward_model_type?,backward_model_type?,extra_features?)");
+//    if (args.length < 2 || args.length > 6)
+//      throw new RuntimeException(
+//          "Usage: HierarchicalReorderingFeaturizer(ordering_table_file,model_type,feature_prefix?,forward_model_type?,backward_model_type?,extra_features?)");
 
-    String modelFilename = args[0];
-    String modelType = args[1];
+    this.mlrt = mlrt;
+    String modelType = mlrt.filetype;
+
+//    String modelFilename = args[0];
+//    String modelType = args[1];
     has2Disc = modelType.contains("msd2");
     hasContainment = modelType.contains("msd2c");
-    if (args.length >= 3) {
-      FEATURE_PREFIX = args[2];
-      if (args.length >= 4) {
+    if (args.size() >= 1) {
+      FEATURE_PREFIX = args.get(0);
+      if (args.size() >= 2) {
         forwardOrientationComputation = ForwardOrientationComputation
-            .valueOf(args[3]);
-        if (args.length >= 5) {
+            .valueOf(args.get(1));
+        if (args.size() >= 3) {
           backwardOrientationComputation = BackwardOrientationComputation
-              .valueOf(args[4]);
-          if (args.length >= 6) {
-            for (String opt : args[5].split(":")) {
+              .valueOf(args.get(2));
+          if (args.size() >= 4) {
+            for (String opt : args.get(3).split(":")) {
               if ("nb".equals(opt)) {
                 nbFeature = true;
               }
@@ -194,8 +197,6 @@ public class HierarchicalReorderingFeaturizer extends
         forwardOrientationComputation);
     System.err.printf("Backward orientation: %s\n",
         backwardOrientationComputation);
-
-    mlrt = new ExtendedLexicalReorderingTable(modelFilename, modelType);
 
     featureTags = new String[mlrt.positionalMapping.length];
     for (int i = 0; i < mlrt.positionalMapping.length; i++)
