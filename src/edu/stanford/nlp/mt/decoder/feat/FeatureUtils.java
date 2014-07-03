@@ -48,7 +48,7 @@ public final class FeatureUtils {
     // 7 translation model scores described in Green et al. (2013).
     for (int i = 0; i < 7; ++i) {
       String fName = String.format("%s:%s.%d", TranslationModelFeaturizer.FEATURE_PREFIX,
-          FlatPhraseTable.FEATURE_PREFIX, i);
+          FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
       features.add(fName);
     }
     BASELINE_DENSE_FEATURES = Collections.unmodifiableSet(features);

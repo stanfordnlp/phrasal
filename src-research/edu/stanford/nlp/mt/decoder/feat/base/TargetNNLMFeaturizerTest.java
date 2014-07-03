@@ -186,7 +186,7 @@ public class TargetNNLMFeaturizerTest {
 //    boolean withGaps = false;
 //    FlatPhraseTable.createIndex(withGaps); // initialized in Phrasal.initStaticMembers
     Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair = 
-        PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable, optionLimit);
+        PhraseGeneratorFactory.<String>factory(generatorName, phraseTable);
     PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
         Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
         CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));

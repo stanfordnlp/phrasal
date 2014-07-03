@@ -1,18 +1,13 @@
 package edu.stanford.nlp.mt.pt;
 
 import java.util.*;
-import java.io.*;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
-import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * 
@@ -236,45 +231,5 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
         longest = phraseGenerator.longestTargetPhrase();
     }
     return longest;
-  }
-  
-  /**
-   * 
-   * @throws IOException
-   */
-  public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.out
-          .printf("Usage:\n\tjava ...PhraseTableListGenerator (pharse table type):(filename) (pharse table type1):(filename1) ...\n");
-      System.exit(-1);
-    }
-
-    String[] conf = new String[args.length + 1];
-    conf[0] = PhraseGeneratorFactory.CONCATENATIVE_LIST_GENERATOR;
-    System.arraycopy(args, 0, conf, 1, args.length);
-
-    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> ptGenPair = PhraseGeneratorFactory.factory(true, conf);
-    PhraseGenerator<IString,String> ptGen = ptGenPair.first();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-
-    System.out.println("Interactive SimpleLookupPhraseGenerator");
-    System.out
-        .println("Please enter foreign sentences for which you want to look up translation phrases.");
-    System.out.println();
-    for (String line; (line = reader.readLine()) != null;) {
-      String[] tokens = line.split("\\s+");
-      SimpleSequence<IString> sequence = new SimpleSequence<IString>(
-          IStrings.toIStringArray(tokens));
-      List<ConcreteRule<IString,String>> options = ptGen
-          .getRules(sequence, null, null, -1, null);
-      System.out.printf("Sequence: '%s'\n", sequence);
-      System.out.println("Translation Options:\n");
-      for (ConcreteRule<IString,String> option : options) {
-        System.out.printf("\t%s -> %s coverage: %s score: %s\n",
-            sequence.subsequence(option.sourceCoverage),
-            option.abstractRule.target, option.sourceCoverage,
-            Arrays.toString(option.abstractRule.scores));
-      }
-    }
   }
 }

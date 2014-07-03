@@ -52,12 +52,12 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> featurizable) {
     if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
-      // Don't score synthetic rules from hte OOV model
+      // Don't score synthetic rules from the OOV model
       return null;
     }
 
     // lookup/construct the list of feature names
-    String phraseTableName = featurizable.phraseTableName;
+    final String phraseTableName = featurizable.phraseTableName;
     assert featurizable.phraseScoreNames.length == featurizable.translationScores.length :
       "Score name/value arrays of different dimensions for table: " + phraseTableName;
     String[] featureNames = featureNamesHash.containsKey(phraseTableName) ? 
