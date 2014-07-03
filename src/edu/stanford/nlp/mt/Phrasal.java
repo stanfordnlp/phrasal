@@ -135,7 +135,7 @@ public class Phrasal {
       .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).").append(nl)
       .append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl)
       .append("  -").append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
-      .append("  -").append(REORDERING_MODEL).append(" type filename : Lexicalized re-ordering model where type is [classic|hierarchical] (default: classic).").append(nl)
+      .append("  -").append(REORDERING_MODEL).append(" type filename : Lexicalized re-ordering model where type is [classic|hierarchical].").append(nl)
       .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
       .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
       .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
@@ -357,7 +357,6 @@ public class Phrasal {
     }
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
-//    FlatPhraseTable.createIndex(withGaps);
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
@@ -539,20 +538,20 @@ public class Phrasal {
 
     // Phrase table query size limit
     if (config.containsKey(OPTION_LIMIT_OPT)) { 
-        this.translationOptionLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
+      this.translationOptionLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
     }
-    String optionLimit = String.valueOf(this.translationOptionLimit);
-    System.err.println("Phrase table option limit: " + optionLimit);
+    final String optionLimitString = String.valueOf(this.translationOptionLimit);
+    System.err.println("Phrase table option limit: " + optionLimitString);
 
     // Create the phrase table(s) 
     String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
         : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
     
     Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        optionLimit == null ? PhraseGeneratorFactory.<String>factory(
+        optionLimitString == null ? PhraseGeneratorFactory.<String>factory(
         false, generatorName, phraseTable)
         : PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable,
-            optionLimit);
+            optionLimitString);
     phraseGenerator = phraseTablePair.first();
     
     // Load additional phrase tables that do not have associated lexicalized reordering models
@@ -561,16 +560,16 @@ public class Phrasal {
        pgens.add(phraseGenerator);
        for (String pgenClasspath : config.get(ADDITIONAL_PHRASE_GENERATOR)) {
          Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> generatorPair =  
-             PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, pgenClasspath, optionLimit); 
+             PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, pgenClasspath, optionLimitString); 
          pgens.add(generatorPair.first());
        }
-       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimit));
+       phraseGenerator = new CombinedPhraseGenerator<IString,String>(pgens, CombinedPhraseGenerator.Type.CONCATENATIVE, Integer.parseInt(optionLimitString));
     }
 
     // Add the OOV model
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
              Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
-             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));
+             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimitString));
 
     // Load the lexicalized reordering model(s) and associated featurizers
     List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = null;

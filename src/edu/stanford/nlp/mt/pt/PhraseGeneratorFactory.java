@@ -86,7 +86,6 @@ public class PhraseGeneratorFactory {
       final boolean withGaps = pgName.equals(DTU_GENERATOR);
 
       List<PhraseGenerator<IString,FV>> pharoahList = new LinkedList<PhraseGenerator<IString,FV>>();
-      List<PhraseGenerator<IString,FV>> finalList = new LinkedList<PhraseGenerator<IString,FV>>();
       List<PhraseTable<IString>> tables = Generics.newLinkedList();
       int phraseLimit = -1;
       if (pgSpecs.length == 3) {
@@ -102,6 +101,7 @@ public class PhraseGeneratorFactory {
       }
 
       // TODO(spenceg) Why do we wrap the list of phrase tables twice? Remove this nesting....
+      List<PhraseGenerator<IString,FV>> finalList = new LinkedList<PhraseGenerator<IString,FV>>();
       finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList,
           CombinedPhraseGenerator.Type.CONCATENATIVE));
       
