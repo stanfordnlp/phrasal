@@ -24,7 +24,7 @@ import edu.stanford.nlp.util.Generics;
 public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> extends
     AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
 
-  public static final String PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
+  public static final String PHRASE_TABLE_NAME = UnknownWordPhraseGenerator.class.getName();
   public static final String UNK_FEATURE_NAME = "TM.UNK";
 
   private static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
@@ -36,6 +36,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
   private final float[] featureValues = { (float) 1.0 };
   
   private final Vocabulary sourceVocab = VocabularyFactory.getSourceInstance();
+  
   /**
    * Constructor.
    * 
