@@ -23,7 +23,6 @@ import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
-import edu.stanford.nlp.mt.util.VocabularyFactory;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -389,8 +388,8 @@ implements PhraseTable<IString> {
   protected void addEntry(Sequence<IString> sourceSequence,
       Sequence<IString> targetSequence, PhraseAlignment alignment,
       float[] scores) {
-    VocabularyFactory.getSourceInstance().add(sourceSequence);
-    VocabularyFactory.getTargetInstance().add(targetSequence);
+    TranslationModelVocabulary.getSourceInstance().add(sourceSequence);
+    TranslationModelVocabulary.getTargetInstance().add(targetSequence);
 
     int[] foreignInts = toWordIndexArray(sourceSequence);
     int[] translationInts = toWordIndexArray(targetSequence);

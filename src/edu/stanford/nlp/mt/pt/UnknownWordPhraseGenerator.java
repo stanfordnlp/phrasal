@@ -3,14 +3,13 @@ package edu.stanford.nlp.mt.pt;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.stanford.nlp.mt.pt.TranslationModelVocabulary.Vocabulary;
 import edu.stanford.nlp.mt.util.HasIntegerIdentity;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.mt.util.VocabularyFactory;
-import edu.stanford.nlp.mt.util.VocabularyFactory.Vocabulary;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -35,7 +34,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
   private final String[] featureNames = { UNK_FEATURE_NAME };
   private final float[] featureValues = { (float) 1.0 };
   
-  private final Vocabulary sourceVocab = VocabularyFactory.getSourceInstance();
+  private final Vocabulary sourceVocab = TranslationModelVocabulary.getSourceInstance();
   
   /**
    * Constructor.

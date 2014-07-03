@@ -1,7 +1,9 @@
-package edu.stanford.nlp.mt.util;
+package edu.stanford.nlp.mt.pt;
 
 import java.util.Set;
 
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.util.Generics;
 
 /**
@@ -10,12 +12,12 @@ import edu.stanford.nlp.util.Generics;
  * @author Spence Green
  *
  */
-public final class VocabularyFactory {
+public final class TranslationModelVocabulary {
 
   private static Vocabulary sourceVocab;
   private static Vocabulary targetVocab;
   
-  private VocabularyFactory() {}
+  private TranslationModelVocabulary() {}
 
   /**
    * Get the system-wide target vocabulary.

@@ -21,7 +21,6 @@ import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.mt.util.VocabularyFactory;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -103,8 +102,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   protected void addEntry(Sequence<IString> sourceSequence,
       Sequence<IString> targetSequence, PhraseAlignment alignment,
       float[] scores) {
-    VocabularyFactory.getSourceInstance().add(sourceSequence);
-    VocabularyFactory.getTargetInstance().add(targetSequence);
+    TranslationModelVocabulary.getSourceInstance().add(sourceSequence);
+    TranslationModelVocabulary.getTargetInstance().add(targetSequence);
 
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int[] targetArray = Sequences.toIntArray(targetSequence);
