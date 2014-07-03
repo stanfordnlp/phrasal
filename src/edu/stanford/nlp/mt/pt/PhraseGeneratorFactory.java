@@ -85,7 +85,7 @@ public class PhraseGeneratorFactory {
 
       final boolean withGaps = pgName.equals(DTU_GENERATOR);
 
-      List<PhraseGenerator<IString,FV>> pharoahList = new LinkedList<PhraseGenerator<IString,FV>>();
+      List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
       List<PhraseTable<IString>> tables = Generics.newLinkedList();
       int phraseLimit = -1;
       if (pgSpecs.length == 3) {
@@ -96,26 +96,14 @@ public class PhraseGeneratorFactory {
       String[] filenames = pgSpecs[1].split(FILENAME_SEPARATOR);
       for (String filename : filenames) {
         PhraseGenerator<IString,FV> pt = withGaps ? new DTUTable<FV>(filename) : new FlatPhraseTable<FV>(filename);
-        pharoahList.add(pt);
+        generators.add(pt);
         tables.add((PhraseTable<IString>) pt);
       }
 
-      // TODO(spenceg) Why do we wrap the list of phrase tables twice? Remove this nesting....
-      List<PhraseGenerator<IString,FV>> finalList = new LinkedList<PhraseGenerator<IString,FV>>();
-      finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList,
-          CombinedPhraseGenerator.Type.CONCATENATIVE));
-      
-      CombinedPhraseGenerator.Type combinationType = withGaps ? CombinedPhraseGenerator.Type.CONCATENATIVE
-          : CombinedPhraseGenerator.Type.STRICT_DOMINANCE;
-      
-      CombinedPhraseGenerator<IString,FV> gen;
-      if (phraseLimit == -1) {
-        gen = new CombinedPhraseGenerator<IString,FV>(finalList, combinationType);
-      
-      } else {
-        gen = new CombinedPhraseGenerator<IString,FV>(finalList, combinationType,
-            phraseLimit);
-      }
+      CombinedPhraseGenerator<IString,FV> gen = phraseLimit == -1 ? 
+          new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE) :
+            new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE,
+                phraseLimit);
       Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> pair =
           new Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>>(
               gen, tables);
