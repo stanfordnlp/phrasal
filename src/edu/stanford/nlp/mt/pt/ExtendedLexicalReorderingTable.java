@@ -159,11 +159,6 @@ public class ExtendedLexicalReorderingTable {
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
 
-//  private static int[] mergeInts(int[] array1, int[] array2) {
-//    return new int[] { FlatPhraseTable.sourceIndex.indexOf(array1),
-//        FlatPhraseTable.ruleIndex.indexOf(array2) };
-//  }
-//
   public float[] getReorderingScores(Rule<IString> rule) {
     int reorderingId = -1;
     if (rule.isSynthetic()) {
@@ -283,13 +278,11 @@ public class ExtendedLexicalReorderingTable {
         int[] fIndexInts = withGaps ? DTUTable.toWordIndexArray(fTokens) : IStrings.toIntArray(fTokens);
         IString[] eTokens = IStrings.toIStringArray(tgtTokens);
         int[] eIndexInts = withGaps ? DTUTable.toWordIndexArray(eTokens) : IStrings.toIntArray(eTokens);
-//        final int[] indexInts = mergeInts(fIndexInts, eIndexInts);
         idx = phraseTable.getId(new SimpleSequence<IString>(true, IStrings.toIStringArray(fIndexInts)), 
             new SimpleSequence<IString>(true, IStrings.toIStringArray(eIndexInts)));
       }
 
       // Lookup this rule in the phrase table
-//      int idx = FlatPhraseTable.ruleIndex.indexOf(indexInts);
       if (idx < 0) {
         throw new RuntimeException(String.format("Phrase %d not in phrase table", reader.getLineNumber()));
       }

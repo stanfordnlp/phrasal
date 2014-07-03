@@ -138,8 +138,8 @@ public class HierarchicalReorderingFeaturizer extends
 
   private BackwardOrientationComputation backwardOrientationComputation = BackwardOrientationComputation.hierarchical;
 
-  String FEATURE_PREFIX = "LexR";
-  String NB_FEATURE_PREFIX = "LexR:NB";
+  private static final String FEATURE_PREFIX = LexicalReorderingFeaturizer.FEATURE_PREFIX;
+  private static final String NB_FEATURE_PREFIX = FEATURE_PREFIX + ":NB";
 
   // Extra features:
   boolean nbFeature = false, // penalty if not binarizable
@@ -152,39 +152,29 @@ public class HierarchicalReorderingFeaturizer extends
   private BitSet tmpCoverage = new BitSet();
 
   public HierarchicalReorderingFeaturizer(ExtendedLexicalReorderingTable mlrt, List<String> args) throws IOException {
-
-//    if (args.length < 2 || args.length > 6)
-//      throw new RuntimeException(
-//          "Usage: HierarchicalReorderingFeaturizer(ordering_table_file,model_type,feature_prefix?,forward_model_type?,backward_model_type?,extra_features?)");
-
     this.mlrt = mlrt;
     String modelType = mlrt.filetype;
 
-//    String modelFilename = args[0];
-//    String modelType = args[1];
     has2Disc = modelType.contains("msd2");
     hasContainment = modelType.contains("msd2c");
-    if (args.size() >= 1) {
-      FEATURE_PREFIX = args.get(0);
-      if (args.size() >= 2) {
-        forwardOrientationComputation = ForwardOrientationComputation
-            .valueOf(args.get(1));
-        if (args.size() >= 3) {
-          backwardOrientationComputation = BackwardOrientationComputation
-              .valueOf(args.get(2));
-          if (args.size() >= 4) {
-            for (String opt : args.get(3).split(":")) {
-              if ("nb".equals(opt)) {
-                nbFeature = true;
-              }
-              if ("fin".equals(opt)) {
-                finalizeFeature = true;
-              }
-              if ("bin".equals(opt)) {
-                binarize = true;
-              }
-            }
-          }
+    if (args.size() > 0) {
+      forwardOrientationComputation = ForwardOrientationComputation
+          .valueOf(args.get(0));
+    }
+    if (args.size() > 1) {
+      backwardOrientationComputation = BackwardOrientationComputation
+          .valueOf(args.get(1));
+    }
+    if (args.size() > 2) {
+      for (String opt : args.get(2).split(":")) {
+        if ("nb".equals(opt)) {
+          nbFeature = true;
+        }
+        if ("fin".equals(opt)) {
+          finalizeFeature = true;
+        }
+        if ("bin".equals(opt)) {
+          binarize = true;
         }
       }
     }

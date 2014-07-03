@@ -44,7 +44,7 @@ implements PhraseTable<IString> {
 
   public IntegerArrayIndex sourceIndex;
   public IntegerArrayIndex ruleIndex;
-  public final List<List<IntArrayTranslationOption>> translations;
+  public final List<List<PhraseTableEntry>> translations;
   protected String name;
   private int numRules = 0;
   
@@ -239,13 +239,13 @@ implements PhraseTable<IString> {
         if (translations.get(s.state) != null) {
 
           // Final state:
-          List<IntArrayTranslationOption> intTransOpts = translations
+          List<PhraseTableEntry> intTransOpts = translations
               .get(s.state);
           if (intTransOpts != null) {
             // System.err.printf("Full match: %s\n",s);
             List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
                 intTransOpts.size());
-            for (IntArrayTranslationOption intTransOpt : intTransOpts) {
+            for (PhraseTableEntry intTransOpt : intTransOpts) {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
@@ -422,10 +422,10 @@ implements PhraseTable<IString> {
         translations.add(null);
     }
 
-    List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
 
     if (intTransOpts == null) {
-      intTransOpts = new LinkedList<IntArrayTranslationOption>();
+      intTransOpts = new LinkedList<PhraseTableEntry>();
       translations.set(fIndex, intTransOpts);
       numRules++;
     }
@@ -438,7 +438,7 @@ implements PhraseTable<IString> {
     }
     if (numTgtSegments == 1) {
       // no gaps:
-      intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex.get(eIndex), scores, alignment));
+      intTransOpts.add(new PhraseTableEntry(id, ruleIndex.get(eIndex), scores, alignment));
     } else {
       // gaps:
       if (numTgtSegments > maxNumberTargetSegments)
@@ -461,7 +461,7 @@ implements PhraseTable<IString> {
   }
 
   protected static class DTUIntArrayTranslationOption extends
-      IntArrayTranslationOption {
+      PhraseTableEntry {
 
     final int[][] dtus;
 

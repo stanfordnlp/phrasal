@@ -39,7 +39,7 @@ public class LexicalReorderingFeaturizer extends
       TokenUtils.START_TOKEN);
   
   private static final String DISCRIMINATIVE_PREFIX = "Disc";
-  private static final String FEATURE_PREFIX = "LexR:";
+  public static final String FEATURE_PREFIX = "LexR";
   public final String[] featureTags;
   public final LexicalReorderingTable mlrt;
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;

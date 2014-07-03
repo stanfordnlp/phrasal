@@ -9,13 +9,13 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
  * @author Spence Green
  *
  */
-public class IntArrayTranslationOption implements Comparable<IntArrayTranslationOption> {
+public class PhraseTableEntry implements Comparable<PhraseTableEntry> {
   public final int[] targetArray;
   public final float[] scores;
   public final PhraseAlignment alignment;
   public final int id;
 
-  public IntArrayTranslationOption(int id, int[] targetArray, float[] scores,
+  public PhraseTableEntry(int id, int[] targetArray, float[] scores,
       PhraseAlignment alignment) {
     this.id = id;
     this.targetArray = targetArray;
@@ -24,7 +24,7 @@ public class IntArrayTranslationOption implements Comparable<IntArrayTranslation
   }
 
   @Override
-  public int compareTo(IntArrayTranslationOption o) {
+  public int compareTo(PhraseTableEntry o) {
     return (int) Math.signum(o.scores[0] - scores[0]);
   }
 }

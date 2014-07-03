@@ -126,11 +126,6 @@ public class LexicalReorderingTable {
 
   private final PhraseTable<IString> phraseTable;
 
-//  private static int[] mergeInts(int[] array1, int[] array2) {
-//    return new int[] { FlatPhraseTable.sourceIndex.indexOf(array1),
-//        FlatPhraseTable.ruleIndex.indexOf(array2) };
-//  }
-
   public float[] getReorderingScores(Rule<IString> rule) {
     int reorderingId = -1;
     if (rule.isSynthetic()) {
@@ -245,13 +240,8 @@ public class LexicalReorderingTable {
         throw new RuntimeException("unidirectional conditioning is not implemented / broken");
       
       } else {
-//        IString[] fTokens = IStrings.toIStringArray(srcTokens);
-//        int[] fIndexInts = IStrings.toIntArray(fTokens);
-//        IString[] eTokens = IStrings.toIStringArray(tgtTokens);
-//        int[] eIndexInts = IStrings.toIntArray(eTokens);
         idx = phraseTable.getId(IStrings.toIStringSequence(srcTokens), IStrings.toIStringSequence(tgtTokens));
       }
-
           
       // Lookup this rule in the phrase table
       if (idx < 0) {
