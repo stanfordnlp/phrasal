@@ -792,15 +792,16 @@ public class Phrasal {
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
     
-    
     // Thang Apr14: cube pruning with NNLM reranking
-    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
-      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
-      String nnlmType = config.get(SEARCH_ALGORITHM).get(2).trim(); // joint or target
-      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
-      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
-      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
-    }
+    // TODO(spenceg): This should be loaded by reflection so that it isn't released
+    // with the public version.
+//    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
+//      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
+//      String nnlmType = config.get(SEARCH_ALGORITHM).get(2).trim(); // joint or target
+//      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
+//      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
+//      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
+//    }
     
     for (int i = 0; i < numThreads; i++) {
       try {
