@@ -7,23 +7,33 @@ import java.util.Deque;
 import java.util.Arrays;
 import java.io.IOException;
 import java.io.File;
+import java.io.LineNumberReader;
 import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
+import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.StringUtils;
 
-public class DTUTable<FV> extends FlatPhraseTable<FV> {
+public class DTUTable<FV> extends AbstractPhraseGenerator<IString, FV>
+implements PhraseTable<IString> {
 
   public static final IString GAP_STR = new IString("X");
   public static final boolean DEBUG = true;
 
+  private static final int INITIAL_CAPACITY = 50000;
+  
   private static final String MIN_GAP_SIZE_PROPERTY = "minSourceGapSize";
   public static final int MIN_GAP_SIZE = Integer.parseInt(System.getProperty(
       MIN_GAP_SIZE_PROPERTY, "1"));
@@ -31,6 +41,17 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     System.err.println("Minimum gap size: " + MIN_GAP_SIZE);
   }
 
+  public IntegerArrayIndex sourceIndex;
+  public IntegerArrayIndex ruleIndex;
+  public final List<List<PhraseTableEntry>> translations;
+  protected String name;
+  private int numRules = 0;
+  
+  public final String[] scoreNames;
+  
+  protected int longestSourcePhrase = -1;
+  protected int longestTargetPhrase = -1;
+  
   public static int maxPhraseSpan = 12;
   public static int maxNumberTargetSegments = 2;
 
@@ -55,10 +76,94 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   }
 
   public DTUTable(String filename) throws IOException {
-    super(filename);
+    super(null);
     System.err.println("DTU phrase table: " + filename);
     File f = new File(filename);
     name = String.format("DTU(%s)", f.getName());
+    translations = Generics.newArrayList(INITIAL_CAPACITY);
+    sourceIndex = new TrieIntegerArrayIndex();
+    ruleIndex = new ProbingIntegerArrayIndex();
+    int countScores = init(f);
+    scoreNames = new String[countScores];
+    for (int i = 0; i < countScores; i++) {
+      scoreNames[i] = String.format("%s.%d", FlatPhraseTable.FEATURE_PREFIX, i);
+    }
+  }
+  
+  /**
+   * Load the phrase table from file. 
+   * 
+   * @param f
+   * @param reverse
+   * @return
+   * @throws IOException
+   */
+  private int init(File f) throws IOException {
+    Runtime rt = Runtime.getRuntime();
+    long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
+    final long startTime = System.nanoTime();
+
+    LineNumberReader reader = IOTools.getReaderFromFile(f);
+    int numScores = -1;
+    for (String line; (line = reader.readLine()) != null;) {
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatPhraseTable.FIELD_DELIM);
+      
+      // The standard format has five fields
+      assert fields.size() == 5 : String.format("phrase table line %d has %d fields", 
+          reader.getLineNumber(), fields.size());
+      Sequence<IString> source = IStrings.toIStringSequence(fields.get(0));
+      Sequence<IString> target = IStrings.toIStringSequence(fields.get(1));
+//      String sourceConstellation = fields[2];
+      String targetConstellation = StringUtils.join(fields.get(3));
+      List<String> scoreList = fields.get(4);
+
+      // Ensure that all rules in the phrase table have the same number of scores
+      if (numScores < 0) {
+        numScores = scoreList.size();
+      } else if (numScores != scoreList.size()) {
+        throw new RuntimeException(
+            String
+                .format(
+                    "Error (line %d): Each entry must have exactly the same number of translation\n"
+                        + "scores per line. Prior entries had %d, while the current entry has %d:",
+                    reader.getLineNumber(), numScores, scoreList.size()));
+      }
+      float[] scores;
+      try {
+        scores = IOTools.stringListToNumeric(scoreList);
+      } catch (NumberFormatException e) {
+        e.printStackTrace();
+        throw new RuntimeException(String.format("Number format error on line %d",
+            reader.getLineNumber()));
+      }
+
+      if (targetConstellation.equals("")) {
+        addEntry(source, target, null, scores);
+      } else {
+        addEntry(source, target,
+            PhraseAlignment.getPhraseAlignment(targetConstellation), scores);
+      }
+
+      if (source.size() > longestSourcePhrase) {
+        longestSourcePhrase = source.size();
+      }
+      if (target.size() > longestTargetPhrase) {
+        longestTargetPhrase = target.size();
+      }
+    }
+    reader.close();
+
+    // print some status information
+    long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
+    double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
+    System.err
+        .printf(
+            "Done loading phrase table: %s (mem used: %d MiB time: %.3f s)%n",
+            f.getAbsolutePath(),
+            (postPhraseTableLoadMemUsed - prePhraseTableLoadMemUsed)
+                / (1024 * 1024), elapsedTime);
+    System.err.println("Longest foreign phrase: " + longestSourcePhrase);
+    return numScores;
   }
 
   static class MatchState {
@@ -133,13 +238,13 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
         if (translations.get(s.state) != null) {
 
           // Final state:
-          List<IntArrayTranslationOption> intTransOpts = translations
+          List<PhraseTableEntry> intTransOpts = translations
               .get(s.state);
           if (intTransOpts != null) {
             // System.err.printf("Full match: %s\n",s);
             List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
                 intTransOpts.size());
-            for (IntArrayTranslationOption intTransOpt : intTransOpts) {
+            for (PhraseTableEntry intTransOpt : intTransOpts) {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
@@ -154,7 +259,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
               } else {
                 // No gaps in target:
                 RawSequence<IString> translation = new RawSequence<IString>(
-                    intTransOpt.translation, IString.identityIndex());
+                    intTransOpt.targetArray, IString.identityIndex());
                 transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
                     new RawSequence<IString>(s.foreign), intTransOpt.alignment));
@@ -280,19 +385,20 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     return list.toArray(new float[list.size()][]);
   }
 
-  @Override
-  protected void addEntry(Sequence<IString> foreignSequence,
-      Sequence<IString> translationSequence, PhraseAlignment alignment,
+  protected void addEntry(Sequence<IString> sourceSequence,
+      Sequence<IString> targetSequence, PhraseAlignment alignment,
       float[] scores) {
+    TranslationModelVocabulary.getSourceInstance().add(sourceSequence);
+    TranslationModelVocabulary.getTargetInstance().add(targetSequence);
 
-    int[] foreignInts = toWordIndexArray(foreignSequence);
-    int[] translationInts = toWordIndexArray(translationSequence);
+    int[] foreignInts = toWordIndexArray(sourceSequence);
+    int[] translationInts = toWordIndexArray(targetSequence);
     int fIndex = sourceIndex.indexOf(foreignInts, true);
     int eIndex = ruleIndex.indexOf(translationInts, true);
     int id = ruleIndex.indexOf(new int[] { fIndex, eIndex }, true);
 
-    float[][] foreignGapSzScores = toGapSizeScores(foreignSequence);
-    float[][] translationGapSzScores = toGapSizeScores(translationSequence);
+    float[][] foreignGapSzScores = toGapSizeScores(sourceSequence);
+    float[][] translationGapSzScores = toGapSizeScores(targetSequence);
 
     if (foreignGapSzScores.length > 0) {
       if (gapSizeScoresF == null)
@@ -315,11 +421,12 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
         translations.add(null);
     }
 
-    List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
 
     if (intTransOpts == null) {
-      intTransOpts = new LinkedList<IntArrayTranslationOption>();
+      intTransOpts = new LinkedList<PhraseTableEntry>();
       translations.set(fIndex, intTransOpts);
+      numRules++;
     }
 
     int numTgtSegments = 1;
@@ -330,8 +437,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
     }
     if (numTgtSegments == 1) {
       // no gaps:
-      intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex
-          .get(eIndex), scores, alignment));
+      intTransOpts.add(new PhraseTableEntry(id, ruleIndex.get(eIndex), scores, alignment));
     } else {
       // gaps:
       if (numTgtSegments > maxNumberTargetSegments)
@@ -354,7 +460,7 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   }
 
   protected static class DTUIntArrayTranslationOption extends
-      IntArrayTranslationOption {
+      PhraseTableEntry {
 
     final int[][] dtus;
 
@@ -374,5 +480,39 @@ public class DTUTable<FV> extends FlatPhraseTable<FV> {
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
+  }
+
+  @Override
+  public List<String> getFeatureNames() { return Arrays.asList(scoreNames); }
+  
+  @Override
+  public int getId(Sequence<IString> sourceSequence,
+      Sequence<IString> targetSequence) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public int size() {
+    return numRules;
+  }
+
+  @Override
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public int longestSourcePhrase() {
+    return longestSourcePhrase;
+  }
+  
+  @Override
+  public int longestTargetPhrase() {
+    return longestTargetPhrase;
+  }
+
+  @Override
+  public int minRuleIndex() {
+    return 0;
   }
 }

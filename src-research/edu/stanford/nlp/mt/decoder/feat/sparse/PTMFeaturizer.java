@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.pt.TranslationModelVocabulary;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -143,10 +143,8 @@ public class PTMFeaturizer extends DerivationFeaturizer<IString, String> impleme
     derivation = isTestMode ? null : sourceIdToDerivation.get(sourceInputId);
     // Mark source OOVs
     isSourceOOV = new BitSet();
-    int[] srcArr = new int[1];
     for (int i = 0, sz = source.size(); i < sz; ++i) {
-      srcArr[0] = source.get(i).id;
-      if (FlatPhraseTable.sourceIndex.indexOf(srcArr) < 0) {
+      if ( ! TranslationModelVocabulary.getSourceInstance().contains(source.get(i))) {
         isSourceOOV.set(i);
       }
     }

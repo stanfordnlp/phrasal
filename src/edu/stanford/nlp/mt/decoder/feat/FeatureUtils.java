@@ -5,6 +5,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
@@ -35,14 +36,14 @@ public final class FeatureUtils {
     features.add(UnknownWordFeaturizer.FEATURE_NAME);
     
     // Lexical reordering scores
-    features.add("LexR:discontinuous2WithNext"); 
-    features.add("LexR:discontinuous2WithPrevious");
-    features.add("LexR:discontinuousWithNext");
-    features.add("LexR:discontinuousWithPrevious");
-    features.add("LexR:monotoneWithNext");
-    features.add("LexR:monotoneWithPrevious");
-    features.add("LexR:swapWithNext");
-    features.add("LexR:swapWithPrevious");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":discontinuous2WithNext"); 
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":discontinuous2WithPrevious");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":discontinuousWithNext");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":discontinuousWithPrevious");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":monotoneWithNext");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":monotoneWithPrevious");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":swapWithNext");
+    features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":swapWithPrevious");
     
     // 7 translation model scores described in Green et al. (2013).
     for (int i = 0; i < 7; ++i) {

@@ -6,62 +6,52 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * A simple phrase table implementation.
+ * A basic phrase table implementation. Does *not* support gappy rules.
  * 
  * @author Daniel Cer
+ * @author Spence Green
+ * 
  */
 public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
-
-  public static final String TRIE_INDEX_PROPERTY = "TriePhraseTable";
-  public static final boolean TRIE_INDEX = Boolean.parseBoolean(System
-      .getProperty(TRIE_INDEX_PROPERTY, "false"));
 
   private static final int INITIAL_CAPACITY = 50000;
   
   public static final String FIELD_DELIM = "|||";
   public static final String FEATURE_PREFIX = "FPT";
 
-  public static IntegerArrayIndex sourceIndex;
-  public static IntegerArrayIndex ruleIndex;
+  // Static so that even when multiple phrase tables are loaded, each rule
+  // is assured of received a unique, non-negative id.
+  private static final AtomicInteger ruleIdCounter = new AtomicInteger();
   
-  public final String[] scoreNames;
-  protected String name;
-  public final List<List<IntArrayTranslationOption>> translations;
+  protected final IntegerArrayRawIndex sourceToRuleIndex;
+  protected final IntegerArrayIndex targetIndex;
+  protected final int minRuleIndex;
+  protected final String[] scoreNames;
+  protected final String name;
+  protected final List<List<PhraseTableEntry>> translations;
   
   protected int longestSourcePhrase = -1;
   protected int longestTargetPhrase = -1;
-
-  /**
-   * Constructor.
-   * 
-   * @param phraseFeaturizer
-   * @param filename
-   * @throws IOException
-   */
-  public FlatPhraseTable(
-      RuleFeaturizer<IString, FV> phraseFeaturizer,
-      String filename) throws IOException {
-    // default is not to do log rithm on the scores
-    this(phraseFeaturizer, filename, false);
-  }
 
   /**
    * Constructor.
@@ -70,7 +60,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @throws IOException
    */
   public FlatPhraseTable(String filename) throws IOException {
-    this(null, filename, false);
+    this(null, filename);
   }
 
   /**
@@ -83,65 +73,54 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    */
   public FlatPhraseTable(
       RuleFeaturizer<IString, FV> phraseFeaturizer,
-      String filename, boolean reverse) throws IOException {
+      String filename) throws IOException {
     super(phraseFeaturizer);
     File f = new File(filename);
-    name = String.format("FlatPhraseTable(%s)", f.getName());
-    // arrayIndex = trieIndex ? new TrieIntegerArrayIndex() : new
-    // DynamicIntegerArrayIndex();
+    name = String.format("%s:%s", this.getClass().getName(), f.getPath()).intern();
+    minRuleIndex = ruleIdCounter.get();
     translations = Generics.newArrayList(INITIAL_CAPACITY);
-    int countScores = init(f, reverse);
+    sourceToRuleIndex = new ProbingIntegerArrayRawIndex();
+    targetIndex = new ProbingIntegerArrayIndex();
+    int countScores = init(f);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
       scoreNames[i] = String.format("%s.%d", FEATURE_PREFIX, i);
     }
   }
+  
+  @Override
+  public int size() { return ruleIdCounter.get(); }
 
-  public static class IntArrayTranslationOption implements
-      Comparable<IntArrayTranslationOption> {
-    public final int[] translation;
-    public final float[] scores;
-    public final PhraseAlignment alignment;
-    public final int id;
-
-    public IntArrayTranslationOption(int id, int[] translation, float[] scores,
-        PhraseAlignment alignment) {
-      this.id = id;
-      this.translation = translation;
-      this.scores = scores;
-      this.alignment = alignment;
-    }
-
-    @Override
-    public int compareTo(IntArrayTranslationOption o) {
-      return (int) Math.signum(o.scores[0] - scores[0]);
-    }
-  }
-
-  protected void addEntry(Sequence<IString> foreignSequence,
-      Sequence<IString> translationSequence, PhraseAlignment alignment,
+  /**
+   * Add a rule to the phrase table.
+   * 
+   * @param sourceSequence
+   * @param targetSequence
+   * @param alignment
+   * @param scores
+   */
+  protected void addEntry(Sequence<IString> sourceSequence,
+      Sequence<IString> targetSequence, PhraseAlignment alignment,
       float[] scores) {
-    int[] foreignInts = Sequences.toIntArray(foreignSequence);
-    int[] translationInts = Sequences.toIntArray(translationSequence);
-    int fIndex = sourceIndex.indexOf(foreignInts, true);
-    int eIndex = ruleIndex.indexOf(translationInts, true);
-    int id = ruleIndex.indexOf(new int[] { fIndex, eIndex }, true);
-    /*
-     * System.err.printf("foreign ints: %s translation ints: %s\n",
-     * Arrays.toString(foreignInts), Arrays.toString(translationInts));
-     * System.err.printf("fIndex: %d\n", fIndex);
-     */
+    TranslationModelVocabulary.getSourceInstance().add(sourceSequence);
+    TranslationModelVocabulary.getTargetInstance().add(targetSequence);
+
+    int[] sourceArray = Sequences.toIntArray(sourceSequence);
+    int[] targetArray = Sequences.toIntArray(targetSequence);
+    int fIndex = sourceToRuleIndex.insertIntoIndex(sourceArray);
+    int eIndex = this.targetIndex.indexOf(targetArray, true);
+    
     if (translations.size() <= fIndex) {
       while (translations.size() <= fIndex)
         translations.add(null);
     }
-    List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
     if (intTransOpts == null) {
       intTransOpts = Generics.newLinkedList();
       translations.set(fIndex, intTransOpts);
     }
-    intTransOpts.add(new IntArrayTranslationOption(id, ruleIndex
-        .get(eIndex), scores, alignment));
+    intTransOpts.add(new PhraseTableEntry(ruleIdCounter.getAndIncrement(), 
+        targetIndex.get(eIndex), scores, alignment));
   }
 
   @Override
@@ -155,7 +134,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @return
    * @throws IOException
    */
-  private int init(File f, boolean reverse) throws IOException {
+  private int init(File f) throws IOException {
     Runtime rt = Runtime.getRuntime();
     long prePhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     final long startTime = System.nanoTime();
@@ -173,12 +152,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 //      String sourceConstellation = fields[2];
       String targetConstellation = StringUtils.join(fields.get(3));
       List<String> scoreList = fields.get(4);
-      
-      if (reverse) {
-        Sequence<IString> tmp = source;
-        source = target;
-        target = tmp;
-      }
 
       // Ensure that all rules in the phrase table have the same number of scores
       if (numScores < 0) {
@@ -241,67 +214,42 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
 
   @Override
   public List<Rule<IString>> query(
-      Sequence<IString> foreignSequence) {
-    RawSequence<IString> rawForeign = new RawSequence<IString>(foreignSequence);
-    int[] foreignInts = Sequences.toIntArray(foreignSequence);
-    int fIndex = sourceIndex.indexOf(foreignInts);
+      Sequence<IString> sourceSequence) {
+    int[] sourceArray = Sequences.toIntArray(sourceSequence);
+    int fIndex = sourceToRuleIndex.getIndex(sourceArray);
     if (fIndex == -1 || fIndex >= translations.size())
       return null;
-    List<IntArrayTranslationOption> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
     if (intTransOpts == null)
       return null;
     List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
         intTransOpts.size());
-    // int intTransOptsSize = intTransOpts.size();
-    // for (int i = 0; i < intTransOptsSize; i++) {
-    for (IntArrayTranslationOption intTransOpt : intTransOpts) {
-      // IntArrayTranslationOption intTransOpt = intTransOpts.get(i);
-      // System.out.printf("%d:%f\n", i, intTransOpt.scores[0]);
-      RawSequence<IString> translation = new RawSequence<IString>(
-          intTransOpt.translation, IString.identityIndex());
+    for (PhraseTableEntry intTransOpt : intTransOpts) {
+      RawSequence<IString> targetSequence = new RawSequence<IString>(
+          intTransOpt.targetArray, IString.identityIndex());
       transOpts.add(new Rule<IString>(intTransOpt.id,
-          intTransOpt.scores, scoreNames, translation, rawForeign,
+          intTransOpt.scores, scoreNames, targetSequence, sourceSequence,
           intTransOpt.alignment));
     }
     return transOpts;
   }
-
-  public static void main(String[] args) throws Exception {
-    if (args.length != 2) {
-      System.out
-          .println("Usage:\n\tjava ...FlatPhraseTable (phrasetable file) (entry to look up)");
-      System.exit(-1);
+  
+  @Override
+  public int getId(Sequence<IString> sourceSequence,
+      Sequence<IString> targetSequence) {
+    int[] sourceArray = Sequences.toIntArray(sourceSequence);
+    int fIndex = sourceToRuleIndex.getIndex(sourceArray);
+    if (fIndex == -1 || fIndex >= translations.size()) {
+      return -1;
     }
-
-    String model = args[0];
-    String phrase = args[1];
-    long startTimeMillis = System.currentTimeMillis();
-    System.out.printf("Loading phrase table: %s\n", model);
-    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null,
-        model);
-    long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
-    long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-    System.err.printf(
-        "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm\n",
-        sourceIndex.size(), totalSecs, totalMemory, freeMemory);
-
-    List<Rule<IString>> translationOptions = ppt
-        .query(new SimpleSequence<IString>(IStrings
-            .toIStringArray(phrase.split("\\s+"))));
-
-    System.out.printf("Phrase: %s\n", phrase);
-
-    if (translationOptions == null) {
-      System.out.printf("No translation options found.");
-      System.exit(-1);
+    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    int[] targetArray = Sequences.toIntArray(targetSequence);
+    for (PhraseTableEntry intTransOpt : intTransOpts) {
+      if (Arrays.equals(targetArray, intTransOpt.targetArray)) {
+        return intTransOpt.id;
+      }
     }
-
-    System.out.printf("Options:\n");
-    for (Rule<IString> opt : translationOptions) {
-      System.out.printf("\t%s : %s\n", opt.target,
-          Arrays.toString(opt.scores));
-    }
+    return -1;
   }
 
   @Override
@@ -319,14 +267,51 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     return getName();
   }
   
-  public static void createIndex(boolean withGaps) {
-    sourceIndex = (withGaps || TRIE_INDEX) ? new TrieIntegerArrayIndex()
-        : new ProbingIntegerArrayIndex();
-    ruleIndex = new ProbingIntegerArrayIndex();
+  @Override
+  public int minRuleIndex() {
+    return minRuleIndex;
   }
+  
+  /**
+   * 
+   * @param args
+   * @throws Exception
+   */
+  public static void main(String[] args) throws Exception {
+    if (args.length != 2) {
+      System.out
+          .println("Usage:\n\tjava ...FlatPhraseTable (phrasetable file) (entry to look up)");
+      System.exit(-1);
+    }
 
-  public static void lockIndex() {
-    sourceIndex.lock();
-    ruleIndex.lock();
-  }
+    String model = args[0];
+    String phrase = args[1];
+    long startTimeMillis = System.currentTimeMillis();
+    System.out.printf("Loading phrase table: %s%n", model);
+    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null,
+        model);
+    long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
+    long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
+    double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
+    System.err.printf(
+        "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm%n",
+        ppt.size(), totalSecs, totalMemory, freeMemory);
+
+    List<Rule<IString>> translationOptions = ppt
+        .query(new SimpleSequence<IString>(IStrings
+            .toIStringArray(phrase.split("\\s+"))));
+
+    System.out.printf("Phrase: %s%n", phrase);
+
+    if (translationOptions == null) {
+      System.out.printf("No translation options found.");
+      System.exit(-1);
+    }
+
+    System.out.printf("Options:%n");
+    for (Rule<IString> opt : translationOptions) {
+      System.out.printf("\t%s : %s%n", opt.target,
+          Arrays.toString(opt.scores));
+    }
+  }  
 }

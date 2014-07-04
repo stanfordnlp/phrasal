@@ -1,25 +1,39 @@
 package edu.stanford.nlp.mt.pt;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
+ * Load a phrase table from a filename
  * 
  * @author Daniel Cer
+ * @author Spence Green
  */
 public class PhraseGeneratorFactory {
 
   public static final String CONCATENATIVE_LIST_GENERATOR = "tablelist";
-  public static final String BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR = "augmentedtablelist";
   public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
   public static final String DTU_GENERATOR = "dtu";
   public static final String DYNAMIC_GENERATOR = "dpt";
   public static final String PHAROAH_PHRASE_TABLE = "pharaohphrasetable";
   public static final String PHAROAH_PHRASE_TABLE_ALT = "ppt";
+  public static final String FILENAME_SEPARATOR = ":";
 
-  static public <FV> PhraseGenerator<IString,FV> factory(
+  /**
+   * Factory method for phrase table loading.
+   * 
+   * @param dropUnknownWords
+   * @param pgSpecs
+   * @return
+   * @throws IOException
+   */
+  @SuppressWarnings("unchecked")
+  static public <FV> Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> factory(
       Boolean dropUnknownWords,
       String... pgSpecs) throws IOException {
 
@@ -31,10 +45,10 @@ public class PhraseGeneratorFactory {
 
     String pgName = pgSpecs[0].toLowerCase();
 
-    if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)
-        || pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)) {
-      List<PhraseGenerator<IString,FV>> phraseTables = new LinkedList<PhraseGenerator<IString,FV>>();
-
+    if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)) {
+      List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
+      List<PhraseTable<IString>> tables = Generics.newLinkedList();
+      
       for (int i = 1; i < pgSpecs.length; i++) {
         String[] fields = pgSpecs[i].split(":");
         if (fields.length != 2) {
@@ -47,87 +61,54 @@ public class PhraseGeneratorFactory {
         switch (type) {
           case PHAROAH_PHRASE_TABLE:
           case PHAROAH_PHRASE_TABLE_ALT:
-            phraseTables.add((new FlatPhraseTable<FV>(filename)));
+            PhraseGenerator<IString,FV> pt = new FlatPhraseTable<FV>(filename);
+            generators.add(pt);
+            tables.add((PhraseTable<IString>) pt);
             break;
           case DTU_GENERATOR:
-            phraseTables.add(new DTUTable<FV>(filename));
+            pt = new DTUTable<FV>(filename);
+            generators.add(pt);
+            tables.add((PhraseTable<IString>) pt);
             break;
           default:
             throw new RuntimeException(String.format(
                 "Unknown phrase table type: '%s'\n", type));
         }
       }
-      if (pgName.equals(CONCATENATIVE_LIST_GENERATOR)) {
-        return new CombinedPhraseGenerator<IString,FV>(phraseTables,
-            CombinedPhraseGenerator.Type.CONCATENATIVE);
-      } else if (pgName.equals(BASIC_AUGMENTED_CONCATENATIVE_LIST_GENERATOR)) {
-        List<PhraseGenerator<IString,FV>> augmentedList = new LinkedList<PhraseGenerator<IString,FV>>();
-
-        // user specified translation tables and equal in ranking special
-        // purpose phrase generators
-        List<PhraseGenerator<IString,FV>> userEquivList = new LinkedList<PhraseGenerator<IString,FV>>(
-            phraseTables); // user phrase tables
-
-        CombinedPhraseGenerator<IString,FV> equivUserRanking = new CombinedPhraseGenerator<IString,FV>(
-            userEquivList);
-        augmentedList.add(equivUserRanking);
-
-       
-        return new CombinedPhraseGenerator<IString,FV>(augmentedList,
-            CombinedPhraseGenerator.Type.STRICT_DOMINANCE);
-      }
+      Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> pair =
+          new Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>>(
+              new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE), 
+              tables);
+      return pair;
+    
     } else if (pgName.equals(PSEUDO_PHARAOH_GENERATOR)
         || pgName.equals(DTU_GENERATOR)) {
 
-      boolean withGaps = pgName.equals(DTU_GENERATOR);
+      final boolean withGaps = pgName.equals(DTU_GENERATOR);
 
-      List<PhraseGenerator<IString,FV>> pharoahList = new LinkedList<PhraseGenerator<IString,FV>>();
-      List<PhraseGenerator<IString,FV>> finalList = new LinkedList<PhraseGenerator<IString,FV>>();
-      if (pgSpecs.length < 2) {
-        throw new RuntimeException("A phrase table filename must be specified.");
-      }
-      if (pgSpecs.length > 3) {
-        throw new RuntimeException("Unrecognized additional material.");
-      }
+      List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
+      List<PhraseTable<IString>> tables = Generics.newLinkedList();
       int phraseLimit = -1;
       if (pgSpecs.length == 3) {
         String phraseLimitStr = pgSpecs[2];
-        try {
-          phraseLimit = Integer.parseInt(phraseLimitStr);
-        } catch (NumberFormatException e) {
-          throw new RuntimeException(
-              String
-                  .format(
-                      "Specified phrase limit, %s, can not be parsed as an integer value\n",
-                      phraseLimitStr));
-        }
+        phraseLimit = Integer.parseInt(phraseLimitStr);
       }
 
-      String[] filenames = pgSpecs[1].split(System
-          .getProperty("path.separator"));
+      String[] filenames = pgSpecs[1].split(FILENAME_SEPARATOR);
       for (String filename : filenames) {
-        // System.err.printf("loading pt: %s\n", filename);
-        if (withGaps)
-          pharoahList.add(new DTUTable<FV>(filename));
-        else
-//          if (new File(filename).isDirectory()) {
-//             pharoahList.add(new BinaryPhraseTable<FV>(filename)); 
-//          } else {
-            pharoahList.add(new FlatPhraseTable<FV>(filename));
-//          }
+        PhraseGenerator<IString,FV> pt = withGaps ? new DTUTable<FV>(filename) : new FlatPhraseTable<FV>(filename);
+        generators.add(pt);
+        tables.add((PhraseTable<IString>) pt);
       }
 
-      finalList.add(new CombinedPhraseGenerator<IString,FV>(pharoahList,
-          CombinedPhraseGenerator.Type.CONCATENATIVE));
-      
-      CombinedPhraseGenerator.Type combinationType = withGaps ? CombinedPhraseGenerator.Type.CONCATENATIVE
-          : CombinedPhraseGenerator.Type.STRICT_DOMINANCE;
-      if (phraseLimit == -1) {
-        return new CombinedPhraseGenerator<IString,FV>(finalList, combinationType);
-      } else {
-        return new CombinedPhraseGenerator<IString,FV>(finalList, combinationType,
-            phraseLimit);
-      }
+      CombinedPhraseGenerator<IString,FV> gen = phraseLimit == -1 ? 
+          new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE) :
+            new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE,
+                phraseLimit);
+      Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> pair =
+          new Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>>(
+              gen, tables);
+      return pair;
     }
 
     throw new RuntimeException(String.format("Unknown phrase generator '%s'%n",

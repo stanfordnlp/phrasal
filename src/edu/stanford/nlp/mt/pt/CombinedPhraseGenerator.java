@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * 
@@ -252,7 +253,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     conf[0] = PhraseGeneratorFactory.CONCATENATIVE_LIST_GENERATOR;
     System.arraycopy(args, 0, conf, 1, args.length);
 
-    PhraseGenerator<IString,String> ptGen = PhraseGeneratorFactory.factory(true, conf);
+    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> ptGenPair = PhraseGeneratorFactory.factory(true, conf);
+    PhraseGenerator<IString,String> ptGen = ptGenPair.first();
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     System.out.println("Interactive SimpleLookupPhraseGenerator");
