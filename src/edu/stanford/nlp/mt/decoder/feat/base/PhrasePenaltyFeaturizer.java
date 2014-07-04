@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -17,12 +18,14 @@ import edu.stanford.nlp.util.Generics;
  */
 public class PhrasePenaltyFeaturizer<TK> implements
     RuleFeaturizer<TK, String> {
-  private static String FEATURE_NAME = "PhrasePenalty";
+  private static final String FEATURE_NAME = "PhrasePenalty";
 
   // Cache since this value will simply be aggregated by the feature API
-  private static final List<FeatureValue<String>> features = Generics.newArrayList(1);
+  private static final List<FeatureValue<String>> features;
   static {
-    features.add(new FeatureValue<String>(FEATURE_NAME, 1.0));
+    List<FeatureValue<String>> feats = Generics.newArrayList(1);
+    feats.add(new FeatureValue<String>(FEATURE_NAME, 1.0));
+    features = Collections.unmodifiableList(feats);
   }
   
   @Override
