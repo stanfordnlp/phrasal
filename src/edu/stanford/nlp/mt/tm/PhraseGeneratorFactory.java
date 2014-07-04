@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.pt;
+package edu.stanford.nlp.mt.tm;
 
 import java.io.IOException;
 import java.util.LinkedList;

@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;

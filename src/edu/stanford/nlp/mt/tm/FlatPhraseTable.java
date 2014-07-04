@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.pt;
+package edu.stanford.nlp.mt.tm;
 
 import java.io.File;
 import java.io.IOException;

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;

@@ -4,9 +4,9 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
-import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
