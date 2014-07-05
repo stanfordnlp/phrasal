@@ -551,8 +551,9 @@ public class MERT extends Thread {
       FlatNBestList nbest) {
     quickIncEval = emetric.getIncrementalMetric();
     int sz = nbest.nbestLists().size();
+    ScoredFeaturizedTranslation<IString, String> is_null = null;
     for (int i = 0; i < sz; i++) {
-      quickIncEval.add(null);
+      quickIncEval.add(is_null);
     }
   }
 

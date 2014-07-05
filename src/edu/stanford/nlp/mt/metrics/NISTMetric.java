@@ -271,6 +271,12 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> tran) {
+      return add(tran == null ? null : tran.translation);
+    }
+
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> tran) {
       int pos = sequences.size();
       if (pos >= maxReferenceCounts.size()) {
         throw new RuntimeException(String.format(
@@ -279,11 +285,11 @@ public class NISTMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
       if (tran != null) {
         Counter<Sequence<TK>> canidateCounts = Metrics.getNGramCounts(
-            tran.translation, order);
+            tran, order);
         Metrics.clipCounts(canidateCounts, maxReferenceCounts.get(pos));
-        sequences.add(tran.translation);
-        incCounts(canidateCounts, tran.translation);
-        c += tran.translation.size();
+        sequences.add(tran);
+        incCounts(canidateCounts, tran);
+        c += tran.size();
         r += averageReferenceLength(pos);
       } else {
         sequences.add(null);

@@ -113,15 +113,20 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   PhraseTable phrasetable;
 
   TERcost costfunc = new TERcost();
-
+  
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
+      int idx, double[] editCounts) {
+    return calcTER(trans, idx, editCounts);
+  }
+
+  public TERalignment calcTER(Sequence<TK> trans,
       int idx, double[] editCounts) {
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
     String[] refs = new String[refsSeq.size()];
     TERalignment bestAl = null;
 
     double best = Double.POSITIVE_INFINITY;
-    String hyp = trans.translation.toString();
+    String hyp = trans.toString();
     for (int i = 0; i < refs.length; i++) {
       refs[i] = refsSeq.get(i).toString();
     }      
@@ -177,14 +182,19 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
       nulls = p.nulls;
     }
 
-    @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
-      if (trans == null) {
+      return add(trans == null ? null : trans.translation);
+    }
+
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> translation) {
+      if (translation == null) {
         nulls[cnt++] = true;
         nullCnt++;
       } else {
-        aligns[cnt] = calcTER(trans, cnt, editCounts);
+        aligns[cnt] = calcTER(translation, cnt, editCounts);
         editsTotal += aligns[cnt].numEdits;
         numWordsTotal += aligns[cnt].numWords;
         cnt++;

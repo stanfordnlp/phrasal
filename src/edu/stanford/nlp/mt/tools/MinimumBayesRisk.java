@@ -14,7 +14,8 @@ import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
-import edu.stanford.nlp.mt.util.FlatNBestList;
+import edu.stanford.nlp.mt.util.BasicNBestList;
+import edu.stanford.nlp.mt.util.BasicNBestEntry;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -71,34 +72,33 @@ public class MinimumBayesRisk {
 
     final String filename = options.getProperty("");
     System.err.print("Loading n-best list...");
-    FlatNBestList nbestlists = new FlatNBestList(filename);
+    BasicNBestList nbestlists = new BasicNBestList(filename);
     System.err.println("done!");
     System.err.println("Decoding...");
     int idx = -1; 
-    for (List<ScoredFeaturizedTranslation<IString,String>> nbestlist :
-      nbestlists.nbestLists()) { idx++;
+    for (List<BasicNBestEntry> nbestlist : nbestlists) { idx++;
       double[] nbestScores = new double[nbestlist.size()];
 
-      for (ScoredFeaturizedTranslation<IString,String> refTrans : nbestlist) 
+      for (BasicNBestEntry refTrans : nbestlist) 
       { 
         @SuppressWarnings("unchecked")
         List<List<Sequence<IString>>> fakeRef = Arrays.asList(
-            Arrays.asList(refTrans.translation));
+            Arrays.asList(refTrans.getTokens()));
         EvaluationMetric<IString,String> metric =
             CorpusLevelMetricFactory.newMetric(metricName,fakeRef);
 
         int hypI = -1;
-        for (ScoredFeaturizedTranslation<IString,String> hyp : nbestlist) 
+        for (BasicNBestEntry hyp : nbestlist) 
         { hypI++;
         @SuppressWarnings("unchecked")
-        double metricScore = metric.score(Arrays.asList(hyp)); 
+        double metricScore = metric.scoreSeq(Arrays.asList(hyp.getTokens())); 
 
-        double fracHypScore = metricScore * Math.exp(scale*refTrans.score);
+        double fracHypScore = metricScore * Math.exp(scale*refTrans.getScore());
         nbestScores[hypI] += fracHypScore; 
         if (VERBOSE) {
           System.err.printf("hyp(%d): %s\n", hypI, hyp);
           System.err.printf("scale: %f\n", scale);
-          System.err.printf("score: %f\n", hyp.score);
+          System.err.printf("score: %f\n", hyp.getScore());
           System.err.printf("metricScore: %f\n", metricScore);
           System.err.printf("fracHypScore: %f\n", fracHypScore);
           System.err.printf("nbestScores[%d]: %f\n", hypI, nbestScores[hypI]);
@@ -106,19 +106,18 @@ public class MinimumBayesRisk {
         }
       }
       int hypI = -1;
-      List<Pair<Double,ScoredFeaturizedTranslation<IString,String>>> 
-      rescoredNBestList = new ArrayList<Pair<Double,ScoredFeaturizedTranslation<IString,String>>>(nbestlist.size());
-      for (ScoredFeaturizedTranslation<IString,String> hyp : nbestlist) {
+      List<Pair<Double,String>>
+      rescoredNBestList = new ArrayList<Pair<Double,String>>(nbestlist.size());
+      for (BasicNBestEntry hyp : nbestlist) {
         hypI++;
-        rescoredNBestList.add(new Pair<Double,ScoredFeaturizedTranslation<IString,String>>(nbestScores[hypI], hyp));
+        rescoredNBestList.add(new Pair<Double,String>(nbestScores[hypI], hyp.getLine()));
       }
       Collections.sort(rescoredNBestList);
       if (!risk) {
         Collections.reverse(rescoredNBestList);
       }
-      for (Pair<Double,ScoredFeaturizedTranslation<IString,String>> entry : rescoredNBestList) {
-        System.out.printf("%d ||| %s ||| %e%n", idx, 
-            entry.second().translation, entry.first());
+      for (Pair<Double,String> entry : rescoredNBestList) {
+        System.out.println(entry.second());
       }
     }
   }

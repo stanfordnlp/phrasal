@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.State;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 public class ScorerWrapperEvaluationMetric<TK, FV> implements
     EvaluationMetric<TK, FV> {
@@ -41,6 +42,13 @@ public class ScorerWrapperEvaluationMetric<TK, FV> implements
       score += tscore = scorer.getIncrementalScore(trans.features);
       scores.add(tscore);
       return this;
+    }
+    
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> trans) {
+      // Apparently we need the features?!
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -114,6 +122,10 @@ public class ScorerWrapperEvaluationMetric<TK, FV> implements
 
   @Override
   public double score(List<ScoredFeaturizedTranslation<TK, FV>> sequences) {
+    throw new UnsupportedOperationException();
+  }
+  @Override
+  public double scoreSeq(List<Sequence<TK>> sequences) {
     throw new UnsupportedOperationException();
   }
 

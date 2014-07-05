@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class BasicNBestList implements Iterator<List<BasicNBestEntry> > {
+public class BasicNBestList implements Iterator<List<BasicNBestEntry>>, Iterable<List<BasicNBestEntry>> {
   private LineNumberReader reader;
   private BasicNBestEntry start;
 
@@ -17,6 +17,10 @@ public class BasicNBestList implements Iterator<List<BasicNBestEntry> > {
     if (got != null) {
       start = new BasicNBestEntry(got);
     }
+  }
+
+  public Iterator<List<BasicNBestEntry>> iterator() {
+    return this;
   }
 
   public boolean hasNext() { return start != null; }
