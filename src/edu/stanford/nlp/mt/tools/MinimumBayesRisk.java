@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
+import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
@@ -53,30 +55,23 @@ public class MinimumBayesRisk {
     return argDefs;
   }
 
-  /**
-   * 
-   * @param args
-   * @throws IOException
-   */
-  public static void main(String[] args) throws IOException {
-    if (args.length < 1) {
-      System.err.print(usage());
-      System.exit(-1);
+  private static class Processor implements ThreadsafeProcessor<List<BasicNBestEntry>, List<Pair<Double, String>>> {
+    private final String metricName;
+    private final boolean risk;
+    private final double scale;
+
+    Processor(String in_metricName, boolean in_risk, double in_scale) {
+      metricName = in_metricName;
+      risk = in_risk;
+      scale = in_scale;
     }
 
-    Properties options = StringUtils.argsToProperties(args, argDefs());
-    final double scale = PropertiesUtils.getDouble(options, "s", DEFAULT_SCALE);
-    final String orientation = options.getProperty("o", "utility");
-    final boolean risk = "risk".equals(orientation);
-    final String metricName = options.getProperty("m", DEFAULT_METRIC);
+    // Class is threadsafe for concurrent calls.
+    public ThreadsafeProcessor<List<BasicNBestEntry>, List<Pair<Double, String>>> newInstance() {
+      return this;
+    }
 
-    final String filename = options.getProperty("");
-    System.err.print("Loading n-best list...");
-    BasicNBestList nbestlists = new BasicNBestList(filename);
-    System.err.println("done!");
-    System.err.println("Decoding...");
-    int idx = -1; 
-    for (List<BasicNBestEntry> nbestlist : nbestlists) { idx++;
+    public List<Pair<Double, String>> process(List<BasicNBestEntry> nbestlist) {
       double[] nbestScores = new double[nbestlist.size()];
 
       for (BasicNBestEntry refTrans : nbestlist) 
@@ -116,9 +111,46 @@ public class MinimumBayesRisk {
       if (!risk) {
         Collections.reverse(rescoredNBestList);
       }
-      for (Pair<Double,String> entry : rescoredNBestList) {
-        System.out.println(entry.second());
+      return rescoredNBestList;
+    }
+  }
+
+  /**
+   * 
+   * @param args
+   * @throws IOException
+   */
+  public static void main(String[] args) throws IOException {
+    if (args.length < 1) {
+      System.err.print(usage());
+      System.exit(-1);
+    }
+
+    Properties options = StringUtils.argsToProperties(args, argDefs());
+    final double scale = PropertiesUtils.getDouble(options, "s", DEFAULT_SCALE);
+    final String orientation = options.getProperty("o", "utility");
+    final boolean risk = "risk".equals(orientation);
+    final String metricName = options.getProperty("m", DEFAULT_METRIC);
+
+    final String filename = options.getProperty("");
+    BasicNBestList nbestlists = new BasicNBestList(filename);
+    MulticoreWrapper<List<BasicNBestEntry>, List<Pair<Double, String>>> wrapper = 
+      new MulticoreWrapper<List<BasicNBestEntry>, List<Pair<Double, String>>>(0, new Processor(metricName, risk, scale), true);
+    for (List<BasicNBestEntry> nbestlist : nbestlists) {
+      wrapper.put(nbestlist);
+      while (wrapper.peek()) {
+        DumpRescored(wrapper.poll());
       }
+    }
+    wrapper.join();
+    while (wrapper.peek()) {
+      DumpRescored(wrapper.poll());
+    }
+  }
+
+  private static void DumpRescored(List<Pair<Double, String>> rescoredNBestList) {
+    for (Pair<Double,String> entry : rescoredNBestList) {
+      System.out.println(entry.second());
     }
   }
 }
