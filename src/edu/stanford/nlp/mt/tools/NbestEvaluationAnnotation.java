@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.metrics.EvaluationMetricFactory;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.util.FlatNBestList;
@@ -56,7 +56,7 @@ public class NbestEvaluationAnnotation {
     for (int id = 0; id < nbestLists.size(); id++) {
       List<ScoredFeaturizedTranslation<IString, String>> nbestList = nbestLists.get(id);
       
-      EvaluationMetric<IString,String> emetric = EvaluationMetricFactory.newMetric(metricName, refs.subList(id, id+1));
+      EvaluationMetric<IString,String> emetric = CorpusLevelMetricFactory.newMetric(metricName, refs.subList(id, id+1));
       for (ScoredFeaturizedTranslation<IString, String> tran : nbestList) {
         List<ScoredFeaturizedTranslation<IString,String>> trans = 
             new ArrayList<ScoredFeaturizedTranslation<IString,String>>(1);

@@ -24,9 +24,9 @@ import edu.stanford.nlp.util.Generics;
  */
 public final class FeaturizerFactory {
 
-  public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
-  public static final String BASELINE_FEATURIZERS = "baseline";
-  public static final String DEFAULT_FEATURIZERS = PSEUDO_PHARAOH_GENERATOR;
+  public static final String MOSES_DENSE_FEATURES = "mosesdense";
+  public static final String BASELINE_FEATURES = "baseline";
+  public static final String DEFAULT_FEATURIZERS = MOSES_DENSE_FEATURES;
   public static final String ARPA_LM_PARAMETER = "arpalm";
   public static final String LINEAR_DISTORTION_PARAMETER = "lineardistortion";
   public static final String GAP_PARAMETER = "gap";
@@ -76,7 +76,7 @@ public final class FeaturizerFactory {
         Integer.valueOf(paramPairs.get(NUM_PHRASE_FEATURES)) : Integer.MAX_VALUE;
     
     // Model features
-    if (featurizerName.equals(BASELINE_FEATURIZERS)) {
+    if (featurizerName.equals(BASELINE_FEATURES)) {
       if (!paramPairs.containsKey(ARPA_LM_PARAMETER)) {
         throw new RuntimeException(
             String
@@ -107,7 +107,7 @@ public final class FeaturizerFactory {
 
       return new CombinedFeaturizer<IString, String>(baselineFeaturizers);
     
-    } else if (featurizerName.equals(PSEUDO_PHARAOH_GENERATOR)) {
+    } else if (featurizerName.equals(MOSES_DENSE_FEATURES)) {
       List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
       pharaohFeaturizers.addAll(gapFeaturizers);
 

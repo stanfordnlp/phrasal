@@ -9,8 +9,6 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import static java.lang.System.*;
 
 /**
@@ -82,8 +80,9 @@ public class LineIndexedCorpus extends AbstractList<String> {
       byte[] rawBytes = new byte[(int)(endPos-startPos)];
       try {
          rfh.seek(startPos);
-         rfh.read(rawBytes);      
-         return StringUtils.chomp(new String(rawBytes, "UTF-8"));
+         rfh.read(rawBytes);
+         String str = new String(rawBytes, "UTF-8");
+         return str.trim();
       } catch (IOException e) {
          throw new RuntimeException(e);
       }

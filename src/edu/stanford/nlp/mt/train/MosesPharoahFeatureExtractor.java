@@ -18,7 +18,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 /**
  * Extractor for the five base feature functions of Moses/Pharaoh (four
  * translation probabilities plus phrase penalty).
- * 
+ *
  * @author Michel Galley
  */
 public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor implements
@@ -49,11 +49,11 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   protected final IntArrayList feCounts = new IntArrayList();
   protected final IntArrayList fCounts = new IntArrayList();
   protected final IntArrayList eCounts = new IntArrayList();
-  protected List<Double> totalCounts = new ArrayList<Double>(0);
+  protected final List<Double> totalCounts = new ArrayList<Double>(0);
   protected double totalFECount = -1;
   protected double totalFCount = -1;
   protected double totalECount = -1;
-  protected List<Double> totalLexCounts = new ArrayList<Double>(0);
+  protected final List<Double> totalLexCounts = new ArrayList<Double>(0);
   protected double totalFELexCount = -1;
   protected double totalFLexCount = -1;
   protected double totalELexCount = -1;
@@ -193,7 +193,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     assert (idx >= 0 && idxF >= 0 && idxE >= 0);
     assert (idx < feCounts.size());
     // Compute phi features p(f|e) and p(e|f):
-    double pairCount = feCounts.get(idx); 
+    double pairCount = feCounts.get(idx);
     double eCount = eCounts.get(idxE);
     double fCount = fCounts.get(idxF);
     double phi_f_e = pairCount * 1.0 / eCount;
@@ -325,7 +325,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   }
 
   /**
-   * Lexically-weighted PMI as the sum of alTemp.f() given alTemp.e() 
+   * Lexically-weighted PMI as the sum of alTemp.f() given alTemp.e()
    * word-level PMI normalized by the number of words in alTemp.f()
    */
   private double getLexPmiScore(AlignmentTemplate alTemp, boolean doNormalize) {

@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.pt;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +10,7 @@ import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -152,54 +152,34 @@ public class ExtendedLexicalReorderingTable {
         ConditionTypes.f);
   }
 
-  final String filetype;
+  public final String filetype;
   private final List<float[]> reorderingScores;
+  private final PhraseTable<IString> phraseTable;
 
   public final ReorderingTypes[] positionalMapping;
   public final ConditionTypes conditionType;
-
-  private static int[] mergeInts(int[] array1, int[] array2) {
-    return new int[] { FlatPhraseTable.sourceIndex.indexOf(array1),
-        FlatPhraseTable.ruleIndex.indexOf(array2) };
-  }
 
   public float[] getReorderingScores(Rule<IString> rule) {
     int reorderingId = -1;
     if (rule.isSynthetic()) {
       // Do nothing
-    } else if (conditionType == ConditionTypes.f) {
-      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[0];
-    } else if (conditionType == ConditionTypes.e) {
-      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[1];
+//    } else if (conditionType == ConditionTypes.f) {
+//      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[0];
+//    } else if (conditionType == ConditionTypes.e) {
+//      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[1];
+//    } 
     } else if (conditionType == ConditionTypes.fe) {
       reorderingId = rule.id;
     }
-    return reorderingId < 0 || reorderingId >= reorderingScores.size() ? 
-        null : reorderingScores.get(reorderingId);
+    reorderingId -= phraseTable.minRuleIndex();
+    return reorderingId >= 0 && reorderingId < reorderingScores.size() ? reorderingScores.get(reorderingId) : null;
   }
 
-  /**
-   * 
-   * @throws IOException
-   */
-  public ExtendedLexicalReorderingTable(String filename) throws IOException {
-    int phraseTableSize = FlatPhraseTable.ruleIndex.size();
-    this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
-    for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
-
-    String filetype = init(filename, null);
-    
-    this.filetype = filetype;
-    this.positionalMapping = (ReorderingTypes[]) fileTypeToReorderingType
-        .get(filetype);
-    this.conditionType = fileTypeToConditionType.get(filetype);
-  }
-
-  public ExtendedLexicalReorderingTable(String filename, String desiredFileType)
+  public ExtendedLexicalReorderingTable(String filename, PhraseTable<IString> phraseTable, String desiredFileType)
       throws IOException {
-    int phraseTableSize = FlatPhraseTable.ruleIndex.size();
-    this.reorderingScores = new ArrayList<float[]>(phraseTableSize);
-    for (int i = 0; i < phraseTableSize; ++i) reorderingScores.add(null);
+    this.phraseTable = phraseTable;
+    this.reorderingScores = Generics.newArrayList(phraseTable.size());
+    for (int i = 0, sz = phraseTable.size(); i < sz; ++i) this.reorderingScores.add(null);
 
     String filetype = init(filename, desiredFileType);
     if (!desiredFileType.equals(filetype)) {
@@ -284,30 +264,33 @@ public class ExtendedLexicalReorderingTable {
                     reader.getLineNumber()));
       }
       
-      final int[] indexInts;
+      int idx = -1;
       if (conditionType == ConditionTypes.e
           || conditionType == ConditionTypes.f) {
         IString[] tokens = IStrings.toIStringArray(srcTokens);
-        indexInts = withGaps ? DTUTable.toWordIndexArray(tokens) : IStrings.toIntArray(tokens);
-      
+        final int[] indexInts = withGaps ? DTUTable.toWordIndexArray(tokens) : IStrings.toIntArray(tokens);
+        //TODO(spenceg): This lookup is broken as of 2 July 2014. It broke sometime earlier, but I only
+        //discovered the bug today.
+        throw new RuntimeException("unidirectional conditioning is not implemented / broken");
+        
       } else {
         IString[] fTokens = IStrings.toIStringArray(srcTokens);
         int[] fIndexInts = withGaps ? DTUTable.toWordIndexArray(fTokens) : IStrings.toIntArray(fTokens);
         IString[] eTokens = IStrings.toIStringArray(tgtTokens);
         int[] eIndexInts = withGaps ? DTUTable.toWordIndexArray(eTokens) : IStrings.toIntArray(eTokens);
-        indexInts = mergeInts(fIndexInts, eIndexInts);
+        idx = phraseTable.getId(new SimpleSequence<IString>(true, IStrings.toIStringArray(fIndexInts)), 
+            new SimpleSequence<IString>(true, IStrings.toIStringArray(eIndexInts)));
       }
 
-      float[] scores = IOTools.stringListToNumeric(scoreList);
-
       // Lookup this rule in the phrase table
-      int idx = FlatPhraseTable.ruleIndex.indexOf(indexInts);
       if (idx < 0) {
         throw new RuntimeException(String.format("Phrase %d not in phrase table", reader.getLineNumber()));
       }
       if (reorderingScores.get(idx) != null) {
         throw new RuntimeException(String.format("Duplicate phrase %d in phrase table", reader.getLineNumber()));
       }
+      float[] scores = IOTools.stringListToNumeric(scoreList);
+      idx -= phraseTable.minRuleIndex();
       reorderingScores.set(idx, scores);
     }
     reader.close();

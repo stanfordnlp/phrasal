@@ -24,9 +24,6 @@ public final class TokenUtils {
   /**
    * Returns true if the string contains a character in the
    * range [0-9]. False otherwise.
-   * 
-   * @param token
-   * @return
    */
   public static boolean hasDigit(String token) {
     int len = token.length();
@@ -42,9 +39,6 @@ public final class TokenUtils {
   /**
    * Map all characters in the range [0-9] to 0 in the input
    * string.
-   * 
-   * @param token
-   * @return
    */
   public static String normalizeDigits(String token) {
     StringBuilder sb = new StringBuilder(token.length());
@@ -58,9 +52,6 @@ public final class TokenUtils {
 
   /**
    * Returns true if the input token is a URL, and false otherwise.
-   * 
-   * @param token
-   * @return
    */
   @SuppressWarnings("unused")
   public static boolean isURL(String token) {
@@ -75,9 +66,6 @@ public final class TokenUtils {
   /**
    * Returns true if the token consists entirely of punctuation, and false
    * otherwise.
-   * 
-   * @param token
-   * @return
    */
   public static boolean isPunctuation(String token) {
     int len = token.length();
@@ -93,9 +81,6 @@ public final class TokenUtils {
   /**
    * True if a token consists entirely of numbers and punctuation, and false
    * otherwise.
-   * 
-   * @param token
-   * @return
    */
   public static boolean isNumbersOrPunctuation(String token) {
     int len = token.length();
@@ -111,9 +96,6 @@ public final class TokenUtils {
   /**
    * True if the input string contains at least one digit and 0 or more
    * punctuation characters. False otherwise.
-   * 
-   * @param token
-   * @return
    */
   public static boolean isNumbersWithPunctuation(String token) {
     boolean hasDigit = false;
@@ -131,9 +113,6 @@ public final class TokenUtils {
   /**
    * Returns true if a string consists entirely of numbers, punctuation, 
    * and/or symbols.
-   * 
-   * @param token
-   * @return
    */
   public static boolean isNumericOrPunctuationOrSymbols(String token) {
     int len = token.length();
@@ -149,7 +128,7 @@ public final class TokenUtils {
   /** 
    * Returns true if all letter and number characters are ASCII
    * 
-   * @param token
+   * @param token the token to examine
    * @return true/false all letter and number characters are ASCII 
    */
   public static boolean isASCII(String token) {

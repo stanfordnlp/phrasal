@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.pt;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -19,7 +18,7 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
-    PhraseGenerator<TK,FV>, PhraseTable<TK> {
+    PhraseGenerator<TK,FV> {
   protected RuleFeaturizer<TK, FV> phraseFeaturizer;
 
   @Override
@@ -61,10 +60,8 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
     this.phraseFeaturizer = phraseFeaturizer;
   }
 
-  @Override
   abstract public String getName();
 
-  @Override
   abstract public List<Rule<TK>> query(
       Sequence<TK> sequence);
 
@@ -73,7 +70,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   
   @Override
   abstract public int longestTargetPhrase();
-
+  
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
     phraseFeaturizer = featurizer;

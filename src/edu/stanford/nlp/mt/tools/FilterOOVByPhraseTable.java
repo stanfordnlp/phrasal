@@ -7,17 +7,18 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
-import edu.stanford.nlp.mt.decoder.util.PhraseGeneratorFactory;
 import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.pt.PhraseGenerator;
+import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.pt.PhraseTable;
 import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Filter OOVs from an input file given a phrase table.c
@@ -38,16 +39,16 @@ public class FilterOOVByPhraseTable {
    * @throws IOException
    */
   public static PhraseGenerator<IString,String> load(String filename) throws IOException {
-    FlatPhraseTable.createIndex(false);
+//    FlatPhraseTable.createIndex(false);
     String generatorName = PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
 
-    PhraseGenerator<IString,String> phraseGenerator =  
+    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair =  
         PhraseGeneratorFactory.<String>factory(false, generatorName, filename, String.valueOf(QUERY_LIMIT));
-    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-        Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(true, FlatPhraseTable.sourceIndex)),
+    PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
+        Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(true)),
         CombinedPhraseGenerator.Type.STRICT_DOMINANCE, QUERY_LIMIT);
 
-    FlatPhraseTable.lockIndex();
+//    FlatPhraseTable.lockIndex();
 
     return phraseGenerator;
   }

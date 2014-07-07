@@ -36,6 +36,8 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     PHRASE_SCORE_NAMES = new String[NUM_SYNTHETIC_SCORES];
     PHRASE_SCORES = new float[NUM_SYNTHETIC_SCORES];
     for (int i = 0; i < NUM_SYNTHETIC_SCORES; ++i) {
+      // TODO(spenceg) This ignores the phrase penalty. Bad for now! But this is another
+      // reason why the phrase penalty should be a separate featurizer.
       // Emulate the FlatPhraseTable feature naming convention
       PHRASE_SCORE_NAMES[i] = String.format("%s.%d", FlatPhraseTable.FEATURE_PREFIX, i);
       PHRASE_SCORES[i] = -99.0f;

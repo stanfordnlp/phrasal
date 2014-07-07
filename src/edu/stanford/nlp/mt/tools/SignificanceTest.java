@@ -4,8 +4,10 @@ import java.util.List;
 import java.util.Random;
 
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
+import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
-import edu.stanford.nlp.mt.metrics.MetricFactory;
+import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
@@ -38,10 +40,16 @@ public class SignificanceTest {
     return incEval.score();
   }
 
+  /**
+   * Runs the significance test, applying NIST tokenization to the input.
+   * 
+   * @param args
+   * @throws Exception
+   */
   static public void main(String[] args) throws Exception {
     if (args.length != 4) {
       System.err
-          .printf("Usage: java %s [bleu|ter] reference_prefix system1 system2%n", SignificanceTest.class.getName());
+          .printf("Usage: java %s metric_name reference_prefix system1 system2%n", SignificanceTest.class.getName());
       System.exit(-1);
     }
     String evalMetricName = args[0];
@@ -50,10 +58,11 @@ public class SignificanceTest {
     String system2TransFilename = args[3];
 
     // Load everything we need
-    EvaluationMetric<IString, String> eval = MetricFactory.metric(
-        evalMetricName, referencePrefix);
-    List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename);
-    List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename);
+    boolean doNIST = true;
+    List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix), doNIST);
+    EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricName, references);
+    List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename, doNIST);
+    List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename, doNIST);
 
     if (system1Trans.size() != system2Trans.size()) {
       System.err
@@ -100,7 +109,7 @@ public class SignificanceTest {
         matchedOrExceededDiffs++;
     }
     double p = (matchedOrExceededDiffs + 1.0) / (SAMPLES + 1.0);
-    System.out.printf("\np = %f (%d+1)/(%d+1)%n", p, matchedOrExceededDiffs,
+    System.out.printf("%np = %f (%d+1)/(%d+1)%n", p, matchedOrExceededDiffs,
         SAMPLES);
   }
 }

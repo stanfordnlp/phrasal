@@ -3,12 +3,12 @@ package edu.stanford.nlp.mt.pt;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.stanford.nlp.mt.pt.TranslationModelVocabulary.Vocabulary;
 import edu.stanford.nlp.mt.util.HasIntegerIdentity;
-import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 
@@ -23,29 +23,29 @@ import edu.stanford.nlp.util.Generics;
 public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> extends
     AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
 
-  public static final String PHRASE_TABLE_NAME = "IdentityPhraseGenerator(Dyn)";
+  public static final String PHRASE_TABLE_NAME = UnknownWordPhraseGenerator.class.getName();
   public static final String UNK_FEATURE_NAME = "TM.UNK";
 
-  // do we need to account for "(0) (1)", etc?
-  public static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
-      .getPhraseAlignment(PhraseAlignment.PHRASE_ALIGNMENT);
+  private static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
+      .getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
 
   private final boolean dropUnknownWords;
   private final RawSequence<TK> empty = new RawSequence<TK>();
-  private final IntegerArrayIndex sourceIndex;
   private final String[] featureNames = { UNK_FEATURE_NAME };
   private final float[] featureValues = { (float) 1.0 };
-
+  
+  private final Vocabulary sourceVocab = TranslationModelVocabulary.getSourceInstance();
+  
   /**
    * Constructor.
    * 
    * @param dropUnknownWords
+   * @param phraseGenerator 
    * @param sourceIndex 
    */
-  public UnknownWordPhraseGenerator(boolean dropUnknownWords, IntegerArrayIndex sourceIndex) {
+  public UnknownWordPhraseGenerator(boolean dropUnknownWords) {
     super(null);
     this.dropUnknownWords = dropUnknownWords;
-    this.sourceIndex = sourceIndex;
   }
 
   @Override
@@ -58,6 +58,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
     return Arrays.asList(featureNames);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<Rule<TK>> query(Sequence<TK> sequence) {
     if (sequence.size() > longestSourcePhrase()) {
@@ -66,9 +67,8 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
     List<Rule<TK>> list = Generics.newLinkedList();
 
     // Check to see if this word is unknown
-    int[] foreignInts = Sequences.toIntArray(sequence);
-    int sIndex = sourceIndex.indexOf(foreignInts);
-    if (sIndex < 0) {
+    Sequence<IString> seq = (Sequence<IString>) sequence;
+    if ( ! sourceVocab.contains(seq)) {
       RawSequence<TK> raw = new RawSequence<TK>(sequence);
       final String word = sequence.get(0).toString();
 

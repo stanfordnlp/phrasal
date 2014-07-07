@@ -44,7 +44,8 @@ while(<STDIN>) {
   if($field eq 'ttable-file' ||
     $field eq 'lmodel-file' ||
     $field eq 'additional-featurizers' ||
-    $field eq 'input-properties') {
+    $field eq 'input-properties' ||
+    $field eq 'reordering-model') {
     if(s/DEVID/$newid/g || s/$oldid/$newid/g) {
       if($field eq 'additional-featurizers') {
         /\((.*)\)/;

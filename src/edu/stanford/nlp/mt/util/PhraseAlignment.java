@@ -27,15 +27,15 @@ public class PhraseAlignment {
   // Hence, storing these alignments typically has the cost of just storing one
   // pointer in memory.
 
-  public static final String PHRASE_ALIGNMENT = "I-I";
+  public static final String MONOTONE_ALIGNMENT = "I-I";
   
-  final IString str;
-  public final int[][] t2s;
+  private final IString str;
+  private final int[][] t2s;
 
   private PhraseAlignment(String s) {
     // System.err.println("align: "+s);
     String stringRep = s.intern();
-    if (stringRep.equals(PHRASE_ALIGNMENT)) {
+    if (stringRep.equals(MONOTONE_ALIGNMENT)) {
       // No internal alignment
       t2s = null;
     } else {

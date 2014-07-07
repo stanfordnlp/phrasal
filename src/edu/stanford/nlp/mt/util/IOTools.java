@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -51,9 +52,7 @@ public final class IOTools {
 
   /**
    * Converts a string list of scores to float.
-   * 
-   * @param scoreList
-   * @return
+   *
    * @throws NumberFormatException
    */
   public static float[] stringListToNumeric(List<String> scoreList) throws NumberFormatException {
@@ -107,7 +106,6 @@ public final class IOTools {
     PrintStream output = null;
     try {
       if (fileName != null) {
-        System.err.println("output file: " + fileName);
         if (fileName.endsWith(".gz")) {
           output = new PrintStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
               fileName))), false, encoding);
@@ -276,5 +274,34 @@ public final class IOTools {
       sb.append(nl);
     }
     nbestListWriter.append(sb.toString());
+  }
+  
+  /**
+   * Return a list of files given a path prefix, e.g., passing the path
+   *  /home/me/ref  will return all files in /home/me that begin with ref.
+   */
+  public static String[] fileNamesFromPathPrefix(String pathPrefix) {
+    File p = new File(pathPrefix);
+    final String filePrefix = p.getName();
+    File folder = p.getParent() == null ? new File(".") : new File(p.getParent());
+    if (folder.exists() && folder.isDirectory()) {
+      String[] fileNames = folder.list(new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+          return name.startsWith(filePrefix);
+        }
+      });
+      for (int i = 0; i < fileNames.length; ++i) {
+        File path = new File(folder, fileNames[i]);
+        fileNames[i] = path.getPath();
+      }
+      return fileNames;
+    
+    } else if (p.exists()) {
+      return new String[] { p.getPath() };
+    
+    } else {
+      return new String[0];
+    }
   }
 }

@@ -17,28 +17,24 @@ import edu.stanford.nlp.util.Generics;
  */
 public class PhrasePenaltyFeaturizer<TK> implements
     RuleFeaturizer<TK, String> {
-  static public String FEATURE_NAME = "TM:phrasePenalty";
+  private static String FEATURE_NAME = "PhrasePenalty";
   // mg2008: please don't change to "= 1" since not exactly the same value:
-  private double phrasePenalty = Math.log(2.718);
+  private static final double FEATURE_VALUE = Math.log(2.718);
 
-  public PhrasePenaltyFeaturizer(String... args) {
-    if (args.length >= 1) {
-      assert (args.length == 1);
-      phrasePenalty = Double.parseDouble(args[0]);
-    }
+  // Cache since this value will simply be aggregated by the feature API
+  private static final List<FeatureValue<String>> features = Generics.newArrayList(1);
+  static {
+    features.add(new FeatureValue<String>(FEATURE_NAME, FEATURE_VALUE));
   }
-
+  
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<TK, String> f) {
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(FEATURE_NAME, phrasePenalty));
     return features;
   }
 
   @Override
-  public void initialize() {
-  }
+  public void initialize() {}
 
   @Override
   public boolean isolationScoreOnly() {

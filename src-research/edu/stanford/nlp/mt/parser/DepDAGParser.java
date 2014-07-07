@@ -39,7 +39,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.OpenAddressCounter;
-import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.common.Tagger;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.DependencyScoring;
 import edu.stanford.nlp.trees.DependencyScoring.Score;
@@ -253,10 +253,10 @@ public class DepDAGParser implements Parser, Serializable {
       if(s.input.size() > 1) parsePhrase(s, 2);
     }
     CoreLabel last = sentence.get(sentence.size()-1);
-    if(!last.get(TextAnnotation.class).equals(TaggerConstants.EOS_WORD)) {
+    if(!last.get(TextAnnotation.class).equals(Tagger.EOS_WORD)) {
       CoreLabel cl = new CoreLabel();
-      cl.set(TextAnnotation.class, TaggerConstants.EOS_WORD);
-      cl.set(PartOfSpeechAnnotation.class, TaggerConstants.EOS_TAG);
+      cl.set(TextAnnotation.class, Tagger.EOS_WORD);
+      cl.set(PartOfSpeechAnnotation.class, Tagger.EOS_TAG);
       cl.set(IndexAnnotation.class, last.get(IndexAnnotation.class)+1);
       s.input.push(cl);
       if(s.input.size() > 1) parsePhrase(s, 2);
@@ -370,8 +370,8 @@ public class DepDAGParser implements Parser, Serializable {
       this.parseToken(struc, w, labelRelation);
     }
     CoreLabel w = new CoreLabel();
-    w.set(TextAnnotation.class, TaggerConstants.EOS_WORD);
-    w.set(PartOfSpeechAnnotation.class, TaggerConstants.EOS_TAG);
+    w.set(TextAnnotation.class, Tagger.EOS_WORD);
+    w.set(PartOfSpeechAnnotation.class, Tagger.EOS_TAG);
     w.set(IndexAnnotation.class, idx++);
     this.parseToken(struc, w, labelRelation);
 

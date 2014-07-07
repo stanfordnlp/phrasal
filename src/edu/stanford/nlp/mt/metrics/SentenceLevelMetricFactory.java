@@ -8,6 +8,8 @@ import edu.stanford.nlp.util.Generics;
 /**
  * Factory for sentence-level scoring metrics.
  * 
+ * TODO(spenceg) Make the string specifications static final string constants.
+ * 
  * @author Spence Green
  *
  */
@@ -16,6 +18,73 @@ public final class SentenceLevelMetricFactory {
   private static final int DEFAULT_ORDER = 4;
   
   private SentenceLevelMetricFactory() {}
+  
+  /**
+   * Return the corresponding corpus-level specification from
+   * <code>CorpusLevelMetricFactory</code>.
+   * 
+   * TODO(spenceg): These string constants should be static final variables
+   * in CorpusLevelMetricFactory.
+   * 
+   * @param scoreMetricStr Sentence-level metric specification.
+   * @return
+   */
+  public static String sentenceLevelToCorpusLevel(String scoreMetricStr) {
+    if (scoreMetricStr.equals("bleu-smooth")) {
+      return "bleu";
+
+    } else if (scoreMetricStr.equals("bleu-smooth-unscaled")) {
+      return "bleu";
+      
+    } else if (scoreMetricStr.equals("bleu-nakov")) {
+      return "bleu";
+    
+    } else if (scoreMetricStr.equals("bleu-nakov-unscaled")) {
+      return "bleu";
+    
+    } else if (scoreMetricStr.equals("bleu-chiang")) {
+      return "bleu";
+
+    } else if (scoreMetricStr.equals("bleu-cherry")) {
+      return "bleu";
+
+    } else if (scoreMetricStr.equals("tergain")) {
+      return "terp";
+      
+    } else if (scoreMetricStr.equals("terp")) {
+      return scoreMetricStr;
+      
+    } else if (scoreMetricStr.equals("terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("2bleu-terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("bleu-terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("bleu-2terp")) {
+      return scoreMetricStr;
+    
+    } else if (scoreMetricStr.equals("bleus-2terp")) {
+      return "bleu-2terp";
+    
+    } else if (scoreMetricStr.equals("bleu-terp/2") || scoreMetricStr.equals("bleus-terp/2")) {
+      return "bleu-terp/2";
+    
+    } else if (scoreMetricStr.equals("bleuX2terp")) {
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+    
+    } else if (scoreMetricStr.equals("bleuXterp")) {
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+    
+    } else if (scoreMetricStr.equals("bleu-2fastterp")) {
+      return "bleu-2terp";
+      
+    } else {
+      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+    }
+  }
   
   /**
    * Load a scoring metric from a string key.
@@ -51,6 +120,9 @@ public final class SentenceLevelMetricFactory {
       // Cherry and Foster (2012)
       return new BLEUOracleCost<IString,String>(DEFAULT_ORDER, true);
     
+    } else if (scoreMetricStr.equals("tergain")) {
+      return new SLTERGain<IString,String>();
+      
     } else if (scoreMetricStr.equals("terp")) {
       return new SLTERpMetric<IString,String>();
     
@@ -75,13 +147,27 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-s-2terp")) {
+    } else if (scoreMetricStr.equals("bleus-2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERpMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
+    } else if (scoreMetricStr.equals("bleu-terp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>(true));
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+    
+    } else if (scoreMetricStr.equals("bleus-terp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      metrics.add(new BLEUGain<IString,String>());
+      metrics.add(new SLTERpMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{0.5, 0.5}, metrics);
+      
     } else if (scoreMetricStr.equals("bleuX2terp")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));

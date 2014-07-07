@@ -1,14 +1,12 @@
-Phrasal machine translation package
-====================================================
-
-Welcome to the Phrasal machine translation package! 
+Phrasal machine translation system
+==================================================== 
 
 License:
 ========
 
 Phrasal is licensed under the GPL. For details, please see the file LICENSE.txt in the root directory of this software package.
 
-Copyright (c) 2007-2012 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
+Copyright (c) 2007-2014 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
 
 
 Dependencies:
@@ -18,16 +16,18 @@ The Phrasal decoder requires that you also install the latest Stanford CoreNLP s
 
 http://nlp.stanford.edu/software/corenlp.shtml
 
+Some advanced Phrasal features have external dependencies. A script to fetch
+and configure these dependencies is included in scripts/get-dependencies.sh. If you are compiling Phrasal,
+then the "ant compile" target automatically runs this script for you.
+
+
 Contributors:
 =============
 
-    * Daniel Cer (original author and current maintainer)
+    * Daniel Cer (original author)
     * Michel Galley
     * Spence Green
-    * Pi-Chuan Chang
-    * Heeyoung Lee
     * John Bauer
-    * Karthik Raghunathan
     * Chris Manning
 
 
@@ -35,6 +35,9 @@ Documentation / User Guide:
 ==================
 
 http://www-nlp.stanford.edu/wiki/Software/Phrasal
+
+Please see the user guide for complete installation and configuration instructions. The guide also
+contains a tutorial for building an MT system from raw text.
 
 Support:
 ========

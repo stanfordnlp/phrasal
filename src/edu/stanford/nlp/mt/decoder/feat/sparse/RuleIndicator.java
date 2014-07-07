@@ -55,16 +55,15 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
    */
   public RuleIndicator(String... args) {
     Properties options = FeatureUtils.argsToProperties(args);
-    // Thang Mar14: use PropertiesUtils.getBool so that we can set, e.g., addLexicalized=false
-    this.addLexicalizedRule = PropertiesUtils.getBool(options, "addLexicalized"); //options.containsKey("addLexicalized");
-    this.addClassBasedRule = PropertiesUtils.getBool(options, "addClassBased"); //options.containsKey("addClassBased");
+    this.addLexicalizedRule = options.containsKey("addLexicalized");
+    this.addClassBasedRule = options.containsKey("addClassBased");
 
     this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
     if (addClassBasedRule) {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = PropertiesUtils.getBool(options, "domainFeature"); //options.containsKey("domainFeature");
+    this.addDomainFeatures = options.containsKey("domainFeature");
     this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
   }
 

@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.pt;
 
-import edu.stanford.nlp.mt.decoder.util.PhraseGenerator;
 
 /**
  * 

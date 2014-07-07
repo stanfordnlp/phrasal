@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.*;
 
+import edu.stanford.nlp.mt.tools.NISTTokenizer;
+
 
 /**
  * Utility functions for working with {@link IString}s.
@@ -20,14 +22,22 @@ public final class IStrings {
   /**
    * Convert a newline-delimited file to a list of Sequences.
    * 
-   * @param filename
    * @return the list of Sequences represented by the file
    */
   static public List<Sequence<IString>> tokenizeFile(String filename) {
+    return tokenizeFile(filename, false);
+  }
+  
+  /**
+   * Convert a newline-delimited file to a list of Sequences, optionally
+   * applying NIST tokenization.
+   */
+  static public List<Sequence<IString>> tokenizeFile(String filename, boolean doNIST) {
     List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
       for (String line; (line = reader.readLine()) != null;) {
+        if (doNIST) line = NISTTokenizer.tokenize(line);
         sequences.add(IStrings.tokenize(line));
       }
       reader.close();
@@ -36,13 +46,12 @@ public final class IStrings {
     }
     return sequences;
   }
+  
+  
 
   /**
    * Apply whitespace tokenization then convert to a Sequence
    * of IString objects.
-   * 
-   * @param str
-   * @return
    */
   static public Sequence<IString> tokenize(String str) {
     String[] strings = str.trim().split("\\s+");
@@ -52,9 +61,6 @@ public final class IStrings {
   
   /**
    * Convert String to IString.
-   * 
-   * @param strings
-   * @return
    */
   static public IString[] toIStringArray(String[] strings) {
     IString[] istrs = new IString[strings.length];
@@ -66,9 +72,6 @@ public final class IStrings {
   
   /**
    * Convert a List of String to a Sequence.
-   * 
-   * @param seq
-   * @return
    */
   public static Sequence<IString> toIStringSequence(List<String> seq) {
     IString[] istrs = toIStringArray(seq);
@@ -77,9 +80,6 @@ public final class IStrings {
 
   /**
    * Convert a collection of String to an IString array.
-   * 
-   * @param strings
-   * @return
    */
   static public IString[] toIStringArray(Collection<String> strings) {
     IString[] istrs = new IString[strings.size()];
@@ -92,9 +92,6 @@ public final class IStrings {
 
   /**
    * Convert an array of IString to an array of the underlying ids.
-   * 
-   * @param strings
-   * @return
    */
   static public int[] toIntArray(IString[] strings) {
     int[] intArray = new int[strings.length];
@@ -106,9 +103,6 @@ public final class IStrings {
 
   /**
    * Convert an array of ids to IString.
-   * 
-   * @param ids
-   * @return
    */
   static public IString[] toIStringArray(int[] ids) {
     IString[] istrs = new IString[ids.length];
@@ -120,9 +114,6 @@ public final class IStrings {
 
   /**
    * Convert an array of ids to an array of String.
-   * 
-   * @param ids
-   * @return
    */
   static public String[] toStringArray(int[] ids) {
     String[] strs = new String[ids.length];

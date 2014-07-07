@@ -19,7 +19,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.tagger.common.TaggerConstants;
+import edu.stanford.nlp.tagger.common.Tagger;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
@@ -83,8 +83,8 @@ public class InteractiveLinearParser {
         // finalize parse for the current prefix/sentence
         List<CoreLabel> phrase = new ArrayList<CoreLabel>();
         CoreLabel w = new CoreLabel();
-        w.set(TextAnnotation.class, TaggerConstants.EOS_WORD);
-        w.set(PartOfSpeechAnnotation.class, TaggerConstants.EOS_TAG);
+        w.set(TextAnnotation.class, Tagger.EOS_WORD);
+        w.set(PartOfSpeechAnnotation.class, Tagger.EOS_TAG);
         w.set(IndexAnnotation.class, idx++);
         phrase.add(w);
         parser.parsePhrase(struc, phrase, labelRelation);

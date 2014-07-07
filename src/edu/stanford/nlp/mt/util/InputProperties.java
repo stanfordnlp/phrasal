@@ -29,9 +29,6 @@ public class InputProperties extends HashMap<InputProperty, Object> {
   
   /**
    * Set the phrase table indicator index associated with a domain.
-   * 
-   * @param domain
-   * @param index
    */
   public static void setDomainIndex(String domain, String index) {
     domainToRuleIndex.put(domain, index);
@@ -51,9 +48,6 @@ public class InputProperties extends HashMap<InputProperty, Object> {
   
   /**
    * Parse a string into an <code>InputProperties</code> object.
-   * 
-   * @param propsString
-   * @return
    */
   public static InputProperties fromString(String propsString) {
     InputProperties inputProperties = new InputProperties();
@@ -71,9 +65,6 @@ public class InputProperties extends HashMap<InputProperty, Object> {
 
   /**
    * Parse an input file into an InputProperties file. 
-   * 
-   * @param filename
-   * @return
    */
   public static List<InputProperties> parse(File file) {
     LineNumberReader reader = IOTools.getReaderFromFile(file);

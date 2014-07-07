@@ -500,6 +500,10 @@ public class PhraseExtract {
       this.eLine = eLine;
       this.aLine = aLine;
     }
+    @Override
+    public String toString() {
+      return String.format("%d: %s ||| %s ||| %s", lineNb, fLine, eLine, aLine);
+    }
   }
   
   /**
@@ -529,7 +533,8 @@ public class PhraseExtract {
     public Boolean process(ExtractorInput input) {
       try {
         sent.init(input.lineNb, input.fLine, input.eLine, input.aLine, false, false);
-      } catch (IOException e) {
+      } catch (Exception e) {
+        System.err.println("Invalid line: " + input.toString());
         throw new RuntimeException(e);
       }
       phraseEx.extractPhrases(sent);
