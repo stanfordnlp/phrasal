@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
+import edu.stanford.nlp.mt.util.Sequence;
 
 /**
  * 
@@ -90,6 +91,16 @@ public class GeometricMeanCombinationMetric<TK, FV> extends AbstractMetric<TK, F
       }
       return this;
     }
+
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> trans) {
+      for (IncrementalEvaluationMetric<TK, FV> incMetric : incMetrics) {
+        incMetric.add(trans);
+      }
+      return this;
+    }
+
 
     @Override
     public IncrementalEvaluationMetric<TK, FV> replace(int index,

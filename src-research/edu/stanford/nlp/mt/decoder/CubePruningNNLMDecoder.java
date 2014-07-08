@@ -26,7 +26,7 @@ import edu.stanford.nlp.mt.lm.JointNNLM;
 import edu.stanford.nlp.mt.lm.NNLM;
 import edu.stanford.nlp.mt.lm.PseudoNNLM;
 import edu.stanford.nlp.mt.lm.TargetNNLM;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.InputProperties;

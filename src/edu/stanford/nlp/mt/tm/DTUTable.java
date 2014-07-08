@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.pt;
+package edu.stanford.nlp.mt.tm;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -86,7 +86,7 @@ implements PhraseTable<IString> {
     int countScores = init(f);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
-      scoreNames[i] = String.format("%s.%d", FlatPhraseTable.FEATURE_PREFIX, i);
+      scoreNames[i] = String.format("%s.%d", FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
     }
   }
   

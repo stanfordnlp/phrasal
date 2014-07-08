@@ -459,8 +459,19 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> tran) {
+      return add(-1, tran);
+    }
+
     public IncrementalEvaluationMetric<TK, FV> add(int nbestId,
         ScoredFeaturizedTranslation<TK, FV> tran) {
+      return add(nbestId, tran == null ? null : tran.translation);
+    }
+
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(int nbestId,
+        Sequence<TK> translation) {
       int pos = sequences.size();
       if (pos >= maxReferenceCounts.size()) {
         throw new RuntimeException(String.format(
@@ -469,22 +480,22 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
 
       if (smooth) {
-        if (tran != null) {
-          sequences.add(tran.translation);
-          smoothSum += getLocalSmoothScore(tran.translation, pos, nbestId);
+        if (translation != null) {
+          sequences.add(translation);
+          smoothSum += getLocalSmoothScore(translation, pos, nbestId);
           smoothCnt++;
         } else {
           sequences.add(null);
         }
       } else {
-        if (tran != null) {
+        if (translation != null) {
           Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(
-              tran.translation, order);
+              translation, order);
           Metrics.clipCounts(candidateCounts, maxReferenceCounts.get(pos));
-          sequences.add(tran.translation);
-          incCounts(candidateCounts, tran.translation);
-          c += tran.translation.size();
-          r += bestMatchLength(refLengths[pos], tran.translation.size());
+          sequences.add(translation);
+          incCounts(candidateCounts, translation);
+          c += translation.size();
+          r += bestMatchLength(refLengths[pos], translation.size());
         } else {
           sequences.add(null);
         }
@@ -502,8 +513,9 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public IncrementalEvaluationMetric<TK, FV> replace(int index, int nbestId,
         ScoredFeaturizedTranslation<TK, FV> trans) {
       if (index >= sequences.size()) {
+        Sequence<TK> is_null = null;
         for (int i = sequences.size(); i < index; i++)
-          add(null);
+          add(is_null);
         add(trans);
       }
       Counter<Sequence<TK>> candidateCounts = null;

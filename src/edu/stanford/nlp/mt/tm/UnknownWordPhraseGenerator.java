@@ -1,9 +1,9 @@
-package edu.stanford.nlp.mt.pt;
+package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.pt.TranslationModelVocabulary.Vocabulary;
+import edu.stanford.nlp.mt.tm.TranslationModelVocabulary.Vocabulary;
 import edu.stanford.nlp.mt.util.HasIntegerIdentity;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;

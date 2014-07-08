@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.EmptySequence;

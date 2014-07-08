@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.base;
 
 import java.util.List;
 
-import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.MandarinNumberPhraseGenerator;

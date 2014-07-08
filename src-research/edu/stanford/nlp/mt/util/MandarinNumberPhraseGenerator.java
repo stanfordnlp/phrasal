@@ -13,8 +13,8 @@ import java.util.HashSet;
 import java.math.BigDecimal;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.pt.AbstractPhraseGenerator;
-import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.tm.AbstractPhraseGenerator;
+import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.RawSequence;

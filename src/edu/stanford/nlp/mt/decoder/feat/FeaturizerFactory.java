@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.PhrasePenaltyFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.SourceGapFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TargetGapFeaturizer;
@@ -72,7 +73,7 @@ public final class FeaturizerFactory {
     if (gapType == GapType.target || gapType == GapType.both)
       gapFeaturizers.add(new TargetGapFeaturizer());
 
-    int numPhraseFeatures = paramPairs.containsKey(NUM_PHRASE_FEATURES) ?
+    final int numPhraseFeatures = paramPairs.containsKey(NUM_PHRASE_FEATURES) ?
         Integer.valueOf(paramPairs.get(NUM_PHRASE_FEATURES)) : Integer.MAX_VALUE;
     
     // Model features
@@ -87,10 +88,8 @@ public final class FeaturizerFactory {
       List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
       baselineFeaturizers.addAll(gapFeaturizers);
 
-      DerivationFeaturizer<IString, String> arpaLmFeaturizer = null;
-      Featurizer<IString,String> phraseTableScoresFeaturizer;
-
       // ARPA LM
+      DerivationFeaturizer<IString, String> arpaLmFeaturizer = null;
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       if (lm != null && ! lm.equals("")) {
         arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
@@ -99,8 +98,7 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new TranslationModelFeaturizer(numPhraseFeatures);
-      baselineFeaturizers.add(phraseTableScoresFeaturizer);
+      baselineFeaturizers.add(new TranslationModelFeaturizer(numPhraseFeatures));
 
       // Linear distortion
       baselineFeaturizers.add(linearDistortionFeaturizer);
@@ -112,7 +110,6 @@ public final class FeaturizerFactory {
       pharaohFeaturizers.addAll(gapFeaturizers);
 
       DerivationFeaturizer<IString, String> arpaLmFeaturizer;
-      Featurizer<IString,String> phraseTableScoresFeaturizer, wordPenaltyFeaturizer, unknownWordFeaturizer;
       // ARPA LM
       String lm = paramPairs.get(ARPA_LM_PARAMETER);
       if (lm != null) {
@@ -122,19 +119,19 @@ public final class FeaturizerFactory {
       }
 
       // Precomputed phrase to phrase translation scores
-      phraseTableScoresFeaturizer = new TranslationModelFeaturizer(numPhraseFeatures);
-      pharaohFeaturizers.add(phraseTableScoresFeaturizer);
+      pharaohFeaturizers.add(new TranslationModelFeaturizer(numPhraseFeatures));
 
       // Linear distortion
       pharaohFeaturizers.add(linearDistortionFeaturizer);
 
       // Word Penalty
-      wordPenaltyFeaturizer = new WordPenaltyFeaturizer<IString>();
-      pharaohFeaturizers.add(wordPenaltyFeaturizer);
-
+      pharaohFeaturizers.add(new WordPenaltyFeaturizer<IString>());
+      
+      // Phrase Penalty
+      pharaohFeaturizers.add(new PhrasePenaltyFeaturizer<IString>());
+      
       // Unknown Word Featurizer
-      unknownWordFeaturizer = new UnknownWordFeaturizer<IString>();
-      pharaohFeaturizers.add(unknownWordFeaturizer);
+      pharaohFeaturizers.add(new UnknownWordFeaturizer<IString>());
 
       // return combined model
       return new CombinedFeaturizer<IString, String>(pharaohFeaturizers);

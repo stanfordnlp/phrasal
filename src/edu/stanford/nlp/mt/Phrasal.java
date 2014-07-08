@@ -61,16 +61,16 @@ import edu.stanford.nlp.mt.metrics.Metrics;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
-import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.DTUTable;
-import edu.stanford.nlp.mt.pt.ExtendedLexicalReorderingTable;
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
-import edu.stanford.nlp.mt.pt.LexicalReorderingTable;
-import edu.stanford.nlp.mt.pt.PhraseGenerator;
-import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
-import edu.stanford.nlp.mt.pt.PhraseTable;
-import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tm.DTUTable;
+import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
+import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
+import edu.stanford.nlp.mt.tm.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.tm.PhraseTable;
+import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -126,7 +126,7 @@ public class Phrasal {
     sb.append("Usage: java ").append(Phrasal.class.getName()).append(" OPTS [ini_file] < input > output").append(nl).append(nl)
       .append("Phrasal: A phrase-based machine translation decoder from the Stanford NLP group.").append(nl).append(nl)
       .append("Command-line arguments override arguments specified in the optional ini_file:").append(nl)
-      .append("  -").append(TRANSLATION_TABLE_OPT).append(" filename : Translation model file.").append(nl)
+      .append("  -").append(TRANSLATION_TABLE_OPT).append(" filename : Translation model file. Multiple models can be specified by separating filenames with colons.").append(nl)
       .append("  -").append(LANGUAGE_MODEL_OPT).append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl)
       .append("  -").append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl)
       .append("  -").append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl)
@@ -135,7 +135,7 @@ public class Phrasal {
       .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).").append(nl)
       .append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl)
       .append("  -").append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
-      .append("  -").append(REORDERING_MODEL).append(" type filename : Lexicalized re-ordering model where type is [classic|hierarchical].").append(nl)
+      .append("  -").append(REORDERING_MODEL).append(" type filename [options] : Lexicalized re-ordering model where type is [classic|hierarchical]. Multiple models can be separating filenames with colons.").append(nl)
       .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
       .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
       .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
@@ -146,7 +146,7 @@ public class Phrasal {
       .append("  -").append(USE_ITG_CONSTRAINTS).append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl)
       .append("  -").append(RECOMBINATION_MODE).append(" name : Recombination mode [pharoah,exact,dtu] (default: exact).").append(nl)
       .append("  -").append(DROP_UNKNOWN_WORDS).append(" boolean : Drop unknown source words from the output (default: false)").append(nl)
-      .append("  -").append(INDEPENDENT_PHRASE_TABLES).append(" filename [filename] : List of additional phrase tables that cannot have associated reordering models.").append(nl)
+      .append("  -").append(INDEPENDENT_PHRASE_TABLES).append(" filename [filename] : Phrase tables that cannot have associated reordering models. Optionally supports custom per-table prefixes for features (e.g., pref:filename).").append(nl)
       .append("  -").append(ALIGNMENT_OUTPUT_FILE).append(" filename : Output word-word alignments to file for each translation.").append(nl)
       .append("  -").append(PREPROCESSOR_FILTER).append(" language [opts] : Pre-processor to apply to source input.").append(nl)
       .append("  -").append(POSTPROCESSOR_FILTER).append(" language [opts] : Post-processor to apply to target output.").append(nl)
@@ -530,28 +530,19 @@ public class Phrasal {
       }
     }
 
-    // Unknown word policy
-    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
-      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
-    }
-    System.err.printf("Phrase table: %s Unknown words policy: %s%n", phraseTable, (dropUnknownWords ? "Drop" : "Keep"));
-
     // Phrase table query size limit
     if (config.containsKey(OPTION_LIMIT_OPT)) { 
-      this.ruleQueryLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
+      ruleQueryLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
     }
-    final String optionLimitString = String.valueOf(this.ruleQueryLimit);
-    System.err.println("Phrase table option limit: " + optionLimitString);
+    System.err.printf("Phrase table option limit: %d%n", ruleQueryLimit);
 
     // Create the phrase table(s) 
-    String generatorName = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
-        : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
-    
+    final String optionLimitString = String.valueOf(this.ruleQueryLimit);
+    final String phraseTableType = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
+        : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR; 
     Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        optionLimitString == null ? PhraseGeneratorFactory.<String>factory(
-        false, generatorName, phraseTable)
-        : PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable,
-            optionLimitString);
+        PhraseGeneratorFactory.<String>factory(phraseTableType, phraseTable,
+            makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString));
     phraseGenerator = phraseTablePair.first();
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
@@ -559,14 +550,33 @@ public class Phrasal {
        List<PhraseGenerator<IString,String>> generators = Generics.newLinkedList();
        generators.add(phraseGenerator);
        for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
+         String[] fields = filename.split(":");
+         String[] generatorOptions;
+         if (fields.length == 1) {
+           generatorOptions = new String[1];
+           generatorOptions[0] = makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString);
+         } else if (fields.length == 2) {
+           generatorOptions = new String[2];
+           generatorOptions[0] = makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString);
+           generatorOptions[1] = makePair(PhraseGeneratorFactory.FEATURE_PREFIX_OPTION, fields[0]);
+           filename = fields[1];
+         } else {
+           throw new RuntimeException("Invalid phrase table specification: " + filename);
+         }
+         System.err.printf("Loading independent phrase table: %s %s%n", filename, Arrays.toString(generatorOptions));
          Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> generatorPair =  
-             PhraseGeneratorFactory.<String>factory(false, PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, filename, optionLimitString); 
+             PhraseGeneratorFactory.<String>factory(PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, 
+                 filename, generatorOptions); 
          generators.add(generatorPair.first());
        }
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE, ruleQueryLimit);
     }
 
     // Add the OOV model
+    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
+      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
+    }
+    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
     phraseGenerator = new CombinedPhraseGenerator<IString,String>(
              Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
              CombinedPhraseGenerator.Type.STRICT_DOMINANCE, ruleQueryLimit);
@@ -581,7 +591,7 @@ public class Phrasal {
         throw new RuntimeException(REORDERING_MODEL + " parameter requires at least three arguments");
       }
       String modelType = parameters.get(0);
-      String[] modelFilenames = parameters.get(1).split(PhraseGeneratorFactory.FILENAME_SEPARATOR);
+      String[] modelFilenames = parameters.get(1).split(PhraseGeneratorFactory.SEPARATOR);
       String modelSpecification = parameters.get(2);
       parameters = parameters.subList(3, parameters.size());
       if (modelFilenames.length != phraseTables.size()) {

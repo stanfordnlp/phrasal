@@ -80,10 +80,16 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       // editDistanceCache.put(key,retVal);
       return new double[] { minEd, refCount };
     }
-
+    
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
+      return add(trans == null ? null : trans.translation);
+    }
+
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> trans) {
       if (trans == null) {
         wordEdits.add(0.0);
         refLengths.add(0.0);
@@ -91,7 +97,7 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       }
       int id = wordEdits.size();
       double[] minEdPair = minimumPositionIndependentDistance(id,
-          trans.translation);
+          trans);
       wordEdits.add(-minEdPair[0]);
       refLengths.add(minEdPair[1]);
       editSum += -minEdPair[0];

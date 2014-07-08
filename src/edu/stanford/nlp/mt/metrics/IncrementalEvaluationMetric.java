@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.metrics;
 
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
@@ -18,6 +19,9 @@ public interface IncrementalEvaluationMetric<TK, FV> extends
 	 */
   IncrementalEvaluationMetric<TK, FV> add(
       ScoredFeaturizedTranslation<TK, FV> trans);
+
+  IncrementalEvaluationMetric<TK, FV> add(
+      Sequence<TK> trans);
 
   /**
 	 * 
