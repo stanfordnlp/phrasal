@@ -79,10 +79,10 @@ public class DependencyProjectorCoNLL {
       }
     }
     
-    if (fragmentCount > 3) {
-      skippedSentences++;
-      return;
-    }
+    //if (fragmentCount > 1) {
+    //  skippedSentences++;
+    //  return;
+    //}
     
     for (int i = 0; i < tokens.size(); i++) {
       String token = tokens.get(i).word();
@@ -131,7 +131,7 @@ public class DependencyProjectorCoNLL {
       System.out.println("");
       
     }
-          
+    System.out.println();      
     processedSentences++;
     
   }
@@ -307,7 +307,7 @@ public class DependencyProjectorCoNLL {
     String sourceSentence;
     int i = 0;
     while ((sourceSentence = sourceReader.readLine()) != null) {
-      //try {
+      try {
         CoreMap sentence = getParsedSentence(annotations, i, annotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
@@ -326,9 +326,11 @@ public class DependencyProjectorCoNLL {
      
         printDependencies(dependencies, alignment.e());
         //System.err.println("---------------------------");
-      //} catch (Exception e) {
-      //  e.printStackTrace();
-      //}
+      } catch (Exception e) {
+        System.err.println("SourceSentence: " + sourceSentence);
+        e.printStackTrace();
+        return;
+      }
       i++;
     }
   
