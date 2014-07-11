@@ -13,14 +13,14 @@ DumpRow = namedtuple('DumpRow', 'username birth_country resident_of mt_opinion s
 str2bool = lambda x:True if x == '1' else False
 genre_from_url = lambda x:basename(split(x)[0])
 
-def load_sbleu_files(directory):
+def load_sbleu_files(directory, extension='sbleu_ref'):
     """
     Returns d[username][doc_id] -> BLEU
     """
     file_list = [join(directory,x) for x in os.listdir(directory)]
     d = defaultdict(dict)
     for filename in file_list:
-        if not filename.endswith('sbleu_ref'):
+        if not filename.endswith(extension):
             continue
         username = basename(filename).split('.')[0]
         with open(filename) as csv_file:

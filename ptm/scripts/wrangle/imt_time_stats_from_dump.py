@@ -20,11 +20,11 @@ import edit_distance
 
 stderr = lambda x:sys.stderr.write(str(x) + os.linesep)
 
-OutputRow = namedtuple('OutputRow', 'time last_time username user_resident_of user_mt_opinion user_gender interface doc_id segment_id src_len order genre mt_sbleu subject_sbleu is_valid edit_distance')
+OutputRow = namedtuple('OutputRow', 'time last_time username user_resident_of user_mt_opinion user_gender interface doc_id segment_id src_len order session_order interface_order genre mt_sbleu subject_sbleu subject_hbleu is_valid edit_distance')
 
 args = sys.argv[1:]
 if len(args) < 5:
-    stderr('Usage: python %s dump_file tgt_lang gender_csv out_file [bleu_directory]' % (basename(sys.argv[0])))
+    stderr('Usage: python %s dump_file tgt_lang gender_csv out_file [bleu_directory] [prefix]' % (basename(sys.argv[0])))
     stderr('bleu_directory : output of the extract translations script')
     sys.exit(-1)
 
@@ -34,15 +34,21 @@ target_lang = args[1]
 gender_file = args[2]
 out_file_name = args[3]
 bleu_directory = args[4] if len(args) > 4 else None
+quality_prefix = args[5] if len(args) > 5 else 'sbleu'
 
 user_to_gender = imt_utils.load_gender_csv(gender_file)
-user_doc_to_sbleu = imt_utils.load_sbleu_files(bleu_directory) if bleu_directory else None
+user_doc_to_sbleu = imt_utils.load_sbleu_files(bleu_directory, quality_prefix+'_ref') if bleu_directory else None
+user_doc_to_hbleu = imt_utils.load_sbleu_files(bleu_directory, quality_prefix+'_mt') if bleu_directory else None
 dump_row_list = imt_utils.load_middleware_dump(dump_file, target_lang)
 output_row_list = []
 total_translation_time = defaultdict(Counter)
 user_order_to_time = defaultdict(list)
 
 # Load and process the database dump
+session_order = 0
+condition_order = 0
+last_user = None
+last_condition = None
 for i,row in enumerate(dump_row_list):
     if i > 0 and i % 10 == 0:
         sys.stdout.write('.')
@@ -72,6 +78,14 @@ for i,row in enumerate(dump_row_list):
         total_translation_time[row.username][row.interface] += time
         total_translation_time[row.username][row.interface+'_nseg'] += 1
         order = int(row.order)
+        if not (last_user or last_condition):
+            last_user = row.username
+            last_condition = row.interface
+        if row.username != last_user:
+            session_order = 0
+            condition_order = 0
+        elif last_condition != row.interface:
+            condition_order = 0
         time_key = '%s:%d' % (row.username,order)
         user_order_to_time[time_key].append(time)
         output_row = OutputRow(time=str(time),
@@ -85,12 +99,19 @@ for i,row in enumerate(dump_row_list):
                                segment_id=segment_id,
                                src_len=str(len(segment_to_src_txt[line_id].split())),
                                order=str(order),
+                               session_order=str(session_order),
+                               interface_order=str(condition_order),
                                genre=doc_genre,
                                mt_sbleu=user_doc_to_sbleu['MT'][segment_id],
                                subject_sbleu=user_doc_to_sbleu[row.username][segment_id],
+                               subject_hbleu=user_doc_to_hbleu[row.username][segment_id],
                                is_valid='T' if int(row.valid) == 1 else 'F',
                                edit_distance=str(edist))
         output_row_list.append(output_row)
+        session_order += 1
+        condition_order += 1
+        last_condition = row.interface
+        last_user = row.username
 
 # Fill in the previous time column
 for i in xrange(len(output_row_list)):

@@ -3,7 +3,9 @@ package edu.stanford.nlp.mt.metrics;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
@@ -89,6 +91,33 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     NormalizeText.init();
   }
 
+  /**
+   * Compute the sentence-level TER score (pseudo-percentage).
+   * @param translation
+   * @param references
+   * @return
+   */
+  public static <TK> double computeLocalTERScore(Sequence<TK> translation, List<Sequence<TK>> references) {
+    TERcalc terCalc = new TERcalc(new TERcost());
+    terCalc.BEAM_WIDTH = 20;
+    
+    // uniq references to prevent (expensive) redundant calculation.
+    Set<Sequence<TK>> uniqRefs = new HashSet<Sequence<TK>>(references);
+
+    final String hyp = translation.toString();
+    double bestTER = Double.POSITIVE_INFINITY;
+    for (Sequence<TK> refSeq : uniqRefs) {
+      String ref = refSeq.toString();
+      TERalignment align = terCalc.TER(hyp, ref);
+      double ter = align.numEdits / align.numWords;
+      if (ter < bestTER) {
+        bestTER = ter;
+      }
+    }
+    
+    return bestTER;
+  }
+  
   @Override
   public TERpIncrementalMetric getIncrementalMetric() {
     return new TERpIncrementalMetric();
