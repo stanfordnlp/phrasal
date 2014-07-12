@@ -48,37 +48,28 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleu-cherry")) {
       return "bleu";
 
-    } else if (scoreMetricStr.equals("tergain")) {
+    } else if (scoreMetricStr.equals("ter") || scoreMetricStr.equals("tergain")) {
       return "ter";
       
-    } else if (scoreMetricStr.equals("ter")) {
-      return scoreMetricStr;
-      
-    } else if (scoreMetricStr.equals("ter")) {
+    } else if (scoreMetricStr.equals("2bleu-ter") || scoreMetricStr.equals("2bleun-ter")) {
       return scoreMetricStr;
     
-    } else if (scoreMetricStr.equals("2bleu-ter")) {
-      return scoreMetricStr;
+    } else if (scoreMetricStr.equals("bleu-ter") || scoreMetricStr.equals("bleun-ter")) {
+      return "bleu-ter";
     
-    } else if (scoreMetricStr.equals("bleu-ter")) {
-      return scoreMetricStr;
-    
-    } else if (scoreMetricStr.equals("bleu-2ter")) {
-      return scoreMetricStr;
-    
-    } else if (scoreMetricStr.equals("bleus-2ter")) {
+    } else if (scoreMetricStr.equals("bleu-2ter") || scoreMetricStr.equals("bleun-2ter")) {
       return "bleu-2ter";
     
-    } else if (scoreMetricStr.equals("bleu-ter/2") || scoreMetricStr.equals("bleus-ter/2")) {
+    } else if (scoreMetricStr.equals("bleun-ter/2") || scoreMetricStr.equals("bleu-ter/2")) {
       return "bleu-ter/2";
     
-    } else if (scoreMetricStr.equals("bleuX2ter")) {
+    } else if (scoreMetricStr.equals("bleunX2ter")) {
       throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
     
-    } else if (scoreMetricStr.equals("bleuXter")) {
+    } else if (scoreMetricStr.equals("bleunXter")) {
       throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
     
-    } else if (scoreMetricStr.equals("bleu-2fastter")) {
+    } else if (scoreMetricStr.equals("bleun-2fastter")) {
       return "bleu-2ter";
       
     } else {
@@ -126,63 +117,63 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("ter")) {
       return new SLTERMetric<IString,String>();
     
-    } else if (scoreMetricStr.equals("2bleu-ter")) {
+    } else if (scoreMetricStr.equals("2bleun-ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{2.0, 1.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-ter")) {
+    } else if (scoreMetricStr.equals("bleun-ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 1.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-2ter")) {
+    } else if (scoreMetricStr.equals("bleun-2ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleus-2ter")) {
+    } else if (scoreMetricStr.equals("bleu-2ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-ter/2")) {
+    } else if (scoreMetricStr.equals("bleun-ter/2")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{0.5, 0.5}, metrics);
     
-    } else if (scoreMetricStr.equals("bleus-ter/2")) {
+    } else if (scoreMetricStr.equals("bleu-ter/2")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{0.5, 0.5}, metrics);
       
-    } else if (scoreMetricStr.equals("bleuX2ter")) {
+    } else if (scoreMetricStr.equals("bleunX2ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLGeometricCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, new boolean[]{false, true}, metrics);
     
-    } else if (scoreMetricStr.equals("bleuXter")) {
+    } else if (scoreMetricStr.equals("bleunXter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLGeometricCombinationMetric<IString,String>(
         new double[]{1.0, 1.0}, new boolean[]{false, true}, metrics);
     
-    } else if (scoreMetricStr.equals("bleu-2fastter")) {
+    } else if (scoreMetricStr.equals("bleun-2fastter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>(5));

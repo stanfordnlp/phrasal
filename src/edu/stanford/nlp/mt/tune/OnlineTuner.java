@@ -591,7 +591,7 @@ public final class OnlineTuner {
     for (Map.Entry<Integer, Sequence<IString>> entry : sortedMap.entrySet()) {
       incMetric.add(new ScoredFeaturizedTranslation<IString,String>(entry.getValue(), null, 0.0));
     }
-    double objectiveValue = Math.abs(incMetric.score()) * 100.0;
+    double objectiveValue = incMetric.score() * 100.0;
     logger.info(String.format("Epoch %d expected %s: %.2f", epoch, scoreMetricStr.toUpperCase(), objectiveValue));
     return objectiveValue;
   }
