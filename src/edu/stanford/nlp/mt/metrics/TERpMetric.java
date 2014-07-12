@@ -45,14 +45,13 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private int beamWidth = 20;
   private int maxShiftDist = 50;
 
-  public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
-    this.referencesList = referencesList;
-    this.countEdits = countEdits;
-    WordNet.setWordNetDB(TERpara.para().get_string(
-        TERpara.OPTIONS.WORDNET_DB_DIR));
-    NormalizeText.init();
-  }
-
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   * @param countEdits
+   * @param terpa
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList,
       boolean countEdits, boolean terpa) {
     this.referencesList = referencesList;
@@ -75,10 +74,22 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     NormalizeText.init();
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList) {
     this(referencesList, 0, 0);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   * @param beamWidth
+   * @param maxShiftDist
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList, int beamWidth,
       int maxShiftDist) {
     this.referencesList = referencesList;

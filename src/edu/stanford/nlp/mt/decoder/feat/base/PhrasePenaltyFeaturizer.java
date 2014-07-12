@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.Generics;
  */
 public class PhrasePenaltyFeaturizer<TK> implements
     RuleFeaturizer<TK, String> {
-  private static final String FEATURE_NAME = "PhrasePenalty";
+  public static final String FEATURE_NAME = "PhrasePenalty";
 
   // Cache since this value will simply be aggregated by the feature API
   private static final List<FeatureValue<String>> features;

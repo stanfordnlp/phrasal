@@ -11,14 +11,17 @@ import com.bbn.mt.terp.TERcalc;
 import edu.stanford.nlp.mt.util.Sequence;
 
 /**
- * Sentence-level TERp metric for use in online tuning.
+ * Sentence-level TER metric. Even though this package calls the TERp jar,
+ * it is equiavalent to vanilla TER. We don't use the original TER jar, which
+ * is not threadsafe.
  *
  * @author danielcer
+ * @author Spence Green
  *
  * @param <TK>
  * @param <FV>
  */
-public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
+public class SLTERMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   public static final int DEFAULT_BEAM_SIZE = 20;
   public static final boolean VERBOSE = false;
@@ -26,12 +29,19 @@ public class SLTERpMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   private final TERcost terCost;
   private final int beamSize;
   
-
-  public SLTERpMetric() {
+  /**
+   * Constructor.
+   */
+  public SLTERMetric() {
     this(DEFAULT_BEAM_SIZE);
   } 
 
-  public SLTERpMetric(int beamSize) {
+  /**
+   * Constructor.
+   * 
+   * @param beamSize
+   */
+  public SLTERMetric(int beamSize) {
     terCost = new TERcost();
     this.beamSize = beamSize; 
   }
