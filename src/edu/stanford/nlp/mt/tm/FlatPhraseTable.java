@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.pt;
+package edu.stanford.nlp.mt.tm;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -37,7 +36,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   private static final int INITIAL_CAPACITY = 50000;
   
   public static final String FIELD_DELIM = "|||";
-  public static final String FEATURE_PREFIX = "FPT";
+  public static final String DEFAULT_FEATURE_PREFIX = "FPT";
 
   // Static so that even when multiple phrase tables are loaded, each rule
   // is assured of received a unique, non-negative id.
@@ -60,21 +59,20 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @throws IOException
    */
   public FlatPhraseTable(String filename) throws IOException {
-    this(null, filename);
+    this(DEFAULT_FEATURE_PREFIX, filename);
   }
 
   /**
    * Constructor.
    * 
-   * @param phraseFeaturizer
+   * @param featurePrefix
    * @param filename
-   * @param reverse
    * @throws IOException
    */
   public FlatPhraseTable(
-      RuleFeaturizer<IString, FV> phraseFeaturizer,
+      String featurePrefix,
       String filename) throws IOException {
-    super(phraseFeaturizer);
+    super(null);
     File f = new File(filename);
     name = String.format("%s:%s", this.getClass().getName(), f.getPath()).intern();
     minRuleIndex = ruleIdCounter.get();
@@ -84,7 +82,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     int countScores = init(f);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
-      scoreNames[i] = String.format("%s.%d", FEATURE_PREFIX, i);
+      scoreNames[i] = String.format("%s.%d", featurePrefix, i);
     }
   }
   
@@ -288,8 +286,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     String phrase = args[1];
     long startTimeMillis = System.currentTimeMillis();
     System.out.printf("Loading phrase table: %s%n", model);
-    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(null,
-        model);
+    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(model);
     long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
     long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
     double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;

@@ -4,10 +4,11 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.PhrasePenaltyFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
@@ -34,6 +35,7 @@ public final class FeatureUtils {
     features.add(LinearFutureCostFeaturizer.FEATURE_NAME);
     features.add(WordPenaltyFeaturizer.FEATURE_NAME);
     features.add(UnknownWordFeaturizer.FEATURE_NAME);
+    features.add(PhrasePenaltyFeaturizer.FEATURE_NAME);
     
     // Lexical reordering scores
     features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":discontinuous2WithNext"); 
@@ -45,10 +47,10 @@ public final class FeatureUtils {
     features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":swapWithNext");
     features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":swapWithPrevious");
     
-    // 7 translation model scores described in Green et al. (2013).
-    for (int i = 0; i < 7; ++i) {
+    // 6 translation model scores described in Green et al. (2013).
+    for (int i = 0; i < 6; ++i) {
       String fName = String.format("%s:%s.%d", TranslationModelFeaturizer.FEATURE_PREFIX,
-          FlatPhraseTable.FEATURE_PREFIX, i);
+          FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
       features.add(fName);
     }
     BASELINE_DENSE_FEATURES = Collections.unmodifiableSet(features);

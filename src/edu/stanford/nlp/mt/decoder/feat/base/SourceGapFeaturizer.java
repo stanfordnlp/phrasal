@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.DTUTable;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValue;

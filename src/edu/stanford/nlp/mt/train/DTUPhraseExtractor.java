@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.pt.DTUTable;
+import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;

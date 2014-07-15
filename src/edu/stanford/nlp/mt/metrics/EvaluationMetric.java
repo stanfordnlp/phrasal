@@ -4,6 +4,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.util.NBestListContainer;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 
 /**
@@ -17,7 +18,10 @@ public interface EvaluationMetric<TK, FV> {
   /**
 	 * 
 	 */
-  double score(List<ScoredFeaturizedTranslation<TK, FV>> sequences);
+  
+  public double score(List<ScoredFeaturizedTranslation<TK,FV>> translations);
+  // Java has a bug with erasure.
+  public double scoreSeq(List<Sequence<TK>> translations);
 
   /**
 	 * 

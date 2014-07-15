@@ -3,7 +3,9 @@ package edu.stanford.nlp.mt.metrics;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
@@ -43,14 +45,13 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private int beamWidth = 20;
   private int maxShiftDist = 50;
 
-  public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
-    this.referencesList = referencesList;
-    this.countEdits = countEdits;
-    WordNet.setWordNetDB(TERpara.para().get_string(
-        TERpara.OPTIONS.WORDNET_DB_DIR));
-    NormalizeText.init();
-  }
-
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   * @param countEdits
+   * @param terpa
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList,
       boolean countEdits, boolean terpa) {
     this.referencesList = referencesList;
@@ -73,10 +74,22 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     NormalizeText.init();
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList) {
     this(referencesList, 0, 0);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   * @param beamWidth
+   * @param maxShiftDist
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList, int beamWidth,
       int maxShiftDist) {
     this.referencesList = referencesList;
@@ -89,6 +102,33 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     NormalizeText.init();
   }
 
+  /**
+   * Compute the sentence-level TER score (pseudo-percentage).
+   * @param translation
+   * @param references
+   * @return
+   */
+  public static <TK> double computeLocalTERScore(Sequence<TK> translation, List<Sequence<TK>> references) {
+    TERcalc terCalc = new TERcalc(new TERcost());
+    terCalc.BEAM_WIDTH = 20;
+    
+    // uniq references to prevent (expensive) redundant calculation.
+    Set<Sequence<TK>> uniqRefs = new HashSet<Sequence<TK>>(references);
+
+    final String hyp = translation.toString();
+    double bestTER = Double.POSITIVE_INFINITY;
+    for (Sequence<TK> refSeq : uniqRefs) {
+      String ref = refSeq.toString();
+      TERalignment align = terCalc.TER(hyp, ref);
+      double ter = align.numEdits / align.numWords;
+      if (ter < bestTER) {
+        bestTER = ter;
+      }
+    }
+    
+    return bestTER;
+  }
+  
   @Override
   public TERpIncrementalMetric getIncrementalMetric() {
     return new TERpIncrementalMetric();
@@ -113,15 +153,20 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   PhraseTable phrasetable;
 
   TERcost costfunc = new TERcost();
-
+  
   public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
+      int idx, double[] editCounts) {
+    return calcTER(trans, idx, editCounts);
+  }
+
+  public TERalignment calcTER(Sequence<TK> trans,
       int idx, double[] editCounts) {
     List<Sequence<TK>> refsSeq = referencesList.get(idx);
     String[] refs = new String[refsSeq.size()];
     TERalignment bestAl = null;
 
     double best = Double.POSITIVE_INFINITY;
-    String hyp = trans.translation.toString();
+    String hyp = trans.toString();
     for (int i = 0; i < refs.length; i++) {
       refs[i] = refsSeq.get(i).toString();
     }      
@@ -177,14 +222,19 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
       nulls = p.nulls;
     }
 
-    @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
-      if (trans == null) {
+      return add(trans == null ? null : trans.translation);
+    }
+
+    @Override
+    public IncrementalEvaluationMetric<TK, FV> add(
+        Sequence<TK> translation) {
+      if (translation == null) {
         nulls[cnt++] = true;
         nullCnt++;
       } else {
-        aligns[cnt] = calcTER(trans, cnt, editCounts);
+        aligns[cnt] = calcTER(translation, cnt, editCounts);
         editsTotal += aligns[cnt].numEdits;
         numWordsTotal += aligns[cnt].numWords;
         cnt++;

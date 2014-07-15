@@ -30,11 +30,11 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.lm.NNLMState;
-import edu.stanford.nlp.mt.pt.CombinedPhraseGenerator;
-import edu.stanford.nlp.mt.pt.PhraseGenerator;
-import edu.stanford.nlp.mt.pt.PhraseGeneratorFactory;
-import edu.stanford.nlp.mt.pt.PhraseTable;
-import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.tm.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.tm.PhraseTable;
+import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -186,7 +186,7 @@ public class TargetNNLMFeaturizerTest {
 //    boolean withGaps = false;
 //    FlatPhraseTable.createIndex(withGaps); // initialized in Phrasal.initStaticMembers
     Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair = 
-        PhraseGeneratorFactory.<String>factory(false, generatorName, phraseTable, optionLimit);
+        PhraseGeneratorFactory.<String>factory(generatorName, phraseTable);
     PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
         Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
         CombinedPhraseGenerator.Type.STRICT_DOMINANCE, Integer.parseInt(optionLimit));

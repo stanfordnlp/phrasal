@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.SmartBundleBeam;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;

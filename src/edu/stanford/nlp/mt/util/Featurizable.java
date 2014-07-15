@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.util;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
-import edu.stanford.nlp.mt.pt.ConcreteRule;
-import edu.stanford.nlp.mt.pt.DTURule;
-import edu.stanford.nlp.mt.pt.Rule;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tm.DTURule;
+import edu.stanford.nlp.mt.tm.Rule;
 
 /**
  * Packages information about a newly constructed hypothesis for use in the 

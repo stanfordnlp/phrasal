@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.pt.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -52,12 +52,12 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> featurizable) {
     if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
-      // Don't score synthetic rules from hte OOV model
+      // Don't score synthetic rules from the OOV model
       return null;
     }
 
     // lookup/construct the list of feature names
-    String phraseTableName = featurizable.phraseTableName;
+    final String phraseTableName = featurizable.phraseTableName;
     assert featurizable.phraseScoreNames.length == featurizable.translationScores.length :
       "Score name/value arrays of different dimensions for table: " + phraseTableName;
     String[] featureNames = featureNamesHash.containsKey(phraseTableName) ? 

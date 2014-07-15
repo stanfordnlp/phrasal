@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.ejml.simple.SimpleMatrix;
 
-import edu.stanford.nlp.mt.pt.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;

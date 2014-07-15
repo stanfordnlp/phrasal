@@ -5,7 +5,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.pt.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.PhraseGenerator;
 
 /**
  * An abstract factory for an inference algorithm.
