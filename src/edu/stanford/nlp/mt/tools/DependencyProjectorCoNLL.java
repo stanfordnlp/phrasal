@@ -45,7 +45,9 @@ public class DependencyProjectorCoNLL {
     optionArgDefs.put("annotations", 1);
     optionArgDefs.put("outdir", 1);
     optionArgDefs.put("transitive", 0);
+    optionArgDefs.put("", 0);
 
+    
     return optionArgDefs;
   }
   
@@ -137,8 +139,46 @@ public class DependencyProjectorCoNLL {
   }
 
  
+  public static HashMap<Integer, Integer> getDependenciesFromCoreMap(CoreMap annotation) {
+
+    SemanticGraph semanticGraph = annotation.get(BasicDependenciesAnnotation.class);
+    Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
+
+    
+    HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
+
+    for (TypedDependency dep : dependencies) {
+      int govIndex = dep.gov().index() - 1;
+      int depIndex = dep.dep().index() - 1;
+      reverseDependencies.put(depIndex, govIndex);
+    }
+    
+    return reverseDependencies;
+  }
+  
+  public static HashMap<Integer, Integer> getDependenciesFromCoNLLFileReader(BufferedReader reader) {
+    HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>();
+    
+    String line = null;
+    try {
+      while ((line = reader.readLine()) != null && line.length() > 1) {
+        String[] fields = line.split("\t");
+        int dep = Integer.parseInt(fields[0]) - 1;
+        int gov = Integer.parseInt(fields[6]) - 1;
+        reverseDependencies.put(dep, gov);
+      }
+    
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+    
+    return reverseDependencies;
+    
+  }
+  
    
-  public static Map<Integer, NavigableSet<Integer>> projectDependencies(CoreMap annotation, SymmetricalWordAlignment alignment, boolean transitive) {
+  public static Map<Integer, NavigableSet<Integer>> projectDependencies(HashMap<Integer, Integer> reverseDependencies , SymmetricalWordAlignment alignment, boolean transitive) {
     Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
     
     //source to target token aligment (we force 1:1)
@@ -147,17 +187,6 @@ public class DependencyProjectorCoNLL {
     //left dependencies indexed by source head index
     Map<Integer, SortedSet<Integer>> leftDependencies = Generics.newHashMap();
     
-    SemanticGraph semanticGraph = annotation.get(BasicDependenciesAnnotation.class);
-
-    Collection<TypedDependency> dependencies = semanticGraph.typedDependencies();
-    HashMap<Integer, Integer> reverseDependencies = new HashMap<Integer, Integer>() ;
-    
-    
-    for (TypedDependency dep : dependencies) {
-      int govIndex = dep.gov().index() - 1;
-      int depIndex = dep.dep().index() - 1;
-      reverseDependencies.put(depIndex, govIndex);
-    }
     
     if (transitive) {
       //delete all nodes that are not aligned and make things transitive
@@ -291,7 +320,9 @@ public class DependencyProjectorCoNLL {
     String alignments = PropertiesUtils.get(options, "alignment", null, String.class);
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
  
+    boolean isCoNLL = annotations.toLowerCase().endsWith(".conll");
 
+    
  
 
     
@@ -304,18 +335,31 @@ public class DependencyProjectorCoNLL {
     BufferedReader sourceReader = new BufferedReader(new FileReader(sourceSentences));
     BufferedReader targetReader = new BufferedReader(new FileReader(targetSentences));
     BufferedReader alignmentReader = new BufferedReader(new FileReader(alignmentFile));
+    
+    BufferedReader coNLLReader = null;
+    if (isCoNLL)
+      coNLLReader = new BufferedReader(new FileReader(annotations));
+    
     String sourceSentence;
     int i = 0;
     while ((sourceSentence = sourceReader.readLine()) != null) {
       try {
-        CoreMap sentence = getParsedSentence(annotations, i, annotationsSplit);
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
         //System.err.println("---------------------------");
         //System.err.println("alignment = \"" + alignmentString + "\";");
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
         //projectSentence(sentence, alignment);
-        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(sentence, alignment, transitive);
+        
+        HashMap<Integer, Integer> reverseDependencies  = null;
+        if (isCoNLL) {
+          reverseDependencies = getDependenciesFromCoNLLFileReader(coNLLReader);
+        } else {
+          CoreMap sentence = getParsedSentence(annotations, i, annotationsSplit);
+          reverseDependencies = getDependenciesFromCoreMap(sentence);
+        }
+        
+        Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(reverseDependencies, alignment, transitive);
         //if (i == 0) {
         //  System.err.println(dependencies.get(-1));
         //  System.err.println(dependencies.get(1));
@@ -340,6 +384,9 @@ public class DependencyProjectorCoNLL {
     sourceReader.close();
     targetReader.close();
     alignmentReader.close();
+    
+    if (isCoNLL)
+      coNLLReader.close();
 
   
     
