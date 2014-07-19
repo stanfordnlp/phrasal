@@ -188,7 +188,9 @@ function create-learn-curve {
     
   rm -f $RUNNAME.learn-curve.tmp
 
+  #
   # Reporting system. Only activated if REPORTING_DIR exists.
+  #
   REPORTING_DIR=/u/apache/htdocs/local/phrasal/ems-reporting
   RESULTS_FILE=$REPORTING_DIR/results.html
   if [ -d $REPORTING_DIR ]; then
@@ -243,45 +245,62 @@ RUNNAME="$DECODE_SET_NAME"."$TUNERUNNAME"
 # Log some info about this run
 bookmark
 
+# Setup a trap handler in case user presses "CTRL+C" during
+# a given step
+sigint_handler () {
+    DIE=1
+}
+
+trap trapeze SIGINT
+
 for step in ${STEPS[@]};
 do
   if [ $step -eq 1 ]; then
-	  step-status "$step -- Extract phrases from dev set" 
-	  extract $TUNE_SET $TUNE_PTABLE_DIR
+      step-status "$step -- Extract phrases from dev set" 
+      extract $TUNE_SET $TUNE_PTABLE_DIR
   fi
     
-  if [ $step -eq 2 ]; then
-	  step-status "$step -- Run tuning"
-    if [ $TUNE_MODE == "batch" ]; then
-        tune-batch
-    else
-        tune-online
-    fi
+  if [ $step -eq 2 && -z "$DIE" ]; then
+      step-status "$step -- Run tuning"
+      if [ $TUNE_MODE == "batch" ]; then
+          tune-batch
+      else
+          tune-online
+      fi
   fi
     
-  if [ $step -eq 3 ]; then
-	  step-status "$step -- Extract phrases from test set"
-    extract $DECODE_SET $DECODE_PTABLE_DIR
+  if [ $step -eq 3 && -z "$DIE" ]; then
+      step-status "$step -- Extract phrases from test set"
+      extract $DECODE_SET $DECODE_PTABLE_DIR
   fi
     
-  if [ $step -eq 4 ]; then
-	  step-status "$step -- Decode test set"
+  if [ $step -eq 4 && -z "$DIE" ]; then
+      step-status "$step -- Decode test set"
 	  
-    if [ $TUNE_MODE == "batch" ]; then
-	    make-ini-from-batch-run
-	  else
-	    make-ini-from-online-run
-	  fi
-	  decode
+      if [ $TUNE_MODE == "batch" ]; then
+	  make-ini-from-batch-run
+      else
+	  make-ini-from-online-run
+      fi
+      decode
   fi
     
-  if [ $step -eq 5 ]; then
-    step-status "$step -- Output results file"
-	  evaluate
+  if [ $step -eq 5 && -z "$DIE" ]; then
+      step-status "$step -- Output results file"
+      evaluate
   fi
     
-  if [ $step -eq 6 ]; then
-	  step-status "$step -- Generate a learning curve from an online run"
-	  create-learn-curve
+  if [ $step -eq 6 && -z "$DIE" ]; then
+      step-status "$step -- Generate a learning curve from an online run"
+      create-learn-curve
   fi
 done
+
+##
+## Notify user if an email address has been specified
+## and 'mail' is installed. Don't send an email if DIE
+## has been set.
+##
+if [ -z "$DIE" && -n $EMAIL_ADDRESS && $(command -v mail >/dev/null 2>&1) ]; then
+    echo Completed steps $EXEC_STEPS | mail -s "Phrasal run $RUNNAME finished on $HOSTNAME" $EMAIL_ADDRESS
+fi
