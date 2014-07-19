@@ -188,8 +188,8 @@ function create-learn-curve {
     
   rm -f $RUNNAME.learn-curve.tmp
 
-  # Reporting system. Only activated if REPORTING_DIR exists
-  REPORTING_DIR=/scr/nlp/data/MT/ems-reporting
+  # Reporting system. Only activated if REPORTING_DIR exists.
+  REPORTING_DIR=/u/apache/htdocs/local/phrasal/ems-reporting
   RESULTS_FILE=$REPORTING_DIR/results.html
   if [ -d $REPORTING_DIR ]; then
       MAX_SCORE=$(cat $RUNNAME.learn-curve | awk '{ t = $1; $1 = $3; $3 = t; print; }' | sort -nr | cut -f1 -d' ' | head -n 1)
