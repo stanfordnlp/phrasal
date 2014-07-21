@@ -260,7 +260,7 @@ do
       extract $TUNE_SET $TUNE_PTABLE_DIR
   fi
     
-  if [ $step -eq 2 && -z "$DIE" ]; then
+  if [[ $step -eq 2 && -z "$DIE" ]]; then
       step-status "$step -- Run tuning"
       if [ $TUNE_MODE == "batch" ]; then
           tune-batch
@@ -269,12 +269,12 @@ do
       fi
   fi
     
-  if [ $step -eq 3 && -z "$DIE" ]; then
+  if [[ $step -eq 3 && -z "$DIE" ]]; then
       step-status "$step -- Extract phrases from test set"
       extract $DECODE_SET $DECODE_PTABLE_DIR
   fi
     
-  if [ $step -eq 4 && -z "$DIE" ]; then
+  if [[ $step -eq 4 && -z "$DIE" ]]; then
       step-status "$step -- Decode test set"
 	  
       if [ $TUNE_MODE == "batch" ]; then
@@ -285,12 +285,12 @@ do
       decode
   fi
     
-  if [ $step -eq 5 && -z "$DIE" ]; then
+  if [[ $step -eq 5 && -z "$DIE" ]]; then
       step-status "$step -- Output results file"
       evaluate
   fi
     
-  if [ $step -eq 6 && -z "$DIE" ]; then
+  if [[ $step -eq 6 && -z "$DIE" ]]; then
       step-status "$step -- Generate a learning curve from an online run"
       create-learn-curve
   fi
@@ -301,6 +301,6 @@ done
 ## and 'mail' is installed. Don't send an email if DIE
 ## has been set.
 ##
-if [ -z "$DIE" && -n $EMAIL_ADDRESS && $(command -v mail >/dev/null 2>&1) ]; then
+if [[ -z "$DIE" && -n $EMAIL_ADDRESS && $(command -v mail >/dev/null 2>&1) ]]; then
     echo Completed steps $EXEC_STEPS | mail -s "Phrasal run $RUNNAME finished on $HOSTNAME" $EMAIL_ADDRESS
 fi
