@@ -6,7 +6,7 @@ import java.util.Random;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -59,7 +59,7 @@ public class SignificanceTest {
 
     // Load everything we need
     boolean doNIST = true;
-    List<List<Sequence<IString>>> references = Metrics.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix), doNIST);
+    List<List<Sequence<IString>>> references = MetricUtils.readReferences(IOTools.fileNamesFromPathPrefix(referencePrefix), doNIST);
     EvaluationMetric<IString, String> eval = CorpusLevelMetricFactory.newMetric(evalMetricName, references);
     List<Sequence<IString>> system1Trans = IStrings.tokenizeFile(system1TransFilename, doNIST);
     List<Sequence<IString>> system2Trans = IStrings.tokenizeFile(system2TransFilename, doNIST);

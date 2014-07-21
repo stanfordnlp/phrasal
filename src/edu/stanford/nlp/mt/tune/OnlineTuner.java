@@ -27,7 +27,7 @@ import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
@@ -642,7 +642,7 @@ public final class OnlineTuner {
     
     try {
       String[] filenames = refStr.split(",");
-      references = Metrics.readReferences(filenames);
+      references = MetricUtils.readReferences(filenames);
       assert references.get(0).size() == filenames.length;
       numReferences = filenames.length;
     } catch (IOException e) {

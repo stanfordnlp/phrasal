@@ -18,7 +18,7 @@ import java.util.Set;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -304,7 +304,7 @@ public class BLEUConditionSignificanceTest {
     // Load references
     String[] refs = new String[parameters.length - 1];
     System.arraycopy(parameters, 1, refs, 0, refs.length);
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs, true);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(refs, true);
     
     // Load the user files
     final String prefix = parameters[0];

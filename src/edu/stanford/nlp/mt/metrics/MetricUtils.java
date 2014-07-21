@@ -22,9 +22,9 @@ import edu.stanford.nlp.stats.Counters;
  * @author danielcer
  * 
  */
-public class Metrics {
-  private Metrics() {
-  }
+public final class MetricUtils {
+  
+  private MetricUtils() {}
 
   private static final double LOG2 = Math.log(2);
 

@@ -56,22 +56,22 @@ public final class CorpusLevelMetricFactory {
     } else if (evalMetric.equals("nist")) {
       emetric = new NISTMetric<IString, String>(references);
 
-    } else if (evalMetric.startsWith("bleu-ter")) {
+    } else if (evalMetric.equals("bleu-ter")) {
         emetric = new LinearCombinationMetric<IString, String>(new double[] {
             1.0, 1.0 }, new BLEUMetric<IString, String>(references),
             new TERpMetric<IString, String>(references));
     
-    } else if (evalMetric.startsWith("2bleu-ter")) {
+    } else if (evalMetric.equals("2bleu-ter")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           2.0, 1.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references));
       
-    } else if (evalMetric.startsWith("bleu-2ter")) {
+    } else if (evalMetric.equals("bleu-2ter")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references));
 
-    } else if (evalMetric.startsWith("bleu-2terpa")) {
+    } else if (evalMetric.equals("bleu-2terpa")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references, false, true));

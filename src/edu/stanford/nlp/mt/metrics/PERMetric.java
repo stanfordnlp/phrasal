@@ -1,16 +1,11 @@
 package edu.stanford.nlp.mt.metrics;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
-import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.PositionIndependentDistance;
 import edu.stanford.nlp.mt.util.RawSequence;
@@ -162,33 +157,5 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
       super.clone();
       return new PERIncrementalMetric();
     }
-  }
-
-  public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.err
-          .println("Usage:\n\tjava PERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
-      System.exit(-1);
-    }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
-
-    PERMetric<IString, String> PER = new PERMetric<IString, String>(
-        referencesList);
-    PERMetric<IString, String>.PERIncrementalMetric incMetric = PER
-        .getIncrementalMetric();
-
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in));
-
-    for (String line; (line = reader.readLine()) != null;) {
-      Sequence<IString> translation = IStrings.tokenize(line);
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
-          translation, null, 0);
-      incMetric.add(tran);
-    }
-
-    reader.close();
-
-    System.out.printf("PER = %.3f %%\n", 100 * incMetric.score());
   }
 }

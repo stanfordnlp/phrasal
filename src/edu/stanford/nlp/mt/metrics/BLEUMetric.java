@@ -97,11 +97,11 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
   public static <TK> double computeLocalSmoothScore(Sequence<TK> seq,
       List<Sequence<TK>> refs, int order, boolean doNakovExtension) {
 
-    Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(seq,
+    Counter<Sequence<TK>> candidateCounts = MetricUtils.getNGramCounts(seq,
         order);
-    Counter<Sequence<TK>> maxReferenceCount = Metrics.getMaxNGramCounts(refs, order);
+    Counter<Sequence<TK>> maxReferenceCount = MetricUtils.getMaxNGramCounts(refs, order);
     
-    Metrics.clipCounts(candidateCounts, maxReferenceCount);
+    MetricUtils.clipCounts(candidateCounts, maxReferenceCount);
     int seqSz = seq.size();
     int[] localPossibleMatchCounts = new int[order];
     for (int i = 0; i < order; i++) {
@@ -207,7 +207,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     for (int listI = 0; listI < listSz; listI++) {
       List<Sequence<TK>> references = referencesList.get(listI);
 
-      Counter<Sequence<TK>> maxReferenceCount = Metrics.getMaxNGramCounts(
+      Counter<Sequence<TK>> maxReferenceCount = MetricUtils.getMaxNGramCounts(
           references, order);
       maxReferenceCounts.add(maxReferenceCount);
 
@@ -296,9 +296,9 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
               futurePossibleCounts[i][j] = possibleMatchCounts(j, seqSz);
             }
           }
-          Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(
+          Counter<Sequence<TK>> candidateCounts = MetricUtils.getNGramCounts(
               tran.translation, order);
-          Metrics.clipCounts(candidateCounts, maxReferenceCounts.get(i));
+          MetricUtils.clipCounts(candidateCounts, maxReferenceCounts.get(i));
           double[] localCounts = localMatchCounts(candidateCounts,order);
           for (int j = 0; j < order; j++) {
             if (futureMatchCounts[i][j] < localCounts[j]) {
@@ -407,9 +407,9 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     }
 
     public double computeLocalSmoothScore(Sequence<TK> seq, int pos) {
-      Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(seq,
+      Counter<Sequence<TK>> candidateCounts = MetricUtils.getNGramCounts(seq,
           order);
-      Metrics.clipCounts(candidateCounts, maxReferenceCounts.get(pos));
+      MetricUtils.clipCounts(candidateCounts, maxReferenceCounts.get(pos));
       int seqSz = seq.size();
       int[] localPossibleMatchCounts = new int[order];
       for (int i = 0; i < order; i++) {
@@ -489,9 +489,9 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
         }
       } else {
         if (translation != null) {
-          Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(
+          Counter<Sequence<TK>> candidateCounts = MetricUtils.getNGramCounts(
               translation, order);
-          Metrics.clipCounts(candidateCounts, maxReferenceCounts.get(pos));
+          MetricUtils.clipCounts(candidateCounts, maxReferenceCounts.get(pos));
           sequences.add(translation);
           incCounts(candidateCounts, translation);
           c += translation.size();
@@ -526,12 +526,12 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
         }
       } else {
         candidateCounts = (trans == null ? new ClassicCounter<Sequence<TK>>()
-            : Metrics.getNGramCounts(trans.translation, order));
-        Metrics.clipCounts(candidateCounts, maxReferenceCounts.get(index));
+            : MetricUtils.getNGramCounts(trans.translation, order));
+        MetricUtils.clipCounts(candidateCounts, maxReferenceCounts.get(index));
         if (sequences.get(index) != null) {
-          Counter<Sequence<TK>> oldCandidateCounts = Metrics
+          Counter<Sequence<TK>> oldCandidateCounts = MetricUtils
               .getNGramCounts(sequences.get(index), order);
-          Metrics.clipCounts(oldCandidateCounts, maxReferenceCounts.get(index));
+          MetricUtils.clipCounts(oldCandidateCounts, maxReferenceCounts.get(index));
           decCounts(oldCandidateCounts, sequences.get(index));
           c -= sequences.get(index).size();
           r -= bestMatchLength(refLengths[index], sequences.get(index).size());
@@ -733,7 +733,7 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
     // Load the references
     String[] refs = options.getProperty("").split("\\s+");
     System.out.printf("Metric: BLEU-%d with %d references%n", BLEUOrder, refs.length);
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs, true);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(refs, true);
 
     // For backwards compatibility
     doSmooth |= System.getProperty("smoothBLEU") != null;

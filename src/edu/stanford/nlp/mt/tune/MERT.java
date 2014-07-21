@@ -40,7 +40,7 @@ import edu.stanford.nlp.util.Pair;
 
 import edu.stanford.nlp.mt.decoder.util.DenseScorer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
@@ -128,7 +128,7 @@ public class MERT extends Thread {
     this.optStr = optStr;
     this.seedStr = seedStr;
 
-    references = Metrics.readReferences(
+    references = MetricUtils.readReferences(
         referenceList.split(","));
     this.evalMetric = evalMetric;
     this.emetric = CorpusLevelMetricFactory.newMetric(evalMetric, references);

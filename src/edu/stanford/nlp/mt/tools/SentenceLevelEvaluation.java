@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.TERpMetric;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -75,7 +75,7 @@ public class SentenceLevelEvaluation {
     String metric = options.getProperty("metric", "bleu");
 
     String[] refs = options.getProperty("").split("\\s+");
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs, ! disableTokenization);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(refs, ! disableTokenization);
     System.err.printf("Metric: %s with %d references%n", metric, referencesList.get(0).size());
     
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(

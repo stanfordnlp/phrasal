@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="tablesorter/jquery-latest.js"></script> 
+    <script type="text/javascript" src="tablesorter/jquery.tablesorter.min.js"></script>
+    <link rel="stylesheet" href="tablesorter/themes/blue/style.css" type="text/css" media="print, projection, screen" />
+    <script type="text/javascript">
+      $(document).ready(function() 
+      { 
+      $("#phrasal-results").tablesorter({widgets: ['zebra'], dateFormat: 'us'});
+      $("#options").tablesorter({sortList: [[0,0]], headers: { 3:{sorter: false}, 4:{sorter: false}}});
+      } 
+      ); 
+    </script>
+    <title>Phrasal Experimental Results</title>
+</head>
+
+<body style="padding: 0; margin: 0; background: #FFF;">
+  <div style="width: 960px; margin: 10px auto;">
+    <h2>Phrasal Experimental Results</h2>
+
+    <table id="phrasal-results" class="tablesorter" border="0" cellpadding="3" cellspacing="1">
+      <thead>
+	<tr>
+	  <th>Tune set</th>
+	  <th>Dev set</th>
+	  <th>Run name</th>
+	  <th>Max. dev</th>
+	  <th>Metric</th>
+	  <th>User</th>
+	  <th>Path</th>
+	  <th>Date</th>
+	</tr>
+      </thead>
+      <tbody>
+	<!-- TODO: Should correspond to RESULTS_FILE in phrasal.sh -->
+	<!-- This file must be under the web server root -->
+	<!--#include virtual="results.html" -->
+      </tbody>
+    </table>
+
+    <p>
+      <strong>NOTE:</strong> Sort multiple columns simultaneously by holding down the shift key and clicking additional columns.
+    </p>
+  </div>
+</body>
+</html>

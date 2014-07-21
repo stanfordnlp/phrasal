@@ -86,7 +86,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
 
   private Counter<Sequence<TK>> getMaxRefCounts(int sourceId,  List<Sequence<TK>> references) {
     if ( ! maxRefCounts.containsKey(sourceId)) {
-      Counter<Sequence<TK>> counts = Metrics.getMaxNGramCounts(references, order);
+      Counter<Sequence<TK>> counts = MetricUtils.getMaxNGramCounts(references, order);
       maxRefCounts.put(sourceId, counts);
     }
     return maxRefCounts.get(sourceId);
@@ -151,7 +151,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
         Sequence<TK> translation, boolean updateCounts) {
     // Extract n-grams
     final Counter<Sequence<TK>> maxRefCounts = getMaxRefCounts(sourceId, references);
-    final Counter<Sequence<TK>> hypothesisCounts = Metrics.getNGramCounts(translation, order);
+    final Counter<Sequence<TK>> hypothesisCounts = MetricUtils.getNGramCounts(translation, order);
     
     // Calculate the BLEU statistics for this example
     final double[] m = new double[order];
@@ -261,7 +261,7 @@ public class BLEUOracleCost<TK,FV> implements SentenceLevelMetric<TK, FV> {
     System.arraycopy(args, 1, newArgs, 0, args.length - 1);
 
     try {
-      List<List<Sequence<IString>>> referencesList = Metrics.readReferences(newArgs);
+      List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(newArgs);
       SentenceLevelMetric<IString,String> metric = new BLEUOracleCost<IString,String>(order,true);
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
       int lineId = 0;

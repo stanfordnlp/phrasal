@@ -13,7 +13,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -142,7 +142,7 @@ public class BLEUGenreEvaluator {
     String[] refs = new String[parameters.length - 1];
     System.arraycopy(parameters, 1, refs, 0, refs.length);
     List<InputProperties> inputProperties = InputProperties.parse(new File(parameters[0]));
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refs, true);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(refs, true);
     
     Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> metrics = 
         BLEUGenreEvaluator.run(referencesList, inputProperties, BLEUOrder, System.in);

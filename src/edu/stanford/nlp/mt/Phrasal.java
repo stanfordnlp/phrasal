@@ -57,7 +57,7 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
@@ -464,7 +464,7 @@ public class Phrasal {
     }
     
     if (config.containsKey(FORCE_DECODE)) {
-      forceDecodeReferences = Metrics.readReferences(config.get(FORCE_DECODE)
+      forceDecodeReferences = MetricUtils.readReferences(config.get(FORCE_DECODE)
           .toArray(new String[config.get(FORCE_DECODE).size()]));
     }
 
