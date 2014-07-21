@@ -16,7 +16,7 @@ if [[ $# -ne 5 && $# -ne 6 ]]; then
     exit -1
 fi
 
-MEM=40g
+MEM=15g
 EXEC="nlpsub -m${MEM} -c4"
 
 src_file=$1

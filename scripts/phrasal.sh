@@ -301,6 +301,6 @@ done
 ## and 'mail' is installed. Don't send an email if DIE
 ## has been set.
 ##
-if [[ -z "$DIE" && -n $EMAIL_ADDRESS && $(command -v mail >/dev/null 2>&1) ]]; then
+if [[ -z "$DIE" && -n $EMAIL_ADDRESS ]] && command -v mail >/dev/null 2>&1; then
     echo Completed steps $EXEC_STEPS | mail -s "Phrasal run $RUNNAME finished on $HOSTNAME" $EMAIL_ADDRESS
 fi
