@@ -9,7 +9,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.util.FlatNBestList;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
@@ -46,7 +46,7 @@ public class NbestEvaluationAnnotation {
     
     FlatNBestList nbest = new FlatNBestList(nbestFn);
     
-    List<List<Sequence<IString>>> refs= Metrics.readReferences(
+    List<List<Sequence<IString>>> refs= MetricUtils.readReferences(
         refFns);
     
     List<List<ScoredFeaturizedTranslation<IString,String>>> nbestLists = nbest.nbestLists();

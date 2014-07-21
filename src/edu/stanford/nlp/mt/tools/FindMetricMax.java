@@ -5,7 +5,7 @@ import java.util.*;
 
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.tune.AgendaMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.BeamMultiTranslationMetricMax;
 import edu.stanford.nlp.mt.tune.GreedyMultiTranslationMetricMax;
@@ -57,7 +57,7 @@ public class FindMetricMax {
     if (metricStr.startsWith(BLEU_METRIC_OPT + ":")) {
       String[] fileNames = metricStr.split(":")[1].split(",");
       metric = new BLEUMetric<IString, String>(
-          Metrics.readReferences(fileNames));
+          MetricUtils.readReferences(fileNames));
     } else {
       throw new RuntimeException(String.format("Unrecognized metric: '%s'",
           metric));

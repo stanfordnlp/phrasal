@@ -209,7 +209,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
           .println("Usage:\n\tjava LinearCombinationMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
       System.exit(-1);
     }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(args);
 
     TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
         referencesList);

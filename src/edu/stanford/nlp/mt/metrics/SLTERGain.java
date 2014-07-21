@@ -87,7 +87,7 @@ public class SLTERGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
       System.exit(-1);
     }
     final boolean doNIST = true;
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, doNIST);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(args, doNIST);
     System.out.printf("Metric: Sentence-level TER GAIN with %d references (higher is better)%n", args.length);
 
     SLTERGain<IString,String> metric = new SLTERGain<IString,String>();

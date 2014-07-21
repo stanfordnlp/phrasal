@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
@@ -48,7 +48,7 @@ public class OnlineLearningCurve {
     System.err.printf("Evaluation metric: %s%n", clMetricStr.toUpperCase());
     
     // Read the references and apply NIST tokenization
-    final List<List<Sequence<IString>>> references = Metrics.readReferences(refFiles, true);
+    final List<List<Sequence<IString>>> references = MetricUtils.readReferences(refFiles, true);
     
     // Read the list of weights
     List<String> wts = new ArrayList<String>();

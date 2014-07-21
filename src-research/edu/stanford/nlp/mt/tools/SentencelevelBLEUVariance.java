@@ -6,7 +6,7 @@ import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.List;
 
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -36,7 +36,7 @@ public class SentencelevelBLEUVariance {
     String srcFile = args[1];
     String[] refFileNames = new String[args.length-2];
     System.arraycopy(args, 2, refFileNames, 0, refFileNames.length);
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(refFileNames);
+    List<List<Sequence<IString>>> referencesList = MetricUtils.readReferences(refFileNames);
     List<Sequence<IString>> sourceList = IStrings.tokenizeFile(srcFile);
     
     LineNumberReader reader = new LineNumberReader(new InputStreamReader(
@@ -109,11 +109,11 @@ public class SentencelevelBLEUVariance {
   private static <TK> Pair<Double,Double> computeLocalSmoothScore(Sequence<TK> seq,
       List<Sequence<TK>> refs, int order, boolean doNakovExtension) {
 
-    Counter<Sequence<TK>> candidateCounts = Metrics.getNGramCounts(seq,
+    Counter<Sequence<TK>> candidateCounts = MetricUtils.getNGramCounts(seq,
         order);
-    Counter<Sequence<TK>> maxReferenceCount = Metrics.getMaxNGramCounts(refs, order);
+    Counter<Sequence<TK>> maxReferenceCount = MetricUtils.getMaxNGramCounts(refs, order);
 
-    Metrics.clipCounts(candidateCounts, maxReferenceCount);
+    MetricUtils.clipCounts(candidateCounts, maxReferenceCount);
     int seqSz = seq.size();
     int[] localPossibleMatchCounts = new int[order];
     for (int i = 0; i < order; i++) {
