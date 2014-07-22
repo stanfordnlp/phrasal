@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.tools.deplm;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -20,10 +19,6 @@ import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 public class SerializedDependencyToCoNLL {
-  
-  private static int parseFileIndex = 0;
-  private static int parseSentenceIndex = 0;
-
   
   /**
    * Command-line option specification.
@@ -65,9 +60,7 @@ public class SerializedDependencyToCoNLL {
         e.printStackTrace();
         return;
       }
-      i++;
     }
-    
   }
 
   private static void printDependencies(CoreMap annotation, boolean changepreps) {
