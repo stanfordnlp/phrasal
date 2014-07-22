@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.tools.deplm;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,7 +10,6 @@ import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -65,8 +63,10 @@ public final class DependencyLanguageModelPerplexity {
         leftChildren.add(0, new IString(dependencies.get(gov).first + "<HEAD>"));
         
         Sequence<IString> leftSequence = new SimpleSequence<IString>(leftChildren);
+        leftSequence = Sequences.wrapStartEnd(leftSequence, leftLm.getStartToken(), leftLm.getEndToken());
         Sequence<IString> rightSequence = new SimpleSequence<IString>(rightChildren);
-        
+        leftSequence = Sequences.wrapStartEnd(leftSequence, rightLm.getStartToken(), rightLm.getEndToken());
+
         score += leftLm.score(leftSequence, 0, null).getScore();
         score += rightLm.score(rightSequence, 0, null).getScore();
       }

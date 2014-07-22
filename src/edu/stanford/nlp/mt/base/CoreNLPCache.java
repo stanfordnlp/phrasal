@@ -22,16 +22,17 @@ public class CoreNLPCache {
 
   // The list of raw English CoreNLP annotations
   private static Map<Integer,CoreMap> annotationMap;
-
+  
   /**
    * Load serialized CoreNLP annotations from a file.
    *  
    * @param filename
    */
-  public static void loadSerialized(String filename) {
+  public static int loadSerialized(String filename) {
     try {
       Annotation annotation = IOUtils.readObjectFromFile(filename);
       List<CoreMap> sentenceList = annotation.get(CoreAnnotations.SentencesAnnotation.class);
+
       if (sentenceList == null) {
         throw new RuntimeException("Unusable annotation (no sentences) in " + filename);
       }
@@ -41,7 +42,8 @@ public class CoreNLPCache {
         int lineId = annotationSet.get(CoreAnnotations.LineNumberAnnotation.class);
         annotationMap.put(lineId-1, annotationSet);
       }
-      
+      return sentenceList.size();
+
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
     } catch (IOException e) {

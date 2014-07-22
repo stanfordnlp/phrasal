@@ -36,33 +36,7 @@ public class SerializedDependencyToCoNLL {
     return optionArgDefs;
   }
   
-  public static CoreMap getParsedSentence(String filename, int index, boolean isSplit) {
-    if (!isSplit) {
-      if (!CoreNLPCache.isLoaded()) {
-        CoreNLPCache.loadSerialized(filename);
-      }
-      return CoreNLPCache.get(index);
-    } else {
-      if (!CoreNLPCache.isLoaded()) {
-        parseFileIndex = 0;
-        parseSentenceIndex = 0;
-        String composedFilename = filename + "." + parseFileIndex;
-        CoreNLPCache.loadSerialized(composedFilename);
-      }
-      CoreMap c = CoreNLPCache.get(index - parseSentenceIndex);
-      if (c == null) {
-        parseFileIndex++;
-        String composedFilename = filename + "." + parseFileIndex;
-        File file = new File(composedFilename);
-        if (file.exists()) {
-          parseSentenceIndex = index;
-          CoreNLPCache.loadSerialized(composedFilename);
-          c = CoreNLPCache.get(index - parseSentenceIndex);
-        }
-      }
-      return c;
-    }
-  }
+  
   
 
   public static void main(String[] args) {
@@ -72,11 +46,18 @@ public class SerializedDependencyToCoNLL {
     
     boolean changepreps = PropertiesUtils.getBool(options, "changepreps", false);
     
+    int sentenceCount = CoreNLPCache.loadSerialized(annotations);
    
+    
     CoreMap sentence;
-    int i = 0;
-    while ((sentence = getParsedSentence(annotations, i, false)) != null) {
-      try {     
+    for (int i = 0; i < sentenceCount; i++) {
+      try {  
+        sentence = CoreNLPCache.get(i);
+        if (sentence == null) {
+          System.out.println();
+          System.err.println("Empty sentence #" + i);
+          continue;
+        }
         printDependencies(sentence, changepreps);
         //System.err.println("---------------------------");
       } catch (Exception e) {
