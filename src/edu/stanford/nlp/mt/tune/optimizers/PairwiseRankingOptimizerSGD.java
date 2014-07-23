@@ -47,7 +47,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public static final double DEFAULT_RATE = 0.1;
   public static final String DEFAULT_UPDATER = "sgd";
   public static final double DEFAULT_L1 = 0;
-  public static final String DEFAULT_REGCONFIG="";
   public static final boolean VERBOSE = false;
   
   // Logistic classifier labels
@@ -80,7 +79,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    */
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures) {
     this(tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
-        DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1, DEFAULT_REGCONFIG);
+        DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1, null);
   }
 
   /**
@@ -100,7 +99,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         args != null && args.length > 5 ? Double.parseDouble(args[5]) : DEFAULT_RATE,
         args != null && args.length > 6 ? args[6] : DEFAULT_UPDATER,
         args != null && args.length > 7 ? Double.parseDouble(args[7]) : DEFAULT_L1,
-        args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
+        args != null && args.length > 8 ? args[8] : null);
   }
 
   /**
@@ -385,18 +384,20 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 	if(this.updaterType.equalsIgnoreCase("adagrad"))
 	  return new AdaGradUpdater(learningRate, expectedNumFeatures);
 	Counter<String> customl1 = new ClassicCounter<String>();
-	try{
-	  LineNumberReader reader = IOTools.getReaderFromFile(regconfig);
-	  for (String line; (line = reader.readLine()) != null;) {
-	    String[] fields = line.trim().split("\\s+");
-	    assert fields.length == 2 : "Malformed regularization specification: " + line;
-      customl1.incrementCount(fields[0], Double.parseDouble(fields[1]));
+	if (regconfig != null) {
+	  try{
+	    LineNumberReader reader = IOTools.getReaderFromFile(regconfig);
+	    for (String line; (line = reader.readLine()) != null;) {
+	      String[] fields = line.trim().split("\\s+");
+	      assert fields.length == 2 : "Malformed regularization specification: " + line;
+	      customl1.incrementCount(fields[0], Double.parseDouble(fields[1]));
+	    }
+	    reader.close();
+	    System.out.println("Using custom L1: "+customl1);
+	  } catch (IOException e) {
+	    throw new RuntimeException(e);
 	  }
-	  reader.close();
-	  System.out.println("Using custom L1: "+customl1);
-	} catch (IOException e) {
-	  throw new RuntimeException(e);
-  }
+	}
 	if(this.updaterType.equalsIgnoreCase("adagradl1"))
 	    return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO, customl1);
         if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
