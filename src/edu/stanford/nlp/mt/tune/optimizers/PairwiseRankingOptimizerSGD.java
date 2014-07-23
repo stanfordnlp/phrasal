@@ -1,20 +1,20 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineOptimizer;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -28,7 +28,7 @@ import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Triple;
 
 /**
- * Pairwise Ranking Optimization + SGD
+ * Online variant of the PRO objective (Hopkins and May, 2011).
  *
  * @author Spence Green
  *
@@ -70,15 +70,26 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final String regconfig;
 
   private final Logger logger;
-  private final Random random;
   private final int expectedNumFeatures;
 
-
+  /**
+   * Constructor.
+   * 
+   * @param tuneSetSize
+   * @param expectedNumFeatures
+   */
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures) {
     this(tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
         DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1, DEFAULT_REGCONFIG);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param tuneSetSize
+   * @param expectedNumFeatures
+   * @param args
+   */
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures, String... args) {
     this(tuneSetSize, expectedNumFeatures,
         args != null && args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
@@ -92,6 +103,21 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         args != null && args.length > 8 ? args[8] : DEFAULT_REGCONFIG);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param tuneSetSize
+   * @param expectedNumFeatures
+   * @param minFeatureSegmentCount
+   * @param gamma
+   * @param xi
+   * @param nThreshold
+   * @param sigma
+   * @param rate
+   * @param updaterType
+   * @param L1lambda
+   * @param regconfig
+   */
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures,
       int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType, double L1lambda, String regconfig) {
     if (minFeatureSegmentCount < 1) throw new RuntimeException("Feature segment count must be >= 1: " + minFeatureSegmentCount);
@@ -107,7 +133,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     this.tuneSetSize = tuneSetSize;
     this.learningRate = rate;
     this.updaterType = updaterType;
-    random = new Random();
 
     // L1 regularization
     this.L1lambda = L1lambda;
@@ -192,14 +217,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
         Counters.subtractInPlace(ltVector, plusFeatures);
 
         dataset.add(new Datum(Label.NEGATIVE, ltVector));
-
-        // Debug info
-//        double margin = selectedPair.first();
-//        int j = selectedPair.second();
-//        int jPrime = selectedPair.third();
-//        logger.fine(String.format("%.02f %d %d %d || %s || %s", margin, i, j, jPrime,
-//            translationList.get(i).get(j).translation.toString(),
-//            translationList.get(i).get(jPrime).translation.toString()));
       }
     }
     return dataset;
@@ -207,17 +224,26 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   /**
    * Sampling algorithm of Hopkins and May (2011).
+   * 
+   * Make one pass through the n-best list to score the translations since e.g. TER-based
+   * metrics are very slow.
    */
   private List<Triple<Double, Integer, Integer>> sample(List<RichTranslation<IString, String>> translations,
       List<Sequence<IString>> references, int sourceId, Sequence<IString> source, SentenceLevelMetric<IString, String> scoreMetric) {
+    double[] tgtToScore = new double[translations.size()];
+    for (int i = 0, max = translations.size(); i < max; ++i) {
+      // Cache the scoring metric values.
+      Sequence<IString> nBestItem = translations.get(i).translation;
+      tgtToScore[i] = scoreMetric.score(sourceId, source, references, nBestItem);
+    }
     List<Triple<Double, Integer, Integer>> v =
         new ArrayList<Triple<Double, Integer, Integer>>(gamma);
-    int jMax   = translations.size();
+    final int jMax   = translations.size();
     for (int g = 0; g < gamma; g++) {
-      int j      = random.nextInt(jMax);
-      int jPrime = random.nextInt(jMax);
-      double gJ = scoreMetric.score(sourceId, source, references, translations.get(j).translation);
-      double gJPrime = scoreMetric.score(sourceId, source, references, translations.get(jPrime).translation);
+      int j      = ThreadLocalRandom.current().nextInt(jMax);
+      int jPrime = ThreadLocalRandom.current().nextInt(jMax);
+      double gJ = tgtToScore[j];
+      double gJPrime = tgtToScore[jPrime];
       double absDiff = Math.abs(gJ-gJPrime);
       if (absDiff >= nThreshold) {
         if (gJ > gJPrime) {
@@ -360,17 +386,17 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 	  return new AdaGradUpdater(learningRate, expectedNumFeatures);
 	Counter<String> customl1 = new ClassicCounter<String>();
 	try{
-	  Scanner scanner = new Scanner(new FileReader(regconfig));
-	  while (scanner.hasNextLine()) {
-	    String[] columns = scanner.nextLine().split(" ");
-	    customl1.incrementCount(columns[0], Double.parseDouble(columns[1]));
+	  LineNumberReader reader = IOTools.getReaderFromFile(regconfig);
+	  for (String line; (line = reader.readLine()) != null;) {
+	    String[] fields = line.trim().split("\\s+");
+	    assert fields.length == 2 : "Malformed regularization specification: " + line;
+      customl1.incrementCount(fields[0], Double.parseDouble(fields[1]));
 	  }
+	  reader.close();
 	  System.out.println("Using custom L1: "+customl1);
-	}
-	catch(FileNotFoundException ex)
-	{
-          System.out.println("Not using custom L1");
-	}
+	} catch (IOException e) {
+	  throw new RuntimeException(e);
+  }
 	if(this.updaterType.equalsIgnoreCase("adagradl1"))
 	    return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO, customl1);
         if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
