@@ -86,13 +86,13 @@ public class SerializedDependencyToCoNLL {
         if (dep == null)
           continue;
         
-        if (dep.second.equals("pobj")) {
+        if (dep.second.equals("pobj") || dep.second.equals("pcomp")) {
           int origHead = dep.first;
           Pair<Integer, String> pdep = reverseDependencies.get(origHead);
           dep.first  = pdep.first;
-          dep.second = "nmod";
           pdep.first = idx;
-          pdep.second = "case";
+          pdep.second = dep.second.equals("pobj") ? "case" : "mark";
+          dep.second = dep.second.equals("pobj") ? "nmod" : "ccomp";
         }
       }
     }
