@@ -43,9 +43,8 @@ public class DependencyProjectorCoNLL {
     optionArgDefs.put("targetTokens", 1); 
     optionArgDefs.put("alignment", 1);
     optionArgDefs.put("annotations", 1);
-    optionArgDefs.put("outdir", 1);
     optionArgDefs.put("transitive", 0);
-    optionArgDefs.put("", 0);
+    optionArgDefs.put("maxFragments", 1);
 
     
     return optionArgDefs;
@@ -59,7 +58,7 @@ public class DependencyProjectorCoNLL {
     return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
   }
   
-  public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens) {
+  public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens, int maxFragments) {
     Map<Integer,Integer> reverseDependencies = Generics.newHashMap();
     
     for (int head : dependencies.keySet()) {
@@ -81,10 +80,10 @@ public class DependencyProjectorCoNLL {
       }
     }
     
-    //if (fragmentCount > 1) {
-    //  skippedSentences++;
-    //  return;
-    //}
+    if (maxFragments > 0 && fragmentCount > maxFragments) {
+      skippedSentences++;
+      return;
+    }
     
     for (int i = 0; i < tokens.size(); i++) {
       String token = tokens.get(i).word();
@@ -319,7 +318,8 @@ public class DependencyProjectorCoNLL {
     String targetTokens = PropertiesUtils.get(options, "targetTokens", null, String.class);
     String alignments = PropertiesUtils.get(options, "alignment", null, String.class);
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
- 
+    int maxFragments = PropertiesUtils.getInt(options, "maxFragments", 0);
+    
     boolean isCoNLL = annotations.toLowerCase().endsWith(".conll");
 
     
@@ -344,10 +344,7 @@ public class DependencyProjectorCoNLL {
       try {
         String targetSentence = targetReader.readLine();
         String alignmentString = alignmentReader.readLine();
-        //System.err.println("---------------------------");
-        //System.err.println("alignment = \"" + alignmentString + "\";");
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, targetSentence, alignmentString);
-        //projectSentence(sentence, alignment);
         
         HashMap<Integer, Integer> reverseDependencies  = null;
         if (isCoNLL) {
@@ -358,16 +355,8 @@ public class DependencyProjectorCoNLL {
         }
         
         Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(reverseDependencies, alignment, transitive);
-        //if (i == 0) {
-        //  System.err.println(dependencies.get(-1));
-        //  System.err.println(dependencies.get(1));
-
-        //}
-        //printDependencyString(dependencies, -1, alignment.e(), "");
-        //System.out.println(dependencies);
      
-        printDependencies(dependencies, alignment.e());
-        //System.err.println("---------------------------");
+        printDependencies(dependencies, alignment.e(), maxFragments);
       } catch (Exception e) {
         System.err.println("SourceSentence: " + sourceSentence);
         e.printStackTrace();

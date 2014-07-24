@@ -48,71 +48,8 @@ public class BuildDependencyLMData {
     return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
   }
   
-
-  public static void printJSONHeader() {
-    System.err.print("{ \"action\": \"convert\", \"attributes\": [], \"comments\": [], \"ctime\": 1398402641.0, \"equivs\": [], \"events\": [], \"messages\": [], \"modifications\": [], \"mtime\": 1398402641.0, \"normalizations\": [], \"protocol\": 1, \"source_files\": [ \"ann\", \"txt\" ], \"triggers\": [],");
-  }
   
-  public static void printJSONFooter() {
-    System.err.println("};");
 
-  }
-  
-  public static void printJSONTokens(List<String> tokens, List<String> posTags) {
-
-    int len = tokens.size();
-    int j = 0;
-
-    StringBuffer tokenOffsets = new StringBuffer();
-    tokenOffsets.append("\"token_offsets\": [");
-    
-    System.err.print("\"entities\": [");
-    for (int i = 0; i < len; i++) {
-      if (i > 0) {
-        System.err.print(",");
-        tokenOffsets.append(",");
-      }
-      int end = j + tokens.get(i).length();
-      System.err.print("[\"T"+ (i+1) +"\", \""+ posTags.get(i) +"\", [[" + j + ","  + end + "]]]");
-      tokenOffsets.append("[" + j + ","  + end + "]");
-      j = end + 1;
-    }
-    System.err.print("],");
-    tokenOffsets.append("],");
-    System.err.print(tokenOffsets.toString());
-    
-    System.err.print("\"sentence_offsets\": " + "[[0," + (j-1) + "]],");
-    
-    System.err.print("\"text\":\"");
-    for (String t : tokens) {
-        System.err.print(t + " ");
-    }
-    System.err.print("\",");
-    
-
-  }
-  
-  //return all dfs sequences
-
-  public static void printDependencyString(Map<Integer, Set<Integer>> dependencies, int idx, Sequence<IString> tokens, String parentString) {
-    if (dependencies.get(idx) == null || dependencies.get(idx).isEmpty()) {
-      System.out.print(parentString);
-      if (idx > -1)  {
-        if (parentString.length() > 0)
-          System.out.print(" ");
-        System.out.print(tokens.get(idx).word());
-        
-      }
-     System.out.println("");
-    } else {
-      String word = idx > -1 ? tokens.get(idx).word() : "";
-      String baseString = parentString.length() > 0 && idx > -1 ? parentString + " " + word : parentString + word;
-      for (Integer child : dependencies.get(idx)) {
-        printDependencyString(dependencies, child, tokens, baseString);
-      }
-    }
-  }
-  
   public static void printLeftAndRightDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<String> tokens) throws IOException {
     for (Integer idx : dependencies.keySet()) {
       if (dependencies.get(idx) != null && !dependencies.get(idx).isEmpty()) {
@@ -120,26 +57,22 @@ public class BuildDependencyLMData {
             NavigableSet<Integer> leftNodes =  dependencies.get(idx).headSet(idx, false);
             NavigableSet<Integer> rightNodes =  dependencies.get(idx).tailSet(idx, false);
   
-            if (!leftNodes.isEmpty()) {
-              leftDepLMWriter.write(tokens.get(idx) + HEAD_SUFFIX);
+            leftDepLMWriter.write(tokens.get(idx) + HEAD_SUFFIX);
+            leftDepLMWriter.write(" ");
+            for (Integer child : leftNodes.descendingSet()) {
+              leftDepLMWriter.write(tokens.get(child));
               leftDepLMWriter.write(" ");
-              for (Integer child : leftNodes.descendingSet()) {
-                leftDepLMWriter.write(tokens.get(child));
-                leftDepLMWriter.write(" ");
-              }
-              leftDepLMWriter.write("\n");
             }
+            leftDepLMWriter.write("\n");
             
-            if (!rightNodes.isEmpty()) {
-              rightDepLMWriter.write(tokens.get(idx) + HEAD_SUFFIX);
+            rightDepLMWriter.write(tokens.get(idx) + HEAD_SUFFIX);
+            rightDepLMWriter.write(" ");
+            for (Integer child : rightNodes) {
+              rightDepLMWriter.write(tokens.get(child));
               rightDepLMWriter.write(" ");
-              for (Integer child : rightNodes) {
-                rightDepLMWriter.write(tokens.get(child));
-                rightDepLMWriter.write(" ");
-              }
-              rightDepLMWriter.write("\n");
-            }          
-        } else {
+            }
+            rightDepLMWriter.write("\n");          
+        } else if (idx == -1) {
           for (int headIdx : dependencies.get(idx)) {
             headDepLMWriter.write(tokens.get(headIdx));
             headDepLMWriter.write("\n");
@@ -203,13 +136,16 @@ public class BuildDependencyLMData {
      
       String fields[] = sourceSentence.split("\t");
       int id = Integer.parseInt(fields[0]) - 1;
-      int head = Integer.parseInt(fields[6]) - 1;
+      int head = fields[7].equals("frag") ? -2 : Integer.parseInt(fields[6]) - 1;
+     
       String token = fields[1];
       tokens.add(token);
       if (!isWord(token))
         continue;
       if (!dependencies.containsKey(head)) 
         dependencies.put(head, new TreeSet<Integer>());
+      if (!dependencies.containsKey(id))
+        dependencies.put(id, new TreeSet<Integer>());
       dependencies.get(head).add(id);
     }
   
