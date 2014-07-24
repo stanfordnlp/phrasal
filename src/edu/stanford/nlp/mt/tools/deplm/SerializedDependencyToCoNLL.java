@@ -89,6 +89,8 @@ public class SerializedDependencyToCoNLL {
         if (dep.second.equals("pobj") || dep.second.equals("pcomp")) {
           int origHead = dep.first;
           Pair<Integer, String> pdep = reverseDependencies.get(origHead);
+          if (pdep == null)
+            continue;
           dep.first  = pdep.first;
           pdep.first = idx;
           pdep.second = dep.second.equals("pobj") ? "case" : "mark";
