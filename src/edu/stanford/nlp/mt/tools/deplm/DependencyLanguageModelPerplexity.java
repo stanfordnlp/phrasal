@@ -65,10 +65,10 @@ public final class DependencyLanguageModelPerplexity {
         Sequence<IString> leftSequence = new SimpleSequence<IString>(leftChildren);
         leftSequence = Sequences.wrapStartEnd(leftSequence, leftLm.getStartToken(), leftLm.getEndToken());
         Sequence<IString> rightSequence = new SimpleSequence<IString>(rightChildren);
-        leftSequence = Sequences.wrapStartEnd(leftSequence, rightLm.getStartToken(), rightLm.getEndToken());
+        rightSequence = Sequences.wrapStartEnd(rightSequence, rightLm.getStartToken(), rightLm.getEndToken());
 
-        score += leftLm.score(leftSequence, 0, null).getScore();
-        score += rightLm.score(rightSequence, 0, null).getScore();
+        score += leftLm.score(leftSequence, 1, null).getScore();
+        score += rightLm.score(rightSequence, 1, null).getScore();
       }
     }
     
