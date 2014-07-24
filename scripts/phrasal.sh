@@ -247,11 +247,11 @@ bookmark
 
 # Setup a trap handler in case user presses "CTRL+C" during
 # a given step
-sigint_handler () {
+function sigint_handler {
     DIE=1
 }
 
-trap trapeze SIGINT
+trap sigint_handler SIGINT
 
 for step in ${STEPS[@]};
 do
