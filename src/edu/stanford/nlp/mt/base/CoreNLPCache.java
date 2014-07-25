@@ -37,12 +37,14 @@ public class CoreNLPCache {
         throw new RuntimeException("Unusable annotation (no sentences) in " + filename);
       }
       annotationMap = new HashMap<Integer,CoreMap>(sentenceList.size());
+      int maxLineId = 0;
       for (CoreMap annotationSet : sentenceList) {
         // 1-indexed
         int lineId = annotationSet.get(CoreAnnotations.LineNumberAnnotation.class);
+        maxLineId = lineId > maxLineId ? lineId : maxLineId;
         annotationMap.put(lineId-1, annotationSet);
       }
-      return sentenceList.size();
+      return maxLineId + 1;
 
     } catch (ClassNotFoundException e) {
       throw new RuntimeException(e);
