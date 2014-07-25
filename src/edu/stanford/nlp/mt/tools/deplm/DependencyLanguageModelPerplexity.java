@@ -30,6 +30,10 @@ public final class DependencyLanguageModelPerplexity {
   private static LanguageModel<IString> rightLm;
   private static LanguageModel<IString> rootLm;
   
+  private static String HEAD_SUFFIX = "<HEAD>";
+  private static String ROOT_SUFFIX = "<ROOT>";
+  private static String FRAG_SUFFIX = "<FRAG>";
+
   
   
   public static double scoreTree(HashMap<Integer, Pair<String, List<Integer>>> dependencies) {
@@ -37,15 +41,18 @@ public final class DependencyLanguageModelPerplexity {
     double score = 0.0;
     
     for (int gov : dependencies.keySet()) {
-      if (gov == 0) {
+      if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
-          score += rootLm.score(new SimpleSequence<IString>(new IString(dependencies.get(dep).first)), 0, null).getScore();
+          String suffix = gov == 0 ? ROOT_SUFFIX : FRAG_SUFFIX;
+          Sequence<IString> seq = new SimpleSequence<IString>(new IString(dependencies.get(dep).first + suffix));
+          seq = Sequences.wrapStartEnd(seq, rootLm.getStartToken(), rootLm.getEndToken());
+          score += rootLm.score(seq, 1, null).getScore();
         }
       } else {
         List<IString> leftChildren = Generics.newLinkedList();
         List<IString> rightChildren = Generics.newLinkedList();
 
-        rightChildren.add(new IString(dependencies.get(gov).first + "<HEAD>"));
+        rightChildren.add(new IString(dependencies.get(gov).first + HEAD_SUFFIX));
 
         
         List<Integer> sortedChildren = Generics.newLinkedList();
@@ -60,7 +67,7 @@ public final class DependencyLanguageModelPerplexity {
         }
         
         Collections.reverse(leftChildren);
-        leftChildren.add(0, new IString(dependencies.get(gov).first + "<HEAD>"));
+        leftChildren.add(0, new IString(dependencies.get(gov).first + HEAD_SUFFIX));
         
         Sequence<IString> leftSequence = new SimpleSequence<IString>(leftChildren);
         leftSequence = Sequences.wrapStartEnd(leftSequence, leftLm.getStartToken(), leftLm.getEndToken());

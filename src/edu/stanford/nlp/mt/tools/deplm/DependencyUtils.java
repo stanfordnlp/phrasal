@@ -32,7 +32,7 @@ public class DependencyUtils {
   /*
    * Extracts the next dependency structure from a reader that reads from
    * a file in CoNLL format and puts it into a HashMap index by the head.
-   * The ROOT has index 0.
+   * The ROOT has index 0, fragments have head -1.
    */
   public static HashMap<Integer, Pair<String, List<Integer>>> getDependenciesFromCoNLLFileReader(BufferedReader reader) {
     HashMap<Integer, Pair<String, List<Integer>>> forwardDependencies = new HashMap<Integer, Pair<String, List<Integer>>>();
@@ -43,6 +43,8 @@ public class DependencyUtils {
         String[] fields = line.split("\t");
         int dep = Integer.parseInt(fields[0]);
         int gov = Integer.parseInt(fields[6]);
+        if (gov == 0 && fields[7].equals("frag"))
+          gov = -1;
         String word = fields[1];
         if (forwardDependencies.get(gov) == null) {
           List<Integer> l = Generics.newLinkedList();

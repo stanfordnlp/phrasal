@@ -27,7 +27,10 @@ public class BuildDependencyLMData {
   private static BufferedWriter headDepLMWriter;
 
   private static String HEAD_SUFFIX = "<HEAD>";
-  
+  private static String ROOT_SUFFIX = "<ROOT>";
+  private static String FRAG_SUFFIX = "<FRAG>";
+
+
   
   /**
    * Command-line option specification.
@@ -72,9 +75,10 @@ public class BuildDependencyLMData {
               rightDepLMWriter.write(" ");
             }
             rightDepLMWriter.write("\n");          
-        } else if (idx == -1) {
+        } else {
           for (int headIdx : dependencies.get(idx)) {
-            headDepLMWriter.write(tokens.get(headIdx));
+            String suffix = idx == -1 ? ROOT_SUFFIX : FRAG_SUFFIX;
+            headDepLMWriter.write(tokens.get(headIdx) + suffix);
             headDepLMWriter.write("\n");
           }
         }
