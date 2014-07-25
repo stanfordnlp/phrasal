@@ -13,5 +13,4 @@ fi
 INFILE=$1
 LM_NAME=$2
 
-ngram-count -text $INFILE -lm $LM_NAME -order 7 -interpolate
--unk -wbdiscount
+ngram-count -text $INFILE -lm $LM_NAME -order 7 -interpolate -unk -wbdiscount
