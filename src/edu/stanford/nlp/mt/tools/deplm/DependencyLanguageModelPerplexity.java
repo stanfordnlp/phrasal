@@ -34,35 +34,54 @@ public final class DependencyLanguageModelPerplexity {
   private static String ROOT_SUFFIX = "<ROOT>";
   private static String FRAG_SUFFIX = "<FRAG>";
 
-  
+  static int wordCount = 0;
   
   public static double scoreTree(HashMap<Integer, Pair<String, List<Integer>>> dependencies) {
     
     double score = 0.0;
     
     for (int gov : dependencies.keySet()) {
+      
+      String headWord = dependencies.get(gov).first;
+      if (headWord != null && !DependencyUtils.isWord(headWord))
+        continue;
+      
+      if (headWord != null) {
+        //System.err.println(headWord);
+        wordCount++;
+      }
+      
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
+          String word = dependencies.get(dep).first;
+          if (!DependencyUtils.isWord(word))
+            continue;
           String suffix = gov == 0 ? ROOT_SUFFIX : FRAG_SUFFIX;
-          Sequence<IString> seq = new SimpleSequence<IString>(new IString(dependencies.get(dep).first + suffix));
+          Sequence<IString> seq = new SimpleSequence<IString>(new IString(word + suffix));
           seq = Sequences.wrapStartEnd(seq, rootLm.getStartToken(), rootLm.getEndToken());
           score += rootLm.score(seq, 1, null).getScore();
+          //System.err.println("DEBUG: Scoring head" + seq.toString());
         }
       } else {
         List<IString> leftChildren = Generics.newLinkedList();
         List<IString> rightChildren = Generics.newLinkedList();
 
-        rightChildren.add(new IString(dependencies.get(gov).first + HEAD_SUFFIX));
+        
+        
+        rightChildren.add(new IString(headWord + HEAD_SUFFIX));
 
         
         List<Integer> sortedChildren = Generics.newLinkedList();
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {
+          String word = dependencies.get(dep).first;
+          if (!DependencyUtils.isWord(word))
+            continue;
           if (dep < gov) {
-            leftChildren.add(new IString(dependencies.get(gov).first));
+            leftChildren.add(new IString(word));
           } else {
-            rightChildren.add(new IString(dependencies.get(gov).first));
+            rightChildren.add(new IString(word));
           }
         }
         
@@ -75,11 +94,14 @@ public final class DependencyLanguageModelPerplexity {
         rightSequence = Sequences.wrapStartEnd(rightSequence, rightLm.getStartToken(), rightLm.getEndToken());
 
         score += leftLm.score(leftSequence, 1, null).getScore();
+        //System.err.println("DEBUG: Scoring left: " + leftSequence.toString());
         score += rightLm.score(rightSequence, 1, null).getScore();
+        //System.err.println("DEBUG: Scoring right: " + rightSequence.toString());
       }
     }
     
-    
+    //System.err.println("DEBUG: Wordcount " + wordCount);
+
     return score;
   }
   
@@ -132,7 +154,7 @@ public final class DependencyLanguageModelPerplexity {
     }
     
     reader.close();
-    System.out.printf("Log sum score: %e%n", logSum);
+    System.out.printf("Log sum score: %e%n", logSum / wordCount);
         
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
     System.err.printf("Elapsed time: %.3fs%n", elapsed);

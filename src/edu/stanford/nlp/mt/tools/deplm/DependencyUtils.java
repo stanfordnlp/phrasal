@@ -11,6 +11,14 @@ import edu.stanford.nlp.util.Pair;
 public class DependencyUtils {
 
   
+  /*
+   * returns true if token is a word 
+   * (starts with a letter or a digit)
+   */
+  public static boolean isWord(String token) {
+    return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
+  }
+  
   
   /*
    * Convert a forward dependency HashMap (indexed by heads) to a reverse 
