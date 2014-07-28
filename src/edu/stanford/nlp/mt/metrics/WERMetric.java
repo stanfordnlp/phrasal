@@ -1,8 +1,5 @@
 package edu.stanford.nlp.mt.metrics;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +10,6 @@ import edu.stanford.nlp.util.EditDistance;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
@@ -195,33 +191,5 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public String scoreDetails() {
       return "None";
     }
-  }
-
-  public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.err
-          .println("Usage:\n\tjava WERMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
-      System.exit(-1);
-    }
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args);
-
-    WERMetric<IString, String> wer = new WERMetric<IString, String>(
-        referencesList);
-    WERMetric<IString, String>.WERIncrementalMetric incMetric = wer
-        .getIncrementalMetric();
-
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in));
-
-    for (String line; (line = reader.readLine()) != null;) {
-      Sequence<IString> translation = IStrings.tokenize(line);
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
-          translation, null, 0);
-      incMetric.add(tran);
-    }
-
-    reader.close();
-
-    System.out.printf("WER = %.3f %%\n", 100 * incMetric.score());
   }
 }

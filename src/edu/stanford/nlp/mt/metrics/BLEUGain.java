@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.util.Sequence;
 
 /**
- * Reference implementation of smoothed BLEU for sanity checking.
+ * BLEU+1 (Lin and Och, 2004) with optional Nakov et al. (2012) extensions.
  * 
  * @author Spence Green
  *
@@ -20,14 +20,29 @@ public class BLEUGain<TK,FV> implements SentenceLevelMetric<TK, FV> {
   private final boolean doNakov;
   private final boolean scaleLength;
   
+  /**
+   * Constructor.
+   */
   public BLEUGain() {
     this(false);
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param doNakov
+   */
   public BLEUGain(boolean doNakov) {
     this(DEFAULT_ORDER, doNakov, true);
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param order
+   * @param doNakov
+   * @param scaleLength
+   */
   public BLEUGain(int order, boolean doNakov, boolean scaleLength) {
     this.order = order;
     this.doNakov = doNakov;

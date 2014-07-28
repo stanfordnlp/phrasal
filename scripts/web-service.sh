@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-
+#
+# Run the Phrasal web service. Use the "-help"
+# option to see the options for the service itself.
+#
+# Author: Spence Green
+#
 if [ $# -le 1 ]; then
     echo Usage: `basename $0` mem options
     exit -1

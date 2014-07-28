@@ -33,18 +33,18 @@ public final class CorpusLevelMetricFactory {
     if (evalMetric.equals("smoothbleu")) {
       emetric = new BLEUMetric<IString,String>(references, true);
 
-    } else if (evalMetric.equals("bleu:3-2terp")) {
+    } else if (evalMetric.equals("bleu:3-2ter")) {
       int BLEUOrder = 3;
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references, BLEUOrder), new TERpMetric<IString,String>(references));
 
-    } else if (evalMetric.equals("bleu:3-terp")) {
+    } else if (evalMetric.equals("bleu:3-ter")) {
       int BLEUOrder = 3;
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 1.0 }, new BLEUMetric<IString, String>(references, BLEUOrder), 
           new TERpMetric<IString, String>(references));
 
-    } else if (evalMetric.equals("terp")) {
+    } else if (evalMetric.equals("ter")) {
       emetric = new TERpMetric<IString, String>(references);
 
     } else if (evalMetric.equals("terpa")) {
@@ -56,27 +56,27 @@ public final class CorpusLevelMetricFactory {
     } else if (evalMetric.equals("nist")) {
       emetric = new NISTMetric<IString, String>(references);
 
-    } else if (evalMetric.startsWith("bleu-terp")) {
+    } else if (evalMetric.equals("bleu-ter")) {
         emetric = new LinearCombinationMetric<IString, String>(new double[] {
             1.0, 1.0 }, new BLEUMetric<IString, String>(references),
             new TERpMetric<IString, String>(references));
     
-    } else if (evalMetric.startsWith("2bleu-terp")) {
+    } else if (evalMetric.equals("2bleu-ter")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           2.0, 1.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references));
       
-    } else if (evalMetric.startsWith("bleu-2terp")) {
+    } else if (evalMetric.equals("bleu-2ter")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references));
 
-    } else if (evalMetric.startsWith("bleu-2terpa")) {
+    } else if (evalMetric.equals("bleu-2terpa")) {
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           1.0, 2.0 }, new BLEUMetric<IString, String>(references),
           new TERpMetric<IString, String>(references, false, true));
 
-    } else if (evalMetric.equals("bleu-terp/2")) {
+    } else if (evalMetric.equals("bleu-ter/2")) {
       TERpMetric<IString, String> termetric = new TERpMetric<IString, String>(references);
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
           0.5, 0.5 }, termetric, new BLEUMetric<IString, String>(references));

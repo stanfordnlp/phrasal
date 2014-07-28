@@ -1,15 +1,11 @@
 package edu.stanford.nlp.mt.metrics;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
-import edu.stanford.nlp.mt.tools.NISTTokenizer;
-import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -43,14 +39,13 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   private int beamWidth = 20;
   private int maxShiftDist = 50;
 
-  public TERpMetric(List<List<Sequence<TK>>> referencesList, boolean countEdits) {
-    this.referencesList = referencesList;
-    this.countEdits = countEdits;
-    WordNet.setWordNetDB(TERpara.para().get_string(
-        TERpara.OPTIONS.WORDNET_DB_DIR));
-    NormalizeText.init();
-  }
-
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   * @param countEdits
+   * @param terpa
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList,
       boolean countEdits, boolean terpa) {
     this.referencesList = referencesList;
@@ -73,10 +68,22 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     NormalizeText.init();
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList) {
     this(referencesList, 0, 0);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param referencesList
+   * @param beamWidth
+   * @param maxShiftDist
+   */
   public TERpMetric(List<List<Sequence<TK>>> referencesList, int beamWidth,
       int maxShiftDist) {
     this.referencesList = referencesList;
@@ -89,6 +96,33 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     NormalizeText.init();
   }
 
+  /**
+   * Compute the sentence-level TER score (pseudo-percentage).
+   * @param translation
+   * @param references
+   * @return
+   */
+  public static <TK> double computeLocalTERScore(Sequence<TK> translation, List<Sequence<TK>> references) {
+    TERcalc terCalc = new TERcalc(new TERcost());
+    terCalc.BEAM_WIDTH = 20;
+    
+    // uniq references to prevent (expensive) redundant calculation.
+    Set<Sequence<TK>> uniqRefs = new HashSet<Sequence<TK>>(references);
+
+    final String hyp = translation.toString();
+    double bestTER = Double.POSITIVE_INFINITY;
+    for (Sequence<TK> refSeq : uniqRefs) {
+      String ref = refSeq.toString();
+      TERalignment align = terCalc.TER(hyp, ref);
+      double ter = align.numEdits / align.numWords;
+      if (ter < bestTER) {
+        bestTER = ter;
+      }
+    }
+    
+    return bestTER;
+  }
+  
   @Override
   public TERpIncrementalMetric getIncrementalMetric() {
     return new TERpIncrementalMetric();
@@ -280,41 +314,5 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
     // public double delCount() { return editCounts[EditType.del.ordinal()]; }
     // public double subCount() { return editCounts[EditType.sub.ordinal()]; }
     // public double sftCount() { return editCounts[EditType.sft.ordinal()]; }
-  }
-
-  public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
-      System.err
-          .println("Usage:\n\tjava TERpMetric (ref 1) (ref 2) ... (ref n) < canidateTranslations\n");
-      System.exit(-1);
-    }
-    boolean doNIST = true;
-    List<List<Sequence<IString>>> referencesList = Metrics.readReferences(args, doNIST);
-    System.out.printf("Metric: TERp with %d references (lower is better)%n", args.length);
-
-    TERpMetric<IString, String> ter = new TERpMetric<IString, String>(
-        referencesList, false, System.getProperty("terpa") != null);
-    TERpMetric<IString, String>.TERpIncrementalMetric incMetric = ter
-        .getIncrementalMetric();
-
-    LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        System.in));
-
-    for (String line; (line = reader.readLine()) != null;) {
-      if (doNIST) line = NISTTokenizer.tokenize(line);
-      Sequence<IString> translation = IStrings.tokenize(line);
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
-          translation, null, 0);
-      incMetric.add(tran);
-    }
-
-    reader.close();
-
-    // TODO(spenceg) This score is negative because of how it is used in the optimization
-    // code. Apply abs() so as to not break anything. Should really refactor this so that
-    // the optimization code applies its own transformations.
-    double score = 100 * incMetric.score();
-    score = Math.abs(score);
-    System.out.printf("TERp = %.3f%n", score);
   }
 }

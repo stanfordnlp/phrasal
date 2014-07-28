@@ -5,4 +5,4 @@
 MEM=1g
 JAVA_OPTS="-ea -Xmx$MEM -Xms$MEM"
 
-java $JAVA_OPTS edu.stanford.nlp.mt.metrics.TERpMetric $@
+java $JAVA_OPTS edu.stanford.nlp.mt.tools.Evaluate terp $@

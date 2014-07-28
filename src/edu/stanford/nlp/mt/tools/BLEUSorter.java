@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import edu.stanford.nlp.mt.metrics.Metrics;
+import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -33,7 +33,7 @@ public class BLEUSorter {
       System.exit(-1);
     }
 
-    List<List<Sequence<IString>>> referencesList = Metrics
+    List<List<Sequence<IString>>> referencesList = MetricUtils
         .readReferencesFromRoot(args[0]);
 
     BLEUMetric<IString, String> bleu1 = new BLEUMetric<IString, String>(
