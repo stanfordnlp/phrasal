@@ -1,17 +1,18 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
@@ -20,18 +21,18 @@ import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tools.deplm.DependencyUtils;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
-import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 
@@ -42,6 +43,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
  */
 public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IString, String> implements NeedsCloneable<IString, String> {
 
+  public static String FEAT_NAME_FRAG_PENALTY = "DEPLM_FRAG_PENALTY";
   public static String FEAT_NAME_WORD_PENALTY = "DEPLM_WORD_PENALTY";
   public static String FEAT_NAME = "DEPLM";
   private static LanguageModel<IString> leftLM ;
@@ -53,10 +55,18 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   private TargetClassMap targetClassMap;
 
   
-  private int maxDepth = 0;
-  private HashMap<Integer, Set<Integer>> reachableNodesCache;
-  private HashMap<Integer, HashSet<Integer>> forwardDependencies;
-  private HashMap<Integer, Integer> reverseDependencies;
+  private static Map<Integer, Map<Integer, Set<Integer>>> reachableNodesCache;
+  private static Map<Integer, Map<Integer, HashSet<Integer>>> forwardDependenciesCache;
+  private static Map<Integer, Map<Integer,Integer>> reverseDependenciesCache;
+  
+  private Map<Integer, HashSet<Integer>> forwardDependencies;
+  private Map<Integer,Integer> reverseDependencies;
+  private Map<Integer, Set<Integer>> reachableNodes;
+
+  private static String HEAD_SUFFIX = "<HEAD>";
+  private static String ROOT_SUFFIX = "<ROOT>";
+  private static String FRAG_SUFFIX = "<FRAG>";
+
   
   public DependencyLanguageModelFeaturizer() {
   
@@ -79,13 +89,9 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
             this.getClass().getName() + ": ERROR No root dependency LM file was specified!");
     }
     
-    if (!options.containsKey("annotations")) {
+    if (!options.containsKey("parses")) {
       throw new RuntimeException(
-            this.getClass().getName() + ": ERROR No dependency annotations file was specified!");
-    }
-    
-    if (options.contains("maxDepth")) {
-      this.maxDepth = Integer.parseInt(options.getProperty("maxDepth"));
+            this.getClass().getName() + ": ERROR No dependency parses file was specified!");
     }
     
     this.useClasses = PropertiesUtils.getBool(options, "classBased", false);
@@ -100,12 +106,37 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     assert rootLM == null;
     rootLM = LanguageModelFactory.load(options.getProperty("rootLM"));
 
-    
-    CoreNLPCache.loadSerialized(options.getProperty("annotations"));
-
-    
+    loadDependencies(options.getProperty("parses"));
 
   }
+  
+  
+  private void loadDependencies(String filename) throws IOException {
+    LineNumberReader reader = IOTools.getReaderFromFile(filename);
+    forwardDependenciesCache = new HashMap<Integer, Map<Integer, HashSet<Integer>>>();
+    reverseDependenciesCache = new HashMap<Integer, Map<Integer, Integer>>();
+    reachableNodesCache = new HashMap<Integer, Map<Integer, Set<Integer>>>();
+
+    
+    HashMap<Integer, Pair<String, List<Integer>>> deps;
+    int i = 0;
+    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader)) != null) {
+      reverseDependenciesCache.put(i,DependencyUtils.getReverseDependencies(deps));
+      Map<Integer, HashSet<Integer>> forwardDeps = new HashMap<Integer, HashSet<Integer>>();
+      for (Integer gov : deps.keySet()) {
+        List<Integer> children = deps.get(gov).second;
+        forwardDeps.put(gov, new HashSet<Integer>());
+        for (Integer child : children) {
+          forwardDeps.get(gov).add(child);
+        }
+      }
+      forwardDependenciesCache.put(i, forwardDeps);
+      i++;
+    }
+    
+    reader.close();
+  }
+  
        
   /*
    * returns true if token is a word 
@@ -114,9 +145,6 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   private boolean isWord(String token) {
     return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
   }
-  
-
- 
   
   /*
    * Returns true if a source token was already translated
@@ -162,7 +190,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     Set<Integer> reachableNodes = Generics.newHashSet();
     reachableNodes.add(root);
     Set<Integer> children = this.forwardDependencies.get(root);
-    if (children == null || depth > this.maxDepth)
+    if (children == null)
       return reachableNodes;
     
     for (int i : children) {
@@ -174,33 +202,60 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   }
   
   private Set<Integer> reachableNodes(int root) {
-    if (!this.reachableNodesCache.containsKey(root)) {
-      this.reachableNodesCache.put(root, this.reachableNodes(root, 0));
+    if (!reachableNodes.containsKey(root)) {
+      reachableNodes.put(root, this.reachableNodes(root, 0));
     }
     
-    return this.reachableNodesCache.get(root);
+    return reachableNodes.get(root);
   }
   
 
+  private void scoreFrag(List<FeatureValue<String>> features, IString token, boolean scoreEmptyChildren) {
+    String str = token.word() + FRAG_SUFFIX;
+    Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
+    seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
+    double rootScore = rootLM.score(seq, 1, null).getScore();
+    features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+    features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
 
-  @Override
-  public void initialize(int sourceInputId,
-      List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
-    SemanticGraph semanticGraph = CoreNLPCache.get(sourceInputId).get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class);
-    this.forwardDependencies = new HashMap<Integer, HashSet<Integer>>();
-    this.reverseDependencies = new HashMap<Integer, Integer>() ;
-    this.reachableNodesCache = new HashMap<Integer, Set<Integer>>();
-    for (TypedDependency dep : semanticGraph.typedDependencies()) {
-      int govIndex = dep.gov().index() - 1;
-      int depIndex = dep.dep().index() - 1;
-      if (!this.forwardDependencies.containsKey(govIndex)) {
-        this.forwardDependencies.put(govIndex, new HashSet<Integer>());
-      }
-      this.forwardDependencies.get(govIndex).add(depIndex);
-      this.reverseDependencies.put(depIndex, govIndex);
+    if (scoreEmptyChildren) {
+      String headStr = token.word() + HEAD_SUFFIX;
+      Sequence<IString> childSeq = new SimpleSequence<IString>(new IString(headStr));
+      childSeq = Sequences.wrapStartEnd(childSeq, rootLM.getStartToken(), rootLM.getEndToken());
+      double leftScore = leftLM.score(childSeq, 1, null).getScore();
+      double rightScore = rightLM.score(childSeq, 1, null).getScore();
+      features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
+      features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
     }
   }
 
+  
+  private void scoreRight(List<FeatureValue<String>> features, IString token, DepLMSubState subState) {
+    Sequence<IString> seq = new SimpleSequence<IString>(token);
+    int start = 0;
+    if (subState.getRightLMState() == null) {
+      seq = Sequences.wrapStart(seq, new IString(subState.headToken.word() + HEAD_SUFFIX));
+      seq = Sequences.wrapStart(seq, rightLM.getStartToken());
+      start = 1;
+    }
+    LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
+    double rightScore = lmState.getScore();
+    subState.setRightLMState(lmState);
+    features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+  }
+  
+  @Override
+  public void initialize(int sourceInputId, List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+    this.forwardDependencies = forwardDependenciesCache.get(sourceInputId);
+    this.reverseDependencies = reverseDependenciesCache.get(sourceInputId);
+    if (reachableNodesCache.get(sourceInputId) == null)
+      reachableNodesCache.put(sourceInputId, new HashMap<Integer, Set<Integer>>());
+    this.reachableNodes = reachableNodesCache.get(sourceInputId);
+  }
+
+  
   
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
@@ -210,13 +265,15 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     
     int targetLength = f.targetPhrase.size();
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
-    tokfor: for (int i = 0; i < targetLength; i++) {
+    for (int i = 0; i < targetLength; i++) {
       int currentTargetIndex = i + f.targetPosition;
       IString token = f.targetPhrase.get(i);
       if (token.word().length() < 1 || !isWord(token.word()))
         continue;
-      if (alignment.t2s(i) == null || alignment.t2s(i).length < 1)
+      if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
+        scoreFrag(features, token, true);
         continue;
+      }
       
       
       if (this.useClasses)
@@ -239,169 +296,99 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       }
       
       //check if the current word has a head
-      if (sourceGovIndex == null)
-        continue; 
+      if (sourceGovIndex == null) {
+        scoreFrag(features, token, true);
+        continue;
+      }
 
       //force 1:1 alignments, if the source token is already aligned to some other target token
       //then ignore the current token
       if (state.alignedSourceIndices.contains(sourceDepIndex)) {
+        scoreFrag(features, token, true);
         continue;
+
       }
       
       //mark the source token as being aligned
       state.alignedSourceIndices.add(sourceDepIndex);
       
       //check for root
-      if (sourceGovIndex == -1) {
-        Sequence<IString> seq = new SimpleSequence<IString>(token);
-        double rootScore = rootLM.score(seq, 0, null).getScore();
+      if (sourceGovIndex < 0) {
+        String str = token.word() + ROOT_SUFFIX;
+        Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
+        seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
+        double rootScore = rootLM.score(seq, 1, null).getScore();
         features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
         features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
       } else {
         //check if head was already put down
         if (isSourceTokenTranslated(sourceGovIndex, currentTargetIndex, f, state.alignedSourceIndices)) {
-          //try to score right
-          DepLMSubState oSubState = state.getSubState(sourceGovIndex);
-          DepLMSubState subState = oSubState;
-          
-          //if the substate exists but has no head token, then the head is not aligned
-          //try to align it to the parent of the head until you reach the root or
-          //maximum depth
-          int depth = 0;
-          while (subState == null || subState.headToken == null) {
-            if (depth >= this.maxDepth) {
-              if (oSubState != null) {
-                oSubState.getLeftChildren().clear();
-                state.setSubState(sourceGovIndex, null);
-              }
-              continue tokfor;
-            }
-            depth++;
-            
-            sourceGovIndex = this.reverseDependencies.get(sourceGovIndex);
-            //score all left children as roots
-            if (sourceGovIndex == -1) {
-              if (oSubState != null && oSubState.getLeftChildren().size() > 0) {
-                for (IString child : oSubState.getLeftChildren()) {
-                  Sequence<IString> seq = new SimpleSequence<IString>(child);
-                  double rootScore = rootLM.score(seq, 0, null).getScore();
-                  features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
-                  features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
-                }
-                oSubState.getLeftChildren().clear();
-              }
-              
-              //Score current token as a root
-              
-              
-              Sequence<IString> seq = new SimpleSequence<IString>(token);
-              double rootScore = rootLM.score(seq, 0, null).getScore();
-              features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
-              features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
 
-              
-              //go to next token
-              continue tokfor;
+          //try to score right
+          DepLMSubState subState = state.getSubState(sourceGovIndex);
+          if (subState != null && subState.headToken != null) {
+            scoreRight(features, token, subState);
+          } else {
+            
+            // Walk up the source dependency tree until
+            // 1) we reach the root (isRoot),
+            // 2) we find a token that has not been put down yet (foundLeftHead),
+            // 3) or we find an aligned token (foundRightHead)
+            
+            boolean isRoot = false;
+            boolean foundLeftHead = false;
+            boolean foundRightHead = false;
+
+            while (!isRoot && !foundLeftHead && !foundRightHead) {
+              sourceGovIndex = this.reverseDependencies.get(sourceGovIndex);
+              if (sourceGovIndex == null || sourceGovIndex < 0) {
+                isRoot = true;
+              } else {
+                if (!isSourceTokenTranslated(sourceGovIndex, currentTargetIndex, f, state.alignedSourceIndices)) {
+                  foundRightHead = true;
+                } else {
+                  subState = state.getSubState(sourceGovIndex);
+                  foundLeftHead = (subState != null && subState.headToken != null);
+                }
+              }
+            }
+            
+            if (isRoot) {
+              scoreFrag(features, token, false);
+            } else if (foundLeftHead) {
+              scoreRight(features, token, subState);
             } else {
               subState = state.getSubState(sourceGovIndex);
-              //check if the transitive head was already put down
-              if (isSourceTokenTranslated(sourceGovIndex, currentTargetIndex, f, state.alignedSourceIndices)) {
-                if (subState == null || subState.headToken == null) {
-                  //also the parent is unaligned, go one level further up the tree
-                  continue;
-                }
-                
-                
-                //if left children exist, score them before breaking
-                //they will now be right tokens relative to the new head 
-                //under the assumption that there are no crossing arcs
-                if (oSubState != null && !oSubState.getLeftChildren().isEmpty()) {
-                  Sequence<IString> seq = new SimpleSequence<IString>(oSubState.getLeftChildren());
-                  int start = 0;
-                  if (subState.getRightLMState() == null) {
-                    seq = Sequences.wrapStart(seq, new IString(subState.headToken.word() + "<HEAD>"));
-                    seq = Sequences.wrapStart(seq, rightLM.getStartToken());
-                    start = 1;
-                  }
-                  LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
-                  double rightScore = lmState.getScore();
-                  subState.setRightLMState(lmState);
-                  features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
-                  features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
-                  oSubState.getLeftChildren().clear();
-                }
-                
-                
-                //exit loop to score the current token as a right token
-                break;
-                
-                
-              } else {
-                //add it to the list of left children of the parent
-                if (oSubState != null) {
-                  if (subState == null) {
-                    subState = state.addSubState(sourceGovIndex);
-                  }
-                  subState.getLeftChildren().addAll(oSubState.getLeftChildren());
-                  subState.getLeftChildren().add(token);
-                  //go to next token
-                  continue tokfor;
-                }
-              }
+              if (subState == null)
+                subState = state.addSubState(sourceDepIndex);
+              subState.leftChildren.add(token);
             }
+            
           }
-      
           
-          //score current token as a right token
-          Sequence<IString> seq = new SimpleSequence<IString>(token);
-          //add start and end tokens
-          int start = 0;
-          if (subState.getRightLMState() == null) {
-            seq = Sequences.wrapStart(seq, new IString(subState.headToken.word() + "<HEAD>"));
-            seq = Sequences.wrapStart(seq, rightLM.getStartToken());
-            start = 1;
-          }
-          LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
-          double rightScore = lmState.getScore();
-          subState.setRightLMState(lmState);
-          features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
-          features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
-
-        } else {
-          //add the current token to the list that should be scored on the left
-          DepLMSubState subState =  state.getSubState(sourceGovIndex);
-          if (subState == null) {
-            subState = state.addSubState(sourceGovIndex);
-          }
-          subState.getLeftChildren().add(token);
         }
-          
       }
-      
-      //score left children of current token
-      DepLMSubState subState =  state.getSubState(sourceDepIndex);
-      if (subState != null) {
-        if (subState.getLeftChildren().size() > 0) {
-          Collections.reverse(subState.getLeftChildren());
-          Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
-          seq = Sequences.wrapStart(seq, new IString(token.word() + "<HEAD>"));
-          seq = Sequences.wrapStartEnd(seq, leftLM.getStartToken(), leftLM.getEndToken());
-          double leftScore = leftLM.score(seq, 1, null).getScore();
-          features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
-          features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * subState.getLeftChildren().size()));
-          subState.getLeftChildren().clear();
-        }
-      } else if (this.forwardDependencies.get(sourceDepIndex) != null && !this.forwardDependencies.get(sourceDepIndex).isEmpty()) {
+          
+       
+      DepLMSubState subState = state.getSubState(sourceDepIndex);
+      if (subState == null) {
         subState = state.addSubState(sourceDepIndex);
       }
-      
-      if (subState != null) {
-        subState.setHeadToken(token);
-      }     
+      subState.setHeadToken(token);
+
+      //score left children of current token
+      Collections.reverse(subState.getLeftChildren());
+      Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
+      seq = Sequences.wrapStart(seq, new IString(token.word() + "<HEAD>"));
+      seq = Sequences.wrapStartEnd(seq, leftLM.getStartToken(), leftLM.getEndToken());
+      double leftScore = leftLM.score(seq, 1, null).getScore();
+      features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
+      features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * subState.getLeftChildren().size()));
+      subState.getLeftChildren().clear();
     }
 
     //check which substates can be deleted
-    for (Integer i: state.getSubStates().keySet()) {
+    for (Integer i : state.getSubStates().keySet()) {
       if (state.getSubState(i) == null)
         continue;
       HashSet<Integer> deps = this.forwardDependencies.get(i);
@@ -415,11 +402,12 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         }
       }
       if (del) {
+        //score right end token
+        scoreRight(features, rightLM.getEndToken(), state.getSubState(i));
         //remove this head index from state
         state.setSubState(i, null);
       }
     }
-    
     
     f.setState(this, state);
     
