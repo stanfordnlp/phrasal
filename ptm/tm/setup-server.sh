@@ -20,6 +20,7 @@ sudo pip install django-pipeline
 # python manage.py collectstatic
 # Edit the addresses of the MT services in controller.py
 # Disable Django debug in settings.py
+# Change the SECRET_KEY for production
 
 # nginx start/stop
 # sudo ln -s ~/path/to/your/mysite/mysite_nginx.conf /etc/nginx/sites-enabled/

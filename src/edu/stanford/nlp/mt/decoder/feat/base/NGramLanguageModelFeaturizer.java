@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -38,7 +39,7 @@ RuleFeaturizer<IString, String> {
   private final IString endToken;
 
   private final boolean isClassBased;
-  private final TargetClassMap targetClassMap;
+  private final AbstractWordClassMap targetClassMap;
 
   /**
    * Constructor.
@@ -56,7 +57,7 @@ RuleFeaturizer<IString, String> {
 
   /**
    * Constructor called by Phrasal when NGramLanguageModelFeaturizer appears in
-   * [additional-featurizers].
+   * <code>Phrasal.LANGUAGE_MODEL_OPT</code>.
    * 
    * The first argument is always the language model filename and the second
    * argument is always the feature name.
@@ -79,7 +80,15 @@ RuleFeaturizer<IString, String> {
     // Named parameters
     Properties options = FeatureUtils.argsToProperties(args);
     this.isClassBased = PropertiesUtils.getBool(options, "classBased", false);
-    this.targetClassMap = isClassBased ? TargetClassMap.getInstance() : null;
+    if (isClassBased && options.containsKey("classMap")) {
+      // A local class map that differs from the one specified by Phrasal.TARGET_CLASS_MAP
+      this.targetClassMap = new LocalTargetMap();
+      this.targetClassMap.load(options.getProperty("classMap"));
+    } else if (isClassBased) {
+      this.targetClassMap = TargetClassMap.getInstance();
+    } else {
+      this.targetClassMap = null;
+    }
   }
 
   /**
@@ -157,5 +166,11 @@ RuleFeaturizer<IString, String> {
   @Override
   public boolean isolationScoreOnly() {
     return true;
+  }
+  
+  private static class LocalTargetMap extends AbstractWordClassMap {
+    public LocalTargetMap() {
+      wordToClass = Generics.newHashMap();
+    }
   }
 }
