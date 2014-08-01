@@ -16,11 +16,8 @@ import edu.stanford.nlp.util.Generics;
 public class WordPenaltyFeaturizer<TK> implements
     RuleFeaturizer<TK, String> {
 
-  public static final String DEBUG_PROPERTY = "WordPenaltyFeaturizer";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "WordPenalty";
-  static public final double MOSES_WORD_PENALTY_MUL = -1.0;
+  private static final double MOSES_WORD_PENALTY_MUL = -1.0;
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
