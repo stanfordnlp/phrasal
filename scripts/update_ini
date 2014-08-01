@@ -36,6 +36,9 @@ my $seen_nbest = 0;
 my $seen_wfile = 0;
 
 while(<STDIN>) {
+  # Comment line
+  next if(/^#/);
+
   my $newfield = 0;
   if(/^\[(\S+)\]/) {
     $field = $1;
