@@ -53,6 +53,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
   private static LanguageModel<IString> rootLM;
 
   private boolean useClasses = false;
+  private boolean useFragPenalty = false;
   
   private TargetClassMap targetClassMap;
 
@@ -97,6 +98,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     }
     
     this.useClasses = PropertiesUtils.getBool(options, "classBased", false);
+    this.useFragPenalty = PropertiesUtils.getBool(options, "fragPenalty", false);
     this.targetClassMap = useClasses ? TargetClassMap.getInstance() : null;
     
      
@@ -207,14 +209,15 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     double rootScore = rootLM.score(seq, 1, null).getScore();
     features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
-    features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
+    if (this.useFragPenalty)
+      features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
 
     if (scoreEmptyChildren) {
       String headStr = token.word() + HEAD_SUFFIX;
       Sequence<IString> childSeq = new SimpleSequence<IString>(new IString(headStr));
       childSeq = Sequences.wrapStartEnd(childSeq, rootLM.getStartToken(), rootLM.getEndToken());
-      double leftScore = leftLM.score(childSeq, 1, null).getScore();
-      double rightScore = rightLM.score(childSeq, 1, null).getScore();
+      double leftScore = leftLM.score(childSeq, 2, null).getScore();
+      double rightScore = rightLM.score(childSeq, 2, null).getScore();
       features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
       features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
     }
@@ -226,7 +229,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     if (subState.getRightLMState() == null) {
       seq = Sequences.wrapStart(seq, new IString(subState.headToken.word() + HEAD_SUFFIX));
       seq = Sequences.wrapStart(seq, rightLM.getStartToken());
-      start = 1;
+      start = 2;
     }
     LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
     double rightScore = lmState.getScore();
@@ -372,7 +375,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
       seq = Sequences.wrapStart(seq, new IString(tgtToken.word() + "<HEAD>"));
       seq = Sequences.wrapStartEnd(seq, leftLM.getStartToken(), leftLM.getEndToken());
-      double leftScore = leftLM.score(seq, 1, null).getScore();
+      double leftScore = leftLM.score(seq, 2, null).getScore();
       features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
       features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * subState.getLeftChildren().size()));
       subState.getLeftChildren().clear();

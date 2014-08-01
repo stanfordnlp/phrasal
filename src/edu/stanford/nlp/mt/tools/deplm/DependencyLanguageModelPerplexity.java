@@ -53,7 +53,7 @@ public final class DependencyLanguageModelPerplexity {
       
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
-          String word = dependencies.get(dep).first;
+          String word = dependencies.get(dep).first.toLowerCase();
           if (!DependencyUtils.isWord(word))
             continue;
           String suffix = gov == 0 ? ROOT_SUFFIX : FRAG_SUFFIX;
@@ -68,14 +68,14 @@ public final class DependencyLanguageModelPerplexity {
 
         
         
-        rightChildren.add(new IString(headWord + HEAD_SUFFIX));
+        rightChildren.add(new IString(headWord.toLowerCase() + HEAD_SUFFIX));
 
         
         List<Integer> sortedChildren = Generics.newLinkedList();
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {
-          String word = dependencies.get(dep).first;
+          String word = dependencies.get(dep).first.toLowerCase();
           if (!DependencyUtils.isWord(word))
             continue;
           if (dep < gov) {
@@ -86,16 +86,16 @@ public final class DependencyLanguageModelPerplexity {
         }
         
         Collections.reverse(leftChildren);
-        leftChildren.add(0, new IString(dependencies.get(gov).first + HEAD_SUFFIX));
+        leftChildren.add(0, new IString(headWord.toLowerCase() + HEAD_SUFFIX));
         
         Sequence<IString> leftSequence = new SimpleSequence<IString>(leftChildren);
         leftSequence = Sequences.wrapStartEnd(leftSequence, leftLm.getStartToken(), leftLm.getEndToken());
         Sequence<IString> rightSequence = new SimpleSequence<IString>(rightChildren);
         rightSequence = Sequences.wrapStartEnd(rightSequence, rightLm.getStartToken(), rightLm.getEndToken());
 
-        score += leftLm.score(leftSequence, 1, null).getScore();
+        score += leftLm.score(leftSequence, 2, null).getScore();
         //System.err.println("DEBUG: Scoring left: " + leftSequence.toString());
-        score += rightLm.score(rightSequence, 1, null).getScore();
+        score += rightLm.score(rightSequence, 2, null).getScore();
         //System.err.println("DEBUG: Scoring right: " + rightSequence.toString());
       }
     }
