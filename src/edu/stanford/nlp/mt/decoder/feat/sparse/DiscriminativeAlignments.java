@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
@@ -32,7 +31,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
   private final boolean addSourceDeletions;
   private final boolean addTargetInsertions;
   private final boolean useClasses;
-  private final boolean addDomainFeatures;
   
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
@@ -45,7 +43,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
     this.addSourceDeletions = false;
     this.addTargetInsertions = false;
     this.useClasses = false;
-    this.addDomainFeatures = false;
   }
 
   /**
@@ -62,7 +59,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = options.containsKey("domainFeature");
   }
 
   @Override
@@ -71,9 +67,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
-        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
-
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int tgtLength = f.targetPhrase.size();
     final int srcLength = f.sourcePhrase.size();
@@ -92,9 +85,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
           IString tgtWord = f.targetPhrase.get(i);
           String featureString = FEATURE_NAME_TGT + ":" + targetRepresentation(tgtWord);
           features.add(new FeatureValue<String>(featureString, 1.0));
-          if (genre != null) {
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
         }
 
       } else {
@@ -115,9 +105,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         if (addSourceDeletions) {
           String featureString = FEATURE_NAME_SRC + ":" + sourceRepresentation(srcWord);
           features.add(new FeatureValue<String>(featureString, 1.0));
-          if (genre != null) {
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
         }
         
       } else {
@@ -151,9 +138,6 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         }
         String featureString = FEATURE_NAME + ":" + sb.toString();
         features.add(new FeatureValue<String>(featureString, 1.0));
-        if (genre != null) {
-          features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-        }
       }
     }
     return features;
