@@ -7,6 +7,8 @@ import java.util.Set;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.util.Generics;
 
@@ -24,14 +26,26 @@ public class FeatureExtractor<TK, FV> extends
     Cloneable {
   
   private List<Featurizer<TK, FV>> featurizers;
-  private final int nbStatefulFeaturizers;
-
+  private final int numDerivationFeaturizers;
+  private int featureAugmentationMode = -1;
+  
   /**
    * Constructor.
    * 
    * @param featurizers
    */
   public FeatureExtractor(List<Featurizer<TK, FV>> featurizers) {
+    this(featurizers, null);
+  }
+  
+  /**
+   * Constructor with optional feature splitting mode.
+   * 
+   * @param allFeaturizers
+   * @param featureAugmentationMode
+   */
+  public FeatureExtractor(List<Featurizer<TK, FV>> featurizers,
+      String featureAugmentationMode) {
     this.featurizers = Generics.newArrayList(featurizers);
     int id = -1;
     for (Featurizer<TK, FV> featurizer : featurizers) {
@@ -40,12 +54,22 @@ public class FeatureExtractor<TK, FV> extends
         sfeaturizer.setId(++id);
       }
     }
-    this.nbStatefulFeaturizers = id + 1;
+    this.numDerivationFeaturizers = id + 1;
+    
+    if (featureAugmentationMode != null) {
+      if (featureAugmentationMode.equals("all")) {
+        this.featureAugmentationMode = 0;
+      } else if (featureAugmentationMode.equals("dense")) {
+        this.featureAugmentationMode = 1;
+      } else if (featureAugmentationMode.equals("extended")) {
+        this.featureAugmentationMode = 2;
+      }
+    }
     
     // Initialize rule featurizers
     initialize();
   }
-  
+
   public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: " + disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
@@ -91,14 +115,21 @@ public class FeatureExtractor<TK, FV> extends
             .getNestedFeaturizers());
       }
     }
-
     return allFeaturizers;
   }
 
-  public int getNumberStatefulFeaturizers() {
-    return nbStatefulFeaturizers;
+  /**
+   * Returns the number of <code>DerivationFeaturizer</code>s.
+   * 
+   * @return
+   */
+  public int getNumDerivationFeaturizers() {
+    return numDerivationFeaturizers;
   }
 
+  /**
+   * Extract derivation features.
+   */
   @Override
   public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
@@ -109,6 +140,9 @@ public class FeatureExtractor<TK, FV> extends
         if (listFeatureValues != null) {
           for (FeatureValue<FV> fv : listFeatureValues) {
             featureValues.add(fv);
+            if (featureAugmentationMode >= 0) {
+              augmentFeatureValue(fv, f.derivation.sourceInputProperties, featureValues);
+            }
           }
         }
       }
@@ -116,6 +150,9 @@ public class FeatureExtractor<TK, FV> extends
     return featureValues;
   }
 
+  /**
+   * Extract rule features.
+   */
   @Override
   public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
@@ -129,11 +166,40 @@ public class FeatureExtractor<TK, FV> extends
           for (FeatureValue<FV> fv : listFeatureValues) {
             fv.doNotCache = doNotCache;
             featureValues.add(fv);
+            if (featureAugmentationMode >= 0) {
+              augmentFeatureValue(fv, f.sourceInputProperties, featureValues);
+            }
           }
         }
       }
     }
     return featureValues;
+  }
+
+  /**
+   * Feature space augmentation a la Daume III (2007).
+   * 
+   * @param fv
+   * @param sourceInputProperties
+   * @param featureValues
+   */
+  @SuppressWarnings("unchecked")
+  private void augmentFeatureValue(FeatureValue<FV> fv,
+      InputProperties sourceInputProperties, List<FeatureValue<FV>> featureValues) {
+    final String genre = sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) sourceInputProperties.get(InputProperty.Domain) : null;
+    if (genre != null) {
+      // 0: baseline
+      // 1: extended
+      final int featureType = FeatureUtils.BASELINE_DENSE_FEATURES.contains(fv.name.toString()) ?
+          0 : 1;
+      if (featureAugmentationMode == 0 ||
+          (featureAugmentationMode == 1 && featureType == 0) ||
+          (featureAugmentationMode == 2 && featureType == 1)) {
+        String featureValue = String.format("%s-%s", fv.name.toString(), genre);
+        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value));
+      }
+    }
   }
 
   @Override

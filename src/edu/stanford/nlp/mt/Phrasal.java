@@ -160,7 +160,7 @@ public class Phrasal {
       .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
-      .append("  -").append(DOMAIN_PROPERTIES).append(" prop [prop] : Set properties for each input domain.");
+      .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].");
     return sb.toString();
   }
 
@@ -198,7 +198,7 @@ public class Phrasal {
   public static final String LOG_PREFIX = "log-prefix";
   public static final String LOG_LEVEL = "log-level";
   public static final String INPUT_PROPERTIES = "input-properties";
-  public static final String DOMAIN_PROPERTIES = "domain-properties";
+  public static final String FEATURE_AUGMENTATION = "feature-augmentation";
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -219,7 +219,7 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, DOMAIN_PROPERTIES));
+        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -405,19 +405,6 @@ public class Phrasal {
     
     if (config.containsKey(PRINT_MODEL_SCORES)) {
       printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
-    }
-    
-    // InputProperties setup. The domain configuration must come before loading the
-    // INPUT_PROPERTIES file, if it exists.
-    if (config.containsKey(DOMAIN_PROPERTIES)) {
-      List<String> parameters = config.get(DOMAIN_PROPERTIES);
-      for (String parameter : parameters) {
-        String[] fields = parameter.split(":");
-        if (fields.length != 2) {
-          throw new RuntimeException("Invalid domain specification: " + parameter);
-        }
-        InputProperties.setDomainIndex(fields[0], fields[1]);
-      }
     }
     
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
@@ -690,17 +677,18 @@ public class Phrasal {
       }
     }
 
-    // Create Featurizer
-    String lgModel = null;
-    if (config.containsKey(LANGUAGE_MODEL_OPT)) {
-      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-      System.err.printf("Language model: %s%n", lgModel);
-    }
+    // Create feature extractor
+    String lgModel = config.containsKey(LANGUAGE_MODEL_OPT) ?
+        config.get(LANGUAGE_MODEL_OPT).get(0) : null;
+    
+    String featureAugmentationMode = config.containsKey(FEATURE_AUGMENTATION) ?
+        config.get(FEATURE_AUGMENTATION).get(0) : null;
 
     final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
         : LinearFutureCostFeaturizer.class.getName();
     FeatureExtractor<IString, String> featurizer;
     if (lgModel != null) {
+      System.err.printf("Language model: %s%n", lgModel);
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.MOSES_DENSE_FEATURES,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
@@ -728,7 +716,12 @@ public class Phrasal {
       List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
       allFeaturizers.addAll(featurizer.getNestedFeaturizers());
       allFeaturizers.addAll(additionalFeaturizers);
-      featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
+      if (featureAugmentationMode == null) {
+        featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
+      } else {
+        System.err.printf("Feature augmentation mode: %s%n", featureAugmentationMode);
+        featurizer = new FeatureExtractor<IString, String>(allFeaturizers, featureAugmentationMode);        
+      }
     }
     
     // Link the final featurizer and the phrase table

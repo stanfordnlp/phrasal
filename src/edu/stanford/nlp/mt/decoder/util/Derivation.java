@@ -152,7 +152,7 @@ State<Derivation<TK, FV>> {
         : base.rule.linearDistortion(rule));
     
     featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
-        .getNumberStatefulFeaturizers());
+        .getNumDerivationFeaturizers());
     
     localFeatures = featurizer.featurize(featurizable);
     localFeatures.addAll(rule.cachedFeatureList);
@@ -204,7 +204,7 @@ State<Derivation<TK, FV>> {
         : base.rule.linearDistortion(rule));
 
     featurizable = new DTUFeaturizable<TK, FV>(this, abstractRule,
-        sourceInputId, featurizer.getNumberStatefulFeaturizers(), targetPhrase,
+        sourceInputId, featurizer.getNumDerivationFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
     localFeatures = featurizer.featurize(featurizable);
