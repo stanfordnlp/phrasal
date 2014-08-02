@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilder;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -172,13 +172,13 @@ public class TargetNNLMFeaturizerTest {
     String linearDistortion = LinearFutureCostFeaturizer.class.getName();
     String gapType = FeaturizerFactory.GapType.none.name();
     int numPhraseFeatures = Integer.MAX_VALUE;
-    CombinedFeaturizer<IString, String> featurizer = FeaturizerFactory.factory(
+    FeatureExtractor<IString, String> featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.MOSES_DENSE_FEATURES,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER, linearDistortion),
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
         makePair(FeaturizerFactory.ARPA_LM_PARAMETER, "kenlm:" + lgModel),
         makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
-    infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
+    infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
     
     // phrase generator
     String generatorName = PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;

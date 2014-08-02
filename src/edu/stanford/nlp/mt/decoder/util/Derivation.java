@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.Rule;
@@ -131,7 +131,7 @@ State<Derivation<TK, FV>> {
    */
   public Derivation(int sourceInputId,
       ConcreteRule<TK,FV> rule, int insertionPosition,
-      Derivation<TK, FV> base, CombinedFeaturizer<TK, FV> featurizer,
+      Derivation<TK, FV> base, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
@@ -184,7 +184,7 @@ State<Derivation<TK, FV>> {
   protected Derivation(int sourceInputId,
       ConcreteRule<TK,FV> rule,
       Rule<TK> abstractRule, int insertionPosition,
-      Derivation<TK, FV> base, CombinedFeaturizer<TK, FV> featurizer,
+      Derivation<TK, FV> base, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       RawSequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
     this.id = nextId.incrementAndGet();

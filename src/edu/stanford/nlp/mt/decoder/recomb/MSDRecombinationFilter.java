@@ -7,8 +7,7 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer.HierBlock;
-import edu.stanford.nlp.mt.decoder.feat.CollapsedFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
@@ -36,12 +35,9 @@ public class MSDRecombinationFilter implements
 
       while (!tmpList.isEmpty()) {
         Featurizer<IString, String> el = tmpList.removeLast();
-        if (el instanceof CombinedFeaturizer) {
+        if (el instanceof FeatureExtractor) {
           tmpList
-              .addAll(((CombinedFeaturizer<IString, String>) el).featurizers);
-        } else if (el instanceof CollapsedFeaturizer) {
-          tmpList
-              .addAll(((CollapsedFeaturizer<IString, String>) el).featurizers);
+              .addAll(((FeatureExtractor<IString, String>) el).featurizers);
         } else {
           if (el instanceof HierarchicalReorderingFeaturizer) {
             hierFeaturizers.add((DerivationFeaturizer<IString, String>) el);

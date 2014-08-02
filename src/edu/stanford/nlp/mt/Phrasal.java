@@ -82,7 +82,7 @@ import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
@@ -699,7 +699,7 @@ public class Phrasal {
 
     final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
         : LinearFutureCostFeaturizer.class.getName();
-    CombinedFeaturizer<IString, String> featurizer;
+    FeatureExtractor<IString, String> featurizer;
     if (lgModel != null) {
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.MOSES_DENSE_FEATURES,
@@ -728,7 +728,7 @@ public class Phrasal {
       List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
       allFeaturizers.addAll(featurizer.featurizers);
       allFeaturizers.addAll(additionalFeaturizers);
-      featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
+      featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
     }
     
     // Link the final featurizer and the phrase table
@@ -811,7 +811,7 @@ public class Phrasal {
     for (int i = 0; i < numThreads; i++) {
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
+        infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
