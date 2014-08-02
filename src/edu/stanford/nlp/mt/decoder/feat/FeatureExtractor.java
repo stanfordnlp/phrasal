@@ -23,9 +23,29 @@ public class FeatureExtractor<TK, FV> extends
     DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV>,
     Cloneable {
   
-  public List<Featurizer<TK, FV>> featurizers;
+  private List<Featurizer<TK, FV>> featurizers;
   private final int nbStatefulFeaturizers;
 
+  /**
+   * Constructor.
+   * 
+   * @param featurizers
+   */
+  public FeatureExtractor(List<Featurizer<TK, FV>> featurizers) {
+    this.featurizers = Generics.newArrayList(featurizers);
+    int id = -1;
+    for (Featurizer<TK, FV> featurizer : featurizers) {
+      if (featurizer instanceof DerivationFeaturizer) {
+        DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
+        sfeaturizer.setId(++id);
+      }
+    }
+    this.nbStatefulFeaturizers = id + 1;
+    
+    // Initialize rule featurizers
+    initialize();
+  }
+  
   public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: " + disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
@@ -73,26 +93,6 @@ public class FeatureExtractor<TK, FV> extends
     }
 
     return allFeaturizers;
-  }
-
-  /**
-   * Constructor.
-   * 
-   * @param featurizers
-   */
-  public FeatureExtractor(List<Featurizer<TK, FV>> featurizers) {
-    this.featurizers = Generics.newArrayList(featurizers);
-    int id = -1;
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof DerivationFeaturizer) {
-        DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
-        sfeaturizer.setId(++id);
-      }
-    }
-    this.nbStatefulFeaturizers = id + 1;
-    
-    // Initialize rule featurizers
-    initialize();
   }
 
   public int getNumberStatefulFeaturizers() {

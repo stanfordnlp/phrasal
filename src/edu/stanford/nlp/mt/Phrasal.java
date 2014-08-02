@@ -726,7 +726,7 @@ public class Phrasal {
 
     if (!additionalFeaturizers.isEmpty()) {
       List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
-      allFeaturizers.addAll(featurizer.featurizers);
+      allFeaturizers.addAll(featurizer.getNestedFeaturizers());
       allFeaturizers.addAll(additionalFeaturizers);
       featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
     }
