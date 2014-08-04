@@ -124,7 +124,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     
     HashMap<Integer, Pair<String, List<Integer>>> deps;
     int i = 0;
-    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader)) != null) {
+    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, true)) != null) {
       reverseDependenciesCache.put(i,DependencyUtils.getReverseDependencies(deps));
       Map<Integer, HashSet<Integer>> forwardDeps = new HashMap<Integer, HashSet<Integer>>();
       for (Integer gov : deps.keySet()) {
@@ -235,7 +235,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     double rightScore = lmState.getScore();
     subState.setRightLMState(lmState);
     features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+    if ( ! token.equals(rightLM.getEndToken()))
+        features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
   }
   
   @Override
@@ -354,12 +355,17 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
             } else {
               subState = state.getSubState(sourceHeadIndex);
               if (subState == null)
-                subState = state.addSubState(sourceDepIndex);
+                subState = state.addSubState(sourceHeadIndex);
               subState.leftChildren.add(tgtToken);
             }
             
           }
           
+        } else {
+          DepLMSubState subState = state.getSubState(sourceHeadIndex);
+          if (subState == null)
+            subState = state.addSubState(sourceHeadIndex);
+          subState.leftChildren.add(tgtToken);
         }
       }
           
@@ -395,7 +401,7 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           }
         }
       }
-      if (del) {
+      if (del || f.done) {
         //score right end token
         scoreRight(features, rightLM.getEndToken(), state.getSubState(i));
         //remove this head index from state

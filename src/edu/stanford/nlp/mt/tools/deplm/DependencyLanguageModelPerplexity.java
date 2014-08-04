@@ -60,7 +60,7 @@ public final class DependencyLanguageModelPerplexity {
           Sequence<IString> seq = new SimpleSequence<IString>(new IString(word + suffix));
           seq = Sequences.wrapStartEnd(seq, rootLm.getStartToken(), rootLm.getEndToken());
           score += rootLm.score(seq, 1, null).getScore();
-          //System.err.println("DEBUG: Scoring head" + seq.toString());
+          System.err.println("DEBUG: Scoring head" + seq.toString());
         }
       } else {
         List<IString> leftChildren = Generics.newLinkedList();
@@ -94,9 +94,9 @@ public final class DependencyLanguageModelPerplexity {
         rightSequence = Sequences.wrapStartEnd(rightSequence, rightLm.getStartToken(), rightLm.getEndToken());
 
         score += leftLm.score(leftSequence, 2, null).getScore();
-        //System.err.println("DEBUG: Scoring left: " + leftSequence.toString());
+        System.err.println("DEBUG: Scoring left: " + leftSequence.toString());
         score += rightLm.score(rightSequence, 2, null).getScore();
-        //System.err.println("DEBUG: Scoring right: " + rightSequence.toString());
+        System.err.println("DEBUG: Scoring right: " + rightSequence.toString());
       }
     }
     
@@ -129,13 +129,7 @@ public final class DependencyLanguageModelPerplexity {
     System.out.printf("Loading root lm: %s...%n", rootModel);
     rootLm = LanguageModelFactory.load(rootModel);
 
-    //train LM:
-    // - on entire bitext
-    // - only on good alignments (try 0 1 2 3 4 5)
-    // - 
-    //READ conll sentence
-    //score according to dependency scoring scheme
-    //try with and without start/end tokens
+ 
     
     
     LineNumberReader reader = IOTools.getReaderFromFile(args[3]);
@@ -145,7 +139,7 @@ public final class DependencyLanguageModelPerplexity {
     double logSum = 0.0;
     final long startTimeMillis = System.nanoTime();
     
-    while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(reader)) != null) {
+    while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, false)) != null) {
       final double score = scoreTree(dependencies);
       assert score != 0.0;
       assert ! Double.isNaN(score);
@@ -154,6 +148,7 @@ public final class DependencyLanguageModelPerplexity {
     }
     
     reader.close();
+    System.out.printf("Word count: %d%n", wordCount);
     System.out.printf("Log sum score: %e%n", logSum / wordCount);
         
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
