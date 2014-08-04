@@ -1,6 +1,11 @@
+#!/usr/bin/env python
+import sys
+import os
+from os.path import basename
 from csv import DictReader
 from collections import defaultdict
 from itertools import combinations
+
 
 """
 Responsible for reading in WMT-formatted CSV files, and outputting pairwise ranks.
@@ -79,3 +84,24 @@ def parse_csv(fh):
         else:
             sent_sys_rank[sentID].append({'systems': systems, 'ranks': ranks})
     return all_systems, sent_sys_rank
+
+def main():
+    """
+    """
+    args = sys.argv[1:]
+    if len(args) != 1:
+        sys.stderr.write('Usage: python %s csv_file%s' % (basename(sys.argv[0]), os.linesep))
+        sys.exit(-1)
+    sys.stderr.write('Converting 1-indexing to 0-indexing' + os.linesep)
+    print '%s,%s,%s,%s' % ('system1', 'system2', 'cmp', 'segmentId')
+    with open(args[0]) as infile:
+        for pair in pairs(infile):
+            sys1 = pair[0]
+            sys2 = pair[1]
+            compare = pair[2]
+            # Convert to 0-indexing
+            seg_id = int(pair[3]) - 1
+            print '%s,%s,%s,%d' % (sys1,sys2,compare,seg_id)
+            
+if __name__ == '__main__':
+    main()

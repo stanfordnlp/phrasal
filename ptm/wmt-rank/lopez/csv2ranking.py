@@ -11,14 +11,12 @@ import csv
 import os
 from collections import namedtuple,defaultdict,Counter
 from argparse import ArgumentParser
+from csv import DictReader
 
 # pip install BitVector
 from BitVector import BitVector
 
 import mfas_solver
-
-# Input format
-AnswerRow = namedtuple('AnswerRow', 'srclang,trglang,srcIndex,documentId,segmentId,judgeId,system1Number,system1Id,system2Number,system2Id,rank')
 
 # Output format
 RankRow = namedtuple('RankRow', 'src_id sys_id rank')
@@ -31,21 +29,20 @@ class Ranking:
         """ Convert ans2csv.sh ranking values to __cmp__ values.
              a<b indicates that a is better than b.
         """
-        if rank == 1:
+        if rank == '<':
             return -1
-        elif rank == 2:
+        elif rank == '>':
             return 1
-        elif rank == 11:
+        elif rank == '=':
             return 0
         else:
             raise RuntimeError('Invalid ranking: ' + str(rank))
         
-    def __init__(self, src_id, judge_id, sys1_id, sys2_id, rank):
+    def __init__(self, src_id, sys1_id, sys2_id, rank):
         self.src_id = int(src_id)
-        self.judge_id = judge_id
-        sys1_id = int(sys1_id)
-        sys2_id = int(sys2_id)
-        self.rank = self.rank_to_int(int(rank))
+        sys1_id = sys1_id
+        sys2_id = sys2_id
+        self.rank = self.rank_to_int(rank)
         if self.rank < 0:
             # A is better than B
             self.sysA = sys1_id
@@ -57,55 +54,30 @@ class Ranking:
             self.sysB = sys1_id
 
     def __str__(self):
-        return '[%s: src:%d sys1:%d sys2:%d rank:%d]' % (self.judge_id,
-                                                         self.src_id,
+        return '[src:%d sys1:%s sys2:%s rank:%d]' % (self.src_id,
                                                          self.sysA,
                                                          self.sysB,
                                                          self.rank)
 
-def parse_answer_file(answer_file, src_lang, tgt_lang):
+def parse_answer_file(answer_file):
     """
     Returns the following data structures:
-      src -> list of rankings
-      judgeId -> list of rankings
-      rankingId -> list of rankings
+      segmentId -> list of rankings
 
     Args:
     Returns:
     Raises:
     """
     src2rank = defaultdict(list)
-    judge2rank = defaultdict(list)
     with open(answer_file) as infile:
-        seen_header = False
-        n_rows = 0
-        for row in map(AnswerRow._make, csv.reader(infile)):
-            if not seen_header:
-                seen_header = True
-                continue
-            if not (row.srclang == src_lang and row.trglang == tgt_lang):
-                continue
-            n_rows += 1
-            # This file is 1-indexed.
-            ranking = Ranking(int(row.srcIndex)-1,
-                              row.judgeId,
-                              row.system1Id,
-                              row.system2Id,
-                              row.rank)
+        for i,row in enumerate(DictReader(infile)):
+            ranking = Ranking(row.get('segmentId'),
+                              row.get('system1'),
+                              row.get('system2'),
+                              row.get('cmp'))
             src2rank[ranking.src_id].append(ranking)
-            judge2rank[ranking.judge_id].append(ranking)
-
-    sys.stderr.write('Read: %d rows%s' % (n_rows, os.linesep))
-    return src2rank,judge2rank
-
-
-def weight_judges(judge2rank, do_non_expert):
-    """ TODO(spenceg): Add judge weighting.
-    """
-    weights = {}
-    for judge_id in judge2rank.keys():
-        weights[judge_id] = 1.0
-    return weights
+        sys.stderr.write('Read: %d rows%s' % (i, os.linesep))
+    return src2rank
 
 
 def uncovered(bv):
@@ -204,7 +176,7 @@ def mark_ties(ranking, edges):
     return tie_with_prev
 
 
-def sort_tgts(ranking_list, judge_weights):
+def sort_tgts(ranking_list):
     """ Use the ranking list to build a total ordering
     of the ranked translations (indicated by Ranking.sys{1,2}_id
 
@@ -274,7 +246,7 @@ def sort_tgts(ranking_list, judge_weights):
     return make_rows(ranking, tie_with_prev)
 
 
-def rank(answer_file, src_lang, tgt_lang, do_non_expert):
+def rank(answer_file):
     """ Reads the input file and applies ranking. Results
     are printed to stdout.
 
@@ -283,18 +255,14 @@ def rank(answer_file, src_lang, tgt_lang, do_non_expert):
     Raises:
     """
     # Build data structures
-    src2rank, judge2rank = parse_answer_file(answer_file,
-                                             src_lang,
-                                             tgt_lang)
-    # Setup weighting of judges
-    judge_weights = weight_judges(judge2rank, do_non_expert)
+    src2rank = parse_answer_file(answer_file)
     
     # Iterate over each source sentence and rank
     # Write to stdout
     write_header = True
     csv_out = csv.writer(sys.stdout)
     for src_id in sorted(src2rank.keys()):
-        row_list = sort_tgts(src2rank[src_id], judge_weights)
+        row_list = sort_tgts(src2rank[src_id])
         for row in row_list:
             if write_header:
                 csv_out.writerow(list(row._fields))
@@ -305,22 +273,13 @@ def rank(answer_file, src_lang, tgt_lang, do_non_expert):
             csv_out.writerow(columns)
 
 def main():
-    desc='Converts the output of ans2csv.sh to a global ranking.'
+    desc='Converts the output of wmtformat.py to a global ranking using the algorithm of Lopez (2012).'
     parser = ArgumentParser(description=desc)
-    parser.add_argument('-n','--non_expert',
-                        dest='do_weight',
-                        action='store_true',
-                        default=False,
-                        help='Apply non-expert weighting a la CCB (2009).')
-    parser.add_argument('src_lang',
-                        help='Source language to rank')
-    parser.add_argument('tgt_lang',
-                        help='Target language to rank')
     parser.add_argument('answer_csv',
-                        help='Output of ans2csv.sh')
+                        help='Output of wmtformat.py')
     args = parser.parse_args()
 
-    rank(args.answer_csv, args.src_lang, args.tgt_lang, args.do_weight)
+    rank(args.answer_csv)
 
 if __name__ == '__main__':
     main()
