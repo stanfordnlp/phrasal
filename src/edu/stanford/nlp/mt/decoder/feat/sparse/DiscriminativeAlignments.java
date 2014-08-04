@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.util.Generics;
-import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
  * Indicator features for aligned and unaligned tokens in phrase pairs.
