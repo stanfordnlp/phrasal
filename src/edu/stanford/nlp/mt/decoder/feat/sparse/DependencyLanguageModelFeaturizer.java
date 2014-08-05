@@ -499,14 +499,15 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         if (state.getSubState(i).headToken != null) {
           //score right end token
           scoreRight(features, rightLM.getEndToken(), state.getSubState(i));
-        } else {
-          //clean up
-          cleanUp(state, f, f.targetPosition + f.targetPhrase.size(), features);
         }
         //remove this head index from state
         state.setSubState(i, null);
       }
     }
+    
+    //clean up
+    cleanUp(state, f, f.targetPosition + f.targetPhrase.size(), features);
+
     
     f.setState(this, state);
     
