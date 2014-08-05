@@ -155,26 +155,51 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     if (alignedSourceIndices.get(sourceHeadIndex))
       return true;
     
-    //check if the sourceIndex lies within the boundaries
-    //of the current rule
-    //if not, then the token was already translated as
-    //it is in the source coverage set
-    if (sourceHeadIndex < f.sourcePosition || sourceHeadIndex >= (f.sourcePosition + f.sourcePhrase.size()))
-      return true;
-    
-    int ruleTargetIndex = tgtIndex - f.targetPosition;
-    
-    //the target index token should always be aligned
-    //if this is not the case, return false
-    if (f.rule.abstractRule.alignment.t2s(ruleTargetIndex) == null 
-        || f.rule.abstractRule.alignment.t2s(ruleTargetIndex).length < 1)
-    return false;
-     
-    int currentSourceIndex = f.rule.abstractRule.alignment.t2s(ruleTargetIndex)[0];
 
-    if (sourceHeadIndex <= currentSourceIndex)
-      return true;
+    final int tgtLength = f.targetPhrase.size();
+    final int srcLength = f.sourcePhrase.size();
 
+    //check if the source head is outside of the bounds of the current rule
+    if (sourceHeadIndex < f.sourcePosition || sourceHeadIndex >= (f.sourcePosition + srcLength)) {
+      //not in coverage set and not within the current rule, 
+      //so it cannot be scorable at this point.
+      return false;
+    }
+    
+    final int ruleTgtIndex = tgtIndex - f.targetPosition;
+    final int ruleSrcIndex = sourceHeadIndex - f.sourcePosition;
+    
+    List<Set<Integer>> s2t = Generics.newArrayList(srcLength);
+    for (int i = 0; i < srcLength; ++i) {
+      s2t.add(new HashSet<Integer>());
+    }
+    
+    PhraseAlignment alignment =  f.rule.abstractRule.alignment;
+
+    for (int i = 0; i < tgtLength; ++i) {
+      int[] alignments = alignment.t2s(i);
+      if (alignments != null) {
+        for (int j : alignments) {
+          s2t.get(j).add(i);
+        }
+      }
+    }
+
+    if (ruleSrcIndex < 0) {
+      s2t.get(0);
+    }
+    
+    if (s2t.get(ruleSrcIndex).isEmpty()) {
+        //Cache this result in alignedSourceIndices
+        alignedSourceIndices.set(sourceHeadIndex);
+        return true;
+    } else {
+      for (int j : s2t.get(ruleSrcIndex)) {
+        if (j < ruleTgtIndex)
+          return true;
+      }
+    }
+    
     return false;
   }
   
@@ -239,6 +264,60 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
   }
   
+  /**
+   * Clean up the state by scoring or attaching all left children of a substate
+   * that corresponds to an unaligned source token
+   */
+  
+  private void cleanUp(DepLMState state, Featurizable<IString, String> f, int tgtIndex, 
+      List<FeatureValue<String>> features) {
+    for (int j = f.sourcePosition; j < f.sourcePhrase.size(); j++) {
+      DepLMSubState orphanedSubState = state.getSubState(j);
+      if (orphanedSubState != null  
+          && orphanedSubState.headToken == null 
+          && ! orphanedSubState.leftChildren.isEmpty()
+          && isSourceTokenScorable(j, tgtIndex, f, state.alignedSourceIndices)) {
+      
+        DepLMSubState subState = null;
+        Integer sourceHeadIndex = dependent2Head.get(j);
+        
+        boolean isRoot = false;
+        boolean foundLeftHead = false;
+        boolean foundRightHead = false;
+
+        while (!isRoot && !foundLeftHead && !foundRightHead) {
+          sourceHeadIndex = this.dependent2Head.get(sourceHeadIndex);
+          if (sourceHeadIndex == null || sourceHeadIndex < 0) {
+            isRoot = true;
+          } else {
+            if (!isSourceTokenScorable(sourceHeadIndex, tgtIndex, f, state.alignedSourceIndices)) {
+              foundRightHead = true;
+            } else {
+              subState = state.getSubState(sourceHeadIndex);
+              foundLeftHead = (subState != null && subState.headToken != null);
+            }
+          }
+        }
+        for (IString child : orphanedSubState.leftChildren) {
+          if (isRoot) {
+            scoreFrag(features, child, false);
+          } else if (foundLeftHead) {
+            scoreRight(features, child, subState);
+          } else {
+            subState = state.getSubState(sourceHeadIndex);
+            if (subState == null)
+              subState = state.addSubState(sourceHeadIndex);
+            subState.leftChildren.add(child);
+          }
+        }
+        
+        orphanedSubState.leftChildren.clear();
+        state.setSubState(j, null);
+        
+      }
+    }
+  }
+  
   @Override
   public void initialize(int sourceInputId, List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
     this.head2Dependent = forwardDependenciesCache.get(sourceInputId);
@@ -259,6 +338,12 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     for (int i = 0, targetLength = f.targetPhrase.size(); i < targetLength; i++) {
       int tgtIndex = i + f.targetPosition;
+      
+      //clean up orphaned substates that are a result of
+      //unaligned source tokens
+      cleanUp(state, f, tgtIndex, features);
+      
+      
       IString tgtToken = f.targetPhrase.get(i);
       if (tgtToken.word().length() == 0 || TokenUtils.isPunctuation(tgtToken.word()))
         continue;
@@ -306,6 +391,8 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       //mark the source token as being aligned
       state.alignedSourceIndices.set(sourceDepIndex);
       
+      
+      
       //check for root
       if (sourceHeadIndex < 0) {
         String str = tgtToken.word() + ROOT_SUFFIX;
@@ -319,6 +406,9 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
         //check if head was already put down
         if (isSourceTokenScorable(sourceHeadIndex, tgtIndex, f, state.alignedSourceIndices)) {
 
+          
+          
+          
           //try to score right
           DepLMSubState subState = state.getSubState(sourceHeadIndex);
           if (subState != null && subState.headToken != null) {
@@ -376,6 +466,10 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
       }
       subState.setHeadToken(tgtToken);
 
+      
+     
+      
+      
       //score left children of current token
       Collections.reverse(subState.getLeftChildren());
       Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
@@ -401,9 +495,14 @@ public class DependencyLanguageModelFeaturizer extends DerivationFeaturizer<IStr
           }
         }
       }
-      if (del || f.done) {
-        //score right end token
-        scoreRight(features, rightLM.getEndToken(), state.getSubState(i));
+      if (del) {
+        if (state.getSubState(i).headToken != null) {
+          //score right end token
+          scoreRight(features, rightLM.getEndToken(), state.getSubState(i));
+        } else {
+          //clean up
+          cleanUp(state, f, f.targetPosition + f.targetPhrase.size(), features);
+        }
         //remove this head index from state
         state.setSubState(i, null);
       }
