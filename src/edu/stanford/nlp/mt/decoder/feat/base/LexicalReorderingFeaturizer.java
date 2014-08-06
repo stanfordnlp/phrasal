@@ -137,7 +137,7 @@ public class LexicalReorderingFeaturizer extends
           }
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
-          features.add(new FeatureValue<String>(featureString, 1.0));
+          features.add(new FeatureValue<String>(featureString, 1.0, true));
         
         } else {
           String ruleRep = useAlignmentConstellations ? 
@@ -145,7 +145,7 @@ public class LexicalReorderingFeaturizer extends
                 getDiscriminativeRepresentation(f);
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
-          features.add(new FeatureValue<String>(featureString, 1.0));
+          features.add(new FeatureValue<String>(featureString, 1.0, true));
         }
       }
     }
@@ -175,11 +175,11 @@ public class LexicalReorderingFeaturizer extends
         boolean ff = featureFunction(monotone, swap, mlrt.positionalMapping[i]);
         if (!usePrior(mlrt.positionalMapping[i])) {
           if (scores != null && ff)
-            features.add(new FeatureValue<String>(featureTags[i], scores[i]));
+            features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
         } else {
           if (priorScores != null && ff)
             features
-                .add(new FeatureValue<String>(featureTags[i], priorScores[i]));
+                .add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
         }
       }
     }

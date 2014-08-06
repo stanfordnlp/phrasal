@@ -189,15 +189,11 @@ public class FeatureExtractor<TK, FV> extends
     final String genre = sourceInputProperties.containsKey(InputProperty.Domain)
         ? (String) sourceInputProperties.get(InputProperty.Domain) : null;
     if (genre != null) {
-      // 0: baseline
-      // 1: extended
-      final int featureType = FeatureUtils.BASELINE_DENSE_FEATURES.contains(fv.name.toString()) ?
-          0 : 1;
       if (featureAugmentationMode == 0 ||
-          (featureAugmentationMode == 1 && featureType == 0) ||
-          (featureAugmentationMode == 2 && featureType == 1)) {
+          (featureAugmentationMode == 1 && fv.isDenseFeature) ||
+          (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
         String featureValue = String.format("%s-%s", fv.name.toString(), genre);
-        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value));
+        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
       }
     }
   }

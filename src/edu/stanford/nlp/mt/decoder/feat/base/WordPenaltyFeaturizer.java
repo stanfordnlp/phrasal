@@ -2,10 +2,10 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Word penalty feature: count of the target side of a rule.
@@ -25,10 +25,8 @@ public class WordPenaltyFeaturizer<TK> implements
     if (f.targetPhrase == null || f.targetPhrase.size() == 0) {
       return null;
     } else {
-      List<FeatureValue<String>> features = Generics.newLinkedList();
-      features.add(new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
-        * f.targetPhrase.size()));
-      return features;
+      return FeatureUtils.wrapFeature(new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
+          * f.targetPhrase.size(), true));
     }
   }
 

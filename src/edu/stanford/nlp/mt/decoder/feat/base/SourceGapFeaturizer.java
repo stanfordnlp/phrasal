@@ -148,13 +148,13 @@ public class SourceGapFeaturizer extends
     double gc3V = gapCount >= 3 ? gc3OnValue : gc3OffValue;
     double gc4V = gapCount >= 4 ? gc4OnValue : gc4OffValue;
     if (gcV != 0.0)
-      list.add(new FeatureValue<String>(gcFeatureName, gcV));
+      list.add(new FeatureValue<String>(gcFeatureName, gcV, true));
     if (gc2V != 0.0)
-      list.add(new FeatureValue<String>(gc2FeatureName, gc2V));
+      list.add(new FeatureValue<String>(gc2FeatureName, gc2V, true));
     if (gc3V != 0.0)
-      list.add(new FeatureValue<String>(gc3FeatureName, gc3V));
+      list.add(new FeatureValue<String>(gc3FeatureName, gc3V, true));
     if (gc4V != 0.0)
-      list.add(new FeatureValue<String>(gc4FeatureName, gc4V));
+      list.add(new FeatureValue<String>(gc4FeatureName, gc4V, true));
   }
 
   private void addDynamicFeatures(Featurizable<IString, String> f,
@@ -178,7 +178,7 @@ public class SourceGapFeaturizer extends
           double gapLogProb = DTUTable.getSourceGapScore(phraseId, i,
               binIds.get(i));
           list.add(new FeatureValue<String>(gapSizeFeaturePerBinName + ":"
-              + binId, gapLogProb));
+              + binId, gapLogProb, true));
         }
       } else {
         double totalGapLogProb = 0.0;
@@ -187,7 +187,7 @@ public class SourceGapFeaturizer extends
           double gapLogProb = DTUTable.getSourceGapScore(id, i, binIds.get(i));
           totalGapLogProb += gapLogProb;
         }
-        list.add(new FeatureValue<String>(gapSizeFeatureName, totalGapLogProb));
+        list.add(new FeatureValue<String>(gapSizeFeatureName, totalGapLogProb, true));
       }
     }
 
@@ -227,7 +227,7 @@ public class SourceGapFeaturizer extends
       }
       if (crossings > 0)
         list.add(new FeatureValue<String>(crossingFeatureName, crossings
-            * crossingOnValue));
+            * crossingOnValue, true));
     }
   }
 

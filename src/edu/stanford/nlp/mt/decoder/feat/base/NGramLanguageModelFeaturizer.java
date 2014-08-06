@@ -133,16 +133,13 @@ RuleFeaturizer<IString, String> {
     
     LMState state = lm.score(partialTranslation, startIndex, priorState);
 
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(featureName, state.getScore()));
-
     f.setState(this, state);
     
     if (DEBUG) {
       System.err.printf("Final score: %f%n", state.getScore());
       System.err.println("===================");
     }
-    return features;
+    return FeatureUtils.wrapFeature(new FeatureValue<String>(featureName, state.getScore(), true));
   }
 
   @Override
@@ -150,9 +147,7 @@ RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(featureName, lmScore));
-    return features;
+    return FeatureUtils.wrapFeature(new FeatureValue<String>(featureName, lmScore, true));
   }
 
   @Override
