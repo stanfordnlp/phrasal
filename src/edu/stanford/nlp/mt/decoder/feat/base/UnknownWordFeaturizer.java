@@ -2,11 +2,11 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Unknown word feature.
@@ -27,10 +27,8 @@ public class UnknownWordFeaturizer<TK> implements
       Featurizable<TK, String> f) {
     final int size = f.targetPhrase.size();
     if (size != 0 && f.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
-      List<FeatureValue<String>> features = Generics.newLinkedList();
-      features.add(new FeatureValue<String>(FEATURE_NAME,
-          MOSES_UNKNOWN_WORD_MUL * size));
-      return features;
+      return FeatureUtils.wrapFeature(new FeatureValue<String>(FEATURE_NAME,
+          MOSES_UNKNOWN_WORD_MUL * size, true));
     }
     return null;
   }

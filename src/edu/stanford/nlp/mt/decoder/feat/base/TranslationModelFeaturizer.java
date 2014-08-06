@@ -69,7 +69,7 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     final int numEffectiveFeatures = Math.min(this.numFeatures, featureNames.length);
     for (int i = 0; i < numEffectiveFeatures; i++) {
       features.add((i < featurizable.translationScores.length) ? new FeatureValue<String>(
-          featureNames[i], featurizable.translationScores[i]) : emptyFV);
+          featureNames[i], featurizable.translationScores[i], true) : emptyFV);
     }
     return features;
   }

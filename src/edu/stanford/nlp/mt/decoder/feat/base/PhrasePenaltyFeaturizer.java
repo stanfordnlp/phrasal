@@ -24,7 +24,7 @@ public class PhrasePenaltyFeaturizer<TK> implements
   private static final List<FeatureValue<String>> features;
   static {
     List<FeatureValue<String>> feats = Generics.newArrayList(1);
-    feats.add(new FeatureValue<String>(FEATURE_NAME, 1.0));
+    feats.add(new FeatureValue<String>(FEATURE_NAME, 1.0, true));
     features = Collections.unmodifiableList(feats);
   }
   

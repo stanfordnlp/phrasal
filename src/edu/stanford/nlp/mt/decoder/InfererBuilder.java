@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder;
 
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -24,7 +24,7 @@ public interface InfererBuilder<TK, FV> {
 	 * 
 	 */
   InfererBuilder<TK, FV> setIncrementalFeaturizer(
-      CombinedFeaturizer<TK, FV> featurizer);
+      FeatureExtractor<TK, FV> featurizer);
 
   /**
 	 * 

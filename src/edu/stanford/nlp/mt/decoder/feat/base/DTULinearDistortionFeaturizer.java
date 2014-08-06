@@ -81,7 +81,7 @@ public class DTULinearDistortionFeaturizer extends
         ++totalSz;
     int gapSz = span - totalSz;
     if (gapSz != 0)
-      list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0 * gapSz));
+      list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0 * gapSz, true));
 
     // /////////////////////////////////////////
     // (2) Standard linear distortion features:
@@ -102,7 +102,7 @@ public class DTULinearDistortionFeaturizer extends
     float deltaCost = futureCost - oldFutureCost;
     int cost = LinearFutureCostFeaturizer.cost(f);
     list.add(new FeatureValue<String>(LD_FEATURE_NAME, -1.0
-        * (cost + deltaCost)));
+        * (cost + deltaCost), true));
 
     return list;
   }
@@ -116,7 +116,7 @@ public class DTULinearDistortionFeaturizer extends
       if (fw.id == DTUTable.GAP_STR.id)
         ++minTotalSz;
     if (minTotalSz > 0)
-      list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0 * minTotalSz));
+      list.add(new FeatureValue<String>(SG_FEATURE_NAME, -1.0 * minTotalSz, true));
     return list;
   }
 

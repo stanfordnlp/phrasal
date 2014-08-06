@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.*;
 
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTURule;
@@ -72,7 +72,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
 
     public PendingPhrase(ConcreteRule<TK,FV> concreteOpt,
         int sourceInputId, Derivation<TK, FV> hyp,
-        CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
+        FeatureExtractor<TK, FV> featurizer, Scorer<FV> scorer,
         int segmentIdx, int firstPosition, int lastPosition) {
       this.segmentIdx = segmentIdx;
       assert (segmentIdx == 0);
@@ -106,7 +106,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
     };
 
     private double[] setFutureCosts(int sourceInputId, Derivation<TK, FV> hyp,
-        CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer) {
+        FeatureExtractor<TK, FV> featurizer, Scorer<FV> scorer) {
 
       // Do we clear the cache of future cost?
       MutableInteger lastId = tlTranslationId.get();
@@ -296,7 +296,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
    * Merge current DTUHypothesis with PendingPhrase instances.
    */
   public List<DTUHypothesis<TK, FV>> mergeHypothesisAndPendingPhrase(
-      int sourceInputId, CombinedFeaturizer<TK, FV> featurizer,
+      int sourceInputId, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
 
     if (hasExpired)
@@ -336,7 +336,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
    */
   public DTUHypothesis(int sourceInputId,
       ConcreteRule<TK,FV> translationOpt, int insertionPosition,
-      Derivation<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
+      Derivation<TK, FV> baseHyp, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
 
     super(sourceInputId, translationOpt, translationOpt.abstractRule,
@@ -387,7 +387,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
   // Constructor used with successors:
   public DTUHypothesis(int sourceInputId,
       ConcreteRule<TK,FV> translationOpt, int insertionPosition,
-      Derivation<TK, FV> baseHyp, CombinedFeaturizer<TK, FV> featurizer,
+      Derivation<TK, FV> baseHyp, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       PendingPhrase<TK, FV> currentPhrase, int currentSegmentIdx,
       Rule<TK> actualTranslationOption) {
@@ -449,7 +449,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
   public DTUHypothesis(int sourceInputId,
       ConcreteRule<TK,FV> translationOpt, int insertionPosition,
       Derivation<TK, FV> baseHyp, Derivation<TK, FV> nextHyp,
-      CombinedFeaturizer<TK, FV> featurizer, Scorer<FV> scorer,
+      FeatureExtractor<TK, FV> featurizer, Scorer<FV> scorer,
       SearchHeuristic<TK, FV> heuristic, Set<Rule<TK>> seenOptions) {
 
     super(sourceInputId, translationOpt,

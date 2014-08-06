@@ -23,6 +23,8 @@ import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
@@ -664,9 +666,9 @@ public final class OnlineTuner {
       Set<String> featureNames = Generics.newHashSet(weights.keySet());
       featureNames.addAll(FeatureUtils.BASELINE_DENSE_FEATURES);
       for (String key : featureNames) {
-        if (key.startsWith("LM")) {
+        if (key.startsWith(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME)) {
           weights.setCount(key, 0.5);
-        } else if (key.startsWith("WordPenalty")) {
+        } else if (key.startsWith(WordPenaltyFeaturizer.FEATURE_NAME)) {
           weights.setCount(key, -1.0);
         } else {
           weights.setCount(key, 0.2);
