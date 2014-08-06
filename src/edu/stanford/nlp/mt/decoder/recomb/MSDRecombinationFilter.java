@@ -37,7 +37,7 @@ public class MSDRecombinationFilter implements
         Featurizer<IString, String> el = tmpList.removeLast();
         if (el instanceof FeatureExtractor) {
           tmpList
-              .addAll(((FeatureExtractor<IString, String>) el).getNestedFeaturizers());
+              .addAll(((FeatureExtractor<IString, String>) el).getFeaturizers());
         } else {
           if (el instanceof HierarchicalReorderingFeaturizer) {
             hierFeaturizers.add((DerivationFeaturizer<IString, String>) el);

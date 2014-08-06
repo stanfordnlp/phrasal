@@ -70,6 +70,11 @@ public class FeatureExtractor<TK, FV> extends
     initialize();
   }
 
+  /**
+   * Remove feature templates give a <code>Set</code> of class names.
+   * 
+   * @param disabledFeaturizers
+   */
   public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: " + disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
@@ -106,13 +111,19 @@ public class FeatureExtractor<TK, FV> extends
     return featurizer;
   }
 
-  public List<Featurizer<TK, FV>> getNestedFeaturizers() {
+  /**
+   * Get all feature templates in this feature extractor. Recursively extracts
+   * feature templates from nested <code>FeatureExtractor</code>s.
+   * 
+   * @return
+   */
+  public List<Featurizer<TK, FV>> getFeaturizers() {
     List<Featurizer<TK, FV>> allFeaturizers = Generics.newLinkedList(
         featurizers);
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof FeatureExtractor) {
         allFeaturizers.addAll(((FeatureExtractor<TK, FV>) featurizer)
-            .getNestedFeaturizers());
+            .getFeaturizers());
       }
     }
     return allFeaturizers;
@@ -210,7 +221,6 @@ public class FeatureExtractor<TK, FV> extends
 
   @Override
   public void initialize() {
-    // Initialize the IsolatedPhraseFeaturizers
     for (Featurizer<TK,FV> featurizer : featurizers) {
       if (featurizer instanceof RuleFeaturizer) {
         ((RuleFeaturizer<TK,FV>) featurizer).initialize();

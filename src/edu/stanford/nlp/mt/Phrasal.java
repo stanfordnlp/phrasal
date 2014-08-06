@@ -714,7 +714,7 @@ public class Phrasal {
 
     if (!additionalFeaturizers.isEmpty()) {
       List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
-      allFeaturizers.addAll(featurizer.getNestedFeaturizers());
+      allFeaturizers.addAll(featurizer.getFeaturizers());
       allFeaturizers.addAll(additionalFeaturizers);
       if (featureAugmentationMode == null) {
         featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
@@ -764,7 +764,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(recombinationMode, featurizer.getNestedFeaturizers());
+        .factory(recombinationMode, featurizer.getFeaturizers());
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;

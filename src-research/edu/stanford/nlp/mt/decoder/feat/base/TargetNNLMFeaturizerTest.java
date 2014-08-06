@@ -219,7 +219,7 @@ public class TargetNNLMFeaturizerTest {
     // recombination Filter
     String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(recombinationMode, featurizer.getNestedFeaturizers());
+        .factory(recombinationMode, featurizer.getFeaturizers());
     infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
     
     return infererBuilder;
