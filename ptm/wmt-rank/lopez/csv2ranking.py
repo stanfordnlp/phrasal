@@ -202,16 +202,21 @@ def sort_tgts(ranking_list):
 
     # SPECIAL CASE: Equality
     # TODO(spenceg): A. Lopez discarded this data as a pre-processing
-    # step. That is clearly bad.
-    # Do naive approach and assert equality if that ranking is in
-    # the majority
+    # step. That is clearly bad since a single pairwise ranked judgment could
+    # subsume all equality judgments.
+    # Do naive approach and assert equality if equality is the majority
+    # pairwise ranking
     for (a,b),n_eq in eq_edges.iteritems():
         n_eq += eq_edges[(b,a)]
         total = edge_counts[(a,b)] + edge_counts[(b,a)]
         perc_eq = float(n_eq) / float(total)
         if perc_eq >= 0.5:
-            di_edges[(a,b)] = 0
-            di_edges[(b,a)] = 0
+            del di_edges[(a,b)]
+            del di_edges[(b,a)]
+        #if not (a,b) in di_edges:
+        #    di_edges[(a,b)] = 0
+        #if not (b,a) in di_edges:
+        #    di_edges[(a,b)] = 0
 
     # Filter edges by only allowing one directed edge between
     # vertices. Edge weights are non-negative, and indicate
@@ -219,6 +224,7 @@ def sort_tgts(ranking_list):
     tournament = Counter()
     for (a,b) in di_edges.keys():
         ab_cost = di_edges[(a,b)]
+        assert ab_cost >= 0
         if (b,a) in di_edges:
             ba_cost = di_edges[(b,a)]
             cost_diff = ab_cost - ba_cost
@@ -226,7 +232,7 @@ def sort_tgts(ranking_list):
                 tournament[(a,b)] = cost_diff
             elif cost_diff < 0:
                 tournament[(b,a)] = -1 * cost_diff
-        elif ab_cost > 0:
+        else:
             tournament[(a,b)] = ab_cost
             
     # Generate the ranking
