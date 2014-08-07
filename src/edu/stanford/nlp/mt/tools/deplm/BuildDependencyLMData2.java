@@ -62,7 +62,7 @@ public class BuildDependencyLMData2 {
     
    head = new IString(head + HEAD_SUFFIX);
    
-   headLmWriter.write(child + " " + head);
+   headLmWriter.write(head + " " + child);
    headLmWriter.write("\n");
    
    noEventWriter.write(head.word());
@@ -76,7 +76,7 @@ public class BuildDependencyLMData2 {
     sibling = new IString(sibling + SIBLING_SUFFIX);
 
     
-    lmWriter.write(child + " " + head + " " + direction + " " + sibling);
+    lmWriter.write(sibling + " " + direction + " " + head + " " + child);
     lmWriter.write("\n");
 
     noEventWriter.write(head.word());
