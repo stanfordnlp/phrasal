@@ -86,59 +86,7 @@ def uncovered(bv):
     return [i for i in xrange(len(bv)) if bv[i] == 0]
 
 
-def run_lopez_mfas_solver(di_edges, vertices):
-    """ Ranks the targets according to the MFAS
-    algorithm of Lopez (2012). 
-
-    Args:
-      vertices -- a list of vertex labels
-      di_edges -- dictionary of weighted edges
-    Returns:
-      ranking -- ranking of vertices input list
-      tie_with_prev -- True if the corresponding index in ranking
-                       is equal to its predecessor.
-    Raises:
-    """
-    goal = BitVector(bitlist=[1]*len(vertices))
-    initial_state = BitVector(intVal=0,size=len(vertices))
-    hypothesis = namedtuple("hypothesis", "cost, state, predecessor, vertex")
-    initial_hypothesis = hypothesis(0, initial_state, None, None)
-    agenda = {}
-    agenda[initial_state] = initial_hypothesis
-
-    while len(agenda) > 0:
-        h = sorted(agenda.itervalues(), key=lambda h:h.cost)[0]
-        if h.state == goal:
-            break
-        del agenda[h.state]
-        print str(h.state),h.cost
-        print uncovered(h.state)
-        for u in uncovered(h.state):
-            # Append u to create new hypothesis
-            new_state = BitVector(intVal=int(h.state), size=len(vertices))
-            new_state[u] = 1
-            u_id = vertices[u]
-            added_cost = 0
-            # Sum up costs of outgoing edges from u
-            print ' ',uncovered(new_state)
-            for v in uncovered(new_state):
-                uv_edge = (u_id, vertices[v])
-                if uv_edge in di_edges:
-                    added_cost += di_edges[uv_edge]
-            new_cost = h.cost + added_cost
-            if new_state not in agenda or agenda[new_state].cost > new_cost:
-                agenda[new_state] = hypothesis(new_cost, new_state, h, u_id)
-        
-    # h is the goal. Extract the 1-best ranking.
-    ranking = []
-    while h.vertex:
-        ranking.append(h.vertex)
-        h = h.predecessor
-
-    return ranking
-
-
-def make_rows(id_list, tie_with_prev):
+def make_rows(id_list, tie_with_prev=None):
     """ Converts the sorted id list to a list
     of RankedRow namedtuples for output.
 
@@ -151,7 +99,10 @@ def make_rows(id_list, tie_with_prev):
     row_list = []
     last_rank = 0
     for i,sys_id in enumerate(id_list):
-        rank = last_rank if tie_with_prev[i] else i + 1
+        rank = i + 1
+        if tie_with_prev and tie_with_prev[i]:
+            rank = last_rank
+            
         row_list.append(RankRow(src_id=None,
                                 sys_id=sys_id,
                                 rank=rank))
@@ -201,11 +152,12 @@ def sort_tgts(ranking_list):
             di_edges[edge] += 1
 
     # SPECIAL CASE: Equality
-    # TODO(spenceg): A. Lopez discarded this data as a pre-processing
+    # TA. Lopez discarded this data as a pre-processing
     # step. That is clearly bad since a single pairwise ranked judgment could
     # subsume all equality judgments.
-    # Do naive approach and assert equality if equality is the majority
-    # pairwise ranking
+    # Assert equality if equality is the majority pairwise judgment
+    # TODO(spenceg): The Lopez implementation returns different
+    # results if 0-weight edges are included in the tournament. Weird?
     for (a,b),n_eq in eq_edges.iteritems():
         n_eq += eq_edges[(b,a)]
         total = edge_counts[(a,b)] + edge_counts[(b,a)]
@@ -237,17 +189,16 @@ def sort_tgts(ranking_list):
             
     # Generate the ranking
     vertices = list(vertices)
-    #vertices = run_lopez_mfas_solver(tournament, vertices)
+    # Call the reference Lopez implementation
     ranking = mfas_solver.lopez_solver(tournament, vertices)
 
     # Sanity check
     assert len(ranking) == len(vertices)
 
-    # Return a vector of Booleans identifying if
-    # the corresponding vertex is tied with the previous vertex.
-    # This is naive (and wrong) since transitivity cannot be asserted
-    # from the rankings.
-    tie_with_prev = mark_ties(ranking, di_edges)
+    # TODO(spenceg): Use the equality rankings as a post-processing
+    # step to declare ties? Lopez didn't do this.
+    #tie_with_prev = mark_ties(ranking, di_edges)
+    tie_with_prev=None
     
     return make_rows(ranking, tie_with_prev)
 
