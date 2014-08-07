@@ -46,10 +46,6 @@ public final class DependencyLanguageModelPerplexity {
       if (headWord != null && !DependencyUtils.isWord(headWord))
         continue;
       
-      if (headWord != null) {
-        //System.err.println(headWord);
-        wordCount++;
-      }
       
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
@@ -60,6 +56,7 @@ public final class DependencyLanguageModelPerplexity {
           Sequence<IString> seq = new SimpleSequence<IString>(new IString(word + suffix));
           seq = Sequences.wrapStartEnd(seq, rootLm.getStartToken(), rootLm.getEndToken());
           score += rootLm.score(seq, 1, null).getScore();
+          wordCount += seq.size() - 1;
           System.err.println("DEBUG: Scoring head" + seq.toString());
         }
       } else {
@@ -94,8 +91,10 @@ public final class DependencyLanguageModelPerplexity {
         rightSequence = Sequences.wrapStartEnd(rightSequence, rightLm.getStartToken(), rightLm.getEndToken());
 
         score += leftLm.score(leftSequence, 2, null).getScore();
+        wordCount += leftSequence.size() - 2;
         System.err.println("DEBUG: Scoring left: " + leftSequence.toString());
         score += rightLm.score(rightSequence, 2, null).getScore();
+        wordCount += rightSequence.size() - 2;
         System.err.println("DEBUG: Scoring right: " + rightSequence.toString());
       }
     }
@@ -150,6 +149,7 @@ public final class DependencyLanguageModelPerplexity {
     reader.close();
     System.out.printf("Word count: %d%n", wordCount);
     System.out.printf("Log sum score: %e%n", logSum / wordCount);
+    System.out.printf("Perplexity: %e%n", Math.pow(2.0, -logSum / wordCount));
         
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
     System.err.printf("Elapsed time: %.3fs%n", elapsed);

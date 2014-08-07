@@ -40,6 +40,8 @@ public final class LanguageModelPerplexity {
         new LineNumberReader(new InputStreamReader(System.in)) :
           IOTools.getReaderFromFile(args[1]);
     
+        
+    int wordCount = 0;
     double logSum = 0.0;
     final long startTimeMillis = System.nanoTime();
     for (String sent; (sent = reader.readLine()) != null;) {
@@ -47,6 +49,7 @@ public final class LanguageModelPerplexity {
       Sequence<IString> paddedSequence = Sequences.wrapStartEnd(seq, lm.getStartToken(),
           lm.getEndToken());
       final double score = lm.score(paddedSequence, 1, null).getScore();
+      wordCount += paddedSequence.size() - 1;
       assert score != 0.0;
       assert ! Double.isNaN(score);
       assert ! Double.isInfinite(score);
@@ -59,6 +62,8 @@ public final class LanguageModelPerplexity {
     }
     reader.close();
     System.out.printf("Log sum score: %e%n", logSum);
+    System.out.printf("Perplexity: %e%n", Math.pow(2.0, -logSum/wordCount));
+
         
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
     System.err.printf("Elapsed time: %.3fs%n", elapsed);
