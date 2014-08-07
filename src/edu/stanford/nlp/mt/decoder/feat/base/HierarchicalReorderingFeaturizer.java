@@ -331,14 +331,14 @@ public class HierarchicalReorderingFeaturizer extends
         if (!usePrior(mlrt.positionalMapping[i])) {
           boolean firstInDTU = f.getSegmentIdx() == 0;
           if (scores != null && firstInDTU) {
-            values.add(new FeatureValue<String>(featureTags[i], scores[i]));
+            values.add(new FeatureValue<String>(featureTags[i], scores[i], true));
           }
         } else {
           boolean lastInDTU = (f.prior == null)
               || f.prior.getSegmentIdx() + 1 == f.prior.getSegmentNumber();
           if (priorScores != null && lastInDTU) {
             values
-                .add(new FeatureValue<String>(featureTags[i], priorScores[i]));
+                .add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
           }
         }
       }
@@ -364,7 +364,7 @@ public class HierarchicalReorderingFeaturizer extends
             : (hb.stackSz - 1);
         if (stackSzDelta != 0)
           values.add(new FeatureValue<String>(NB_FEATURE_PREFIX, -1.0
-              * stackSzDelta));
+              * stackSzDelta, true));
       }
     }
 
@@ -385,7 +385,7 @@ public class HierarchicalReorderingFeaturizer extends
           if (usePrior(mlrt.positionalMapping[i])) {
             if (finalScores != null)
               values.add(new FeatureValue<String>(featureTags[i],
-                  finalScores[i]));
+                  finalScores[i], true));
           }
         }
       }

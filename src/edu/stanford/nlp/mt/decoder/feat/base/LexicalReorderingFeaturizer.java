@@ -15,7 +15,6 @@ import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.SourceClassMap;
@@ -49,8 +48,6 @@ public class LexicalReorderingFeaturizer extends
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
   
-  private final boolean addDomainFeatures;
-
   /**
    * Constructor for discriminative lexicalized reordering.
    */
@@ -61,7 +58,6 @@ public class LexicalReorderingFeaturizer extends
     featureTags = null;
     useAlignmentConstellations = false;
     useClasses = false;
-    addDomainFeatures = false;
     countFeatureIndex = -1;
   }
 
@@ -90,8 +86,6 @@ public class LexicalReorderingFeaturizer extends
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    // Add domain-specific features
-    this.addDomainFeatures = options.containsKey("domainFeature");
     mlrt = null;
     featureTags = null;
   }
@@ -110,7 +104,6 @@ public class LexicalReorderingFeaturizer extends
           mlrt.positionalMapping[i]);
     }
     discriminativeSet = null;
-    addDomainFeatures = false;
     countFeatureIndex = -1;
   }
   
@@ -144,11 +137,7 @@ public class LexicalReorderingFeaturizer extends
           }
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
-          features.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)) {
-            String genre = (String) f.sourceInputProperties.get(InputProperty.Domain);
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
+          features.add(new FeatureValue<String>(featureString, 1.0, true));
         
         } else {
           String ruleRep = useAlignmentConstellations ? 
@@ -156,11 +145,7 @@ public class LexicalReorderingFeaturizer extends
                 getDiscriminativeRepresentation(f);
           String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
               + ruleRep;
-          features.add(new FeatureValue<String>(featureString, 1.0));
-          if (addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)) {
-            String genre = (String) f.sourceInputProperties.get(InputProperty.Domain);
-            features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-          }
+          features.add(new FeatureValue<String>(featureString, 1.0, true));
         }
       }
     }
@@ -190,11 +175,11 @@ public class LexicalReorderingFeaturizer extends
         boolean ff = featureFunction(monotone, swap, mlrt.positionalMapping[i]);
         if (!usePrior(mlrt.positionalMapping[i])) {
           if (scores != null && ff)
-            features.add(new FeatureValue<String>(featureTags[i], scores[i]));
+            features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
         } else {
           if (priorScores != null && ff)
             features
-                .add(new FeatureValue<String>(featureTags[i], priorScores[i]));
+                .add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
         }
       }
     }

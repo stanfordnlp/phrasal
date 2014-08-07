@@ -48,7 +48,7 @@ public final class FeaturizerFactory {
   /**
 	 */
   @SuppressWarnings("unchecked")
-  public static CombinedFeaturizer<IString, String> factory(
+  public static FeatureExtractor<IString, String> factory(
       String...featurizerSpecs) throws IOException {
     final String featurizerName = featurizerSpecs.length == 0 ? DEFAULT_FEATURIZERS :
       featurizerSpecs[0].toLowerCase();
@@ -103,7 +103,7 @@ public final class FeaturizerFactory {
       // Linear distortion
       baselineFeaturizers.add(linearDistortionFeaturizer);
 
-      return new CombinedFeaturizer<IString, String>(baselineFeaturizers);
+      return new FeatureExtractor<IString, String>(baselineFeaturizers);
     
     } else if (featurizerName.equals(MOSES_DENSE_FEATURES)) {
       List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
@@ -134,7 +134,7 @@ public final class FeaturizerFactory {
       pharaohFeaturizers.add(new UnknownWordFeaturizer<IString>());
 
       // return combined model
-      return new CombinedFeaturizer<IString, String>(pharaohFeaturizers);
+      return new FeatureExtractor<IString, String>(pharaohFeaturizers);
     }
     throw new RuntimeException(String.format("Unrecognized featurizer '%s'",
         featurizerName));

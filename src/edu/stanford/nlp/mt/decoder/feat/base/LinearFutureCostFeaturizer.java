@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
@@ -10,9 +11,11 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 
 /**
+ * Linear distortion with optional future cost estimation a la
+ * Green et al. (2010).
+ * 
  * @author Michel Galley
  */
 public class LinearFutureCostFeaturizer extends
@@ -71,9 +74,7 @@ public class LinearFutureCostFeaturizer extends
     int edge = lastOptionForeignEdge(f.derivation);
     f.setState(this, new FutureCostState(edge, futureCost));
     float deltaCost = futureCost - oldFutureCost;
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    features.add(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost)));
-    return features;
+    return FeatureUtils.wrapFeature(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost), true));
   }
 
   @Override

@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
  
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
@@ -60,7 +60,7 @@ public class DerivationNNLM<TK, FV> extends Derivation<TK, FV> {
    */
   public DerivationNNLM(int sourceInputId,
       ConcreteRule<TK,FV> rule, int insertionPosition,
-      DerivationNNLM<TK, FV> base, CombinedFeaturizer<TK, FV> featurizer,
+      DerivationNNLM<TK, FV> base, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
     super(sourceInputId, rule, insertionPosition, base, featurizer, scorer, heuristic);
     prevNNLMScore = base.nnlmScore;

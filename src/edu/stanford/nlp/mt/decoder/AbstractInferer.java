@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.decoder;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -21,7 +21,7 @@ import edu.stanford.nlp.mt.util.FeatureValueCollection;
  * @param <FV>
  */
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
-  protected final CombinedFeaturizer<TK, FV> featurizer;
+  protected final FeatureExtractor<TK, FV> featurizer;
   protected final PhraseGenerator<TK,FV> phraseGenerator;
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
