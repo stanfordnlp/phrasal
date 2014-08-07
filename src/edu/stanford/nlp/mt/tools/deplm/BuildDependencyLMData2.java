@@ -28,6 +28,8 @@ import edu.stanford.nlp.util.StringUtils;
 public class BuildDependencyLMData2 {
 
   private static BufferedWriter lmWriter;
+  private static BufferedWriter headLmWriter;
+
   private static BufferedWriter noEventWriter;
 
   private static String HEAD_SUFFIX = "<HEAD>";
@@ -55,23 +57,13 @@ public class BuildDependencyLMData2 {
     return optionArgDefs;
   }
   
-  
-  /*
-   * returns true if token is a word 
-   * (starts with a letter or a digit)
-   */
-  private static boolean isWord(String token) {
-    return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
-  }
-  
-  
 
  private static void incrementHeadCount(IString child, IString head) throws IOException {
     
    head = new IString(head + HEAD_SUFFIX);
    
-   lmWriter.write(child + " " + head);
-   lmWriter.write("\n");
+   headLmWriter.write(child + " " + head);
+   headLmWriter.write("\n");
    
    noEventWriter.write(head.word());
    noEventWriter.write("\n");
@@ -172,8 +164,10 @@ public class BuildDependencyLMData2 {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     String sourceTokens = PropertiesUtils.get(options, "input", null, String.class);
     String outdirPath = PropertiesUtils.get(options, "outdir", ".", String.class);
-    String leftDepLMFilename = outdirPath + File.separator + "deplm.data";
+    String headDepLMFilename = outdirPath + File.separator + "deplm.head.data";
     String rightDepLMFilename = outdirPath + File.separator + "deplm.nonevents";
+    String leftDepLMFilename = outdirPath + File.separator + "deplm.data";
+
 
 
     File leftDepLMFile = new File(leftDepLMFilename);
@@ -185,11 +179,18 @@ public class BuildDependencyLMData2 {
     if (!rightDepLMFile.exists())
       rightDepLMFile.createNewFile();
     
+    File headDepLMFile = new File(headDepLMFilename);
+    if (!headDepLMFile.exists())
+      headDepLMFile.createNewFile();
+    
 
     FileWriter leftFW = new FileWriter(leftDepLMFile.getAbsoluteFile());
     FileWriter rightFW = new FileWriter(rightDepLMFile.getAbsoluteFile());
+    FileWriter headFW = new FileWriter(headDepLMFile.getAbsoluteFile());
 
+    
     lmWriter = new BufferedWriter(leftFW);
+    headLmWriter = new BufferedWriter(headFW);
     noEventWriter = new BufferedWriter(rightFW);
 
     LineNumberReader inputReader = IOTools.getReaderFromFile(sourceTokens);
@@ -203,6 +204,7 @@ public class BuildDependencyLMData2 {
     inputReader.close();
     lmWriter.close();
     noEventWriter.close();
+    headLmWriter.close();
     
   }
 
