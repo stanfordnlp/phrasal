@@ -146,10 +146,12 @@ public final class DependencyLanguageModelPerplexity {
       logSum += score;
     }
     
+    logSum = logSum / Math.log10(2.0);
+    
     reader.close();
     System.out.printf("Word count: %d%n", wordCount);
     System.out.printf("Log sum score: %e%n", logSum / wordCount);
-    System.out.printf("Perplexity: %e%n", Math.exp(-logSum / wordCount));
+    System.out.printf("Perplexity: %e%n", Math.pow(2.0, -logSum / wordCount));
         
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
     System.err.printf("Elapsed time: %.3fs%n", elapsed);

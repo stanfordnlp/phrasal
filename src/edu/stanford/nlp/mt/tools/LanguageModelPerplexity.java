@@ -61,8 +61,11 @@ public final class LanguageModelPerplexity {
           / Math.log(10));
     }
     reader.close();
+    
+    logSum = logSum / Math.log10(2.0);
+    
     System.out.printf("Log sum score: %e%n", logSum);
-    System.out.printf("Perplexity: %e%n", Math.exp(-logSum/wordCount));
+    System.out.printf("Perplexity: %e%n", Math.pow(2.0, -logSum/wordCount));
 
         
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
