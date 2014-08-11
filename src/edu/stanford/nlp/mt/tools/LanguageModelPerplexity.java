@@ -54,15 +54,13 @@ public final class LanguageModelPerplexity {
       assert ! Double.isNaN(score);
       assert ! Double.isInfinite(score);
       
-      logSum += score;
+      logSum += score / Math.log10(2.0);
       
       System.out.println("Sentence: " + sent);
-      System.out.printf("Sequence score: %f score_log10: %f%n", score, score
-          / Math.log(10));
+      System.out.printf("Sequence score: %f score_log2: %f%n", score, score / Math.log10(2.0));
     }
     reader.close();
     
-    logSum = logSum / Math.log10(2.0);
     
     System.out.printf("Log sum score: %e%n", logSum);
     System.out.printf("Perplexity: %e%n", Math.pow(2.0, -logSum/wordCount));
