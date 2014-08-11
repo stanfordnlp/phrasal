@@ -170,7 +170,7 @@ public final class DependencyLanguageModelPerplexity2 {
   public static void main(String[] args) throws IOException {
     if (args.length != 3) {
       System.err
-          .printf("Usage: java %s type:path_childlm type:path_headlm input_file.conll%n", fDependencyLanguageModelPerplexity2.class.getName());
+          .printf("Usage: java %s type:path_childlm type:path_headlm input_file.conll%n", DependencyLanguageModelPerplexity2.class.getName());
       System.exit(-1);
     }
 
@@ -185,7 +185,7 @@ public final class DependencyLanguageModelPerplexity2 {
     
        
     
-    LineNumberReader reader = IOTools.getReaderFromFile(args[3]);
+    LineNumberReader reader = IOTools.getReaderFromFile(args[2]);
     
     HashMap<Integer, Pair<String, List<Integer>>> dependencies;
     
