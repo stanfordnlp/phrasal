@@ -58,9 +58,9 @@ public final class DependencyLanguageModelPerplexity2 {
 
     Sequence<IString> seq = new SimpleSequence<IString>(tokens);
     
-    double score = headLm.score(seq, 0, null).getScore();
+    double score = headLm.score(seq, 1, null).getScore();
     
-    wordCount += seq.size();
+    wordCount += seq.size() - 1;
     
     return score;
     
@@ -80,9 +80,9 @@ public final class DependencyLanguageModelPerplexity2 {
 
     Sequence<IString> seq = new SimpleSequence<IString>(tokens);
 
-    double score = childLm.score(seq, 0, null).getScore();
+    double score = childLm.score(seq, 3, null).getScore();
     
-    wordCount += seq.size();
+    wordCount += seq.size() - 3;
     
     return score;
 
@@ -177,14 +177,12 @@ public final class DependencyLanguageModelPerplexity2 {
     String childModel = args[0];
     String headModel = args[1];
     
-    System.out.printf("Loading left lm: %s...%n", childModel);
+    System.out.printf("Loading child lm: %s...%n", childModel);
     childLm = LanguageModelFactory.load(childModel);
 
-    System.out.printf("Loading right lm: %s...%n", headModel);
-    headLm = LanguageModelFactory.load(childModel);
-    
-       
-    
+    System.out.printf("Loading head lm: %s...%n", headModel);
+    headLm = LanguageModelFactory.load(headModel);
+        
     LineNumberReader reader = IOTools.getReaderFromFile(args[2]);
     
     HashMap<Integer, Pair<String, List<Integer>>> dependencies;
@@ -199,13 +197,15 @@ public final class DependencyLanguageModelPerplexity2 {
       assert ! Double.isInfinite(score);
       logSum += score;
     }
-    
-    logSum = logSum / Math.log10(2.0);
-    
+        
     reader.close();
     System.out.printf("Word count: %d%n", wordCount);
-    System.out.printf("Log sum score: %e%n", logSum / wordCount);
-    System.out.printf("Perplexity: %e%n", Math.pow(2.0, -logSum / wordCount));
+    System.out.printf("Log sum score: %e%n", logSum);
+    System.out.printf("Log10 sum score: %e%n", logSum / Math.log(10.0));
+    System.out.printf("Log2 sum score: %e%n", logSum / Math.log(2.0));
+    System.out.printf("Log2 Perplexity: %e%n", Math.pow(2.0, -logSum / Math.log(2.0) / wordCount));
+    System.out.printf("Log10 Perplexity: %e%n", Math.pow(10.0, -logSum / Math.log(10.0) / wordCount));
+
        
     double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
     System.err.printf("Elapsed time: %.3fs%n", elapsed);
