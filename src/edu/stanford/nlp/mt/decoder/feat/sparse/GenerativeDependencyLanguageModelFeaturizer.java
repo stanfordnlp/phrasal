@@ -71,9 +71,9 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     head = new IString(head + HEAD_SUFFIX);
     sibling = new IString(sibling + SIBLING_SUFFIX);
     List<IString> tokens = new LinkedList<IString>();
-    tokens.add(head);
-    tokens.add(direction);
     tokens.add(sibling);
+    tokens.add(direction);
+    tokens.add(head);
     tokens.add(child);
     Sequence<IString> seq = new SimpleSequence<IString>(tokens);
     double score = depLM.score(seq, 3, null).getScore();
