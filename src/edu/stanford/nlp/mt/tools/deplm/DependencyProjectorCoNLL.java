@@ -32,6 +32,25 @@ public class DependencyProjectorCoNLL {
   private static int skippedSentences = 0;
   private static int processedSentences = 0;
     
+  private static Map<String, Integer> DEFAULT_ATTACHMENT = Generics.newHashMap();
+  
+  static {
+    //root = 0
+    //left = -1
+    //right = 1
+    DEFAULT_ATTACHMENT.put("adv", 1);
+    DEFAULT_ATTACHMENT.put("noun", -1);
+    DEFAULT_ATTACHMENT.put("adp", 1);
+    DEFAULT_ATTACHMENT.put("prt", 1);
+    DEFAULT_ATTACHMENT.put("det", 1);
+    DEFAULT_ATTACHMENT.put("num", 1);
+    DEFAULT_ATTACHMENT.put(".", 0);
+    DEFAULT_ATTACHMENT.put("pron", 1);
+    DEFAULT_ATTACHMENT.put("verb", -1);
+    DEFAULT_ATTACHMENT.put("x", 1);
+    DEFAULT_ATTACHMENT.put("conj", -1);
+    DEFAULT_ATTACHMENT.put("adj", 1);  
+  }
   
   /**
    * Command-line option specification.
@@ -218,8 +237,9 @@ public class DependencyProjectorCoNLL {
       IString token = alignment.e().get(i);
       if (token.word().length() < 1 || !isWord(token.word()))
         continue;
-      if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1)
-        continue;
+      if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1) {
+        
+      }
       
       Integer sourceGovIndex = null;
       int sourceDepIndex = -1;
@@ -280,6 +300,29 @@ public class DependencyProjectorCoNLL {
     }
     
    
+    //try to attach unaligned tokens
+    //requires POS tagged input
+    //TODO: What to do about circles?
+    for (int i = 0; i < len; i++) {
+      IString token = alignment.e().get(i);
+      if (token.word().length() < 1 || !isWord(token.word()))
+        continue;
+      if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1) {
+        String parts[] = token.word().split("_");
+        if (parts.length > 1) {
+          String pos = parts[parts.length - 1];
+          int dir = DEFAULT_ATTACHMENT.get(pos.toLowerCase());
+          if (dir != 0) {
+            int head = i + dir;
+            if (!projectedDependencies.containsKey(head))
+              projectedDependencies.put(head, new TreeSet<Integer>());
+            projectedDependencies.get(head).add(i);
+          }
+        }
+      }
+    }
+    
+    
     return projectedDependencies;
   }
 
