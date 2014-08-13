@@ -49,20 +49,21 @@ public final class DependencyLanguageModelPerplexity2 {
   
   
   private static double scoreHead(IString child, IString head) throws IOException {
-    
-    head = new IString(head + HEAD_SUFFIX);
-    
-    List<IString> tokens = new LinkedList<IString>();
-    tokens.add(head);
-    tokens.add(child);
 
-    Sequence<IString> seq = new SimpleSequence<IString>(tokens);
-    
-    double score = headLm.score(seq, 1, null).getScore();
-    
-    wordCount += seq.size() - 1;
-    
-    return score;
+    return 0.0;
+//    head = new IString(head + HEAD_SUFFIX);
+//    
+//    List<IString> tokens = new LinkedList<IString>();
+//    tokens.add(head);
+//    tokens.add(child);
+//
+//    Sequence<IString> seq = new SimpleSequence<IString>(tokens);
+//    
+//    double score = headLm.score(seq, 1, null).getScore();
+//    
+//    wordCount += seq.size() - 1;
+//    
+//    return score;
     
    }
   
@@ -73,14 +74,16 @@ public final class DependencyLanguageModelPerplexity2 {
     sibling = new IString(sibling + SIBLING_SUFFIX);
 
     List<IString> tokens = new LinkedList<IString>();
-    tokens.add(head);
-    tokens.add(direction);
     tokens.add(sibling);
+    tokens.add(direction);
+    tokens.add(head);
     tokens.add(child);
 
     Sequence<IString> seq = new SimpleSequence<IString>(tokens);
 
     double score = childLm.score(seq, 3, null).getScore();
+    
+    System.err.println("Scoring: " + seq);
     
     wordCount += seq.size() - 3;
     
