@@ -140,9 +140,9 @@ public final class DependencyLanguageModelPerplexity2 {
           IString depToken1 =  (i > 0) ?  leftChildren.get(i-1) : START_TOKEN;
           IString depToken2 =  (i < leftChildrenCount) ?  leftChildren.get(i) : END_TOKEN;
           if (i > 0)
-            scoreHead(depToken1, headToken);
+            score += scoreHead(depToken1, headToken);
           
-          scoreChild(depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
+          score += scoreChild(depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
         }
         
         
@@ -151,8 +151,8 @@ public final class DependencyLanguageModelPerplexity2 {
           IString depToken1 =  (i > 0) ?  rightChildren.get(i-1) : START_TOKEN;
           IString depToken2 =  (i < rightChildrenCount) ?  rightChildren.get(i) : END_TOKEN;
           if (i > 0)
-            scoreHead(depToken1, headToken);
-          scoreChild(depToken2, depToken1, headToken, RIGHT_DIR_TOKEN);
+            score += scoreHead(depToken1, headToken);
+          score += scoreChild(depToken2, depToken1, headToken, RIGHT_DIR_TOKEN);
         }
       }
     }
