@@ -40,6 +40,9 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
   private static final IString LEFT_DIR_TOKEN = new IString("1<DIR>");
   private static final IString RIGHT_DIR_TOKEN = new IString("2<DIR>");
   
+  private boolean disableEndToken = false;
+  
+  
   public GenerativeDependencyLanguageModelFeaturizer() {
   
   }
@@ -56,7 +59,10 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
             this.getClass().getName() + ": ERROR No dependency parses file was specified!");
     }
     
+    
+    
     this.useClasses = PropertiesUtils.getBool(options, "classBased", false);
+    this.disableEndToken = PropertiesUtils.getBool(options, "disableEndToken", false);
     this.useFragPenalty = PropertiesUtils.getBool(options, "fragPenalty", false);
     this.targetClassMap = useClasses ? TargetClassMap.getInstance() : null;
     
@@ -83,7 +89,8 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
   public void scoreFrag(List<FeatureValue<String>> features, IString token, boolean scoreEmptyChildren) {
     
     double score = score(token, START_TOKEN, FRAG_TOKEN, ROOT_DIR_TOKEN);
-    score += score(END_TOKEN, token, FRAG_TOKEN, ROOT_DIR_TOKEN);
+    if ( ! this.disableEndToken)
+      score += score(END_TOKEN, token, FRAG_TOKEN, ROOT_DIR_TOKEN);
     
     features.add(new FeatureValue<String>(FEAT_NAME, score));
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -2.0));
@@ -91,7 +98,7 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     if (this.useFragPenalty)
       features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
 
-    if (scoreEmptyChildren) {
+    if ( ! this.disableEndToken && scoreEmptyChildren) {
       double leftScore = score(END_TOKEN, START_TOKEN, token, LEFT_DIR_TOKEN);
       double rightScore = score(END_TOKEN, START_TOKEN, token, RIGHT_DIR_TOKEN);
       features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
@@ -112,7 +119,8 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
   
   public void scoreRoot(List<FeatureValue<String>> features, IString token) {
     double score = score(token, START_TOKEN, ROOT_TOKEN, ROOT_DIR_TOKEN);
-    score += score(END_TOKEN, token, ROOT_TOKEN, ROOT_DIR_TOKEN);
+    if ( ! this.disableEndToken)
+      score += score(END_TOKEN, token, ROOT_TOKEN, ROOT_DIR_TOKEN);
     
     features.add(new FeatureValue<String>(FEAT_NAME, score));
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -2.0));
@@ -129,7 +137,8 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     for (int i = 0; i <= leftChildrenCount; i++) {
       IString depToken1 =  (i > 0) ?  subState.getLeftChildren().get(i-1) : START_TOKEN;
       IString depToken2 =  (i < leftChildrenCount) ?  subState.getLeftChildren().get(i) : END_TOKEN;      
-      leftScore += score(depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
+      if ( i < leftChildrenCount ||  ! this.disableEndToken)
+        leftScore += score(depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
     }
     features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * (subState.getLeftChildren().size() + 1)));
@@ -139,7 +148,8 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
   @Override
   public void scoreRightEnd(List<FeatureValue<String>> features,
       DepLMSubState subState) {
-    scoreRight(features, END_TOKEN, subState);
+    if ( ! this.disableEndToken)
+      scoreRight(features, END_TOKEN, subState);
   }
 
   @Override
