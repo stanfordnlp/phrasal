@@ -39,6 +39,7 @@ def rankings(fh):
     sent_sys_rank = defaultdict(list)
     for i,row in enumerate(DictReader(fh)):
         sentID = int(row.get('segmentId'))
+        judgeID = row.get('judgeId')
         systems = []
         ranks = []
         for num in range(1, 6):
@@ -46,24 +47,14 @@ def rankings(fh):
             ranks.append(int(row.get('system%drank' % num)))
 
         if not -1 in ranks:
-            yield (systems, ranks, sentID)
+            yield (systems, ranks, sentID, judgeID)
 
 def pairs(fh):
     """Reads in a CSV file fh, returning pairwise judgments."""
-    for systems, ranks, sentID in rankings(fh):
+    for systems, ranks, sentID, judgeID in rankings(fh):
         for pair in get_pairwise(systems, ranks):
-            yield pair + (sentID,)
+            yield pair + (sentID, judgeID)
             
-def numeric_observation(obs):
-    if obs == '<':
-        return 0
-    elif obs == '=':
-        return 1
-    elif obs == '>':
-        return 2
-
-    raise RuntimeException()
-
 def parse_csv(fh):
     ### Parsing csv file and return system names and rank(1-5) for each sentence
     all_systems = []
@@ -93,7 +84,7 @@ def main():
         sys.stderr.write('Usage: python %s csv_file%s' % (basename(sys.argv[0]), os.linesep))
         sys.exit(-1)
     sys.stderr.write('Converting 1-indexing to 0-indexing' + os.linesep)
-    print '%s,%s,%s,%s' % ('system1', 'system2', 'cmp', 'segmentId')
+    print '%s,%s,%s,%s,%s' % ('system1', 'system2', 'cmp', 'segmentId', 'judgeId')
     with open(args[0]) as infile:
         for pair in pairs(infile):
             sys1 = pair[0]
@@ -101,7 +92,8 @@ def main():
             compare = pair[2]
             # Convert to 0-indexing
             seg_id = int(pair[3]) - 1
-            print '%s,%s,%s,%d' % (sys1,sys2,compare,seg_id)
+            judge_id = pair[4]
+            print '%s,%s,%s,%d,%s' % (sys1,sys2,compare,seg_id,judge_id)
             
 if __name__ == '__main__':
     main()
