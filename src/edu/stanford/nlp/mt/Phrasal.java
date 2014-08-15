@@ -78,9 +78,11 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.TargetClassMap;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -160,7 +162,8 @@ public class Phrasal {
       .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
-      .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].");
+      .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
+      .append("  -").append(ADD_BOUNDARY_TOKENS).append(" boolean : Add boundary tokens around each input sentence (default: false).");
     return sb.toString();
   }
 
@@ -199,6 +202,8 @@ public class Phrasal {
   public static final String LOG_LEVEL = "log-level";
   public static final String INPUT_PROPERTIES = "input-properties";
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
+  public static final String ADD_BOUNDARY_TOKENS = "add-boundary-tokens";
+
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -219,7 +224,8 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION));
+        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
+        ADD_BOUNDARY_TOKENS));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -312,6 +318,11 @@ public class Phrasal {
    */
   private String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
 
+  /**
+   * Add boundary tokens flag.
+   */
+  private boolean addBoundaryTokens;
+  
   /**
    * Pre/post processing filters.
    */
@@ -409,7 +420,10 @@ public class Phrasal {
     
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
         InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
-        
+     
+     addBoundaryTokens  = config.containsKey(ADD_BOUNDARY_TOKENS) ? 
+         Boolean.valueOf(config.get(ADD_BOUNDARY_TOKENS).get(0)) : false;
+         
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
@@ -967,6 +981,10 @@ public class Phrasal {
             bestTranslation = translations.get(0).translation;
           }
         }
+        
+        if (addBoundaryTokens)
+          bestTranslation = bestTranslation.subsequence(1, bestTranslation.size() - 1);
+        
       }
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);
     }
@@ -1044,6 +1062,7 @@ public class Phrasal {
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
       Sequence<IString> source = preprocessor == null ? IStrings.tokenize(line) :
         preprocessor.process(line.trim());
+            
       if (source.size() > maxSentenceSize || source.size() < minSentenceSize) {
         System.err.printf("Skipping: %s%n", line);
         System.err.printf("Tokens: %d (min: %d max: %d)%n", source.size(), minSentenceSize,
@@ -1121,6 +1140,10 @@ public class Phrasal {
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       InputProperties inputProperties) {
     // Sanity checks
+    
+    if (addBoundaryTokens)
+      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
+    
     if (threadId < 0 || threadId >= numThreads) {
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
     }

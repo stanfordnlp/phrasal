@@ -137,17 +137,17 @@ RuleFeaturizer<IString, String> {
     Sequence<IString> partialTranslation = isClassBased ? 
         toClassRepresentation(f.targetPhrase) : f.targetPhrase;
     int startIndex = 0;
-    if (f.prior == null && f.done) {
-      partialTranslation = Sequences.wrapStartEnd(
-          partialTranslation, startToken, endToken);
-      startIndex = 1;
-    } else if (f.prior == null) {
+    if (f.prior == null && (partialTranslation.size() == 0 
+        || partialTranslation.get(0) != startToken)) {
       partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
       startIndex = 1;
-    } else if (f.done) {
-      partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
     }
     
+    if (f.done && (partialTranslation.size() == 0 
+        || partialTranslation.get(partialTranslation.size() - 1) != endToken)) {
+      partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
+    }
+        
     LMState state = lm.score(partialTranslation, startIndex, priorState);
 
     f.setState(this, state);

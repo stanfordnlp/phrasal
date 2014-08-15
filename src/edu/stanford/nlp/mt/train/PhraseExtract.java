@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -49,9 +50,9 @@ import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
-
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
  * Loads multiple feature extractors and writes the output to user-specified
@@ -126,6 +127,7 @@ public class PhraseExtract {
   static public final String TRIPLE_FILE = "tripleFile";
   static public final String MIN_PHRASE_COUNT = "minCount";
   static public final String OUTPUT_DIR = "outputDir";
+  
   
   // phrase translation probs:  
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
@@ -220,6 +222,7 @@ public class PhraseExtract {
   private boolean withAlign;
   private boolean lowercase;
   private String outputDir;
+  private boolean addBoundaryMarkers;
   
   // Triple file format:
   // Single source ||| target ||| alignment triple file
@@ -329,8 +332,10 @@ public class PhraseExtract {
     String fFilterList = prop.getProperty(FILTER_LIST_OPT);
     boolean filterCenterDot = Boolean.parseBoolean(prop.getProperty(
         FILTER_CENTERDOT_OPT, "false"));
-    boolean addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(
+    addBoundaryMarkers = Boolean.parseBoolean(prop.getProperty(
         SymmetricalWordAlignment.ADD_BOUNDARY_MARKERS_OPT, "false"));
+  
+
     boolean emptyFilterList = Boolean.parseBoolean(prop.getProperty(
         EMPTY_FILTER_LIST_OPT, "false"));
     numSplits = Integer.parseInt(prop.getProperty(SPLIT_SIZE_OPT, "0"));
@@ -550,6 +555,21 @@ public class PhraseExtract {
     }
   }
 
+  //increases the index of all alignment points by 1
+  String shiftAlignment(String aString) {
+    StringBuffer sb = new StringBuffer();
+    String alignments[] = aString.trim().split("\\s+");
+    for (String a : alignments) {
+      String parts[] = a.split("-");
+      sb.append(Integer.parseInt(parts[0]) + 1);
+      sb.append("-");
+      sb.append(Integer.parseInt(parts[1]) + 1);
+      sb.append(" ");
+    }
+    return sb.toString();
+  }
+  
+  
   // Make as many passes over training data as needed to extract features.
   void extractFromAlignedData() {
 
@@ -558,6 +578,8 @@ public class PhraseExtract {
           .println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
 
+    Pattern alignmentLinePattern = Pattern.compile("^(NULL \\(\\{ [0-9 ]+ \\}\\)) (.*)$");
+    
     try {
       for (int passNumber = 0; passNumber < totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
@@ -626,8 +648,13 @@ public class PhraseExtract {
           if (eLine == null)
             throw new IOException("Target-language corpus is too short!");
 
+          
+         
+          
           boolean skipLine = (fLine.isEmpty() || eLine.isEmpty());
 
+          
+          
           // Read alignment:
           String aLine = null;
           if (useGIZA) {
@@ -644,6 +671,7 @@ public class PhraseExtract {
                   .symmetrize(gizaAlign, symmetrizationType);
               symAlign.reverse();
               aLine = symAlign.toString().trim();
+
             }
           } else {
             aLine = aReader.readLine();
@@ -660,9 +688,24 @@ public class PhraseExtract {
           }
           if (skipLine || aLine.isEmpty())
             continue;
-
+          
           if (lineNb < startAtLine)
             continue;
+          
+          if (addBoundaryMarkers) {
+           
+            eLine = new StringBuffer(TokenUtils.START_TOKEN).append(" ").append(eLine).append(" ")
+                .append(TokenUtils.END_TOKEN).toString();
+            fLine = new StringBuffer(TokenUtils.START_TOKEN).append(" ").append(fLine).append(" ")
+                .append(TokenUtils.END_TOKEN).toString();
+            
+            int eLen = eLine.split("\\s+").length - 1;
+            int fLen = fLine.split("\\s+").length - 1;
+           
+            aLine = new StringBuffer("0-0 ").append(shiftAlignment(aLine)).append(fLen).append("-")
+                .append(eLen).toString();
+          }
+          
           if (DETAILED_DEBUG) {
             System.err.printf("e(%d): %s%n", lineNb, eLine);
             System.err.printf("f(%d): %s%n", lineNb, fLine);
@@ -866,7 +909,8 @@ public class PhraseExtract {
             + " -noAlign : do not specify alignment in phrase table%n"
             + " -verbose : enable verbose mode%n"
             + " -minCount <n> : Retain only phrases that occur >= n times%n"
-            + " -outputDir path : Output files to <path>%n");
+            + " -outputDir path : Output files to <path>%n"
+            + " -addSentenceBoundaryMarkers : Add <s> and </s> tokens at the beginning and end fof the sentence%n");
   }
 
   /**
