@@ -51,7 +51,7 @@ public class FlatNBestListTest extends TestCase {
 
   public void testToString() throws IOException {
     String strRep = nbestList.toString();
-    assertTrue(strRep.length() == 156305);
+    assertEquals(156305, strRep.length());
   }
 
   public void testRuntimeException() throws IOException {
