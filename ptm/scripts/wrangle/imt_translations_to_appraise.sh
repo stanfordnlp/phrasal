@@ -18,12 +18,8 @@ mkdir -p $ROOT/systems
 # Copy translations
 for file in $(ls *.trans); do
     ID="${file%.*}"
-    cp $file $ROOT/systems/$NAME.$SRC-$TGT.$ID
+    paste $file $ID.props | perl -pe 's/.*IsValid=false.*/\t/g;' | cut -f1 > $ROOT/systems/$NAME.$SRC-$TGT.$ID
 done
-
-# Make the SPAM system, which is a random sort of
-# the MT output.
-cat MT.trans | sort -R > $ROOT/systems/$NAME.$SRC-$TGT.SPAM
 
 # Copy the reference
 cp ref0 $ROOT/references/$NAME-ref.$TGT
