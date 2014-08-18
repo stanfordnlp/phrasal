@@ -132,7 +132,6 @@ public class Phrasal {
       .append("  -").append(LANGUAGE_MODEL_OPT).append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl)
       .append("  -").append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl)
       .append("  -").append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl)
-      .append("  -").append(MOSES_NBEST_LIST_OPT).append(" filename : Generate Moses-format n-best lists.").append(nl)
       .append("  -").append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl)
       .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).").append(nl)
       .append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl)
@@ -171,7 +170,6 @@ public class Phrasal {
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   public static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
-  public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
@@ -213,7 +211,7 @@ public class Phrasal {
     OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE,
         REORDERING_MODEL, DISTORTION_LIMIT, 
         ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
-        OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
+        OPTION_LIMIT_OPT, NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_MODE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
@@ -283,7 +281,7 @@ public class Phrasal {
   /**
    * n-best list options
    */
-  private boolean generateMosesNBestList = true;
+  private String nbestListOutputType = "moses";
   private PrintStream nbestListWriter;
   private int nbestListSize;
   
@@ -866,28 +864,31 @@ public class Phrasal {
         System.err.printf("Generating n-best lists (size: %d)%n",
             nbestListSize);
 
-      } else if (nbestOpt.size() == 2) {
+      } else if (nbestOpt.size() == 2 || nbestOpt.size() == 3) {
         String nbestListFilename = nbestOpt.get(0);
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
         assert nbestListSize >= 0;
-        nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
+        
+        if ( ! nbestListFilename.equals("default")) {
+          nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
+        }
+        
+        if (nbestOpt.size() == 3) {
+          nbestListOutputType = nbestOpt.get(2);
+        }
+        
         System.err.printf("Generating n-best lists to: %s (size: %d)%n",
             nbestListFilename, nbestListSize);
 
       } else {
         throw new RuntimeException(
-            String.format("%s requires 1 or 2 arguments, not %d", NBEST_LIST_OPT,
+            String.format("%s requires 1, 2 or 3 arguments, not %d", NBEST_LIST_OPT,
                 nbestOpt.size()));
       }
 
     } else {
       nbestListSize = -1;
       nbestListWriter = null;
-    }
-    
-    List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
-    if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
-      generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
     }
         
     // Determine if we need to generate an alignment file
@@ -1021,7 +1022,7 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nbestListWriter);
       }
       
       // Output the alignments if necessary

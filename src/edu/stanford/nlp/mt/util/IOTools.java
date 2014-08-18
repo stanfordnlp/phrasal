@@ -257,7 +257,7 @@ public final class IOTools {
    */
   public static void writeNbest(List<RichTranslation<IString, String>> translations, 
       int sourceInputId,
-      boolean generateMosesNBestList,
+      String outputType,
       PrintStream nbestListWriter) {
     assert translations != null;
     assert nbestListWriter != null;
@@ -265,8 +265,10 @@ public final class IOTools {
     StringBuilder sb = new StringBuilder(translations.size() * 500);
     String nl = System.getProperty("line.separator");
     for (RichTranslation<IString, String> translation : translations) {
-      if (generateMosesNBestList) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb);
+      if (outputType.equals("moses")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, true);
+      } else if (outputType.equals("nofeats")) { 
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, false);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());
