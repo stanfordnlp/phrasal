@@ -19,7 +19,6 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
-import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
@@ -52,14 +51,6 @@ RuleFeaturizer<IString, String> {
     featureName = DEFAULT_FEATURE_NAME;
     this.startToken = lm.getStartToken();
     this.endToken = lm.getEndToken();
-    if (! this.startToken.equals(TokenUtils.START_TOKEN)) {
-      System.err.printf("%s: WARNING LM start token %s differs from Phrasal system start token %s%n",
-          this.getClass().getName(), this.startToken.toString(), TokenUtils.START_TOKEN.toString());
-    }
-    if (! this.endToken.equals(TokenUtils.END_TOKEN)) {
-      System.err.printf("%s: WARNING LM end token %s differs from Phrasal system end token %s%n",
-          this.getClass().getName(), this.endToken.toString(), TokenUtils.END_TOKEN.toString());
-    }
     this.isClassBased = false;
     this.targetClassMap = null;
   }
@@ -82,14 +73,6 @@ RuleFeaturizer<IString, String> {
     this.lm = LanguageModelFactory.load(args[0]);
     this.startToken = lm.getStartToken();
     this.endToken = lm.getEndToken();
-    if (! this.startToken.equals(TokenUtils.START_TOKEN)) {
-      System.err.printf("%s: WARNING LM start token %s differs from Phrasal system start token %s%n",
-          this.getClass().getName(), this.startToken.toString(), TokenUtils.START_TOKEN.toString());
-    }
-    if (! this.endToken.equals(TokenUtils.END_TOKEN)) {
-      System.err.printf("%s: WARNING LM end token %s differs from Phrasal system end token %s%n",
-          this.getClass().getName(), this.endToken.toString(), TokenUtils.END_TOKEN.toString());
-    }
 
     // Set the feature name
     this.featureName = args[1];
@@ -137,18 +120,21 @@ RuleFeaturizer<IString, String> {
     Sequence<IString> partialTranslation = isClassBased ? 
         toClassRepresentation(f.targetPhrase) : f.targetPhrase;
     int startIndex = 0;
-    if (f.prior == null && (partialTranslation.size() == 0 
-        || partialTranslation.get(0) != startToken)) {
+    if (f.prior == null && f.done) {
+      partialTranslation = Sequences.wrapStartEnd(
+          partialTranslation, startToken, endToken);
+      startIndex = 1;
+    } else if (f.prior == null) {
       partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
       startIndex = 1;
-    }
-    
-    if (f.done && (partialTranslation.size() == 0 
-        || partialTranslation.get(partialTranslation.size() - 1) != endToken)) {
+    } else if (f.done) {
       partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
     }
-        
+    
     LMState state = lm.score(partialTranslation, startIndex, priorState);
+
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(featureName, state.getScore()));
 
     f.setState(this, state);
     
@@ -156,7 +142,7 @@ RuleFeaturizer<IString, String> {
       System.err.printf("Final score: %f%n", state.getScore());
       System.err.println("===================");
     }
-    return FeatureUtils.wrapFeature(new FeatureValue<String>(featureName, state.getScore(), true));
+    return features;
   }
 
   @Override
@@ -164,7 +150,9 @@ RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
-    return FeatureUtils.wrapFeature(new FeatureValue<String>(featureName, lmScore, true));
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    features.add(new FeatureValue<String>(featureName, lmScore));
+    return features;
   }
 
   @Override
