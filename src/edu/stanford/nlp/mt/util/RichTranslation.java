@@ -61,16 +61,18 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
    *          Segment id
    * @param sbuf
    *          Where to append the output to
+   * @param printFeatures
+   *          Whether all features should be printed
    * @param nbestWordInternalAlignments 
    */
-  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf) {
+  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean printFeatures) {
     final String delim = FlatPhraseTable.FIELD_DELIM;
     sbuf.append(id);
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(this.translation);
     sbuf.append(' ').append(delim);
     DecimalFormat df = new DecimalFormat("0.####E0");
-    if (features != null) {
+    if (printFeatures && features != null) {
       for (FeatureValue<FV> fv : this.features) {
         sbuf.append(' ')
         .append(fv.name)

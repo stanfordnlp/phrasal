@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -132,8 +131,6 @@ public class PhraseExtract {
   // phrase translation probs:  
   static public final String EXACT_PHI_OPT = "exactPhiCounts";
   static public final String IBM_LEX_MODEL_OPT = "ibmLexModel";
-  static public final String USE_PMI = "usePmi";
-  static public final String NORMALIZE_PMI = "normalizePmi";
   static public final String ONLY_ML_OPT = "onlyML";
   static public final String PTABLE_PHI_FILTER_OPT = "phiFilter"; // p_phi(e|f)
                                                                   // filtering
@@ -184,8 +181,6 @@ public class PhraseExtract {
         DTUPhraseExtractor.ALLOW_LOOSE_GAPS_F_OPT,
         DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
         DTUPhraseExtractor.NO_UNALIGNED_SUBPHRASE_OPT,
-        USE_PMI,
-        NORMALIZE_PMI,
         FILTER_CENTERDOT_OPT,
         WITH_POS_OPT,
         TRIPLE_FILE));
@@ -578,8 +573,6 @@ public class PhraseExtract {
           .println("WARNING: extracting phrase table not targeted to a specific dev/test corpus!");
     long startTimeMillis = System.currentTimeMillis();
 
-    Pattern alignmentLinePattern = Pattern.compile("^(NULL \\(\\{ [0-9 ]+ \\}\\)) (.*)$");
-    
     try {
       for (int passNumber = 0; passNumber < totalPassNumber; ++passNumber) {
         alTemps.enableAlignmentCounts(passNumber == 0);
