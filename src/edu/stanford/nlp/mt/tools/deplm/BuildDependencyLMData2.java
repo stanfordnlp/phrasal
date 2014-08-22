@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -89,17 +90,19 @@ public class BuildDependencyLMData2 {
     
   }
   
-  private static void updateCounts(HashMap<Integer, Pair<String, List<Integer>>> dependencies) throws IOException {
+  private static void updateCounts(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies) throws IOException {
 
     for (int gov : dependencies.keySet()) {
       
-      String headWord = dependencies.get(gov).first;
-      if (headWord != null && !DependencyUtils.isWord(headWord))
+      IndexedWord iw = dependencies.get(gov).first;
+      if (iw != null && !DependencyUtils.isWord(iw.word()))
         continue;
+      
+      String headWord = iw.word();
       
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
-          String word = dependencies.get(dep).first.toLowerCase();
+          String word = dependencies.get(dep).first.word().toLowerCase();
           if (!DependencyUtils.isWord(word))
             continue;
           
@@ -119,7 +122,7 @@ public class BuildDependencyLMData2 {
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {
-          String word = dependencies.get(dep).first.toLowerCase();
+          String word = dependencies.get(dep).first.word().toLowerCase();
           if (!DependencyUtils.isWord(word))
             continue;
           if (dep < gov) {
@@ -196,8 +199,8 @@ public class BuildDependencyLMData2 {
     LineNumberReader inputReader = IOTools.getReaderFromFile(sourceTokens);
 
     
-    HashMap<Integer, Pair<String, List<Integer>>>  dependencies =  null;
-    while ((dependencies =  DependencyUtils.getDependenciesFromCoNLLFileReader(inputReader, false)) != null) {
+    HashMap<Integer, Pair<IndexedWord, List<Integer>>>  dependencies =  null;
+    while ((dependencies =  DependencyUtils.getDependenciesFromCoNLLFileReader(inputReader, false, false)) != null) {
       updateCounts(dependencies);
     }
     

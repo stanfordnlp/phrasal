@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
@@ -161,9 +162,9 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     reachableNodesCache = new HashMap<Integer, Map<Integer, Set<Integer>>>();
 
     
-    HashMap<Integer, Pair<String, List<Integer>>> deps;
+    HashMap<Integer, Pair<IndexedWord, List<Integer>>> deps;
     int i = 0;
-    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, true)) != null) {
+    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, true, false)) != null) {
       reverseDependenciesCache.put(i,DependencyUtils.getReverseDependencies(deps));
       Map<Integer, HashSet<Integer>> forwardDeps = new HashMap<Integer, HashSet<Integer>>();
       for (Integer gov : deps.keySet()) {

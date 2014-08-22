@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -92,19 +93,23 @@ public final class DependencyLanguageModelPerplexity2 {
     
   }
   
-  private static double scoreTree(HashMap<Integer, Pair<String, List<Integer>>> dependencies) throws IOException {
+  private static double scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies) throws IOException {
 
     double score = 0.0;
 
     for (int gov : dependencies.keySet()) {
       
-      String headWord = dependencies.get(gov).first;
-      if (headWord != null && !DependencyUtils.isWord(headWord))
+      IndexedWord iw = dependencies.get(gov).first;
+
+      if (iw != null && !DependencyUtils.isWord(iw.word()))
         continue;
+      
+      String headWord = dependencies.get(gov).first.word();
+
       
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
-          String word = dependencies.get(dep).first.toLowerCase();
+          String word = dependencies.get(dep).first.word().toLowerCase();
           if (!DependencyUtils.isWord(word))
             continue;
           
@@ -124,7 +129,7 @@ public final class DependencyLanguageModelPerplexity2 {
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {
-          String word = dependencies.get(dep).first.toLowerCase();
+          String word = dependencies.get(dep).first.word().toLowerCase();
           if (!DependencyUtils.isWord(word))
             continue;
           if (dep < gov) {
@@ -188,12 +193,12 @@ public final class DependencyLanguageModelPerplexity2 {
         
     LineNumberReader reader = IOTools.getReaderFromFile(args[2]);
     
-    HashMap<Integer, Pair<String, List<Integer>>> dependencies;
+    HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies;
     
     double logSum = 0.0;
     final long startTimeMillis = System.nanoTime();
     
-    while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, false)) != null) {
+    while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, false, false)) != null) {
       final double score = scoreTree(dependencies);
       assert score != 0.0;
       assert ! Double.isNaN(score);

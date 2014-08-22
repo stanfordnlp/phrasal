@@ -321,10 +321,8 @@ public class DependencyTreeBasedPreorderer implements Preprocessor {
    ArrayList<Family> families = new ArrayList<Family>();
    
    Tree parseTree = currentSentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-   String docID = currentSentence.get(CoreAnnotations.DocIDAnnotation.class);
-   Integer sentenceIndex = currentSentence.get(CoreAnnotations.SentenceIndexAnnotation.class);
    EnglishGrammaticalStructureFactory gsf = new EnglishGrammaticalStructureFactory(new NoFilter());
-   SemanticGraph basicDependencies = SemanticGraphFactory.generateUncollapsedDependencies(gsf.newGrammaticalStructure(parseTree), docID, sentenceIndex);
+   SemanticGraph basicDependencies = SemanticGraphFactory.generateUncollapsedDependencies(gsf.newGrammaticalStructure(parseTree));
 
    boolean isQuestion = false;
    if (parseTree != null && parseTree.firstChild() != null && parseTree.firstChild().label().toString().endsWith("Q"))
