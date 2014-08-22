@@ -838,7 +838,7 @@ public final class OnlineTuner {
       .append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl)
       .append("   -tmp path  : Temp directory (default: /tmp)").append(nl)
       .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl)
-      .append("   -a         : Wrap references and source inputs in boundary tokens");
+      .append("   -s         : Wrap references and source inputs in boundary tokens");
     
     return sb.toString();
   }
@@ -869,7 +869,7 @@ public final class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
-    boolean wrapBoundary = PropertiesUtils.getBool(opts, "a", false);
+    boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
    
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");

@@ -162,7 +162,7 @@ public class Phrasal {
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
-      .append("  -").append(ADD_BOUNDARY_TOKENS).append(" boolean : Add boundary tokens around each input sentence (default: false).");
+      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).");
     return sb.toString();
   }
 
@@ -200,7 +200,7 @@ public class Phrasal {
   public static final String LOG_LEVEL = "log-level";
   public static final String INPUT_PROPERTIES = "input-properties";
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
-  public static final String ADD_BOUNDARY_TOKENS = "add-boundary-tokens";
+  public static final String WRAP_BOUNDARY = "wrap-boundary";
 
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
@@ -223,7 +223,7 @@ public class Phrasal {
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
         LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
-        ADD_BOUNDARY_TOKENS));
+        WRAP_BOUNDARY));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -319,7 +319,7 @@ public class Phrasal {
   /**
    * Add boundary tokens flag.
    */
-  private boolean addBoundaryTokens;
+  private boolean wrapBoundary;
   
   /**
    * Pre/post processing filters.
@@ -354,6 +354,13 @@ public class Phrasal {
    * @return
    */
   public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
+ 
+  /**
+   * @return The wrap boundary property specified in the ini file.
+   */
+  public boolean getWrapBoundary() {
+    return wrapBoundary;
+  }
   
   // TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
   public static void initStaticMembers(Map<String, List<String>> config) {
@@ -419,8 +426,8 @@ public class Phrasal {
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
         InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
      
-     addBoundaryTokens  = config.containsKey(ADD_BOUNDARY_TOKENS) ? 
-         Boolean.valueOf(config.get(ADD_BOUNDARY_TOKENS).get(0)) : false;
+     wrapBoundary  = config.containsKey(WRAP_BOUNDARY) ? 
+         Boolean.valueOf(config.get(WRAP_BOUNDARY).get(0)) : false;
          
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
@@ -969,6 +976,7 @@ public class Phrasal {
       List<RichTranslation<IString, String>> translations = 
           decode(input.source, input.sourceInputId, infererId, nbestListSize, input.targets, input.inputProps);
       
+     
       // Select and process the best translation
       Sequence<IString> bestTranslation = null;
       if (translations.size() > 0) {
@@ -982,11 +990,13 @@ public class Phrasal {
             bestTranslation = translations.get(0).translation;
           }
         }
-        
-        if (addBoundaryTokens)
+        if (wrapBoundary) {
           bestTranslation = bestTranslation.subsequence(1, bestTranslation.size() - 1);
+        }
+        
         
       }
+        
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);
     }
 
@@ -1142,7 +1152,7 @@ public class Phrasal {
       InputProperties inputProperties) {
     // Sanity checks
     
-    if (addBoundaryTokens)
+    if (wrapBoundary)
       source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
     
     if (threadId < 0 || threadId >= numThreads) {
