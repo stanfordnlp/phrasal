@@ -1166,7 +1166,8 @@ public class Phrasal {
     final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix) ? 
         (Boolean) inputProperties.get(InputProperty.TargetPrefix) : false;
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, 
-        targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase());
+        targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(),
+        wrapBoundary);
 
     List<RichTranslation<IString, String>> translations = Generics.newArrayList(1);
     if (numTranslations > 1) {

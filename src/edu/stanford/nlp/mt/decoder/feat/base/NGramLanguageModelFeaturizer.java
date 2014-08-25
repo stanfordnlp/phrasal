@@ -104,10 +104,10 @@ RuleFeaturizer<IString, String> {
     
     IString[] array = new IString[targetSequence.size()];
     for (int i = 0; i < array.length; ++i) {
-      if (!this.wrapBoundary || ! (targetSequence.get(i).equals(this.startToken) || targetSequence.get(i).equals(this.endToken)))
-        array[i] = targetClassMap.get(targetSequence.get(i));
-      else
+      if (wrapBoundary && (targetSequence.get(i).equals(this.startToken) || targetSequence.get(i).equals(this.endToken)))
         array[i] = targetSequence.get(i);
+      else
+        array[i] = targetClassMap.get(targetSequence.get(i));
     }
     return new SimpleSequence<IString>(true, array);
   }
@@ -126,19 +126,20 @@ RuleFeaturizer<IString, String> {
     Sequence<IString> partialTranslation = isClassBased ? 
         toClassRepresentation(f.targetPhrase) : f.targetPhrase;
     int startIndex = 0;
-    if ( ! this.wrapBoundary && f.prior == null && f.done) {
-      partialTranslation = Sequences.wrapStartEnd(
-          partialTranslation, startToken, endToken);
-      startIndex = 1;
-    } else if ( ! this.wrapBoundary && f.prior == null) {
-      partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
-      startIndex = 1;
-    } else if ( ! this.wrapBoundary && f.done) {
-      partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
-    } else if (this.wrapBoundary && f.prior == null) {
+    if (! wrapBoundary) {
+      if (f.prior == null && f.done) {
+        partialTranslation = Sequences.wrapStartEnd(
+            partialTranslation, startToken, endToken);
+        startIndex = 1;
+      } else if (f.prior == null) {
+        partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
+        startIndex = 1;
+      } else if ( f.done) {
+        partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
+      } 
+    } else if (f.prior == null) {
       startIndex = 1;
     }
-    
     LMState state = lm.score(partialTranslation, startIndex, priorState);
    
     List<FeatureValue<String>> features = Generics.newLinkedList();
