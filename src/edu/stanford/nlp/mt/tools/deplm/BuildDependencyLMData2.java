@@ -1,9 +1,7 @@
 package edu.stanford.nlp.mt.tools.deplm;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -11,16 +9,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
 import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
@@ -95,7 +89,7 @@ public class BuildDependencyLMData2 {
     for (int gov : dependencies.keySet()) {
       
       IndexedWord iw = dependencies.get(gov).first;
-      if (iw != null && !DependencyUtils.isWord(iw.word()))
+      if (iw != null && TokenUtils.isPunctuation(iw.word()))
         continue;
       
       String headWord = iw.word();
@@ -103,7 +97,7 @@ public class BuildDependencyLMData2 {
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
           String word = dependencies.get(dep).first.word().toLowerCase();
-          if (!DependencyUtils.isWord(word))
+          if (TokenUtils.isPunctuation(word))
             continue;
           
           IString depToken = new IString(word); 
@@ -123,7 +117,7 @@ public class BuildDependencyLMData2 {
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {
           String word = dependencies.get(dep).first.word().toLowerCase();
-          if (!DependencyUtils.isWord(word))
+          if (TokenUtils.isPunctuation(word))
             continue;
           if (dep < gov) {
             leftChildren.add(new IString(word));
