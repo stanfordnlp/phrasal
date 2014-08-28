@@ -202,7 +202,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
                 coveredTokens, sourceLength));
           }
           return beam;
-        }
+        } //else {
+          //System.err.println("Source input ID: " + sourceInputId);
+          //System.err.println("Filtering final hypothesis: " + (bestHyp != null ? bestHyp.targetPrefix : "(null)"));
+        //}
       }
       isGoalBeam = false;
     }
@@ -226,8 +229,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
-      // Derivation construction: this is the expensive part
-      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
+      //if (!buildDerivation) {
+      //   System.err.println("Source input ID: " + sourceInputId); 
+      //   System.err.println("Filtering partial hypothesis: " + (successor.antecedent.featurizable != null ? successor.antecedent.featurizable.targetPrefix : "") + 
+      //            " | " + (successor.rule != null ? successor.rule.abstractRule.target : " "));
+      //} 
+     // Derivation construction: this is the expensive part
+    
+     Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic) :
             null;
       consequents.add(new Item<TK,FV>(derivation, successor));

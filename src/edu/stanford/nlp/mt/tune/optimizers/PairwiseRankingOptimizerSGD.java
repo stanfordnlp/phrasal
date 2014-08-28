@@ -187,12 +187,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       List<Triple<Double, Integer, Integer>> v;
       if (scoreMetric.isThreadsafe()) {
         v = sample(translations, references, sourceId, source, scoreMetric);
-        scoreMetric.update(sourceId, references, translations.get(0).translation);
+        if (translations.size() > 0) scoreMetric.update(sourceId, references, translations.get(0).translation);
 
       } else {
         synchronized(scoreMetric) {
           v = sample(translations, references, sourceId, source, scoreMetric);
-          scoreMetric.update(sourceId, references, translations.get(0).translation);
+          if (translations.size() > 0) scoreMetric.update(sourceId, references, translations.get(0).translation);
         }
       }
 
@@ -238,6 +238,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     List<Triple<Double, Integer, Integer>> v =
         new ArrayList<Triple<Double, Integer, Integer>>(gamma);
     final int jMax   = translations.size();
+    
+    if (jMax == 0) {
+      System.err.println("No translations for input sentence #" + sourceId) ;
+      return v;
+    }
+
     for (int g = 0; g < gamma; g++) {
       int j      = ThreadLocalRandom.current().nextInt(jMax);
       int jPrime = ThreadLocalRandom.current().nextInt(jMax);

@@ -104,7 +104,7 @@ RuleFeaturizer<IString, String> {
     
     IString[] array = new IString[targetSequence.size()];
     for (int i = 0; i < array.length; ++i) {
-      if (wrapBoundary && (targetSequence.get(i).equals(this.startToken) || targetSequence.get(i).equals(this.endToken)))
+      if (wrapBoundary && (targetSequence.get(i).word().equals(this.startToken.word()) || targetSequence.get(i).word().equals(this.endToken.word())))
         array[i] = targetSequence.get(i);
       else
         array[i] = targetClassMap.get(targetSequence.get(i));
@@ -138,11 +138,23 @@ RuleFeaturizer<IString, String> {
         partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
       } 
     } else if (f.prior == null) {
+      if (partialTranslation.size() < 2) return null;
+      startIndex = 1;
+    } else if (f.prior != null && priorState == null) {
+      partialTranslation = Sequences.wrapStart(partialTranslation, f.prior.targetPrefix.get(0));
       startIndex = 1;
     }
-    LMState state = lm.score(partialTranslation, startIndex, priorState);
-   
+    LMState state;
+    
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    try {
+     state = lm.score(partialTranslation, startIndex, priorState);
+   
+    } catch (Exception e) {
+       System.err.println("Problematic translation: " + partialTranslation);
+       features.add(new FeatureValue<String>(featureName, -100000.0)); 
+      return features;
+    }
     features.add(new FeatureValue<String>(featureName, state.getScore()));
 
     f.setState(this, state);
