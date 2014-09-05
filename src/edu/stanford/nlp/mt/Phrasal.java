@@ -1036,6 +1036,17 @@ public class Phrasal {
     } else {
       // Decoder failure. Print an empty line.
       System.out.println();
+      
+      // Output the n-best list if necessary
+      if (nbestListWriter != null) {
+        IOTools.writeEmptyNBest(sourceInputId, nbestListWriter);
+      }
+      
+      // Output the alignments if necessary
+      if (alignmentWriter != null) {
+        alignmentWriter.printf("%n");
+      }
+      
       System.err.printf("<<< decoder failure for id: %d >>>%n", sourceInputId);
     }
   }

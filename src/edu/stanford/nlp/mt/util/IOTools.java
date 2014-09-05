@@ -283,6 +283,21 @@ public final class IOTools {
   }
   
   /**
+   * Write an empty entry to a n-best list file.
+   */
+  public static void writeEmptyNBest(int sourceInputId, PrintStream nbestListWriter) {
+    StringBuilder sb = new StringBuilder(50);
+    String nl = System.getProperty("line.separator");
+    sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" 0.0000E0 ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" ");
+    sb.append(nl);
+    nbestListWriter.append(sb.toString());
+  }
+  
+  /**
    * Return a list of files given a path prefix, e.g., passing the path
    *  /home/me/ref  will return all files in /home/me that begin with ref.
    */
