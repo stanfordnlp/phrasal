@@ -36,7 +36,7 @@ if [ $# -ge 5 ]; then
 fi
 
 RUN_MSG=""
-if [ $# -eq 6]; then
+if [ $# -eq 6 ]; then
   RUN_MSG=$6
 fi
 
