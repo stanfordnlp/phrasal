@@ -17,6 +17,7 @@
 import sys
 import codecs
 import os
+import re
 
 import xml.sax.saxutils
 
@@ -48,6 +49,7 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
           print >>ofh, "</seg>"
         id = tokens[0]
         rank = 0
+        #print "\r%s" %id
         print >>ofh, "<seg id=\"%s\">" % id
         print >>ofh, "<src>"
         src_toks = tokens[-2].split(" ")
@@ -61,7 +63,9 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
       #for i in xrange(0, len(tokens)):
       #  print "%d:%s\n" % (i, tokens[i])
       #print "phrase_toks: ", tokens[-1] 
-      phrase_toks = tokens[-1].split(" |")
+      
+      #phrase_toks = tokens[-1].split(" |")
+      phrase_toks = re.split(" \|(?=[\-0-9\.]+)", tokens[-1])
       for ptok in phrase_toks[1:]:
         sub_ptoks = ptok.split(" ")
         sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")
@@ -73,5 +77,6 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
     print >>ofh, "</nbest>" 
     print >>ofh, "</seg>"
     print >>ofh, "</translations>"
+
 
 
