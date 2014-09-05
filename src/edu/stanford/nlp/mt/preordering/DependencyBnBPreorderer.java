@@ -2,20 +2,21 @@ package edu.stanford.nlp.mt.preordering;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.classify.Dataset;
-import edu.stanford.nlp.classify.LinearClassifier;
-import edu.stanford.nlp.classify.LinearClassifierFactory;
 import edu.stanford.nlp.classify.LogisticClassifier;
 import edu.stanford.nlp.classify.LogisticClassifierFactory;
 import edu.stanford.nlp.ling.Datum;
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.tools.deplm.DependencyUtils;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.AbstractWordClassMap;
@@ -36,7 +37,8 @@ public class DependencyBnBPreorderer {
 
   
   private static Set<String> mostFrequentTokens;
-  private static LinearClassifier<String, String> classifier;
+
+  private static LogisticClassifier<Integer, String> classifier;
   
   private static AbstractWordClassMap classMap;
   
@@ -85,20 +87,52 @@ public class DependencyBnBPreorderer {
     
   }
   
+  private static int computeCrossingLinks(List<Label> sourceWords, SymmetricalWordAlignment alignment) {
+    
+    int sourceLen = sourceWords.size();
+    
+    int score = 0;
+    
+    for (int i = 0; i < sourceLen; i++) {
+      IndexedWord iw1 = (IndexedWord) sourceWords.get(i);
+      Set<Integer> aAlignment = new HashSet<Integer>();
+      aAlignment.addAll(alignment.f2e(iw1.index() - 1));
+      for (int j = i + 1; j < sourceLen; j++) {
+        IndexedWord iw2 = (IndexedWord) sourceWords.get(j);
+        Set<Integer> bAlignment = new HashSet<Integer>();
+        bAlignment.addAll(alignment.f2e(iw2.index() - 1));
+        for (int k : aAlignment) {
+          for (int l : bAlignment) {
+            if (k > l)
+              score++;
+          }
+        }
+      }
+    }
+    
+    return score;
+    
+  }
+  
+  
   private static int computeCrossingScore(Tree a, Tree b, SymmetricalWordAlignment alignment) {
     List<Tree> aChildren = a.getChildrenAsList();
     List<Tree> bChildren = b.getChildrenAsList();
     
     int score = 0;
     Set<Integer> aAlignment = new HashSet<Integer>();
+    int aIdx = ((IndexedWord) a.label()).index() - 1;
+    aAlignment.addAll(alignment.f2e(aIdx));
     for (Tree aChild : aChildren) {
-      int aIdx = ((IndexedWord) aChild.label()).index() - 1;
+      aIdx = ((IndexedWord) aChild.label()).index() - 1;
       aAlignment.addAll(alignment.f2e(aIdx));
     } 
 
     Set<Integer> bAlignment = new HashSet<Integer>();
+    int bIdx = ((IndexedWord) b.label()).index() - 1;
+    bAlignment.addAll(alignment.f2e(bIdx));
     for (Tree bChild : bChildren) {
-      int bIdx = ((IndexedWord) bChild.label()).index() - 1;
+      bIdx = ((IndexedWord) bChild.label()).index() - 1;
       bAlignment.addAll(alignment.f2e(bIdx));
     }   
    
@@ -113,6 +147,46 @@ public class DependencyBnBPreorderer {
     
   }
   
+  private static String preorder(Tree tree) {
+    
+    List<Tree> queue = Generics.newLinkedList();
+    queue.add(tree);
+    
+    
+    while ( ! queue.isEmpty()) {
+      Tree currentNode = queue.remove(0);
+      
+      if (currentNode.isLeaf())
+        continue;
+      
+      Tree children[] = currentNode.children();
+      int childCount = children.length;
+      IndexedWord hw = (IndexedWord) currentNode.label();
+      List<FeatureNode> featureNodes = Generics.newArrayList(childCount);
+      for (int i = 0; i < childCount; i++) {
+        featureNodes.add(new FeatureNode(children[i], hw));
+        queue.add(children[i]);
+      }
+      if (childCount < 8) {
+        Pair<Double, List<Integer>> result = search(featureNodes, new LinkedList<Integer>(), Double.NEGATIVE_INFINITY);
+        if (result != null) {
+          //System.err.println("Search completed.");
+          List<Integer> permutation = result.second;
+          List<Tree> newChildren = Generics.newArrayList(Arrays.asList(children));
+          for (int i = 0; i < childCount; i++) {
+            int idx = permutation.get(i);
+            newChildren.set(idx, children[i]);
+          }
+          currentNode.setChildren(newChildren);
+        } else {
+          System.err.println("Warning: No path found.");
+        }
+      }
+    }
+    
+    return StringUtils.join(tree.yieldWords());
+  }
+  
 
   private static List<TrainingExample> generateTrainingExamples(Tree tree, SymmetricalWordAlignment alignment) {
     List<TrainingExample> examples = Generics.newLinkedList();
@@ -124,23 +198,15 @@ public class DependencyBnBPreorderer {
     
     for (int i = 0; i < childCount; i++) {
       Tree a = tree.children()[i];
-      IndexedWord iw1 = (IndexedWord) a.label();
       for (int j = i + 1; j < childCount; j++) {
+       if (i == j) continue;
        Tree b = tree.children()[j];
-       IndexedWord iw2 = (IndexedWord) b.label();
        int cs1 = computeCrossingScore(a, b, alignment);
        int cs2 = computeCrossingScore(b, a, alignment);
        
        if (cs1 != cs2) {
-         IndexedWord lm1 = a.isLeaf() ? null : (IndexedWord) a.children()[0].label();
-         IndexedWord rm1 = a.isLeaf() ? null : (IndexedWord) a.children()[a.children().length - 1].label();
-         int dst1 = hw.index() - iw1.index();
-         FeatureNode n1 = new FeatureNode(iw1, hw, lm1, rm1, dst1);
-         
-         IndexedWord lm2 = b.isLeaf() ? null : (IndexedWord) b.children()[0].label(); 
-         IndexedWord rm2 = b.isLeaf() ? null : (IndexedWord) b.children()[b.children().length - 1].label();
-         int dst2 = hw.index() - iw2.index();
-         FeatureNode n2 = new FeatureNode(iw2, hw, lm2, rm2, dst2);
+         FeatureNode n1 = new FeatureNode(a, hw);
+         FeatureNode n2 = new FeatureNode(b, hw);
          int label = cs1 > cs2 ? 1 : -1;
          TrainingExample ex = new TrainingExample(n1, n2, label);
          examples.add(ex);
@@ -188,6 +254,95 @@ public class DependencyBnBPreorderer {
     return mostFrequentTokens;
   }
   
+  private static Pair<Double, List<Integer>> search(List<FeatureNode> nodes, List<Integer> partialPermutation, double bound) {
+    
+    double score = scorePermutation(nodes, partialPermutation);
+    List<Integer> bestPath = null;
+    if (score > bound) {
+      if (nodes.size() == partialPermutation.size()) {
+        bound = score;
+        bestPath = partialPermutation;
+        return new Pair<Double, List<Integer>>(score, bestPath);
+      } else {
+        int size = nodes.size();
+        Set<Integer> fixedPositions = Generics.newHashSet(partialPermutation);
+        Pair<Double, List<Integer>> retValue = null;
+        for (int i = 0; i < size; i++) {
+          if ( ! fixedPositions.contains(i)) {
+            List<Integer> perm = Generics.newLinkedList(partialPermutation);
+            perm.add(i);
+            Pair<Double, List<Integer>> result = search(nodes, perm, bound);
+            if (result != null) {
+              bound = result.first;
+              bestPath = result.second;
+              retValue = result;
+            }
+          }
+        }
+        if (retValue != null)
+          return retValue;
+      }
+    }
+    return null;
+  }
+  
+  
+  private static double scorePermutation(List<FeatureNode> nodes, List<Integer> permutation) {
+    
+    int size = permutation.size();
+    
+    assert size <= nodes.size();
+    
+    double score = 0.0;
+    for (int i = 0; i < size; i++) {
+      for (int j = i + 1; j < size; j++) {
+       FeatureNode fn1 = nodes.get(permutation.get(i));
+       FeatureNode fn2 = nodes.get(permutation.get(j));
+       
+       TrainingExample example = new TrainingExample(fn1, fn2, 0);
+       List<String> features = example.extractFeatures();
+       double p = classifier.probabilityOf(features, 1);
+       double p_inv = 1 - p;
+       if (permutation.get(i) > permutation.get(j)) {
+         score += Math.log(p);
+       } else {
+         score += Math.log(p_inv);
+       }
+      }
+    }
+    return score;
+  }
+  
+  
+  
+  private static double scorePartialPermuation(List<FeatureNode> nodes, List<Integer> partialPermutation, int i) {
+    Set<Integer> fixedPositions = Generics.newHashSet(partialPermutation);
+    
+    int childCount = nodes.size();
+    
+    FeatureNode fn1 = nodes.get(i);
+    
+    double score = 0.0;
+
+    for (int j = 0; j < childCount; j++) {
+      if (i == j || fixedPositions.contains(j))
+        continue;
+      FeatureNode fn2 = nodes.get(j);
+      TrainingExample example = new TrainingExample(fn1, fn2, 0);
+      List<String> features = example.extractFeatures();
+      double p = classifier.probabilityOf(features, 1);
+      double p_inv = 1 - p;
+
+      if (i > j) {
+        score += Math.log(p);
+      } else {
+        score += Math.log(p_inv);
+      }
+    }
+    
+    return score;
+  }
+  
   
   /**
    * Command-line option specification.
@@ -205,7 +360,7 @@ public class DependencyBnBPreorderer {
     return optionArgDefs;
   }
   
-  
+
   
   public static void main(String[] args) throws IOException {
     
@@ -261,7 +416,10 @@ public class DependencyBnBPreorderer {
 
       int i = 0;
       
-      while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(dependencyReader, false, true)) != null) {
+      List<Tree> treesToReorder = Generics.newArrayList();
+      List<SymmetricalWordAlignment> alignmentsToReorder = Generics.newArrayList();
+
+      while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(dependencyReader, false, false)) != null) {
         String sourceLine = sourceTokenReader.readLine();
         String targetLine = targetTokenReader.readLine();
         String alignmentLine = alignmentReader.readLine();
@@ -284,15 +442,22 @@ public class DependencyBnBPreorderer {
         for (TrainingExample ex : trainingExamples) {
           //System.err.println(ex.label);
           //System.err.println(ex.extractFeatures());
-          if (i < 100000)
+          if (i < 100000) {
             dataset.add(ex.extractFeatures(), ex.label);
-          else
+          } else {
             testDataset.add(ex.extractFeatures(), ex.label);
+          } 
+          
         }
         
         i++;
         
-        if (i > 105000)
+        if (i > 100000) {
+          treesToReorder.add(tree);
+          alignmentsToReorder.add(alignment);
+        }
+        
+        if (i > 100500)
           break;
         
         
@@ -302,7 +467,7 @@ public class DependencyBnBPreorderer {
 
       LogisticClassifierFactory<Integer,String> lcf = new LogisticClassifierFactory<Integer,String>();
       
-      LogisticClassifier<Integer, String> classifier = lcf.trainClassifier(dataset, 1.0);
+      classifier = lcf.trainClassifier(dataset, 1.0);
 
       int correct = 0;
       int count = 0;
@@ -360,6 +525,26 @@ public class DependencyBnBPreorderer {
       System.out.println("Correct: " + correct + "/" + count);
       System.out.println("TP: " + tp + ", TN: " + tn + ", FP: " + fp + ", FN: " + fn);
 
+      
+      int totalOriginalCrossingScore = 0;
+      int totalPreorderedCrossingScore = 0;
+      
+      for (int j = 0; j < treesToReorder.size(); j++) {
+        Tree tree = treesToReorder.get(j);
+        SymmetricalWordAlignment alignment = alignmentsToReorder.get(j);
+        System.out.println("---------------");
+        System.out.println("Original: " + tree.yieldWords());
+        int OCS = computeCrossingLinks(tree.yield(), alignment);
+        System.out.println("Reordered: " + preorder(tree));
+        int PCS = computeCrossingLinks(tree.yield(), alignment);
+        System.out.println("Crossing score, before: " + OCS + ", after: " + PCS);
+        totalOriginalCrossingScore += OCS;
+        totalPreorderedCrossingScore += PCS;
+      }
+      
+      System.out.println("##################");
+      System.out.println("Crossing score reduction: " + totalPreorderedCrossingScore + "/" + totalOriginalCrossingScore);
+      
       sourceTokenReader.close();
       targetTokenReader.close();
       alignmentReader.close();
@@ -425,10 +610,21 @@ public class DependencyBnBPreorderer {
       this.dst = dst;
     }
     
+    FeatureNode(Tree node, IndexedWord hw) {
+      
+      List<Label> yield = node.yield();
+      
+      this.word = (IndexedWord) node.label();
+      this.hw = hw;
+      this.lm = (IndexedWord) yield.get(0);
+      this.rm = (IndexedWord) yield.get(yield.size() - 1);
+      this.dst = hw.index() - this.word.index();
+    }
+    
     List<String> extractFeatures(String prefix) {
       List<String> features = Generics.newLinkedList();
       //dependency label
-      features.add(prefix + ":l:" + this.word.category());
+      features.add(prefix + ":l:" + this.word.lemma());
       //POS tag
       features.add(prefix + ":t:" + this.word.tag());
       //head word
@@ -451,15 +647,15 @@ public class DependencyBnBPreorderer {
     }
     
     String getWordOrClass(IndexedWord iw) {
-      if (mostFrequentTokens.contains(iw.word())) {
-        return iw.word();
+      if (mostFrequentTokens.contains(iw.word().toLowerCase())) {
+        return iw.word().toLowerCase();
       }
       return this.getClass(iw);
     }
     
     String getClass(IndexedWord iw) {
       //return iw.word();
-      return classMap.get(new IString(iw.word())).word();
+      return classMap.get(new IString(iw.word().toLowerCase())).word();
     }
     
   }

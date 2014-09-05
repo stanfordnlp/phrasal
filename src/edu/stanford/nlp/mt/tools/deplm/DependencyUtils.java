@@ -67,8 +67,8 @@ public class DependencyUtils {
         iw.setIndex(dep);
         iw.setTag(pos);
         iw.setValue(word);
-        /* Store the dependency type as category. */
-        iw.setCategory(rel);
+        /* Store the dependency type as lemma. */
+        iw.setLemma(rel);
         if (forwardDependencies.get(gov) == null) {
           List<Integer> l = Generics.newLinkedList();
           Pair<IndexedWord, List<Integer>> p = Generics.newPair(null, l);
