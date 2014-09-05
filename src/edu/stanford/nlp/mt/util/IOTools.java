@@ -266,9 +266,13 @@ public final class IOTools {
     String nl = System.getProperty("line.separator");
     for (RichTranslation<IString, String> translation : translations) {
       if (outputType.equals("moses")) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, true);
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, true, false);
       } else if (outputType.equals("nofeats")) { 
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, false);
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, false, false);
+      } else if (outputType.equals("verbose")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, true, false);
+      } else if (outputType.equals("nofeats-verbose")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, false, true);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());
