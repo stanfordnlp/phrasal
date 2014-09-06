@@ -108,9 +108,6 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
         sbuf.append(f.derivation.rule.abstractRule.target.toString());
       }
     }
-
-    String alignmentString = alignmentString();
-    sbuf.append(" ").append(alignmentString);
   }
   
   List<Featurizable<TK,FV>> featurizables() {
