@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.util.Generics;
@@ -32,7 +31,6 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
   private final boolean addClassBasedRule;
   private final int countFeatureIndex;
   private final int lexicalCutoff;
-  private final boolean addDomainFeatures;
 
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
@@ -45,7 +43,6 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
     this.addClassBasedRule = false;
     this.countFeatureIndex = -1;
     this.lexicalCutoff = DEFAULT_LEXICAL_CUTOFF;
-    this.addDomainFeatures = false;
   }
 
   /**
@@ -63,7 +60,6 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.addDomainFeatures = options.containsKey("domainFeature");
     this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
   }
 
@@ -73,17 +69,11 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
-    final String genre = addDomainFeatures && f.sourceInputProperties.containsKey(InputProperty.Domain)
-        ? (String) f.sourceInputProperties.get(InputProperty.Domain) : null;
-    
     if (addLexicalizedRule && aboveThreshold(f.rule)) {
       String sourcePhrase = f.sourcePhrase.toString("-");
       String targetPhrase = f.targetPhrase.toString("-");
       String featureString = FEATURE_NAME + ":" + String.format("%s>%s", sourcePhrase, targetPhrase);
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (genre != null) {
-        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-      }
     }
     if (addClassBasedRule) {
       StringBuilder sb = new StringBuilder();
@@ -102,9 +92,6 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
       }
       String featureString = FEATURE_NAME + ":" + sb.toString();
       features.add(new FeatureValue<String>(featureString, 1.0));
-      if (genre != null) {
-        features.add(new FeatureValue<String>(featureString + "-" + genre, 1.0));
-      }
     }
     return features;
   }

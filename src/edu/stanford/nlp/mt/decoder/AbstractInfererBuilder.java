@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder;
 
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.tm.PhraseGenerator;
  */
 abstract public class AbstractInfererBuilder<TK, FV> implements
     InfererBuilder<TK, FV> {
-  CombinedFeaturizer<TK, FV> incrementalFeaturizer;
+  FeatureExtractor<TK, FV> incrementalFeaturizer;
   PhraseGenerator<TK,FV> phraseGenerator;
   Scorer<FV> scorer;
   SearchHeuristic<TK, FV> heuristic;
@@ -27,7 +27,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
 
   @Override
   public InfererBuilder<TK, FV> setIncrementalFeaturizer(
-      CombinedFeaturizer<TK, FV> featurizer) {
+      FeatureExtractor<TK, FV> featurizer) {
     this.incrementalFeaturizer = featurizer;
 
     return this;

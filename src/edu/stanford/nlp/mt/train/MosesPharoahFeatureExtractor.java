@@ -1,23 +1,26 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.HashIndex;
-
-import java.util.*;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.tm.DTUTable;
-import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Index;
+import edu.stanford.nlp.util.HashIndex;
 
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
- * Extractor for the five base feature functions of Moses/Pharaoh (four
- * translation probabilities plus phrase penalty).
+ * Extractor for the four base feature functions of Moses/Pharaoh (four
+ * translation probabilities).
  *
  * @author Michel Galley
  */
@@ -39,21 +42,20 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   protected double phiFilter = DEFAULT_PHI_FILTER,
       lexFilter = DEFAULT_LEX_FILTER;
   protected boolean ibmLexModel = false, onlyPhi = false;
-  protected boolean usePmi, normalizePmi = false;
   protected int numPasses = 1;
 
-  protected final DynamicIntegerArrayIndex lexIndex = new DynamicIntegerArrayIndex();
+  protected final IntegerArrayIndex lexIndex = new ProbingIntegerArrayIndex();
   protected final Index<Integer> fLexIndex = new HashIndex<Integer>(),
       eLexIndex = new HashIndex<Integer>();
 
   protected final IntArrayList feCounts = new IntArrayList();
   protected final IntArrayList fCounts = new IntArrayList();
   protected final IntArrayList eCounts = new IntArrayList();
-  protected final List<Double> totalCounts = new ArrayList<Double>(0);
+  protected final List<Double> totalCounts = Generics.newArrayList();
   protected double totalFECount = -1;
   protected double totalFCount = -1;
   protected double totalECount = -1;
-  protected final List<Double> totalLexCounts = new ArrayList<Double>(0);
+  protected final List<Double> totalLexCounts = Generics.newArrayList();
   protected double totalFELexCount = -1;
   protected double totalFLexCount = -1;
   protected double totalELexCount = -1;
@@ -82,10 +84,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     if (!ibmLexModel)
       alTemps.enableAlignmentCounts(true);
     onlyPhi = prop.getProperty(PhraseExtract.ONLY_ML_OPT, "false").equals(
-        "true");
-    usePmi = prop.getProperty(PhraseExtract.USE_PMI, "false").equals(
-        "true");
-    normalizePmi = prop.getProperty(PhraseExtract.NORMALIZE_PMI, "false").equals(
         "true");
     // Filtering:
     phiFilter = Double.parseDouble(prop.getProperty(
@@ -146,41 +144,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
    */
   @Override
   public Object score(AlignmentTemplate alTemp) {
-    // print phi(f|e), lex(f|e), phi(e|f), lex(e|f), and phrase penalty:
-    if (usePmi) {
-      synchronized (totalCounts) {
-        if (totalCounts.size() == 0){
-          totalCounts.add(0.0);
-          // initialize the sum of all counts to calculate PMI
-          totalFECount = 0;
-          totalFCount = 0;
-          totalECount = 0;
-          for (int i : feCounts.elements())
-             totalFECount += i;
-          for (int i : fCounts.elements())
-             totalFCount += i;
-          for (int i : eCounts.elements())
-             totalECount += i;
-        }
-      }
-
-      synchronized (totalLexCounts) {
-        if (totalLexCounts.size() == 0){
-          totalLexCounts.add(0.0);
-          // initialize the sum of all counts to calculate PMI
-          totalFELexCount = 0;
-          totalFLexCount = 0;
-          totalELexCount = 0;
-          for (int i : feLexCounts.elements())
-             totalFELexCount += i;
-          for (int i : fLexCounts.elements())
-             totalFLexCount += i;
-          for (int i : eLexCounts.elements())
-             totalELexCount += i;
-        }
-      }
-    }
-
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();
     int idxE = alTemp.getEKey();
@@ -201,10 +164,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
 
     if (phiFilter > phi_e_f)
       return null;
-    double pTF = pairCount/totalFECount;
-    double pmi = Math.log(pTF / ((eCount/totalECount) * (fCount/totalFCount)));
-    if (normalizePmi)
-      pmi = pmi / (-1 * Math.log(pTF));
+
     // Compute lexical weighting features:
     double lex_f_e;
     double lex_e_f;
@@ -215,7 +175,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       lex_f_e = getLexScore(alTemp);
       lex_e_f = getLexScoreInv(alTemp);
     }
-    double lexPMI = getLexPmiScore(alTemp, normalizePmi);
     // Determine if need to filter phrase:
     if (lexFilter > lex_e_f)
       return null;
@@ -227,8 +186,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     } else if (onlyPhi) {
       // -- only two features: relative freq. in both directions:
       return new double[] { phi_f_e, phi_e_f };
-    } else if (usePmi) {
-      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, pmi, lexPMI };
     } else {
       // -- 4 basic features functions of Moses:
       return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f };
@@ -321,37 +278,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       System.err.println("Increasing count idx=" + idx + " in vector (" + list
           + ").");
   }
-
-  /**
-   * Lexically-weighted PMI as the sum of alTemp.f() given alTemp.e()
-   * word-level PMI normalized by the number of words in alTemp.f()
-   */
-  private double getLexPmiScore(AlignmentTemplate alTemp, boolean doNormalize) {
-    if (DEBUG_LEVEL >= 1)
-      System.err.println("Computing word-level PMI(f|e) for alignment template: "
-          + alTemp.toString(true));
-    // PMI calculation only accounts for French words that are aligned,
-    // normalized by the number of french words
-    double pmiSum = 1.0;
-    for (int fi = 0; fi < alTemp.f().size(); ++fi) {
-      if (alTemp.f().get(fi).equals(DTUTable.GAP_STR))
-        continue;
-      double wPMI = 0.0;
-      int alCount = alTemp.f2e(fi).size();
-      if (alCount != 0) {
-        for (int ei : alTemp.f2e(fi)) {
-          assert (!alTemp.e().get(ei).equals(DTUTable.GAP_STR));
-          wPMI += getLexPmi(alTemp.f().get(fi), alTemp.e().get(ei), doNormalize);
-        }
-        wPMI /= alCount;
-      }
-      pmiSum += wPMI;
-    }
-    //normalize the sum of pmi by the length of the French phrase
-    double pmiAvg = pmiSum / alTemp.f().size();
-    return pmiAvg;
-  }
-
 
   /**
    * Lexically-weighted probability of alTemp.f() given alTemp.e() according to
@@ -480,34 +406,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
       lex *= wMax;
     }
     return lex;
-  }
-
-  /**
-   * Point-wise Mutual Information of f and e. Note that getLexPmi(f,e)
-   * should equal to getLexPmi(e,f)
-   */
-  private double getLexPmi(IString f, IString e, boolean doNormalize) {
-    if (DEBUG_LEVEL >= 1) {
-      System.err.print("pmi(f = \"" + f + "\" | e = \"" + e + "\") = ");
-      System.err.print(feLexCounts.get(indexOfLex(f, e, false)));
-      System.err.print("/(");
-      System.err.println(eLexCounts.get(indexOfELex(e, false)));
-      System.err.print("*");
-      System.err.println(fLexCounts.get(indexOfFLex(f, false)));
-      System.err.print(")");
-    }
-    int fei = indexOfLex(f, e, false);
-    int ei = indexOfELex(e, false);
-    int fi = indexOfFLex(f, false);
-    if (fei < 0 || ei < 0 | fi < 0) // this is a not very well defined case
-      return 0.0;
-    double pFE = feLexCounts.get(fei) * 1.0 / totalFELexCount;
-    double pF = eLexCounts.get(ei) * 1.0 / totalELexCount;
-    double pE = fLexCounts.get(fi) * 1.0 / totalFLexCount;
-    double lexPMI = Math.log( pFE / (pF * pE));
-    if (doNormalize)
-      lexPMI = lexPMI / (-1 * Math.log(pFE));
-    return lexPMI;
   }
 
   /**

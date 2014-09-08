@@ -23,6 +23,8 @@ import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
+import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
@@ -46,8 +48,10 @@ import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -120,10 +124,11 @@ public final class OnlineTuner {
    * @param uniformStartWeights
    * @param randomizeStartWeights
    * @param expectedNumFeatures
+   * @param wrapBoundary 
    */
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
-      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures) {
+      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, boolean wrapBoundary) {
     logger = Logger.getLogger(OnlineTuner.class.getName());
     SystemLogger.attach(logger, LogName.ONLINE);
     this.outputWeightPrefix = SystemLogger.getPrefix() + "." + LogName.ONLINE.toString().toLowerCase();
@@ -138,7 +143,7 @@ public final class OnlineTuner {
     // Load the tuning set
     tuneSource = IStrings.tokenizeFile(srcFile);
     assert tuneSource.size() > 0;
-    loadReferences(tgtFile);
+    loadReferences(tgtFile, wrapBoundary);
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
     
     // Load Phrasal
@@ -404,7 +409,7 @@ public final class OnlineTuner {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int sourceId = result.translationIds[i];
           if (createPseudoReferences && nbestListWriter != null) {
-            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter);
+            IOTools.writeNbest(result.nbestLists.get(i), sourceId, "moses", nbestListWriter);
           }
           if (nbestLists != null) {
             assert ! nbestLists.containsKey(sourceId);
@@ -634,8 +639,9 @@ public final class OnlineTuner {
    * NOTE: This method re-initializes OnlineTuner.references
    * 
    * @param refStr a comma-separated list of reference filenames
+   * @param wrapBoundary 
    */
-  public void loadReferences(String refStr) {
+  public void loadReferences(String refStr, boolean wrapBoundary) {
     if (refStr == null || refStr.length() == 0) {
       throw new IllegalArgumentException("Invalid reference list");
     }
@@ -645,11 +651,27 @@ public final class OnlineTuner {
       references = MetricUtils.readReferences(filenames);
       assert references.get(0).size() == filenames.length;
       numReferences = filenames.length;
+      if (wrapBoundary) {
+        for (List<Sequence<IString>> refList : references) {
+          wrap(refList);
+        }
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
     assert references.size() == tuneSource.size();
     logger.info("Number of references for objective function calculation: " + numReferences);
+  }
+  
+  /**
+   * Wrap all sequences in the input with start and end tokens.
+   * 
+   * @param sequences
+   */
+  private static void wrap(List<Sequence<IString>> sequences) {
+    for (int i = 0, sz = sequences.size(); i < sz; ++i) {
+      sequences.set(i, Sequences.wrapStartEnd(sequences.get(i), TokenUtils.START_TOKEN, TokenUtils.END_TOKEN));
+    }
   }
 
   /**
@@ -664,9 +686,9 @@ public final class OnlineTuner {
       Set<String> featureNames = Generics.newHashSet(weights.keySet());
       featureNames.addAll(FeatureUtils.BASELINE_DENSE_FEATURES);
       for (String key : featureNames) {
-        if (key.startsWith("LM")) {
+        if (key.startsWith(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME)) {
           weights.setCount(key, 0.5);
-        } else if (key.startsWith("WordPenalty")) {
+        } else if (key.startsWith(WordPenaltyFeaturizer.FEATURE_NAME)) {
           weights.setCount(key, -1.0);
         } else {
           weights.setCount(key, 0.2);
@@ -786,6 +808,7 @@ public final class OnlineTuner {
     optionMap.put("fmc", 1);
     optionMap.put("tmp", 1);
     optionMap.put("p", 1);
+    optionMap.put("s", 0);
     return optionMap;
   }
 
@@ -815,7 +838,8 @@ public final class OnlineTuner {
       .append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl)
       .append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl)
       .append("   -tmp path  : Temp directory (default: /tmp)").append(nl)
-      .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)");
+      .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl)
+      .append("   -a         : Wrap references and source inputs in boundary tokens");
     
     return sb.toString();
   }
@@ -846,6 +870,7 @@ public final class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
+    boolean wrapBoundary = PropertiesUtils.getBool(opts, "a", false);
    
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -875,9 +900,9 @@ public final class OnlineTuner {
     final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
         optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-        expectedNumFeatures);
+        expectedNumFeatures, wrapBoundary);
     if (refStr != null) {
-      tuner.loadReferences(refStr);
+      tuner.loadReferences(refStr, wrapBoundary);
     }
     if (pseudoRefOptions != null) {
       tuner.computePseudoReferences(pseudoRefOptions, tmpPath);

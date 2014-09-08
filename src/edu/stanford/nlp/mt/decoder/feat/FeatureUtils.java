@@ -1,10 +1,12 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
@@ -54,6 +56,18 @@ public final class FeatureUtils {
       features.add(fName);
     }
     BASELINE_DENSE_FEATURES = Collections.unmodifiableSet(features);
+  }
+  
+  /**
+   * Wrap a single feature value for return from a feature template.
+   * 
+   * @param feature
+   * @return
+   */
+  public static <FV> List<FeatureValue<FV>> wrapFeature(FeatureValue<FV> feature) {
+    List<FeatureValue<FV>> features = Generics.newArrayList(1);
+    features.add(feature);
+    return features;
   }
   
   /**

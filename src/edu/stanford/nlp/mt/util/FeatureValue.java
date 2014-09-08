@@ -4,6 +4,7 @@ package edu.stanford.nlp.mt.util;
  * A feature key/value pair.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <T>
  */
@@ -14,6 +15,9 @@ public class FeatureValue<T> {
   // Some featurizers attempt to cache feature values for later lookup. This flag
   // instructs those featurizers not to cache this feature value.
   public boolean doNotCache = false;
+  
+  // This feature is a baseline dense feature.
+  public final boolean isDenseFeature;
 
   /**
    * Constructor.
@@ -22,11 +26,21 @@ public class FeatureValue<T> {
    * @param value
    */
   public FeatureValue(T name, double value) {
-    if (name == null) {
-      throw new RuntimeException("Feature name cannot be null");
-    }
+    this(name, value, false);
+  }
+  
+  /**
+   * Constructor.
+   * 
+   * @param name
+   * @param value
+   * @param isDense
+   */
+  public FeatureValue(T name, double value, boolean isDense) {
+    assert name != null : "Feature name cannot be null";
     this.name = name;
     this.value = value;
+    this.isDenseFeature = isDense;
   }
 
   @Override

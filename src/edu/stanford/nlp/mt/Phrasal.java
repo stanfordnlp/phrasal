@@ -78,11 +78,13 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.TargetClassMap;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
@@ -130,7 +132,6 @@ public class Phrasal {
       .append("  -").append(LANGUAGE_MODEL_OPT).append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl)
       .append("  -").append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl)
       .append("  -").append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl)
-      .append("  -").append(MOSES_NBEST_LIST_OPT).append(" filename : Generate Moses-format n-best lists.").append(nl)
       .append("  -").append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl)
       .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).").append(nl)
       .append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl)
@@ -160,7 +161,8 @@ public class Phrasal {
       .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
-      .append("  -").append(DOMAIN_PROPERTIES).append(" prop [prop] : Set properties for each input domain.");
+      .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
+      .append("  -").append(ADD_BOUNDARY_TOKENS).append(" boolean : Add boundary tokens around each input sentence (default: false).");
     return sb.toString();
   }
 
@@ -168,7 +170,6 @@ public class Phrasal {
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   public static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
-  public static final String MOSES_NBEST_LIST_OPT = "moses-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
@@ -198,7 +199,9 @@ public class Phrasal {
   public static final String LOG_PREFIX = "log-prefix";
   public static final String LOG_LEVEL = "log-level";
   public static final String INPUT_PROPERTIES = "input-properties";
-  public static final String DOMAIN_PROPERTIES = "domain-properties";
+  public static final String FEATURE_AUGMENTATION = "feature-augmentation";
+  public static final String ADD_BOUNDARY_TOKENS = "add-boundary-tokens";
+
 
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
@@ -208,7 +211,7 @@ public class Phrasal {
     OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE,
         REORDERING_MODEL, DISTORTION_LIMIT, 
         ADDITIONAL_FEATURIZERS, DISABLED_FEATURIZERS,
-        OPTION_LIMIT_OPT, NBEST_LIST_OPT, MOSES_NBEST_LIST_OPT,
+        OPTION_LIMIT_OPT, NBEST_LIST_OPT,
         DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_MODE, SEARCH_ALGORITHM,
         BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
@@ -219,7 +222,8 @@ public class Phrasal {
         LANGUAGE_MODEL_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, DOMAIN_PROPERTIES));
+        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
+        ADD_BOUNDARY_TOKENS));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -277,7 +281,7 @@ public class Phrasal {
   /**
    * n-best list options
    */
-  private boolean generateMosesNBestList = true;
+  private String nbestListOutputType = "moses";
   private PrintStream nbestListWriter;
   private int nbestListSize;
   
@@ -312,6 +316,11 @@ public class Phrasal {
    */
   private String recombinationMode = RecombinationFilterFactory.EXACT_RECOMBINATION;
 
+  /**
+   * Add boundary tokens flag.
+   */
+  private boolean addBoundaryTokens;
+  
   /**
    * Pre/post processing filters.
    */
@@ -407,22 +416,12 @@ public class Phrasal {
       printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
     }
     
-    // InputProperties setup. The domain configuration must come before loading the
-    // INPUT_PROPERTIES file, if it exists.
-    if (config.containsKey(DOMAIN_PROPERTIES)) {
-      List<String> parameters = config.get(DOMAIN_PROPERTIES);
-      for (String parameter : parameters) {
-        String[] fields = parameter.split(":");
-        if (fields.length != 2) {
-          throw new RuntimeException("Invalid domain specification: " + parameter);
-        }
-        InputProperties.setDomainIndex(fields[0], fields[1]);
-      }
-    }
-    
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
         InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
-        
+     
+     addBoundaryTokens  = config.containsKey(ADD_BOUNDARY_TOKENS) ? 
+         Boolean.valueOf(config.get(ADD_BOUNDARY_TOKENS).get(0)) : false;
+         
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
@@ -690,17 +689,18 @@ public class Phrasal {
       }
     }
 
-    // Create Featurizer
-    String lgModel = null;
-    if (config.containsKey(LANGUAGE_MODEL_OPT)) {
-      lgModel = config.get(LANGUAGE_MODEL_OPT).get(0);
-      System.err.printf("Language model: %s%n", lgModel);
-    }
+    // Create feature extractor
+    String lgModel = config.containsKey(LANGUAGE_MODEL_OPT) ?
+        config.get(LANGUAGE_MODEL_OPT).get(0) : null;
+    
+    String featureAugmentationMode = config.containsKey(FEATURE_AUGMENTATION) ?
+        config.get(FEATURE_AUGMENTATION).get(0) : null;
 
     final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
         : LinearFutureCostFeaturizer.class.getName();
-    CombinedFeaturizer<IString, String> featurizer;
+    FeatureExtractor<IString, String> featurizer;
     if (lgModel != null) {
+      System.err.printf("Language model: %s%n", lgModel);
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.MOSES_DENSE_FEATURES,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
@@ -726,9 +726,14 @@ public class Phrasal {
 
     if (!additionalFeaturizers.isEmpty()) {
       List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
-      allFeaturizers.addAll(featurizer.featurizers);
+      allFeaturizers.addAll(featurizer.getFeaturizers());
       allFeaturizers.addAll(additionalFeaturizers);
-      featurizer = new CombinedFeaturizer<IString, String>(allFeaturizers);
+      if (featureAugmentationMode == null) {
+        featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
+      } else {
+        System.err.printf("Feature augmentation mode: %s%n", featureAugmentationMode);
+        featurizer = new FeatureExtractor<IString, String>(allFeaturizers, featureAugmentationMode);        
+      }
     }
     
     // Link the final featurizer and the phrase table
@@ -771,7 +776,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(recombinationMode, featurizer.getNestedFeaturizers());
+        .factory(recombinationMode, featurizer.getFeaturizers());
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;
@@ -811,7 +816,7 @@ public class Phrasal {
     for (int i = 0; i < numThreads; i++) {
       try {
         infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder.setIncrementalFeaturizer((CombinedFeaturizer<IString, String>) featurizer.clone());
+        infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
@@ -859,28 +864,31 @@ public class Phrasal {
         System.err.printf("Generating n-best lists (size: %d)%n",
             nbestListSize);
 
-      } else if (nbestOpt.size() == 2) {
+      } else if (nbestOpt.size() == 2 || nbestOpt.size() == 3) {
         String nbestListFilename = nbestOpt.get(0);
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
         assert nbestListSize >= 0;
-        nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
+        
+        if ( ! nbestListFilename.equals("default")) {
+          nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
+        }
+        
+        if (nbestOpt.size() == 3) {
+          nbestListOutputType = nbestOpt.get(2);
+        }
+        
         System.err.printf("Generating n-best lists to: %s (size: %d)%n",
             nbestListFilename, nbestListSize);
 
       } else {
         throw new RuntimeException(
-            String.format("%s requires 1 or 2 arguments, not %d", NBEST_LIST_OPT,
+            String.format("%s requires 1, 2 or 3 arguments, not %d", NBEST_LIST_OPT,
                 nbestOpt.size()));
       }
 
     } else {
       nbestListSize = -1;
       nbestListWriter = null;
-    }
-    
-    List<String> mosesNbestOpt = config.get(MOSES_NBEST_LIST_OPT);
-    if (mosesNbestOpt != null && mosesNbestOpt.size() > 0) {
-      generateMosesNBestList = Boolean.parseBoolean(mosesNbestOpt.get(0));
     }
         
     // Determine if we need to generate an alignment file
@@ -974,6 +982,10 @@ public class Phrasal {
             bestTranslation = translations.get(0).translation;
           }
         }
+        
+        if (addBoundaryTokens)
+          bestTranslation = bestTranslation.subsequence(1, bestTranslation.size() - 1);
+        
       }
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);
     }
@@ -1010,7 +1022,7 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, generateMosesNBestList, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nbestListWriter);
       }
       
       // Output the alignments if necessary
@@ -1024,6 +1036,17 @@ public class Phrasal {
     } else {
       // Decoder failure. Print an empty line.
       System.out.println();
+      
+      // Output the n-best list if necessary
+      if (nbestListWriter != null) {
+        IOTools.writeEmptyNBest(sourceInputId, nbestListWriter);
+      }
+      
+      // Output the alignments if necessary
+      if (alignmentWriter != null) {
+        alignmentWriter.printf("%n");
+      }
+      
       System.err.printf("<<< decoder failure for id: %d >>>%n", sourceInputId);
     }
   }
@@ -1051,6 +1074,7 @@ public class Phrasal {
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
       Sequence<IString> source = preprocessor == null ? IStrings.tokenize(line) :
         preprocessor.process(line.trim());
+            
       if (source.size() > maxSentenceSize || source.size() < minSentenceSize) {
         System.err.printf("Skipping: %s%n", line);
         System.err.printf("Tokens: %d (min: %d max: %d)%n", source.size(), minSentenceSize,
@@ -1128,6 +1152,10 @@ public class Phrasal {
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       InputProperties inputProperties) {
     // Sanity checks
+    
+    if (addBoundaryTokens)
+      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
+    
     if (threadId < 0 || threadId >= numThreads) {
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
     }

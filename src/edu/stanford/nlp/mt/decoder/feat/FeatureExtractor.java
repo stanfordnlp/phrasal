@@ -7,6 +7,8 @@ import java.util.Set;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.util.Generics;
 
@@ -19,21 +21,68 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  * @param <FV>
  */
-public class CombinedFeaturizer<TK, FV> extends 
+public class FeatureExtractor<TK, FV> extends 
     DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV>,
     Cloneable {
   
-  public List<Featurizer<TK, FV>> featurizers;
-  private final int nbStatefulFeaturizers;
+  private List<Featurizer<TK, FV>> featurizers;
+  private final int numDerivationFeaturizers;
+  private int featureAugmentationMode = -1;
+  
+  /**
+   * Constructor.
+   * 
+   * @param featurizers
+   */
+  public FeatureExtractor(List<Featurizer<TK, FV>> featurizers) {
+    this(featurizers, null);
+  }
+  
+  /**
+   * Constructor with optional feature splitting mode.
+   * 
+   * @param allFeaturizers
+   * @param featureAugmentationMode
+   */
+  public FeatureExtractor(List<Featurizer<TK, FV>> featurizers,
+      String featureAugmentationMode) {
+    this.featurizers = Generics.newArrayList(featurizers);
+    int id = -1;
+    for (Featurizer<TK, FV> featurizer : featurizers) {
+      if (featurizer instanceof DerivationFeaturizer) {
+        DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
+        sfeaturizer.setId(++id);
+      }
+    }
+    this.numDerivationFeaturizers = id + 1;
+    
+    if (featureAugmentationMode != null) {
+      if (featureAugmentationMode.equals("all")) {
+        this.featureAugmentationMode = 0;
+      } else if (featureAugmentationMode.equals("dense")) {
+        this.featureAugmentationMode = 1;
+      } else if (featureAugmentationMode.equals("extended")) {
+        this.featureAugmentationMode = 2;
+      }
+    }
+    
+    // Initialize rule featurizers
+    initialize();
+  }
 
+  /**
+   * Remove feature templates give a <code>Set</code> of class names.
+   * 
+   * @param disabledFeaturizers
+   */
   public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: " + disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
     List<Featurizer<TK, FV>> filteredFeaturizers = Generics.newLinkedList();
     for (Featurizer<TK, FV> f : featurizers) {
       String className = f.getClass().getName();
-      if (f instanceof CombinedFeaturizer)
-        ((CombinedFeaturizer<?, ?>) f).deleteFeaturizers(disabledFeaturizers);
+      if (f instanceof FeatureExtractor)
+        ((FeatureExtractor<?, ?>) f).deleteFeaturizers(disabledFeaturizers);
       if (!disabledFeaturizers.contains(className)) {
         System.err.println("Keeping featurizer: " + f);
         filteredFeaturizers.add(f);
@@ -51,7 +100,7 @@ public class CombinedFeaturizer<TK, FV> extends
   @Override
   @SuppressWarnings("unchecked")
   public Object clone() throws CloneNotSupportedException {
-    CombinedFeaturizer<TK, FV> featurizer = (CombinedFeaturizer<TK, FV>) super
+    FeatureExtractor<TK, FV> featurizer = (FeatureExtractor<TK, FV>) super
         .clone();
     featurizer.featurizers = Generics.newLinkedList();
     for (Featurizer<TK, FV> f : featurizers) {
@@ -62,43 +111,36 @@ public class CombinedFeaturizer<TK, FV> extends
     return featurizer;
   }
 
-  public List<Featurizer<TK, FV>> getNestedFeaturizers() {
+  /**
+   * Get all feature templates in this feature extractor. Recursively extracts
+   * feature templates from nested <code>FeatureExtractor</code>s.
+   * 
+   * @return
+   */
+  public List<Featurizer<TK, FV>> getFeaturizers() {
     List<Featurizer<TK, FV>> allFeaturizers = Generics.newLinkedList(
         featurizers);
     for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof CombinedFeaturizer) {
-        allFeaturizers.addAll(((CombinedFeaturizer<TK, FV>) featurizer)
-            .getNestedFeaturizers());
+      if (featurizer instanceof FeatureExtractor) {
+        allFeaturizers.addAll(((FeatureExtractor<TK, FV>) featurizer)
+            .getFeaturizers());
       }
     }
-
     return allFeaturizers;
   }
 
   /**
-   * Constructor.
+   * Returns the number of <code>DerivationFeaturizer</code>s.
    * 
-   * @param featurizers
+   * @return
    */
-  public CombinedFeaturizer(List<Featurizer<TK, FV>> featurizers) {
-    this.featurizers = Generics.newArrayList(featurizers);
-    int id = -1;
-    for (Featurizer<TK, FV> featurizer : featurizers) {
-      if (featurizer instanceof DerivationFeaturizer) {
-        DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
-        sfeaturizer.setId(++id);
-      }
-    }
-    this.nbStatefulFeaturizers = id + 1;
-    
-    // Initialize rule featurizers
-    initialize();
+  public int getNumDerivationFeaturizers() {
+    return numDerivationFeaturizers;
   }
 
-  public int getNumberStatefulFeaturizers() {
-    return nbStatefulFeaturizers;
-  }
-
+  /**
+   * Extract derivation features.
+   */
   @Override
   public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
@@ -109,6 +151,9 @@ public class CombinedFeaturizer<TK, FV> extends
         if (listFeatureValues != null) {
           for (FeatureValue<FV> fv : listFeatureValues) {
             featureValues.add(fv);
+            if (featureAugmentationMode >= 0) {
+              augmentFeatureValue(fv, f.derivation.sourceInputProperties, featureValues);
+            }
           }
         }
       }
@@ -116,6 +161,9 @@ public class CombinedFeaturizer<TK, FV> extends
     return featureValues;
   }
 
+  /**
+   * Extract rule features.
+   */
   @Override
   public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
     List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
@@ -129,11 +177,36 @@ public class CombinedFeaturizer<TK, FV> extends
           for (FeatureValue<FV> fv : listFeatureValues) {
             fv.doNotCache = doNotCache;
             featureValues.add(fv);
+            if (featureAugmentationMode >= 0) {
+              augmentFeatureValue(fv, f.sourceInputProperties, featureValues);
+            }
           }
         }
       }
     }
     return featureValues;
+  }
+
+  /**
+   * Feature space augmentation a la Daume III (2007).
+   * 
+   * @param fv
+   * @param sourceInputProperties
+   * @param featureValues
+   */
+  @SuppressWarnings("unchecked")
+  private void augmentFeatureValue(FeatureValue<FV> fv,
+      InputProperties sourceInputProperties, List<FeatureValue<FV>> featureValues) {
+    final String genre = sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String) sourceInputProperties.get(InputProperty.Domain) : null;
+    if (genre != null) {
+      if (featureAugmentationMode == 0 ||
+          (featureAugmentationMode == 1 && fv.isDenseFeature) ||
+          (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
+        String featureValue = String.format("%s-%s", fv.name.toString(), genre);
+        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+      }
+    }
   }
 
   @Override
@@ -148,7 +221,6 @@ public class CombinedFeaturizer<TK, FV> extends
 
   @Override
   public void initialize() {
-    // Initialize the IsolatedPhraseFeaturizers
     for (Featurizer<TK,FV> featurizer : featurizers) {
       if (featurizer instanceof RuleFeaturizer) {
         ((RuleFeaturizer<TK,FV>) featurizer).initialize();

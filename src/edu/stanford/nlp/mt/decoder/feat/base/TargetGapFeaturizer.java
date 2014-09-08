@@ -96,9 +96,9 @@ public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> im
 
       // First segment of a target-side dtu: cost will be <= -1.0, so pay -1.0
       // upfront:
-      feats.add(new FeatureValue<String>(gapCountFeatureName, -1.0));
+      feats.add(new FeatureValue<String>(gapCountFeatureName, -1.0, true));
       feats.add(new FeatureValue<String>(gapLengthFeatureName, -1.0
-          * MINIMUM_GAP_SIZE));
+          * MINIMUM_GAP_SIZE, true));
 
       return feats;
 
@@ -139,12 +139,12 @@ public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> im
                 // We might be here during nbest list extraction, because
                 // recombination can
                 // create a longer gap than seen during beam search:
-                feats.add(new FeatureValue<String>(gapLengthFeatureName, -100));
+                feats.add(new FeatureValue<String>(gapLengthFeatureName, -100, true));
               } else {
                 int len = distance - MINIMUM_GAP_SIZE;
                 if (len != 0)
                   feats.add(new FeatureValue<String>(gapLengthFeatureName, -1.0
-                      * len));
+                      * len, true));
                 if (addGapSizeProb) {
                   int binId = DTUFeatureExtractor.sizeToBin(distance);
                   int phraseId = f.rule.abstractRule.id;
@@ -152,10 +152,10 @@ public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> im
                       curIdx, binId);
                   if (featureForEachBin) {
                     feats.add(new FeatureValue<String>(gapSizeFeaturePerBinName
-                        + ":" + binId, gapScore));
+                        + ":" + binId, gapScore, true));
                   } else {
                     feats.add(new FeatureValue<String>(gapSizeFeatureName,
-                        gapScore));
+                        gapScore, true));
                   }
                 }
               }
@@ -177,8 +177,8 @@ public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> im
     int gapCount = getGapCount(f);
     if (gapCount > 0) {
       double score = -1.0 * gapCount;
-      list.add(new FeatureValue<String>(gapCountFeatureName, score));
-      list.add(new FeatureValue<String>(gapLengthFeatureName, score));
+      list.add(new FeatureValue<String>(gapCountFeatureName, score, true));
+      list.add(new FeatureValue<String>(gapLengthFeatureName, score, true));
     }
     return list;
   }
@@ -218,13 +218,13 @@ public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> im
     if (WITH_BONBON) {
       if (bonbonCount > 0)
         feats.add(new FeatureValue<String>(bonbonFeatureName, -1.0
-            * bonbonCount));
+            * bonbonCount, true));
     } else {
       crossingCount += bonbonCount;
     }
     if (crossingCount > 0)
       feats.add(new FeatureValue<String>(gapCrossingFeatureName, -1.0
-          * crossingCount));
+          * crossingCount, true));
   }
 
   @Override

@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
-import edu.stanford.nlp.mt.decoder.feat.CombinedFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
@@ -54,7 +54,7 @@ public class LanguageModelTrueCaser {
         NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
     List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
     listFeaturizers.add(lmFeaturizer);
-    CombinedFeaturizer<IString, String> combinedFeaturizer = new CombinedFeaturizer<IString, String>(
+    FeatureExtractor<IString, String> combinedFeaturizer = new FeatureExtractor<IString, String>(
         listFeaturizers);
 
     CubePruningDecoder.CubePruningDecoderBuilder<IString, String> infererBuilder = 
