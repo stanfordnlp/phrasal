@@ -35,19 +35,19 @@ import edu.stanford.nlp.util.Index;
  * Various static methods for reading and writing files. Also includes
  * utilities for converting string-valued objects to other types after
  * reading from file.
- * 
+ *
  * @author danielcer
  * @author Spence Green
  *
  */
 public final class IOTools {
-  
+
   // TODO(spenceg): Should be user-configurable via various main methods (Phrasal,
   // OnlineTuner, PhraseExtract, etc.)
   public static final String DEFAULT_ENCODING = "UTF-8";
-  
+
   public static final String WEIGHTS_FILE_EXTENSION = ".binwts";
-  
+
   private IOTools() {}
 
   /**
@@ -188,10 +188,10 @@ public final class IOTools {
     reader.close();
     return config;
   }
-  
+
   /**
    * Read weights from a file. Supports both binary and text formats.
-   * 
+   *
    * @param filename
    * @param featureIndex
    * @return a counter of weights
@@ -205,29 +205,29 @@ public final class IOTools {
       ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
           filename));
       wts =  ErasureUtils.<Counter<String>>uncheckedCast(ois.readObject());
-      ois.close();    
+      ois.close();
     } catch (IOException e) {
        wts = Counters.loadCounter(filename, String.class);
     } catch (ClassNotFoundException e) {
        wts = Counters.loadCounter(filename, String.class);
     }
-    
+
     if (featureIndex != null) {
       for (String key : wts.keySet()) {
-        featureIndex.indexOf(key, true);
+        featureIndex.addToIndex(key);
       }
     }
     return wts;
   }
-  
-  
+
+
   public static Counter<String> readWeights(String filename) {
     return readWeights(filename, null);
   }
 
   /**
    * Write weights to a file. Supports both binary and text formats.
-   * 
+   *
    * @param filename
    * @param wts
    */
@@ -247,27 +247,27 @@ public final class IOTools {
       e.printStackTrace();
     }
   }
-  
+
   /**
    * Write an n-best list to file.
-   * 
+   *
    * @param translations
    * @param sourceInputId
-   * @param nbestWordInternalAlignments 
+   * @param nbestWordInternalAlignments
    */
-  public static void writeNbest(List<RichTranslation<IString, String>> translations, 
+  public static void writeNbest(List<RichTranslation<IString, String>> translations,
       int sourceInputId,
       String outputType,
       PrintStream nbestListWriter) {
     assert translations != null;
     assert nbestListWriter != null;
-    
+
     StringBuilder sb = new StringBuilder(translations.size() * 500);
     String nl = System.getProperty("line.separator");
     for (RichTranslation<IString, String> translation : translations) {
       if (outputType.equals("moses")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, true, false);
-      } else if (outputType.equals("nofeats")) { 
+      } else if (outputType.equals("nofeats")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, false, false);
       } else if (outputType.equals("verbose")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, true, false);
@@ -281,7 +281,7 @@ public final class IOTools {
     }
     nbestListWriter.append(sb.toString());
   }
-  
+
   /**
    * Write an empty entry to a n-best list file.
    */
@@ -296,7 +296,7 @@ public final class IOTools {
     sb.append(nl);
     nbestListWriter.append(sb.toString());
   }
-  
+
   /**
    * Return a list of files given a path prefix, e.g., passing the path
    *  /home/me/ref  will return all files in /home/me that begin with ref.
@@ -317,10 +317,10 @@ public final class IOTools {
         fileNames[i] = path.getPath();
       }
       return fileNames;
-    
+
     } else if (p.exists()) {
       return new String[] { p.getPath() };
-    
+
     } else {
       return new String[0];
     }

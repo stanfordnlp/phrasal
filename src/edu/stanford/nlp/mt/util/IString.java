@@ -31,7 +31,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
    * Constructor.
    */
   public IString(String string) {
-    id = index.indexOf(string, true);
+    id = index.addToIndex(string);
   }
 
   public IString(int id) {
@@ -126,10 +126,11 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
     @Override
     public int addToIndex(IString o) {
-      return indexOf(o, true);
+      throw new UnsupportedOperationException();
     }
 
     @Override
+    @Deprecated
     public int indexOf(IString o, boolean add) {
       return o.id;
     }
