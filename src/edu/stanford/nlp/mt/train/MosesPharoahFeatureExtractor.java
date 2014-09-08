@@ -181,7 +181,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
 
     if (PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
-      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f, 
+      return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f,
           feCounts.get(idx), eCounts.get(idxE), fCounts.get(idxF) };
     } else if (onlyPhi) {
       // -- only two features: relative freq. in both directions:
@@ -255,13 +255,21 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
 
   private int indexOfFLex(IString f, boolean add) {
     synchronized (fLexIndex) {
-      return fLexIndex.indexOf(f.getId(), add);
+      if (add) {
+        return fLexIndex.addToIndex(f.getId());
+      } else {
+        return fLexIndex.indexOf(f.getId());
+      }
     }
   }
 
   private int indexOfELex(IString e, boolean add) {
     synchronized (eLexIndex) {
-      return eLexIndex.indexOf(e.getId(), add);
+      if (add) {
+        return eLexIndex.addToIndex(e.getId());
+      } else {
+        return eLexIndex.indexOf(e.getId());
+      }
     }
   }
 
