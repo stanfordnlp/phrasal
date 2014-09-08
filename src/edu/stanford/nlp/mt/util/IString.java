@@ -125,6 +125,11 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     }
 
     @Override
+    public int addToIndex(IString o) {
+      return indexOf(o, true);
+    }
+
+    @Override
     public int indexOf(IString o, boolean add) {
       return o.id;
     }
@@ -199,7 +204,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   public int compareTo(IString o) {
     return index.get(id).compareTo(index.get(o.id));
   }
-  
+
   /**
    * Get a sequence of IString from an array of IString indices.
    */
