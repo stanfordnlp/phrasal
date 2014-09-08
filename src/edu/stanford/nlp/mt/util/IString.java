@@ -181,11 +181,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean add(IString iString) {
       throw new UnsupportedOperationException();
     }
