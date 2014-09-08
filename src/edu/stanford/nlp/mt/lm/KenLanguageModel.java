@@ -10,13 +10,15 @@ import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
  * KenLM language model support via JNI.
- * 
+ *
  * @author daniel cer (danielcer@stanford.edu)
  * @author Spence Green
  * @author Kenneth Heafield
  *
  */
 public class KenLanguageModel implements LanguageModel<IString> {
+
+  private static final int[] EMPTY_INT_ARRAY = new int[0];
 
   static {
     System.loadLibrary("PhrasalKenLM");
@@ -32,7 +34,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
   /**
    * Constructor for multi-threaded queries.
-   * 
+   *
    * @param filename
    */
   public KenLanguageModel(String filename) {
@@ -114,32 +116,31 @@ public class KenLanguageModel implements LanguageModel<IString> {
   public int order() {
     return model.order();
   }
-  
+
   @Override
   public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
     Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
     if (boundaryState != null) {
-      return new KenLMState(0.0, makeKenLMInput(boundaryState, new int[0]), boundaryState.size());
+      return new KenLMState(0.0, makeKenLMInput(boundaryState, EMPTY_INT_ARRAY), boundaryState.size());
     }
-    
+
     // Extract prior state
-    int[] state = priorState == null ? new int[0] : ((KenLMState) priorState).getState();
+    int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
     int[] ngramIds = makeKenLMInput(sequence, state);
-    
+
     // Reverse the start index for KenLM
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
-    
+
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
-  
+
   /**
    * Convert a Sequence and an optional state to an input for KenLM.
-   * 
+   *
    * @param sequence
    * @param priorState
-   * @param priorStateLength
    * @return
    */
   private int[] makeKenLMInput(Sequence<IString> sequence, int[] priorState) {
