@@ -36,4 +36,5 @@ public class PreorderingTest extends TestCase {
             ChineseSourcePreordering.preorder("(TOP (NP (DNP (NP (DP (DT 该) (CLP (M 项))) (NP (NN 技术))) (DEG 的)) (NP (NN 掌握))))"));
     
   }
+
 }
