@@ -34,15 +34,19 @@ public final class ProcessorFactory {
    */
   public static Preprocessor getPreprocessor(String language, String...options) throws IllegalArgumentException {
     language = language.toLowerCase();
-    
-    if (language.equals("en") || language.equals("english")) {
-      return new EnglishPreprocessor();
-    
-    } else if (language.equals("de") || language.equals("german")) {
-      return new GermanPreprocessor();
-      
-    } else if (language.equals("fr") || language.equals("french")) {
-      return new FrenchPreprocessor();
+
+    switch (language) {
+      case "en":
+      case "english":
+        return new EnglishPreprocessor();
+
+      case "de":
+      case "german":
+        return new GermanPreprocessor();
+
+      case "fr":
+      case "french":
+        return new FrenchPreprocessor();
     }
     
     throw new IllegalArgumentException("Invalid preprocessor language code: " + language);
@@ -57,15 +61,19 @@ public final class ProcessorFactory {
    */
   public static Postprocessor getPostprocessor(String language, String...options) {
     language = language.toLowerCase();
-    
-    if (language.equals("en") || language.equals("english")) {
-      return new EnglishPostprocessor(options);
-    
-    } else if (language.equals("de") || language.equals("german")) {
-      return new GermanPostprocessor(options);
-      
-    } else if (language.equals("fr") || language.equals("french")) {
-      return new FrenchPostprocessor(options);
+
+    switch (language) {
+      case "en":
+      case "english":
+        return new EnglishPostprocessor(options);
+
+      case "de":
+      case "german":
+        return new GermanPostprocessor(options);
+
+      case "fr":
+      case "french":
+        return new FrenchPostprocessor(options);
     }
     
     throw new IllegalArgumentException("Invalid postprocessor language code: " + language);

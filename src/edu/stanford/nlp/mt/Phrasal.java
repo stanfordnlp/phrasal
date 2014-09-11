@@ -1037,6 +1037,17 @@ public class Phrasal {
     } else {
       // Decoder failure. Print an empty line.
       System.out.println();
+      
+      // Output the n-best list if necessary
+      if (nbestListWriter != null) {
+        IOTools.writeEmptyNBest(sourceInputId, nbestListWriter);
+      }
+      
+      // Output the alignments if necessary
+      if (alignmentWriter != null) {
+        alignmentWriter.printf("%n");
+      }
+      
       System.err.printf("<<< decoder failure for id: %d >>>%n", sourceInputId);
     }
   }
@@ -1286,13 +1297,10 @@ public class Phrasal {
 
     // by default, exit on uncaught exception
     Thread
-        .setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-          @Override
-          public void uncaughtException(Thread t, Throwable ex) {
-            System.err.println("Uncaught exception from thread: " + t.getName());
-            ex.printStackTrace();
-            System.exit(-1);
-          }
+        .setDefaultUncaughtExceptionHandler((t, ex) -> {
+          System.err.println("Uncaught exception from thread: " + t.getName());
+          ex.printStackTrace();
+          System.exit(-1);
         });
 
     Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);

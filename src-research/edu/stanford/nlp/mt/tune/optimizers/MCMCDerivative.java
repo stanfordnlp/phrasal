@@ -70,7 +70,7 @@ public class MCMCDerivative extends AbstractBatchOptimizer {
     Scorer<String> scorer = new DenseScorer(wts, MERT.featureIndex);
 
     double hardEval = emetric.score(argmax);
-    System.err.printf("Hard eval: %.5f\n", hardEval);
+    System.err.printf("Hard apply: %.5f\n", hardEval);
 
     // expected value sums
     OpenAddressCounter<String> sumExpLF = new OpenAddressCounter<String>(0.50f);
@@ -192,7 +192,7 @@ public class MCMCDerivative extends AbstractBatchOptimizer {
               35));
       System.err.printf("dE:\n%s\n\n", Counters.toString(dE, 35));
     }
-    System.err.printf("Hard eval: %.5f E(Eval): %.5f diff: %e\n", hardEval,
+    System.err.printf("Hard apply: %.5f E(Eval): %.5f diff: %e\n", hardEval,
         sumExpL / cnt, hardEval - sumExpL / cnt);
 
     double l2wts = Counters.L2Norm(wts);

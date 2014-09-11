@@ -45,7 +45,7 @@ public class MCMCELossObjectiveCG extends AbstractBatchOptimizer {
     System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
     System.err.printf("E(Eval): %e\n", (regE + 0.5 * l2wtsSqred) / C);
     System.err.printf("C: %e\n", C);
-    System.err.printf("Last eval: %e\n", eval);
+    System.err.printf("Last apply: %e\n", eval);
 
     System.err.println("Begin CG optimization\n");
     ObjELossDiffFunction obj = new ObjELossDiffFunction(mert, sgdWts);
@@ -75,7 +75,7 @@ public class MCMCELossObjectiveCG extends AbstractBatchOptimizer {
     System.err.printf("||w||_2^2: %e\n", l2wtsSqred);
     System.err.printf("E(Eval): %e\n", (regE + 0.5 * l2wtsSqred) / C);
     System.err.printf("C: %e\n", C);
-    System.err.printf("Last eval: %e\n", eval);
+    System.err.printf("Last apply: %e\n", eval);
     return wts;
   }
 

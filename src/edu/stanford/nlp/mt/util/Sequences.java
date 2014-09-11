@@ -7,10 +7,10 @@ import edu.stanford.nlp.util.Index;
 
 /**
  * Helper functions for working with Sequences.
- * 
+ *
  * @author danielcer
  * @author Spence Green
- * 
+ *
  */
 public final class Sequences {
 
@@ -18,7 +18,7 @@ public final class Sequences {
 
   /**
    * Convert a sequence to its underlying list of integers.
-   * 
+   *
    * @param sequence
    * @return
    */
@@ -34,7 +34,7 @@ public final class Sequences {
   }
 
   /**
-   * 
+   *
    * @param <T>
    */
   @SuppressWarnings("unchecked")
@@ -48,14 +48,14 @@ public final class Sequences {
     int[] intArray = new int[sz];
     for (int i = 0; i < sz; i++) {
       T token = sequence.get(i);
-      intArray[i] = index.indexOf(token, true);
+      intArray[i] = index.addToIndex(token);
     }
     return intArray;
   }
 
   /**
    * Returns true if seq starts with prefix, and false otherwise.
-   * 
+   *
    * @param seq
    * @param prefix
    * @return
@@ -71,10 +71,10 @@ public final class Sequences {
     }
     return true;
   }
-  
+
   /**
    * Concatenate two sequences.
-   * 
+   *
    * @param a
    * @param b
    * @return
@@ -97,7 +97,7 @@ public final class Sequences {
     RawSequence<T> ab = new RawSequence<T>((T[])abArr);
     return ab;
   }
-  
+
   @SuppressWarnings("unchecked")
   private static <T> Sequence<T> concatenateRaw(RawSequence<T> a, RawSequence<T> b) {
     Object[] elements = new Object[a.size() + b.size()];
@@ -112,7 +112,7 @@ public final class Sequences {
 
   /**
    * Convert a sequence to an array of Strings.
-   * 
+   *
    * @param sequence
    * @return
    */
@@ -126,7 +126,7 @@ public final class Sequences {
 
   /**
    * Convert a sequence to a List of Strings.
-   * 
+   *
    * @param sequence
    * @return
    */
@@ -137,10 +137,10 @@ public final class Sequences {
     }
     return stringList;
   }
-  
+
   /**
    * Append a start symbol to the beginning of a sequence.
-   * 
+   *
    * @param sequence
    * @param startToken
    * @return
@@ -148,10 +148,10 @@ public final class Sequences {
   public static <T> Sequence<T> wrapStart(Sequence<T> sequence, T startToken) {
     return new InsertedStartToken<T>(sequence, startToken);
   }
-  
+
   /**
    * Append an end symbol to the end of a sequence.
-   * 
+   *
    * @param sequence
    * @param endToken
    * @return
@@ -159,11 +159,11 @@ public final class Sequences {
   public static <T> Sequence<T> wrapEnd(Sequence<T> sequence, T endToken) {
     return new InsertedEndToken<T>(sequence, endToken);
   }
-  
+
   /**
    * Append a start symbol to the beginning of a sequence and an end symbol to the end
    * of a sequence.
-   * 
+   *
    * @param sequence
    * @param startToken
    * @param endToken
@@ -172,10 +172,10 @@ public final class Sequences {
   public static <T> Sequence<T> wrapStartEnd(Sequence<T> sequence, T startToken, T endToken) {
     return new InsertedStartEndToken<T>(sequence, startToken, endToken);
   }
-  
+
   /**
    * Efficient wrapper around a sequence.
-   * 
+   *
    * @author Spence Green
    *
    * @param <TK>
@@ -223,10 +223,10 @@ public final class Sequences {
       }
     }
   }
-  
+
   /**
    * Efficient wrapper around a sequence.
-   * 
+   *
    * @author Spence Green
    *
    * @param <TK>
@@ -269,10 +269,10 @@ public final class Sequences {
       }
     }
   }
-  
+
   /**
    * Efficient wrapper around a sequence.
-   * 
+   *
    * @author Spence Green
    *
    * @param <TK>

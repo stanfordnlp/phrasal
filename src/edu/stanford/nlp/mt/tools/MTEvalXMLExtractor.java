@@ -56,24 +56,29 @@ public class MTEvalXMLExtractor {
      public void startElement (String uri, String localName,
          String qName, Attributes attributes) throws SAXException
      {
-       if ("seg".equals(qName)) {
-         inSeg = true;
-       } else if ("doc".equals(qName)) {
-         genre = attributes.getValue("genre");
-       } else if ("srcset".equals(qName)) {
-         try {
-           output = new BufferedWriter(new FileWriter(outputFnOrPrefix));
-         } catch (IOException e) {
-           throw new RuntimeException(e);
-         }
-       } else if ("refset".equals(qName)) {
-         try {
-           String refId = attributes.getValue("refid");
-           String fn = String.format("%s.%s", outputFnOrPrefix, refId);
-           output = new BufferedWriter(new FileWriter(fn));
-         } catch (IOException e) {
-           throw new RuntimeException(e);
-         }
+       switch (qName) {
+         case "seg":
+           inSeg = true;
+           break;
+         case "doc":
+           genre = attributes.getValue("genre");
+           break;
+         case "srcset":
+           try {
+             output = new BufferedWriter(new FileWriter(outputFnOrPrefix));
+           } catch (IOException e) {
+             throw new RuntimeException(e);
+           }
+           break;
+         case "refset":
+           try {
+             String refId = attributes.getValue("refid");
+             String fn = String.format("%s.%s", outputFnOrPrefix, refId);
+             output = new BufferedWriter(new FileWriter(fn));
+           } catch (IOException e) {
+             throw new RuntimeException(e);
+           }
+           break;
        }
      }
      
@@ -81,16 +86,21 @@ public class MTEvalXMLExtractor {
      public void endElement (String uri, String localName,
          String qName) throws SAXException
      {
-       try {         
-         if ("seg".equals(qName)) {
-           inSeg = false;           
-           if (filterGenre == null || filterGenre.equals(genre)) {             
-             output.write("\n");
-           }
-         } else if ("doc".equals(qName)) {
-           genre = null;
-         } else if ("srcset".equals(qName) || "refset".equals(qName)) {
-           output.close();
+       try {
+         switch (qName) {
+           case "seg":
+             inSeg = false;
+             if (filterGenre == null || filterGenre.equals(genre)) {
+               output.write("\n");
+             }
+             break;
+           case "doc":
+             genre = null;
+             break;
+           case "srcset":
+           case "refset":
+             output.close();
+             break;
          }
        } catch (IOException e) {
          throw new RuntimeException(e);

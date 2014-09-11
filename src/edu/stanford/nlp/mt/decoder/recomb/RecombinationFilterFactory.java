@@ -40,41 +40,44 @@ public final class RecombinationFilterFactory {
         msdRecombination = true;
     }
 
-    if (recombinationMode.equals(PHAROAH_RECOMBINATION)) {
-      List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
-      // maintain uniqueness of hypotheses that will result in different linear
-      // distortion scores when extended
-      // with future translation options.
-      filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
+    switch (recombinationMode) {
+      case PHAROAH_RECOMBINATION: {
+        List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
+        // maintain uniqueness of hypotheses that will result in different linear
+        // distortion scores when extended
+        // with future translation options.
+        filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
 
-      // maintain uniqueness of hypotheses that differ by the last N-tokens,
-      // this being relevant to lg model scoring
-      filters.add(new TranslationNgramRecombinationFilter(featurizers));
+        // maintain uniqueness of hypotheses that differ by the last N-tokens,
+        // this being relevant to lg model scoring
+        filters.add(new TranslationNgramRecombinationFilter(featurizers));
 
-      // maintain uniqueness of hypotheses that differ in terms of foreign
-      // sequence coverage
-      filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
+        // maintain uniqueness of hypotheses that differ in terms of foreign
+        // sequence coverage
+        filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
 
-      if (msdRecombination) {
-        filters.add(new MSDRecombinationFilter(featurizers));
+        if (msdRecombination) {
+          filters.add(new MSDRecombinationFilter(featurizers));
+        }
+        return new CombinedRecombinationFilter<Derivation<IString, String>>(
+            filters);
+
       }
-      return new CombinedRecombinationFilter<Derivation<IString, String>>(
-          filters);
+      case DTU_RECOMBINATION: {
+        List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
+        filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
+        filters.add(new TranslationNgramRecombinationFilter(featurizers));
+        filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
+        filters.add(new DTURecombinationFilter<IString, String>());
+        if (msdRecombination) {
+          filters.add(new MSDRecombinationFilter(featurizers));
+        }
+        return new CombinedRecombinationFilter<Derivation<IString, String>>(
+            filters);
 
-    } else if (recombinationMode.equals(DTU_RECOMBINATION)) {
-      List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
-      filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
-      filters.add(new TranslationNgramRecombinationFilter(featurizers));
-      filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
-      filters.add(new DTURecombinationFilter<IString, String>());
-      if (msdRecombination) {
-        filters.add(new MSDRecombinationFilter(featurizers));
       }
-      return new CombinedRecombinationFilter<Derivation<IString, String>>(
-          filters);
-    
-    } else if (recombinationMode.equals(EXACT_RECOMBINATION)) {
-      return new ExactRecombinationFilter<Derivation<IString, String>>(featurizers);
+      case EXACT_RECOMBINATION:
+        return new ExactRecombinationFilter<Derivation<IString, String>>(featurizers);
     }
     
     throw new RuntimeException("Unrecognized recombination filter: " + recombinationMode);
