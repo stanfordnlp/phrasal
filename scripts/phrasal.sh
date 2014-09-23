@@ -199,11 +199,10 @@ function create-learn-curve {
   rm -f $RUNNAME.learn-curve.tmp
 
   #
-  # Reporting system. Only activated if REPORTING_DIR exists.
+  # Reporting system. Only activated if REPORTING_DIR is set in
+  # the vars file and the directory exists.
   #
-  REPORTING_DIR=/u/apache/htdocs/local/phrasal/ems-reporting
-  RESULTS_FILE=$REPORTING_DIR/results.html
-  if [ -d $REPORTING_DIR ]; then
+  if [[ -n "$REPORTING_DIR" && -d $REPORTING_DIR ]]; then
       MAX_SCORE=$(cat $RUNNAME.learn-curve | awk '{ t = $1; $1 = $3; $3 = t; print; }' | sort -nr | cut -f1 -d' ' | head -n 1)
       echo "<tr><td>$TUNE_SET_NAME</td><td>$DECODE_SET_NAME</td><td>$RUNNAME</td><td>$MAX_SCORE</td><td>$METRIC</td><td>$(whoami)</td><td>$(pwd)</td><td>$(date)</td><td>$RUN_MSG</td></tr>" >> $RESULTS_FILE
       cp $RUNNAME.ini $REPORTING_DIR
