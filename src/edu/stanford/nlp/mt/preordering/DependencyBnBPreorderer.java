@@ -295,8 +295,8 @@ public class DependencyBnBPreorderer {
     
     double score = 0.0;
     for (int i = 0; i < size; i++) {
+      FeatureNode fn1 = nodes.get(permutation.get(i));
       for (int j = i + 1; j < size; j++) {
-       FeatureNode fn1 = nodes.get(permutation.get(i));
        FeatureNode fn2 = nodes.get(permutation.get(j));
        
        TrainingExample example = new TrainingExample(fn1, fn2, 0);
@@ -356,6 +356,10 @@ public class DependencyBnBPreorderer {
     optionArgDefs.put("alignment", 1);
     optionArgDefs.put("classMap", 1);
     optionArgDefs.put("model", 1);
+    optionArgDefs.put("devSourceSentences", 1);
+    optionArgDefs.put("devTargetSentences", 1);
+    optionArgDefs.put("devAlignment", 1);
+    optionArgDefs.put("devDependencies", 1);
 
     return optionArgDefs;
   }
@@ -386,9 +390,13 @@ public class DependencyBnBPreorderer {
       String alignmentFile = PropertiesUtils.getString(options, "alignment", null);
       String classMapFile = PropertiesUtils.getString(options, "classMap", null);
 
-
+      String devSourceTokenFile = PropertiesUtils.getString(options, "devSourceSentences", null);
+      String devTargetTokenFile = PropertiesUtils.getString(options, "devTargetSentences", null);
+      String devAlignmentFile = PropertiesUtils.getString(options, "devAlignment", null);
+      String devDependencyFile = PropertiesUtils.getString(options, "devDependencies", null);
+      
       if (sourceTokenFile == null || targetTokenFile == null || alignmentFile == null || classMapFile == null) {
-        System.err.println("Usage: java " + DependencyBnBPreorderer.class.getName() + " -dependencies path_to_conll_file -model file [-train -sourceSentences file -targetSentences file -alignment file -classMap file]");
+        System.err.println("Usage: java " + DependencyBnBPreorderer.class.getName() + " -dependencies path_to_conll_file -model file [-train -sourceSentences file -targetSentences file -alignment file -classMap file -devSourceSentences file -devTargetSentences file -devAlignment file -devDependencies file]");
         return;
       }
       
@@ -408,31 +416,49 @@ public class DependencyBnBPreorderer {
       LineNumberReader targetTokenReader =  IOTools.getReaderFromFile(targetTokenFile);
       LineNumberReader alignmentReader =  IOTools.getReaderFromFile(alignmentFile);
       
+      LineNumberReader devSourceTokenReader = IOTools.getReaderFromFile(devSourceTokenFile);
+      LineNumberReader devTargetTokenReader = IOTools.getReaderFromFile(devTargetTokenFile);
+      LineNumberReader devAlignmentReader = IOTools.getReaderFromFile(devAlignmentFile);
+      LineNumberReader devDependencyReader = IOTools.getReaderFromFile(devDependencyFile);
+      
       Dataset<Integer, String> dataset = new Dataset<Integer, String>();
       
       
 
       Dataset<Integer, String> testDataset = new Dataset<Integer, String>();
 
-      int i = 0;
-      
       List<Tree> treesToReorder = Generics.newArrayList();
       List<SymmetricalWordAlignment> alignmentsToReorder = Generics.newArrayList();
 
+      int i = 0;
       while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(dependencyReader, false, false)) != null) {
+        Tree tree = generateShallowTree(dependencies);
+
+        if (tree.yield().size() > 100)
+          continue;
+        
         String sourceLine = sourceTokenReader.readLine();
         String targetLine = targetTokenReader.readLine();
         String alignmentLine = alignmentReader.readLine();
         
-        //System.err.println(sourceLine);
-        //System.err.println(targetLine);
-        //System.err.println(alignmentLine);
+//        System.err.println(sourceLine);
+//        System.err.println(targetLine);
+//        System.err.println(alignmentLine);
 
 
         
-        SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceLine, targetLine, alignmentLine);
-        Tree tree = generateShallowTree(dependencies);
         //tree.pennPrint(System.err);
+        //System.err.println(tree.yield());
+        
+        SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceLine, targetLine, alignmentLine);
+
+//        System.err.println(sourceLine.split("\\s+").length);
+//        System.err.println(targetLine.split("\\s+").length);
+//        System.err.println(alignment.toString());
+//        System.err.println(alignment.fSize());
+//        System.err.println(alignment.eSize());
+        
+
         
         //System.err.println(tree.yield());
         
@@ -442,32 +468,41 @@ public class DependencyBnBPreorderer {
         for (TrainingExample ex : trainingExamples) {
           //System.err.println(ex.label);
           //System.err.println(ex.extractFeatures());
-          if (i < 100000) {
             dataset.add(ex.extractFeatures(), ex.label);
-          } else {
-            testDataset.add(ex.extractFeatures(), ex.label);
-          } 
-          
         }
-        
         i++;
-        
-        if (i > 100000) {
-          treesToReorder.add(tree);
-          alignmentsToReorder.add(alignment);
-        }
-        
-        if (i > 100500)
-          break;
-        
-        
+        if (i % 10 == 0) 
+          System.err.println(i);
       }
       
+      
       dataset.applyFeatureCountThreshold(5);
-
+      
+      while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(devDependencyReader, false, false)) != null) {
+        String sourceLine = devSourceTokenReader.readLine();
+        String targetLine = devTargetTokenReader.readLine();
+        String alignmentLine = devAlignmentReader.readLine();
+        SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceLine, targetLine, alignmentLine);
+        Tree tree = generateShallowTree(dependencies);
+        //tree.pennPrint(System.err);
+        
+        //System.err.println(tree.yield());
+        
+        List<TrainingExample> trainingExamples = generateTrainingExamples(tree, alignment);
+        
+        for (TrainingExample ex : trainingExamples) {
+          //System.err.println(ex.label);
+          //System.err.println(ex.extractFeatures());
+            testDataset.add(ex.extractFeatures(), ex.label);
+        }
+        treesToReorder.add(tree);
+        alignmentsToReorder.add(alignment);
+      }  
+      
+      
       LogisticClassifierFactory<Integer,String> lcf = new LogisticClassifierFactory<Integer,String>();
       
-      classifier = lcf.trainClassifier(dataset, 1.0);
+      classifier = lcf.trainClassifier(dataset, 2.0);
 
       int correct = 0;
       int count = 0;
@@ -496,6 +531,16 @@ public class DependencyBnBPreorderer {
       System.out.println("Train:");
       System.out.println("Correct: " + correct + "/" + count);
       System.out.println("TP: " + tp + ", TN: " + tn + ", FP: " + fp + ", FN: " + fn);
+      System.out.println("Accurracy\tTP\tTN\tFP\tFN");
+      System.out.printf("%.4f", (correct * 100.0 / count ));
+      System.out.print("\t");
+      System.out.print(tp);
+      System.out.print("\t");
+      System.out.print(tn);
+      System.out.print("\t");
+      System.out.print(fp);
+      System.out.print("\t");
+      System.out.println(fn);
       
       correct = 0;
       count = 0;
@@ -524,6 +569,16 @@ public class DependencyBnBPreorderer {
       System.out.println("Test:");
       System.out.println("Correct: " + correct + "/" + count);
       System.out.println("TP: " + tp + ", TN: " + tn + ", FP: " + fp + ", FN: " + fn);
+      System.out.println("Accurracy\tTP\tTN\tFP\tFN");
+      System.out.printf("%.4f", (correct * 100.0 / count ));
+      System.out.print("\t");
+      System.out.print(tp);
+      System.out.print("\t");
+      System.out.print(tn);
+      System.out.print("\t");
+      System.out.print(fp);
+      System.out.print("\t");
+      System.out.println(fn);
 
       
       int totalOriginalCrossingScore = 0;
@@ -532,12 +587,13 @@ public class DependencyBnBPreorderer {
       for (int j = 0; j < treesToReorder.size(); j++) {
         Tree tree = treesToReorder.get(j);
         SymmetricalWordAlignment alignment = alignmentsToReorder.get(j);
-        System.out.println("---------------");
-        System.out.println("Original: " + tree.yieldWords());
+        //System.out.println("---------------");
+        //System.out.println("Original: " + tree.yieldWords());
         int OCS = computeCrossingLinks(tree.yield(), alignment);
-        System.out.println("Reordered: " + preorder(tree));
+        //System.out.println("Reordered: " + preorder(tree));
+        preorder(tree);
         int PCS = computeCrossingLinks(tree.yield(), alignment);
-        System.out.println("Crossing score, before: " + OCS + ", after: " + PCS);
+        //System.out.println("Crossing score, before: " + OCS + ", after: " + PCS);
         totalOriginalCrossingScore += OCS;
         totalPreorderedCrossingScore += PCS;
       }
@@ -574,6 +630,19 @@ public class DependencyBnBPreorderer {
       List<String> leftFeatures = a.extractFeatures("l");
       List<String> rightFeatures = b.extractFeatures("r");
       
+//      for (int i = 0, lfc = leftFeatures.size(); i < lfc; i++) {
+//        for (int j = i + 1; j < lfc; j++) {
+//          leftFeatures.add(leftFeatures.get(i) + "_" + leftFeatures.get(j));
+//        }
+//      }
+//      
+//      for (int i = 0, lfc = rightFeatures.size(); i < lfc; i++) {
+//        for (int j = i + 1; j < lfc; j++) {
+//          rightFeatures.add(rightFeatures.get(i) + "_" + rightFeatures.get(j));
+//        }
+//      }
+
+
       features.addAll(leftFeatures);
       features.addAll(rightFeatures);
       for (String l : leftFeatures) {
@@ -627,6 +696,10 @@ public class DependencyBnBPreorderer {
       features.add(prefix + ":l:" + this.word.lemma());
       //POS tag
       features.add(prefix + ":t:" + this.word.tag());
+      //word
+      features.add(prefix + ":w:" + getWordOrClass(this.word));
+      //word class
+      features.add(prefix + ":c:" + getClass(this.word));
       //head word
       features.add(prefix + ":hw:" + getWordOrClass(this.hw));
       //head class

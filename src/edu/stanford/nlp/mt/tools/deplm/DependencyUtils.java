@@ -60,7 +60,7 @@ public class DependencyUtils {
         if (zeroIndexed)
           gov--;
         String word = fields[1];
-        String pos = fields[3];
+        String pos = fields[4];
         String rel = fields[7];
         IndexedWord iw =  new IndexedWord();
         iw.setWord(word);
