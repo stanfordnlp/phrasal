@@ -26,16 +26,17 @@ public class HeuristicFactory {
       hName = hSpecs[0].toLowerCase();
     }
 
-    if (hName.equals(NULL_HEURISTIC)) {
-      return new NullHeuristic<IString, String>();
-    } else if (hName.equals(ISOLATED_PHRASE_SOURCE_COVERAGE)) {
-      return new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
-          featurizer);
-    } else if (hName.equals(ISOLATED_DTU_SOURCE_COVERAGE)) {
-      return new DTUIsolatedPhraseForeignCoverageHeuristic<IString, String>(
-          featurizer);
-    } else if (hName.equals(OPTIMISTIC_FOREIGN_COVERAGE)) {
-      return new OptimisticForeignCoverageHeuristic<IString, String>();
+    switch (hName) {
+      case NULL_HEURISTIC:
+        return new NullHeuristic<IString, String>();
+      case ISOLATED_PHRASE_SOURCE_COVERAGE:
+        return new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
+            featurizer);
+      case ISOLATED_DTU_SOURCE_COVERAGE:
+        return new DTUIsolatedPhraseForeignCoverageHeuristic<IString, String>(
+            featurizer);
+      case OPTIMISTIC_FOREIGN_COVERAGE:
+        return new OptimisticForeignCoverageHeuristic<IString, String>();
     }
 
     throw new RuntimeException(String.format("Unknown search heuristic '%s'\n",

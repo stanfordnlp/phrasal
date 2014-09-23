@@ -28,7 +28,7 @@ public class NBestErrorSurface {
   static public void main(String[] args) throws Exception {
     if (args.length != 7) {
       System.err
-          .println("Usage:\n\tjava ...NBestErrorSurface (eval metric) (refs) "
+          .println("Usage:\n\tjava ...NBestErrorSurface (apply metric) (refs) "
               + "(n-best) (weights) (feature1|||min,max) (feature2|||min,max) "
               + "(out prefix)\n");
       System.exit(-1);

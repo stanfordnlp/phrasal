@@ -86,7 +86,7 @@ public final class SentenceLevelMetricFactory {
    */
   public static SentenceLevelMetric<IString, String> getMetric(
       String scoreMetricStr, String[] scoreMetricOpts) {
-    
+
     if (scoreMetricStr.equals("bleu-smooth")) {
       // Lin and Och smoothed BLEU (BLEU+1)
       return new BLEUGain<IString,String>();

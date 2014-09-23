@@ -56,9 +56,9 @@ public class PowellOptimizer extends AbstractBatchOptimizer {
       double biggestWin = Math.max(0, eval - objValue);
       System.err.printf("initial totalWin: %e (%e-%e)\n", biggestWin, eval,
           objValue);
-      System.err.printf("eval @ wts: %e\n",
+      System.err.printf("apply @ wts: %e\n",
           MERT.evalAtPoint(nbest, wts, emetric));
-      System.err.printf("eval @ p[0]: %e\n",
+      System.err.printf("apply @ p[0]: %e\n",
           MERT.evalAtPoint(nbest, p[0], emetric));
       objValue = eval;
       int biggestWinId = 0;

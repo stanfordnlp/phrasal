@@ -44,13 +44,7 @@ public class AgendaMultiTranslationMetricMax<TK, FV> implements
         .nbestLists();
 
     PriorityQueue<MultiTranslationState<TK, FV>> agenda = new PriorityQueue<MultiTranslationState<TK, FV>>(
-        1000, new Comparator<MultiTranslationState<TK, FV>>() {
-          @Override
-          public int compare(MultiTranslationState<TK, FV> o1,
-              MultiTranslationState<TK, FV> o2) {
-            return -o1.compareTo(o2);
-          }
-        });
+        1000, (o1, o2) -> -o1.compareTo(o2));
 
     agenda.add(new MultiTranslationState<TK, FV>(nbest, metric));
     recombinationHash.put(agenda.peek());

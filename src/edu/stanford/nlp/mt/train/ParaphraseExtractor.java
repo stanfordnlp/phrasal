@@ -53,12 +53,7 @@ public class ParaphraseExtractor extends PhraseExtract {
 
   public ParaphraseExtractor(Properties prop) throws IOException {
     super(prop);
-    beamCmp = new Comparator<PhraseHyp>() {
-      @Override
-      public int compare(PhraseHyp p1, PhraseHyp p2) {
-        return (Double.valueOf(p1.d).compareTo(p2.d));
-      }
-    };
+    beamCmp = (p1, p2) -> (Double.valueOf(p1.d).compareTo(p2.d));
   }
 
   private String keyToPlainString(int key) {

@@ -60,30 +60,35 @@ public class TMXExtractor extends DefaultHandler {
   @Override
   public void endElement(String uri, String localName, 
       String qName) throws SAXException {
-    if ("tu".equals(qName)) {
-      Set<String> tuLangSet = langToCurrentSeg.keySet();
-      tuLangSet.retainAll(langs);
-      if (tuLangSet.equals(langs)) {
-        try {
-          for (Map.Entry<String, String> langSeg : 
-            langToCurrentSeg.entrySet()) {
-             String lang = langSeg.getKey();
-             String seg = langSeg.getValue();
-             langToFh.get(lang).write(
-                 seg.replaceAll("[\\s+\r\n]+", " ").
-                 replaceFirst("^ ", "").
-                 replaceFirst(" $", ""));
-             langToFh.get(lang).write("\n");
+    switch (qName) {
+      case "tu":
+        Set<String> tuLangSet = langToCurrentSeg.keySet();
+        tuLangSet.retainAll(langs);
+        if (tuLangSet.equals(langs)) {
+          try {
+            for (Map.Entry<String, String> langSeg :
+                langToCurrentSeg.entrySet()) {
+              String lang = langSeg.getKey();
+              String seg = langSeg.getValue();
+              langToFh.get(lang).write(
+                  seg.replaceAll("[\\s+\r\n]+", " ").
+                      replaceFirst("^ ", "").
+                      replaceFirst(" $", "")
+              );
+              langToFh.get(lang).write("\n");
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
-        } catch (IOException e) {
-          throw new RuntimeException(e);          
         }
-      }
-      langToCurrentSeg.clear();  
-    } else if ("tuv".equals(qName)) {
-      inTUVLang = null;
-    } else if ("seg".equals(qName)) {
-      inSeg = false;
+        langToCurrentSeg.clear();
+        break;
+      case "tuv":
+        inTUVLang = null;
+        break;
+      case "seg":
+        inSeg = false;
+        break;
     }
   }
   

@@ -15,8 +15,8 @@ sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
 last_id = -1
 for line in sys.stdin:
-    sid,segment,score = line.strip().split('|||')
-    sid = int(sid)
+    parts = line.strip().split('|||')
+    sid = int(parts[0])
     if not sid == last_id:
-        print segment.strip()
+        print parts[1].strip()
         last_id = sid

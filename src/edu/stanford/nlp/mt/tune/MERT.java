@@ -420,7 +420,7 @@ public class MERT extends Thread {
       evals[i] = eval;
 
       if (DEBUG) {
-        System.out.printf("pt(%d): %e eval: %e best: %e\n", i, chkpt, eval,
+        System.out.printf("pt(%d): %e apply: %e best: %e\n", i, chkpt, eval,
             bestEval);
       }
     }
@@ -434,7 +434,7 @@ public class MERT extends Thread {
       }
     }
 
-    System.out.printf(" - best eval: %f\n", bestEval);
+    System.out.printf(" - best apply: %f\n", bestEval);
 
     Counter<String> newWts = new ClassicCounter<String>(initialWts);
     Counters.addInPlace(newWts, direction, chkpts[bestPt]);
@@ -590,7 +590,7 @@ public class MERT extends Thread {
     }
     Scorer<String> scorer = new DenseScorer(wts, featureIndex);
     if (DEBUG)
-      System.err.printf("eval at point (%d,%d): %s\n", optWts.size(),
+      System.err.printf("apply at point (%d,%d): %s\n", optWts.size(),
           wts.size(), wts.toString());
     IncrementalEvaluationMetric<IString, String> incEval = emetric
         .getIncrementalMetric();
@@ -726,7 +726,7 @@ public class MERT extends Thread {
       double localNbestEval = emetric.score(localNbestArgmax);
       nbestEval = emetric.score(nbestArgmax);
       reuseWeights = Math.abs(localNbestEval - nbestEval) < MAX_LOCAL_ALL_GAP_WTS_REUSE;
-      System.err.printf("Eval: %f Local eval: %f\n", nbestEval, localNbestEval);
+      System.err.printf("Eval: %f Local apply: %f\n", nbestEval, localNbestEval);
       System.err.printf("Rescoring entries\n");
       // rescore all entries by weights
       System.err.printf("n-best list sizes %d, %d\n", localNbest.nbestLists()
@@ -966,7 +966,7 @@ public class MERT extends Thread {
       System.out.printf("\npoint %d - final wts: %s", ptI, newWts.toString());
       System.out
           .printf(
-              "\npoint %d - eval: %e E(eval): %e obj: %e best obj: %e (l1: %f)\n\n",
+              "\npoint %d - apply: %e E(apply): %e obj: %e best obj: %e (l1: %f)\n\n",
               ptI, evalAt, mcmcEval2, obj, bestObj, l1norm(newWts));
     }
   }
@@ -1012,38 +1012,49 @@ public class MERT extends Thread {
     String arg;
 
     while (argi < args.length && (arg = args[argi]).startsWith("-")) {
-      if (arg.equals("-S")) {
-        smoothBLEU = true;
-      } else if (arg.equals("-D")) {
-        String disableStr = args[++argi];
-        fixedWts.incrementCount(disableStr, 0.0);
-        System.err.println("Disabling feature: " + disableStr);
-      } else if (arg.equals("-s")) {
-        seedStr = args[++argi];
-      } else if (arg.equals("-F")) {
-        filterUnreachable = true;
-      } else if (arg.equals("-T")) {
-        filterStrictlyUnreachable = true;
-      } else if (arg.equals("-p")) {
-        nStartingPoints = Integer.parseInt(args[++argi]);
-      } else if (arg.equals("-o")) {
-        optStr = args[++argi];
-      } else if (arg.equals("-a")) {
-        optTransFile = args[++argi];
-      } else if (arg.equals("-f")) {
-        String fixedWtsFile = args[++argi];
-        fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
-      } else if (arg.equals("-t")) {
-        nThreads = Integer.parseInt(args[++argi]);
-      } else {
-        throw new UnsupportedOperationException("Unknown flag: " + arg);
+      switch (arg) {
+        case "-S":
+          smoothBLEU = true;
+          break;
+        case "-D":
+          String disableStr = args[++argi];
+          fixedWts.incrementCount(disableStr, 0.0);
+          System.err.println("Disabling feature: " + disableStr);
+          break;
+        case "-s":
+          seedStr = args[++argi];
+          break;
+        case "-F":
+          filterUnreachable = true;
+          break;
+        case "-T":
+          filterStrictlyUnreachable = true;
+          break;
+        case "-p":
+          nStartingPoints = Integer.parseInt(args[++argi]);
+          break;
+        case "-o":
+          optStr = args[++argi];
+          break;
+        case "-a":
+          optTransFile = args[++argi];
+          break;
+        case "-f":
+          String fixedWtsFile = args[++argi];
+          fixedWts.addAll(IOTools.readWeights(fixedWtsFile, featureIndex));
+          break;
+        case "-t":
+          nThreads = Integer.parseInt(args[++argi]);
+          break;
+        default:
+          throw new UnsupportedOperationException("Unknown flag: " + arg);
       }
       ++argi;
     }
 
     if (args.length - argi != 6) {
       System.err
-          .printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [OPTIONS] (eval metric) (nbest list) (local n-best) (file w/initial weights) (reference list) (new weights file)\n");
+          .printf("Usage:\n\tjava edu.stanford.nlp.mt.MERT [OPTIONS] (apply metric) (nbest list) (local n-best) (file w/initial weights) (reference list) (new weights file)\n");
       System.err.printf("where OPTIONS are:\n");
       System.err
           .println("-a <file>: save argmax translation to file after MERT");
