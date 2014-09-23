@@ -42,7 +42,7 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
     print >>ofh, "<translations sysid=\"%s\" set=\"%s\">" % (system_name,set_name) 
     id = ""  
     for line in ifh:
-      tokens = line.rstrip().split(" ||| ")
+      tokens = [t.strip() for t in line.rstrip().split("|||")]
       if id != tokens[0]:
         if id != "":
           print >>ofh, "</nbest>" 
@@ -65,7 +65,7 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
       #print "phrase_toks: ", tokens[-1] 
       
       #phrase_toks = tokens[-1].split(" |")
-      phrase_toks = re.split(" \|(?=[\-0-9\.]+)", tokens[-1])
+      phrase_toks = re.split(" \|(?=[\-0-9\.]+)", " " + tokens[-1])
       for ptok in phrase_toks[1:]:
         sub_ptoks = ptok.split(" ")
         sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")
