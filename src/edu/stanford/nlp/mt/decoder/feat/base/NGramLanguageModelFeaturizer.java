@@ -144,17 +144,11 @@ RuleFeaturizer<IString, String> {
       partialTranslation = Sequences.wrapStart(partialTranslation, f.prior.targetPrefix.get(0));
       startIndex = 1;
     }
-    LMState state;
     
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    try {
-     state = lm.score(partialTranslation, startIndex, priorState);
+    LMState state = lm.score(partialTranslation, startIndex, priorState);
    
-    } catch (Exception e) {
-       System.err.println("Problematic translation: " + partialTranslation);
-       features.add(new FeatureValue<String>(featureName, -100000.0)); 
-      return features;
-    }
+    List<FeatureValue<String>> features = Generics.newLinkedList();
+    
     features.add(new FeatureValue<String>(featureName, state.getScore()));
 
     f.setState(this, state);

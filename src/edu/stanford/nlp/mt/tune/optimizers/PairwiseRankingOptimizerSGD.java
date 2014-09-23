@@ -187,12 +187,16 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       List<Triple<Double, Integer, Integer>> v;
       if (scoreMetric.isThreadsafe()) {
         v = sample(translations, references, sourceId, source, scoreMetric);
-        if (translations.size() > 0) scoreMetric.update(sourceId, references, translations.get(0).translation);
+        if (translations.size() > 0) {
+          scoreMetric.update(sourceId, references, translations.get(0).translation);
+        }
 
       } else {
         synchronized(scoreMetric) {
           v = sample(translations, references, sourceId, source, scoreMetric);
-          if (translations.size() > 0) scoreMetric.update(sourceId, references, translations.get(0).translation);
+          if (translations.size() > 0) {
+            scoreMetric.update(sourceId, references, translations.get(0).translation);
+          }
         }
       }
 
