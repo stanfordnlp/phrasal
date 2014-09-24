@@ -48,8 +48,10 @@ import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -122,10 +124,11 @@ public final class OnlineTuner {
    * @param uniformStartWeights
    * @param randomizeStartWeights
    * @param expectedNumFeatures
+   * @param wrapBoundary 
    */
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
-      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures) {
+      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, boolean wrapBoundary) {
     logger = Logger.getLogger(OnlineTuner.class.getName());
     SystemLogger.attach(logger, LogName.ONLINE);
     this.outputWeightPrefix = SystemLogger.getPrefix() + "." + LogName.ONLINE.toString().toLowerCase();
@@ -140,7 +143,7 @@ public final class OnlineTuner {
     // Load the tuning set
     tuneSource = IStrings.tokenizeFile(srcFile);
     assert tuneSource.size() > 0;
-    loadReferences(tgtFile);
+    loadReferences(tgtFile, wrapBoundary);
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
     
     // Load Phrasal
@@ -406,7 +409,7 @@ public final class OnlineTuner {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int sourceId = result.translationIds[i];
           if (createPseudoReferences && nbestListWriter != null) {
-            IOTools.writeNbest(result.nbestLists.get(i), sourceId, true, nbestListWriter);
+            IOTools.writeNbest(result.nbestLists.get(i), sourceId, "moses", nbestListWriter);
           }
           if (nbestLists != null) {
             assert ! nbestLists.containsKey(sourceId);
@@ -636,8 +639,9 @@ public final class OnlineTuner {
    * NOTE: This method re-initializes OnlineTuner.references
    * 
    * @param refStr a comma-separated list of reference filenames
+   * @param wrapBoundary 
    */
-  public void loadReferences(String refStr) {
+  public void loadReferences(String refStr, boolean wrapBoundary) {
     if (refStr == null || refStr.length() == 0) {
       throw new IllegalArgumentException("Invalid reference list");
     }
@@ -647,11 +651,27 @@ public final class OnlineTuner {
       references = MetricUtils.readReferences(filenames);
       assert references.get(0).size() == filenames.length;
       numReferences = filenames.length;
+      if (wrapBoundary) {
+        for (List<Sequence<IString>> refList : references) {
+          wrap(refList);
+        }
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
     assert references.size() == tuneSource.size();
     logger.info("Number of references for objective function calculation: " + numReferences);
+  }
+  
+  /**
+   * Wrap all sequences in the input with start and end tokens.
+   * 
+   * @param sequences
+   */
+  private static void wrap(List<Sequence<IString>> sequences) {
+    for (int i = 0, sz = sequences.size(); i < sz; ++i) {
+      sequences.set(i, Sequences.wrapStartEnd(sequences.get(i), TokenUtils.START_TOKEN, TokenUtils.END_TOKEN));
+    }
   }
 
   /**
@@ -713,29 +733,30 @@ public final class OnlineTuner {
   private OnlineOptimizer<IString, String> configureOptimizer(String optimizerAlg, String[] optimizerFlags) {
     assert optimizerAlg != null;
 
-    if (optimizerAlg.equals("mira-1best")) {
-      return new MIRA1BestHopeFearOptimizer(optimizerFlags);
+    switch (optimizerAlg) {
+      case "mira-1best":
+        return new MIRA1BestHopeFearOptimizer(optimizerFlags);
 
-    } else if (optimizerAlg.equals("pro-sgd")) {
-      assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
-      assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
-      Counters.normalize(wtsAccumulator);
-      return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+      case "pro-sgd":
+        assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
+        assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
+        Counters.normalize(wtsAccumulator);
+        return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
-    } else if (optimizerAlg.equals("expectedBLEU")) {
-       assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
-       assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
-       Counters.normalize(wtsAccumulator);
-       return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-     
-    } else if (optimizerAlg.equals("crossentropy")) {
-      assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
-      assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
-      Counters.normalize(wtsAccumulator);
-      return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-    
-    } else {
-      throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
+      case "expectedBLEU":
+        assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
+        assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
+        Counters.normalize(wtsAccumulator);
+        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+
+      case "crossentropy":
+        assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
+        assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
+        Counters.normalize(wtsAccumulator);
+        return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
+
+      default:
+        throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
     }
   }
 
@@ -787,6 +808,7 @@ public final class OnlineTuner {
     optionMap.put("fmc", 1);
     optionMap.put("tmp", 1);
     optionMap.put("p", 1);
+    optionMap.put("s", 0);
     return optionMap;
   }
 
@@ -816,7 +838,8 @@ public final class OnlineTuner {
       .append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl)
       .append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl)
       .append("   -tmp path  : Temp directory (default: /tmp)").append(nl)
-      .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)");
+      .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl)
+      .append("   -s         : Wrap references and source inputs in boundary tokens");
     
     return sb.toString();
   }
@@ -847,6 +870,7 @@ public final class OnlineTuner {
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
+    boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
    
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -876,9 +900,9 @@ public final class OnlineTuner {
     final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
         optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-        expectedNumFeatures);
+        expectedNumFeatures, wrapBoundary);
     if (refStr != null) {
-      tuner.loadReferences(refStr);
+      tuner.loadReferences(refStr, wrapBoundary);
     }
     if (pseudoRefOptions != null) {
       tuner.computePseudoReferences(pseudoRefOptions, tmpPath);

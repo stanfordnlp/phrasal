@@ -33,7 +33,7 @@ public class SparseFeatureValueCollection<E> implements
     ClassicCounter<Integer> cnts = new ClassicCounter<Integer>();
     this.featureIndex = featureIndex;
     for (FeatureValue<E> feature : c) {
-      int index = featureIndex.indexOf(feature.name, true);
+      int index = featureIndex.addToIndex(feature.name);
       cnts.incrementCount(index, feature.value);
     }
     featureValues = new double[cnts.size()];

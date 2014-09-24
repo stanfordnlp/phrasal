@@ -199,11 +199,7 @@ public final class PhraseGUI {
     if (exitMenuItem == null) {
       exitMenuItem = new JMenuItem();
       exitMenuItem.setText("Exit");
-      exitMenuItem.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          System.exit(0);
-        }
-      });
+      exitMenuItem.addActionListener(e -> System.exit(0));
     }
     return exitMenuItem;
   }
@@ -211,12 +207,10 @@ public final class PhraseGUI {
   private JCheckBoxMenuItem getRightLeftMenuItem() {
     if (rightLeftMenuItem == null) {
       rightLeftMenuItem = new JCheckBoxMenuItem("Right-To-Left Source");
-      rightLeftMenuItem.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          boolean newState = getRightLeftMenuItem().isSelected();
-          controller.setRightToLeft(newState);
-          toggleLoadButton();
-        }
+      rightLeftMenuItem.addActionListener(e -> {
+        boolean newState = getRightLeftMenuItem().isSelected();
+        controller.setRightToLeft(newState);
+        toggleLoadButton();
       });
     }
     return rightLeftMenuItem;
@@ -225,12 +219,10 @@ public final class PhraseGUI {
   private JCheckBoxMenuItem getNormScoresMenuItem() {
     if (normScoresMenuItem == null) {
       normScoresMenuItem = new JCheckBoxMenuItem("Normalize Phrase Scores");
-      normScoresMenuItem.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          boolean newState = getNormScoresMenuItem().isSelected();
-          controller.normalizePhraseScores(newState);
-          toggleLoadButton();
-        }
+      normScoresMenuItem.addActionListener(e -> {
+        boolean newState = getNormScoresMenuItem().isSelected();
+        controller.normalizePhraseScores(newState);
+        toggleLoadButton();
       });
     }
     return normScoresMenuItem;
@@ -239,28 +231,23 @@ public final class PhraseGUI {
   private JMenuItem getOpenOptionsDialogMenuItem() {
     if (openOptionsDialogMenuItem == null) {
       openOptionsDialogMenuItem = new JMenuItem("Other Options");
-      openOptionsDialogMenuItem.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          OptionsDialog dialog = getOptionsDialog();
-          dialog.pack();
-          Point loc = getMainFrame().getLocation();
-          loc.translate(20, 20);
-          dialog.setLocation(loc);
-          dialog.setVisible(true);
-        }
+      openOptionsDialogMenuItem.addActionListener(e -> {
+        OptionsDialog dialog = getOptionsDialog();
+        dialog.pack();
+        Point loc = getMainFrame().getLocation();
+        loc.translate(20, 20);
+        dialog.setLocation(loc);
+        dialog.setVisible(true);
       });
     }
     return openOptionsDialogMenuItem;
   }
 
   public static void show() {
-    SwingUtilities.invokeLater(new Runnable() {
-      public void run() {
-        PhraseGUI application = PhraseGUI.getInstance();
-        application.getMainFrame().pack();
-        application.getMainFrame().setVisible(true);
-      }
+    SwingUtilities.invokeLater(() -> {
+      PhraseGUI application = PhraseGUI.getInstance();
+      application.getMainFrame().pack();
+      application.getMainFrame().setVisible(true);
     });
 
   }
@@ -271,11 +258,7 @@ public final class PhraseGUI {
           controller.getSourceFilePath()) : new JTextField();
       updateSourceFile();
       sourceFileTextField.setPreferredSize(new Dimension(350, 15));
-      sourceFileTextField.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          updateSourceFile();
-        }
-      });
+      sourceFileTextField.addActionListener(e -> updateSourceFile());
       sourceFileTextField.addFocusListener(new FocusListener() {
         @Override
         public void focusGained(FocusEvent arg0) {
@@ -307,11 +290,7 @@ public final class PhraseGUI {
           controller.getOptsFilePath()) : new JTextField();
       updateOptsFile();
       optsFileTextField.setPreferredSize(new Dimension(350, 15));
-      optsFileTextField.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          updateOptsFile();
-        }
-      });
+      optsFileTextField.addActionListener(e -> updateOptsFile());
       optsFileTextField.addFocusListener(new FocusListener() {
         @Override
         public void focusGained(FocusEvent e) {
@@ -342,17 +321,15 @@ public final class PhraseGUI {
       sourceFileButton = new JButton();
       sourceFileButton.setPreferredSize(new Dimension(15, 20));
       sourceFileButton.setText("Browse...");
-      sourceFileButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          Point loc = getMainFrame().getLocation();
-          loc.translate(20, 20);
-          getFileChooser().setLocation(loc);
-          getFileChooser().showOpenDialog(getMainFrame());
-          File selection = getFileChooser().getSelectedFile();
-          if (selection != null) {
-            getSourceFileTextField().setText(selection.getPath());
-            updateSourceFile();
-          }
+      sourceFileButton.addActionListener(e -> {
+        Point loc = getMainFrame().getLocation();
+        loc.translate(20, 20);
+        getFileChooser().setLocation(loc);
+        getFileChooser().showOpenDialog(getMainFrame());
+        File selection = getFileChooser().getSelectedFile();
+        if (selection != null) {
+          getSourceFileTextField().setText(selection.getPath());
+          updateSourceFile();
         }
       });
     }
@@ -364,17 +341,15 @@ public final class PhraseGUI {
       optsFileButton = new JButton();
       optsFileButton.setPreferredSize(new Dimension(15, 20));
       optsFileButton.setText("Browse...");
-      optsFileButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          Point loc = getMainFrame().getLocation();
-          loc.translate(20, 20);
-          getFileChooser().setLocation(loc);
-          getFileChooser().showOpenDialog(getMainFrame());
-          File selection = getFileChooser().getSelectedFile();
-          if (selection != null) {
-            getOptsFileTextField().setText(selection.getPath());
-            updateOptsFile();
-          }
+      optsFileButton.addActionListener(e -> {
+        Point loc = getMainFrame().getLocation();
+        loc.translate(20, 20);
+        getFileChooser().setLocation(loc);
+        getFileChooser().showOpenDialog(getMainFrame());
+        File selection = getFileChooser().getSelectedFile();
+        if (selection != null) {
+          getOptsFileTextField().setText(selection.getPath());
+          updateOptsFile();
         }
       });
     }
@@ -406,16 +381,14 @@ public final class PhraseGUI {
       loadButton.setEnabled(false);
       loadButton.setPreferredSize(new Dimension(15, 20));
       loadButton.setText("Load");
-      loadButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          JFrame dialog = getAnalysisDialog();
-          Point loc = getMainFrame().getLocation();
-          loc.translate(20, 20);
-          dialog.setLocation(loc);
-          dialog.pack();
-          dialog.setVisible(true);
-          toggleLoadButton();
-        }
+      loadButton.addActionListener(e -> {
+        JFrame dialog = getAnalysisDialog();
+        Point loc = getMainFrame().getLocation();
+        loc.translate(20, 20);
+        dialog.setLocation(loc);
+        dialog.pack();
+        dialog.setVisible(true);
+        toggleLoadButton();
       });
     }
     return loadButton;

@@ -20,7 +20,7 @@ import edu.stanford.nlp.util.Pair;
  * non-sequential (i.e., does not condition on contextual class labels) and only
  * looks at the current word and a left context of <i>prefixSize</i> words to
  * determine the best tag.
- * 
+ *
  * @author Michel Galley
  */
 public class PrefixTagger extends TestSentence {
@@ -40,7 +40,7 @@ public class PrefixTagger extends TestSentence {
 
   /**
    * Creates a new PrefixTagger.
-   * 
+   *
    * @param maxentTagger
    *          general information on the tagger (this parameter will soon
    *          change)
@@ -58,7 +58,7 @@ public class PrefixTagger extends TestSentence {
    * Creates a new PrefixTagger. Since PrefixTagger can't determine how many
    * words of context are needed by the tagging model, <i>leftWindow</i> must be
    * manually specified.
-   * 
+   *
    * @param maxentTagger
    *          general information on the tagger (this parameter will soon
    *          change)
@@ -97,8 +97,8 @@ public class PrefixTagger extends TestSentence {
   }
 
   /**
-   * Determine best tag based on curent word and its immediate predecessors.
-   * 
+   * Determine best tag based on current word and its immediate predecessors.
+   *
    * @param s
    *          <i>leftWindow</i> plus one words
    * @param o
@@ -136,8 +136,8 @@ public class PrefixTagger extends TestSentence {
     bestTags[loc] = vals[loc][am];
     cleanUpScorer();
 
-    tag = new Pair<IString, Float>(new IString(maxentTagger.getTags().getTag(
-        bestTags[loc])), (float) scores[am]);
+    tag = new Pair<IString, Float>(new IString(maxentTagger.getTag(bestTags[loc])),
+            (float) scores[am]);
     if (CACHE_POS)
       cache.put(aw, tag);
     return tag;
@@ -145,7 +145,7 @@ public class PrefixTagger extends TestSentence {
 
   /**
    * Tag text file using PrefixTagger.
-   * 
+   *
    * @param textFile
    *          File to tag
    */

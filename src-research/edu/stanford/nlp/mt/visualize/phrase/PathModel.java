@@ -71,12 +71,9 @@ public class PathModel {
     controller.removeClickEventListener(clickStreamListener);
   }
 
-  private ClickEventListener clickStreamListener = new ClickEventListener() {
-    @Override
-    public void handleClickEvent(ClickEvent e) {
-      VisualPhrase vp = (VisualPhrase) e.getSource();
-      processClick(vp);
-    }
+  private ClickEventListener clickStreamListener = e -> {
+    VisualPhrase vp = (VisualPhrase) e.getSource();
+    processClick(vp);
   };
 
   public void processClick(VisualPhrase vp) {

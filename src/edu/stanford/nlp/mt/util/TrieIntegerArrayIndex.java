@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
 import it.unimi.dsi.fastutil.longs.*;
-import edu.stanford.nlp.util.Function;
+import java.util.function.Function;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -47,12 +47,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
     map.growthFactor(GROWTH_FACTOR);
     map.defaultReturnValue(IDX_NOSUCCESSOR);
     // System.err.println("TrieIntegerArrayIndex: constructor.");
-    this.transitionNormalizer = new Function<Integer, Integer>() {
-      @Override
-      public Integer apply(Integer x) {
-        return x;
-      }
-    };
+    this.transitionNormalizer = x -> x;
   }
 
   @Override

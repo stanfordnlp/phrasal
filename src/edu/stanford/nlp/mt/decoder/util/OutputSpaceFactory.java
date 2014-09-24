@@ -26,8 +26,10 @@ public class OutputSpaceFactory {
    * @return
    */
   public static OutputSpace<IString,String> getOutputSpace(int sourceInputId, List<Sequence<IString>> targets, 
-      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase) {
-    if (targets == null || targets.size() == 0) {
+      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase, boolean wrapBoundary) {
+    if (wrapBoundary) {
+      return new WrapBoundaryOutputSpace<>();
+    } else if (targets == null || targets.size() == 0) {
       return new UnconstrainedOutputSpace<IString,String>();
     
     } else if (targetsArePrefixes) {

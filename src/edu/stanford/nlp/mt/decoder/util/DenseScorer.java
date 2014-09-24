@@ -14,10 +14,10 @@ import edu.stanford.nlp.math.ArrayMath;
 
 /**
  * Score a set of features under a fixed set of weights.
- * 
+ *
  * @author danielcer
  * @author Spence Green
- * 
+ *
  */
 public class DenseScorer implements Scorer<String> {
 
@@ -80,7 +80,7 @@ public class DenseScorer implements Scorer<String> {
       // TODO(spenceg) - find out what is generating 'null' model weights
       // for now, we'll just have the decoding model ignore them
       if (key == null) continue;
-      featureIndex.indexOf(key, true);
+      featureIndex.addToIndex(key);
     }
 
     weights = new double[featureIndex.size()];

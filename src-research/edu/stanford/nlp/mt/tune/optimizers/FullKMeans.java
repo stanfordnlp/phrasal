@@ -161,7 +161,7 @@ public class FullKMeans extends AbstractBatchOptimizer {
             bestEval = eval;
             bestWts = eWts;
           }
-          System.err.printf("new eval: %f best eval: %f\n", eval, bestEval);
+          System.err.printf("new apply: %f best apply: %f\n", eval, bestEval);
         }
       }
       System.err.printf("new wts:\n%s\n\n", bestWts);
@@ -180,7 +180,7 @@ public class FullKMeans extends AbstractBatchOptimizer {
 
           System.err.printf("seach perceptron to cluster: %d\n", i);
           newWts = mert.lineSearch(nbest, newWts, dir, emetric);
-          System.err.printf("new eval: %f\n",
+          System.err.printf("new apply: %f\n",
               MERT.evalAtPoint(nbest, newWts, emetric));
           for (int j = i; j < K; j++) {
             dir = new ClassicCounter<String>(kMeans.get(i));
@@ -192,7 +192,7 @@ public class FullKMeans extends AbstractBatchOptimizer {
             }
 
             newWts = mert.lineSearch(nbest, newWts, dir, emetric);
-            System.err.printf("new eval: %f\n",
+            System.err.printf("new apply: %f\n",
                 MERT.evalAtPoint(nbest, newWts, emetric));
           }
         }

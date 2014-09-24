@@ -34,7 +34,7 @@ public class DenseFeatureValueCollection<E> implements
     isDefined = new BitSet(c.size());
     this.featureIndex = featureIndex;
     for (FeatureValue<E> feature : c) {
-      int index = featureIndex.indexOf(feature.name, true);
+      int index = featureIndex.addToIndex(feature.name);
       w[index] = feature.value;
       isDefined.set(index);
     }

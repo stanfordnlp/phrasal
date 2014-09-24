@@ -252,12 +252,7 @@ public class PathDialog extends JFrame {
       newPathButton.setToolTipText("<html>Create new path</html>");
       newPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, newPathButton
           .getHeight()));
-      newPathButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          toggleInputField();
-        }
-      });
+      newPathButton.addActionListener(e -> toggleInputField());
     }
     return newPathButton;
   }
@@ -298,19 +293,16 @@ public class PathDialog extends JFrame {
       savePathButton.setEnabled(controller.isFileIOEnabled());
       savePathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, savePathButton
           .getHeight()));
-      savePathButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          int returned = getFileChooser().showSaveDialog(PathDialog.this);
-          if (returned == JFileChooser.APPROVE_OPTION) {
-            File f = getFileChooser().getSelectedFile();
-            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            if (!controller.savePaths(f)) {
-              PhraseGUI gui = PhraseGUI.getInstance();
-              gui.setStatusMessage("Failure saving paths to file");
-            }
-            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+      savePathButton.addActionListener(e -> {
+        int returned = getFileChooser().showSaveDialog(PathDialog.this);
+        if (returned == JFileChooser.APPROVE_OPTION) {
+          File f = getFileChooser().getSelectedFile();
+          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+          if (!controller.savePaths(f)) {
+            PhraseGUI gui = PhraseGUI.getInstance();
+            gui.setStatusMessage("Failure saving paths to file");
           }
+          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
       });
     }
@@ -324,21 +316,18 @@ public class PathDialog extends JFrame {
       loadPathButton.setEnabled(controller.isFileIOEnabled());
       loadPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH, loadPathButton
           .getHeight()));
-      loadPathButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          int returned = getFileChooser().showOpenDialog(PathDialog.this);
-          if (returned == JFileChooser.APPROVE_OPTION) {
-            File f = getFileChooser().getSelectedFile();
-            setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            if (controller.loadPaths(f))
-              setCurrentTranslationId(currentTranslationId);
-            else {
-              PhraseGUI gui = PhraseGUI.getInstance();
-              gui.setStatusMessage("Could not load paths from file");
-            }
-            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+      loadPathButton.addActionListener(e -> {
+        int returned = getFileChooser().showOpenDialog(PathDialog.this);
+        if (returned == JFileChooser.APPROVE_OPTION) {
+          File f = getFileChooser().getSelectedFile();
+          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+          if (controller.loadPaths(f))
+            setCurrentTranslationId(currentTranslationId);
+          else {
+            PhraseGUI gui = PhraseGUI.getInstance();
+            gui.setStatusMessage("Could not load paths from file");
           }
+          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
         }
       });
     }
@@ -352,12 +341,7 @@ public class PathDialog extends JFrame {
       finishPathButton.setEnabled(false);
       finishPathButton.setMinimumSize(new Dimension(BUTTON_WIDTH,
           finishPathButton.getHeight()));
-      finishPathButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          toggleRecording(false, recordingPathName);
-        }
-      });
+      finishPathButton.addActionListener(e -> toggleRecording(false, recordingPathName));
     }
     return finishPathButton;
   }

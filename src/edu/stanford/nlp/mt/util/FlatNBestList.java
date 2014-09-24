@@ -16,17 +16,17 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
 /**
  * Naive data structure for storing n-best lists. This data structure is not memory-efficient.
- * 
+ *
  * @author danielcer
  * @author Spence Green
- * 
+ *
  */
 public class FlatNBestList implements NBestListContainer<IString, String> {
 
   static public final int MAX_DENSE_SIZE = 50;
 
   private static final int DEFAULT_INITIAL_CAPACITY = 2000;
-  
+
   private final List<List<ScoredFeaturizedTranslation<IString, String>>> nbestLists;
   public final Index<String> featureIndex;
   public static final String DEBUG_PROPERTY = "FlatNBestListDebug";
@@ -46,7 +46,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
   public FlatNBestList(String filename) throws IOException {
     this(filename, null);
   }
-  
+
   public FlatNBestList(String filename, int initialCapacity) throws IOException {
     this(filename, null, initialCapacity);
   }
@@ -76,7 +76,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
     nbestLists = Generics.newArrayList(initialCapacity);
 
-    List<ScoredFeaturizedTranslation<IString, String>> currentNbest = 
+    List<ScoredFeaturizedTranslation<IString, String>> currentNbest =
         Generics.newLinkedList();
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
@@ -95,7 +95,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       List<String> featuresStr = fields.get(2);
       String scoreStr = (fields.size() >= 4) ? fields.get(3).get(0) : "0";
       String latticeIdStr = (fields.size()) >= 5 ? fields.get(4).get(0) : null;
-      
+
       if (lastId >= 0 && lastId != id) {
         // n-best lists may be out of order
         while (nbestLists.size() <= lastId) {
@@ -157,7 +157,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
       for (String feature : featureMap.keySet()) {
         if (featureIndex != null)
-          featureIndex.indexOf(feature, true);
+          featureIndex.addToIndex(feature);
         List<Double> values = featureMap.get(feature);
         if (values.size() == 1) {
           String featureNameStored = featureNameSelfMap.get(feature);

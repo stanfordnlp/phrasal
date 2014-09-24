@@ -32,12 +32,13 @@ public class ScorerFactory {
   public static Scorer<String> factory(String scorerName, Counter<String> config, Index<String> featureIndex)
       throws IOException {
 
-    if (scorerName.equals(UNIFORM_SCORER)) {
-      return new UniformScorer<String>();
-    } else if (scorerName.equals(DENSE_SCORER)) {
-      return new DenseScorer(config, featureIndex);
-    } else if (scorerName.equals(SPARSE_SCORER)) {
-      return new SparseScorer(config, featureIndex);
+    switch (scorerName) {
+      case UNIFORM_SCORER:
+        return new UniformScorer<String>();
+      case DENSE_SCORER:
+        return new DenseScorer(config, featureIndex);
+      case SPARSE_SCORER:
+        return new SparseScorer(config, featureIndex);
     }
 
     throw new RuntimeException(String.format("Unknown scorer \"%s\"",

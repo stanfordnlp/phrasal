@@ -31,7 +31,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
    * Constructor.
    */
   public IString(String string) {
-    id = index.indexOf(string, true);
+    id = index.addToIndex(string);
   }
 
   public IString(int id) {
@@ -125,6 +125,12 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     }
 
     @Override
+    public int addToIndex(IString o) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    @Deprecated
     public int indexOf(IString o, boolean add) {
       return o.id;
     }
@@ -175,11 +181,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean add(IString iString) {
       throw new UnsupportedOperationException();
     }
@@ -199,7 +200,7 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
   public int compareTo(IString o) {
     return index.get(id).compareTo(index.get(o.id));
   }
-  
+
   /**
    * Get a sequence of IString from an array of IString indices.
    */

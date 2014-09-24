@@ -347,12 +347,10 @@ public class AnalysisDialog extends JFrame {
     if (navPrevButton == null) {
       navPrevButton = new JButton();
       navPrevButton.setText("<<");
-      navPrevButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          int newValue = currentTranslationId - 1;
-          if (newValue >= minTranslationId)
-            setCurrentTranslation(newValue);
-        }
+      navPrevButton.addActionListener(e -> {
+        int newValue = currentTranslationId - 1;
+        if (newValue >= minTranslationId)
+          setCurrentTranslation(newValue);
       });
     }
     return navPrevButton;
@@ -362,13 +360,11 @@ public class AnalysisDialog extends JFrame {
     if (navNextButton == null) {
       navNextButton = new JButton();
       navNextButton.setText(">>");
-      navNextButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          int newValue = currentTranslationId + 1;
-          if (newValue <= minTranslationId
-              + controller.getNumTranslationLayouts())
-            setCurrentTranslation(newValue);
-        }
+      navNextButton.addActionListener(e -> {
+        int newValue = currentTranslationId + 1;
+        if (newValue <= minTranslationId
+            + controller.getNumTranslationLayouts())
+          setCurrentTranslation(newValue);
       });
     }
     return navNextButton;
@@ -381,18 +377,16 @@ public class AnalysisDialog extends JFrame {
       transIDTextField.setMaximumSize(new Dimension(40, 27));
       transIDTextField.setMinimumSize(new Dimension(40, 27));
       transIDTextField.setHorizontalAlignment(JTextField.CENTER);
-      transIDTextField.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          String strNewValue = getTransIDTextField().getText().trim();
-          if (strNewValue.matches("\\d+")) {
-            int newValue = Integer.parseInt(strNewValue);
-            if (newValue <= controller.getNumTranslationLayouts()) {
-              setCurrentTranslation(newValue);
-              return;
-            }
+      transIDTextField.addActionListener(e -> {
+        String strNewValue = getTransIDTextField().getText().trim();
+        if (strNewValue.matches("\\d+")) {
+          int newValue = Integer.parseInt(strNewValue);
+          if (newValue <= controller.getNumTranslationLayouts()) {
+            setCurrentTranslation(newValue);
+            return;
           }
-          getTransIDTextField().setText(Integer.toString(currentTranslationId));
         }
+        getTransIDTextField().setText(Integer.toString(currentTranslationId));
       });
     }
     return transIDTextField;
@@ -520,13 +514,11 @@ public class AnalysisDialog extends JFrame {
   private JButton getResetAnimationButton() {
     if (resetAnimationButton == null) {
       resetAnimationButton = new JButton("Reset");
-      resetAnimationButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          TranslationLayout currentLayout = controller
-              .getTranslationLayout(currentTranslationId);
-          for (VisualPhrase label : currentLayout.getLabels())
-            label.setToDefaultFormat();
-        }
+      resetAnimationButton.addActionListener(e -> {
+        TranslationLayout currentLayout = controller
+            .getTranslationLayout(currentTranslationId);
+        for (VisualPhrase label : currentLayout.getLabels())
+          label.setToDefaultFormat();
       });
     }
     return resetAnimationButton;
@@ -536,12 +528,10 @@ public class AnalysisDialog extends JFrame {
     if (heatMapButton == null) {
       heatMapButton = new JButton("Heat Map");
       heatMapButton.setEnabled(false);
-      heatMapButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent arg0) {
-          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-          drawHeatMap();
-          setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-        }
+      heatMapButton.addActionListener(arg0 -> {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        drawHeatMap();
+        setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
       });
     }
     return heatMapButton;
@@ -566,18 +556,15 @@ public class AnalysisDialog extends JFrame {
   private JButton getPathButton() {
     if (pathButton == null) {
       pathButton = new JButton("Paths...");
-      pathButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          PathDialog dialog = getPathDialog();
-          Point loc = getLocation();
-          loc.translate(getWidth() - 20, 20);
-          dialog.setLocation(loc);
-          dialog.pack();
-          dialog.setCurrentTranslationId(currentTranslationId);
-          dialog.setVisible(true);
-          getPathButton().setEnabled(false);
-        }
+      pathButton.addActionListener(e -> {
+        PathDialog dialog = getPathDialog();
+        Point loc = getLocation();
+        loc.translate(getWidth() - 20, 20);
+        dialog.setLocation(loc);
+        dialog.pack();
+        dialog.setCurrentTranslationId(currentTranslationId);
+        dialog.setVisible(true);
+        getPathButton().setEnabled(false);
       });
     }
     return pathButton;

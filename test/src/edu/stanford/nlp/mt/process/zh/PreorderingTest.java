@@ -2,7 +2,9 @@ package edu.stanford.nlp.mt.process.zh;
 
 import edu.stanford.nlp.mt.process.zh.ChineseSourcePreordering;
 import junit.framework.TestCase;
+
 /**
+ * 
  * @author Rob Voigt
  */
 public class PreorderingTest extends TestCase {

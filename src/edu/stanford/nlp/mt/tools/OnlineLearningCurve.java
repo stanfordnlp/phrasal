@@ -92,10 +92,17 @@ public class OnlineLearningCurve {
       for (RichTranslation<IString,String> translation : translations) {
         // Apply NIST tokenization so that the learning curve accurately reflects
         // the BLEUMetric evaluation (see the main() method of that class).
-        String translationStr = NISTTokenizer.tokenize(translation.translation.toString());
+        String translationStr;
+        if (p.getWrapBoundary()) {
+          Sequence<IString> unwrappedTranslation = translation == null ? null : 
+            translation.translation.subsequence(1, translation.translation.size() - 1);
+          translationStr = unwrappedTranslation == null ? "" : NISTTokenizer.tokenize(unwrappedTranslation.toString());
+        } else {
+          translationStr = translation == null ? "" : NISTTokenizer.tokenize(translation.translation.toString());
+        }
         ScoredFeaturizedTranslation<IString,String> tr = 
             new ScoredFeaturizedTranslation<IString,String>(IStrings.tokenize(translationStr), 
-                translation.features, translation.score);
+                translation == null ? null : translation.features, translation == null ? null : translation.score);
         incMetric.add(tr);
       }
       double scorePseudoPercentage = incMetric.score() * 100.0;

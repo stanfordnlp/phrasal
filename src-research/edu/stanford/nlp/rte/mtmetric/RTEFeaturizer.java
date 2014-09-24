@@ -163,7 +163,7 @@ public class RTEFeaturizer {
         dataPts.add(results);
         scores.add(score);
         for (String feature : results.keySet()) {
-          featureIndex.indexOf(feature,true);
+          featureIndex.addToIndex(feature);
         }
         String resultStr = results.toString();
         resultStr = resultStr.substring(1, resultStr.length()-1).replaceAll(", ", " ");

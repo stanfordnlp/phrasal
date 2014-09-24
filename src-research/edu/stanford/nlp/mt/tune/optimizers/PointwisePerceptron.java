@@ -53,7 +53,7 @@ public class PointwisePerceptron extends AbstractBatchOptimizer {
         Counter<String> newWts = mert.lineSearch(nbest, wts, dir, emetric);
         double ssd = MERT.wtSsd(wts, newWts);
         System.err.printf(
-            "%d.%d - ssd: %e changes(total: %d iter: %d) eval: %f\n", iter, i,
+            "%d.%d - ssd: %e changes(total: %d iter: %d) apply: %f\n", iter, i,
             ssd, totalChanges, changes,
             MERT.evalAtPoint(nbest, newWts, emetric));
         wts = newWts;

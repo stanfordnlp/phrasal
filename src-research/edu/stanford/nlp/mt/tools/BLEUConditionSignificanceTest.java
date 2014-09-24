@@ -188,17 +188,20 @@ public class BLEUConditionSignificanceTest {
         if (references.size() <= referencesList.size()) {
           references.add(refLine);
         }
-        if (genre.equals("pe")) {
-          peTranslations.add(line.trim());
-          peReferences.add(refLine);
-          peIds.add(sourceId);
-        } else if(genre.equals("imt")) {
-          imtTranslations.add(line.trim());
-          imtReferences.add(refLine);
-          imtIds.add(sourceId);
-        } else {
-          System.err.printf("WARNING: Discarding line %d for user %s%n", sourceId, subjectId);
-          continue;
+        switch (genre) {
+          case "pe":
+            peTranslations.add(line.trim());
+            peReferences.add(refLine);
+            peIds.add(sourceId);
+            break;
+          case "imt":
+            imtTranslations.add(line.trim());
+            imtReferences.add(refLine);
+            imtIds.add(sourceId);
+            break;
+          default:
+            System.err.printf("WARNING: Discarding line %d for user %s%n", sourceId, subjectId);
+            continue;
         }
         if ( ! pooledTranslations.containsKey(sourceId)) {
           List<String> l = Generics.newArrayList();
@@ -310,12 +313,7 @@ public class BLEUConditionSignificanceTest {
     final String prefix = parameters[0];
     String path = "."; 
     File folder = new File(path);
-    File[] files = folder.listFiles(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String name) {
-        return name.startsWith(prefix);
-      }
-    });
+    File[] files = folder.listFiles((dir, name) -> name.startsWith(prefix));
     Map<String,List<InputProperties>> subjectToProps = Generics.newHashMap();
     Map<String,File> subjectToTgt = Generics.newHashMap();
     for (File file : files) {

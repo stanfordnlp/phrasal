@@ -90,12 +90,7 @@ public class OptionsDialog extends JFrame {
       heatOptTextField = new JTextField(Integer.toString(curHeatOptValue));
       heatOptTextField.setMaximumSize(new Dimension(W_TEXTBOX, H_TEXTBOX));
       heatOptTextField.setHorizontalAlignment(JTextField.CENTER);
-      heatOptTextField.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-          updateHeatOptTextField();
-        }
-      });
+      heatOptTextField.addActionListener(arg0 -> updateHeatOptTextField());
       heatOptTextField.addFocusListener(new FocusListener() {
         @Override
         public void focusGained(FocusEvent arg0) {
@@ -136,12 +131,7 @@ public class OptionsDialog extends JFrame {
       rowsOptTextField = new JTextField(Integer.toString(curRowsOptValue));
       rowsOptTextField.setMaximumSize(new Dimension(W_TEXTBOX, H_TEXTBOX));
       rowsOptTextField.setHorizontalAlignment(JTextField.CENTER);
-      rowsOptTextField.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent arg0) {
-          updateRowsOptTextField();
-        }
-      });
+      rowsOptTextField.addActionListener(arg0 -> updateRowsOptTextField());
       rowsOptTextField.addFocusListener(new FocusListener() {
         @Override
         public void focusGained(FocusEvent arg0) {
@@ -179,12 +169,7 @@ public class OptionsDialog extends JFrame {
   private JButton getCloseButton() {
     if (closeButton == null) {
       closeButton = new JButton("Close");
-      closeButton.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-          setVisible(false);
-        }
-      });
+      closeButton.addActionListener(e -> setVisible(false));
     }
     return closeButton;
   }

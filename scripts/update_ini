@@ -60,18 +60,28 @@ while(<STDIN>) {
   } elsif($field eq 'n-best-list' && $newfield) {
     $seen_nbest = 1;
     my $oldlist = <STDIN>;  
-    my $oldsize = <STDIN>;  
+    my $oldsize = <STDIN>;
     if($opts{n} && $opts{f}) {
       print "[n-best-list]\n$opts{f}\n$opts{n}\n";
-      if($oldsize =~ /^\s*$/) {
-        print "\n";
-      }
     } elsif($opts{n}) {
-      print "[n-best-list]\n$opts{n}\n";
       if($oldsize =~ /^\s*$/) {
-        print "\n";
+        print "[n-best-list]\n$opts{n}\n";      
+      } else {
+        print "[n-best-list]\n$oldlist$opts{n}\n";      
       }
     }
+    
+    if($oldsize =~ /^\s*$/) {
+      print "\n";
+    } else {
+      my $oldtype = <STDIN>;
+      if($oldtype =~ /^\s*$/) {
+         print "\n";
+      } else {
+         print "$oldtype\n";
+      }
+    }
+    
     next;
   } elsif($field eq 'weights-file' && $newfield) {
     $seen_wfile = 1;
