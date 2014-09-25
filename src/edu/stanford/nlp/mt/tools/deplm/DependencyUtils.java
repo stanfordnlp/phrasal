@@ -44,8 +44,7 @@ public class DependencyUtils {
    * The ROOT has index 0, fragments have head -1.
    */
   public static HashMap<Integer, Pair<IndexedWord, List<Integer>>> getDependenciesFromCoNLLFileReader(BufferedReader reader, boolean zeroIndexed, boolean skipPunct) {
-    HashMap<Integer, Pair<IndexedWord, List<Integer>>> forwardDependencies 
-    = new HashMap<Integer, Pair<IndexedWord, List<Integer>>>();
+    HashMap<Integer, Pair<IndexedWord, List<Integer>>> forwardDependencies = new HashMap<Integer, Pair<IndexedWord, List<Integer>>>();
     
     String line = null;
     try {

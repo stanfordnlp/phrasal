@@ -196,7 +196,7 @@ public class DependencyProjectorCoNLL {
   }
   
    
-  public static Map<Integer, NavigableSet<Integer>> projectDependencies(HashMap<Integer, Integer> reverseDependencies , SymmetricalWordAlignment alignment, boolean transitive) {
+  public static Map<Integer, NavigableSet<Integer>> projectDependencies(Map<Integer, Integer> reverseDependencies , SymmetricalWordAlignment alignment, boolean transitive) {
     Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
     
     //source to target token aligment (we force 1:1)
@@ -321,7 +321,6 @@ public class DependencyProjectorCoNLL {
         }
       }
     }
-    
     
     return projectedDependencies;
   }
