@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
 
+import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -28,7 +28,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   protected final String name;
   
-  private static final RawSequence<IString> EMPTY_SEQUENCE = new RawSequence<IString>();
+  private static final Sequence<IString> EMPTY_SEQUENCE = new EmptySequence<IString>();
+  private static final ARPALMState EMPTY_STATE = new ARPALMState(0.0, EMPTY_SEQUENCE);
   private static final int[] UNK_QUERY = new int[]{TokenUtils.UNK_TOKEN.id};
   
   @Override
@@ -254,7 +255,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
     // Score the sequence
     double lmSumScore = 0.0;
-    ARPALMState state = null;
+    ARPALMState state = EMPTY_STATE;
     for (int pos = startOffsetIndex, limit = sequence.size(); pos < limit; pos++) {
       final int seqStart = Math.max(0, pos - order() + 1);
       Sequence<IString> ngram = sequence.subsequence(seqStart, pos + 1);
