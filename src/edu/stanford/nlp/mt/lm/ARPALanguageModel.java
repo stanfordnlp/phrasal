@@ -187,7 +187,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       double p = probs[ngramInts.length - 1][index];
       if (verbose)
         System.err.printf("EM: scoreR: seq: %s logp: %f%n", sequence.toString(), p);
-      return new ARPALMState(p, sequence.subsequence(0, sequence.size()-1));
+      return new ARPALMState(p, sequence.subsequence(1, sequence.size()));
     }
     
     // OOV
@@ -250,7 +250,9 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     
     // Concatenate the state onto the sequence.
     if (priorState != null && priorState instanceof ARPALMState) {
-      sequence = Sequences.concatenate(((ARPALMState) priorState).getState(), sequence);
+      int seqLength = sequence.size();
+    	sequence = Sequences.concatenate(((ARPALMState) priorState).getState(), sequence);
+    	startOffsetIndex += (sequence.size() - seqLength);
     }
 
     // Score the sequence
@@ -264,8 +266,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     }
     
     if (verbose) {
-      System.err.printf("score: seq: %s logp: %f [%f]%n", sequence.toString(),
-          state.getScore(), state.getScore() / Math.log(10));
+      System.err.printf("ARPALM: seq: %s  state: %s  score: %f%n", sequence.toString(),
+          state.toString(), lmSumScore);
     }
     return new ARPALMState(lmSumScore, state);
   }
