@@ -219,35 +219,8 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     return new ARPALMState(p, state);
   }
 
-  /**
-   * Determines whether we are computing p( <s> | <s> ... ) or p( w_n=</s> |
-   * w_n-1=</s> ..), in which case log-probability is zero. This function is
-   * only useful if the translation hypothesis contains explicit <s> and </s>,
-   * and always returns false otherwise.
-   */
-  static Sequence<IString> isBoundaryWord(Sequence<IString> sequence) {
-    if (sequence.size() == 2 && sequence.get(0).equals(TokenUtils.START_TOKEN)
-        && sequence.get(1).equals(TokenUtils.START_TOKEN)) {
-      return sequence.subsequence(0, 1);
-    }
-    if (sequence.size() > 1) {
-      int last = sequence.size() - 1;
-      IString endTok = TokenUtils.END_TOKEN;
-      if (sequence.get(last).equals(endTok)
-          && sequence.get(last - 1).equals(endTok)) {
-        return sequence.subsequence(last-1, last);
-      }
-    }
-    return null;
-  }
-
   @Override
   public LMState score(Sequence<IString> sequence, int startOffsetIndex, LMState priorState) {
-    Sequence<IString> boundaryState = isBoundaryWord(sequence);
-    if (boundaryState != null) {
-      return new ARPALMState(0.0, boundaryState);
-    }
-    
     // Concatenate the state onto the sequence.
     if (priorState != null && priorState instanceof ARPALMState) {
       int seqLength = sequence.size();

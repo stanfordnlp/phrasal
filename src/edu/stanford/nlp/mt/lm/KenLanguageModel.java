@@ -119,11 +119,6 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
   @Override
   public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
-    Sequence<IString> boundaryState = ARPALanguageModel.isBoundaryWord(sequence);
-    if (boundaryState != null) {
-      return new KenLMState(0.0, makeKenLMInput(boundaryState, EMPTY_INT_ARRAY), boundaryState.size());
-    }
-
     // Extract prior state
     int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
     int[] ngramIds = makeKenLMInput(sequence, state);
