@@ -106,13 +106,15 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
     
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
-      return add(trans.translation);
+      return add(trans == null ? null : trans.translation);
     }
 
     public IncrementalEvaluationMetric<TK, FV> add(
         Sequence<TK> trans) {
-      for (IncrementalEvaluationMetric<TK, FV> iem : iems)
-        iem.add(trans);
+      if (trans != null) {
+        for (IncrementalEvaluationMetric<TK, FV> iem : iems)
+          iem.add(trans);
+      }
       return this;
     }
 
