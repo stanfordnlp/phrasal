@@ -60,7 +60,7 @@ public class TypedDependencyChains {
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
 
       for (TypedDependency tdep : typeDeps) {
-        if (puncFilter.accept(wordOnly(tdep.gov().label().toString())) && puncFilter.accept(wordOnly(tdep.dep().label().toString()))) {
+        if (puncFilter.accept(wordOnly(tdep.gov().toString())) && puncFilter.accept(wordOnly(tdep.dep().toString()))) {
           filteredDeps.add(tdep);
         }
       }
@@ -72,7 +72,7 @@ public class TypedDependencyChains {
       }
    }
 
-   public Counter<List<String>> getNoIndexChains(String sentence, int maxChain,      boolean untyped) {
+   public Counter<List<String>> getNoIndexChains(String sentence, int maxChain, boolean untyped) {
 
      Counter<List<TypedDependency>> chains = getChains(sentence, maxChain);
      if (chains == null) return null;
@@ -80,7 +80,8 @@ public class TypedDependencyChains {
      for (List<TypedDependency> chain : chains.keySet()) {
        List<String> deps = new ArrayList<String>(chain.size());
        for (TypedDependency dep : chain) {
-         String depString = dep.toString(true);
+         // TODO: double check that this isn't returning (null, null), eg value() is set correctly
+         String depString = dep.toString(CoreLabel.OutputFormat.VALUE);
          if (untyped) {
            int firstPar = depString.indexOf("(");
            depString = depString.substring(firstPar);

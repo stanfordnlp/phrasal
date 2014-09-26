@@ -12,6 +12,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.ValueAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.parser.Actions.Action;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.parser.lexparser.Lexicon;
@@ -173,16 +174,16 @@ public class Structure {
     inputIdxToNode = new HashMap<Integer, TreeGraphNode>();
   }
   public void addRoot() {
-    for(TreeGraphNode dep : findNonDependentNode(dependencies)) {
-      TypedDependency dependency = new TypedDependency(GrammaticalRelation.ROOT, root, dep);
+    for(IndexedWord dep : findNonDependentNode(dependencies)) {
+      TypedDependency dependency = new TypedDependency(GrammaticalRelation.ROOT, new IndexedWord(root.label()), dep);
       dependencies.push(dependency);
     }
   }
 
-  private Set<TreeGraphNode> findNonDependentNode(LinkedStack<TypedDependency> deps) {
+  private Set<IndexedWord> findNonDependentNode(LinkedStack<TypedDependency> deps) {
     // make governor/dependent node set
-    Set<TreeGraphNode> dependents = new HashSet<TreeGraphNode>();
-    Set<TreeGraphNode> governors = new HashSet<TreeGraphNode>();
+    Set<IndexedWord> dependents = new HashSet<>();
+    Set<IndexedWord> governors = new HashSet<>();
     for(TypedDependency dep : deps) {
       dependents.add(dep.dep());
       governors.add(dep.gov());

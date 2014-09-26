@@ -8,8 +8,8 @@ import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.trees.GrammaticalStructure;
-import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
 
 /**
@@ -24,9 +24,9 @@ public class GrammaticalStructures {
    
    private GrammaticalStructures() { }
    
-   public static DirectedGraph<TreeGraphNode, TypedDependency> toDirectedGraph(GrammaticalStructure gs, boolean forward) {
-      DirectedGraph<TreeGraphNode, TypedDependency> jgt =
-         new DefaultDirectedGraph<TreeGraphNode, TypedDependency>(TypedDependency.class);
+   public static DirectedGraph<IndexedWord, TypedDependency> toDirectedGraph(GrammaticalStructure gs, boolean forward) {
+      DirectedGraph<IndexedWord, TypedDependency> jgt =
+         new DefaultDirectedGraph<IndexedWord, TypedDependency>(TypedDependency.class);
       for (TypedDependency dep : gs.allTypedDependencies()) {
          if (forward) {
            jgt.addEdge(dep.dep(), dep.gov(), dep); 
@@ -37,15 +37,15 @@ public class GrammaticalStructures {
       return jgt;
    }
    
-   public static UndirectedGraph<TreeGraphNode, TypedDependency> toGraph(GrammaticalStructure gs) {
-      UndirectedGraph<TreeGraphNode, TypedDependency> jgt =
-         new SimpleGraph<TreeGraphNode, TypedDependency>(TypedDependency.class);
+   public static UndirectedGraph<IndexedWord, TypedDependency> toGraph(GrammaticalStructure gs) {
+      UndirectedGraph<IndexedWord, TypedDependency> jgt =
+         new SimpleGraph<IndexedWord, TypedDependency>(TypedDependency.class);
       
-      Set<TreeGraphNode> nodes = new HashSet<TreeGraphNode>();
+      Set<IndexedWord> nodes = new HashSet<>();
       for (TypedDependency dep : gs.allTypedDependencies()) {
          nodes.add(dep.gov()); nodes.add(dep.dep());
       }
-      for (TreeGraphNode node : nodes) { 
+      for (IndexedWord node : nodes) { 
          System.err.println("Adding: " + node);
          jgt.addVertex(node);
       }

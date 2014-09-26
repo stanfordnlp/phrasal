@@ -7,6 +7,7 @@ import java.util.TreeSet;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LeftChildrenNodeAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.trees.GrammaticalRelation;
 import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
@@ -131,7 +132,7 @@ public class Actions {
       dep = new TreeGraphNode(topStack);
       s.getInputIdxToNode().put(topStack.get(IndexAnnotation.class), dep);
     }
-    TypedDependency dependency = new TypedDependency(relation, gov, dep);
+    TypedDependency dependency = new TypedDependency(relation, new IndexedWord(gov.label()), new IndexedWord(dep.label()));
     s.dependencies.push(dependency);
     s.dependentsIdx.add(topStack.get(IndexAnnotation.class));
 
@@ -164,7 +165,7 @@ public class Actions {
       dep = new TreeGraphNode(w);
       s.getInputIdxToNode().put(w.get(IndexAnnotation.class), dep);
     }
-    TypedDependency dependency = new TypedDependency(relation, gov, dep);
+    TypedDependency dependency = new TypedDependency(relation, new IndexedWord(gov.label()), new IndexedWord(dep.label()));
     s.dependencies.push(dependency);
     s.dependentsIdx.add(w.get(IndexAnnotation.class));
   }
