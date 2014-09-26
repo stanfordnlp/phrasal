@@ -23,7 +23,6 @@ import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.stats.OpenAddressCounter;
 import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Triple;
 
@@ -211,12 +210,12 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
             translations.get(selectedPair.second()).features);
         Counter<String> minusFeatures = OptimizerUtils.featureValueCollectionToCounter(
             translations.get(selectedPair.third()).features);
-        Counter<String> gtVector = new OpenAddressCounter<String>(plusFeatures);
+        Counter<String> gtVector = new ClassicCounter<String>(plusFeatures);
         Counters.subtractInPlace(gtVector, minusFeatures);
 
         dataset.add(new Datum(Label.POSITIVE, gtVector));
 
-        Counter<String> ltVector = new OpenAddressCounter<String>(minusFeatures);
+        Counter<String> ltVector = new ClassicCounter<String>(minusFeatures);
         Counters.subtractInPlace(ltVector, plusFeatures);
 
         dataset.add(new Datum(Label.NEGATIVE, ltVector));
@@ -340,7 +339,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private Counter<String> computeGradient(List<Datum> dataset, Counter<String> weights,
       int batchSize) {
 
-    Counter<String> gradient = new OpenAddressCounter<String>(weights.keySet().size(), 1.0f);
+    Counter<String> gradient = new ClassicCounter<String>(weights.keySet().size());
 
     for (Datum datum : dataset) {
       double sum = 0;
