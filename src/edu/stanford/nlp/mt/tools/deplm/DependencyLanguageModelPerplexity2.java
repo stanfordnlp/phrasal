@@ -85,7 +85,7 @@ public final class DependencyLanguageModelPerplexity2 {
 
     double score = lm.score(seq, 3, null).getScore();
     
-    System.err.println("Scoring: " + seq);
+    //System.err.println("Scoring: " + seq);
     
     wordCount += seq.size() - 3;
     
