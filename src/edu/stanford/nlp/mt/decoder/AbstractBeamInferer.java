@@ -78,7 +78,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
     CoverageSet possibleCoverage = new CoverageSet();
     for (ConcreteRule<TK,FV> rule : rules) {
-      if (rule.abstractRule.target.size() > 0 && !"".equals(rule.abstractRule.target.toString())) {
+      if (rule.abstractRule.target.size() > 0) {
         possibleCoverage.or(rule.sourceCoverage);
       }
     }
@@ -143,13 +143,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       // references may be incorrect due to recombination.
       // When we replace StateLatticeDecoder, this code should go away.
       Derivation<TK, FV> goalHyp = null;
-      long goalHypId = -1;
       for (Derivation<TK, FV> node : latticePath) {
         if (goalHyp == null) {
           goalHyp = node;
           continue;
         }
-        goalHypId = node.id;
         if (node.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {

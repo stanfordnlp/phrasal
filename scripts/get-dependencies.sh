@@ -16,7 +16,7 @@ mv terp.v1/dist/lib/*.jar lib-nodistrib
 #
 echo Downloading Jetty...
 JETTY_VERSION=9.2.1.v20140609
-wget http://download.eclipse.org/jetty/$JETTY_VERSION/dist/jetty-distribution-$JETTY_VERSION.tar.gz
+wget http://archive.eclipse.org/jetty/$JETTY_VERSION/dist/jetty-distribution-$JETTY_VERSION.tar.gz
 tar -xzf jetty-distribution-$JETTY_VERSION.tar.gz
 mv jetty-distribution-$JETTY_VERSION/lib/jetty-*jar lib-nodistrib
 
