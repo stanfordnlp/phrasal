@@ -101,10 +101,12 @@ public class DependencyLanguageModelScoreNBest {
         System.out.print(nBestParts[1]);
         System.out.print(separator);
         System.out.print(nBestParts[2]);
-        System.out.print(" DEPLM:");
+        System.out.print(" DEPLM: ");
         System.out.print(df.format(score));
-        System.out.print(" DEPLMWORDPENALTY:");
+        System.out.print(" DEPLMWORDPENALTY: ");
         System.out.print(-deplmWordCount);
+        System.out.print(" DEPLMPERP: ");
+        System.out.print(df.format(score / deplmWordCount));
         System.out.print(separator);
         System.out.print(nBestParts[3]);
         System.out.print(separator);
