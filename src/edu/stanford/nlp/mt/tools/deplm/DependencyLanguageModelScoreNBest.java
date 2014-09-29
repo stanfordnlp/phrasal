@@ -37,6 +37,7 @@ public class DependencyLanguageModelScoreNBest {
     optionArgDefs.put("nBestList", 1); 
     optionArgDefs.put("dependencies", 1);
     optionArgDefs.put("lm", 1);
+    optionArgDefs.put("scoreFrag", 0);
     return optionArgDefs;
   }
   
@@ -50,6 +51,7 @@ public class DependencyLanguageModelScoreNBest {
     String dependencies = PropertiesUtils.get(options, "dependencies", null, String.class);
     String lm = PropertiesUtils.get(options, "lm", null, String.class);
 
+    boolean scoreFrag = PropertiesUtils.getBool(options, "scoreFrag", false);
     
     if (sourceTokens == null || nBestList == null || dependencies == null || lm == null) {
       System.err.println("java " + DependencyLanguageModelScoreNBest.class.getCanonicalName() + " -sourceTokens file -nBestList file -dependencies file -lm file");
@@ -86,15 +88,11 @@ public class DependencyLanguageModelScoreNBest {
           
         Map<Integer, NavigableSet<Integer>> projectedDependencies = DependencyProjectorCoNLL.projectDependencies(dependent2Head, alignment, true);
 
-        double score = scoreTree(projectedDependencies, alignment.e());
+        Pair<Double, Integer> treeScore = scoreTree(projectedDependencies, alignment.e(), scoreFrag);
           
-        int deplmWordCount = 0;
-        
-        for (int i = 0; i < alignment.e().size(); i++) {
-          if ( ! TokenUtils.isPunctuation(alignment.e().get(i).word())) {
-            deplmWordCount++;
-          }
-        }
+        double score = treeScore.first;
+        int deplmWordCount = treeScore.second;
+      
         
         System.out.print(nBestParts[0]);
         System.out.print(separator);
@@ -122,7 +120,7 @@ public class DependencyLanguageModelScoreNBest {
 
 
 
-  private static double scoreTree(Map<Integer, NavigableSet<Integer>> projectedDependencies, Sequence<IString> e) throws IOException {
+  private static Pair<Double, Integer> scoreTree(Map<Integer, NavigableSet<Integer>> projectedDependencies, Sequence<IString> e, boolean scoreFrag) throws IOException {
     
     HashMap<Integer, Pair<IndexedWord, List<Integer>>> forwardDependencies = new HashMap<Integer, Pair<IndexedWord, List<Integer>>>();
 
@@ -167,7 +165,7 @@ public class DependencyLanguageModelScoreNBest {
       }
     }
     
-    return DependencyLanguageModelPerplexity2.scoreTree(forwardDependencies, DEPLM);
+    return DependencyLanguageModelPerplexity2.scoreTree(forwardDependencies, DEPLM, scoreFrag);
   }
 
 }

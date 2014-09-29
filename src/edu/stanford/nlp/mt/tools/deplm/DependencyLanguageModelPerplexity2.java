@@ -93,10 +93,15 @@ public final class DependencyLanguageModelPerplexity2 {
 
     
   }
+
+  public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm) throws IOException {
+    return scoreTree(dependencies, lm, true);
+  }
   
-  public static double scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm) throws IOException {
+  public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm, boolean scoreFrag) throws IOException {
 
     double score = 0.0;
+    int scoredTokens = 0;
 
     for (int gov : dependencies.keySet()) {
       
@@ -114,12 +119,16 @@ public final class DependencyLanguageModelPerplexity2 {
           if (TokenUtils.isPunctuation(word))
             continue;
           
+          if ( ! scoreFrag && gov != 0) 
+            continue;
+          
           IString depToken = new IString(word); 
           IString headToken = gov == 0 ? ROOT_TOKEN : FRAG_TOKEN;
           
           score += scoreHead(depToken, headToken);
           score += scoreChild(lm, depToken, START_TOKEN, headToken, ROOT_DIR_TOKEN);
           score += scoreChild(lm, END_TOKEN, depToken, headToken, ROOT_DIR_TOKEN);
+          scoredTokens++;
         }
           
       } else {
@@ -155,6 +164,7 @@ public final class DependencyLanguageModelPerplexity2 {
           
           score += scoreChild(lm, depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
         }
+        scoredTokens += leftChildren.size();
         
         
         int rightChildrenCount = rightChildren.size();
@@ -165,9 +175,10 @@ public final class DependencyLanguageModelPerplexity2 {
             score += scoreHead(depToken1, headToken);
           score += scoreChild(lm, depToken2, depToken1, headToken, RIGHT_DIR_TOKEN);
         }
+        scoredTokens += rightChildren.size();
       }
     }
-    return score;
+    return new Pair<Double, Integer> (score, scoredTokens);
 
   }  
   
@@ -202,7 +213,7 @@ public final class DependencyLanguageModelPerplexity2 {
     final long startTimeMillis = System.nanoTime();
     
     while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, false, false)) != null) {
-      final double score = scoreTree(dependencies, childLm);
+      final double score = scoreTree(dependencies, childLm).first;
       assert score != 0.0;
       assert ! Double.isNaN(score);
       assert ! Double.isInfinite(score);
