@@ -1,7 +1,12 @@
 package edu.stanford.nlp.mt.preordering;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +46,9 @@ public class DependencyBnBPreorderer {
   private static LogisticClassifier<Integer, String> classifier;
   
   private static AbstractWordClassMap classMap;
+  
+  private static final double  REG_STRENGTH = 1.5;
+  
   
   /**
    * Implements the dependency tree-based preordering method
@@ -170,7 +178,6 @@ public class DependencyBnBPreorderer {
       if (childCount < 8) {
         Pair<Double, List<Integer>> result = search(featureNodes, new LinkedList<Integer>(), Double.NEGATIVE_INFINITY);
         if (result != null) {
-          //System.err.println("Search completed.");
           List<Integer> permutation = result.second;
           List<Tree> newChildren = Generics.newArrayList(Arrays.asList(children));
           for (int i = 0; i < childCount; i++) {
@@ -343,6 +350,28 @@ public class DependencyBnBPreorderer {
     return score;
   }
   
+  private static void saveModel(String path) throws IOException {
+    
+    Model model = new Model(classifier, mostFrequentTokens);
+    
+    FileOutputStream fos = new FileOutputStream(path);
+    ObjectOutputStream oos = new ObjectOutputStream(fos);
+    oos.writeObject(model);
+    oos.close();
+    fos.close();
+  }
+  
+  
+  private static void loadModel(String path) throws IOException, ClassNotFoundException {
+    FileInputStream fis = new FileInputStream(path);
+    ObjectInputStream ois = new ObjectInputStream(fis);
+    Model model = (Model) ois.readObject();
+    classifier = model.classifier;
+    mostFrequentTokens = model.mostFrequentTokens;
+    ois.close();
+    fis.close();
+  }
+  
   
   /**
    * Command-line option specification.
@@ -366,14 +395,18 @@ public class DependencyBnBPreorderer {
   
 
   
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, ClassNotFoundException {
     
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     boolean train = PropertiesUtils.getBool(options, "train", false);
 
     String dependencyFile = PropertiesUtils.getString(options, "dependencies", null);
-    if (dependencyFile == null) {
-      System.err.println("Usage: java " + DependencyBnBPreorderer.class.getName() + " -dependencies path_to_conll_file -model file [-train -sourceSentences file -targetSentences file -alignment file -classMap file]");
+    String modelFile = PropertiesUtils.getString(options, "model", null);
+    String classMapFile = PropertiesUtils.getString(options, "classMap", null);
+
+    
+    if (dependencyFile == null || modelFile == null || classMapFile == null) {
+      System.err.println("Usage: java " + DependencyBnBPreorderer.class.getName() + " -dependencies path_to_conll_file -model file  -classMap file [-train -sourceSentences file -targetSentences file -alignment file -devSourceSentences file -devTargetSentences file -devAlignment file -devDependencies file]");
       return;
     }
     
@@ -383,12 +416,16 @@ public class DependencyBnBPreorderer {
     
     HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies = null;
    
+    
+    classMap = new LocalWordClassMap();
+    classMap.load(classMapFile);
+
+    
     if (train) {
       System.err.println("Training a new model.");
       String sourceTokenFile = PropertiesUtils.getString(options, "sourceSentences", null);
       String targetTokenFile = PropertiesUtils.getString(options, "targetSentences", null);
       String alignmentFile = PropertiesUtils.getString(options, "alignment", null);
-      String classMapFile = PropertiesUtils.getString(options, "classMap", null);
 
       String devSourceTokenFile = PropertiesUtils.getString(options, "devSourceSentences", null);
       String devTargetTokenFile = PropertiesUtils.getString(options, "devTargetSentences", null);
@@ -407,8 +444,6 @@ public class DependencyBnBPreorderer {
           
       sourceTokenReader.close();   
       
-      classMap = new LocalWordClassMap();
-      classMap.load(classMapFile);
 
       
       
@@ -471,7 +506,7 @@ public class DependencyBnBPreorderer {
             dataset.add(ex.extractFeatures(), ex.label);
         }
         i++;
-        if (i % 10 == 0) 
+        if (i % 100 == 0) 
           System.err.println(i);
       }
       
@@ -502,8 +537,11 @@ public class DependencyBnBPreorderer {
       
       LogisticClassifierFactory<Integer,String> lcf = new LogisticClassifierFactory<Integer,String>();
       
-      classifier = lcf.trainClassifier(dataset, 2.0);
+      classifier = lcf.trainClassifier(dataset, REG_STRENGTH);
 
+      
+      saveModel(modelFile);
+      
       int correct = 0;
       int count = 0;
       int tp = 0;
@@ -604,6 +642,24 @@ public class DependencyBnBPreorderer {
       sourceTokenReader.close();
       targetTokenReader.close();
       alignmentReader.close();
+    } else {
+      // load model
+      // reorder trees and print them
+      System.err.println("Loading model from " + modelFile);
+      loadModel(modelFile);
+      
+      while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(dependencyReader, false, false)) != null) {
+
+        Tree tree = generateShallowTree(dependencies);
+        //tree.pennPrint(System.err);
+        
+        //System.err.println(tree.yield());
+        
+        
+        System.out.println(preorder(tree));
+      }  
+     
+      
     }
     
     
@@ -697,9 +753,9 @@ public class DependencyBnBPreorderer {
       //POS tag
       features.add(prefix + ":t:" + this.word.tag());
       //word
-      features.add(prefix + ":w:" + getWordOrClass(this.word));
+      //features.add(prefix + ":w:" + getWordOrClass(this.word));
       //word class
-      features.add(prefix + ":c:" + getClass(this.word));
+      //features.add(prefix + ":c:" + getClass(this.word));
       //head word
       features.add(prefix + ":hw:" + getWordOrClass(this.hw));
       //head class
@@ -740,6 +796,21 @@ public class DependencyBnBPreorderer {
     }
   }
 
+  
+  private static class Model implements Serializable {
+    
+    //private static final long serialVersionUID = 1L;
+    
+    public LogisticClassifier<Integer, String> classifier;
+    public Set<String> mostFrequentTokens;
+    
+    
+    public Model(LogisticClassifier<Integer, String> classifier,  Set<String> mostFrequentTokens) {
+      this.classifier = classifier;
+      this.mostFrequentTokens = mostFrequentTokens;
+    }
+    
+  }
   
 
 }
