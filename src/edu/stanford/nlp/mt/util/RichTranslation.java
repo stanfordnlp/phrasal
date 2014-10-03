@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.util.Generics;
@@ -39,6 +40,13 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     this.source = (f == null) ? new EmptySequence<TK>() : f.sourceSentence;    
   }
   
+  //Thang May14, store goalHyp, to later output history of phrase pairs used
+  public RichTranslation(Featurizable<TK, FV> f, double score,
+      FeatureValueCollection<FV> features, long latticeSourceId, Derivation<TK, FV> goalHyp) {
+    this(f, score, features, latticeSourceId);
+    this.goalHyp = goalHyp;
+  }
+ 
   /**
    * Access the underlying featurizable.
    * 
@@ -79,12 +87,15 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     DecimalFormat df = new DecimalFormat("0.####E0");
     if (printFeatures && features != null) {
       for (FeatureValue<FV> fv : this.features) {
-        sbuf.append(' ')
-        .append(fv.name)
-        .append(": ")
-        .append(
-            (fv.value == (int) fv.value ? (int) fv.value : df
-                .format(fv.value)));
+        if(goalHyp!=null){ // Thang May14: only print LM score, TODO: add more general flag
+          if(fv.name.equals("LM")){
+            sbuf.append(' ').append(fv.name).append(": ")
+            .append((fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));
+          }
+        } else {
+          sbuf.append(' ').append(fv.name).append(": ")
+          .append((fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));  
+        }
       }
     }
     sbuf.append(' ').append(delim).append(' ');
@@ -107,6 +118,13 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
         sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
         sbuf.append(f.derivation.rule.abstractRule.target.toString());
       }
+    }
+    
+    // Thang May14: print derivation history
+    if(goalHyp!=null){
+      sbuf.append(' ').append(delim).append(' ');
+      String historyString = historyString();
+      sbuf.append(historyString);
     }
   }
   

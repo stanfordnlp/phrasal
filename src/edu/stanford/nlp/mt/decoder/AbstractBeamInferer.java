@@ -45,7 +45,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
   private final Comparator<RichTranslation<TK,FV>> translationComparator;
-
+  public static boolean HISTORY_NBEST_LIST = false; // Thang May14 to store the goal hypothesis in the RichTranslation
+  
   /**
    * Constructor.
    * 
@@ -185,8 +186,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
       
-      translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
-          goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
+      if(HISTORY_NBEST_LIST){ // Thang May14: store goalHyp
+        translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
+            goalHyp.score, FeatureValues.combine(goalHyp), nbestId++, goalHyp));
+      } else {
+        translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
+            goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
+      }
       if (translations.size() >= size) {
         break;
       }
