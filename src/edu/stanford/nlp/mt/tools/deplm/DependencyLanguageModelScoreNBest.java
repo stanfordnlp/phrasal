@@ -38,6 +38,8 @@ public class DependencyLanguageModelScoreNBest {
     optionArgDefs.put("dependencies", 1);
     optionArgDefs.put("lm", 1);
     optionArgDefs.put("scoreFrag", 0);
+    optionArgDefs.put("scoreStop", 0);
+    optionArgDefs.put("transitive", 0);
     return optionArgDefs;
   }
   
@@ -52,6 +54,10 @@ public class DependencyLanguageModelScoreNBest {
     String lm = PropertiesUtils.get(options, "lm", null, String.class);
 
     boolean scoreFrag = PropertiesUtils.getBool(options, "scoreFrag", false);
+    boolean scoreStop = PropertiesUtils.getBool(options, "scoreStop", false);
+    boolean transitive = PropertiesUtils.getBool(options, "transitive", false);
+
+    
     
     if (sourceTokens == null || nBestList == null || dependencies == null || lm == null) {
       System.err.println("java " + DependencyLanguageModelScoreNBest.class.getCanonicalName() + " -sourceTokens file -nBestList file -dependencies file -lm file");
@@ -86,9 +92,9 @@ public class DependencyLanguageModelScoreNBest {
         SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(sourceSentence, translation, alignmentString);
           
           
-        Map<Integer, NavigableSet<Integer>> projectedDependencies = DependencyProjectorCoNLL.projectDependencies(dependent2Head, alignment, true);
+        Map<Integer, NavigableSet<Integer>> projectedDependencies = DependencyProjectorCoNLL.projectDependencies(dependent2Head, alignment, transitive);
 
-        Pair<Double, Integer> treeScore = scoreTree(projectedDependencies, alignment.e(), scoreFrag);
+        Pair<Double, Integer> treeScore = scoreTree(projectedDependencies, alignment.e(), scoreFrag, scoreStop);
           
         double score = treeScore.first;
         int deplmWordCount = treeScore.second;
@@ -120,7 +126,7 @@ public class DependencyLanguageModelScoreNBest {
 
 
 
-  private static Pair<Double, Integer> scoreTree(Map<Integer, NavigableSet<Integer>> projectedDependencies, Sequence<IString> e, boolean scoreFrag) throws IOException {
+  private static Pair<Double, Integer> scoreTree(Map<Integer, NavigableSet<Integer>> projectedDependencies, Sequence<IString> e, boolean scoreFrag, boolean scoreStop) throws IOException {
     
     HashMap<Integer, Pair<IndexedWord, List<Integer>>> forwardDependencies = new HashMap<Integer, Pair<IndexedWord, List<Integer>>>();
 
@@ -165,7 +171,7 @@ public class DependencyLanguageModelScoreNBest {
       }
     }
     
-    return DependencyLanguageModelPerplexity2.scoreTree(forwardDependencies, DEPLM, scoreFrag);
+    return DependencyLanguageModelPerplexity2.scoreTree(forwardDependencies, DEPLM, scoreFrag, scoreStop);
   }
 
 }

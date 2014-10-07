@@ -95,10 +95,10 @@ public final class DependencyLanguageModelPerplexity2 {
   }
 
   public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm) throws IOException {
-    return scoreTree(dependencies, lm, true);
+    return scoreTree(dependencies, lm, true, true);
   }
   
-  public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm, boolean scoreFrag) throws IOException {
+  public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm, boolean scoreFrag, boolean scoreStop) throws IOException {
 
     double score = 0.0;
     int scoredTokens = 0;
