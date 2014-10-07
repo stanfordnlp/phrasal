@@ -64,6 +64,7 @@ public class DependencyProjectorCoNLL {
     optionArgDefs.put("annotations", 1);
     optionArgDefs.put("transitive", 0);
     optionArgDefs.put("maxFragments", 1);
+    optionArgDefs.put("posTagged", 0);
 
     
     return optionArgDefs;
@@ -77,7 +78,7 @@ public class DependencyProjectorCoNLL {
     return Character.isAlphabetic(token.charAt(0)) || Character.isDigit(token.charAt(0));
   }
   
-  public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens, int maxFragments) {
+  public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens, int maxFragments, boolean posTagged) {
     Map<Integer,Integer> reverseDependencies = Generics.newHashMap();
     
     for (int head : dependencies.keySet()) {
@@ -109,7 +110,7 @@ public class DependencyProjectorCoNLL {
       String parts[] = token.split("_");
       String pos = "POS";
       String word = token;
-      if (parts.length > 1) {
+      if (posTagged && parts.length > 1) {
         word = token.substring(0, token.lastIndexOf("_"));
         pos = parts[parts.length -1];
       }
@@ -303,7 +304,7 @@ public class DependencyProjectorCoNLL {
     //try to attach unaligned tokens
     //requires POS tagged input
     //TODO: What to do about circles?
-    for (int i = 0; i < len; i++) {
+    /*for (int i = 0; i < len; i++) {
       IString token = alignment.e().get(i);
       if (token.word().length() < 1 || !isWord(token.word()))
         continue;
@@ -321,6 +322,7 @@ public class DependencyProjectorCoNLL {
         }
       }
     }
+    */
     
     return projectedDependencies;
   }
@@ -361,9 +363,10 @@ public class DependencyProjectorCoNLL {
     String alignments = PropertiesUtils.get(options, "alignment", null, String.class);
     String annotations = PropertiesUtils.get(options, "annotations", null, String.class);
     int maxFragments = PropertiesUtils.getInt(options, "maxFragments", 0);
+    boolean posTagged = PropertiesUtils.getBool(options, "posTagged", true); 
     
     boolean isCoNLL = annotations.toLowerCase().endsWith(".conll");
-
+    
     
  
 
@@ -398,7 +401,7 @@ public class DependencyProjectorCoNLL {
         
         Map<Integer, NavigableSet<Integer>> dependencies = projectDependencies(reverseDependencies, alignment, transitive);
      
-        printDependencies(dependencies, alignment.e(), maxFragments);
+        printDependencies(dependencies, alignment.e(), maxFragments, posTagged);
       } catch (Exception e) {
         System.err.println("SourceSentence: " + sourceSentence);
         e.printStackTrace();
