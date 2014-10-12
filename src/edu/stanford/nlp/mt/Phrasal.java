@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
@@ -163,8 +164,6 @@ public class Phrasal {
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
       .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).")
-       // Thang May14
-       .append("  -").append(HISTORY_NBEST_LIST_OPT).append(" boolean : append history information to n-best list output (default: false)").append(nl)
        ;
     return sb.toString();
   }
@@ -205,9 +204,6 @@ public class Phrasal {
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
   public static final String WRAP_BOUNDARY = "wrap-boundary";
   
-  // Thang May14: store derivation history in the nbest list
-  public static final String HISTORY_NBEST_LIST_OPT = "history-n-best-list";
-
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
   private static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
@@ -229,7 +225,6 @@ public class Phrasal {
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
         LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
         WRAP_BOUNDARY
-        , HISTORY_NBEST_LIST_OPT // Thang May14
         ));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
@@ -289,6 +284,7 @@ public class Phrasal {
    * n-best list options
    */
   private String nbestListOutputType = "moses";
+  private Pattern nBestListFeaturePattern = null;
   private PrintStream nbestListWriter;
   private int nbestListSize;
   
@@ -394,11 +390,6 @@ public class Phrasal {
       ConcreteRule
           .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
               .name());
-    
-    // Thang May14
-    if (config.containsKey(HISTORY_NBEST_LIST_OPT)) {
-      AbstractBeamInferer.HISTORY_NBEST_LIST = Boolean.parseBoolean(config.get(HISTORY_NBEST_LIST_OPT).get(0));
-    }
   }
 
   @SuppressWarnings("unchecked")
@@ -883,7 +874,7 @@ public class Phrasal {
         System.err.printf("Generating n-best lists (size: %d)%n",
             nbestListSize);
 
-      } else if (nbestOpt.size() == 2 || nbestOpt.size() == 3) {
+      } else if (nbestOpt.size() >= 2 && nbestOpt.size() <= 4) {
         String nbestListFilename = nbestOpt.get(0);
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
         assert nbestListSize >= 0;
@@ -892,8 +883,12 @@ public class Phrasal {
           nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
         }
         
-        if (nbestOpt.size() == 3) {
+        if (nbestOpt.size() >= 3) {
           nbestListOutputType = nbestOpt.get(2);
+        }
+        
+        if (nbestOpt.size() >= 4) {
+          nBestListFeaturePattern = Pattern.compile(nbestOpt.get(3));
         }
         
         System.err.printf("Generating n-best lists to: %s (size: %d)%n",
@@ -901,7 +896,7 @@ public class Phrasal {
 
       } else {
         throw new RuntimeException(
-            String.format("%s requires 1, 2 or 3 arguments, not %d", NBEST_LIST_OPT,
+            String.format("%s requires 1 to 4 arguments, not %d", NBEST_LIST_OPT,
                 nbestOpt.size()));
       }
 
@@ -1044,7 +1039,7 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nBestListFeaturePattern, nbestListWriter);
       }
       
       // Output the alignments if necessary

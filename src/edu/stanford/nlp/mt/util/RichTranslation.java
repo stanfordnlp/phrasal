@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.util;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
@@ -27,25 +28,20 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
   /**
    * Constructor.
    * 
-   * @param f
+   * @param goalHyp
    * @param score
    * @param features
    * @param latticeSourceId
    */
-  public RichTranslation(Featurizable<TK, FV> f, double score,
+  public RichTranslation(Derivation<TK, FV> goalHyp, double score,
       FeatureValueCollection<FV> features, long latticeSourceId) {
-    super((f == null ? new EmptySequence<TK>() : f.targetPrefix),
-        features, score, latticeSourceId);
-    this.featurizable = f;
-    this.source = (f == null) ? new EmptySequence<TK>() : f.sourceSentence;    
-  }
-  
-  //Thang May14, store goalHyp, to later output history of phrase pairs used
-  public RichTranslation(Featurizable<TK, FV> f, double score,
-      FeatureValueCollection<FV> features, long latticeSourceId, Derivation<TK, FV> goalHyp) {
-    this(f, score, features, latticeSourceId);
+    super(((goalHyp == null || goalHyp.featurizable == null) ? 
+        new EmptySequence<TK>() : goalHyp.featurizable.targetPrefix), features, score, latticeSourceId);
+    this.featurizable = (goalHyp == null) ? null : goalHyp.featurizable;
+    this.source = (this.featurizable == null) ? new EmptySequence<TK>() : this.featurizable.sourceSentence;
     this.goalHyp = goalHyp;
   }
+  
  
   /**
    * Access the underlying featurizable.
@@ -74,27 +70,27 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
    *          Segment id
    * @param sbuf
    *          Where to append the output to
-   * @param printFeatures
-   *          Whether all features should be printed
-   * @param nbestWordInternalAlignments 
+   * @param featurePattern
+   *          Only features that match this pattern will be printed. Set to null to
+   *          print all features.
+   * @param bolt
+   *          Print additional information required for BOLT submissions.
+   * @param printHistory
+   *          Print the derivation history. 
    */
-  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, boolean printFeatures, boolean verbose) {
+  public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, Pattern featurePattern, boolean bolt, boolean printHistory) {
     final String delim = FlatPhraseTable.FIELD_DELIM;
     sbuf.append(id);
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(this.translation);
     sbuf.append(' ').append(delim);
     DecimalFormat df = new DecimalFormat("0.####E0");
-    if (printFeatures && features != null) {
+    if (features != null) {
       for (FeatureValue<FV> fv : this.features) {
-        if(goalHyp!=null){ // Thang May14: only print LM score, TODO: add more general flag
-          if(fv.name.equals("LM")){
-            sbuf.append(' ').append(fv.name).append(": ")
-            .append((fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));
-          }
-        } else {
+        String featureName = (String) fv.name;
+        if (featurePattern == null || featurePattern.matcher(featureName).matches()) {
           sbuf.append(' ').append(fv.name).append(": ")
-          .append((fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));  
+            .append((fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));
         }
       }
     }
@@ -102,7 +98,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sbuf.append(df.format(this.score)).append(' ').append(delim);
 
     // Internal Alignments
-    if ( ! verbose) {
+    if ( ! bolt) {
       // Simple Alignments
       String alignmentString = alignmentString();
       sbuf.append(" ").append(alignmentString);
@@ -120,8 +116,8 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
       }
     }
     
-    // Thang May14: print derivation history
-    if(goalHyp!=null){
+    // Print derivation history
+    if (printHistory){
       sbuf.append(' ').append(delim).append(' ');
       String historyString = historyString();
       sbuf.append(historyString);
