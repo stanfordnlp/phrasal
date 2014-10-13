@@ -140,7 +140,11 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       return reachableNodes;
     
     for (int i : children) {
-      reachableNodes.addAll(reachableNodes(i, depth + 1));
+      if (this.disableTransitivity) {
+        reachableNodes.add(i);
+      } else {
+        reachableNodes.addAll(reachableNodes(i, depth + 1));
+      }
     }
  
     return reachableNodes;
