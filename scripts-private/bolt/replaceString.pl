@@ -1,8 +1,12 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use Getopt::Long;
 
-die "Usage: $0 str_to_replace value_to_insert < input > output" if @ARGV != 2;
+my $replace_all = '';
+GetOptions ('all' => \$replace_all);
+
+die "Usage: $0 [--all] str_to_replace value_to_insert < input > output" if @ARGV != 2;
 
 my $stringToFind = shift;
 my $replacement = shift;
@@ -13,7 +17,7 @@ binmode(STDERR, ":utf8");
 
 my $replaced_already = 0;
 while(<STDIN>) {
-    if($replaced_already) { 
+    if($replaced_already && !$replace_all) { 
 	print; 
     }
     else {

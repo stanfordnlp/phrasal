@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
@@ -73,7 +75,15 @@ public final class SentenceLevelMetricFactory {
       return "bleu-2ter";
       
     } else {
-      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			// Attempt pattern match
+			Pattern p = Pattern.compile("([0-9\\.]+)bleu-([0-9\\.]+)ter");
+			Matcher m = p.matcher(scoreMetricStr);
+			if(m.matches()) {
+				return scoreMetricStr;
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			}
     }
   }
   
@@ -180,7 +190,23 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(new double[]{1.0, 2.0}, metrics);
     
     } else {
-      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			// Attempt pattern match
+			Pattern p = Pattern.compile("([0-9\\.]+)bleu-([0-9\\.]+)ter");
+			Matcher m = p.matcher(scoreMetricStr);
+			if(m.matches()) {
+				
+				List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+				metrics.add(new BLEUGain<IString,String>());
+				metrics.add(new SLTERMetric<IString,String>());
+
+				double b_coeff = Double.parseDouble(m.group(1));
+				double t_coeff = Double.parseDouble(m.group(2));
+				return new SLLinearCombinationMetric<IString,String>(
+					new double[]{b_coeff, t_coeff}, metrics);
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			}
     }
   }
 }
