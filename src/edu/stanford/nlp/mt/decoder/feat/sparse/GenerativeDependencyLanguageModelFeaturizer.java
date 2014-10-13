@@ -71,7 +71,14 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     depLM = LanguageModelFactory.load(options.getProperty("depLM"));
    
     loadDependencies(options.getProperty("parses"));
+    
 
+    System.err.println("Loaded DepLM: " + options.getProperty("depLM"));
+    System.err.println("Options:");
+    if (this.useClasses) System.err.println("useClasses");
+    if (this.disableEndToken) System.err.println("disableEndToken");
+    if (this.useFragPenalty) System.err.println("fragPenalty");
+    if (this.disableTransitivity) System.err.println("disableTransitivity"); 
   }
   
   private static double score(IString child, IString sibling, IString head, IString direction) {
