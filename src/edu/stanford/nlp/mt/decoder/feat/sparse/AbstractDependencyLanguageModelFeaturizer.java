@@ -39,6 +39,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
 
   public boolean useClasses = false;
   public boolean useFragPenalty = false;
+  public boolean disableTransitivity = false;
   
   public TargetClassMap targetClassMap;
 
@@ -188,7 +189,11 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   
   private void cleanUp(DepLMState state, Featurizable<IString, String> f, int tgtIndex, 
       List<FeatureValue<String>> features) {
-    for (int j = f.sourcePosition; j < f.sourcePhrase.size(); j++) {
+    
+    final int startPos = f.sourcePosition;
+    final int endPos = startPos + f.sourcePhrase.size();
+    
+    for (int j = startPos; j < endPos; j++) {
       DepLMSubState orphanedSubState = state.getSubState(j);
       if (orphanedSubState != null  
           && orphanedSubState.getHeadToken() == null 
@@ -198,7 +203,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         DepLMSubState subState = null;
         Integer sourceHeadIndex = dependent2Head.get(j);
         
-        boolean isRoot = false;
+        boolean isRoot = ! this.disableTransitivity; // in case transitive attachments are disabled, go directly to the root
         boolean foundLeftHead = false;
         boolean foundRightHead = false;
 
@@ -327,8 +332,10 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
             // 1) we reach the root (isRoot),
             // 2) we find a token that has not been put down yet (foundLeftHead),
             // 3) or we find an aligned token (foundRightHead)
+            // In case transitivity is disabled, then we score it as a 
+            // fragment immediately.
             
-            boolean isRoot = false;
+            boolean isRoot = ! this.disableTransitivity;
             boolean foundLeftHead = false;
             boolean foundRightHead = false;
 

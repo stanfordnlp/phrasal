@@ -63,6 +63,7 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     
     this.useClasses = PropertiesUtils.getBool(options, "classBased", false);
     this.disableEndToken = PropertiesUtils.getBool(options, "disableEndToken", false);
+    this.disableTransitivity = PropertiesUtils.getBool(options, "disableTransitivity", false);
     this.useFragPenalty = PropertiesUtils.getBool(options, "fragPenalty", false);
     this.targetClassMap = useClasses ? TargetClassMap.getInstance() : null;
     
@@ -93,7 +94,7 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
       score += score(END_TOKEN, token, FRAG_TOKEN, ROOT_DIR_TOKEN);
     
     features.add(new FeatureValue<String>(FEAT_NAME, score));
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -2.0));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
     
     if (this.useFragPenalty)
       features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
@@ -103,7 +104,6 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
       double rightScore = score(END_TOKEN, START_TOKEN, token, RIGHT_DIR_TOKEN);
       features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
       features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
-      features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -2.0));
     }
   }
 
@@ -123,7 +123,7 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
       score += score(END_TOKEN, token, ROOT_TOKEN, ROOT_DIR_TOKEN);
     
     features.add(new FeatureValue<String>(FEAT_NAME, score));
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -2.0));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
   }
   
   public void scoreLeft(List<FeatureValue<String>> features, IString headToken, DepLMSubState subState) {
@@ -141,7 +141,7 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
         leftScore += score(depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
     }
     features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * (subState.getLeftChildren().size() + 1)));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * (subState.getLeftChildren().size())));
     subState.getLeftChildren().clear();
   }
 
