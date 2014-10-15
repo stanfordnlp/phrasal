@@ -3,12 +3,12 @@
 
 if [[ $# -gt 8 || $# -lt 6 ]]; then
   echo "# Num arguments = $#"
-  echo "`basename $0` outDir tuneNbestFile tuneRefPrefix testNbestFile testRefPrefix featureStr [mertOpt] [evaluateOpt]"
+  echo "`basename $0` outDir tuneNbestFile tuneRefPrefix testNbestFile testRefPrefix featureStr [mertOpt] [evalOpt]"
   echo "  tuneRefPrefix: the code automatically check if tuneRefPrefix is a file on its own or if there are other files like tuneRefPrefix1, tuneRefPrefix2, etc., to build up a list of all references."
   echo "  testRefPrefix: similar to tuneRefPrefix."
   echo "  featureStr: comma-separated list of weights to tune, e.g., \"rnnlm,nnlm\" implies that our nbest file is of the following format: \"id ||| translation ||| rnnlm: value1 nnlm: value2 dm: value3\", here the decoder score (dm) is always present."
   echo "  mertOpt: same as featureStr but we tell Mert to ignore those\n"
-  echo "  evaluateOpt: 0 -- default, 1 -- use Mike'script"
+  echo "  evalOpt: 0 -- default, 1 -- Jun14 system, 2 -- Sep14 system" 
   exit
 fi
 
@@ -23,16 +23,16 @@ mertOpt=""
 if [ $# -ge 7 ]; then
   mertOpt=$7
 fi
-evaluateOpt="0"
+evalOpt="0"
 if [ $# -eq 8 ]; then
-  evaluateOpt=$8
+  evalOpt=$8
 fi
 
 echo "tuneRefPrefix=$tuneRefPrefix"
 echo "testRefPrefix=$testRefPrefix"
 echo "featureStr=$featureStr"
 echo "mertOpt=$mertOpt"
-echo "evaluateOpt=$evaluateOpt"
+echo "evalOpt=$evalOpt"
 function execute_check {
   file=$1 
   cmd=$2
@@ -82,7 +82,7 @@ function rerank_eval {
   nbestFile=$2
   wtsFile=$3
   refList=$4
-  evaluateOpt=$5
+  evalOpt=$5
 
   ### run reranker on test ###
   echo "# run reranker..."
@@ -94,8 +94,12 @@ function rerank_eval {
     execute_check "" "java edu.stanford.nlp.mt.metrics.BLEUMetric $refList < $transFile"
     execute_check "" "java edu.stanford.nlp.mt.metrics.TERMetric $refList < $transFile"
   else
-    if [ "$evaluateOpt" = "1" ]; then
+    if [ "$evalOpt" = "1" ]; then # Jun14 system
       execute_check "" "perl /scr/mkayser/mt/experiments/BOLT/jun_2_2014_dryrun/commands_for_thang/score_thang.pl $transFile /scr/mkayser/mt/experiments/BOLT/jun_2_2014_dryrun/commands_for_thang/all_test_sets_thang.regions"
+    fi
+
+    if [ "$evalOpt" = "2" ]; then # Sep14 system
+      execute_check "" "perl /scr/nlp/data/gale/BOLT/zhen-2014/translate_thang/scoring/score.pl $transFile /juicy/scr42/scr/nlp/data/gale/BOLT/zhen-2014/translate_thang/scoring/test_set.info_for_ibm_prep"
     fi
   fi
 }
@@ -140,13 +144,13 @@ execute_check "" "java edu.stanford.nlp.mt.tools.PrintWeights $trainWtsFile"
 echo "### Run reranker on tune ###"
 date
 tuneTransFile="$outDir/tune.trans"
-rerank_eval $tuneTransFile $tuneNbestFile $trainWtsFile "$tuneSpaceRefList" $evaluateOpt
+rerank_eval $tuneTransFile $tuneNbestFile $trainWtsFile "$tuneSpaceRefList" $evalOpt
 
 ### Run reranker on test ###
 echo "### Run reranker on test ###"
 date
 testTransFile="$outDir/test.trans"
-rerank_eval $testTransFile $testNbestFile $trainWtsFile "$testSpaceRefList" $evaluateOpt
+rerank_eval $testTransFile $testNbestFile $trainWtsFile "$testSpaceRefList" $evalOpt
 
 
 ### Baseline results with only decoder scores ##
@@ -161,13 +165,13 @@ rerank_eval $testTransFile $testNbestFile $trainWtsFile "$testSpaceRefList" $eva
 #echo ""
 #echo "## Baseline resutls on tune ##"
 #tuneTransFile="$outDir/tune.base.trans"
-#rerank_eval $tuneTransFile $tuneNbestFile $initWtsFile "$tuneSpaceRefList" $evaluateOpt
+#rerank_eval $tuneTransFile $tuneNbestFile $initWtsFile "$tuneSpaceRefList" $evalOpt
 #
 ## run reranker on test
 #echo ""
 #echo "## Baseline resutls on test ##"
 #testTransFile="$outDir/test.base.trans"
-#rerank_eval $testTransFile $testNbestFile $initWtsFile "$testSpaceRefList" $evaluateOpt
+#rerank_eval $testTransFile $testNbestFile $initWtsFile "$testSpaceRefList" $evalOpt
 
 
 

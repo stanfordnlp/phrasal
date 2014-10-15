@@ -80,13 +80,15 @@ def process_files(in_file, out_file, opt):
 
   line_id = 0
   sys.stderr.write('# Processing file %s ...\n' % (in_file))
+  feature_list = []
+  feature_map = {}
   for line in inf:
     line = clean_line(line)
     if re.search('^#', line): # comment line
       print("Skip line: ", line)
       continue
     
-    tokens = re.split('\s+\|\|\|\s+', line)
+    tokens = re.split(' \|\|\| ', line)
     if opt==1 or opt==2:
       # find lm score
       features = re.split(' ', tokens[2])
@@ -97,16 +99,24 @@ def process_files(in_file, out_file, opt):
         if re.search('LM', name):
           lmTokens.append(name)
           lmTokens.append(value)
-      if len(lmTokens)==0:
-        sys.stderr.write('! Failed to find LM score: %s\n' % (line))
-        sys.exit(1)
+
+          if name not in feature_map:
+            feature_list.append(name)
+            feature_map[name] = 1
+
+      if len(lmTokens)/2!=len(feature_list):
+        sys.stderr.write('\n! Failed to find LM features: %s\n' % (line))
+        lmTokens = []
+        for name in feature_list:
+          lmTokens.append(name)
+          lmTokens.append('0.0000E0')
       featureStr = ' '.join(lmTokens)
      
       if opt==1: # retain only LM scores + dm score
         new_tokens = []
         new_tokens.append(tokens[0])
         new_tokens.append(tokens[1])
-        dmScore = tokens[3]
+        dmScore = tokens[3].strip()
         featureStr = featureStr + ' dm: ' + dmScore
         new_tokens.append(featureStr)
       elif opt==2: # only retain lm features
