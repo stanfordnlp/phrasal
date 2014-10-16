@@ -23,7 +23,7 @@ import edu.stanford.nlp.util.StringUtils;
 public class BuildDependencyLMData2 {
 
   private static BufferedWriter lmWriter;
-  private static BufferedWriter headLmWriter;
+  //private static BufferedWriter headLmWriter;
 
   private static BufferedWriter noEventWriter;
 
@@ -54,7 +54,7 @@ public class BuildDependencyLMData2 {
   
 
  private static void incrementHeadCount(IString child, IString head) throws IOException {
-    
+   /* 
    head = new IString(head + HEAD_SUFFIX);
    
    headLmWriter.write(head + " " + child);
@@ -62,7 +62,7 @@ public class BuildDependencyLMData2 {
    
    noEventWriter.write(head.word());
    noEventWriter.write("\n");
-
+   */
   }
   
   private static void incrementChildCount(IString child, IString sibling, IString head, IString direction) throws IOException {
@@ -161,7 +161,7 @@ public class BuildDependencyLMData2 {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     String sourceTokens = PropertiesUtils.get(options, "input", null, String.class);
     String outdirPath = PropertiesUtils.get(options, "outdir", ".", String.class);
-    String headDepLMFilename = outdirPath + File.separator + "deplm.head.data";
+    //String headDepLMFilename = outdirPath + File.separator + "deplm.head.data";
     String rightDepLMFilename = outdirPath + File.separator + "deplm.nonevents";
     String leftDepLMFilename = outdirPath + File.separator + "deplm.data";
 
@@ -176,32 +176,32 @@ public class BuildDependencyLMData2 {
     if (!rightDepLMFile.exists())
       rightDepLMFile.createNewFile();
     
-    File headDepLMFile = new File(headDepLMFilename);
-    if (!headDepLMFile.exists())
-      headDepLMFile.createNewFile();
+    //File headDepLMFile = new File(headDepLMFilename);
+    //if (!headDepLMFile.exists())
+    //  headDepLMFile.createNewFile();
     
 
     FileWriter leftFW = new FileWriter(leftDepLMFile.getAbsoluteFile());
     FileWriter rightFW = new FileWriter(rightDepLMFile.getAbsoluteFile());
-    FileWriter headFW = new FileWriter(headDepLMFile.getAbsoluteFile());
+    //FileWriter headFW = new FileWriter(headDepLMFile.getAbsoluteFile());
 
     
     lmWriter = new BufferedWriter(leftFW);
-    headLmWriter = new BufferedWriter(headFW);
+    //headLmWriter = new BufferedWriter(headFW);
     noEventWriter = new BufferedWriter(rightFW);
 
     LineNumberReader inputReader = IOTools.getReaderFromFile(sourceTokens);
 
     
     HashMap<Integer, Pair<IndexedWord, List<Integer>>>  dependencies =  null;
-    while ((dependencies =  DependencyUtils.getDependenciesFromCoNLLFileReader(inputReader, false, false)) != null) {
+    while ((dependencies =  DependencyUtils.getDependenciesFromCoNLLFileReader(inputReader, false, true)) != null) {
       updateCounts(dependencies);
     }
     
     inputReader.close();
     lmWriter.close();
     noEventWriter.close();
-    headLmWriter.close();
+    //headLmWriter.close();
     
   }
 

@@ -169,7 +169,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     
     HashMap<Integer, Pair<IndexedWord, List<Integer>>> deps;
     int i = 0;
-    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, true, false)) != null) {
+    while ((deps = DependencyUtils.getDependenciesFromCoNLLFileReader(reader, true, true)) != null) {
       reverseDependenciesCache.put(i,DependencyUtils.getReverseDependencies(deps));
       Map<Integer, HashSet<Integer>> forwardDeps = new HashMap<Integer, HashSet<Integer>>();
       for (Integer gov : deps.keySet()) {
