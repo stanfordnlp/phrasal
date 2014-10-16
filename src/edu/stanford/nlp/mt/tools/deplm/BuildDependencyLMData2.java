@@ -92,7 +92,6 @@ public class BuildDependencyLMData2 {
       if (iw != null && TokenUtils.isPunctuation(iw.word()))
         continue;
       
-      String headWord = iw.word();
       
       if (gov < 1) {
         for (Integer dep : dependencies.get(gov).second) {
@@ -109,6 +108,8 @@ public class BuildDependencyLMData2 {
         }
           
       } else {
+        String headWord = iw.word();
+
         List<IString> leftChildren = Generics.newLinkedList();
         List<IString> rightChildren = Generics.newLinkedList();
         
