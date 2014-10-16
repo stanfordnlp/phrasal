@@ -15,7 +15,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.Dependencies;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.util.Filter;
+import java.util.function.Predicate;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -24,7 +24,7 @@ public class TypedDependencyChains {
    MaltParserInterface mpi;
    TokenizerFactory<CoreLabel> ptbtokf;
    Morphology morpha;
-   Filter<String> puncFilter;
+   Predicate<String> puncFilter;
 
    public TypedDependencyChains()  {
      try {
@@ -60,7 +60,7 @@ public class TypedDependencyChains {
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
 
       for (TypedDependency tdep : typeDeps) {
-        if (puncFilter.accept(wordOnly(tdep.gov().toString())) && puncFilter.accept(wordOnly(tdep.dep().toString()))) {
+        if (puncFilter.test(wordOnly(tdep.gov().toString())) && puncFilter.test(wordOnly(tdep.dep().toString()))) {
           filteredDeps.add(tdep);
         }
       }

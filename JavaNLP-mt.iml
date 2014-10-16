@@ -1,3 +1,291 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module classpath="eclipse" classpath-dir="$MODULE_DIR$" type="JAVA_MODULE" version="4" />
+<module type="JAVA_MODULE" version="4">
+  <component name="EclipseModuleManager">
+    <libelement value="jar://$MODULE_DIR$/lib/create_phrasedb.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/terp.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib-research/pinyin4j-2.5.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib-research/jopt-simple.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib-research/jsr305.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/optimize_terp.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-annotations.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-client.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-continuation.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-deploy.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-http.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-io.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-jaas.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-jmx.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-jndi.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-plus.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-proxy.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-rewrite.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-security.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-server.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-servlet.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-servlets.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-util.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-webapp.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/jetty-xml.jar!/" />
+    <src_description expected_position="0">
+      <src_folder value="file://$MODULE_DIR$/src" expected_position="0" />
+      <src_folder value="file://$MODULE_DIR$/src-research" expected_position="1" />
+      <src_folder value="file://$MODULE_DIR$/test/src" expected_position="2" />
+    </src_description>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/classes" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src-research" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test/src" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="JavaNLP-more" exported="" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="module-library">
+      <library name="create_phrasedb.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/create_phrasedb.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://C:/cygwin/home/daniel/terp.v1/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="terp.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/terp.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module" module-name="JavaNLP-core" />
+    <orderEntry type="module-library">
+      <library name="pinyin4j-2.5.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib-research/pinyin4j-2.5.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/libsrc/pinyin4j-2.5.0.zip!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module" module-name="JavaNLP-rte" />
+    <orderEntry type="module-library">
+      <library name="jopt-simple.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib-research/jopt-simple.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/libsrc/jopt-simple-4.3-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jsr305.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib-research/jsr305.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="optimize_terp.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/optimize_terp.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-annotations.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-annotations.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-client.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-client.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-continuation.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-continuation.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-deploy.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-deploy.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-http.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-http.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-io.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-io.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-jaas.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-jaas.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-jmx.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-jmx.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-jndi.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-jndi.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-plus.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-plus.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-proxy.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-proxy.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-rewrite.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-rewrite.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-security.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-security.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-server.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-server.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-servlet.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-servlet.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-servlets.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-servlets.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-util.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-util.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-webapp.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-webapp.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jetty-xml.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/jetty-xml.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>
 
