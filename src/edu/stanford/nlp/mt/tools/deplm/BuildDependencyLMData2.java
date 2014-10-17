@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -49,6 +50,9 @@ public class BuildDependencyLMData2 {
     Map<String,Integer> optionArgDefs = Generics.newHashMap();
     optionArgDefs.put("input", 1); 
     optionArgDefs.put("outdir", 1);
+    optionArgDefs.put("alignment", 1);
+    optionArgDefs.put("sourceTokens", 1);
+    optionArgDefs.put("targetTokens", 1);
     return optionArgDefs;
   }
   
@@ -84,7 +88,7 @@ public class BuildDependencyLMData2 {
     
   }
   
-  private static void updateCounts(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies) throws IOException {
+  private static void updateCounts(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, SymmetricalWordAlignment alignment) throws IOException {
 
     for (int gov : dependencies.keySet()) {
       
@@ -120,10 +124,20 @@ public class BuildDependencyLMData2 {
           String word = dependencies.get(dep).first.word().toLowerCase();
           if (TokenUtils.isPunctuation(word))
             continue;
-          if (dep < gov) {
-            leftChildren.add(new IString(word));
+          if (alignment != null && alignment.e2f(gov - 1).isEmpty()) {
+            /* Add a FRAG training example. */
+            IString depToken = new IString(word); 
+            IString headToken = FRAG_TOKEN;
+            
+            incrementHeadCount(depToken, headToken);
+            incrementChildCount(depToken, START_TOKEN, headToken, ROOT_DIR_TOKEN);
+            incrementChildCount(END_TOKEN, depToken, headToken, ROOT_DIR_TOKEN);
           } else {
-            rightChildren.add(new IString(word));
+            if (dep < gov) {
+              leftChildren.add(new IString(word));
+            } else {
+              rightChildren.add(new IString(word));
+            }
           }
         }
         
@@ -160,14 +174,29 @@ public class BuildDependencyLMData2 {
   
   public static void main(String[] args) throws IOException {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
-    String sourceTokens = PropertiesUtils.get(options, "input", null, String.class);
+    String dependenciesFilename = PropertiesUtils.get(options, "input", null, String.class);
     String outdirPath = PropertiesUtils.get(options, "outdir", ".", String.class);
-    //String headDepLMFilename = outdirPath + File.separator + "deplm.head.data";
+    String alignmentFilename = PropertiesUtils.get(options, "alignment", null, String.class);
+    String sourceTokensFilename = PropertiesUtils.get(options, "sourceTokens", null, String.class);
+    String targetTokensFilename = PropertiesUtils.get(options, "targetTokens", null, String.class);
     String rightDepLMFilename = outdirPath + File.separator + "deplm.nonevents";
     String leftDepLMFilename = outdirPath + File.separator + "deplm.data";
 
+    /* Include alignment information and generate a "FRAG" tuple for each unaligned word instead of the real one. */
+    boolean includeAlignment = (alignmentFilename != null && sourceTokensFilename != null);
 
+    LineNumberReader alignmentReader = null;
+    LineNumberReader sourceTokensReader = null;
+    LineNumberReader targetTokensReader = null;
 
+    
+    if (includeAlignment) {
+      alignmentReader = IOTools.getReaderFromFile(alignmentFilename);
+      sourceTokensReader = IOTools.getReaderFromFile(sourceTokensFilename);
+      targetTokensReader = IOTools.getReaderFromFile(targetTokensFilename);
+    }
+    
+    
     File leftDepLMFile = new File(leftDepLMFilename);
     if (!leftDepLMFile.exists())
       leftDepLMFile.createNewFile();
@@ -177,26 +206,29 @@ public class BuildDependencyLMData2 {
     if (!rightDepLMFile.exists())
       rightDepLMFile.createNewFile();
     
-    //File headDepLMFile = new File(headDepLMFilename);
-    //if (!headDepLMFile.exists())
-    //  headDepLMFile.createNewFile();
+ 
     
 
     FileWriter leftFW = new FileWriter(leftDepLMFile.getAbsoluteFile());
     FileWriter rightFW = new FileWriter(rightDepLMFile.getAbsoluteFile());
-    //FileWriter headFW = new FileWriter(headDepLMFile.getAbsoluteFile());
-
+ 
     
     lmWriter = new BufferedWriter(leftFW);
-    //headLmWriter = new BufferedWriter(headFW);
     noEventWriter = new BufferedWriter(rightFW);
 
-    LineNumberReader inputReader = IOTools.getReaderFromFile(sourceTokens);
+    LineNumberReader inputReader = IOTools.getReaderFromFile(dependenciesFilename);
 
     
     HashMap<Integer, Pair<IndexedWord, List<Integer>>>  dependencies =  null;
     while ((dependencies =  DependencyUtils.getDependenciesFromCoNLLFileReader(inputReader, false, true)) != null) {
-      updateCounts(dependencies);
+      
+      SymmetricalWordAlignment alignment = null;
+      
+      if (includeAlignment) {
+        alignment = new SymmetricalWordAlignment(sourceTokensReader.readLine(), targetTokensReader.readLine(), alignmentReader.readLine());
+      }
+      
+      updateCounts(dependencies, alignment);
     }
     
     inputReader.close();
