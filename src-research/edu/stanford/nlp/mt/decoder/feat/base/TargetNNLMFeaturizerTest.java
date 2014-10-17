@@ -96,7 +96,7 @@ public class TargetNNLMFeaturizerTest {
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
     assertEquals("余下 servant 违抗 依纪 严处 putting do prohibits the , any if be law . , , to would ||| LM: -1.2442E3 LinearDistortion: -75 ||| -6.3712E2", translations.get(0).toStringNoLatticeId());
     assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden any if be law . , , to would ||| LM: -1.2466E3 LinearDistortion: -73 ||| -6.379E2", translations.get(1).toStringNoLatticeId());
@@ -116,7 +116,7 @@ public class TargetNNLMFeaturizerTest {
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
     
     assertEquals("余下 made 违抗 依纪 严处 if they do just that must be forbidden , any servant , law . would ||| LM: -1.2346E3 LinearDistortion: -73 ||| -6.319E2", translations.get(0).toStringNoLatticeId());
@@ -140,13 +140,13 @@ public class TargetNNLMFeaturizerTest {
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     
     /* CubePrunningDecoder */
     InfererBuilder<IString, String> cubeInfererBuilder = getInferer("cube");
     Inferer<IString, String> cubeDecoder = cubeInfererBuilder.build();
     List<RichTranslation<IString, String>> cubeTranslations = cubeDecoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     
     for (int i = 0; i < translations.size(); i++) {
       assertEquals(true, translations.get(i).toStringNoLatticeId().equals(cubeTranslations.get(i).toStringNoLatticeId()));

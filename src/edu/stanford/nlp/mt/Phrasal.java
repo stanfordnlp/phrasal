@@ -43,7 +43,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
@@ -284,6 +283,7 @@ public class Phrasal {
   private String nbestListOutputType = "moses";
   private PrintStream nbestListWriter;
   private int nbestListSize;
+  private boolean distinctNbest = false;
   
   /**
    * Internal alignment options
@@ -376,10 +376,6 @@ public class Phrasal {
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
-    if (config.containsKey(DISTINCT_NBEST_LIST_OPT))
-      if (!AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS)
-        AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = Boolean.parseBoolean(config.get(
-            DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
       ConcreteRule.setLinearDistortionType(config.get(
           LINEAR_DISTORTION_TYPE).get(0));
@@ -426,8 +422,8 @@ public class Phrasal {
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
         InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
      
-     wrapBoundary  = config.containsKey(WRAP_BOUNDARY) ? 
-         Boolean.valueOf(config.get(WRAP_BOUNDARY).get(0)) : false;
+    wrapBoundary  = config.containsKey(WRAP_BOUNDARY) ? 
+        Boolean.valueOf(config.get(WRAP_BOUNDARY).get(0)) : false;
          
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
@@ -897,6 +893,10 @@ public class Phrasal {
       nbestListSize = -1;
       nbestListWriter = null;
     }
+    
+    if (config.containsKey(DISTINCT_NBEST_LIST_OPT)) {
+      distinctNbest = true;
+    }
         
     // Determine if we need to generate an alignment file
     List<String> alignmentOpt = config.get(ALIGNMENT_OUTPUT_FILE);
@@ -1183,7 +1183,7 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations = Generics.newArrayList(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 
-          outputSpace, outputSpace.getAllowableSequences(), numTranslations);
+          outputSpace, outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
 
       // Return an empty n-best list
       if (translations == null) translations = Generics.newArrayList(1);
