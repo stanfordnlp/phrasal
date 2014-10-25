@@ -90,11 +90,12 @@ wins_a = wins[condition_a][condition_b]
 wins_b = wins[condition_b][condition_a]
 denom = wins_a + wins_b
 
+print '# ratings:',n_ratings
 ew_a = float(wins_a) / float(denom)
 print 'Expected wins %s > %s: %.3f' % (condition_a, condition_b, ew_a)
 ew_b = float(wins_b) / float(denom)
 print 'Expected wins %s > %s: %.3f' % (condition_b, condition_a, ew_b)
-
+print '\# ties',wins[condition_a][condition_a]+wins[condition_b][condition_b]
 
 #wins_imt = wins['imt']['pe']
 #denom = wins['imt']['pe'] + wins['pe']['imt']
