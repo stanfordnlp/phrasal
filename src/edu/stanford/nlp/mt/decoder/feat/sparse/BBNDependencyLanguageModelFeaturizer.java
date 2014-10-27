@@ -72,12 +72,13 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
 
   }
 
-  public void scoreFrag(List<FeatureValue<String>> features, IString token, boolean scoreEmptyChildren) {
+  @Override
+  public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, boolean scoreEmptyChildren) {
     String str = token.word() + FRAG_SUFFIX;
     Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
     seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
     double rootScore = rootLM.score(seq, 1, null).getScore();
-    features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
+    lmScores.add(rootScore);
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
     if (this.useFragPenalty)
       features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
@@ -88,12 +89,13 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
       childSeq = Sequences.wrapStartEnd(childSeq, rootLM.getStartToken(), rootLM.getEndToken());
       double leftScore = leftLM.score(childSeq, 2, null).getScore();
       double rightScore = rightLM.score(childSeq, 2, null).getScore();
-      features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
-      features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
+      lmScores.add(leftScore);
+      lmScores.add(rightScore);
     }
   }
 
-  public void scoreRight(List<FeatureValue<String>> features, IString token, DepLMSubState subState) {
+  @Override
+  public void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState) {
     Sequence<IString> seq = new SimpleSequence<IString>(token);
     int start = 0;
     if (subState.getRightLMState() == null) {
@@ -104,40 +106,41 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
     LMState lmState = rightLM.score(seq, start, subState.getRightLMState());
     double rightScore = lmState.getScore();
     subState.setRightLMState(lmState);
-    features.add(new FeatureValue<String>(FEAT_NAME, rightScore));
+    lmScores.add(rightScore);    
     if ( ! token.equals(rightLM.getEndToken()))
         features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
   }
   
-  public void scoreRoot(List<FeatureValue<String>> features, IString token) {
+  @Override
+  public void scoreRoot(List<FeatureValue<String>> features, List<Double> lmScores, IString token) {
     String str = token.word() + ROOT_SUFFIX;
     Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
     seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
     double rootScore = rootLM.score(seq, 1, null).getScore();
-    features.add(new FeatureValue<String>(FEAT_NAME, rootScore));
+    lmScores.add(rootScore);    
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
   }
   
-  public void scoreLeft(List<FeatureValue<String>> features, IString token, DepLMSubState subState) {
+  @Override
+  public void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState) {
     Collections.reverse(subState.getLeftChildren());
     Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
     seq = Sequences.wrapStart(seq, new IString(token.word() + "<HEAD>"));
     seq = Sequences.wrapStartEnd(seq, leftLM.getStartToken(), leftLM.getEndToken());
     double leftScore = leftLM.score(seq, 2, null).getScore();
-    features.add(new FeatureValue<String>(FEAT_NAME, leftScore));
+    lmScores.add(leftScore);    
     features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * subState.getLeftChildren().size()));
     subState.getLeftChildren().clear();
   }
 
   @Override
-  public void scoreRightEnd(List<FeatureValue<String>> features,
-      DepLMSubState subState) {
-    scoreRight(features, rightLM.getEndToken(), subState);
+  public void scoreRightEnd(List<FeatureValue<String>> features, List<Double> lmScores, DepLMSubState subState) {
+    scoreRight(features, lmScores, rightLM.getEndToken(), subState);
   }
 
   @Override
-  public void scoreUnaligned(List<FeatureValue<String>> features, IString token) {
-    scoreFrag(features, token, true);
+  public void scoreUnaligned(List<FeatureValue<String>> features,  List<Double> lmScores, IString token) {
+    scoreFrag(features, lmScores, token, true);
   }
   
 }

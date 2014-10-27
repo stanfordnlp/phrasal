@@ -57,17 +57,17 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   public static String FRAG_SUFFIX = "<FRAG>";
 
   
-  public abstract void scoreLeft(List<FeatureValue<String>> features, IString token, DepLMSubState subState);
+  public abstract void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState);
   
-  public abstract void scoreRight(List<FeatureValue<String>> features, IString token, DepLMSubState subState);
+  public abstract void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState);
 
-  public abstract void scoreRightEnd(List<FeatureValue<String>> features, DepLMSubState subState);
+  public abstract void scoreRightEnd(List<FeatureValue<String>> features,  List<Double> lmScores, DepLMSubState subState);
   
-  public abstract void scoreUnaligned(List<FeatureValue<String>> features, IString token);
+  public abstract void scoreUnaligned(List<FeatureValue<String>> features,  List<Double> lmScores, IString token);
   
-  public abstract void scoreFrag(List<FeatureValue<String>> features, IString token, boolean scoreEmptyChildren);
+  public abstract void scoreFrag(List<FeatureValue<String>> features,  List<Double> lmScores, IString token, boolean scoreEmptyChildren);
   
-  public abstract void scoreRoot(List<FeatureValue<String>> features, IString token);
+  public abstract void scoreRoot(List<FeatureValue<String>> features,  List<Double> lmScores, IString token);
   
   /*
    * Returns true if a source token was already translated
@@ -192,7 +192,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
    */
   
   private void cleanUp(DepLMState state, Featurizable<IString, String> f, int tgtIndex, 
-      List<FeatureValue<String>> features) {
+      List<FeatureValue<String>> features, List<Double> lmScores) {
     
     final int startPos = f.sourcePosition;
     final int endPos = startPos + f.sourcePhrase.size();
@@ -226,9 +226,9 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         }
         for (IString child : orphanedSubState.getLeftChildren()) {
           if (isRoot) {
-            scoreFrag(features, child, false);
+            scoreFrag(features, lmScores, child, false);
           } else if (foundLeftHead) {
-            scoreRight(features, child, subState);
+            scoreRight(features,lmScores, child, subState);
           } else {
             subState = state.getSubState(sourceHeadIndex);
             if (subState == null)
@@ -256,6 +256,8 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<Double> lmScores = Generics.newLinkedList();
+    
     
     // Lookup the state
     DepLMState prevState = f.prior == null ? null : (DepLMState) f.prior.getState(this);
@@ -267,7 +269,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       //clean up orphaned substates that are a result of
       //unaligned source tokens
-      cleanUp(state, f, tgtIndex, features);
+      cleanUp(state, f, tgtIndex, features, lmScores);
       
       
       IString tgtToken = f.targetPhrase.get(i);
@@ -275,7 +277,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
         // Unaligned
-        scoreUnaligned(features, tgtToken);
+        scoreUnaligned(features, lmScores, tgtToken);
         continue;
       }
       
@@ -303,14 +305,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       // True if a target content word is aligned to source punctuation
       if (sourceHeadIndex == null) {
-        scoreUnaligned(features, tgtToken);
+        scoreUnaligned(features, lmScores, tgtToken);
         continue;
       }
 
       //Special case: force 1:1 alignments, if the source token is already aligned to some other target token
       //then ignore the current token
       if (state.getAlignedSourceIndices().get(sourceDepIndex)) {
-        scoreUnaligned(features, tgtToken);
+        scoreUnaligned(features, lmScores, tgtToken);
         continue;
       }
       
@@ -321,7 +323,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       //check for root
       if (sourceHeadIndex < 0) {
-       scoreRoot(features, tgtToken);
+       scoreRoot(features, lmScores, tgtToken);
       } else {
         //check if head was already put down
         if (isSourceTokenScorable(sourceHeadIndex, tgtIndex, f, state.getAlignedSourceIndices())) {
@@ -329,7 +331,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
           //try to score right
           DepLMSubState subState = state.getSubState(sourceHeadIndex);
           if (subState != null && subState.getHeadToken() != null) {
-            scoreRight(features, tgtToken, subState);
+            scoreRight(features, lmScores, tgtToken, subState);
           } else {
             
             // Walk up the source dependency tree until
@@ -358,9 +360,9 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
             }
             
             if (isRoot) {
-              scoreFrag(features, tgtToken, false);
+              scoreFrag(features, lmScores, tgtToken, false);
             } else if (foundLeftHead) {
-              scoreRight(features, tgtToken, subState);
+              scoreRight(features, lmScores, tgtToken, subState);
             } else {
               subState = state.getSubState(sourceHeadIndex);
               if (subState == null)
@@ -390,7 +392,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       
       //score left children of current token
-      scoreLeft(features, tgtToken, subState);
+      scoreLeft(features, lmScores, tgtToken, subState);
     }
 
     //check which substates can be deleted
@@ -410,7 +412,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       if (del) {
         if (state.getSubState(i).getHeadToken() != null) {
           //score right end token
-          scoreRightEnd(features, state.getSubState(i));
+          scoreRightEnd(features, lmScores, state.getSubState(i));
         }
         //remove this head index from state
         state.setSubState(i, null);
@@ -418,8 +420,33 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     }
     
     //clean up
-    cleanUp(state, f, f.targetPosition + f.targetPhrase.size(), features);
+    cleanUp(state, f, f.targetPosition + f.targetPhrase.size(), features, lmScores);
 
+    //compute new average
+    
+    double newLmScore = 0.0;
+    for (double score : lmScores) {
+      newLmScore += score;
+    }
+    
+    int scoredTokens = state.scoredTokens;
+    //TODO: Store token count somewhere else such that we don't have
+    // to loop and build a new list
+    for (FeatureValue<String> fv : features) {
+      if (fv.name.equals(FEAT_NAME_WORD_PENALTY)) {
+        scoredTokens += fv.value;
+      }
+    }
+    
+    features = Generics.newLinkedList();
+    
+    double oldLmScore = state.f * state.scoredTokens;
+    double newAverageLmScore = scoredTokens == 0 ? 0.0 : ((oldLmScore + newLmScore) / scoredTokens);
+    double delta = newAverageLmScore - state.f;
+    
+    features.add(new FeatureValue<String>(FEAT_NAME, delta));
+    state.f = newAverageLmScore;
+    state.scoredTokens = scoredTokens;
     
     f.setState(this, state);
     
@@ -439,9 +466,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     private HashMap<Integer, DepLMSubState> subStates;
     private CoverageSet alignedSourceIndices;
     
+    private int scoredTokens;
+    private double f;
+    
     public DepLMState() {
       this.subStates = new HashMap<Integer, DepLMSubState>();
       this.setAlignedSourceIndices(new CoverageSet());
+      this.scoredTokens = 0;
+      this.f = 0.0;
     }
     
     @Override
@@ -454,6 +486,10 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         return false;
 
       DepLMState oState = (DepLMState) other;
+      
+      if (oState.scoredTokens != this.scoredTokens) {
+        return false;
+      }
       
       if (oState.getAlignedSourceIndices().cardinality() != this.getAlignedSourceIndices().cardinality())
         return false;
@@ -499,7 +535,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     @Override
     public int hashCode() {
       SortedSet<Integer> keys = new TreeSet<Integer>(this.getSubStates().keySet());
-      int sz = this.getAlignedSourceIndices().size();
+      int sz = this.getAlignedSourceIndices().size() + 1;
       for (int i : keys) {
         if (this.getSubState(i) != null)
           sz++;
@@ -508,7 +544,8 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       if (sz == 0)
         return 0;
       int arr[] = new int[sz];
-      int j = 0;
+      arr[0] = this.scoredTokens;
+      int j = 1;
       for (int i: this.getAlignedSourceIndices()) {
         arr[j] = i;
         j++;
@@ -528,6 +565,8 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         copy.setSubState(i, this.subStates.get(i) != null ? this.subStates.get(i).clone() : null);
       }
       copy.getAlignedSourceIndices().or(this.getAlignedSourceIndices());
+      copy.f = this.f;
+      copy.scoredTokens = this.scoredTokens;
       return copy;
     }
 
@@ -549,13 +588,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     private List<IString> leftChildren;
     private IString headToken;
     
+
+    
     
     public DepLMSubState() {
       this.rightLMState = null;
       this.leftChildren = new LinkedList<IString>();
       this.headToken = null;
       this.rightSibling = null;
-      
     }
     
     public void setHeadToken(IString token) {
