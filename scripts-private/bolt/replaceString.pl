@@ -6,31 +6,36 @@ use Getopt::Long;
 my $replace_all = '';
 GetOptions ('all' => \$replace_all);
 
-die "Usage: $0 [--all] str_to_replace value_to_insert < input > output" if @ARGV != 2;
+die "Usage: $0 [--all] str_to_replace1 value_to_insert1 [str2 val2 ...] < input > output" 
+    if scalar(@ARGV)==0 || scalar(@ARGV)%2 != 0;
 
-my $stringToFind = shift;
-my $replacement = shift;
+my %repl = ();
+while(scalar(@ARGV)>0) {
+    my $from = shift @ARGV;
+    my $to = shift @ARGV;
+    $repl{$from} = $to;
+}   
 
 binmode(STDIN, ":utf8");
 binmode(STDOUT, ":utf8");
 binmode(STDERR, ":utf8");
 
-my $replaced_already = 0;
 while(<STDIN>) {
-    if($replaced_already && !$replace_all) { 
-	print; 
-    }
-    else {
-	my $ind = index($_, $stringToFind);
-	if($ind == -1) {
-	    print;
-	}
-	else {
+    foreach my $from (keys %repl) {
+	my $newstr = $repl{$from};
+
+	while(1) {
+	    my $ind = index($_, $from);
+	    last if($ind == -1);
+	    
 	    my $before = substr($_, 0, $ind);
-	    my $after  = substr($_, ($ind+length($stringToFind)));
-	    my $newStr = $before . $replacement . $after;
-	    print $newStr;
-	    $replaced_already=1;
+	    my $after  = substr($_, ($ind+length($from)));
+	    $_ = $before . $newstr . $after;
+	    if(!$replace_all) {
+		delete $repl{$from};
+		last;
+	    }
 	}
     }
+    print;
 }
