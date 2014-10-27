@@ -1,6 +1,6 @@
 ## PHRASAL EXPERIMENTAL MANAGEMENT SYSTEM
 
-phrasal.sh supports a passive experimental management system (EMS). The EMS records to the results of experimental runs, but does not support active configuration of runs. 
+phrasal.sh supports a passive experimental management system (EMS). The EMS records the results of experimental runs, but does not support active configuration of runs. 
 
 The EMS reporting feature requires a web server that supports server-side includes (SSI). At Stanford we use Apache.
 
@@ -10,10 +10,12 @@ To configure the reporting feature, follow these steps:
 
   git clone https://github.com/christianbach/tablesorter.git
 
-2) In phrasal.sh:
+2) In your vars file:
  a) Change the REPORTING_DIR variable to (1). Results, ini, and vars files will be copied to this directory. 
  b) Set the RESULTS_FILE variable. phrasal.sh will write experimental results to this file. IMPORTANT: this file should be somewhere under the web server root, i.e., a path accessible by the server.
 
-3) Copy phrasal-ems.html to (1). Open the file and search for "TODO". Update the "include" statement to the path of RESULTS_FILE.
+3) Copy phrasal-ems.html to (1). Open the file and search for "TODO". Update the "include" statement to the RESULTS_FILE path.
 
 4) You can create different views by repeating (2b) and (3).
+
+5) Optionally, you may also set the EMAIL_ADDRESS variable in phrasal.sh to a comma-separated list of email addresses to receive notification when a run of phrasal.sh completes successfully.

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Takes as input a file containing records (lines) with fields separated by
+# " ||| " (output of sort_by_bleu, plus phrase tables and other things) and
+# outputs it reformatted with the fields on separate lines and records
+# separated by 2 newlines.
+
+awk '                      
+BEGIN {
+  FS = " [|][|][|] ";
+  OFS = "\n";
+  ORS = "\n\n"
+}
+{ $1 = $1; print }
+'

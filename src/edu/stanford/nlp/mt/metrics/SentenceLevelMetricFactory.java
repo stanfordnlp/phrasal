@@ -63,6 +63,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleun-ter/2") || scoreMetricStr.equals("bleu-ter/2")) {
       return "bleu-ter/2";
     
+    } else if (scoreMetricStr.equals("bleu-ter-len/3")) {
+      return "bleu-ter/2";
+      
     } else if (scoreMetricStr.equals("bleunX2ter")) {
       throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
     
@@ -159,6 +162,14 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{0.5, 0.5}, metrics);
       
+    } else if (scoreMetricStr.equals("bleu-ter-len/3")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(3);
+      metrics.add(new BLEUGain<IString,String>());
+      metrics.add(new SLTERMetric<IString,String>());
+      metrics.add(new LengthMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{1.0/3.0, 1.0/3.0, 1.0/3.0}, metrics);
+    
     } else if (scoreMetricStr.equals("bleunX2ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
