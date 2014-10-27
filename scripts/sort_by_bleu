@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+#
+# Takes as input three files (source sentences, reference translations,
+# candidate translations) in one-sentence-per-line format and collates them
+# into one file containing all three, sorted in ascending order by sentence-
+# level BLEU.
+# 
+# Example usage:
+#   BASE=/scr/nlp/data/gale/BOLT/zhen-2014
+#   SRC=$BASE/corpora/eval/sys_sel_websmscht_v2/src
+#   REF=$BASE/corpora/eval/sys_sel_websmscht_v2/ref
+#   TRANS=$BASE/translate/sys_sel_websmscht_v2.tune_v6.baseline4.tune_v6.trans 
+#   projects/mt/scripts/sort_by_bleu $SRC $REF $TRANS
+#
+# For more human-readable output, pipe this to separate_lines.
+
+set -o errexit
+
+if [ "$#" -ne 3 ]; then
+    echo "Usage: `basename $0` <src> <ref> <trans>"
+    echo "   <src>   - File containing the original text, one sentence per line"
+    echo "   <ref>   - File containing the reference translations"
+    echo "   <trans> - File containing the translations to evaluate"
+    exit 1
+fi
+
+src=$1
+ref=$2
+trans=$3
+output_scores=$(mktemp -dt "$(echo $0 | sed 's/\//_/g').XXXXX")/scores
+java edu.stanford.nlp.mt.tools.SentenceLevelEvaluation "$ref" < "$trans" > "$output_scores"
+
+paste "$output_scores" "$src" "$ref" "$trans" | sed 's/\t/ ||| /g' | sort -n

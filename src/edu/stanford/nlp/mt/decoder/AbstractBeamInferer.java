@@ -37,10 +37,7 @@ import edu.stanford.nlp.util.Generics;
 abstract public class AbstractBeamInferer<TK, FV> extends
     AbstractInferer<TK, FV> {
 
-  static public final String DEBUG_OPT = "AbstractBeamInfererDebug";
-  static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_OPT, "false"));
-  static public boolean DISTINCT_SURFACE_TRANSLATIONS = false;
+  private static final boolean DEBUG = false;
   
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
@@ -61,9 +58,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size);
+        outputSpace, targets, size, distinct);
   }
 
   /**
@@ -100,7 +97,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
 
     // filter unknown words
     if (filterUnknownWords) {
@@ -131,12 +128,20 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // Extract
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
+    
+    // Limit the number of popped items in the case of distinct nbest lists.
+    // We want the algorithm to terminate eventually....
+    final int maxItemsToExtract = distinct ? size * 5 : Integer.MAX_VALUE;
     int numExtracted = 0;
     long nbestId = 0;
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
+      if (numExtracted >= maxItemsToExtract) {
+        break;
+      }
+      // DTU stuff
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
-
+      
       // TODO(spenceg): This is very inefficient. Reconstruct the derivation
       // from the lattice path since the current n-best list extractor
       // does not set the parent references when it traverses the lattice. These
@@ -176,7 +181,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       
       ++numExtracted;
       
-      if (DISTINCT_SURFACE_TRANSLATIONS) {
+      if (distinct) {
         if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
           // Seen a higher-scoring derivation with this target string before
           continue;

@@ -21,7 +21,7 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.Dependencies;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.util.Filter;
+import java.util.function.Predicate;
 
 /**
  * Tool for interactively inspecting dependency chains
@@ -39,7 +39,7 @@ public class InteractiveDependencyChains {
     MaltParserInterface mpi = new MaltParserInterface(args[0]);
     TokenizerFactory<CoreLabel> ptbtokf = PTBTokenizer.factory(false, false);
     Morphology morpha = new Morphology();
-    Filter<String> puncFilter = new PennTreebankLanguagePack().punctuationWordRejectFilter();
+    Predicate<String> puncFilter = new PennTreebankLanguagePack().punctuationWordRejectFilter();
 
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       List<CoreLabel> words = ptbtokf.getTokenizer(new StringReader(line)).tokenize();
@@ -55,7 +55,7 @@ public class InteractiveDependencyChains {
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
 
       for (TypedDependency tdep : typeDeps) {
-        if (puncFilter.accept(wordOnly(tdep.gov().toString())) && puncFilter.accept(wordOnly(tdep.dep().toString()))) {
+        if (puncFilter.test(wordOnly(tdep.gov().toString())) && puncFilter.test(wordOnly(tdep.dep().toString()))) {
           filteredDeps.add(tdep);
         }
       }

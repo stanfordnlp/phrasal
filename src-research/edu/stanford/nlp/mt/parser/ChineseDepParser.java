@@ -18,7 +18,7 @@ import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.GrammaticalStructureFactory;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
-import edu.stanford.nlp.util.Filter;
+import java.util.function.Predicate;
 import edu.stanford.nlp.util.Filters;
 
 /**
@@ -46,7 +46,7 @@ public class ChineseDepParser {
     pp.parser = LexicalizedParser.loadModel(defaultModel);
     pp.tLP = pp.parser.getOp().tlpParams.treebankLanguagePack();
 
-    Filter<String> puncWordFilter;
+    Predicate<String> puncWordFilter;
     puncWordFilter = Filters.acceptFilter();
     pp.gsf = pp.tLP.grammaticalStructureFactory(puncWordFilter);
 

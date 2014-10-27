@@ -32,7 +32,7 @@ def get_pairwise(names, ranks):
         pair_result.append((pn[0], pn[1], pw))
     return pair_result
 
-def rankings(fh):
+def rankings(fh, num_systems):
     """Reads in a CSV file fh, returning each 5-way ranking."""
 
     ### Parsing csv file and return system names and rank(1-5) for each sentence
@@ -42,16 +42,16 @@ def rankings(fh):
         judgeID = row.get('judgeId')
         systems = []
         ranks = []
-        for num in range(1, 6):
+        for num in xrange(1, num_systems+1):
             systems.append(row.get('system%dId' % num))
             ranks.append(int(row.get('system%drank' % num)))
 
         if not -1 in ranks:
             yield (systems, ranks, sentID, judgeID)
 
-def pairs(fh):
+def pairs(fh, num_systems):
     """Reads in a CSV file fh, returning pairwise judgments."""
-    for systems, ranks, sentID, judgeID in rankings(fh):
+    for systems, ranks, sentID, judgeID in rankings(fh, num_systems):
         for pair in get_pairwise(systems, ranks):
             yield pair + (sentID, judgeID)
             
@@ -80,13 +80,14 @@ def main():
     """
     """
     args = sys.argv[1:]
-    if len(args) != 1:
-        sys.stderr.write('Usage: python %s csv_file%s' % (basename(sys.argv[0]), os.linesep))
+    if len(args) != 2:
+        sys.stderr.write('Usage: python %s num_systems csv_file%s' % (basename(sys.argv[0]), os.linesep))
         sys.exit(-1)
     sys.stderr.write('Converting 1-indexing to 0-indexing' + os.linesep)
     print '%s,%s,%s,%s,%s' % ('system1', 'system2', 'cmp', 'segmentId', 'judgeId')
-    with open(args[0]) as infile:
-        for pair in pairs(infile):
+    num_systems = int(args[0])
+    with open(args[1]) as infile:
+        for pair in pairs(infile, num_systems):
             sys1 = pair[0]
             sys2 = pair[1]
             compare = pair[2]

@@ -1,0 +1,9 @@
+Code in this directory is used in the EMNLP14 and thesis analyses. It is collected from the following sources:
+
+  compute_agreement_scores.py  https://github.com/cfedermann/Appraise
+  wmtformat.py                 https://github.com/keisks/wmt-trueskill
+  mfas_solver.py               https://github.com/alopez/wmt-ranking
+
+
+Spence
+18 October 2014
