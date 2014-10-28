@@ -13,7 +13,9 @@ import java.util.Properties;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.tools.deplm.BuildDependencyLMData2.LocalWordClassMap;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -26,6 +28,8 @@ import edu.stanford.nlp.util.StringUtils;
 public class DependencyLanguageModelScoreNBest {
 
   private static LanguageModel<IString> DEPLM;
+  private static LocalWordClassMap classMap;
+  
   
   
   /**
@@ -40,6 +44,7 @@ public class DependencyLanguageModelScoreNBest {
     optionArgDefs.put("scoreFrag", 0);
     optionArgDefs.put("scoreStop", 0);
     optionArgDefs.put("transitive", 0);
+    optionArgDefs.put("classMap", 1);
     return optionArgDefs;
   }
   
@@ -52,7 +57,10 @@ public class DependencyLanguageModelScoreNBest {
     String nBestList = PropertiesUtils.get(options, "nBestList", null, String.class);
     String dependencies = PropertiesUtils.get(options, "dependencies", null, String.class);
     String lm = PropertiesUtils.get(options, "lm", null, String.class);
+    String classMapFilename = PropertiesUtils.get(options, "classMap", null, String.class);
 
+    
+    
     boolean scoreFrag = PropertiesUtils.getBool(options, "scoreFrag", false);
     boolean scoreStop = PropertiesUtils.getBool(options, "scoreStop", false);
     boolean transitive = PropertiesUtils.getBool(options, "transitive", false);
@@ -60,9 +68,18 @@ public class DependencyLanguageModelScoreNBest {
     
     
     if (sourceTokens == null || nBestList == null || dependencies == null || lm == null) {
-      System.err.println("java " + DependencyLanguageModelScoreNBest.class.getCanonicalName() + " -sourceTokens file -nBestList file -dependencies file -lm file");
+      System.err.println("java " + DependencyLanguageModelScoreNBest.class.getCanonicalName() + " -sourceTokens file -nBestList file -dependencies file -lm file [-classMap file]");
       return;
     }
+    
+    if (classMapFilename != null) {
+      System.err.println("Loading word class mapping from " + classMapFilename);
+      classMap = new LocalWordClassMap();
+      classMap.load(classMapFilename);
+    } else {
+      classMap = null;
+    }
+    
     
     DEPLM = LanguageModelFactory.load(lm);
 
@@ -171,7 +188,13 @@ public class DependencyLanguageModelScoreNBest {
       }
     }
     
-    return DependencyLanguageModelPerplexity2.scoreTree(forwardDependencies, DEPLM, scoreFrag, scoreStop);
+    return DependencyLanguageModelPerplexity2.scoreTree(forwardDependencies, DEPLM, classMap, scoreFrag, scoreStop);
+  }
+  
+  private static class LocalWordClassMap extends AbstractWordClassMap {
+    public LocalWordClassMap() {
+      wordToClass = Generics.newHashMap();
+    }
   }
 
 }

@@ -122,6 +122,11 @@ public class BuildDependencyLMData2 {
         }
           
       } else {
+        
+        if (iw == null) {
+          continue;
+        }
+        
         String headWord = iw.word();
 
         List<IString> leftChildren = Generics.newLinkedList();

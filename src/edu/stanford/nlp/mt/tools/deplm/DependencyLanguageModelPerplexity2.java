@@ -10,6 +10,7 @@ import java.util.List;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -70,9 +71,14 @@ public final class DependencyLanguageModelPerplexity2 {
    }
   
   
-  private static double scoreChild(LanguageModel<IString> lm, IString child, IString sibling, IString head, IString direction) throws IOException {
+  private static double scoreChild(LanguageModel<IString> lm, AbstractWordClassMap classMap, IString child, IString sibling, IString head, IString direction) throws IOException {
     
     head = new IString(head + HEAD_SUFFIX);
+    
+    if (classMap != null && sibling != START_TOKEN) {
+      sibling = classMap.get(sibling);
+    }
+    
     sibling = new IString(sibling + SIBLING_SUFFIX);
 
     List<IString> tokens = new LinkedList<IString>();
@@ -95,10 +101,10 @@ public final class DependencyLanguageModelPerplexity2 {
   }
 
   public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm) throws IOException {
-    return scoreTree(dependencies, lm, true, true);
+    return scoreTree(dependencies, lm, null, true, true);
   }
   
-  public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm, boolean scoreFrag, boolean scoreStop) throws IOException {
+  public static Pair<Double, Integer> scoreTree(HashMap<Integer, Pair<IndexedWord, List<Integer>>> dependencies, LanguageModel<IString> lm, AbstractWordClassMap classMap, boolean scoreFrag, boolean scoreStop) throws IOException {
 
     double score = 0.0;
     int scoredTokens = 0;
@@ -126,9 +132,9 @@ public final class DependencyLanguageModelPerplexity2 {
           IString headToken = gov == 0 ? ROOT_TOKEN : FRAG_TOKEN;
           
           score += scoreHead(depToken, headToken);
-          score += scoreChild(lm, depToken, START_TOKEN, headToken, ROOT_DIR_TOKEN);
+          score += scoreChild(lm, classMap, depToken, START_TOKEN, headToken, ROOT_DIR_TOKEN);
           if (scoreStop)
-            score += scoreChild(lm, END_TOKEN, depToken, headToken, ROOT_DIR_TOKEN);
+            score += scoreChild(lm, classMap, END_TOKEN, depToken, headToken, ROOT_DIR_TOKEN);
           scoredTokens++;
         }
           
@@ -163,7 +169,7 @@ public final class DependencyLanguageModelPerplexity2 {
           if (i > 0)
             score += scoreHead(depToken1, headToken);
           
-          score += scoreChild(lm, depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
+          score += scoreChild(lm, classMap, depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
         }
         scoredTokens += leftChildren.size();
         
@@ -174,7 +180,7 @@ public final class DependencyLanguageModelPerplexity2 {
           IString depToken2 =  (i < rightChildrenCount) ?  rightChildren.get(i) : END_TOKEN;
           if (i > 0)
             score += scoreHead(depToken1, headToken);
-          score += scoreChild(lm, depToken2, depToken1, headToken, RIGHT_DIR_TOKEN);
+          score += scoreChild(lm, classMap, depToken2, depToken1, headToken, RIGHT_DIR_TOKEN);
         }
         scoredTokens += rightChildren.size();
       }
