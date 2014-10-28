@@ -13,7 +13,6 @@ import java.util.Properties;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
-import edu.stanford.nlp.mt.tools.deplm.BuildDependencyLMData2.LocalWordClassMap;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.IOTools;
