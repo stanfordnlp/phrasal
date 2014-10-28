@@ -5,14 +5,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
+import edu.stanford.nlp.classify.LogisticClassifier;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -27,6 +31,8 @@ public class BuildDependencyLMData2 {
   //private static BufferedWriter headLmWriter;
 
   private static BufferedWriter noEventWriter;
+  
+  private static LocalWordClassMap classMap;
 
   private static String HEAD_SUFFIX = "<HEAD>";
   private static String SIBLING_SUFFIX = "<SIB>";
@@ -53,6 +59,7 @@ public class BuildDependencyLMData2 {
     optionArgDefs.put("alignment", 1);
     optionArgDefs.put("sourceTokens", 1);
     optionArgDefs.put("targetTokens", 1);
+    optionArgDefs.put("classMap", 1);
     return optionArgDefs;
   }
   
@@ -72,9 +79,12 @@ public class BuildDependencyLMData2 {
   private static void incrementChildCount(IString child, IString sibling, IString head, IString direction) throws IOException {
     
     head = new IString(head + HEAD_SUFFIX);
+    
+    if (classMap != null && sibling != START_TOKEN) {
+      sibling = classMap.get(sibling);
+    }
     sibling = new IString(sibling + SIBLING_SUFFIX);
 
-    
     lmWriter.write(sibling + " " + direction + " " + head + " " + child);
     lmWriter.write("\n");
 
@@ -181,7 +191,16 @@ public class BuildDependencyLMData2 {
     String targetTokensFilename = PropertiesUtils.get(options, "targetTokens", null, String.class);
     String rightDepLMFilename = outdirPath + File.separator + "deplm.nonevents";
     String leftDepLMFilename = outdirPath + File.separator + "deplm.data";
-
+    String classMapFilename = PropertiesUtils.get(options, "classMap", null, String.class);
+    
+    if (classMapFilename != null) {
+      System.err.println("Loading word class mapping from " + classMapFilename);
+      classMap = new LocalWordClassMap();
+      classMap.load(classMapFilename);
+    } else {
+      classMap = null;
+    }
+    
     /* Include alignment information and generate a "FRAG" tuple for each unaligned word instead of the real one. */
     boolean includeAlignment = (alignmentFilename != null && sourceTokensFilename != null);
 
@@ -238,4 +257,11 @@ public class BuildDependencyLMData2 {
     
   }
 
+  private static class LocalWordClassMap extends AbstractWordClassMap {
+    public LocalWordClassMap() {
+      wordToClass = Generics.newHashMap();
+    }
+  }
+  
+  
 }
