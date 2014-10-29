@@ -271,7 +271,7 @@ public final class IOTools {
       } else if (outputType.equals("bolt")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, false);
       } else if (outputType.equals("nnlm")) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, false);
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, false, true);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());

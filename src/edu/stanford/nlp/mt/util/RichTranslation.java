@@ -1,14 +1,12 @@
 package edu.stanford.nlp.mt.util;
 
 import java.text.DecimalFormat;
-import java.util.Collections;
-import java.util.List;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * A full hypothesis with various fields extracted from the featurizable
@@ -28,18 +26,16 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
   /**
    * Constructor.
    * 
-   * @param goalHyp
    * @param score
    * @param features
    * @param latticeSourceId
    */
-  public RichTranslation(Derivation<TK, FV> goalHyp, double score,
+  public RichTranslation(Featurizable<TK, FV> featurizable, double score,
       FeatureValueCollection<FV> features, long latticeSourceId) {
-    super(((goalHyp == null || goalHyp.featurizable == null) ? 
-        new EmptySequence<TK>() : goalHyp.featurizable.targetPrefix), features, score, latticeSourceId);
-    this.featurizable = (goalHyp == null) ? null : goalHyp.featurizable;
-    this.source = (this.featurizable == null) ? new EmptySequence<TK>() : this.featurizable.sourceSentence;
-    this.goalHyp = goalHyp;
+    super((featurizable == null ? new EmptySequence<TK>() : featurizable.targetPrefix), 
+        features, score, latticeSourceId);
+    this.featurizable = featurizable;
+    this.source = featurizable == null ? new EmptySequence<TK>() : featurizable.sourceSentence;
   }
   
  
@@ -106,8 +102,10 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
       // Very Verbose Alignments 
       sbuf.append(' ').append(this.featurizable.sourceSentence.toString());
       sbuf.append(' ').append(delim).append(' ');
-      List<Featurizable<TK,FV>> featurizables = featurizables();
-      for (Featurizable<TK,FV> f : featurizables) {
+      Stack<Featurizable<TK,FV>> featurizables = featurizables();
+      Featurizable<TK,FV> f = null;
+      while ( ! featurizables.isEmpty()) {
+        f = featurizables.pop();
         sbuf.append(' ');
         double parentScore = (f.prior == null ? 0 : f.prior.derivation.score);
         sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
@@ -124,21 +122,68 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     }
   }
   
-  List<Featurizable<TK,FV>> featurizables() {
-    List<Featurizable<TK,FV>> listFeaturizables = Generics.newArrayList();
-    featurizables(this.featurizable, listFeaturizables);
-    Collections.reverse(listFeaturizables);
-    return listFeaturizables;
-  }
-
-  private void featurizables(Featurizable<TK,FV> f, List<Featurizable<TK,FV>> l) {
-    if (f == null) {
-      return;
+  Stack<Featurizable<TK,FV>> featurizables() {
+    Stack<Featurizable<TK, FV>> featurizablesStack = new Stack<Featurizable<TK, FV>>();
+    for (Featurizable<TK,FV> f = this.featurizable; f != null; f = f.prior) { 
+      featurizablesStack.add(f); 
     }
-    l.add(f);
-    featurizables(f.prior, l);
+    return featurizablesStack;
   }
 
+ 
+
+  
+  // Thang May14: copy toString, to debug CubePrunningDecoder/CubePrunningNNLMDecoder
+  public String toStringNoLatticeId() {
+    final String delim = FlatPhraseTable.FIELD_DELIM;
+    StringBuilder sb = new StringBuilder();
+    sb.append(this.translation.toString());
+    sb.append(' ').append(delim);
+    DecimalFormat df = new DecimalFormat("0.####E0");
+    if (features != null) {
+      for (FeatureValue<FV> fv : this.features) {
+        sb.append(' ')
+        .append(fv.name)
+        .append(": ")
+        .append(
+            (fv.value == (int) fv.value ? (int) fv.value : df
+                .format(fv.value)));
+      }
+    }
+    sb.append(' ').append(delim).append(' ');
+    sb.append(df.format(this.score));
+    return sb.toString();
+  }
+  
+  // Thang May14
+  public String ruleInfo(ConcreteRule<TK,FV> rule){
+    return String.format("%s <r> %s <r> %d <r> %s", rule.abstractRule.source,
+        rule.abstractRule.target, rule.sourcePosition, rule.abstractRule.alignment);
+    
+  }
+  /**
+   * Print out list of rules participating in building up this translation
+   * Useful for JointNNLM model
+   * 
+   * @return
+   */
+  // Thang May14
+  public String historyString() {
+    StringBuilder sb = new StringBuilder();
+    
+    Stack<Featurizable<TK, FV>> featurizables = featurizables();
+    Featurizable<TK,FV> f = null;
+    while ( ! featurizables.isEmpty()) {
+      f = featurizables.pop();
+      if (featurizables.isEmpty()) {
+        // last one
+        sb.append(ruleInfo(f.rule));
+      } else {
+        sb.append(ruleInfo(f.rule) + " |R| ");
+      }
+    }
+    return sb.toString();
+  }
 
 
   /**

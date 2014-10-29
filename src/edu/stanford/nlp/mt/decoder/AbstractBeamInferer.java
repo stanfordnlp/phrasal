@@ -190,7 +190,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
       
-      translations.add(new RichTranslation<TK, FV>(goalHyp,
+      translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
             goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
       if (translations.size() >= size) {
         break;
@@ -245,7 +245,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     if (beam == null)
       return null;
     Derivation<TK, FV> hyp = beam.iterator().next();
-    return new RichTranslation<TK, FV>(hyp, hyp.score,
+    return new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
         FeatureValues.combine(hyp), 0);
   }
 
