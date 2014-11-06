@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.metrics;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
+import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
@@ -106,7 +107,7 @@ public class LinearCombinationMetric<TK, FV> extends AbstractMetric<TK, FV> {
     
     public IncrementalEvaluationMetric<TK, FV> add(
         ScoredFeaturizedTranslation<TK, FV> trans) {
-      return add(trans.translation);
+      return add(trans == null ? new EmptySequence<TK>() : trans.translation);
     }
 
     public IncrementalEvaluationMetric<TK, FV> add(
