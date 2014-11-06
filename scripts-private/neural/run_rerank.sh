@@ -19,7 +19,7 @@ testNbestFile=$4
 testRefPrefix=$5
 featureStr=$6
 #evalMetric="bleu"
-evalMetric="(ter-bleu)/2"
+evalMetric="bleu-ter/2"
 mertOpt=""
 if [ $# -ge 7 ]; then
   mertOpt=$7
