@@ -31,8 +31,8 @@ def process_command_line():
   parser = argparse.ArgumentParser(description=usage) # add description
   # positional arguments
   parser.add_argument('score_type', metavar='score_type', type=str, help='score type, e.g. nplm or rnnlm') 
-  parser.add_argument('in_file', metavar='in_file', type=str, help='input file') 
-  parser.add_argument('score_file', metavar='score_file', type=str, help='nbest score file with the same number of lines as in_file unless distinct_nbest_file is specified.') 
+  parser.add_argument('in_file', metavar='in_file', type=str, help='input file, format: id ||| translation ||| feature1: value1 feature2: value2') 
+  parser.add_argument('score_files', metavar='score_files', type=str, help='list of nbest score files, comma separated, each of which has the same number of lines as in_file unless distinct_nbest_file is specified.') 
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
 
   parser.add_argument('-d', '--distinct_nbest_file', dest='distinct_nbest_file', type=str, default='', help='If specified, each score in the score_file corresponds to a sentence in distinct_nbest_file.')
@@ -79,17 +79,30 @@ def load_nbest_score(nbest_file, score_file):
 
   return nbest_map
 
-def process_files(score_type, in_file, distinct_nbest_file, score_file, out_file):
+def process_files(score_type, in_file, distinct_nbest_file, score_files, out_file):
   """
   Read data from in_file, and output to out_file
   """
 
+  tokens = re.split(',', score_files)
+  file_list = []
+  for token in tokens:
+    if token.strip() != '':
+      file_list.append(token)
+  num_files = len(file_list)
+  sys.stderr.write('# num_files=%d\n' % num_files)
+  score_infs = []
   distinct_flag=0
-  if distinct_nbest_file!='': # score_file corresponds to distinct_nbest_file
-    distinct_flag=1
-    nbest_map = load_nbest_score(distinct_nbest_file, score_file) # map a translation into an rnnlm score
-  else: # score_file corresponds to in_file
-    score_inf = codecs.open(score_file, 'r', 'utf-8')
+  if num_files == 1: # single score file
+    if distinct_nbest_file!='': # score_file corresponds to distinct_nbest_file
+      distinct_flag=1
+      nbest_map = load_nbest_score(distinct_nbest_file, score_file) # map a translation into an rnnlm score
+    else: # score_file corresponds to in_file
+      score_infs.append(codecs.open(file_list[0], 'r', 'utf-8'))
+  else:
+    assert distinct_nbest_file=='' # we don't handle distinct nbest for multiple files
+    for ii in xrange(num_files):
+      score_infs.append(codecs.open(file_list[ii], 'r', 'utf-8'))
 
   sys.stderr.write('  processing in_file = %s and out_file = %s ... ' % (in_file, out_file))
   inf = codecs.open(in_file, 'r', 'utf-8')
@@ -115,17 +128,20 @@ def process_files(score_type, in_file, distinct_nbest_file, score_file, out_file
       sys.stderr.write('! In continuous id %s in nbest line %d\n%s\n' % (id, line_id, eachline))
       sys.exit(1)
     cur_id = int(id)
-
+    
+    neural_str = '' 
     if distinct_flag==1:
       if translation == '':
-        sys.stderr.write('\n! Empty translation: %s. Use score -100.\n' % eachline)
-        neural_score = -100
+        sys.stderr.write('\n! Empty translation: %s. Use score -1000.\n' % eachline)
+        neural_score = -1000
       else:
         neural_score = nbest_map[translation] 
+      neural_str = score_type + ': ' + neural_score
     else:
-      neural_score = clean_line(score_inf.readline())
+      for ii in xrange(num_files):
+        neural_str = neural_str + score_type + str(ii) + ': ' + clean_line(score_infs[ii].readline()) + ' '
 
-    ouf.write('%s ||| %s ||| %s %s: %s\n' % (id, translation, features, score_type, neural_score))
+    ouf.write('%s ||| %s ||| %s %s\n' % (id, translation, features, neural_str))
     line_id = line_id + 1
     if (line_id % 10000 == 0):
       sys.stderr.write(' (%d) ' % line_id)
@@ -133,9 +149,10 @@ def process_files(score_type, in_file, distinct_nbest_file, score_file, out_file
   sys.stderr.write('  done! Num lines = %d\n' % line_id)
 
   inf.close()
-  score_inf.close()
+  for ii in xrange(num_files):
+    score_infs[ii].close()
   ouf.close()
 
 if __name__ == '__main__':
   args = process_command_line()
-  process_files(args.score_type, args.in_file, args.distinct_nbest_file, args.score_file, args.out_file)
+  process_files(args.score_type, args.in_file, args.distinct_nbest_file, args.score_files, args.out_file)
