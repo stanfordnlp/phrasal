@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Generics;
@@ -63,6 +65,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleun-ter/2") || scoreMetricStr.equals("bleu-ter/2")) {
       return "bleu-ter/2";
     
+    } else if (scoreMetricStr.equals("bleu-ter-len/3")) {
+      return "bleu-ter/2";
+      
     } else if (scoreMetricStr.equals("bleunX2ter")) {
       throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
     
@@ -73,7 +78,15 @@ public final class SentenceLevelMetricFactory {
       return "bleu-2ter";
       
     } else {
-      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			// Attempt pattern match
+			Pattern p = Pattern.compile("([0-9\\.]+)bleu-([0-9\\.]+)ter");
+			Matcher m = p.matcher(scoreMetricStr);
+			if(m.matches()) {
+				return scoreMetricStr;
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			}
     }
   }
   
@@ -159,6 +172,14 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{0.5, 0.5}, metrics);
       
+    } else if (scoreMetricStr.equals("bleu-ter-len/3")) {
+      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(3);
+      metrics.add(new BLEUGain<IString,String>());
+      metrics.add(new SLTERMetric<IString,String>());
+      metrics.add(new LengthMetric<IString,String>());
+      return new SLLinearCombinationMetric<IString,String>(
+        new double[]{1.0/3.0, 1.0/3.0, 1.0/3.0}, metrics);
+    
     } else if (scoreMetricStr.equals("bleunX2ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
       metrics.add(new BLEUGain<IString,String>(true));
@@ -180,7 +201,23 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(new double[]{1.0, 2.0}, metrics);
     
     } else {
-      throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			// Attempt pattern match
+			Pattern p = Pattern.compile("([0-9\\.]+)bleu-([0-9\\.]+)ter");
+			Matcher m = p.matcher(scoreMetricStr);
+			if(m.matches()) {
+				
+				List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+				metrics.add(new BLEUGain<IString,String>());
+				metrics.add(new SLTERMetric<IString,String>());
+
+				double b_coeff = Double.parseDouble(m.group(1));
+				double t_coeff = Double.parseDouble(m.group(2));
+				return new SLLinearCombinationMetric<IString,String>(
+					new double[]{b_coeff, t_coeff}, metrics);
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
+			}
     }
   }
 }

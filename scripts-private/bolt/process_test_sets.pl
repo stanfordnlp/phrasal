@@ -104,5 +104,6 @@ sub get_length {
 
 sub exec_command {
     my ($cmd) = @_;
-    system($cmd)==0 or die $!;
+    print $cmd."\n";
+    #system($cmd)==0 or die $!;
 }

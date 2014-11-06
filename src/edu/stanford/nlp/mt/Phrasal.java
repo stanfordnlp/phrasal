@@ -42,8 +42,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
@@ -162,7 +162,8 @@ public class Phrasal {
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
-      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).");
+      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).")
+       ;
     return sb.toString();
   }
 
@@ -201,8 +202,7 @@ public class Phrasal {
   public static final String INPUT_PROPERTIES = "input-properties";
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
   public static final String WRAP_BOUNDARY = "wrap-boundary";
-
-
+  
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
   private static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
@@ -223,7 +223,8 @@ public class Phrasal {
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
         LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
-        WRAP_BOUNDARY));
+        WRAP_BOUNDARY
+        ));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -282,8 +283,10 @@ public class Phrasal {
    * n-best list options
    */
   private String nbestListOutputType = "moses";
+  private Pattern nBestListFeaturePattern = null;
   private PrintStream nbestListWriter;
   private int nbestListSize;
+  private boolean distinctNbest = false;
   
   /**
    * Internal alignment options
@@ -376,10 +379,6 @@ public class Phrasal {
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
-    if (config.containsKey(DISTINCT_NBEST_LIST_OPT))
-      if (!AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS)
-        AbstractBeamInferer.DISTINCT_SURFACE_TRANSLATIONS = Boolean.parseBoolean(config.get(
-            DISTINCT_NBEST_LIST_OPT).get(0));
     if (config.containsKey(LINEAR_DISTORTION_TYPE))
       ConcreteRule.setLinearDistortionType(config.get(
           LINEAR_DISTORTION_TYPE).get(0));
@@ -426,8 +425,8 @@ public class Phrasal {
     inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
         InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
      
-     wrapBoundary  = config.containsKey(WRAP_BOUNDARY) ? 
-         Boolean.valueOf(config.get(WRAP_BOUNDARY).get(0)) : false;
+    wrapBoundary  = config.containsKey(WRAP_BOUNDARY) ? 
+        Boolean.valueOf(config.get(WRAP_BOUNDARY).get(0)) : false;
          
     // Pre/post processor filters. These may be accessed programmatically, but they
     // are only applied automatically to text read from the console.
@@ -871,7 +870,7 @@ public class Phrasal {
         System.err.printf("Generating n-best lists (size: %d)%n",
             nbestListSize);
 
-      } else if (nbestOpt.size() == 2 || nbestOpt.size() == 3) {
+      } else if (nbestOpt.size() >= 2 && nbestOpt.size() <= 4) {
         String nbestListFilename = nbestOpt.get(0);
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
         assert nbestListSize >= 0;
@@ -880,8 +879,12 @@ public class Phrasal {
           nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
         }
         
-        if (nbestOpt.size() == 3) {
+        if (nbestOpt.size() >= 3) {
           nbestListOutputType = nbestOpt.get(2);
+        }
+        
+        if (nbestOpt.size() >= 4) {
+          nBestListFeaturePattern = Pattern.compile(nbestOpt.get(3));
         }
         
         System.err.printf("Generating n-best lists to: %s (size: %d)%n",
@@ -889,13 +892,17 @@ public class Phrasal {
 
       } else {
         throw new RuntimeException(
-            String.format("%s requires 1, 2 or 3 arguments, not %d", NBEST_LIST_OPT,
+            String.format("%s requires 1 to 4 arguments, not %d", NBEST_LIST_OPT,
                 nbestOpt.size()));
       }
 
     } else {
       nbestListSize = -1;
       nbestListWriter = null;
+    }
+    
+    if (config.containsKey(DISTINCT_NBEST_LIST_OPT)) {
+      distinctNbest = true;
     }
         
     // Determine if we need to generate an alignment file
@@ -1032,7 +1039,7 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nBestListFeaturePattern, nbestListWriter);
       }
       
       // Output the alignments if necessary
@@ -1183,7 +1190,7 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations = Generics.newArrayList(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 
-          outputSpace, outputSpace.getAllowableSequences(), numTranslations);
+          outputSpace, outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
 
       // Return an empty n-best list
       if (translations == null) translations = Generics.newArrayList(1);

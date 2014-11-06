@@ -16,7 +16,6 @@ import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 public class ScoredFeaturizedTranslation<TK, FV> extends
     FeaturizedTranslation<TK, FV> implements
     Comparable<ScoredFeaturizedTranslation<TK, FV>> {
-  
   public final long latticeSourceId;
   
   /**
@@ -62,7 +61,7 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
     if (features != null) {
       for (FeatureValue<FV> fv : this.features) {
         sb.append(' ').append(fv.name).append(": ").append(
-            (fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));
+              (fv.value == (int) fv.value ? (int) fv.value : df.format(fv.value)));
       }
     }
     sb.append(' ').append(delim).append(' ');
@@ -71,28 +70,7 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
       sb.append(' ').append(delim).append(' ');
       sb.append(latticeSourceId);
     }
-    return sb.toString();
-  }
-  
-  // Thang May14: copy toString, to debug CubePrunningDecoder/CubePrunningNNLMDecoder
-  public String toStringNoLatticeId() {
-    final String delim = FlatPhraseTable.FIELD_DELIM;
-    StringBuilder sb = new StringBuilder();
-    sb.append(this.translation.toString());
-    sb.append(' ').append(delim);
-    DecimalFormat df = new DecimalFormat("0.####E0");
-    if (features != null) {
-      for (FeatureValue<FV> fv : this.features) {
-        sb.append(' ')
-        .append(fv.name)
-        .append(": ")
-        .append(
-            (fv.value == (int) fv.value ? (int) fv.value : df
-                .format(fv.value)));
-      }
-    }
-    sb.append(' ').append(delim).append(' ');
-    sb.append(df.format(this.score));
+        
     return sb.toString();
   }
 }
