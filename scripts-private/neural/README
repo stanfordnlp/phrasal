@@ -1,0 +1,2 @@
+* Append new feature/value pairs. Results are in toy.allScores
+./nbest_add_neural_score.py -o 1 nnlm toy.nbest toy.score1,toy.score2 toy.allScores
