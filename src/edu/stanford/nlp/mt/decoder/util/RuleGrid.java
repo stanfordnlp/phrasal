@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.util.Generics;
 
@@ -26,20 +27,19 @@ public class RuleGrid<TK,FV> {
   private final int sourceLength;
   private final BitSet isSorted;
   private final boolean doLazySorting;
+  private final boolean completeCoverage;
   
   /**
-   * Create an option grid from the source sentence and list of rules.
+   * Constructor.
    * 
-   * @param options
    * @param source
    */
-  public RuleGrid(List<ConcreteRule<TK,FV>> options,
-      Sequence<TK> source) {
-    this(options, source, false);
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
+    this(ruleList, source, false);
   }
 
   @SuppressWarnings("unchecked")
-  public RuleGrid(List<ConcreteRule<TK, FV>> ruleList,
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, 
       Sequence<TK> source, boolean doLazySorting) {
     sourceLength = source.size();
     isSorted = new BitSet();
@@ -47,7 +47,9 @@ public class RuleGrid<TK,FV> {
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
+    CoverageSet coverage = new CoverageSet();
     for (ConcreteRule<TK,FV> rule : ruleList) {
+      coverage.or(rule.sourceCoverage);
       int startPos = rule.sourcePosition;
       int endPos = startPos + rule.abstractRule.source.size() - 1;
       // Sanity checks
@@ -58,8 +60,15 @@ public class RuleGrid<TK,FV> {
       if (grid[offset] == null) grid[offset] = Generics.newArrayList();
       grid[offset].add(rule);
     }
+    this.completeCoverage = (coverage.cardinality() == sourceLength);
   }
 
+  /**
+   * True if the grid completely covers the source input. Otherwise, false.
+   * @return
+   */
+  public boolean isCoverageComplete() { return completeCoverage; }
+  
   /**
    * True if this list of rules has been sorted, false otherwise.
    * 

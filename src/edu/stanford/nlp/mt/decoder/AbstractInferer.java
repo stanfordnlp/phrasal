@@ -27,7 +27,13 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Derivation<TK, FV>> filter;
   protected final boolean filterUnknownWords;
+  protected final PhraseGenerator<TK,FV> unknownWordModel;
 
+  /**
+   * Constructor.
+   * 
+   * @param builder
+   */
   protected AbstractInferer(AbstractInfererBuilder<TK, FV> builder) {
     featurizer = builder.incrementalFeaturizer;
     phraseGenerator = builder.phraseGenerator;
@@ -35,8 +41,14 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     heuristic = builder.heuristic;
     filter = builder.filter;
     filterUnknownWords = builder.filterUnknownWords;
+    unknownWordModel = builder.unknownWordModel;
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param inferer
+   */
   protected AbstractInferer(AbstractInferer<TK, FV> inferer) {
     featurizer = inferer.featurizer;
     phraseGenerator = inferer.phraseGenerator;
@@ -44,6 +56,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     heuristic = inferer.heuristic;
     filter = inferer.filter;
     filterUnknownWords = inferer.filterUnknownWords;
+    unknownWordModel = inferer.unknownWordModel;
   }
 
   protected FeatureValueCollection<FV> collectFeatureValues(

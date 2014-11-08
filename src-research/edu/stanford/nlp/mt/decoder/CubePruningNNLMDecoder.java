@@ -37,6 +37,7 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Similar to CubePrunningDecoder but having the NNLM reranking component.
@@ -105,15 +106,18 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
-    final int sourceLength = source.size();
 
     // create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
 
     // TM (phrase table) query for applicable rules
-    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    source = sourceRulePair.first();
+    if (source == null || source.size() == 0) return null;
+    final int sourceLength = source.size();
+    List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
 
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
@@ -124,7 +128,10 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
-
+    if (ruleGrid.isCoverageComplete()) {
+      logger.warning(String.format("Incomplete coverage for source input %d", sourceInputId));
+    }
+    
     // Fill Beam 0...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
         recombinationHistory, maxDistortion, 0);

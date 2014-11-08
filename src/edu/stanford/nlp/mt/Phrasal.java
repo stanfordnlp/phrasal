@@ -577,15 +577,6 @@ public class Phrasal {
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE, ruleQueryLimit);
     }
 
-    // Add the OOV model
-    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
-      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
-    }
-    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
-    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
-             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, ruleQueryLimit);
-
     // Load the lexicalized reordering model(s) and associated featurizers
     List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = Generics.newLinkedList();
     if (config.containsKey(REORDERING_MODEL)) {
@@ -791,6 +782,14 @@ public class Phrasal {
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
+    // Set the OOV policy
+    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
+      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
+    }
+    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
+    PhraseGenerator<IString,String> oovModel = 
+        new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords);
+    
     // Create Inferers and scorers
     inferers = Generics.newArrayList(numThreads);
     scorers = Generics.newArrayList(numThreads);
@@ -811,7 +810,7 @@ public class Phrasal {
     // Create the decoders, one per thread
     for (int i = 0; i < numThreads; i++) {
       try {
-        infererBuilder.setUnknownWordModel(null, dropUnknownWords);
+        infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
         infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
@@ -819,6 +818,7 @@ public class Phrasal {
         scorers.add(scorer);
         infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
         infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
+      
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
@@ -990,8 +990,6 @@ public class Phrasal {
         if (wrapBoundary) {
           bestTranslation = bestTranslation.subsequence(1, bestTranslation.size() - 1);
         }
-        
-        
       }
         
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);

@@ -13,14 +13,14 @@ import edu.stanford.nlp.mt.tm.PhraseGenerator;
  * @author danielcer
  * 
  */
-abstract public class AbstractInfererBuilder<TK, FV> implements
-    InfererBuilder<TK, FV> {
-  FeatureExtractor<TK, FV> incrementalFeaturizer;
-  PhraseGenerator<TK,FV> phraseGenerator;
-  Scorer<FV> scorer;
-  SearchHeuristic<TK, FV> heuristic;
-  RecombinationFilter<Derivation<TK, FV>> filter;
-  boolean filterUnknownWords;
+abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<TK, FV> {
+  protected FeatureExtractor<TK, FV> incrementalFeaturizer;
+  protected PhraseGenerator<TK,FV> phraseGenerator;
+  protected Scorer<FV> scorer;
+  protected SearchHeuristic<TK, FV> heuristic;
+  protected RecombinationFilter<Derivation<TK, FV>> filter;
+  protected boolean filterUnknownWords;
+  protected PhraseGenerator<TK, FV> unknownWordModel;
 
   @Override
   abstract public Inferer<TK, FV> newInferer();
@@ -52,11 +52,12 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
     this.heuristic = heuristic;
     return this;
   }
-  
+
   @Override
   public InfererBuilder<TK, FV> setUnknownWordModel(PhraseGenerator<TK, FV> unknownWordModel, boolean filterUnknownWords) {
-     this.filterUnknownWords = filterUnknownWords;
-     return this;
+    this.unknownWordModel = unknownWordModel;
+    this.filterUnknownWords = filterUnknownWords;
+    return this;
   }
 
   @Override
