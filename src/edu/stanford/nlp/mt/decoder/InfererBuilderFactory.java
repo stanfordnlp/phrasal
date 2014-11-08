@@ -53,7 +53,7 @@ public class InfererBuilderFactory {
       MultiBeamDecoder.MultiBeamDecoderBuilder<IString, String> builder = MultiBeamDecoder
           .builder();
       if (beamSize != -1)
-        builder.setBeamCapacity(beamSize);
+        builder.setBeamSize(beamSize);
       if (beamType != null)
         builder.setBeamType(beamType);
       return builder;
@@ -63,7 +63,7 @@ public class InfererBuilderFactory {
       CubePruningDecoder.CubePruningDecoderBuilder<IString, String> builder = CubePruningDecoder
           .builder();
       if (beamSize != -1)
-        builder.setBeamCapacity(beamSize);
+        builder.setBeamSize(beamSize);
       if (beamType != null)
         builder.setBeamType(beamType);
       return builder;
@@ -73,7 +73,7 @@ public class InfererBuilderFactory {
     if (infererName.equals(CUBE_PRUNING_NNLM_DECODER)) {
       CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder<IString, String> builder = CubePruningNNLMDecoder.builder();
       if (beamSize != -1)
-        builder.setBeamCapacity(beamSize);
+        builder.setBeamSize(beamSize);
       if (beamType != null)
         builder.setBeamType(beamType);
       return builder;
@@ -83,7 +83,7 @@ public class InfererBuilderFactory {
       DTUDecoder.DTUDecoderBuilder<IString, String> builder = DTUDecoder
           .builder();
       if (beamSize != -1)
-        builder.setBeamCapacity(beamSize);
+        builder.setBeamSize(beamSize);
       if (beamType != null)
         builder.setBeamType(beamType);
       return builder;

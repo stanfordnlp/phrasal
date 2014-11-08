@@ -23,10 +23,10 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
   boolean filterUnknownWords;
 
   @Override
-  abstract public Inferer<TK, FV> build();
+  abstract public Inferer<TK, FV> newInferer();
 
   @Override
-  public InfererBuilder<TK, FV> setIncrementalFeaturizer(
+  public InfererBuilder<TK, FV> setFeaturizer(
       FeatureExtractor<TK, FV> featurizer) {
     this.incrementalFeaturizer = featurizer;
 
@@ -54,7 +54,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements
   }
   
   @Override
-  public InfererBuilder<TK, FV> setFilterUnknownWords(boolean filterUnknownWords) {
+  public InfererBuilder<TK, FV> setUnknownWordModel(PhraseGenerator<TK, FV> unknownWordModel, boolean filterUnknownWords) {
      this.filterUnknownWords = filterUnknownWords;
      return this;
   }

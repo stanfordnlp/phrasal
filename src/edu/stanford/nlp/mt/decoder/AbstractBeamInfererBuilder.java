@@ -4,6 +4,7 @@ import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 
 /**
+ * An abstract builder interface for beam-based inferers.
  * 
  * @author danielcer
  * 
@@ -13,43 +14,63 @@ import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 abstract public class AbstractBeamInfererBuilder<TK, FV> extends
     AbstractInfererBuilder<TK, FV> {
 
-  int beamCapacity;
-  BeamFactory.BeamType beamType;
+  protected int beamSize;
+  protected BeamFactory.BeamType beamType;
 
   /**
-	 *
-	 */
+   * Constructor.
+   * 
+   * @param defaultBeamCapacity
+   * @param defaultBeamType
+   */
   public AbstractBeamInfererBuilder(int defaultBeamCapacity,
       BeamFactory.BeamType defaultBeamType) {
-    beamCapacity = defaultBeamCapacity;
+    beamSize = defaultBeamCapacity;
     beamType = defaultBeamType;
   }
 
   /**
-	 *
-	 */
+   * Set the beam type.
+   * 
+   * @param beamType
+   */
   public void setBeamType(BeamFactory.BeamType beamType) {
     this.beamType = beamType;
   }
 
   /**
-	 *
-	 */
-  public AbstractBeamInfererBuilder<TK, FV> setBeamCapacity(int beamCapacity) {
-    if (beamCapacity <= 0) {
+   * Set the beam size.
+   * 
+   * @param beamSize
+   * @return
+   */
+  public AbstractBeamInfererBuilder<TK, FV> setBeamSize(int beamSize) {
+    if (beamSize <= 0) {
       throw new RuntimeException(String.format(
-          "Invalid beam capacity, %d. Beam capacity must be > 0", beamCapacity));
+          "Invalid beam capacity, %d. Beam capacity must be > 0", beamSize));
     }
-    this.beamCapacity = beamCapacity;
+    this.beamSize = beamSize;
     return this;
   }
 
   @Override
-  abstract public Inferer<TK, FV> build();
+  abstract public Inferer<TK, FV> newInferer();
 
+  /**
+   * Set the distortion limit.
+   * 
+   * @param distortionLimit
+   * @return
+   */
   abstract public AbstractBeamInfererBuilder<TK, FV> setMaxDistortion(
       int distortionLimit);
 
+  /**
+   * Toggle ITG constraints.
+   * 
+   * @param itg
+   * @return
+   */
   abstract public AbstractBeamInfererBuilder<TK, FV> useITGConstraints(
       boolean itg);
 }

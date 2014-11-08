@@ -27,7 +27,7 @@ import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.util.Generics;
 
 /**
- * Abstract interfaces and algorithms that apply to all inference algorithms.
+ * An abstract interface for beam-based inference algorithms.
  * 
  * @author danielcer
  * 
@@ -50,7 +50,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    */
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
-    this.beamCapacity = builder.beamCapacity;
+    this.beamCapacity = builder.beamSize;
     this.beamType = builder.beamType;
     this.translationComparator = new RichTranslationComparator<TK,FV>();
   }

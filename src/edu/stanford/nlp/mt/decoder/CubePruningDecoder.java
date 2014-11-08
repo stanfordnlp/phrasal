@@ -59,8 +59,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }    
   }
 
-  public static class CubePruningDecoderBuilder<TK, FV> extends
-  AbstractBeamInfererBuilder<TK, FV> {
+  public static class CubePruningDecoderBuilder<TK, FV> extends AbstractBeamInfererBuilder<TK, FV> {
     int maxDistortion = DEFAULT_MAX_DISTORTION;
     int decoderId = -1;
 
@@ -75,7 +74,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       decoderId++;
       return new CubePruningDecoder<TK, FV>(this);
     }

@@ -118,7 +118,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       return new DTUDecoder<TK, FV>(this);
     }
   }

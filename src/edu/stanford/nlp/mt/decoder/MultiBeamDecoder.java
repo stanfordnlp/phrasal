@@ -117,7 +117,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       return new MultiBeamDecoder<TK, FV>(this);
     }
   }

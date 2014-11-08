@@ -92,7 +92,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     }
     
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       decoderId++;
       return new CubePruningNNLMDecoder<TK, FV>(this, jointNNLM);
     }

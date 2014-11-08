@@ -807,22 +807,12 @@ public class Phrasal {
     // Configure InfererBuilder
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
-    
-    // Thang Apr14: cube pruning with NNLM reranking
-    // TODO(spenceg): This should be loaded by reflection so that it isn't released
-    // with the public version.
-//    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
-//      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
-//      String nnlmType = config.get(SEARCH_ALGORITHM).get(2).trim(); // joint or target
-//      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
-//      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
-//      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
-//    }
-    
+
+    // Create the decoders, one per thread
     for (int i = 0; i < numThreads; i++) {
       try {
-        infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
+        infererBuilder.setUnknownWordModel(null, dropUnknownWords);
+        infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
@@ -848,7 +838,7 @@ public class Phrasal {
       if (config.containsKey(BEAM_SIZE)) {
         try {
           int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
-          infererBuilder.setBeamCapacity(beamSize);
+          infererBuilder.setBeamSize(beamSize);
         } catch (NumberFormatException e) {
           throw new RuntimeException(
               String
@@ -857,7 +847,7 @@ public class Phrasal {
                       config.get(BEAM_SIZE).get(0), BEAM_SIZE));
         }
       }
-      inferers.add(infererBuilder.build());
+      inferers.add(infererBuilder.newInferer());
     }
     System.err.printf("Inferer Count: %d%n", inferers.size());
 
