@@ -612,6 +612,11 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     
     @Override
     public boolean equals(Object other) {
+      
+      return true;
+      
+      /*
+      
       if (other == null)
         return false;
       if (other == this)
@@ -656,13 +661,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       }
       
       return true;
+      */
     }
    
-    //fix hash function such that it returns the same
-    //val if equals returns true
-    //arrays.hashCode
-    
+ 
     public int hashCode() {
+      
+      return 0;
+      /*
       int sz = 3 + this.getLeftChildren().size();
       int arr[] = new int[sz];
       arr[0] = this.headToken != null ? this.headToken.id : 0;
@@ -674,6 +680,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         i++;
       }
       return arr.hashCode();
+      */
     }
     
     public LMState getRightLMState() {
