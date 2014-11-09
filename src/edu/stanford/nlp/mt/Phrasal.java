@@ -577,15 +577,6 @@ public class Phrasal {
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE, ruleQueryLimit);
     }
 
-    // Add the OOV model
-    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
-      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
-    }
-    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
-    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
-             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, ruleQueryLimit);
-
     // Load the lexicalized reordering model(s) and associated featurizers
     List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = Generics.newLinkedList();
     if (config.containsKey(REORDERING_MODEL)) {
@@ -791,6 +782,14 @@ public class Phrasal {
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
+    // Set the OOV policy
+    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
+      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
+    }
+    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
+    PhraseGenerator<IString,String> oovModel = 
+        new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords);
+    
     // Create Inferers and scorers
     inferers = Generics.newArrayList(numThreads);
     scorers = Generics.newArrayList(numThreads);
@@ -807,28 +806,19 @@ public class Phrasal {
     // Configure InfererBuilder
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
-    
-    // Thang Apr14: cube pruning with NNLM reranking
-    // TODO(spenceg): This should be loaded by reflection so that it isn't released
-    // with the public version.
-//    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
-//      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
-//      String nnlmType = config.get(SEARCH_ALGORITHM).get(2).trim(); // joint or target
-//      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
-//      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
-//      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
-//    }
-    
+
+    // Create the decoders, one per thread
     for (int i = 0; i < numThreads; i++) {
       try {
-        infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
+        infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
+        infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
         infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
+      
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
@@ -848,7 +838,7 @@ public class Phrasal {
       if (config.containsKey(BEAM_SIZE)) {
         try {
           int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
-          infererBuilder.setBeamCapacity(beamSize);
+          infererBuilder.setBeamSize(beamSize);
         } catch (NumberFormatException e) {
           throw new RuntimeException(
               String
@@ -857,7 +847,7 @@ public class Phrasal {
                       config.get(BEAM_SIZE).get(0), BEAM_SIZE));
         }
       }
-      inferers.add(infererBuilder.build());
+      inferers.add(infererBuilder.newInferer());
     }
     System.err.printf("Inferer Count: %d%n", inferers.size());
 
@@ -1000,8 +990,6 @@ public class Phrasal {
         if (wrapBoundary) {
           bestTranslation = bestTranslation.subsequence(1, bestTranslation.size() - 1);
         }
-        
-        
       }
         
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);

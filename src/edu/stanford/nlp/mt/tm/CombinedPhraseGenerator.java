@@ -232,4 +232,9 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     }
     return longest;
   }
+
+  @Override
+  public String getName() {
+    return this.getClass().getSimpleName();
+  }
 }

@@ -30,6 +30,7 @@ package edu.stanford.nlp.mt.decoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
@@ -42,6 +43,7 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Stack-based, left-to-right phrase-based inference implemented as a beam search.
@@ -117,7 +119,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       return new MultiBeamDecoder<TK, FV>(this);
     }
   }
@@ -139,7 +141,6 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
-    final int sourceSz = source.size();
 
     // create beams, where there is a bijection between the beam and the cardinality of
     // the coverage set
@@ -149,8 +150,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // TM (phrase table) query for applicable rules
     if (DEBUG) System.err.println("Generating Translation Options");
-    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    source = sourceRulePair.first();
+    if (source == null || source.size() == 0) return null;
+    final int sourceSz = source.size();
+    List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = sourceInputId;
@@ -174,7 +179,10 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // Create rule lookup chart. Rules can be fetched by span.
     RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source);
-
+    if (ruleGrid.isCoverageComplete()) {
+      System.err.printf("Incomplete coverage for source input %d%n", sourceInputId);
+    }
+    
     // Generate null/start hypothesis
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
     allOptions.add(ruleList);
