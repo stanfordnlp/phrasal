@@ -32,6 +32,8 @@ public final class DependencyLanguageModelPerplexity2 {
   
   private static LanguageModel<IString> childLm;
   private static LanguageModel<IString> headLm;
+  public static boolean useHeadClasses = false;
+  
   
   private static String HEAD_SUFFIX = "<HEAD>";
   private static String SIBLING_SUFFIX = "<SIB>";
@@ -73,11 +75,17 @@ public final class DependencyLanguageModelPerplexity2 {
   
   private static double scoreChild(LanguageModel<IString> lm, AbstractWordClassMap classMap, IString child, IString sibling, IString head, IString direction) throws IOException {
     
-    head = new IString(head + HEAD_SUFFIX);
     
     if (classMap != null && sibling != START_TOKEN) {
       sibling = classMap.get(sibling);
     }
+
+    if (useHeadClasses && classMap != null && head != ROOT_TOKEN && head != FRAG_TOKEN) {
+      head = classMap.get(head);
+    }
+    
+    head = new IString(head + HEAD_SUFFIX);
+
     
     sibling = new IString(sibling + SIBLING_SUFFIX);
 

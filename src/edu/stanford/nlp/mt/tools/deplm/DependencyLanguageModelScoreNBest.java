@@ -30,7 +30,6 @@ public class DependencyLanguageModelScoreNBest {
   private static LocalWordClassMap classMap;
   
   
-  
   /**
    * Command-line option specification.
    */
@@ -44,6 +43,8 @@ public class DependencyLanguageModelScoreNBest {
     optionArgDefs.put("scoreStop", 0);
     optionArgDefs.put("transitive", 0);
     optionArgDefs.put("classMap", 1);
+    optionArgDefs.put("headClasses", 0);
+
     return optionArgDefs;
   }
   
@@ -57,7 +58,7 @@ public class DependencyLanguageModelScoreNBest {
     String dependencies = PropertiesUtils.get(options, "dependencies", null, String.class);
     String lm = PropertiesUtils.get(options, "lm", null, String.class);
     String classMapFilename = PropertiesUtils.get(options, "classMap", null, String.class);
-
+    DependencyLanguageModelPerplexity2.useHeadClasses = PropertiesUtils.getBool(options, "headClasses", false);
     
     
     boolean scoreFrag = PropertiesUtils.getBool(options, "scoreFrag", false);
