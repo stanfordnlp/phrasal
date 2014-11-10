@@ -8,49 +8,71 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.tm.PhraseGenerator;
 
 /**
+ * Configure an Inferer, which is an instance of a search procedure.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <TK>
  * @param <FV>
  */
 public interface InfererBuilder<TK, FV> {
+
   /**
-	 * 
-	 */
+   * Set the translation model.
+   * 
+   * @param phraseGenerator
+   * @return
+   */
   InfererBuilder<TK, FV> setPhraseGenerator(PhraseGenerator<TK,FV> phraseGenerator);
 
   /**
-	 * 
-	 */
-  InfererBuilder<TK, FV> setIncrementalFeaturizer(
-      FeatureExtractor<TK, FV> featurizer);
+   * Set the featurizer.
+   * 
+   * @param featurizer
+   * @return
+   */
+  InfererBuilder<TK, FV> setFeaturizer(FeatureExtractor<TK, FV> featurizer);
 
   /**
-	 * 
-	 */
+   * Set the model scorer.
+   * 
+   * @param scorer
+   * @return
+   */
   InfererBuilder<TK, FV> setScorer(Scorer<FV> scorer);
 
   /**
-	 * 
-	 */
+   * Set the future cost heuristic.
+   * 
+   * @param heuristic
+   * @return
+   */
   InfererBuilder<TK, FV> setSearchHeuristic(SearchHeuristic<TK, FV> heuristic);
 
   /**
-	 * 
-	 */
+   * Set the recombination policy.
+   * 
+   * @param recombinationFilter
+   * @return
+   */
   InfererBuilder<TK, FV> setRecombinationFilter(
       RecombinationFilter<Derivation<TK, FV>> recombinationFilter);
 
   /**
+   * Set the unknown word policy.
    * 
-   * @param filterUnknownWords
+   * @param unknownWordModel The unknown word model
+   * @param filterUnknownWords if true, then remove unknown words from source. Use unknownWordModel otherwise.
    * @return
    */
-  InfererBuilder<TK, FV> setFilterUnknownWords(boolean filterUnknownWords);
-  
+  InfererBuilder<TK, FV> setUnknownWordModel(PhraseGenerator<TK, FV> unknownWordModel, 
+      boolean filterUnknownWords);
+
   /**
-	 * 
-	 */
-  Inferer<TK, FV> build();
+   * Get a new Inferer instance.
+   * 
+   * @return
+   */
+  Inferer<TK, FV> newInferer();
 }

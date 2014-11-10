@@ -7,6 +7,7 @@ import java.util.Map;
 
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
+import edu.stanford.nlp.mt.decoder.feat.base.PhrasePenaltyFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -14,6 +15,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Generics;
 
 /**
+ * Convert a Phrasal binwts file to Moses weights.
  * 
  * @author Spence Green
  *
@@ -42,6 +44,8 @@ public class PhrasalWeightsToMoses {
         System.out.printf("Distortion0= %f%n", value);
       } else if (fname.equals(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME)) {
         System.out.printf("LM0= %f%n", value);
+      } else if (fname.equals(PhrasePenaltyFeaturizer.FEATURE_NAME)) {
+        System.out.printf("PhrasePenalty0= %f%n", value);
       } else if (fname.startsWith("TM")){
         tmScores.put(fname, value);
       }

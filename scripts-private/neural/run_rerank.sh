@@ -19,6 +19,8 @@ testNbestFile=$4
 testRefPrefix=$5
 featureStr=$6
 evalMetric="bleu"
+#evalMetric="ter"
+#evalMetric="bleu-ter/2"
 mertOpt=""
 if [ $# -ge 7 ]; then
   mertOpt=$7
@@ -91,8 +93,8 @@ function rerank_eval {
   ### evaluation on test ###
   if [ "$refList" != "" ]; then
     echo "# Evaluation"
-    execute_check "" "java edu.stanford.nlp.mt.metrics.BLEUMetric $refList < $transFile"
-    execute_check "" "java edu.stanford.nlp.mt.metrics.TERMetric $refList < $transFile"
+    execute_check "" "java edu.stanford.nlp.mt.tools.Evaluate \"bleu\" $refList < $transFile"
+    execute_check "" "java edu.stanford.nlp.mt.tools.Evaluate \"ter\" $refList < $transFile"
   else
     if [ "$evalOpt" = "1" ]; then # Jun14 system
       execute_check "" "perl /scr/mkayser/mt/experiments/BOLT/jun_2_2014_dryrun/commands_for_thang/score_thang.pl $transFile /scr/mkayser/mt/experiments/BOLT/jun_2_2014_dryrun/commands_for_thang/all_test_sets_thang.regions"
@@ -133,7 +135,7 @@ trainWtsFile="$outDir/train.wts" #$initWtsFile #
 echo ""
 echo "# tuning with Mert ..."
 date
-execute_check $trainWtsFile  "java edu.stanford.nlp.mt.tune.MERT $mertOpt -o koehn -t 12 -p 32 $evalMetric $tuneNbestFile $tuneNbestFile $initWtsFile $tuneRefList $trainWtsFile > $outDir/mert.log 2>&1"
+execute_check $trainWtsFile  "java edu.stanford.nlp.mt.tune.MERT $mertOpt -o koehn -t 12 -p 32 \"$evalMetric\" $tuneNbestFile $tuneNbestFile $initWtsFile $tuneRefList $trainWtsFile > $outDir/mert.log 2>&1"
 
 # show weights
 echo ""

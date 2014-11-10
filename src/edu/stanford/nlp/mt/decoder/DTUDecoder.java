@@ -38,8 +38,8 @@ import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
-
 import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Extension of MultiBeamDecoder that allows phrases with discontinuities in
@@ -118,7 +118,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       return new DTUDecoder<TK, FV>(this);
     }
   }
@@ -148,7 +148,6 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
-    int sourceSz = source.size();
     BufferedWriter alignmentDump = null;
 
     if (ALIGNMENT_DUMP != null) {
@@ -169,10 +168,13 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // retrieve translation options
     if (DEBUG)
       System.err.println("Generating Translation Options");
-
-    List<ConcreteRule<TK,FV>> options = phraseGenerator
-        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    source = sourceRulePair.first();
+    if (source == null || source.size() == 0) return null;
+    final int sourceSz = source.size();
+    List<ConcreteRule<TK,FV>> options = sourceRulePair.second();
+    
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:
     List<ConcreteRule<TK,FV>> optionsWithoutGaps = new ArrayList<ConcreteRule<TK,FV>>(), optionsWithGaps = new ArrayList<ConcreteRule<TK,FV>>();

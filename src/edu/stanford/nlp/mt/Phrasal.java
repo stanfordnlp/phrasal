@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
@@ -161,7 +162,8 @@ public class Phrasal {
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
-      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).");
+      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).")
+       ;
     return sb.toString();
   }
 
@@ -200,8 +202,7 @@ public class Phrasal {
   public static final String INPUT_PROPERTIES = "input-properties";
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
   public static final String WRAP_BOUNDARY = "wrap-boundary";
-
-
+  
   private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
   private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
   private static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
@@ -222,7 +223,8 @@ public class Phrasal {
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
         LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
-        WRAP_BOUNDARY));
+        WRAP_BOUNDARY
+        ));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -281,6 +283,7 @@ public class Phrasal {
    * n-best list options
    */
   private String nbestListOutputType = "moses";
+  private Pattern nBestListFeaturePattern = null;
   private PrintStream nbestListWriter;
   private int nbestListSize;
   private boolean distinctNbest = false;
@@ -574,15 +577,6 @@ public class Phrasal {
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE, ruleQueryLimit);
     }
 
-    // Add the OOV model
-    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
-      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
-    }
-    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
-    phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-             Arrays.asList(phraseGenerator, new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords)),
-             CombinedPhraseGenerator.Type.STRICT_DOMINANCE, ruleQueryLimit);
-
     // Load the lexicalized reordering model(s) and associated featurizers
     List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = Generics.newLinkedList();
     if (config.containsKey(REORDERING_MODEL)) {
@@ -788,6 +782,14 @@ public class Phrasal {
         withGaps ? HeuristicFactory.ISOLATED_DTU_SOURCE_COVERAGE
             : HeuristicFactory.ISOLATED_PHRASE_SOURCE_COVERAGE);
 
+    // Set the OOV policy
+    if (config.containsKey(DROP_UNKNOWN_WORDS)) {
+      dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
+    }
+    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
+    PhraseGenerator<IString,String> oovModel = 
+        new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords);
+    
     // Create Inferers and scorers
     inferers = Generics.newArrayList(numThreads);
     scorers = Generics.newArrayList(numThreads);
@@ -804,28 +806,19 @@ public class Phrasal {
     // Configure InfererBuilder
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
-    
-    // Thang Apr14: cube pruning with NNLM reranking
-    // TODO(spenceg): This should be loaded by reflection so that it isn't released
-    // with the public version.
-//    if (searchAlgorithm.equals(InfererBuilderFactory.CUBE_PRUNING_NNLM_DECODER)){ // CubePruningNNLM, load nnlmFile
-//      String nnlmFile = config.get(SEARCH_ALGORITHM).get(1).trim();
-//      String nnlmType = config.get(SEARCH_ALGORITHM).get(2).trim(); // joint or target
-//      int cacheSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(3).trim());
-//      int miniBatchSize = Integer.parseInt(config.get(SEARCH_ALGORITHM).get(4).trim());
-//      ((CubePruningNNLMDecoderBuilder<IString, String>) infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
-//    }
-    
+
+    // Create the decoders, one per thread
     for (int i = 0; i < numThreads; i++) {
       try {
-        infererBuilder.setFilterUnknownWords(dropUnknownWords);
-        infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
+        infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
+        infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
         infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
+      
       } catch (CloneNotSupportedException e) {
         throw new RuntimeException(e);
       }
@@ -845,7 +838,7 @@ public class Phrasal {
       if (config.containsKey(BEAM_SIZE)) {
         try {
           int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
-          infererBuilder.setBeamCapacity(beamSize);
+          infererBuilder.setBeamSize(beamSize);
         } catch (NumberFormatException e) {
           throw new RuntimeException(
               String
@@ -854,7 +847,7 @@ public class Phrasal {
                       config.get(BEAM_SIZE).get(0), BEAM_SIZE));
         }
       }
-      inferers.add(infererBuilder.build());
+      inferers.add(infererBuilder.newInferer());
     }
     System.err.printf("Inferer Count: %d%n", inferers.size());
 
@@ -867,7 +860,7 @@ public class Phrasal {
         System.err.printf("Generating n-best lists (size: %d)%n",
             nbestListSize);
 
-      } else if (nbestOpt.size() == 2 || nbestOpt.size() == 3) {
+      } else if (nbestOpt.size() >= 2 && nbestOpt.size() <= 4) {
         String nbestListFilename = nbestOpt.get(0);
         nbestListSize = Integer.parseInt(nbestOpt.get(1));
         assert nbestListSize >= 0;
@@ -876,8 +869,12 @@ public class Phrasal {
           nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
         }
         
-        if (nbestOpt.size() == 3) {
+        if (nbestOpt.size() >= 3) {
           nbestListOutputType = nbestOpt.get(2);
+        }
+        
+        if (nbestOpt.size() >= 4) {
+          nBestListFeaturePattern = Pattern.compile(nbestOpt.get(3));
         }
         
         System.err.printf("Generating n-best lists to: %s (size: %d)%n",
@@ -885,7 +882,7 @@ public class Phrasal {
 
       } else {
         throw new RuntimeException(
-            String.format("%s requires 1, 2 or 3 arguments, not %d", NBEST_LIST_OPT,
+            String.format("%s requires 1 to 4 arguments, not %d", NBEST_LIST_OPT,
                 nbestOpt.size()));
       }
 
@@ -993,8 +990,6 @@ public class Phrasal {
         if (wrapBoundary) {
           bestTranslation = bestTranslation.subsequence(1, bestTranslation.size() - 1);
         }
-        
-        
       }
         
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);
@@ -1032,7 +1027,7 @@ public class Phrasal {
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
-        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nbestListWriter);
+        IOTools.writeNbest(translations, sourceInputId, nbestListOutputType, nBestListFeaturePattern, nbestListWriter);
       }
       
       // Output the alignments if necessary

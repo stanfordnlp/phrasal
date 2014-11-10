@@ -22,6 +22,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
  * Cube pruning as described by Chiang and Huang (2007)
@@ -59,8 +60,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }    
   }
 
-  public static class CubePruningDecoderBuilder<TK, FV> extends
-  AbstractBeamInfererBuilder<TK, FV> {
+  public static class CubePruningDecoderBuilder<TK, FV> extends AbstractBeamInfererBuilder<TK, FV> {
     int maxDistortion = DEFAULT_MAX_DISTORTION;
     int decoderId = -1;
 
@@ -75,7 +75,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public Inferer<TK, FV> build() {
+    public Inferer<TK, FV> newInferer() {
       decoderId++;
       return new CubePruningDecoder<TK, FV>(this);
     }
@@ -93,16 +93,19 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
-    final int sourceLength = source.size();
 
-    // create beams. We don't need to store all of them, since the translation
+    // Create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
 
     // TM (phrase table) query for applicable rules
-    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    source = sourceRulePair.first();
+    if (source == null || source.size() == 0) return null;
+    final int sourceLength = source.size();
+    List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+        
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     final int originalLength = ruleList.size();
@@ -112,7 +115,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
-
+    if (ruleGrid.isCoverageComplete()) {
+      logger.warning(String.format("Incomplete coverage for source input %d", sourceInputId));
+    }
+    
     // Fill Beam 0...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
         recombinationHistory, maxDistortion, 0);

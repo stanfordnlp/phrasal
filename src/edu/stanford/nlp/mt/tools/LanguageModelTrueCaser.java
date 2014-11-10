@@ -59,7 +59,7 @@ public class LanguageModelTrueCaser {
 
     CubePruningDecoder.CubePruningDecoderBuilder<IString, String> infererBuilder = 
         (CubePruningDecoder.CubePruningDecoderBuilder<IString, String>) InfererBuilderFactory.factory(InfererBuilderFactory.CUBE_PRUNING_DECODER);
-    infererBuilder.setIncrementalFeaturizer(combinedFeaturizer);
+    infererBuilder.setFeaturizer(combinedFeaturizer);
     infererBuilder.setScorer(new UniformScorer<String>());
 
     // Create truecasing phrase generator
@@ -76,7 +76,7 @@ public class LanguageModelTrueCaser {
     infererBuilder.setMaxDistortion(0);
 
     // builder decoder
-    inferer = infererBuilder.build();    
+    inferer = infererBuilder.newInferer();    
   }
 
   /**

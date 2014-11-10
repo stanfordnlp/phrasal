@@ -78,7 +78,13 @@ while(<STDIN>) {
       if($oldtype =~ /^\s*$/) {
          print "\n";
       } else {
-         print "$oldtype\n";
+         print "$oldtype";
+         my $oldfeatpattern = <STDIN>;
+         if($oldfeatpattern =~ /^\s*$/) {
+             print "\n";
+         } else {
+             print "$oldfeatpattern\n";
+         }
       }
     }
     
