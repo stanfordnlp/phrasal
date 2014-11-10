@@ -33,6 +33,7 @@ public class BuildDependencyLMData2 {
   private static BufferedWriter noEventWriter;
   
   private static LocalWordClassMap classMap;
+  private static boolean useHeadClasses = false;
 
   private static String HEAD_SUFFIX = "<HEAD>";
   private static String SIBLING_SUFFIX = "<SIB>";
@@ -60,6 +61,7 @@ public class BuildDependencyLMData2 {
     optionArgDefs.put("sourceTokens", 1);
     optionArgDefs.put("targetTokens", 1);
     optionArgDefs.put("classMap", 1);
+    optionArgDefs.put("headClasses", 0);
     return optionArgDefs;
   }
   
@@ -78,11 +80,18 @@ public class BuildDependencyLMData2 {
   
   private static void incrementChildCount(IString child, IString sibling, IString head, IString direction) throws IOException {
     
-    head = new IString(head + HEAD_SUFFIX);
     
     if (classMap != null && sibling != START_TOKEN) {
       sibling = classMap.get(sibling);
     }
+    
+    if (useHeadClasses && classMap != null && head != ROOT_TOKEN && head != FRAG_TOKEN) {
+      head = classMap.get(head);
+    }
+    
+      
+    head = new IString(head + HEAD_SUFFIX);
+  
     sibling = new IString(sibling + SIBLING_SUFFIX);
 
     lmWriter.write(sibling + " " + direction + " " + head + " " + child);
@@ -197,6 +206,9 @@ public class BuildDependencyLMData2 {
     String rightDepLMFilename = outdirPath + File.separator + "deplm.nonevents";
     String leftDepLMFilename = outdirPath + File.separator + "deplm.data";
     String classMapFilename = PropertiesUtils.get(options, "classMap", null, String.class);
+    
+    useHeadClasses = PropertiesUtils.getBool(options, "headClasses", false);
+    
     
     if (classMapFilename != null) {
       System.err.println("Loading word class mapping from " + classMapFilename);

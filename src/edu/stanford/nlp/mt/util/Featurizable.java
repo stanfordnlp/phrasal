@@ -292,4 +292,17 @@ public class Featurizable<TK, FV> {
     sb.append(rule.abstractRule.alignment);
     return sb.toString();
   }
+  
+  public String debugStates() {
+    StringBuffer sb = new StringBuffer();
+
+    for (FeaturizerState state : this.states) {
+      String debugMessage = state.debug();
+      if (debugMessage != null) {
+        sb.append(debugMessage);
+      }
+    }
+    return sb.toString();
+  }
+  
 }

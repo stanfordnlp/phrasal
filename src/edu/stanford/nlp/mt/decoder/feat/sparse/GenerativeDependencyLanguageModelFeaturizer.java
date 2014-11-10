@@ -95,17 +95,18 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
   }
 
   @Override
-  public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, boolean scoreEmptyChildren) {
+  public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, boolean scoreEmptyChildren) {
     
     double score = score(token, START_TOKEN, FRAG_TOKEN, ROOT_DIR_TOKEN);
     if ( ! this.disableEndToken)
       score += score(END_TOKEN, token, FRAG_TOKEN, ROOT_DIR_TOKEN);
     
     lmScores.add(score);
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, 1.0));
+    this.state.getProjectedDependencies().put(tokenIndex, -2);
     
     if (this.useFragPenalty)
-      features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, -1.0));
+      features.add(new FeatureValue<String>(FEAT_NAME_FRAG_PENALTY, 1.0));
 
     if ( ! this.disableEndToken && scoreEmptyChildren) {
       double leftScore = score(END_TOKEN, START_TOKEN, token, LEFT_DIR_TOKEN);
@@ -116,27 +117,34 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
   }
 
   @Override
-  public void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState) {
+  public void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, DepLMSubState subState) {
     if (subState.getRightSibling() == null) {
       subState.setRightSibling(START_TOKEN);
     }
     double rightScore = score(token, subState.getRightSibling(), subState.getHeadToken(), RIGHT_DIR_TOKEN);
     subState.setRightSibling(token);
     lmScores.add(rightScore);
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, 1.0));
+    /* Set tokenIndex to -1 to disable adding another dependency. Used by scoreRightEnd. */
+    if (tokenIndex > -1) 
+      this.state.getProjectedDependencies().put(tokenIndex, subState.getHeadTokenIndex());
+
   }
   
   @Override
-  public void scoreRoot(List<FeatureValue<String>> features, List<Double> lmScores, IString token) {
+  public void scoreRoot(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex) {
     double score = score(token, START_TOKEN, ROOT_TOKEN, ROOT_DIR_TOKEN);
     if ( ! this.disableEndToken)
       score += score(END_TOKEN, token, ROOT_TOKEN, ROOT_DIR_TOKEN);
     
+    
+    this.state.getProjectedDependencies().put(tokenIndex, -1);
+
     lmScores.add(score);
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, 1.0));
   }
   
-  public void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString headToken, DepLMSubState subState) {
+  public void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString headToken, int headTokenIndex, DepLMSubState subState) {
     
     Collections.reverse(subState.getLeftChildren());
 
@@ -147,24 +155,30 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     for (int i = 0; i <= leftChildrenCount; i++) {
       IString depToken1 =  (i > 0) ?  subState.getLeftChildren().get(i-1) : START_TOKEN;
       IString depToken2 =  (i < leftChildrenCount) ?  subState.getLeftChildren().get(i) : END_TOKEN;      
-      if ( i < leftChildrenCount ||  ! this.disableEndToken)
+      if ( i < leftChildrenCount ||  ! this.disableEndToken) {
         leftScore += score(depToken2, depToken1, headToken, LEFT_DIR_TOKEN);
+        /* Add dependencies to the state */
+        if (i < leftChildrenCount) {
+          Integer depToken2Index = subState.getLeftChildrenIndices().get(i);
+          this.state.getProjectedDependencies().put(depToken2Index, headTokenIndex);
+        }
+      }
     }
     
     lmScores.add(leftScore);
-    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, -1.0 * (subState.getLeftChildren().size())));
+    features.add(new FeatureValue<String>(FEAT_NAME_WORD_PENALTY, 1.0 * (subState.getLeftChildren().size())));
     subState.getLeftChildren().clear();
   }
 
   @Override
   public void scoreRightEnd(List<FeatureValue<String>> features, List<Double> lmScores, DepLMSubState subState) {
     if ( ! this.disableEndToken)
-      scoreRight(features, lmScores, END_TOKEN, subState);
+      scoreRight(features, lmScores, END_TOKEN, -1, subState);
   }
 
   @Override
-  public void scoreUnaligned(List<FeatureValue<String>> features, List<Double> lmScores, IString token) {
-    scoreFrag(features, lmScores, token, true);
+  public void scoreUnaligned(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex) {
+    scoreFrag(features, lmScores, token, tokenIndex, true);
   }
   
 }

@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.feat.sparse.AbstractDependencyLanguageModelFeaturizer.DepLMState;
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.util.Generics;
@@ -108,6 +109,9 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
         sbuf.append(f.derivation.rule.abstractRule.target.toString());
       }
     }
+    
+    sbuf.append(" ").append(delim).append(" ").append(this.featurizable.debugStates());
+    
   }
   
   List<Featurizable<TK,FV>> featurizables() {

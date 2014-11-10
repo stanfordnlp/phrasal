@@ -55,19 +55,21 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   public static String HEAD_SUFFIX = "<HEAD>";
   public static String ROOT_SUFFIX = "<ROOT>";
   public static String FRAG_SUFFIX = "<FRAG>";
+  
+  protected DepLMState state;
 
   
-  public abstract void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState);
+  public abstract void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, DepLMSubState subState);
   
-  public abstract void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState);
+  public abstract void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, DepLMSubState subState);
 
   public abstract void scoreRightEnd(List<FeatureValue<String>> features,  List<Double> lmScores, DepLMSubState subState);
   
-  public abstract void scoreUnaligned(List<FeatureValue<String>> features,  List<Double> lmScores, IString token);
+  public abstract void scoreUnaligned(List<FeatureValue<String>> features,  List<Double> lmScores, IString token, int tokenIndex);
   
-  public abstract void scoreFrag(List<FeatureValue<String>> features,  List<Double> lmScores, IString token, boolean scoreEmptyChildren);
+  public abstract void scoreFrag(List<FeatureValue<String>> features,  List<Double> lmScores, IString token, int tokenIndex, boolean scoreEmptyChildren);
   
-  public abstract void scoreRoot(List<FeatureValue<String>> features,  List<Double> lmScores, IString token);
+  public abstract void scoreRoot(List<FeatureValue<String>> features,  List<Double> lmScores, IString token, int tokenIndex);
   
   /*
    * Returns true if a source token was already translated
@@ -191,7 +193,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
    * that corresponds to an unaligned source token
    */
   
-  private void cleanUp(DepLMState state, Featurizable<IString, String> f, int tgtIndex, 
+  private void cleanUp(Featurizable<IString, String> f, int tgtIndex, 
       List<FeatureValue<String>> features, List<Double> lmScores) {
     
     final int startPos = f.sourcePosition;
@@ -224,20 +226,23 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
             }
           }
         }
-        for (IString child : orphanedSubState.getLeftChildren()) {
+        int leftChildrenCount = orphanedSubState.getLeftChildren().size();
+        for (int i = 0; i < leftChildrenCount; i++) {
+          IString child = orphanedSubState.getLeftChildren().get(i);
+          Integer idx = orphanedSubState.getLeftChildrenIndices().get(i);
           if (isRoot) {
-            scoreFrag(features, lmScores, child, false);
+            scoreFrag(features, lmScores, child, idx, false);
           } else if (foundLeftHead) {
-            scoreRight(features,lmScores, child, subState);
+            scoreRight(features,lmScores, child, idx, subState);
           } else {
             subState = state.getSubState(sourceHeadIndex);
             if (subState == null)
               subState = state.addSubState(sourceHeadIndex);
-            subState.getLeftChildren().add(child);
+            subState.addLeftChild(child, idx);
           }
         }
         
-        orphanedSubState.getLeftChildren().clear();
+        orphanedSubState.clearLeftChildren();
         state.setSubState(j, null);
         
       }
@@ -261,7 +266,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     
     // Lookup the state
     DepLMState prevState = f.prior == null ? null : (DepLMState) f.prior.getState(this);
-    DepLMState state = prevState == null ? new DepLMState() : prevState.clone();
+    this.state = prevState == null ? new DepLMState() : prevState.clone();
     
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     for (int i = 0, targetLength = f.targetPhrase.size(); i < targetLength; i++) {
@@ -269,7 +274,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       //clean up orphaned substates that are a result of
       //unaligned source tokens
-      cleanUp(state, f, tgtIndex, features, lmScores);
+      cleanUp(f, tgtIndex, features, lmScores);
       
       
       IString tgtToken = f.targetPhrase.get(i);
@@ -277,7 +282,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
         // Unaligned
-        scoreUnaligned(features, lmScores, tgtToken);
+        scoreUnaligned(features, lmScores, tgtToken, tgtIndex);
         continue;
       }
       
@@ -305,14 +310,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       // True if a target content word is aligned to source punctuation
       if (sourceHeadIndex == null) {
-        scoreUnaligned(features, lmScores, tgtToken);
+        scoreUnaligned(features, lmScores, tgtToken, tgtIndex);
         continue;
       }
 
       //Special case: force 1:1 alignments, if the source token is already aligned to some other target token
       //then ignore the current token
       if (state.getAlignedSourceIndices().get(sourceDepIndex)) {
-        scoreUnaligned(features, lmScores, tgtToken);
+        scoreUnaligned(features, lmScores, tgtToken, tgtIndex);
         continue;
       }
       
@@ -323,7 +328,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       //check for root
       if (sourceHeadIndex < 0) {
-       scoreRoot(features, lmScores, tgtToken);
+       scoreRoot(features, lmScores, tgtToken, tgtIndex);
       } else {
         //check if head was already put down
         if (isSourceTokenScorable(sourceHeadIndex, tgtIndex, f, state.getAlignedSourceIndices())) {
@@ -331,7 +336,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
           //try to score right
           DepLMSubState subState = state.getSubState(sourceHeadIndex);
           if (subState != null && subState.getHeadToken() != null) {
-            scoreRight(features, lmScores, tgtToken, subState);
+            scoreRight(features, lmScores, tgtToken, tgtIndex, subState);
           } else {
             
             // Walk up the source dependency tree until
@@ -360,14 +365,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
             }
             
             if (isRoot) {
-              scoreFrag(features, lmScores, tgtToken, false);
+              scoreFrag(features, lmScores, tgtToken, tgtIndex, false);
             } else if (foundLeftHead) {
-              scoreRight(features, lmScores, tgtToken, subState);
+              scoreRight(features, lmScores, tgtToken, tgtIndex, subState);
             } else {
               subState = state.getSubState(sourceHeadIndex);
               if (subState == null)
                 subState = state.addSubState(sourceHeadIndex);
-              subState.getLeftChildren().add(tgtToken);
+              subState.addLeftChild(tgtToken, tgtIndex);
             }
             
           }
@@ -376,7 +381,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
           DepLMSubState subState = state.getSubState(sourceHeadIndex);
           if (subState == null)
             subState = state.addSubState(sourceHeadIndex);
-          subState.getLeftChildren().add(tgtToken);
+          subState.addLeftChild(tgtToken, tgtIndex);
         }
       }
           
@@ -385,14 +390,14 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       if (subState == null) {
         subState = state.addSubState(sourceDepIndex);
       }
-      subState.setHeadToken(tgtToken);
+      subState.setHeadToken(tgtToken, tgtIndex);
 
       
      
       
       
       //score left children of current token
-      scoreLeft(features, lmScores, tgtToken, subState);
+      scoreLeft(features, lmScores, tgtToken, tgtIndex, subState);
     }
 
     //check which substates can be deleted
@@ -420,7 +425,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     }
     
     //clean up
-    cleanUp(state, f, f.targetPosition + f.targetPhrase.size(), features, lmScores);
+    cleanUp(f, f.targetPosition + f.targetPhrase.size(), features, lmScores);
 
     //compute new average
     
@@ -451,6 +456,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     f.setState(this, state);
     
     return features;
+    //return null;
   }
   
   
@@ -463,6 +469,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   
   public static class DepLMState extends FeaturizerState {
 
+    private HashMap<Integer, Integer> projectedDependencies;
     private HashMap<Integer, DepLMSubState> subStates;
     private CoverageSet alignedSourceIndices;
     
@@ -474,6 +481,11 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       this.setAlignedSourceIndices(new CoverageSet());
       this.scoredTokens = 0;
       this.f = 0.0;
+      this.projectedDependencies = new HashMap<Integer, Integer>();
+    }
+    
+    public HashMap<Integer, Integer> getProjectedDependencies() {
+      return this.projectedDependencies;
     }
     
     @Override
@@ -530,6 +542,10 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
 
     
    
+    @Override
+    public String debug() {
+      return this.projectedDependencies.toString();
+    }
     
     
     @Override
@@ -567,6 +583,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       copy.getAlignedSourceIndices().or(this.getAlignedSourceIndices());
       copy.f = this.f;
       copy.scoredTokens = this.scoredTokens;
+      copy.projectedDependencies.putAll(this.projectedDependencies);
       return copy;
     }
 
@@ -586,24 +603,41 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     private IString rightSibling;
 
     private List<IString> leftChildren;
+    private List<Integer> leftChildrenIndices;
     private IString headToken;
     
-
+    private int headTokenIndex;
     
     
     public DepLMSubState() {
       this.rightLMState = null;
       this.leftChildren = new LinkedList<IString>();
+      this.leftChildrenIndices = new LinkedList<Integer>();
       this.headToken = null;
+      this.headTokenIndex = -1;
       this.rightSibling = null;
     }
     
-    public void setHeadToken(IString token) {
+    public void addLeftChild(IString token, int index) {
+      this.leftChildren.add(token);
+      this.leftChildrenIndices.add(index);
+    }
+    
+    public void setHeadToken(IString token, int index) {
       this.headToken = token;
+      this.headTokenIndex = index;
     }
     
     public IString getHeadToken() {
       return this.headToken;
+    }
+    
+    public int getHeadTokenIndex() {
+      return this.headTokenIndex;
+    }
+    
+    public List<Integer> getLeftChildrenIndices() {
+      return this.leftChildrenIndices;
     }
     
     public void setRightLMState(LMState rightLMState){
@@ -695,7 +729,8 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       DepLMSubState copy = new DepLMSubState();
       copy.setRightLMState(this.rightLMState);
       copy.getLeftChildren().addAll(this.getLeftChildren());
-      copy.setHeadToken(this.headToken);
+      copy.getLeftChildrenIndices().addAll(this.getLeftChildrenIndices());
+      copy.setHeadToken(this.headToken, this.headTokenIndex);
       copy.setRightSibling(this.rightSibling);
       return copy;
     }
@@ -706,6 +741,11 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
 
     public void setRightSibling(IString rightSibling) {
       this.rightSibling = rightSibling;
+    }
+    
+    public void clearLeftChildren() {
+      this.leftChildren.clear();
+      this.leftChildrenIndices.clear();
     }
     
   }

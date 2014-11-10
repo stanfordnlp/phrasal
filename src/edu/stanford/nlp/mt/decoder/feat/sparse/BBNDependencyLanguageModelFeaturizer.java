@@ -73,7 +73,7 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
   }
 
   @Override
-  public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, boolean scoreEmptyChildren) {
+  public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, boolean scoreEmptyChildren) {
     String str = token.word() + FRAG_SUFFIX;
     Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
     seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
@@ -95,7 +95,7 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
   }
 
   @Override
-  public void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState) {
+  public void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, DepLMSubState subState) {
     Sequence<IString> seq = new SimpleSequence<IString>(token);
     int start = 0;
     if (subState.getRightLMState() == null) {
@@ -112,7 +112,7 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
   }
   
   @Override
-  public void scoreRoot(List<FeatureValue<String>> features, List<Double> lmScores, IString token) {
+  public void scoreRoot(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex) {
     String str = token.word() + ROOT_SUFFIX;
     Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
     seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
@@ -122,7 +122,7 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
   }
   
   @Override
-  public void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString token, DepLMSubState subState) {
+  public void scoreLeft(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, DepLMSubState subState) {
     Collections.reverse(subState.getLeftChildren());
     Sequence<IString> seq = new SimpleSequence<IString>(subState.getLeftChildren());
     seq = Sequences.wrapStart(seq, new IString(token.word() + "<HEAD>"));
@@ -135,12 +135,12 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
 
   @Override
   public void scoreRightEnd(List<FeatureValue<String>> features, List<Double> lmScores, DepLMSubState subState) {
-    scoreRight(features, lmScores, rightLM.getEndToken(), subState);
+    scoreRight(features, lmScores, rightLM.getEndToken(), -1, subState);
   }
 
   @Override
-  public void scoreUnaligned(List<FeatureValue<String>> features,  List<Double> lmScores, IString token) {
-    scoreFrag(features, lmScores, token, true);
+  public void scoreUnaligned(List<FeatureValue<String>> features,  List<Double> lmScores, IString token, int tokenIndex) {
+    scoreFrag(features, lmScores, token, tokenIndex,  true);
   }
   
 }

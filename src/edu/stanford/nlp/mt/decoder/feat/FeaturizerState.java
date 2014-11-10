@@ -11,4 +11,9 @@ public abstract class FeaturizerState {
   public abstract boolean equals(Object other);
   
   public abstract int hashCode();
+  
+  public String debug() {
+    return null;
+  }
+  
 }
