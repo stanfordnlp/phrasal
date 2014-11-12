@@ -281,14 +281,22 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       if (tgtToken.word().length() == 0 || TokenUtils.isPunctuation(tgtToken.word()))
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
-        // Unaligned
-        scoreUnaligned(features, lmScores, tgtToken, tgtIndex);
+        // Unaligned -- try to attach to the next translated word in the rule
+        // Check if there is a next word in the phrase and whether it is aligned
+        if ((i + 1) < targetLength && alignment.t2s(i+1) != null && alignment.t2s(i+1).length > 0) {
+          DepLMSubState subState = state.getSubState(i+1);
+          if (subState == null)
+            subState = state.addSubState(i+1);
+          subState.addLeftChild(tgtToken, tgtIndex);
+        } else {
+          scoreUnaligned(features, lmScores, tgtToken, tgtIndex);
+        }
         continue;
       }
       
-      if (this.useClasses) {
-        tgtToken = this.targetClassMap.get(tgtToken);
-      }
+      //if (this.useClasses) {
+      //  tgtToken = this.targetClassMap.get(tgtToken);
+      //}
       
       Integer sourceHeadIndex = null;
       int sourceDepIndex = -1;

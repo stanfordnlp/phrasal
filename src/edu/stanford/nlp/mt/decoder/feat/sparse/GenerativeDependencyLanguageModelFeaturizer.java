@@ -81,7 +81,16 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     if (this.disableTransitivity) System.err.println("disableTransitivity"); 
   }
   
-  private static double score(IString child, IString sibling, IString head, IString direction) {
+  private double score(IString child, IString sibling, IString head, IString direction) {
+    
+    if (this.useClasses && head != ROOT_TOKEN && head != FRAG_TOKEN) {
+      head = this.targetClassMap.get(head);
+    }
+    
+    if (this.useClasses && sibling != START_TOKEN) {
+      sibling = this.targetClassMap.get(sibling);
+    }
+    
     head = new IString(head + HEAD_SUFFIX);
     sibling = new IString(sibling + SIBLING_SUFFIX);
     List<IString> tokens = new LinkedList<IString>();
@@ -91,12 +100,14 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     tokens.add(child);
     Sequence<IString> seq = new SimpleSequence<IString>(tokens);
     double score = depLM.score(seq, 3, null).getScore();
+    //double score = depLM.score(seq, 2, null).getScore();
+
     return score;
   }
 
   @Override
   public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, boolean scoreEmptyChildren) {
-    
+        
     double score = score(token, START_TOKEN, FRAG_TOKEN, ROOT_DIR_TOKEN);
     if ( ! this.disableEndToken)
       score += score(END_TOKEN, token, FRAG_TOKEN, ROOT_DIR_TOKEN);

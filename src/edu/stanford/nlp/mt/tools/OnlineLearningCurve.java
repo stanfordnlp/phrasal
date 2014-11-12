@@ -95,7 +95,7 @@ public class OnlineLearningCurve {
         String translationStr = translation == null ? "" : NISTTokenizer.tokenize(translation.translation.toString());
         ScoredFeaturizedTranslation<IString,String> tr = 
             new ScoredFeaturizedTranslation<IString,String>(IStrings.tokenize(translationStr), 
-                translation == null ? null : translation.features, translation == null ? null : translation.score);
+                translation == null ? null : translation.features, translation == null ? 0.0 : translation.score);
         incMetric.add(tr);
       }
       double scorePseudoPercentage = incMetric.score() * 100.0;
