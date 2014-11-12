@@ -272,6 +272,8 @@ public final class IOTools {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, false);
       } else if (outputType.equals("nnlm")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, false, true);
+      } else if (outputType.equals("nnlm-bolt")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, true);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());

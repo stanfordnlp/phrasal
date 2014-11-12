@@ -28,6 +28,10 @@ if len(sys.argv) < 4:
 entries = {}
 system_name = sys.argv[2]
 set_name = sys.argv[3]
+
+source_text_index = 4
+rule_mappings_index = 5
+
 with codecs.open(sys.argv[1], 'r', 'utf-8') as fh:
   for line in fh:
     tokens = line.split(" ||| ")
@@ -52,7 +56,7 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
         #print "\r%s" %id
         print >>ofh, "<seg id=\"%s\">" % id
         print >>ofh, "<src>"
-        src_toks = tokens[-2].split(" ")
+        src_toks = tokens[source_text_index].split(" ")
         for tok_id in xrange(0, len(src_toks)):
           print >>ofh, " <tok id=\"%d\">%s</tok>" % \
             (tok_id, xml.sax.saxutils.escape(src_toks[tok_id]))
@@ -62,10 +66,10 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
       #print "tokens: ", tokens
       #for i in xrange(0, len(tokens)):
       #  print "%d:%s\n" % (i, tokens[i])
-      #print "phrase_toks: ", tokens[-1] 
+      #print "phrase_toks: ", tokens[rule_mappings_index] 
       
-      #phrase_toks = tokens[-1].split(" |")
-      phrase_toks = re.split(" \|(?=[\-0-9\.]+)", " " + tokens[-1])
+      #phrase_toks = tokens[rule_mappings_index].split(" |")
+      phrase_toks = re.split(" \|(?=[\-0-9\.]+)", " " + tokens[rule_mappings_index])
       for ptok in phrase_toks[1:]:
         sub_ptoks = ptok.split(" ")
         sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")

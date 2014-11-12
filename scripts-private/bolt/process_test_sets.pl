@@ -36,7 +36,7 @@ while(<STDIN>) {
 	}
 	elsif($src_or_ref eq "src" && $format eq "sgm") {
 	    my $meta_file = "${output_dir}/$concise_name.seg_info$suffix";
-	    &exec_command("cat $file | perl scripts/convert_ibm_sgm_to_plain_text.pl --meta $meta_file --guessGenreUsingRegexpList manual_lists/docid_regexp_to_genre > /dev/null");
+	    &exec_command("cat $file | perl ~/javanlp/projects/mt/scripts-private/bolt/convert_ibm_sgm_to_plain_text.pl --meta $meta_file --guessGenreUsingRegexpList manual_lists/docid_regexp_to_genre > /dev/null");
 	    if(!defined($src_files{$concise_name})) {
 		$src_files{$concise_name} = [[],[]];
 	    }
@@ -105,5 +105,5 @@ sub get_length {
 sub exec_command {
     my ($cmd) = @_;
     print $cmd."\n";
-    #system($cmd)==0 or die $!;
+    system($cmd)==0 or die $!;
 }

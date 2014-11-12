@@ -84,6 +84,8 @@ def process_files(score_type, in_file, distinct_nbest_file, score_files, out_fil
   Read data from in_file, and output to out_file
   """
 
+  reDelim = ' \|\|\| '
+  delim = ' ||| '
   tokens = re.split(',', score_files)
   file_list = []
   for token in tokens:
@@ -112,14 +114,14 @@ def process_files(score_type, in_file, distinct_nbest_file, score_files, out_fil
   cur_id = 0
   for eachline in inf:
     eachline = clean_line(eachline)
-    tokens = re.split(' \|\|\| ', eachline)
+    tokens = re.split(reDelim, eachline)
     
     if len(tokens)<3:
       break
 
     id = tokens[0]
     translation = tokens[1]
-    if len(tokens)==3:
+    if len(tokens)>=3:
       features = tokens[2]
     else:
       features = ''
@@ -141,7 +143,8 @@ def process_files(score_type, in_file, distinct_nbest_file, score_files, out_fil
       for ii in xrange(num_files):
         neural_str = neural_str + score_type + str(ii) + ': ' + clean_line(score_infs[ii].readline()) + ' '
 
-    ouf.write('%s ||| %s ||| %s %s\n' % (id, translation, features, neural_str))
+    tokens[2] = features + ' ' + neural_str;
+    ouf.write('%s\n' % (delim.join(tokens)))
     line_id = line_id + 1
     if (line_id % 10000 == 0):
       sys.stderr.write(' (%d) ' % line_id)
