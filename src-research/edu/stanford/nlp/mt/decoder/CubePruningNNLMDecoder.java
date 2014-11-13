@@ -128,7 +128,7 @@ public class CubePruningNNLMDecoder<TK,FV> extends CubePruningDecoder<TK, FV> {
     
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
-    if (ruleGrid.isCoverageComplete()) {
+    if ( ! ruleGrid.isCoverageComplete()) {
       logger.warning(String.format("Incomplete coverage for source input %d", sourceInputId));
     }
     
