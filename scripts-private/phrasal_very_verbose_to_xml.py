@@ -21,13 +21,16 @@ import re
 
 import xml.sax.saxutils
 
-if len(sys.argv) < 4:
-  print >>sys.stderr, "Usage:\n\t%s [unzipped n-best list] [system name] [section name]" % os.path.basename(sys.argv[0])
+if len(sys.argv) < 5:
+  print >>sys.stderr, "Usage:\n\t%s [unzipped n-best list] [system name] [section name] [output-n-best-size]" % os.path.basename(sys.argv[0])
   sys.exit(-1)
  
 entries = {}
 system_name = sys.argv[2]
 set_name = sys.argv[3]
+output_n = int(sys.argv[4])
+
+#print "Max output %d" %(output_n)
 
 source_text_index = 4
 rule_mappings_index = 5
@@ -36,7 +39,10 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as fh:
   for line in fh:
     tokens = line.split(" ||| ")
     if tokens[0] in entries:
-       entries[tokens[0]] += 1
+      #print "Adding to %s val is %d" % (tokens[0], entries[tokens[0]])
+      if(entries[tokens[0]] < output_n):
+        #print "OK: values are (%d,%s)" % (entries[tokens[0]], output_n)
+        entries[tokens[0]] += 1
     else:
        entries[tokens[0]] = 1
 
@@ -62,21 +68,16 @@ with codecs.open(sys.argv[1], 'r', 'utf-8') as ifh:
             (tok_id, xml.sax.saxutils.escape(src_toks[tok_id]))
         print >>ofh, "</src>"
         print >>ofh, "<nbest count=\"%d\">" % entries[tokens[0]]
-      print >>ofh, "<hyp rank=\"%d\" score=\"%s\">" % (rank, tokens[3])
-      #print "tokens: ", tokens
-      #for i in xrange(0, len(tokens)):
-      #  print "%d:%s\n" % (i, tokens[i])
-      #print "phrase_toks: ", tokens[rule_mappings_index] 
-      
-      #phrase_toks = tokens[rule_mappings_index].split(" |")
-      phrase_toks = re.split(" \|(?=[\-0-9\.]+)", " " + tokens[rule_mappings_index])
-      for ptok in phrase_toks[1:]:
-        sub_ptoks = ptok.split(" ")
-        sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")
-        print >>ofh, \
-          "  <t score=\"%s\" srcidx=\"%s\" type=\"phrase\"> %s </t>" % \
-          (sub_ptoks[0], sub_ptoks[1], xml.sax.saxutils.escape(" ".join(sub_ptoks[2:])))
-      print >>ofh, "</hyp>"
+      if rank < output_n:
+        print >>ofh, "<hyp rank=\"%d\" score=\"%s\">" % (rank, tokens[3])
+        phrase_toks = re.split(" \|(?=[\-0-9\.]+)", " " + tokens[rule_mappings_index])
+        for ptok in phrase_toks[1:]:
+          sub_ptoks = ptok.split(" ")
+          sub_ptoks[1] = sub_ptoks[1].replace("{", "").replace("}", "")
+          print >>ofh, \
+              "  <t score=\"%s\" srcidx=\"%s\" type=\"phrase\"> %s </t>" % \
+              (sub_ptoks[0], sub_ptoks[1], xml.sax.saxutils.escape(" ".join(sub_ptoks[2:])))
+        print >>ofh, "</hyp>"
       rank += 1 
     print >>ofh, "</nbest>" 
     print >>ofh, "</seg>"

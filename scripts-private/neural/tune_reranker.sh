@@ -73,7 +73,8 @@ function get_ref_list {
 echo "# outDir $outDir"
 execute_check "$outDir" "mkdir -p $outDir"
 
-tuneRefList=$( get_ref_list "$tuneRefPrefix" "," ) 
+tuneRefList=`ls $tuneRefPrefix* | perl -ne 's/\s+/,/; print' | perl -ne 's/,$//; print'`
+#tuneRefList=$( get_ref_list "$tuneRefPrefix" "," ) 
 echo "# tuneRefList=$tuneRefList"
 
 # split featureStr
