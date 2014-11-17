@@ -22,6 +22,8 @@ fi
 lang=$1
 infile=$2
 outfile=${3}/`basename $infile`
+# Create the output directory if it doesn't exist.
+mkdir -p $3
 
 shift 3
 
@@ -51,7 +53,7 @@ AR_TOK="java $JAVA_OPTS -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.proc
 EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false"
 
 # French tokenizer setup
-FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false,ptb3Dashes=false"
+FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false"
 
 # German segmentation and tokenization setup
 DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false"
@@ -62,7 +64,7 @@ ZH_SEG_PATH="/u/nlp/distrib/stanford-segmenter-2013-11-12"
 ZH_SEG="$ZH_SEG_PATH/segment.sh"
 
 # Spanish tokenizer setup (same parameters as French)
-ES_TOK="java $JAVA_OPTS edu.stanford.nlp.international.spanish.process.SpanishTokenizer -noSGML -options ptb3Escaping=false,ptb3Dashes=false"
+ES_TOK="java $JAVA_OPTS edu.stanford.nlp.international.spanish.process.SpanishTokenizer -noSGML -options ptb3Escaping=false"
 
 #
 # Process command line options
@@ -84,7 +86,7 @@ for op in $*; do
     elif [ $op == "tolower" ]; then
 	EN_TOK="$EN_TOK -lowerCase"
     	FR_TOK="$FR_TOK -lowerCase"
-	ES_TOK="%ES_TOK -lowerCase"
+	ES_TOK="$ES_TOK -lowerCase"
 
 	# This applies to other languages
     	tolower=tolower-utf8.py
