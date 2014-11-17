@@ -4,6 +4,8 @@ import edu.stanford.nlp.mt.process.de.GermanPostprocessor;
 import edu.stanford.nlp.mt.process.de.GermanPreprocessor;
 import edu.stanford.nlp.mt.process.en.EnglishPostprocessor;
 import edu.stanford.nlp.mt.process.en.EnglishPreprocessor;
+import edu.stanford.nlp.mt.process.es.SpanishPostprocessor;
+import edu.stanford.nlp.mt.process.es.SpanishPreprocessor;
 import edu.stanford.nlp.mt.process.fr.FrenchPostprocessor;
 import edu.stanford.nlp.mt.process.fr.FrenchPreprocessor;
 
@@ -21,7 +23,7 @@ public final class ProcessorFactory {
   // Supported languages in iso-639-1 format
   // TODO(spenceg) Make this more robust, and perhaps reconcile
   // with the JavaNLP core Languages package.
-  public static enum Language {UNK,AR,EN,DE,FR};
+  public static enum Language {UNK,AR,EN,DE,FR,ES};
   
   private ProcessorFactory() {}
   
@@ -47,6 +49,10 @@ public final class ProcessorFactory {
       case "fr":
       case "french":
         return new FrenchPreprocessor();
+        
+      case "es":
+      case "spanish":
+        return new SpanishPreprocessor();
     }
     
     throw new IllegalArgumentException("Invalid preprocessor language code: " + language);
@@ -74,6 +80,10 @@ public final class ProcessorFactory {
       case "fr":
       case "french":
         return new FrenchPostprocessor(options);
+        
+      case "es":
+      case "spanish":
+        return new SpanishPostprocessor(options);
     }
     
     throw new IllegalArgumentException("Invalid postprocessor language code: " + language);
