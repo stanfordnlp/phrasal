@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Author: Minh-Thang Luong <luong.m.thang@gmail.com>, created on Fri Sep 13 16:47:58 PDT 2013
 
 if [[ $# -gt 5 || $# -lt 4 ]]; then

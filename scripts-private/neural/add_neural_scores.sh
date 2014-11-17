@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 
-if [[ $# -gt 8 || $# -lt 8 ]]
+set -e
+
+if [[ $# -gt 6 || $# -lt 6 ]]
 then
-  echo "`basename $0` sourceFile nbestInputFile nbestOutputFile modelPrefixes testFlags device lmFeats [opt]" 
+  echo "`basename $0` sourceFile nbestInputFile nbestOutputFile modelPrefixes testFlags device" 
   echo "device: gpu0 or gpu1"
-  echo "opt: 0 -- use other LMs features, 1 -- only use the decoder score"
   exit
 fi
 
@@ -27,12 +28,6 @@ nbestOutputFile=$3
 modelPrefixes=$4
 testFlags=$5 #  --act_func relu --nbest
 device=$6 # gpu0 or gpu1
-lmFeats=$7
-
-opt=0
-if [ $# -ge 8 ]; then
-  opt=$8
-fi
 
 PYTHON="python2.7"
 SCRIPT_DIR="$JAVANLP_HOME/projects/mt/scripts-private"
@@ -64,13 +59,6 @@ execute_check "$nbestInputFile.clean" "$CLEAN -o 4 $nbestInputFile $nbestInputFi
 IFS=',' read -a models <<< "$modelPrefixes"
 
 nnlmFiles=""
-featureStr="$lmFeats,dm"
-excludeFeatures=""
-if [ "$opt" -eq 1 ]; then # only use decoder score
-  featureStr="dm"
-  excludeFeatures=`echo $lmFeats | perl -e 's/\s+$//; s/,/ -D /g; print "-D $_"'`
-  echo "exclude: $excludeFeatures"
-fi
 
 # compute nnlm scores 
 for index in "${!models[@]}"; do
@@ -79,7 +67,6 @@ for index in "${!models[@]}"; do
   modelName=`basename $modelPrefix`
   echo "# modelPrefix=$modelPrefix"
   echo "# modelName=$modelName"
-  featureStr="$featureStr,nnlm$index"
 
   if [ $isJoint -eq 1 ]; then
       execute_check "$nbestInputFile.clean.nnlm.$modelName" "THEANO_FLAGS='device=$device' $PYTHON $TEST_NNLM $testFlags $modelPrefix.model $modelPrefix.vocab $nbestInputFile $nbestInputFile.clean.nnlm.$modelName > $nbestInputFile.clean.nnlm.$modelName.stderr 2>&1"
@@ -91,8 +78,6 @@ for index in "${!models[@]}"; do
 done
 
 echo "# nnlmFiles=$nnlmFiles"
-echo "# featureStr=$featureStr"
-echo "# excludeFeatures=$excludeFeatures"
 
 # add nnlm scores
 inFile=$nbestInputFile.clean

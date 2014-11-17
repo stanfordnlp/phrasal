@@ -1,9 +1,10 @@
+#/usr/bin/perl
 use strict;
 use warnings;
 
-die "Usage: $0 merged_verbose_nbest_list test_set_regions lang site system date" if @ARGV != 6;
+die "Usage: $0 merged_verbose_nbest_list test_set_regions lang site system date output_root_dir" if @ARGV != 7;
 
-my ($nbest, $regions_file, $lang, $site, $system, $date) = @ARGV;
+my ($nbest, $regions_file, $lang, $site, $system, $date, $output_root) = @ARGV;
 
 my @regions = &get_region_info($regions_file);
 @regions = sort {$a->{start_index} <=> $b->{start_index}} @regions;
@@ -13,7 +14,8 @@ my $SCRIPTS_DIR = $ENV{"JAVANLP_HOME"}."/projects/mt/scripts-private";
 # Step through each line of the nbest list and whenever you finish reading the stuff that is associated with the current region, process the region
 # More specifically, for loop over regions, for each region read until you are past the region, and then print out to a temp file and run the processor
 
-my $temp_file = "./__make_package.temp";
+&exec_or_die("mkdir -p $output_root");
+my $temp_file = "${output_root}/__make_package.temp";
 
 die unless -e $nbest;
 
@@ -44,7 +46,7 @@ while(1) {
 	close TEMP;
 	# This is the first thing we don't want to include
 	# Process the existing tempfile and then reopen it and write this line to it
-	my ($output_dir, $output_file) = ("output/$lang/$site/$system/$ibm_name/$part/$date", "$ibm_name.nbest");
+	my ($output_dir, $output_file) = ("${output_root}/$lang/$site/$system/$ibm_name/$part/$date", "$ibm_name.nbest");
 	&exec_or_die("mkdir -p $output_dir");
 	#print "\nConverting $ibm_name $part ($stanford_name)...\n";
 	&exec_or_die("$SCRIPTS_DIR/phrasal_very_verbose_to_xml.py $temp_file $site.$system.$date $ibm_name 200");
