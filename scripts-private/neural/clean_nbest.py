@@ -34,7 +34,7 @@ def process_command_line():
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
 
   # optional arguments
-  parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='0 -- remove feature field (the third field), 1 -- keep lm features and add decoder score as dm, output contains only id/translation/features, 2 -- clean feature field, only retain LM field, output id/translation/features, 3 -- extract scores from last field only, 4 -- like option 1 but keep all fields in n-best list, to facilitate downstream processing. (default=0)')
+  parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='0 -- remove feature field (the third field), 1 -- keep lm features and add decoder score as dm, output contains only id/translation/features, 2 -- clean feature field, only retain LM field, output id/translation/features, 3 -- extract scores from last field only, 4 -- add decoder score, keep all LM+len scores, keep all fields in n-best list, to facilitate downstream processing. (default=0)')
   parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='enable debugging mode (default: false)') 
   
   args = parser.parse_args()
@@ -96,7 +96,7 @@ def process_files(in_file, out_file, opt):
       for ii in range(len(features)/2):
         name = features[2*ii]
         value = features[2*ii+1]
-        if re.search('LM', name):
+        if re.search('LM', name) or re.search('len', name):
           lmTokens.append(name)
           lmTokens.append(value)
 
