@@ -43,7 +43,7 @@ outfile=$outfile.tok
 # Currently runs on CentOS 6 boxes only
 CDEC_PATH=/u/nlp/packages/cdec
 
-JAVA_OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:PermSize=256m"
+JAVA_OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC"
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz

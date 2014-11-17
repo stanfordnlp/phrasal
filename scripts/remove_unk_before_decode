@@ -9,7 +9,7 @@ MEM=$1
 PTFILE=$2
 INPUT=$3
 
-OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -Xmx$MEM -Xms$MEM -XX:MaxPermSize=256m"
+OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -Xmx$MEM -Xms$MEM"
 
 java $OPTS edu.stanford.nlp.mt.tools.FilterOOVByPhraseTable -a $PTFILE < $INPUT
 
