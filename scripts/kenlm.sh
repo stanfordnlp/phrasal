@@ -32,7 +32,7 @@ shift 3
 mkdir -p $TEMPDIR
 
 echo "Building ARPA LM..."
-zcat $* | perl -ne 's/<s>//g; print' | $MAKELM --interpolate_unigrams -o $ORDER -S 80% -T $TEMPDIR > "$NAME".arpa
+zcat $* | $MAKELM --interpolate_unigrams -o $ORDER -S 80% -T $TEMPDIR --arpa "$NAME".arpa
 
 echo "Binarizing ARPA LM with standard settings"
 $MAKEBIN $TYPE "$NAME".arpa "$NAME".bin
