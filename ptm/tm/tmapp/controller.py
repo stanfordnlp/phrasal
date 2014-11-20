@@ -293,6 +293,7 @@ SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
 SERVICE_URLS['fr']['en'] = 'http://jonah.stanford.edu:8017/x'
 SERVICE_URLS['en']['de'] = 'http://joan.stanford.edu:8017/x'
+SERVICE_URLS['en']['es'] = 'http://jonah.stanford.edu:8017/x'
 
 # Request types
 TRANSLATION_REQUEST = 'tReq'
