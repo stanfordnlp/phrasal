@@ -80,10 +80,12 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     // Don't know where the top K are yet.
     List<GoldScoredTranslation> metricScoredList = Generics.newArrayList(translations.size());
     double qNormalizer = 0.0;
-    for (RichTranslation<IString,String> translation : translations) {
+    
+    for (int i = 0, sz = translations.size(); i < sz; ++i) {
+      RichTranslation<IString,String> translation = translations.get(i);
       qNormalizer += Math.exp(translation.score);
       double labelScore = scoreMetric.score(sourceId, source, references, translation.translation);
-      metricScoredList.add(new GoldScoredTranslation(translation, labelScore));
+      metricScoredList.add(new GoldScoredTranslation(translation, labelScore, i));
     }
     Collections.sort(metricScoredList);
 
@@ -136,19 +138,22 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
   private static class GoldScoredTranslation implements Comparable<GoldScoredTranslation> {
     public final RichTranslation<IString,String> t;
     public double goldScore;
-    public GoldScoredTranslation(RichTranslation<IString,String> t, double goldScore) {
+    public int nbestRank;
+    public GoldScoredTranslation(RichTranslation<IString,String> t, double goldScore, int nbestRank) {
       this.t = t;
       this.goldScore = goldScore;
+      this.nbestRank = nbestRank;
     }
     
     @Override
     public String toString() {
-      return String.format("id: %d score: %.4f", (int) t.latticeSourceId, goldScore);
+      return String.format("id: %d score: %.4f", nbestRank, goldScore);
     }
     
     @Override
     public int compareTo(GoldScoredTranslation o) {
-      return (int) Math.signum(o.goldScore - this.goldScore);
+      int scoreCmp = (int) Math.signum(o.goldScore - this.goldScore);
+      return scoreCmp == 0 ? nbestRank - o.nbestRank : scoreCmp;
     }
     
     @Override
@@ -164,7 +169,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
         return false;
       } else {
         GoldScoredTranslation o = (GoldScoredTranslation) other;
-        return this.t == o.t;
+        return this.t == o.t && this.nbestRank == o.nbestRank;
       }
     }
   }
