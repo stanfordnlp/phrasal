@@ -25,8 +25,6 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "DPT";
 
-  private static final int DEFAULT_LEXICAL_CUTOFF = 50;
-  
   private final boolean addLexicalizedRule;
   private final boolean addClassBasedRule;
   private final int countFeatureIndex;
@@ -42,7 +40,7 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
     this.addLexicalizedRule = true;
     this.addClassBasedRule = false;
     this.countFeatureIndex = -1;
-    this.lexicalCutoff = DEFAULT_LEXICAL_CUTOFF;
+    this.lexicalCutoff = 0;
   }
 
   /**
@@ -60,7 +58,7 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
       sourceMap = SourceClassMap.getInstance();
       targetMap = TargetClassMap.getInstance();
     }
-    this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", DEFAULT_LEXICAL_CUTOFF);
+    this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", 0);
   }
 
   @Override

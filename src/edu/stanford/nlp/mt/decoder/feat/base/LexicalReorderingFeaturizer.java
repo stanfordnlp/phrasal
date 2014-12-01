@@ -32,7 +32,6 @@ import edu.stanford.nlp.util.PropertiesUtils;
 public class LexicalReorderingFeaturizer extends
     DerivationFeaturizer<IString, String> {
 
-  private static final int LEXICAL_FEATURE_CUTOFF = 50;
   private static final boolean DETAILED_DEBUG = false;
   private static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
       TokenUtils.START_TOKEN);
@@ -60,7 +59,7 @@ public class LexicalReorderingFeaturizer extends
     useAlignmentConstellations = false;
     useClasses = false;
     countFeatureIndex = -1;
-    lexicalCutoff = LEXICAL_FEATURE_CUTOFF;
+    lexicalCutoff = 0;
   }
 
   /**
@@ -90,7 +89,7 @@ public class LexicalReorderingFeaturizer extends
     }
     mlrt = null;
     featureTags = null;
-    this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", LEXICAL_FEATURE_CUTOFF);
+    this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", 0);
   }
 
   /**
@@ -108,7 +107,7 @@ public class LexicalReorderingFeaturizer extends
     }
     discriminativeSet = null;
     countFeatureIndex = -1;
-    lexicalCutoff = LEXICAL_FEATURE_CUTOFF;
+    lexicalCutoff = 0;
   }
   
   @Override
