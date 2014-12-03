@@ -65,9 +65,9 @@ def get_session_list(include_training=False):
     """
     try:
         if include_training:
-            return Translation.objects.all()
+            return Translation.objects.all().order_by('?')[:100]
         else:
-            return TranslationSession.objects.exclude(training=True)
+            return TranslationSession.objects.exclude(training=True).order_by('?')[:100]
     except:
         logger.error('Unable to retrieve session list')
     return None
