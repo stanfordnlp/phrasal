@@ -23,6 +23,7 @@ my $tune_components = &getParam($pars, "reranker_tune_components");
 my $evalMetric = &getParam($pars, "eval_metric");
 my $doAddLength = &getParam($pars, "add_length");
 my $mertOpt = &getParam($pars, "mert_opt");
+my $prevTunedWeights = &getParam($pars, "previously_tuned_weights");
 my $models = &getParam($pars, "model_prefixes");
 my $testFlags = &getParam($pars, "test_flags");
 my $rerankFeatures = &getParam($pars, "rerank_features");
@@ -65,25 +66,38 @@ else {
 
 
 &manualExecute($mode, "jagupard*", "$add_neural_scores $src $intermediateNBest $completeNBest $models \"$testFlags\" $gpuDevice", "$ckptDir/add_neural_scores");
-&execute($mode, "$ckptDir/extract_components", "$extract_components  $completeNBest $tuneInfo $outputDir/components");
 
-my @components = split /,/, $tune_components;
-my @comp_nbests = map {"$outputDir/components/$_.nbest"} @components;
-my $comp_nbests_str = join(" ", @comp_nbests);
-&execute($mode, "$ckptDir/concat_nbests", "cat $comp_nbests_str | $renumber_nbest > $outputDir/tune_components.nbest");
-&execute($mode, "$ckptDir/concat_refs", "$make_composite_ref $test_set_root_dir $tune_components $outputDir/tune_components.ref");
+my $weights = undef;
+if(&isNone($prevTunedWeights)) {
+    &execute($mode, "$ckptDir/extract_components", "$extract_components  $completeNBest $tuneInfo $outputDir/components");
+    my @components = split /,/, $tune_components;
+    my @comp_nbests = map {"$outputDir/components/$_.nbest"} @components;
+    my $comp_nbests_str = join(" ", @comp_nbests);
+    &execute($mode, "$ckptDir/concat_nbests", "cat $comp_nbests_str | $renumber_nbest > $outputDir/tune_components.nbest");
+    &execute($mode, "$ckptDir/concat_refs", "$make_composite_ref $test_set_root_dir $tune_components $outputDir/tune_components.ref");
+    $mertOpt = &trim($mertOpt);
+    my $mertOptArg = (&isNone($mertOpt) ? "" : " \"$mertOpt\"");
+    &execute($mode, "$ckptDir/tune_reranker", "$tune_reranker $outputDir/tuned_weights $outputDir/tune_components.nbest $outputDir/tune_components.ref $rerankFeatures $evalMetric$mertOptArg");
+    $weights = "$outputDir/tuned_weights/train.wts";
+}
+else {
+    $weights = $prevTunedWeights;
+}
 
-$mertOpt = &trim($mertOpt);
-my $mertOptArg = (lc $mertOpt eq "none" ? "" : " \"$mertOpt\"");
-&execute($mode, "$ckptDir/tune_reranker", "$tune_reranker $outputDir/tuned_weights $outputDir/tune_components.nbest $outputDir/tune_components.ref $rerankFeatures $evalMetric$mertOptArg");
-&execute($mode, "$ckptDir/rerank", "$rerank $outputDir/tuned_weights/train.wts < $completeNBest > $rerankedNBest");
+
+&execute($mode, "$ckptDir/rerank", "$rerank $weights < $completeNBest > $rerankedNBest");
 &execute($mode, "$ckptDir/extract_1best", "$extract_1best < $rerankedNBest > $outputDir/reranked.trans");
-&execute($mode, "$ckptDir/score_1best", "$score $outputDir/reranked.trans $tuneInfo > $outputDir/results.reranked 2> $outputDir/score.stderr");
+&execute($mode, "$ckptDir/score_1best", "$score $outputDir/reranked.trans $tuneInfo $test_set_root_dir > $outputDir/results.reranked 2> $outputDir/score.stderr");
 
 if($packageForIBM) {
     &execute($mode, "$ckptDir/make_ibm_output", "$make $rerankedNBest $packageInfo $source_lang Stanford $system_name $date $outputDir/reranked.package");
 }
 
+
+sub isNone {
+    my ($opt) = @_;
+    return (lc $opt eq "none");
+}
 
 sub execute {
     my ($mode, $ckptFile, $cmd) = @_;

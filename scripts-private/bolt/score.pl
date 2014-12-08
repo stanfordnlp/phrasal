@@ -4,11 +4,10 @@ use warnings;
 
 my $VERBOSE = 1;
 
-die "Usage: $0 transfile regionsfile\n" unless scalar(@ARGV)==2;
+die "Usage: $0 transfile regionsfile testsetrootdir\n" unless scalar(@ARGV)==3;
 
-my ($trans,$regions) = @ARGV;
+my ($trans,$regions,$refsdir) = @ARGV;
 
-my $refsdir= "/scr/nlp/data/gale/BOLT/zhen-2014/corpora/eval";
 my $scripts = $ENV{"JAVANLP_HOME"}."/projects/mt/scripts-private/bolt";
 
 die if !defined($trans) || !defined($regions);

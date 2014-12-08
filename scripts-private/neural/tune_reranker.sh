@@ -59,7 +59,7 @@ trainWtsFile="$outDir/train.wts" #$initWtsFile #
 echo ""
 echo "# tuning with Mert ..."
 date
-execute_check $trainWtsFile  "java edu.stanford.nlp.mt.tune.MERT $mertOpt -o koehn -t 12 -p 32 \"$evalMetric\" $tuneNbestFile $tuneNbestFile $initWtsFile $tuneRefList $trainWtsFile > $outDir/mert.log 2>&1"
+execute_check $trainWtsFile  "java edu.stanford.nlp.mt.tune.MERT $mertOpt -o koehn -t 16 -p 16 \"$evalMetric\" $tuneNbestFile $tuneNbestFile $initWtsFile $tuneRefList $trainWtsFile > $outDir/mert.log 2>&1"
 
 # show weights
 echo ""
