@@ -15,6 +15,6 @@ fi
 MEM=$1
 shift
 
-JAVA_OPTS="-server -ea -Xmx${MEM} -Xms${MEM} -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:PermSize=256m -XX:MaxPermSize=256m"
+JAVA_OPTS="-server -ea -Xmx${MEM} -Xms${MEM} -XX:+UseParallelGC -XX:+UseParallelOldGC"
 
 java $JAVA_OPTS edu.stanford.nlp.mt.tools.FDACorpusSelection $*

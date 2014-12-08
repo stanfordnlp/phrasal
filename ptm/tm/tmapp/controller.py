@@ -65,9 +65,9 @@ def get_session_list(include_training=False):
     """
     try:
         if include_training:
-            return Translation.objects.all()
+            return Translation.objects.all().order_by('?')[:100]
         else:
-            return TranslationSession.objects.exclude(training=True)
+            return TranslationSession.objects.exclude(training=True).order_by('?')[:100]
     except:
         logger.error('Unable to retrieve session list')
     return None
@@ -293,6 +293,7 @@ SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
 SERVICE_URLS['fr']['en'] = 'http://jonah.stanford.edu:8017/x'
 SERVICE_URLS['en']['de'] = 'http://joan.stanford.edu:8017/x'
+SERVICE_URLS['en']['es'] = 'http://jonah.stanford.edu:8017/x'
 
 # Request types
 TRANSLATION_REQUEST = 'tReq'

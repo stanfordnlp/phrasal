@@ -34,7 +34,7 @@ def get_outfile_name(fname):
     (root,ext) = splitext(fname)
     return '%s.filt.gz' % (root) if ext == '.gz' else fname+'.filt.gz'
 
-def clean_corpus(file1_name, file2_name, min_chars, max_tokens):
+def clean_corpus(file1_name, file2_name, min_chars, max_tokens, do_dedup):
     """
 
     Args:
@@ -43,16 +43,24 @@ def clean_corpus(file1_name, file2_name, min_chars, max_tokens):
     """
     out1 = get_outfile_name(file1_name)
     out2 = get_outfile_name(file2_name)
+    dup_hashes = set()
     with get_reader(file1_name) as infile1:
         with get_reader(file2_name) as infile2:
             with gz_utf8_writer(out1) as outfile1:
                 with gz_utf8_writer(out2) as outfile2:
                     n_filtered = 0
+                    n_dup = 0
                     for i,line1 in enumerate(infile1):
                         line2 = infile2.readline()
                         if line2:
                             line1 = line1.strip()
                             line2 = line2.strip()
+                            if do_dedup:
+                                item_key = hash('%s|||%s' % (line1,line2))
+                                if item_key in dup_hashes:
+                                    n_dup += 1
+                                    continue
+                                dup_hashes.add(item_key)
                             if len(line1) > min_chars \
                                and len(line2) > min_chars \
                                and len(line1.split()) < max_tokens \
@@ -70,6 +78,8 @@ def clean_corpus(file1_name, file2_name, min_chars, max_tokens):
                                           % (i, os.linesep))
                         sys.exit(-1)
     print 'Filtered %d / %d lines' % (n_filtered, i+1)
+    if do_dedup:
+        print 'Duplicates %d / %d lines' % (n_dup, i+1)
 
 def main():
     desc = 'Filter a parallel bitext.'
@@ -88,9 +98,14 @@ def main():
                         type=int,
                         default=1,
                         help='Minimum line length in characters (default: 1)')
+    parser.add_argument('-d','--dedup',
+                        dest='dedup',
+                        action='store_true',
+                        help='Discard duplicate lines.')
     args = parser.parse_args()
     
-    clean_corpus(args.file1, args.file2, args.min_chars, args.max_tokens)
+    clean_corpus(args.file1, args.file2,
+                 args.min_chars, args.max_tokens, args.dedup)
 
 if __name__ == '__main__':
     main()

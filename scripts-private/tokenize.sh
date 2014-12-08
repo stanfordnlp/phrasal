@@ -15,13 +15,15 @@ if [ $# -lt 3 ]; then
     echo "  clean_keep : Heuristic data cleaning, without filtering (you want this for test data)"
     echo "  tolower    : Convert to lowercase" 
     echo "  segment_de : Segment compounds in German"
-    echo "  language   : Arabic, Chinese, English, German, French"
+    echo "  language   : Arabic, Chinese, English, German, French, Spanish"
     exit -1
 fi
 
 lang=$1
 infile=$2
 outfile=${3}/`basename $infile`
+# Create the output directory if it doesn't exist.
+mkdir -p $3
 
 shift 3
 
@@ -41,7 +43,7 @@ outfile=$outfile.tok
 # Currently runs on CentOS 6 boxes only
 CDEC_PATH=/u/nlp/packages/cdec
 
-JAVA_OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:PermSize=256m"
+JAVA_OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC"
 
 # Arabic word segmenter setup
 AR_MODEL=/scr/spenceg/atb-lex/1-Raw-All.utf8.txt.model.gz
@@ -51,7 +53,7 @@ AR_TOK="java $JAVA_OPTS -Xmx6g -Xms6g edu.stanford.nlp.international.arabic.proc
 EN_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false"
 
 # French tokenizer setup
-FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false,ptb3Dashes=false"
+FR_TOK="java $JAVA_OPTS edu.stanford.nlp.international.french.process.FrenchTokenizer -noSGML -options ptb3Escaping=false"
 
 # German segmentation and tokenization setup
 DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -options ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false"
@@ -60,6 +62,9 @@ DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -op
 # Should point to latest distribution of the Chinese segmenter
 ZH_SEG_PATH="/u/nlp/distrib/stanford-segmenter-2013-11-12"
 ZH_SEG="$ZH_SEG_PATH/segment.sh"
+
+# Spanish tokenizer setup (same parameters as French)
+ES_TOK="java $JAVA_OPTS edu.stanford.nlp.international.spanish.process.SpanishTokenizer -noSGML -options ptb3Escaping=false"
 
 #
 # Process command line options
@@ -74,12 +79,18 @@ for op in $*; do
         if [ $lang == "German" ] || [ $lang == "English" ] || [ $lang == "French" ]; then
             fixnl="$fixnl --latin"
         fi    
+
     elif [ $op == "clean_keep" ]; then
         fixnl="python2.7 $JAVANLP_HOME/projects/mt/scripts-private/cleanup_txt.py"
+
     elif [ $op == "tolower" ]; then
-	    EN_TOK="$EN_TOK -lowerCase"
+	EN_TOK="$EN_TOK -lowerCase"
     	FR_TOK="$FR_TOK -lowerCase"
+	ES_TOK="$ES_TOK -lowerCase"
+
+	# This applies to other languages
     	tolower=tolower-utf8.py
+
     elif [ $op == "segment_de" ]; then
         # spenceg[aug.2013] Segmentation was used in WMT2013, but German people
         # at ACL suggested that compound splitting is only good for De-En, not
@@ -109,4 +120,8 @@ elif [ $lang == "German" ]; then
     
 elif [ $lang == "English" ]; then
     $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $EN_TOK | gzip -c > ${outfile}.gz
+
+elif [ $lang == "Spanish" ]; then
+    $CAT $infile | sed -e 's/[[:cntrl:]]/ /g' | $fixnl | $ES_TOK | gzip -c > ${outfile}.gz
 fi
+
