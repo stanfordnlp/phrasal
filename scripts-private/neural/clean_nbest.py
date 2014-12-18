@@ -34,7 +34,7 @@ def process_command_line():
   parser.add_argument('out_file', metavar='out_file', type=str, help='output file') 
 
   # optional arguments
-  parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='0 -- remove feature field (the third field), 1 -- keep lm features and add decoder score as dm, output contains only id/translation/features, 2 -- clean feature field, only retain LM field, output id/translation/features, 3 -- extract scores from last field only. (default=0)')
+  parser.add_argument('-o', '--option', dest='opt', type=int, default=0, help='0 -- remove feature field (the third field), 1 -- keep lm features and add decoder score as dm, output contains only id/translation/features, 2 -- clean feature field, only retain LM field, output id/translation/features, 3 -- extract scores from last field only, 4 -- add decoder score, keep all existing features, keep all fields in n-best list, to facilitate downstream processing. (default=0)')
   parser.add_argument('-d', '--debug', dest='debug', action='store_true', default=False, help='enable debugging mode (default: false)') 
   
   args = parser.parse_args()
@@ -89,28 +89,29 @@ def process_files(in_file, out_file, opt):
       continue
     
     tokens = re.split(' \|\|\| ', line)
-    if opt==1 or opt==2:
+    if opt==1 or opt==2 or opt==4:
       # find lm score
+      tokens[2] = tokens[2].strip()
       features = re.split(' ', tokens[2])
-      lmTokens = []
+      featureTokens = []
       for ii in range(len(features)/2):
         name = features[2*ii]
         value = features[2*ii+1]
-        if re.search('LM', name):
-          lmTokens.append(name)
-          lmTokens.append(value)
+        if re.search('LM', name) or opt==4:
+          featureTokens.append(name)
+          featureTokens.append(value)
 
           if name not in feature_map:
             feature_list.append(name)
             feature_map[name] = 1
 
-      if len(lmTokens)/2!=len(feature_list):
-        sys.stderr.write('\n! Failed to find LM features: %s\n' % (line))
-        lmTokens = []
-        for name in feature_list:
-          lmTokens.append(name)
-          lmTokens.append('0.0000E0')
-      featureStr = ' '.join(lmTokens)
+      # if len(featureTokens)/2!=len(feature_list):
+      #   sys.stderr.write('\n! Failed to find LM features: %s\n' % (line))
+      #   featureTokens = []
+      #   for name in feature_list:
+      #     featureTokens.append(name)
+      #     featureTokens.append('0.0000E0')
+      featureStr = ' '.join(featureTokens)
      
       if opt==1: # retain only LM scores + dm score
         new_tokens = []
@@ -121,6 +122,11 @@ def process_files(in_file, out_file, opt):
         new_tokens.append(featureStr)
       elif opt==2: # only retain lm features
         new_tokens = tokens 
+        new_tokens[2] = featureStr
+      elif opt==4: # like opt=1 but preserve all nbest fields
+        new_tokens = tokens
+        dmScore = tokens[3].strip()
+        featureStr = featureStr + ' dm: ' + dmScore
         new_tokens[2] = featureStr
     elif opt==3: # only extract scores
       new_tokens = []

@@ -93,7 +93,6 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(df.format(this.score)).append(' ').append(delim);
 
-    // Internal Alignments
     if ( ! bolt) {
       // Simple Alignments
       String alignmentString = alignmentString();
@@ -111,8 +110,8 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
         sbuf.append("|").append(f.derivation.score - parentScore).append(" ");
         sbuf.append(f.derivation.rule.sourceCoverage).append(" ");
         sbuf.append(f.derivation.rule.abstractRule.target.toString());
-      }
-    }
+			}
+		}
     
     // Print derivation history
     if (printHistory){

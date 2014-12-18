@@ -78,11 +78,11 @@ public final class SentenceLevelMetricFactory {
       return "bleu-2ter";
       
     } else {
-			// Attempt pattern match
-			Pattern p = Pattern.compile("([0-9\\.]+)bleu-([0-9\\.]+)ter");
-			Matcher m = p.matcher(scoreMetricStr);
-			if(m.matches()) {
-				return scoreMetricStr;
+			String[] s = matchLinearCombMetricPattern(scoreMetricStr);
+			if(s != null) {
+				// TODO: Fix this
+				return "bleu-ter/2";
+				//return scoreMetricStr;
 			}
 			else {
 				throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
@@ -201,23 +201,78 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<IString,String>(new double[]{1.0, 2.0}, metrics);
     
     } else {
-			// Attempt pattern match
-			Pattern p = Pattern.compile("([0-9\\.]+)bleu-([0-9\\.]+)ter");
-			Matcher m = p.matcher(scoreMetricStr);
-			if(m.matches()) {
-				
-				List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
-				metrics.add(new BLEUGain<IString,String>());
-				metrics.add(new SLTERMetric<IString,String>());
-
-				double b_coeff = Double.parseDouble(m.group(1));
-				double t_coeff = Double.parseDouble(m.group(2));
-				return new SLLinearCombinationMetric<IString,String>(
-					new double[]{b_coeff, t_coeff}, metrics);
+			String[] s = matchLinearCombMetricPattern(scoreMetricStr);
+			if(s!=null) {
+				return makeLinearCombMetric(s);
 			}
 			else {
 				throw new UnsupportedOperationException("Unsupported loss function: " + scoreMetricStr);
 			}
     }
   }
+
+	public static String[] matchLinearCombMetricPattern(String scoreMetricStr) {
+		// Attempt pattern match
+		String weight = "[0-9\\.\\/]+";
+		String metric = "ter|bleu|length";
+		String weightMetricPair = String.format("(%s),(%s)", weight, metric);
+		
+		String twoMetrics = String.format("\\(%s;%s\\)", weightMetricPair, weightMetricPair);
+		String threeMetrics = String.format("\\(%s;%s;%s\\)", weightMetricPair, weightMetricPair, weightMetricPair);
+		Pattern p2 = Pattern.compile(twoMetrics);
+		Pattern p3 = Pattern.compile(threeMetrics);
+		
+		Matcher m2 = p2.matcher(scoreMetricStr);
+		Matcher m3 = p3.matcher(scoreMetricStr);
+		
+		if(m2.matches()) {
+			// Groups: (1,2,3,4) => (weight1, metric1, weight2, metric2)
+			return new String[] {m2.group(1), m2.group(2), m2.group(3), m2.group(4)};
+		}
+		else if(m3.matches()) {
+			// Groups: (1,2,3,4,5,6) => (weight1, metric1, weight2, metric2, w3,m3)
+			return new String[] {m3.group(1), m3.group(2), 
+													 m3.group(3), m3.group(4),
+													 m3.group(5), m3.group(6)};
+		}
+		else {
+			return null;
+		}
+	}
+	
+	public static SLLinearCombinationMetric makeLinearCombMetric(String[] args) {
+		List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(args.length/2);
+		double[] weights = new double[args.length/2];
+
+		for(int i=0; i<args.length; i+=2) {			
+			String wStr = args[i];
+			String mStr = args[i+1];
+			
+
+			Pattern frac = Pattern.compile("(\\d+)/(\\d+)");
+			Matcher mfrac = frac.matcher(wStr);
+			if(mfrac.matches()) {
+				weights[i/2]= Double.parseDouble(mfrac.group(1))/Double.parseDouble(mfrac.group(2));
+			}
+			else {
+				weights[i/2]=Double.parseDouble(wStr);
+			}
+
+
+			if(mStr.equals("bleu")) {
+				metrics.add(new BLEUGain<IString,String>());
+			}
+			else if(mStr.equals("ter")) {
+				metrics.add(new SLTERMetric<IString,String>());
+			}
+			else if(mStr.equals("length")) {
+				metrics.add(new LengthMetric<IString,String>());
+			}
+			else {
+				throw new UnsupportedOperationException("Unsupported loss function: " + mStr);
+			}
+		}
+
+		return new SLLinearCombinationMetric<IString,String>(weights, metrics);
+	}
 }

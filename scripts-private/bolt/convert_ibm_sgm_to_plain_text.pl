@@ -56,7 +56,7 @@ while(<STDIN>) {
 	    die "Unexpected line: $_";
 	}
 	else {
-	    m/^<DOC(${attributes_regexp})>\s*$/ or die "Badly formatted line: $_";
+	    m/^<DOC(${attributes_regexp})\s*>\s*$/ or die "Badly formatted line: $_";
 	    my @doc_attribute_pairs = &get_attribute_pairs($1);	    
 	    push @tag_stack, "DOC";
 	    push @attribute_pairs_stack, [@doc_attribute_pairs];

@@ -13,6 +13,9 @@ my ($output_dir) = @ARGV;
 
 my %src_files = (); # Source tok and info files
 
+die "JAVANLP_HOME not defined" if !defined($ENV{"JAVANLP_HOME"});
+my $JAVANLP_HOME = $ENV{"JAVANLP_HOME"};
+
 while(<STDIN>) {
     s/\s+$//;
     my @tokens = split /\s+/, $_;
@@ -28,7 +31,7 @@ while(<STDIN>) {
 
 	if($src_or_ref eq "src" && $format eq "tok") {
 	    my $output_file = "${output_dir}/$concise_name.src$suffix";
-	    &exec_command("cat $file | perl ~/javanlp/projects/mt/scripts-private/bolt/convert_ibm_rbt.pl --keepOrig --removeFFFA --applyLowerCase --rbtBitext ${output_dir}/$concise_name.rbt_bitext$suffix > $output_file\n");
+	    &exec_command("cat $file | perl ${JAVANLP_HOME}/projects/mt/scripts-private/bolt/convert_ibm_rbt.pl --keepOrig --removeFFFA --applyLowerCase --rbtBitext ${output_dir}/$concise_name.rbt_bitext$suffix > $output_file\n");
 	    if(!defined($src_files{$concise_name})) {
 		$src_files{$concise_name} = [[],[]];
 	    }
@@ -36,7 +39,10 @@ while(<STDIN>) {
 	}
 	elsif($src_or_ref eq "src" && $format eq "sgm") {
 	    my $meta_file = "${output_dir}/$concise_name.seg_info$suffix";
-	    &exec_command("cat $file | perl scripts/convert_ibm_sgm_to_plain_text.pl --meta $meta_file --guessGenreUsingRegexpList manual_lists/docid_regexp_to_genre > /dev/null");
+            my $raw_src_file  = "${output_dir}/$concise_name.raw_src$suffix";
+	    &exec_command("cat $file | perl ${JAVANLP_HOME}/projects/mt/scripts-private/bolt/convert_ibm_sgm_to_plain_text.pl --meta $meta_file --guessGenreUsingRegexpList manual_lists/docid_regexp_to_genre > $raw_src_file");
+	    my $src_file = "${output_dir}/$concise_name.src$suffix";
+	    &exec_command("cat $raw_src_file | perl ${JAVANLP_HOME}/projects/mt/scripts-private/bolt/convert_ibm_rbt.pl --keepOrig --removeFFFA --applyLowerCase --rbtBitext ${output_dir}/$concise_name.rbt_bitext$suffix > $src_file\n");
 	    if(!defined($src_files{$concise_name})) {
 		$src_files{$concise_name} = [[],[]];
 	    }
@@ -44,7 +50,7 @@ while(<STDIN>) {
 	    
 	}
 	elsif($src_or_ref eq "ref" && $format eq "tok") {
-	    &exec_command("cat $file | perl ~/javanlp/projects/mt/scripts-private/bolt/convert_ibm_rbt.pl --keepOrig --removeFFFA --applyLowerCase > ${output_dir}/$concise_name.ref$suffix");
+	    &exec_command("cat $file | perl ${JAVANLP_HOME}/projects/mt/scripts-private/bolt/convert_ibm_rbt.pl --keepOrig --removeFFFA --applyLowerCase > ${output_dir}/$concise_name.ref$suffix");
 	}
 	else {
 	    warn "warning: skipping line: $_\n";
@@ -105,5 +111,5 @@ sub get_length {
 sub exec_command {
     my ($cmd) = @_;
     print $cmd."\n";
-    #system($cmd)==0 or die $!;
+    system($cmd)==0 or die $!;
 }
