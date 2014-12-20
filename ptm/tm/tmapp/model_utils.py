@@ -15,12 +15,12 @@ def get_language(code_str):
         logger.error('Language code not found in database: ' + code_str)
         raise RuntimeError
 
-def get_source_docs_for_lang(src_lang_code):
-    """
+def get_random_doc_for_lang(src_lang_code):
+    """ Return a random document.
     """
     src_language = get_language(src_lang_code)
     try:
-        return SourceDocument.objects.filter(language=src_language)
+        return SourceDocument.objects.filter(language=src_language).order_by('?')[0]
     except:
         logger.error('No source documents for language: ' + src_lang_code)
         raise RuntimeError
