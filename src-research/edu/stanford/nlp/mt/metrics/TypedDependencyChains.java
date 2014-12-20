@@ -13,6 +13,7 @@ import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.Dependencies;
+import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
 import java.util.function.Predicate;
@@ -56,7 +57,7 @@ public class TypedDependencyChains {
       }
 
       List<TypedDependency> typeDeps;
-        typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(true);
+        typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(GrammaticalStructure.Extras.MAXIMAL);
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
 
       for (TypedDependency tdep : typeDeps) {

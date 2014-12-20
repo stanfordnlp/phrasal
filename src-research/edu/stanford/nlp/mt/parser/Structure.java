@@ -86,7 +86,7 @@ public class Structure {
 
   public Structure(GrammaticalStructure gs, IncrementalTagger tagger, Morphology lemmatizer, MaxentTagger posTagger) {
     this();
-    dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(true));
+    dependencies = new LinkedStack<TypedDependency>(gs.typedDependencies(GrammaticalStructure.Extras.MAXIMAL));
     input = new LinkedStack<CoreLabel>();
     int seqLen = tagger.ts.leftWindow() + 1;
 

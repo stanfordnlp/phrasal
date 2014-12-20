@@ -85,7 +85,7 @@ public class ChineseDepParser {
 
     GrammaticalStructure gs = cParser.pp.gsf.newGrammaticalStructure(t);
     System.err.println(gs.typedDependencies());
-    System.err.println(gs.typedDependenciesCCprocessed(true));
+    System.err.println(gs.typedDependenciesCCprocessed(GrammaticalStructure.Extras.MAXIMAL));
 
     System.err.println();
 
