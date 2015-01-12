@@ -90,13 +90,13 @@ public class TargetNNLMFeaturizerTest {
     ((CubePruningNNLMDecoderBuilder<IString, String>)  infererBuilder).loadNNLM(nnlmFile, nnlmType, cacheSize, miniBatchSize);
     
     // decoder
-    Inferer<IString, String> decoder = infererBuilder.build();
+    Inferer<IString, String> decoder = infererBuilder.newInferer();
     
     String src = "余下 的 事 , 就 是 必须 令 行 禁止 , 任何 公仆 若 敢 违抗 , 一律 依纪 依法 严处 。";
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
     assertEquals("余下 servant 违抗 依纪 严处 putting do prohibits the , any if be law . , , to would ||| LM: -1.2442E3 LinearDistortion: -75 ||| -6.3712E2", translations.get(0).toStringNoLatticeId());
     assertEquals("余下 servant 违抗 依纪 严处 putting do the , forbidden any if be law . , , to would ||| LM: -1.2466E3 LinearDistortion: -73 ||| -6.379E2", translations.get(1).toStringNoLatticeId());
@@ -110,13 +110,13 @@ public class TargetNNLMFeaturizerTest {
     InfererBuilder<IString, String> infererBuilder = getInferer("cube");
     
     // decoder
-    Inferer<IString, String> decoder = infererBuilder.build();
+    Inferer<IString, String> decoder = infererBuilder.newInferer();
     
     String src = "余下 的 事 , 就 是 必须 令 行 禁止 , 任何 公仆 若 敢 违抗 , 一律 依纪 依法 严处 。";
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     for (RichTranslation<IString, String> richTranslation : translations) { System.err.println(richTranslation); }
     
     assertEquals("余下 made 违抗 依纪 严处 if they do just that must be forbidden , any servant , law . would ||| LM: -1.2346E3 LinearDistortion: -73 ||| -6.319E2", translations.get(0).toStringNoLatticeId());
@@ -133,20 +133,20 @@ public class TargetNNLMFeaturizerTest {
     // load pseudo NNLM
     String nnlmType = "pseudo"; int cacheSize = -1; int miniBatchSize = -1;
     ((CubePruningNNLMDecoderBuilder<IString, String>)  infererBuilder).loadNNLM(lgModel, nnlmType, cacheSize, miniBatchSize);
-    Inferer<IString, String> decoder = ((CubePruningNNLMDecoderBuilder<IString, String>)  infererBuilder).build();
+    Inferer<IString, String> decoder = ((CubePruningNNLMDecoderBuilder<IString, String>)  infererBuilder).newInferer();
     
     // translate
     String src = "余下 的 事 , 就 是 必须 令 行 禁止 , 任何 公仆 若 敢 违抗 , 一律 依纪 依法 严处 。";
     OutputSpace<IString,String> outputSpace = new UnconstrainedOutputSpace<IString,String>(); // see OutputSpaceFactory
     List<Sequence<IString>> targets = null; // allow all outputs
     List<RichTranslation<IString, String>> translations = decoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     
     /* CubePrunningDecoder */
     InfererBuilder<IString, String> cubeInfererBuilder = getInferer("cube");
-    Inferer<IString, String> cubeDecoder = cubeInfererBuilder.build();
+    Inferer<IString, String> cubeDecoder = cubeInfererBuilder.newInferer();
     List<RichTranslation<IString, String>> cubeTranslations = cubeDecoder.nbest
-        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5);
+        (IStrings.tokenize(src), 0, new InputProperties(), outputSpace, targets, 5, false);
     
     for (int i = 0; i < translations.size(); i++) {
       assertEquals(true, translations.get(i).toStringNoLatticeId().equals(cubeTranslations.get(i).toStringNoLatticeId()));
@@ -166,7 +166,7 @@ public class TargetNNLMFeaturizerTest {
     
     // unknown word
     boolean dropUnknownWords = false; 
-    infererBuilder.setFilterUnknownWords(dropUnknownWords);
+    infererBuilder.setUnknownWordModel(null, dropUnknownWords);
     
     // featurizer
     String linearDistortion = LinearFutureCostFeaturizer.class.getName();
@@ -178,7 +178,7 @@ public class TargetNNLMFeaturizerTest {
         makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
         makePair(FeaturizerFactory.ARPA_LM_PARAMETER, "kenlm:" + lgModel),
         makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
-    infererBuilder.setIncrementalFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
+    infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
     
     // phrase generator
     String generatorName = PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;

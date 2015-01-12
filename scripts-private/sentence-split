@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#
+# Simple sentence splitting. Requires JavaNLP.
+#
+# Author: Spence Green
+#
+MEM=512m
+OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -Xmx$MEM -Xms$MEM"
+
+java $OPTS edu.stanford.nlp.process.DocumentPreprocessor -whitespaceTokenization < /dev/stdin

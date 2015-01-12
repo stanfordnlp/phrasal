@@ -29,19 +29,11 @@ def get_demo_configuration(lang_pair):
     src_lang = lang_pair[0:2]
     tgt_lang = lang_pair[2:4]
 
-    doc_list = model_utils.get_source_docs_for_lang(src_lang)
-    num_docs = len(doc_list)
-    if num_docs > 0:
-        doc_id = random.randint(0,num_docs-1)
-        doc_url = doc_list[doc_id].url
-        # UI expects uppercase language codes
-        conf = {'src_document_url' : doc_url,
-                'src_language' : src_lang.upper(),
-                'tgt_language' : tgt_lang.upper()}
-        return conf
-    else:
-        return None
-    
+    doc = model_utils.get_random_doc_for_lang(src_lang)
+    # UI expects uppercase language codes
+    return {'src_document_url' : doc.url,
+            'src_language' : src_lang.upper(),
+            'tgt_language' : tgt_lang.upper()}
 
 def user_training_status(user, complete=False):
     """
@@ -64,10 +56,11 @@ def get_session_list(include_training=False):
     """
     """
     try:
-        if include_training:
-            return Translation.objects.all()
-        else:
-            return TranslationSession.objects.exclude(training=True)
+        return TranslationSession.objects.filter(src_document__url = "/static/data/fren/med/test.07.src.json")
+        #if include_training:
+        #    return TranslationSession.objects.all().order_by('?')[:100]
+        #else:
+        #    return TranslationSession.objects.exclude(training=True).order_by('?')[:100]
     except:
         logger.error('Unable to retrieve session list')
     return None
@@ -293,6 +286,7 @@ SERVICE_URLS = defaultdict(dict)
 SERVICE_URLS['en']['fr'] = 'http://127.0.0.1:8017/x'
 SERVICE_URLS['fr']['en'] = 'http://jonah.stanford.edu:8017/x'
 SERVICE_URLS['en']['de'] = 'http://joan.stanford.edu:8017/x'
+SERVICE_URLS['en']['es'] = 'http://jonah.stanford.edu:8017/x'
 
 # Request types
 TRANSLATION_REQUEST = 'tReq'

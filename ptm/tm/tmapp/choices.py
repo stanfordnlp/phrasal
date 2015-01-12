@@ -6,7 +6,8 @@
 # Supported languages
 LANGUAGES = (('en','English'),
              ('fr','French'),
-             ('de','German'))
+             ('de','German'),
+             ('es','Spanish'))
 
 # CSS layout specifications
 LAYOUT = (('rtl','Right-to-left'),

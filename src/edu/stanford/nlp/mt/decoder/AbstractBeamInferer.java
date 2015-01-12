@@ -25,9 +25,10 @@ import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.util.Generics;
+import edu.stanford.nlp.util.Pair;
 
 /**
- * Abstract interfaces and algorithms that apply to all inference algorithms.
+ * An abstract interface for beam-based inference algorithms.
  * 
  * @author danielcer
  * 
@@ -37,15 +38,12 @@ import edu.stanford.nlp.util.Generics;
 abstract public class AbstractBeamInferer<TK, FV> extends
     AbstractInferer<TK, FV> {
 
-  static public final String DEBUG_OPT = "AbstractBeamInfererDebug";
-  static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_OPT, "false"));
-  static public boolean DISTINCT_SURFACE_TRANSLATIONS = false;
+  private static final boolean DEBUG = false;
   
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
   private final Comparator<RichTranslation<TK,FV>> translationComparator;
-
+  
   /**
    * Constructor.
    * 
@@ -53,7 +51,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    */
   protected AbstractBeamInferer(AbstractBeamInfererBuilder<TK, FV> builder) {
     super(builder);
-    this.beamCapacity = builder.beamCapacity;
+    this.beamCapacity = builder.beamSize;
     this.beamType = builder.beamType;
     this.translationComparator = new RichTranslationComparator<TK,FV>();
   }
@@ -61,37 +59,72 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size);
+        outputSpace, targets, size, distinct);
   }
 
   /**
-   * Remove source words that cannot be covered by a span in the phrase table.
+   * Query the phrase table and decide how to handle unknown words.
    * 
    * @param source
+   * @param sourceInputProperties
+   * @param targets
+   * @param sourceInputId
+   * @param scorer
    * @return
    */
-  private Sequence<TK> filterUnknownWords(Sequence<TK> source) {
-    if (source == null) return null;
-    List<ConcreteRule<TK,FV>> rules = phraseGenerator.getRules(source, null, null, -1, null);
-
-    CoverageSet possibleCoverage = new CoverageSet();
-    for (ConcreteRule<TK,FV> rule : rules) {
-      if (rule.abstractRule.target.size() > 0 && !"".equals(rule.abstractRule.target.toString())) {
-        possibleCoverage.or(rule.sourceCoverage);
+  protected Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>> getRules(Sequence<TK> source,
+      InputProperties sourceInputProperties, List<Sequence<TK>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    // Initial query
+    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
+        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    
+    // Compute source coverage of initial query
+    CoverageSet coverage = new CoverageSet();
+    for (ConcreteRule<TK,FV> rule : ruleList) {
+      if (rule.abstractRule.target.size() > 0) {
+        coverage.or(rule.sourceCoverage);
       }
     }
 
-    List<TK> filteredToks = Generics.newLinkedList();
-    for (int i = 0; i  < source.size(); i++) {
-      if (possibleCoverage.get(i)) {
-        filteredToks.add(source.get(i));
+    // Decide what to do if the coverage set is incomplete
+    if (coverage.cardinality() != source.size()) {
+      if (filterUnknownWords) {
+        // Filter OOVs from the source and then query the phrase table again
+        List<TK> filteredToks = Generics.newLinkedList();
+        for (int i = 0, sz = source.size(); i  < sz; i++) {
+          if (coverage.get(i)) {
+            filteredToks.add(source.get(i));
+          }
+        }
+        Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
+        List<ConcreteRule<TK,FV>> ruleListFiltered = phraseGenerator
+            .getRules(sourceFiltered, sourceInputProperties, targets, sourceInputId, scorer);
+        return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(sourceFiltered, ruleListFiltered);
+        
+      } else {
+        // Add rules from the OOV model
+        for (int gapIndex = coverage.nextClearBit(0), sz = source.size(); gapIndex < sz; 
+            gapIndex = coverage.nextClearBit(gapIndex + 1)) {
+          Sequence<TK> queryWord = source.subsequence(gapIndex, gapIndex + 1);
+          List<ConcreteRule<TK,FV>> oovRules = 
+              unknownWordModel.getRules(queryWord, sourceInputProperties, targets, sourceInputId, scorer);
+          CoverageSet oovCoverage = new CoverageSet();
+          oovCoverage.set(gapIndex);
+          for (ConcreteRule<TK,FV> rule : oovRules) {
+            // Update the coverage set for the output of the OOV model
+            ruleList.add(new ConcreteRule<TK,FV>(rule.abstractRule, 
+                oovCoverage, featurizer, scorer, source, rule.phraseTableName, 
+                sourceInputId, sourceInputProperties));
+          }
+        }
       }
     }
-    return filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
+    return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(source, ruleList);
   }
-
+  
   /**
    * TODO(spenceg): This routine is *extremely* inefficient. Rewrite with e.g., Huang and Chiang's
    * k-best extraction or something.
@@ -100,13 +133,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
 
-    // filter unknown words
-    if (filterUnknownWords) {
-       source = filterUnknownWords(source);
-    }
-    if (source == null) return null;
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     // Decoding
@@ -131,25 +159,31 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // Extract
     List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
     final long nbestStartTime = System.nanoTime();
+    
+    // Limit the number of popped items in the case of distinct nbest lists.
+    // We want the algorithm to terminate eventually....
+    final int maxItemsToExtract = distinct ? size * 5 : Integer.MAX_VALUE;
     int numExtracted = 0;
     long nbestId = 0;
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
+      if (numExtracted >= maxItemsToExtract) {
+        break;
+      }
+      // DTU stuff
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = Generics.newHashSet();
-
+      
       // TODO(spenceg): This is very inefficient. Reconstruct the derivation
       // from the lattice path since the current n-best list extractor
       // does not set the parent references when it traverses the lattice. These
       // references may be incorrect due to recombination.
       // When we replace StateLatticeDecoder, this code should go away.
       Derivation<TK, FV> goalHyp = null;
-      long goalHypId = -1;
       for (Derivation<TK, FV> node : latticePath) {
         if (goalHyp == null) {
           goalHyp = node;
           continue;
         }
-        goalHypId = node.id;
         if (node.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {
@@ -178,7 +212,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       
       ++numExtracted;
       
-      if (DISTINCT_SURFACE_TRANSLATIONS) {
+      if (distinct) {
         if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
           // Seen a higher-scoring derivation with this target string before
           continue;
@@ -188,7 +222,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
       
       translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
-          goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
+            goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
       if (translations.size() >= size) {
         break;
       }
@@ -230,11 +264,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
     
-    // filter unknown source words
-    if (filterUnknownWords) {
-      source = filterUnknownWords(source);
-    }
-    if (source == null) return null;
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,

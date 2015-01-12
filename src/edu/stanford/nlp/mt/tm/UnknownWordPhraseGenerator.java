@@ -3,9 +3,8 @@ package edu.stanford.nlp.mt.tm;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.tm.TranslationModelVocabulary.Vocabulary;
+import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.HasIntegerIdentity;
-import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -21,7 +20,7 @@ import edu.stanford.nlp.util.Generics;
  * @param <TK>
  */
 public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> extends
-    AbstractPhraseGenerator<TK, FV> implements DynamicPhraseGenerator<TK,FV> {
+    AbstractPhraseGenerator<TK, FV> {
 
   public static final String PHRASE_TABLE_NAME = UnknownWordPhraseGenerator.class.getName();
   public static final String UNK_FEATURE_NAME = "TM.UNK";
@@ -29,12 +28,11 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
   private static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
       .getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
 
+  private final Sequence<TK> EMPTY_SEQUENCE = new EmptySequence<TK>();
+
   private final boolean dropUnknownWords;
-  private final RawSequence<TK> empty = new RawSequence<TK>();
   private final String[] featureNames = { UNK_FEATURE_NAME };
   private final float[] featureValues = { (float) 1.0 };
-  
-  private final Vocabulary sourceVocab = TranslationModelVocabulary.getSourceInstance();
   
   /**
    * Constructor.
@@ -58,30 +56,26 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
     return Arrays.asList(featureNames);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public List<Rule<TK>> query(Sequence<TK> sequence) {
     if (sequence.size() > longestSourcePhrase()) {
-      throw new RuntimeException("Source phrase too long: " + String.valueOf(sequence.size()));
+      throw new RuntimeException("Only single-word queries accepted. Query size: " + String.valueOf(sequence.size()));
     }
     List<Rule<TK>> list = Generics.newLinkedList();
 
     // Check to see if this word is unknown
-    Sequence<IString> seq = (Sequence<IString>) sequence;
-    if ( ! sourceVocab.contains(seq)) {
-      RawSequence<TK> raw = new RawSequence<TK>(sequence);
-      final String word = sequence.get(0).toString();
+    RawSequence<TK> sourceWord = new RawSequence<TK>(sequence);
+    final String word = sequence.get(0).toString();
 
-      if (dropUnknownWords && !isTranslateable(word)) {
-        // Deletion rule
-        list.add(new Rule<TK>(featureValues, featureNames, empty, raw,
-            DEFAULT_ALIGNMENT));
+    if (dropUnknownWords && !isTranslateable(word)) {
+      // Deletion rule
+      list.add(new Rule<TK>(featureValues, featureNames, EMPTY_SEQUENCE, sourceWord,
+          DEFAULT_ALIGNMENT));
 
-      } else {
-        // Identity translation rule
-        list.add(new Rule<TK>(featureValues, featureNames, raw, raw,
-            DEFAULT_ALIGNMENT));
-      }
+    } else {
+      // Identity translation rule
+      list.add(new Rule<TK>(featureValues, featureNames, sourceWord, sourceWord,
+          DEFAULT_ALIGNMENT));
     }
     return list;
   }

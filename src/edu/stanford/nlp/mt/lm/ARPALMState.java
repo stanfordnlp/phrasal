@@ -52,6 +52,6 @@ public class ARPALMState extends LMState {
   
   @Override
   public String toString() {
-    return String.format("%.6f\t%s", score, state.toString());
+    return String.format("%.6f ||| %s", score, state.toString());
   }
 }

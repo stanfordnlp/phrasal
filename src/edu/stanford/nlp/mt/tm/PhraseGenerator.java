@@ -40,4 +40,6 @@ public interface PhraseGenerator<TK,FV> extends Cloneable {
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer);
   
   public List<String> getFeatureNames();
+  
+  public String getName();
 }

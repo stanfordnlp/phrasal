@@ -19,8 +19,18 @@ import edu.stanford.nlp.util.Generics;
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
     PhraseGenerator<TK,FV> {
+  
   protected RuleFeaturizer<TK, FV> phraseFeaturizer;
 
+  /**
+   * Constructor.
+   * 
+   * @param phraseFeaturizer
+   */
+  public AbstractPhraseGenerator(RuleFeaturizer<TK, FV> phraseFeaturizer) {
+    this.phraseFeaturizer = phraseFeaturizer;
+  }
+  
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
@@ -28,8 +38,10 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
 
   @Override
   public List<ConcreteRule<TK,FV>> getRules(
-      Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
+      Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, 
+      int sourceInputId, Scorer<FV> scorer) {
     List<ConcreteRule<TK,FV>> opts = Generics.newLinkedList();
+    if (source == null || source.size() == 0) return opts;
     int sequenceSz = source.size();
     int longestForeignPhrase = this.longestSourcePhrase();
     if (longestForeignPhrase < 0)
@@ -55,15 +67,13 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
     return opts;
   }
 
-  public AbstractPhraseGenerator(
-      RuleFeaturizer<TK, FV> phraseFeaturizer) {
-    this.phraseFeaturizer = phraseFeaturizer;
-  }
-
-  abstract public String getName();
-
-  abstract public List<Rule<TK>> query(
-      Sequence<TK> sequence);
+  /**
+   * Return a list of rules for a source span.
+   * 
+   * @param sequence
+   * @return
+   */
+  abstract public List<Rule<TK>> query(Sequence<TK> sequence);
 
   @Override
   abstract public int longestSourcePhrase();

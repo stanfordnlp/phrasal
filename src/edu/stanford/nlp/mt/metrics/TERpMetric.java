@@ -147,11 +147,6 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
   PhraseTable phrasetable;
 
   TERcost costfunc = new TERcost();
-  
-  public TERalignment calcTER(ScoredFeaturizedTranslation<TK, FV> trans,
-      int idx, double[] editCounts) {
-    return calcTER(trans, idx, editCounts);
-  }
 
   public TERalignment calcTER(Sequence<TK> trans,
       int idx, double[] editCounts) {
@@ -262,7 +257,7 @@ public class TERpMetric<TK, FV> extends AbstractMetric<TK, FV> {
           nulls[index] = false;
           nullCnt--;
         }
-        aligns[index] = calcTER(trans, index, null);
+        aligns[index] = calcTER(trans.translation, index, null);
         editsTotal += aligns[index].numEdits;
         numWordsTotal += aligns[index].numWords;
       }

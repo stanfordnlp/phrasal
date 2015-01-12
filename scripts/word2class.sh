@@ -18,6 +18,6 @@ MEM=$1
 THREADS=$2
 shift 2
 
-JAVA_OPTS="-server -ea -Xmx${MEM} -Xms${MEM} -XX:+UseParallelGC -XX:+UseParallelOldGC -XX:PermSize=256m -XX:MaxPermSize=256m"
+JAVA_OPTS="-server -ea -Xmx${MEM} -Xms${MEM} -XX:+UseParallelGC -XX:+UseParallelOldGC"
 
 java $JAVA_OPTS edu.stanford.nlp.mt.wordcls.MakeWordClasses -nthreads $THREADS $*

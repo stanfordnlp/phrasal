@@ -10,6 +10,7 @@ import java.util.Map;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.process.TokenizerFactory;
 import edu.stanford.nlp.parser.maltparser.MaltParserInterface;
 import edu.stanford.nlp.process.Morphology;
@@ -18,10 +19,10 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.Dependencies;
+import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
-import edu.stanford.nlp.trees.TreeGraphNode;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.util.Filter;
+import java.util.function.Predicate;
 
 /**
  * Tool for interactively inspecting dependency chains
@@ -39,7 +40,7 @@ public class InteractiveDependencyChains {
     MaltParserInterface mpi = new MaltParserInterface(args[0]);
     TokenizerFactory<CoreLabel> ptbtokf = PTBTokenizer.factory(false, false);
     Morphology morpha = new Morphology();
-    Filter<String> puncFilter = new PennTreebankLanguagePack().punctuationWordRejectFilter();
+    Predicate<String> puncFilter = new PennTreebankLanguagePack().punctuationWordRejectFilter();
 
     for (String line = reader.readLine(); line != null; line = reader.readLine()) {
       List<CoreLabel> words = ptbtokf.getTokenizer(new StringReader(line)).tokenize();
@@ -51,11 +52,11 @@ public class InteractiveDependencyChains {
         word.setLemma(morpha.lemma(text, posTag));
       }
       System.out.printf("Procesing: %s\n", words);
-      List<TypedDependency> typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(true);
+      List<TypedDependency> typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(GrammaticalStructure.Extras.MAXIMAL);
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
 
       for (TypedDependency tdep : typeDeps) {
-        if (puncFilter.accept(wordOnly(tdep.gov().label().toString())) && puncFilter.accept(wordOnly(tdep.dep().label().toString()))) {
+        if (puncFilter.test(wordOnly(tdep.gov().toString())) && puncFilter.test(wordOnly(tdep.dep().toString()))) {
           filteredDeps.add(tdep);
         }
       }
@@ -63,8 +64,8 @@ public class InteractiveDependencyChains {
       System.out.println(filteredDeps);
 
       System.out.printf("\nGov To Dep Map:\n");
-      Map<TreeGraphNode,List<TypedDependency>> govToDepMap = Dependencies.govToDepMap(typeDeps);
-      for (Map.Entry<TreeGraphNode, List<TypedDependency>> e : govToDepMap.entrySet()) {
+      Map<IndexedWord,List<TypedDependency>> govToDepMap = Dependencies.govToDepMap(typeDeps);
+      for (Map.Entry<IndexedWord, List<TypedDependency>> e : govToDepMap.entrySet()) {
         System.out.println(e);
       }
 
@@ -80,7 +81,7 @@ public class InteractiveDependencyChains {
       for (List<TypedDependency> chain : chains.keySet()) {
         List<String> deps = new ArrayList<String>(chain.size());
         for (TypedDependency dep : chain) {
-          deps.add(dep.toString(true));
+          deps.add(dep.toString(CoreLabel.OutputFormat.VALUE));
         }
         wordDepOnlyStringChains.incrementCount(deps, chains.getCount(chain));
       }

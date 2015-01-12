@@ -41,6 +41,8 @@ RuleFeaturizer<IString, String> {
   private final boolean isClassBased;
   private final AbstractWordClassMap targetClassMap;
 
+  private static final boolean wrapBoundary = System.getProperties().containsKey("wrapBoundary");
+
   /**
    * Constructor.
    * 
@@ -88,7 +90,7 @@ RuleFeaturizer<IString, String> {
       this.targetClassMap = TargetClassMap.getInstance();
     } else {
       this.targetClassMap = null;
-    }
+    }    
   }
 
   /**
@@ -99,9 +101,13 @@ RuleFeaturizer<IString, String> {
    */
   private Sequence<IString> toClassRepresentation(Sequence<IString> targetSequence) {
     if (targetSequence.size() == 0) return targetSequence;
+    
     IString[] array = new IString[targetSequence.size()];
     for (int i = 0; i < array.length; ++i) {
-      array[i] = targetClassMap.get(targetSequence.get(i));
+      if (wrapBoundary && (targetSequence.get(i).word().equals(this.startToken.word()) || targetSequence.get(i).word().equals(this.endToken.word())))
+        array[i] = targetSequence.get(i);
+      else
+        array[i] = targetClassMap.get(targetSequence.get(i));
     }
     return new SimpleSequence<IString>(true, array);
   }
@@ -120,20 +126,29 @@ RuleFeaturizer<IString, String> {
     Sequence<IString> partialTranslation = isClassBased ? 
         toClassRepresentation(f.targetPhrase) : f.targetPhrase;
     int startIndex = 0;
-    if (f.prior == null && f.done) {
-      partialTranslation = Sequences.wrapStartEnd(
-          partialTranslation, startToken, endToken);
-      startIndex = 1;
+    if (! wrapBoundary) {
+      if (f.prior == null && f.done) {
+        partialTranslation = Sequences.wrapStartEnd(
+            partialTranslation, startToken, endToken);
+        startIndex = 1;
+      } else if (f.prior == null) {
+        partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
+        startIndex = 1;
+      } else if ( f.done) {
+        partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
+      } 
     } else if (f.prior == null) {
-      partialTranslation = Sequences.wrapStart(partialTranslation, startToken);
+      if (partialTranslation.size() < 2) return null;
       startIndex = 1;
-    } else if (f.done) {
-      partialTranslation = Sequences.wrapEnd(partialTranslation, endToken);
+    } else if (f.prior != null && priorState == null) {
+      partialTranslation = Sequences.wrapStart(partialTranslation, f.prior.targetPrefix.get(0));
+      startIndex = 1;
     }
     
     LMState state = lm.score(partialTranslation, startIndex, priorState);
-
+   
     List<FeatureValue<String>> features = Generics.newLinkedList();
+    
     features.add(new FeatureValue<String>(featureName, state.getScore()));
 
     f.setState(this, state);

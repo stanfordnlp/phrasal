@@ -27,17 +27,22 @@ public class OutputSpaceFactory {
    * @return
    */
   public static OutputSpace<IString,String> getOutputSpace(int sourceInputId, List<Sequence<IString>> targets, 
-      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase, String permutationString) {
-    if ((targets == null || targets.size() == 0)) {
-      return new UnconstrainedOutputSpace<IString, String>();
-    } else if (targets != null && targets.size() > 0 && targetsArePrefixes) {
+      boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase, boolean wrapBoundary) {
+    if (wrapBoundary) {
+      return new WrapBoundaryOutputSpace<>();
+    } else if (targets == null || targets.size() == 0) {
+      return new UnconstrainedOutputSpace<IString,String>();
+    
+    } else if (targetsArePrefixes) {
       return new SoftPrefixOutputSpace(targets.get(0), sourceInputId);
     
-    } else if (targets != null && targets.size() > 0) {
-      return new ConstrainedOutputSpace<IString,String>(targets, longestSourcePhrase, longestTargetPhrase);
     } else {
-      List<Integer> permutation = PreorderingAgreement.parsePermutation(permutationString);
-      return new PermutationConstrainedOutputSpace<IString, String>(permutation);
-    }
+    //else if (targets != null && targets.size() > 0) {
+      return new ConstrainedOutputSpace<IString,String>(targets, longestSourcePhrase, longestTargetPhrase);
+    } 
+    //else {
+      //List<Integer> permutation = PreorderingAgreement.parsePermutation(permutationString);
+      //return new PermutationConstrainedOutputSpace<IString, String>(permutation);
+    //}
   }
 }

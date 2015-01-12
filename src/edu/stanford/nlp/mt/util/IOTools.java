@@ -258,6 +258,7 @@ public final class IOTools {
   public static void writeNbest(List<RichTranslation<IString, String>> translations,
       int sourceInputId,
       String outputType,
+      Pattern featurePattern,
       PrintStream nbestListWriter) {
     assert translations != null;
     assert nbestListWriter != null;
@@ -266,13 +267,13 @@ public final class IOTools {
     String nl = System.getProperty("line.separator");
     for (RichTranslation<IString, String> translation : translations) {
       if (outputType.equals("moses")) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, true, false);
-      } else if (outputType.equals("nofeats")) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, false, false);
-      } else if (outputType.equals("verbose")) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, true, false);
-      } else if (outputType.equals("nofeats-verbose")) {
-        translation.nbestToMosesStringBuilder(sourceInputId, sb, false, true);
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, false, false);
+      } else if (outputType.equals("bolt")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, false);
+      } else if (outputType.equals("nnlm")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, false, true);
+      } else if (outputType.equals("nnlm-bolt")) {
+        translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, true);
       } else {
         sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());

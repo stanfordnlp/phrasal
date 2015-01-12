@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
@@ -18,10 +20,13 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
+import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
- * Filter OOVs from an input file given a phrase table.c
+ * Filter OOVs from an input file given a phrase table.
  * 
  * @author Spence Green
  *
@@ -39,17 +44,12 @@ public class FilterOOVByPhraseTable {
    * @throws IOException
    */
   public static PhraseGenerator<IString,String> load(String filename) throws IOException {
-//    FlatPhraseTable.createIndex(false);
     String generatorName = PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
-
     Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair =  
         PhraseGeneratorFactory.<String>factory(generatorName, filename);
     PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
         Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(true)),
         CombinedPhraseGenerator.Type.STRICT_DOMINANCE, QUERY_LIMIT);
-
-//    FlatPhraseTable.lockIndex();
-
     return phraseGenerator;
   }
 
@@ -58,10 +58,11 @@ public class FilterOOVByPhraseTable {
    * 
    * @param source
    * @param phraseGenerator
+   * @param keepASCII 
    * @return
    */
   private static Sequence<IString> filterUnknownWords(String input, 
-      PhraseGenerator<IString,String> phraseGenerator) {
+      PhraseGenerator<IString,String> phraseGenerator, boolean keepASCII) {
     Sequence<IString> source = IStrings.tokenize(input);
     List<ConcreteRule<IString,String>> rules = phraseGenerator.getRules(source, null, null, -1, null);
 
@@ -69,6 +70,15 @@ public class FilterOOVByPhraseTable {
     for (ConcreteRule<IString,String> rule : rules) {
       if (rule.abstractRule.target.size() > 0 && !"".equals(rule.abstractRule.target.toString())) {
         possibleCoverage.or(rule.sourceCoverage);
+      }
+    }
+    
+    if (keepASCII) {
+      for (int i = 0, sz = source.size(); i < sz; ++i) {
+        String token = source.get(i).toString();
+        if (TokenUtils.isASCII(token)) {
+          possibleCoverage.set(i);
+        }
       }
     }
 
@@ -82,16 +92,34 @@ public class FilterOOVByPhraseTable {
     return null;
   }
 
+  private static String usage() {
+    StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
+    sb.append("Usage: java ").append(FilterOOVByPhraseTable.class.getName()).append(" phrase_table < file").append(nl);
+    sb.append(nl);
+    sb.append(" Options:").append(nl);
+    sb.append("   -a    : Do not filter ASCII tokens").append(nl);
+    return sb.toString();
+  }
+
+  private static Map<String,Integer> argDefs() {
+    Map<String,Integer> argDefs = Generics.newHashMap();
+    argDefs.put("a", 0);
+    return argDefs;
+  }
+  
   /**
    * @param args
    */
   public static void main(String[] args) {
-    if (args.length != 1 || args[0].equals("-h") || args[0].equals("-help")) {
-      System.err.printf("Usage: java %s phrase_table < file > file%n", 
-          FilterOOVByPhraseTable.class.getName());
+    if (args.length < 1 || args[0].equals("-h") || args[0].equals("-help")) {
+      System.err.print(usage());
       System.exit(-1);
     }
-    String filename = args[0];
+
+    Properties options = StringUtils.argsToProperties(args, argDefs());
+    boolean keepASCII = options.containsKey("a");
+    String filename = options.getProperty("");
     PhraseGenerator<IString,String> phraseGenerator = null;
     try {
       System.err.println("Loading phrase table: " + filename);
@@ -104,7 +132,7 @@ public class FilterOOVByPhraseTable {
         new BufferedInputStream(System.in)));
     try {
       for (String line; (line = reader.readLine()) != null;) {
-        Sequence<IString> output = filterUnknownWords(line, phraseGenerator);
+        Sequence<IString> output = filterUnknownWords(line, phraseGenerator, keepASCII);
         if (output == null) {
           // Don't output blank lines
           System.out.println(line.trim());

@@ -27,10 +27,9 @@ fi
 
 MEM=$1
 CONF=$2
-shift
-shift
+shift 2
 
-OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -Xmx$MEM -Xms$MEM -XX:MaxPermSize=256m"
+OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC -Xmx$MEM -Xms$MEM"
 
 java $OPTS -jar "$BERKELEY_ALIGNER"/berkeleyaligner.jar ++$CONF $@ 
 

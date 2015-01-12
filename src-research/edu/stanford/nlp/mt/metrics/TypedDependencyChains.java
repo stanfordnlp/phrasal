@@ -13,9 +13,10 @@ import edu.stanford.nlp.process.Morphology;
 import edu.stanford.nlp.process.PTBTokenizer;
 import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 import edu.stanford.nlp.trees.Dependencies;
+import edu.stanford.nlp.trees.GrammaticalStructure;
 import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
-import edu.stanford.nlp.util.Filter;
+import java.util.function.Predicate;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -24,7 +25,7 @@ public class TypedDependencyChains {
    MaltParserInterface mpi;
    TokenizerFactory<CoreLabel> ptbtokf;
    Morphology morpha;
-   Filter<String> puncFilter;
+   Predicate<String> puncFilter;
 
    public TypedDependencyChains()  {
      try {
@@ -56,11 +57,11 @@ public class TypedDependencyChains {
       }
 
       List<TypedDependency> typeDeps;
-        typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(true);
+        typeDeps = mpi.parseToGrammaticalStructure(words).typedDependenciesCCprocessed(GrammaticalStructure.Extras.MAXIMAL);
       List<TypedDependency> filteredDeps = new ArrayList<TypedDependency>(typeDeps.size());
 
       for (TypedDependency tdep : typeDeps) {
-        if (puncFilter.accept(wordOnly(tdep.gov().label().toString())) && puncFilter.accept(wordOnly(tdep.dep().label().toString()))) {
+        if (puncFilter.test(wordOnly(tdep.gov().toString())) && puncFilter.test(wordOnly(tdep.dep().toString()))) {
           filteredDeps.add(tdep);
         }
       }
@@ -72,7 +73,7 @@ public class TypedDependencyChains {
       }
    }
 
-   public Counter<List<String>> getNoIndexChains(String sentence, int maxChain,      boolean untyped) {
+   public Counter<List<String>> getNoIndexChains(String sentence, int maxChain, boolean untyped) {
 
      Counter<List<TypedDependency>> chains = getChains(sentence, maxChain);
      if (chains == null) return null;
@@ -80,7 +81,8 @@ public class TypedDependencyChains {
      for (List<TypedDependency> chain : chains.keySet()) {
        List<String> deps = new ArrayList<String>(chain.size());
        for (TypedDependency dep : chain) {
-         String depString = dep.toString(true);
+         // TODO: double check that this isn't returning (null, null), eg value() is set correctly
+         String depString = dep.toString(CoreLabel.OutputFormat.VALUE);
          if (untyped) {
            int firstPar = depString.indexOf("(");
            depString = depString.substring(firstPar);
