@@ -11,7 +11,7 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import edu.stanford.nlp.lm.NPLM;
+import edu.stanford.nlp.mt.lm.NPLM;
 
 /**
  * @author Thang Luong

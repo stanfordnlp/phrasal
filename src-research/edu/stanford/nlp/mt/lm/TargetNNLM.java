@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
-import edu.stanford.nlp.lm.NPLM;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.NNLMUtil;
