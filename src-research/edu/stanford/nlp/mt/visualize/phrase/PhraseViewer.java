@@ -1,8 +1,20 @@
 package edu.stanford.nlp.mt.visualize.phrase;
 
-import joptsimple.*;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
+import edu.stanford.nlp.util.PropertiesUtils;
+import edu.stanford.nlp.util.StringUtils;
+
+/**
+ * Phrase table visualization.
+ * 
+ * Written during the summer of 2009 when I was a young man....
+ * 
+ * @author Spence Green
+ *
+ */
 public final class PhraseViewer {
 
   private PhraseViewer() {
@@ -22,8 +34,16 @@ public final class PhraseViewer {
     return sb.toString();
   }
 
-  private final static OptionParser op = new OptionParser("vs:o:x:p:f:l:");
-  private final static int MIN_ARGS = 0;
+  private static Map<String,Integer> argDefs() {
+    Map<String,Integer> argDefs = new HashMap<String,Integer>();
+    argDefs.put("v", 0);
+    argDefs.put("s", 1);
+    argDefs.put("o", 1);
+    argDefs.put("x", 1);
+    argDefs.put("f", 1);
+    argDefs.put("l", 1);
+    return argDefs;
+  }
 
   private static boolean VERBOSE = false;
   private static int FIRST_ID = Integer.MIN_VALUE;
@@ -34,32 +54,14 @@ public final class PhraseViewer {
 
   private static boolean validateCommandLine(String[] args) {
     // Command line parsing
-    OptionSet opts = null;
-    List<String> parsedArgs = null;
-    try {
-      opts = op.parse(args);
+    Properties options = StringUtils.argsToProperties(args, argDefs());
 
-      parsedArgs = opts.nonOptionArguments();
-
-      if (parsedArgs.size() < MIN_ARGS)
-        return false;
-
-    } catch (OptionException e) {
-      System.err.println(e.toString());
-      return false;
-    }
-
-    VERBOSE = opts.has("v");
-    if (opts.has("s"))
-      SRC_FILE = (String) opts.valueOf("s");
-    if (opts.has("o"))
-      OPTS_FILE = (String) opts.valueOf("o");
-    if (opts.has("x"))
-      XSD_FILE = (String) opts.valueOf("x");
-    if (opts.has("f"))
-      FIRST_ID = Integer.parseInt(opts.valueOf("f").toString());
-    if (opts.has("l"))
-      LAST_ID = Integer.parseInt(opts.valueOf("l").toString());
+    VERBOSE = options.containsKey("v");
+    SRC_FILE = options.getProperty("s", null);
+    OPTS_FILE = options.getProperty("o", null);
+    XSD_FILE = options.getProperty("x", null);
+    FIRST_ID = PropertiesUtils.getInt(options, "f", Integer.MIN_VALUE);
+    LAST_ID = PropertiesUtils.getInt(options,"l",Integer.MAX_VALUE);
 
     return true;
   }
