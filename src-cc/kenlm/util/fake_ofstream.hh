@@ -17,16 +17,15 @@
 namespace util {
 class FakeOFStream {
   public:
-    static const std::size_t kOutBuf = 1048576;
-
     // Does not take ownership of out.
     // Allows default constructor, but must call SetFD.
-    explicit FakeOFStream(int out = -1)
-      : buf_(util::MallocOrThrow(kOutBuf)),
-        builder_(static_cast<char*>(buf_.get()), kOutBuf),
+    explicit FakeOFStream(int out = -1, std::size_t buffer_size = 1048576)
+      : buf_(util::MallocOrThrow(buffer_size)),
+        builder_(static_cast<char*>(buf_.get()), buffer_size),
         // Mostly the default but with inf instead.  And no flags.
         convert_(double_conversion::DoubleToStringConverter::NO_FLAGS, "inf", "NaN", 'e', -6, 21, 6, 0),
-        fd_(out) {}
+        fd_(out),
+        buffer_size_(buffer_size) {}
 
     ~FakeOFStream() {
       if (buf_.get()) Flush();
@@ -35,6 +34,25 @@ class FakeOFStream {
     void SetFD(int to) {
       if (builder_.position()) Flush();
       fd_ = to;
+    }
+
+    FakeOFStream &Write(const void *data, std::size_t length) {
+      // Dominant case
+      if (static_cast<std::size_t>(builder_.size() - builder_.position()) > length) {
+        builder_.AddSubstring((const char*)data, length);
+        return *this;
+      }
+      Flush();
+      if (length > buffer_size_) {
+        util::WriteOrThrow(fd_, data, length);
+      } else {
+        builder_.AddSubstring((const char*)data, length);
+      }
+      return *this;
+    }
+
+    FakeOFStream &operator<<(StringPiece str) {
+      return Write(str.data(), str.size());
     }
 
     FakeOFStream &operator<<(float value) {
@@ -47,17 +65,6 @@ class FakeOFStream {
     FakeOFStream &operator<<(double value) {
       EnsureRemaining(double_conversion::DoubleToStringConverter::kMaxPrecisionDigits + 8);
       convert_.ToShortest(value, &builder_);
-      return *this;
-    }
-
-    FakeOFStream &operator<<(StringPiece str) {
-      if (str.size() > kOutBuf) {
-        Flush();
-        util::WriteOrThrow(fd_, str.data(), str.size());
-      } else {
-        EnsureRemaining(str.size());
-        builder_.AddSubstring(str.data(), str.size());
-      }
       return *this;
     }
 
@@ -98,6 +105,7 @@ class FakeOFStream {
     double_conversion::StringBuilder builder_;
     double_conversion::DoubleToStringConverter convert_;
     int fd_;
+    const std::size_t buffer_size_;
 };
 
 } // namespace
