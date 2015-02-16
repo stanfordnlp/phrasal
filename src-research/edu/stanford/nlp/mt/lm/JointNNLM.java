@@ -9,6 +9,7 @@ import java.util.List;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -188,7 +189,7 @@ public class JointNNLM extends TargetNNLM {
     for (int i = 0; i<numTokens; i++) {
       istringIndices[i] = reverseVocabMap[ngramIds[i]];
     }
-    return IString.getIStringSequence(istringIndices);
+    return IStrings.getIStringSequence(istringIndices);
   }
   
 	/**

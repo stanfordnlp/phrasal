@@ -9,6 +9,7 @@ import java.util.List;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.NNLMUtil;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
@@ -251,7 +252,7 @@ public class TargetNNLM extends AbstractNNLM {
     for (int i = 0; i<numTokens; i++) {
       istringIndices[i] = reverseVocabMap[ngramIds[i]];
     }
-    return IString.getIStringSequence(istringIndices);
+    return IStrings.getIStringSequence(istringIndices);
   }
       
   /**

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -194,7 +195,7 @@ public class PseudoNNLM extends AbstractNNLM {
       istringIndices[i] = kenlmIdToIstringId.get(kenlmIndices[i]);
     }
     
-    return IString.getIStringSequence(istringIndices);
+    return IStrings.getIStringSequence(istringIndices);
   }
 
   @Override
