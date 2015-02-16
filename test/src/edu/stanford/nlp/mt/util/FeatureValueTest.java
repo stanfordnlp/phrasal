@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.util;
 
 import edu.stanford.nlp.mt.util.FeatureValue;
 import junit.framework.TestCase;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.util;
 
 import static org.junit.Assert.*;
 

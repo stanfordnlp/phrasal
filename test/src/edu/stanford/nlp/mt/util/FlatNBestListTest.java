@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.base;
+package edu.stanford.nlp.mt.util;
 
 import java.util.Collection;
 import java.io.*;
