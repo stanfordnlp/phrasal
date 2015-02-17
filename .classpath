@@ -3,12 +3,10 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="src-research"/>
 	<classpathentry kind="src" path="test/src"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/JavaNLP-more"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/create_phrasedb.jar" sourcepath="C:/cygwin/home/daniel/terp.v1/src"/>
 	<classpathentry kind="lib" path="lib/terp.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
 	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-annotations.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-client.jar"/>
@@ -29,5 +27,7 @@
 	<classpathentry kind="lib" path="lib/jetty-util.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-webapp.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-xml.jar"/>
+	<classpathentry kind="lib" path="lib/gson-2.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/fastutil.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

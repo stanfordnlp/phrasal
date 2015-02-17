@@ -2,9 +2,8 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import cern.colt.Arrays;
 
 /**
  * Interface to the Neural Probabilistic Language Model (NPLM) by ISI.

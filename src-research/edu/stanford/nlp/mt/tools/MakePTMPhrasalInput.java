@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import au.com.bytecode.opencsv.CSVReader;
+//import au.com.bytecode.opencsv.CSVReader;
 
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.process.Preprocessor;
@@ -59,10 +59,11 @@ public class MakePTMPhrasalInput {
     Preprocessor tgtPreproc = ProcessorFactory.getPreprocessor(tgtLang);
     
     System.out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s%n", "doc_id", "seg_id", "username", "mt_tok", "user_tok", "s2mt_tok", "src_tok");
-    CSVReader reader = new CSVReader(new FileReader(sqlFile));
+//    CSVReader reader = new CSVReader(new FileReader(sqlFile));
     // Skip header
     boolean seenHeader = false;
-    for (String[] fields; (fields = reader.readNext()) != null;) {
+//    for (String[] fields; (fields = reader.readNext()) != null;) {
+  for (String[] fields = null;;) {
       if ( ! seenHeader) {
         seenHeader = true;
         continue;
@@ -92,7 +93,7 @@ public class MakePTMPhrasalInput {
       }
       System.out.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s%n", fields[0], fields[1], fields[2], t2tPrime.e().toString(), userTextTok, Sentence.listToString(alignmentList), s2sPrime.e().toString());
     }
-    reader.close();
+//    reader.close();
   }
 
   private static String extend(String aStr) {

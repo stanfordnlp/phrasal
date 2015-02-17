@@ -1,7 +1,5 @@
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
-  <property name="project.more"   value="${basedir}/../more" />
-  <property name="project.rte"   value="${basedir}/../rte" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
   <property name="source-research.path"    value="${basedir}/src-research" />
@@ -27,26 +25,8 @@
       </fileset>
       <pathelement path="${project.core}/classes" />
 	  
-	  <!-- depends on more -->
-      <fileset dir="${project.more}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <pathelement path="${project.more}/classes" />
-
-      <!-- for the time being let rte depend on rte -->
-      <fileset dir="${project.rte}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <pathelement path="${project.rte}/classes" />
-      
       <!-- depends on local libs -->
       <fileset dir="${basedir}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <fileset dir="${basedir}/lib-research">
         <include name="*.jar"/>
         <exclude name="javanlp*"/>
       </fileset>
@@ -108,7 +88,7 @@ includeantruntime="false">
           description="Run mt integration tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
-      <sysproperty key="java.library.path" path="${project.more}/src-cc"/>
+      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
