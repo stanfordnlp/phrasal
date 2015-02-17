@@ -9,7 +9,6 @@
 	<classpathentry kind="lib" path="lib/terp.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-core"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaNLP-rte"/>
-	<classpathentry kind="lib" path="lib-research/concurrentlinkedhashmap-lru-1.5-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/optimize_terp.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-annotations.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-client.jar"/>

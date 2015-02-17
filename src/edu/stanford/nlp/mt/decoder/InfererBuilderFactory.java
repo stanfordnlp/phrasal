@@ -69,16 +69,6 @@ public class InfererBuilderFactory {
       return builder;
     }
 
-    // Thang Apr14
-    if (infererName.equals(CUBE_PRUNING_NNLM_DECODER)) {
-      CubePruningNNLMDecoder.CubePruningNNLMDecoderBuilder<IString, String> builder = CubePruningNNLMDecoder.builder();
-      if (beamSize != -1)
-        builder.setBeamSize(beamSize);
-      if (beamType != null)
-        builder.setBeamType(beamType);
-      return builder;
-    }
-    
     if (infererName.equals(DTU_DECODER)) {
       DTUDecoder.DTUDecoderBuilder<IString, String> builder = DTUDecoder
           .builder();
