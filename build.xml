@@ -2,7 +2,7 @@
   <property name="project.core"   value="${basedir}/../core" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
-  <property name="source-research.path"    value="${basedir}/src-research" />
+  <property name="source-extra.path"    value="${basedir}/src-extra" />
   <property name="tests.path"     value="${basedir}/test/src" />
   <property name="itests.path"     value="${basedir}/itest/src" />
   
@@ -42,7 +42,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
-    <javac srcdir="${source.path}:${source-research.path}:${tests.path}:${itests.path}"
+    <javac srcdir="${source.path}:${source-extra.path}:${tests.path}:${itests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
          encoding="${compile.encoding}"   
@@ -63,7 +63,7 @@ includeantruntime="false">
       <fileset dir="${source.path}" excludes="**/*.java"/>
     </copy>
     <copy  todir="${build.path}">
-      <fileset dir="${source-research.path}" excludes="**/*.java"/>
+      <fileset dir="${source-extra.path}" excludes="**/*.java"/>
     </copy>
   </target>
  
