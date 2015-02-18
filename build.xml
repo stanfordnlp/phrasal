@@ -1,10 +1,8 @@
 <project name="mt" default="compile" basedir=".">
   <property name="project.core"   value="${basedir}/../core" />
-  <property name="project.more"   value="${basedir}/../more" />
-  <property name="project.rte"   value="${basedir}/../rte" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
-  <property name="source-research.path"    value="${basedir}/src-research" />
+  <property name="source-extra.path"    value="${basedir}/src-extra" />
   <property name="tests.path"     value="${basedir}/test/src" />
   <property name="itests.path"     value="${basedir}/itest/src" />
   
@@ -27,26 +25,8 @@
       </fileset>
       <pathelement path="${project.core}/classes" />
 	  
-	  <!-- depends on more -->
-      <fileset dir="${project.more}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <pathelement path="${project.more}/classes" />
-
-      <!-- for the time being let rte depend on rte -->
-      <fileset dir="${project.rte}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <pathelement path="${project.rte}/classes" />
-      
       <!-- depends on local libs -->
       <fileset dir="${basedir}/lib">
-        <include name="*.jar"/>
-        <exclude name="javanlp*"/>
-      </fileset>
-      <fileset dir="${basedir}/lib-research">
         <include name="*.jar"/>
         <exclude name="javanlp*"/>
       </fileset>
@@ -62,7 +42,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
-    <javac srcdir="${source.path}:${source-research.path}:${tests.path}:${itests.path}"
+    <javac srcdir="${source.path}:${source-extra.path}:${tests.path}:${itests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
          encoding="${compile.encoding}"   
@@ -83,7 +63,7 @@ includeantruntime="false">
       <fileset dir="${source.path}" excludes="**/*.java"/>
     </copy>
     <copy  todir="${build.path}">
-      <fileset dir="${source-research.path}" excludes="**/*.java"/>
+      <fileset dir="${source-extra.path}" excludes="**/*.java"/>
     </copy>
   </target>
  
@@ -108,7 +88,7 @@ includeantruntime="false">
           description="Run mt integration tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
-      <sysproperty key="java.library.path" path="${project.more}/src-cc"/>
+      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>

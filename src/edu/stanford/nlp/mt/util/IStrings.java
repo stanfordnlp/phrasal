@@ -122,4 +122,15 @@ public final class IStrings {
     }
     return strs;
   }
+
+  /**
+   * Get a sequence of IString from an array of IString indices.
+   */
+  public static Sequence<IString> getIStringSequence(int[] indices){
+    List<IString> istringList = new ArrayList<IString>();
+    for (int id : indices) {
+      istringList.add(new IString(id));
+    }
+    return new SimpleSequence<IString>(istringList);
+  }
 }
