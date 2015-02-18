@@ -6,7 +6,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.logging.Logger;
 
-import edu.stanford.nlp.mt.decoder.feat.sparse.PreorderingAgreement;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
@@ -98,11 +97,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       List<Sequence<TK>> targets, int nbest) {
 
     //this.maxDistortion = Integer.parseInt((String) sourceInputProperties.get(InputProperty.DistortionLimit));
-    
-    String permutationString = (String) sourceInputProperties.get(InputProperty.ReferencePermutation);
-    List<Integer> permutationSequence = permutationString != null 
-        ? PreorderingAgreement.parsePermutation(permutationString) : null;
-    
+        
     // Create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
@@ -129,13 +124,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // Fill Beam 0...only has one cube
-    BundleBeam<TK,FV> nullBeam = null;
-    if (permutationSequence == null)
-      nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+    BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
-    else
-      nullBeam = new SmartBundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
-          recombinationHistory, permutationSequence, 0);
+  
     List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
     allOptions.add(ruleList);
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 

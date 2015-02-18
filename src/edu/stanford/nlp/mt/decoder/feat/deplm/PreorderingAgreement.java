@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.decoder.feat.sparse;
+package edu.stanford.nlp.mt.decoder.feat.deplm;
 
 import java.io.BufferedReader;
 import java.io.File;
