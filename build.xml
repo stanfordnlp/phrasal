@@ -5,6 +5,7 @@
   <property name="source-extra.path"    value="${basedir}/src-extra" />
   <property name="tests.path"     value="${basedir}/test/src" />
   <property name="itests.path"     value="${basedir}/itest/src" />
+  <property name="kenlm.path"     value="${basedir}/src-cc" />
   
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
@@ -36,6 +37,9 @@
   <target name="clean" description="Delete old classes">
     <echo message="${ant.project.name}" />
     <delete dir="${build.path}"/>
+    <delete>
+      <fileset dir="${kenlm.path}" includes="libPhrasalKenLM.*" />
+    </delete>
   </target>
 
   <target name="compile" depends="classpath"
@@ -67,10 +71,26 @@ includeantruntime="false">
     </copy>
   </target>
  
+  <target name="checkkenlm">
+    <!-- Unix filename -->
+    <available file="${kenlm.path}/libPhrasalKenLM.so" type="file" property="kenlm.present"/>
+    <!-- MacOS filename -->
+    <available file="${kenlm.path}/libPhrasalKenLM.dylib" type="file" property="kenlm.present"/>
+  </target>
+
+  <target name="kenlm" depends="checkkenlm" unless="kenlm.present">
+    <echo message="Building KenLM (C++). Windows users must set the CYGWIN environment variable to point to Cygwin."/>
+    <exec executable="${env.CYGWIN}\bin\bash" dir="${kenlm.path}" osfamily="windows">
+      <arg value="${kenlm.path}/compile_JNI.sh"/>
+    </exec>
+    <exec executable="${kenlm.path}/compile_JNI.sh" dir="${kenlm.path}" osfamily="unix"/>
+  </target>
+
   <target name="test" depends="classpath,compile"
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
+      <jvmarg value="-Djava.library.path=${basedir}/lib"/>
       <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
@@ -84,11 +104,12 @@ includeantruntime="false">
     </junit>
   </target>
   
-  <target name="itest" depends="classpath,compile"
+  <target name="itest" depends="classpath,compile,kenlm"
           description="Run mt integration tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
       <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
+      <jvmarg value="-Djava.library.path=${basedir}/lib"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>
