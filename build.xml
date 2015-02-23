@@ -1,5 +1,6 @@
 <project name="mt" default="compile" basedir=".">
-  <property name="project.core"   value="${basedir}/../core" />
+  <property environment="env"/>
+  <property name="project.core"   value="/${env.JAVANLP_HOME}/projects/core" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
   <property name="source-extra.path"    value="${basedir}/src-extra" />
@@ -14,8 +15,6 @@
   <property name="compile.target"      value="1.8" />
   <property name="compile.encoding"    value="utf-8" />
 
-  <property environment="env"/>
- 
   <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">

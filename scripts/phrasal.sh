@@ -65,7 +65,7 @@ echo Loading local parameters from $VAR_FILE
 source $VAR_FILE
 echo System name: $SYS_NAME
 echo Executing steps: $EXEC_STEPS
-echo JavaNLP: $JAVANLP_HOME
+echo Phrasal home: $PHRASAL_HOME
 
 ######################################################################
 ######################################################################

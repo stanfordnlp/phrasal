@@ -1,0 +1,33 @@
+# ignore emacs backups
+*~
+
+# ignore compiled files
+classes/**
+
+# ignore javadoc
+javadoc/**
+
+# Python compiled files
+*.pyc
+
+# temporary files
+*.swp
+*.swo
+
+# C++ binaries
+*.o
+*.so
+*.dylib
+src-cc/kenlm/lmplz
+src-cc/kenlm/build_binary
+src-cc/kenlm/query
+
+# IntelliJ and Eclipse metadata
+.idea
+.metadata
+
+#ignore OS X Finder dirs
+.DS_Store
+
+# ignore eclipse settings files
+.settings/**
