@@ -31,3 +31,8 @@ src-cc/kenlm/query
 
 # ignore eclipse settings files
 .settings/**
+
+# ignore gradle settings
+.gradle/
+build/
+/bin/
