@@ -32,6 +32,7 @@
 	<classpathentry kind="lib" path="/home/rayder441/lilt/phrasal/lib/jetty-client.jar" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/phrasal/lib/create_phrasedb.jar" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/phrasal/lib/jetty-util.jar" exported="true"/>
+	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/classes" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/lib/lucene-analyzers-common-4.2.1.jar" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/lib/lucene-queryparser-4.2.1.jar" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/lib/commons-lang3-3.1.jar" exported="true"/>
@@ -53,5 +54,4 @@
 	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/lib/jollyday-0.4.7.jar" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/lib/javacc.jar" exported="true"/>
 	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/lib/joda-time.jar" exported="true"/>
-	<classpathentry kind="lib" path="/home/rayder441/lilt/CoreNLP/classes" exported="true"/>
 </classpath>

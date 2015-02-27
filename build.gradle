@@ -82,8 +82,8 @@ dependencies {
   compile fileTree(dir: 'lib', include: '*.jar')
   
   // CoreNLP dependencies
-  compile fileTree(dir: coreNlpHome + '/lib', include: '*.jar')
   compile files([corePath])
+  compile fileTree(dir: coreNlpHome + '/lib', include: '*.jar')
 
   // Maven dependencies
   compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
