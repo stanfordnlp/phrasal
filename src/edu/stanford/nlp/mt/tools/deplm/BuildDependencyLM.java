@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.SortedSet;
 
-import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.util.CoreNLPCache;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
 import edu.stanford.nlp.stats.Counter;

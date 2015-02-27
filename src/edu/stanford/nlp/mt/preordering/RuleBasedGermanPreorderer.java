@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.mt.base.CoreNLPCache;
 import edu.stanford.nlp.mt.preordering.ClauseTypeLabeller.Clause;
+import edu.stanford.nlp.mt.util.CoreNLPCache;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
