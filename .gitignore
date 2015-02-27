@@ -35,4 +35,5 @@ src-cc/kenlm/query
 # ignore gradle settings
 .gradle/
 build/
-/bin/
+bin/
+libs/
