@@ -388,9 +388,6 @@ implements PhraseTable<IString> {
   protected void addEntry(Sequence<IString> sourceSequence,
       Sequence<IString> targetSequence, PhraseAlignment alignment,
       float[] scores) {
-    TranslationModelVocabulary.getSourceInstance().add(sourceSequence);
-    TranslationModelVocabulary.getTargetInstance().add(targetSequence);
-
     int[] foreignInts = toWordIndexArray(sourceSequence);
     int[] translationInts = toWordIndexArray(targetSequence);
     int fIndex = sourceIndex.indexOf(foreignInts, true);

@@ -100,9 +100,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   protected void addEntry(Sequence<IString> sourceSequence,
       Sequence<IString> targetSequence, PhraseAlignment alignment,
       float[] scores) {
-    TranslationModelVocabulary.getSourceInstance().add(sourceSequence);
-    TranslationModelVocabulary.getTargetInstance().add(targetSequence);
-
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int[] targetArray = Sequences.toIntArray(targetSequence);
     int fIndex = sourceToRuleIndex.insertIntoIndex(sourceArray);
