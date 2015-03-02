@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.train;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -11,10 +12,8 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.HashIndex;
-
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -51,11 +50,11 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   protected final IntArrayList feCounts = new IntArrayList();
   protected final IntArrayList fCounts = new IntArrayList();
   protected final IntArrayList eCounts = new IntArrayList();
-  protected final List<Double> totalCounts = Generics.newArrayList();
+  protected final List<Double> totalCounts = new ArrayList<>();
   protected double totalFECount = -1;
   protected double totalFCount = -1;
   protected double totalECount = -1;
-  protected final List<Double> totalLexCounts = Generics.newArrayList();
+  protected final List<Double> totalLexCounts = new ArrayList<>();
   protected double totalFELexCount = -1;
   protected double totalFLexCount = -1;
   protected double totalELexCount = -1;

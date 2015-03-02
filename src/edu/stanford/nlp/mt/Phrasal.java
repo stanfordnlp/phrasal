@@ -37,6 +37,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -98,7 +100,6 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
@@ -203,9 +204,9 @@ public class Phrasal {
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
   public static final String WRAP_BOUNDARY = "wrap-boundary";
   
-  private static final Set<String> REQUIRED_FIELDS = Generics.newHashSet();
-  private static final Set<String> OPTIONAL_FIELDS = Generics.newHashSet();
-  private static final Set<String> ALL_RECOGNIZED_FIELDS = Generics.newHashSet();
+  private static final Set<String> REQUIRED_FIELDS = new HashSet<>();
+  private static final Set<String> OPTIONAL_FIELDS = new HashSet<>();
+  private static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<>();
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT));
     OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE,
@@ -395,14 +396,14 @@ public class Phrasal {
       ClassNotFoundException {
     // Check for required parameters
     if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
-      Set<String> missingFields = Generics.newHashSet(REQUIRED_FIELDS);
+      Set<String> missingFields = new HashSet<>(REQUIRED_FIELDS);
       missingFields.removeAll(config.keySet());
       throw new RuntimeException(String.format(
           "The following required fields are missing: %s%n", missingFields));
     }
     // Check for unrecognized parameters
     if (!ALL_RECOGNIZED_FIELDS.containsAll(config.keySet())) {
-      Set<String> extraFields = Generics.newHashSet(config.keySet());
+      Set<String> extraFields = new HashSet<>(config.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_FIELDS);
       throw new RuntimeException(String.format(
           "The following fields are unrecognized: %s%n", extraFields));
@@ -552,7 +553,7 @@ public class Phrasal {
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
     if (config.get(INDEPENDENT_PHRASE_TABLES) != null) {
-       List<PhraseGenerator<IString,String>> generators = Generics.newLinkedList();
+       List<PhraseGenerator<IString,String>> generators = new LinkedList<>();
        generators.add(phraseGenerator);
        for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
          String[] fields = filename.split(":");
@@ -578,7 +579,7 @@ public class Phrasal {
     }
 
     // Load the lexicalized reordering model(s) and associated featurizers
-    List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = Generics.newLinkedList();
+    List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (config.containsKey(REORDERING_MODEL)) {
       List<PhraseTable<IString>> phraseTables = phraseTablePair.second();
       
@@ -613,7 +614,7 @@ public class Phrasal {
       }
     }
 
-    List<Featurizer<IString, String>> additionalFeaturizers = Generics.newArrayList();
+    List<Featurizer<IString, String>> additionalFeaturizers = new ArrayList<>();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
       String featurizerName = null;
@@ -715,14 +716,14 @@ public class Phrasal {
     }
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
-      Set<String> disabledFeaturizers = Generics.newHashSet(config.get(DISABLED_FEATURIZERS));
+      Set<String> disabledFeaturizers = new HashSet<>(config.get(DISABLED_FEATURIZERS));
       featurizer.deleteFeaturizers(disabledFeaturizers);
     }
 
     additionalFeaturizers.addAll(lexReorderFeaturizers);
 
     if (!additionalFeaturizers.isEmpty()) {
-      List<Featurizer<IString, String>> allFeaturizers = Generics.newArrayList();
+      List<Featurizer<IString, String>> allFeaturizers = new ArrayList<>();
       allFeaturizers.addAll(featurizer.getFeaturizers());
       allFeaturizers.addAll(additionalFeaturizers);
       if (featureAugmentationMode == null) {
@@ -791,8 +792,8 @@ public class Phrasal {
         new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords);
     
     // Create Inferers and scorers
-    inferers = Generics.newArrayList(numThreads);
-    scorers = Generics.newArrayList(numThreads);
+    inferers = new ArrayList<>(numThreads);
+    scorers = new ArrayList<>(numThreads);
 
     boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
 
@@ -1175,13 +1176,13 @@ public class Phrasal {
         targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(),
         wrapBoundary);
 
-    List<RichTranslation<IString, String>> translations = Generics.newArrayList(1);
+    List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 
           outputSpace, outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
 
       // Return an empty n-best list
-      if (translations == null) translations = Generics.newArrayList(1);
+      if (translations == null) translations = new ArrayList<>(1);
 
     } else {
       // The 1-best translation in this case is potentially different from

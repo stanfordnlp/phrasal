@@ -1,10 +1,11 @@
 package edu.stanford.nlp.mt.tm;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * A container for the observed source vocabulary.
@@ -44,7 +45,7 @@ public final class TranslationModelVocabulary {
   
   private static Vocabulary getNewVocabulary() {
     return new Vocabulary() {
-      Set<Integer> set = Generics.newHashSet(10000);
+      Set<Integer> set = new HashSet<>(10000);
       @Override
       public void add(String word) {
         IString istr = new IString(word);

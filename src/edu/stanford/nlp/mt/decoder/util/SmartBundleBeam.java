@@ -1,11 +1,12 @@
 package edu.stanford.nlp.mt.decoder.util;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
-import edu.stanford.nlp.util.Generics;
+
 
 
 public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
@@ -25,7 +26,7 @@ public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
       super(capacity, filter, optionGrid, recombinationHistory, -1, coverageCardinality);
       
       
-      this.contiguousRanges = Generics.newLinkedList();
+      this.contiguousRanges = new LinkedList<>();
       int permutationLen = permutationSequence.size();
       for (int i = 0; i < permutationLen; i++) {
         for (int j = 0; j < MAX_PHRASE_LEN; j++) {
@@ -61,7 +62,7 @@ public class SmartBundleBeam<TK, FV> extends BundleBeam<TK, FV> {
     
     int len = sourceCoverage.length();
     
-    List<Range> ranges = Generics.newLinkedList();
+    List<Range> ranges = new LinkedList<>();
     
     for (Range range : this.contiguousRanges) {
       int start = range.start;

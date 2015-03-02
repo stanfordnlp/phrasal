@@ -23,7 +23,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
-import edu.stanford.nlp.util.Generics;
+
 
 public class DistortionProbability extends DerivationFeaturizer<IString, String> implements NeedsCloneable<IString, String> {
 
@@ -115,7 +115,7 @@ private void loadProbabilities(String filename) throws IOException {
   
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     List<Integer> permutation = getPermutationSequence(f);
     int sourceLength = f.sourcePhrase.size();
     int hypLength = permutation.size();

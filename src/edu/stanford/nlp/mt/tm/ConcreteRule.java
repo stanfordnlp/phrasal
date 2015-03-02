@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tm;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -12,7 +13,7 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.Phrasal;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * A translation rule that is associated with a particular source span
@@ -98,7 +99,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
         new ArrayList<FeatureValue<FV>>() : phraseFeaturizer.ruleFeaturize(f);
     
     // Cache selected features
-    cachedFeatureList = Generics.newLinkedList();
+    cachedFeatureList = new LinkedList<>();
     for (FeatureValue<FV> feature : features) {
       if ( ! feature.doNotCache) {
         cachedFeatureList.add(feature);
@@ -132,7 +133,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
 
-    cachedFeatureList = Generics.newLinkedList();
+    cachedFeatureList = new LinkedList<>();
     
     // TM scores:
     double totalScore = 0.0;

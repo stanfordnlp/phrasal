@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +17,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Mock handler for rule query requests.
@@ -30,7 +31,7 @@ public class RuleQueryRequestHandlerMock implements RequestHandler {
   public ServiceResponse handle(Request request) {
     RuleQueryRequest ruleRequest = (RuleQueryRequest) request;
     
-    List<RuleQuery> queriedRules = Generics.newLinkedList();
+    List<RuleQuery> queriedRules = new LinkedList<>();
     Sequence<IString> source = IStrings.tokenize(ruleRequest.text);
     final int sourceLength = source.size();
     for (int i = 0; i < sourceLength; ++i) {

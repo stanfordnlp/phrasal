@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tools;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -12,7 +13,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Approximate Randomization Test for Statistical Significance Testing.
@@ -90,8 +91,8 @@ public class SignificanceTest {
     for (int i = 0; i < SAMPLES; i++) {
       if ((i % 10) == 0)
         System.out.printf(".");
-      List<Sequence<IString>> sample1Trans = Generics.newArrayList(system1Trans.size());
-      List<Sequence<IString>> sample2Trans = Generics.newArrayList(system2Trans.size());
+      List<Sequence<IString>> sample1Trans = new ArrayList<>(system1Trans.size());
+      List<Sequence<IString>> sample2Trans = new ArrayList<>(system2Trans.size());
       int sz = system1Trans.size();
       for (int ii = 0; ii < sz; ii++) {
         if (r.nextDouble() >= 0.5) {

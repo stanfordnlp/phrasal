@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -10,7 +12,6 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Container class for featurizers.
@@ -46,7 +47,7 @@ public class FeatureExtractor<TK, FV> extends
    */
   public FeatureExtractor(List<Featurizer<TK, FV>> featurizers,
       String featureAugmentationMode) {
-    this.featurizers = Generics.newArrayList(featurizers);
+    this.featurizers = new ArrayList<>(featurizers);
     int id = -1;
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
@@ -78,7 +79,7 @@ public class FeatureExtractor<TK, FV> extends
   public void deleteFeaturizers(Set<String> disabledFeaturizers) {
     System.err.println("Featurizers to disable: " + disabledFeaturizers);
     Set<String> foundFeaturizers = new HashSet<String>();
-    List<Featurizer<TK, FV>> filteredFeaturizers = Generics.newLinkedList();
+    List<Featurizer<TK, FV>> filteredFeaturizers = new LinkedList<>();
     for (Featurizer<TK, FV> f : featurizers) {
       String className = f.getClass().getName();
       if (f instanceof FeatureExtractor)
@@ -102,7 +103,7 @@ public class FeatureExtractor<TK, FV> extends
   public Object clone() throws CloneNotSupportedException {
     FeatureExtractor<TK, FV> featurizer = (FeatureExtractor<TK, FV>) super
         .clone();
-    featurizer.featurizers = Generics.newLinkedList();
+    featurizer.featurizers = new LinkedList<>();
     for (Featurizer<TK, FV> f : featurizers) {
       featurizer.featurizers
           .add(f instanceof NeedsCloneable ? (DerivationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f)
@@ -118,7 +119,7 @@ public class FeatureExtractor<TK, FV> extends
    * @return
    */
   public List<Featurizer<TK, FV>> getFeaturizers() {
-    List<Featurizer<TK, FV>> allFeaturizers = Generics.newLinkedList(
+    List<Featurizer<TK, FV>> allFeaturizers = new LinkedList<>(
         featurizers);
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof FeatureExtractor) {
@@ -143,7 +144,7 @@ public class FeatureExtractor<TK, FV> extends
    */
   @Override
   public List<FeatureValue<FV>> featurize(Featurizable<TK, FV> f) {
-    List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
+    List<FeatureValue<FV>> featureValues = new LinkedList<>();
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
         List<FeatureValue<FV>> listFeatureValues = 
@@ -166,7 +167,7 @@ public class FeatureExtractor<TK, FV> extends
    */
   @Override
   public List<FeatureValue<FV>> ruleFeaturize(Featurizable<TK, FV> f) {
-    List<FeatureValue<FV>> featureValues = Generics.newLinkedList();
+    List<FeatureValue<FV>> featureValues = new LinkedList<>();
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof RuleFeaturizer) {
         RuleFeaturizer<TK, FV> ruleFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;

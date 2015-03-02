@@ -5,7 +5,7 @@ public class WordPenaltyFeaturizer implements
   public List<FeatureValue<String>> ruleFeaturize(
            Featurizable<TK, String> f) {
 
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     features.add(new FeatureValue<String>("WordPenalty",
 					    f.targetPhrase.size()));
     return features;

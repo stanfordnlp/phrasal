@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -7,7 +8,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Configure and return a recombination filter.
@@ -42,7 +43,7 @@ public final class RecombinationFilterFactory {
 
     switch (recombinationMode) {
       case PHAROAH_RECOMBINATION: {
-        List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
+        List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
         // maintain uniqueness of hypotheses that will result in different linear
         // distortion scores when extended
         // with future translation options.
@@ -64,7 +65,7 @@ public final class RecombinationFilterFactory {
 
       }
       case DTU_RECOMBINATION: {
-        List<RecombinationFilter<Derivation<IString, String>>> filters = Generics.newLinkedList();
+        List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
         filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
         filters.add(new TranslationNgramRecombinationFilter(featurizers));
         filters.add(new ForeignCoverageRecombinationFilter<IString, String>());

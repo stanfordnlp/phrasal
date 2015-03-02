@@ -1,7 +1,9 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -15,7 +17,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Indicator features for aligned and unaligned tokens in phrase pairs.
@@ -70,12 +72,12 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
     PhraseAlignment alignment = f.rule.abstractRule.alignment;
     final int tgtLength = f.targetPhrase.size();
     final int srcLength = f.sourcePhrase.size();
-    List<Set<Integer>> s2t = Generics.newArrayList(srcLength);
+    List<Set<Integer>> s2t = new ArrayList<>(srcLength);
     for (int i = 0; i < srcLength; ++i) {
       s2t.add(new HashSet<Integer>());
     }
     BitSet hasMultipleAlignments = new BitSet(tgtLength);
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
 
     // Target-side alignments
     for (int i = 0; i < tgtLength; ++i) {

@@ -7,7 +7,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -16,6 +15,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -28,7 +28,6 @@ import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -148,7 +147,7 @@ public final class IOTools {
    */
   public static Map<String, List<String>> readConfigFile(String filename)
       throws IOException {
-    Map<String, List<String>> config = Generics.newHashMap();
+    Map<String, List<String>> config = new HashMap<>();
     LineNumberReader reader = getReaderFromFile(filename);
     for (String line; (line = reader.readLine()) != null;) {
       line = line.trim().replaceAll("#.*$", "");

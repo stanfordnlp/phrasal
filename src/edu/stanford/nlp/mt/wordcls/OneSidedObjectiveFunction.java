@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.wordcls;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -9,7 +10,7 @@ import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * The one-sided class model of Uszkoreit and Brants (2008), which comes
@@ -33,7 +34,7 @@ public class OneSidedObjectiveFunction {
   public OneSidedObjectiveFunction(ClustererState input) {
     // Setup delta data structures
     this.inputState = input;
-    localWordToClass = Generics.newHashMap(input.vocabularySubset.size());
+    localWordToClass = new HashMap<>(input.vocabularySubset.size());
     deltaClassCount = new ClassicCounter<Integer>(input.numClasses);
     deltaClassHistoryCount = new TwoDimensionalCounter<Integer,NgramHistory>();
     for (IString word : input.vocabularySubset) {

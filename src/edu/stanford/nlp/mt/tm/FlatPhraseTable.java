@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,7 +21,6 @@ import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -76,7 +76,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     File f = new File(filename);
     name = String.format("%s:%s", this.getClass().getName(), f.getPath()).intern();
     minRuleIndex = ruleIdCounter.get();
-    translations = Generics.newArrayList(INITIAL_CAPACITY);
+    translations = new ArrayList<>(INITIAL_CAPACITY);
     sourceToRuleIndex = new ProbingIntegerArrayRawIndex();
     targetIndex = new ProbingIntegerArrayIndex();
     int countScores = init(f);
@@ -114,7 +114,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
     List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
     if (intTransOpts == null) {
-      intTransOpts = Generics.newLinkedList();
+      intTransOpts = new LinkedList<>();
       translations.set(fIndex, intTransOpts);
     }
     intTransOpts.add(new PhraseTableEntry(ruleIdCounter.getAndIncrement(),

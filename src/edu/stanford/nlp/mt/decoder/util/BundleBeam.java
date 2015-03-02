@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHash.Status;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.CoverageSet;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Implements a beam with hypergraph bundles. The generic type still should be hypothesis.
@@ -101,12 +102,12 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     // Group hypotheses by source source coverage
     List<Derivation<TK,FV>> hypothesisList = recombinationHash.hypotheses();
     assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
-    Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = Generics.newHashMap(hypothesisList.size());
+    Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(hypothesisList.size());
     for (Derivation<TK,FV> hypothesis : hypothesisList) {
       if (coverageGroups.containsKey(hypothesis.sourceCoverage)) {
         coverageGroups.get(hypothesis.sourceCoverage).add(hypothesis);
       } else {
-        List<Derivation<TK,FV>> list = Generics.newArrayList();
+        List<Derivation<TK,FV>> list = new ArrayList<>();
         list.add(hypothesis);
         coverageGroups.put(hypothesis.sourceCoverage, list);
       }
@@ -126,7 +127,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
           if (bundles.containsKey(range.size())) {
             bundles.get(range.size()).add(bundle);
           } else {
-            List<HyperedgeBundle<TK,FV>> list = Generics.newLinkedList();
+            List<HyperedgeBundle<TK,FV>> list = new LinkedList<>();
             list.add(bundle);
             bundles.put(range.size(), list);
           }
@@ -158,7 +159,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   }
 
   protected List<Range> ranges(CoverageSet sourceCoverage) {
-    List<Range> rangeList = Generics.newLinkedList();
+    List<Range> rangeList = new LinkedList<>();
     int firstCoverageGap = sourceCoverage.nextClearBit(0);
     for (int startPos = firstCoverageGap; startPos < sourceLength; startPos++) {
       int endPosMax = sourceCoverage.nextSetBit(startPos);

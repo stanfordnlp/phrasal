@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.tm;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +13,6 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -106,7 +107,7 @@ public class ExtendedLexicalReorderingTable {
       ReorderingTypes.nonMonotoneWithPrevious,
       ReorderingTypes.monotoneWithNext, ReorderingTypes.nonMonotoneWithNext };
 
-  static final Map<String, Object> fileTypeToReorderingType = Generics.newHashMap();
+  static final Map<String, Object> fileTypeToReorderingType = new HashMap<>();
 
   static {
     fileTypeToReorderingType.put("msd-fe", msdPositionMapping);
@@ -133,7 +134,7 @@ public class ExtendedLexicalReorderingTable {
         monotonicityBidirectionalMapping);
   }
 
-  static final Map<String, ConditionTypes> fileTypeToConditionType = Generics.newHashMap();
+  static final Map<String, ConditionTypes> fileTypeToConditionType = new HashMap<>();
 
   static {
     fileTypeToConditionType.put("msd-fe", ConditionTypes.fe);
@@ -178,7 +179,7 @@ public class ExtendedLexicalReorderingTable {
   public ExtendedLexicalReorderingTable(String filename, PhraseTable<IString> phraseTable, String desiredFileType)
       throws IOException {
     this.phraseTable = phraseTable;
-    this.reorderingScores = Generics.newArrayList(phraseTable.size());
+    this.reorderingScores = new ArrayList<>(phraseTable.size());
     for (int i = 0, sz = phraseTable.size(); i < sz; ++i) this.reorderingScores.add(null);
 
     String filetype = init(filename, desiredFileType);

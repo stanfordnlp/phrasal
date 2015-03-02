@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -19,7 +21,6 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
@@ -147,7 +148,7 @@ RuleFeaturizer<IString, String> {
     
     LMState state = lm.score(partialTranslation, startIndex, priorState);
    
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     
     features.add(new FeatureValue<String>(featureName, state.getScore()));
 
@@ -165,7 +166,7 @@ RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     features.add(new FeatureValue<String>(featureName, lmScore));
     return features;
   }
@@ -185,7 +186,7 @@ RuleFeaturizer<IString, String> {
   
   private static class LocalTargetMap extends AbstractWordClassMap {
     public LocalTargetMap() {
-      wordToClass = Generics.newHashMap();
+      wordToClass = new HashMap<>();
     }
   }
 }

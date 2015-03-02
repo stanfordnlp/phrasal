@@ -1,11 +1,12 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.State;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Implements hypothesis recombination according to the specified recombination
@@ -227,7 +228,7 @@ public class RecombinationHash<S extends State<S>> {
    * @return
    */
   public List<S> hypotheses() {
-    List<S> hypotheses = Generics.newArrayList(recombinationHash.size());
+    List<S> hypotheses = new ArrayList<>(recombinationHash.size());
     for (FilterWrappedHypothesis fwh : recombinationHash.keySet()) {
       hypotheses.add(fwh.hypothesis);
     }

@@ -3,11 +3,12 @@ package edu.stanford.nlp.mt.util;
 import java.io.File;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Specify properties of the segment input. The string format is
@@ -47,7 +48,7 @@ public class InputProperties extends HashMap<InputProperty, Object> {
    */
   public static List<InputProperties> parse(File file) {
     LineNumberReader reader = IOTools.getReaderFromFile(file);
-    List<InputProperties> propertiesList = Generics.newArrayList();
+    List<InputProperties> propertiesList = new ArrayList<>();
     try {
       for(String line; (line = reader.readLine()) != null;) {
         InputProperties inputProperties = fromString(line);

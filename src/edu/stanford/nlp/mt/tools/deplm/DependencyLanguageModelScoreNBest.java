@@ -5,6 +5,7 @@ import java.io.LineNumberReader;
 import java.text.DecimalFormat;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -19,7 +20,6 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -34,7 +34,7 @@ public class DependencyLanguageModelScoreNBest {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("sourceTokens", 1); 
     optionArgDefs.put("nBestList", 1); 
     optionArgDefs.put("dependencies", 1);
@@ -156,13 +156,13 @@ public class DependencyLanguageModelScoreNBest {
       
       Pair<IndexedWord, List<Integer>> pair = new Pair<IndexedWord, List<Integer>>();
       pair.setFirst(iw);
-      pair.setSecond(Generics.newLinkedList());
+      pair.setSecond(new LinkedList<>());
       forwardDependencies.put(i, pair);
     }
 
     {
       Pair<IndexedWord, List<Integer>> pair = new Pair<IndexedWord, List<Integer>>();
-      pair.setSecond(Generics.newLinkedList());
+      pair.setSecond(new LinkedList<>());
       forwardDependencies.put(-1, pair);
     }
     
@@ -175,7 +175,7 @@ public class DependencyLanguageModelScoreNBest {
         dependentsWithHead.set(dep);
         if (forwardDependencies.get(oneIndexedGov) == null) {
           Pair<IndexedWord, List<Integer>> pair = new Pair<IndexedWord, List<Integer>>();
-          pair.setSecond(Generics.newLinkedList());
+          pair.setSecond(new LinkedList<>());
           forwardDependencies.put(oneIndexedGov, pair);
         }
         forwardDependencies.get(oneIndexedGov).second.add(dep);
@@ -193,7 +193,7 @@ public class DependencyLanguageModelScoreNBest {
   
   private static class LocalWordClassMap extends AbstractWordClassMap {
     public LocalWordClassMap() {
-      wordToClass = Generics.newHashMap();
+      wordToClass = new HashMap<>();
     }
   }
 

@@ -7,6 +7,7 @@ import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +34,6 @@ import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.trees.LabeledScoredTreeNode;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CollectionUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -157,7 +157,7 @@ public class DependencyBnBPreorderer {
   
   private static String preorder(Tree tree) {
     
-    List<Tree> queue = Generics.newLinkedList();
+    List<Tree> queue = new LinkedList<>();
     queue.add(tree);
     
     
@@ -170,7 +170,7 @@ public class DependencyBnBPreorderer {
       Tree children[] = currentNode.children();
       int childCount = children.length;
       IndexedWord hw = (IndexedWord) currentNode.label();
-      List<FeatureNode> featureNodes = Generics.newArrayList(childCount);
+      List<FeatureNode> featureNodes = new ArrayList<>(childCount);
       for (int i = 0; i < childCount; i++) {
         featureNodes.add(new FeatureNode(children[i], hw));
         queue.add(children[i]);
@@ -179,7 +179,7 @@ public class DependencyBnBPreorderer {
         Pair<Double, List<Integer>> result = search(featureNodes, new LinkedList<Integer>(), Double.NEGATIVE_INFINITY);
         if (result != null) {
           List<Integer> permutation = result.second;
-          List<Tree> newChildren = Generics.newArrayList(Arrays.asList(children));
+          List<Tree> newChildren = new ArrayList<>(Arrays.asList(children));
           for (int i = 0; i < childCount; i++) {
             int idx = permutation.get(i);
             newChildren.set(idx, children[i]);
@@ -196,7 +196,7 @@ public class DependencyBnBPreorderer {
   
 
   private static List<TrainingExample> generateTrainingExamples(Tree tree, SymmetricalWordAlignment alignment) {
-    List<TrainingExample> examples = Generics.newLinkedList();
+    List<TrainingExample> examples = new LinkedList<>();
     
     if (tree.isLeaf()) return examples;
     
@@ -254,7 +254,7 @@ public class DependencyBnBPreorderer {
       }
     }
 
-    Set<String> mostFrequentTokens = Generics.newHashSet(k);
+    Set<String> mostFrequentTokens = new HashSet<>(k);
     Counters.retainTop(tokenCounts, k);
     mostFrequentTokens.addAll(tokenCounts.keySet());
     tokenCounts = null;
@@ -272,11 +272,11 @@ public class DependencyBnBPreorderer {
         return new Pair<Double, List<Integer>>(score, bestPath);
       } else {
         int size = nodes.size();
-        Set<Integer> fixedPositions = Generics.newHashSet(partialPermutation);
+        Set<Integer> fixedPositions = new HashSet<>(partialPermutation);
         Pair<Double, List<Integer>> retValue = null;
         for (int i = 0; i < size; i++) {
           if ( ! fixedPositions.contains(i)) {
-            List<Integer> perm = Generics.newLinkedList(partialPermutation);
+            List<Integer> perm = new LinkedList<>(partialPermutation);
             perm.add(i);
             Pair<Double, List<Integer>> result = search(nodes, perm, bound);
             if (result != null) {
@@ -323,7 +323,7 @@ public class DependencyBnBPreorderer {
   
   
   private static double scorePartialPermuation(List<FeatureNode> nodes, List<Integer> partialPermutation, int i) {
-    Set<Integer> fixedPositions = Generics.newHashSet(partialPermutation);
+    Set<Integer> fixedPositions = new HashSet<>(partialPermutation);
     
     int childCount = nodes.size();
     
@@ -377,7 +377,7 @@ public class DependencyBnBPreorderer {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("train", 0); 
     optionArgDefs.put("dependencies", 1);
     optionArgDefs.put("sourceSentences", 1);
@@ -462,8 +462,8 @@ public class DependencyBnBPreorderer {
 
       Dataset<Integer, String> testDataset = new Dataset<Integer, String>();
 
-      List<Tree> treesToReorder = Generics.newArrayList();
-      List<SymmetricalWordAlignment> alignmentsToReorder = Generics.newArrayList();
+      List<Tree> treesToReorder = new ArrayList<>();
+      List<SymmetricalWordAlignment> alignmentsToReorder = new ArrayList<>();
 
       int i = 0;
       while ((dependencies = DependencyUtils.getDependenciesFromCoNLLFileReader(dependencyReader, false, false)) != null) {
@@ -681,7 +681,7 @@ public class DependencyBnBPreorderer {
     }
     
     List<String> extractFeatures() {
-      List<String> features = Generics.newLinkedList();
+      List<String> features = new LinkedList<>();
       
       List<String> leftFeatures = a.extractFeatures("l");
       List<String> rightFeatures = b.extractFeatures("r");
@@ -747,7 +747,7 @@ public class DependencyBnBPreorderer {
     }
     
     List<String> extractFeatures(String prefix) {
-      List<String> features = Generics.newLinkedList();
+      List<String> features = new LinkedList<>();
       //dependency label
       features.add(prefix + ":l:" + this.word.lemma());
       //POS tag
@@ -792,7 +792,7 @@ public class DependencyBnBPreorderer {
   
   private static class LocalWordClassMap extends AbstractWordClassMap {
     public LocalWordClassMap() {
-      wordToClass = Generics.newHashMap();
+      wordToClass = new HashMap<>();
     }
   }
 

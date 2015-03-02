@@ -2,11 +2,11 @@ package edu.stanford.nlp.mt.tools.deplm;
 
 import java.io.BufferedReader;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.ling.IndexedWord;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 public class DependencyUtils {
@@ -29,7 +29,7 @@ public class DependencyUtils {
     if (forwardDependencies == null)
       return null;
     
-    Map<Integer, Integer> reverseDependencies = Generics.newHashMap();
+    Map<Integer, Integer> reverseDependencies = new HashMap<>();
     for (Integer gov : forwardDependencies.keySet()) {
       for (Integer dep : forwardDependencies.get(gov).second) {
         reverseDependencies.put(dep, gov);
@@ -69,13 +69,13 @@ public class DependencyUtils {
         /* Store the dependency type as lemma. */
         iw.setLemma(rel);
         if (forwardDependencies.get(gov) == null) {
-          List<Integer> l = Generics.newLinkedList();
-          Pair<IndexedWord, List<Integer>> p = Generics.newPair(null, l);
+          List<Integer> l = new LinkedList<>();
+          Pair<IndexedWord, List<Integer>> p = new Pair<IndexedWord, List<Integer>>(null, l);
           forwardDependencies.put(gov, p);
         }
         if (forwardDependencies.get(dep) == null) {
-          List<Integer> l = Generics.newLinkedList();
-          Pair<IndexedWord, List<Integer>> p = Generics.newPair(iw, l);
+          List<Integer> l = new LinkedList<>();
+          Pair<IndexedWord, List<Integer>> p = new Pair<IndexedWord, List<Integer>>(iw, l);
           forwardDependencies.put(dep, p);
         }
         forwardDependencies.get(dep).first = iw;

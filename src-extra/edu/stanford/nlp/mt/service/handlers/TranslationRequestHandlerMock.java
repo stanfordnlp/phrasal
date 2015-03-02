@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -18,7 +19,7 @@ import edu.stanford.nlp.mt.service.PhrasalServlet;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.TranslationReply;
 import edu.stanford.nlp.mt.service.Messages.TranslationRequest;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Mock handler for translation requests.
@@ -45,11 +46,11 @@ public class TranslationRequestHandlerMock implements RequestHandler {
     
     // Translate to uppercase!
     List<String> translation = Arrays.asList(translationRequest.text.toUpperCase().split("\\s+"));
-    List<String> alignments = Generics.newArrayList(2);
+    List<String> alignments = new ArrayList<>(2);
     alignments.add("1-2");
     alignments.add("2-1");
     TranslationQuery query = new TranslationQuery(translation, alignments, 1.0);
-    List<TranslationQuery> queryList = Generics.newArrayList(1);
+    List<TranslationQuery> queryList = new ArrayList<>(1);
     queryList.add(query);
     Type t = new TypeToken<TranslationReply>() {}.getType();
     TranslationReply baseResponse = new TranslationReply(queryList);

@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -20,7 +22,6 @@ import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
@@ -53,7 +54,7 @@ public class LexicalReorderingFeaturizer extends
    */
   public LexicalReorderingFeaturizer() {
     // by default include everything
-    discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
+    discriminativeSet = new ArrayList<>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     mlrt = null;
     featureTags = null;
     useAlignmentConstellations = false;
@@ -68,7 +69,7 @@ public class LexicalReorderingFeaturizer extends
    * @param args
    */
   public LexicalReorderingFeaturizer(String...args) {
-    discriminativeSet = Generics.newArrayList(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
+    discriminativeSet = new ArrayList<>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     Properties options = FeatureUtils.argsToProperties(args);
     
     this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
@@ -76,7 +77,7 @@ public class LexicalReorderingFeaturizer extends
     // Which reordering classes to extract
     if (options.containsKey("classes")) {
       String[] typeStrings = options.getProperty("classes").split("-");
-      discriminativeSet = Generics.newArrayList();
+      discriminativeSet = new ArrayList<>();
       for (String type : typeStrings) {
         discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
       }
@@ -118,7 +119,7 @@ public class LexicalReorderingFeaturizer extends
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    final List<FeatureValue<String>> features = Generics.newLinkedList();
+    final List<FeatureValue<String>> features = new LinkedList<>();
     final boolean monotone = f.linearDistortion == 0;
     final boolean swap = (f.prior != null && f.sourcePosition
         + f.sourcePhrase.size() == f.prior.sourcePosition);

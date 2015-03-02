@@ -13,7 +13,7 @@ import edu.stanford.nlp.mt.util.CoreNLPCache;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -55,7 +55,7 @@ public class RuleBasedGermanPreorderer {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("annotations", 1); 
     optionArgDefs.put("annotationsSplit", 0); 
     optionArgDefs.put("permutations", 0); 

@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -10,7 +11,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer.Hi
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * @author Michel Galley
@@ -22,7 +23,7 @@ public class MSDRecombinationFilter implements
   // and hurts search)
   private static final boolean HIERARCHICAL_RECOMBINATION = false;
 
-  private final List<DerivationFeaturizer<IString, String>> hierFeaturizers = Generics.newLinkedList();
+  private final List<DerivationFeaturizer<IString, String>> hierFeaturizers = new LinkedList<>();
 
   public MSDRecombinationFilter(
       List<Featurizer<IString, String>> featurizers) {
@@ -30,7 +31,7 @@ public class MSDRecombinationFilter implements
     System.err.println("MSD recombination enabled.");
 
     if (HIERARCHICAL_RECOMBINATION) {
-      Deque<Featurizer<IString, String>> tmpList = Generics.newLinkedList(
+      Deque<Featurizer<IString, String>> tmpList = new LinkedList<>(
           featurizers);
 
       while (!tmpList.isEmpty()) {

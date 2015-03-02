@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.tools;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -9,11 +11,12 @@ import java.util.Set;
 
 //import au.com.bytecode.opencsv.CSVReader;
 
+
+
 import edu.stanford.nlp.ling.Sentence;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -35,7 +38,7 @@ public class MakePTMPhrasalInput {
   }
 
   private static Map<String,Integer> argDefs() {
-    Map<String,Integer> argDefs = Generics.newHashMap();
+    Map<String,Integer> argDefs = new HashMap<>();
     return argDefs;
   }
   
@@ -78,7 +81,7 @@ public class MakePTMPhrasalInput {
       String userTextTok = tgtPreproc.process(fields[3]).toString();
       
       // Want sprime --> tprime
-      List<String> alignmentList = Generics.newLinkedList();
+      List<String> alignmentList = new LinkedList<>();
       for (int i = 0, size = s2sPrime.eSize(); i < size; ++i) {
         Set<Integer> alignments = s2sPrime.e2f(i);
         for (int j : alignments) {

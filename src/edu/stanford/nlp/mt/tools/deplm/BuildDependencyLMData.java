@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -16,7 +18,6 @@ import java.util.TreeSet;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -36,7 +37,7 @@ public class BuildDependencyLMData {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("input", 1); 
     optionArgDefs.put("outdir", 1);
     return optionArgDefs;
@@ -123,14 +124,14 @@ public class BuildDependencyLMData {
     File sourceSentences = new File(sourceTokens);
     BufferedReader sourceReader = new BufferedReader(new FileReader(sourceSentences));
     String sourceSentence;
-    Map<Integer, NavigableSet<Integer>> dependencies = Generics.newHashMap();
-    List<String> tokens = Generics.newLinkedList();
+    Map<Integer, NavigableSet<Integer>> dependencies = new HashMap<>();
+    List<String> tokens = new LinkedList<>();
     while (true) {
       sourceSentence = sourceReader.readLine();
       if (sourceSentence == null || sourceSentence.equals("")) {
         printLeftAndRightDependencies(dependencies, new SimpleSequence<String>(tokens));
-        dependencies = Generics.newHashMap();
-        tokens = Generics.newLinkedList();
+        dependencies = new HashMap<>();
+        tokens = new LinkedList<>();
         if (sourceSentence == null) {
           break;
         } else {

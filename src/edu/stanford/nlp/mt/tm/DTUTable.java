@@ -23,7 +23,7 @@ import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.StringUtils;
 
 public class DTUTable<FV> extends AbstractPhraseGenerator<IString, FV>
@@ -80,7 +80,7 @@ implements PhraseTable<IString> {
     System.err.println("DTU phrase table: " + filename);
     File f = new File(filename);
     name = String.format("DTU(%s)", f.getName());
-    translations = Generics.newArrayList(INITIAL_CAPACITY);
+    translations = new ArrayList<>(INITIAL_CAPACITY);
     sourceIndex = new TrieIntegerArrayIndex();
     ruleIndex = new ProbingIntegerArrayIndex();
     int countScores = init(f);

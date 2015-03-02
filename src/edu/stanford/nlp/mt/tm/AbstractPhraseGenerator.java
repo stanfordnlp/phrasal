@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.tm;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -7,7 +8,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Implements an abstract method for querying rules from a phrase
@@ -40,7 +41,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   public List<ConcreteRule<TK,FV>> getRules(
       Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, 
       int sourceInputId, Scorer<FV> scorer) {
-    List<ConcreteRule<TK,FV>> opts = Generics.newLinkedList();
+    List<ConcreteRule<TK,FV>> opts = new LinkedList<>();
     if (source == null || source.size() == 0) return opts;
     int sequenceSz = source.size();
     int longestForeignPhrase = this.longestSourcePhrase();

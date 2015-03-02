@@ -1,7 +1,9 @@
 package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +14,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Convert a Phrasal binwts file to Moses weights.
@@ -33,7 +35,7 @@ public class PhrasalWeightsToMoses {
     }
     Counter<String> weightVector = IOTools.readWeights(args[0]);
     System.out.println("[weight]");
-    Map<String,Double> tmScores = Generics.newHashMap();
+    Map<String,Double> tmScores = new HashMap<>();
     for (String fname : weightVector.keySet()) {
       double value = weightVector.getCount(fname);
       if (fname.equals(UnknownWordFeaturizer.FEATURE_NAME)) {
@@ -50,7 +52,7 @@ public class PhrasalWeightsToMoses {
         tmScores.put(fname, value);
       }
     }
-    List<String> keys = Generics.newArrayList(tmScores.keySet());
+    List<String> keys = new ArrayList<>(tmScores.keySet());
     Collections.sort(keys);
     System.out.print("TranslationModel0=");
     for (String fname : keys) {

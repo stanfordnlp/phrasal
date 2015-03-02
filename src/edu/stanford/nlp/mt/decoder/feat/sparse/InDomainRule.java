@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -12,7 +13,7 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Indicator feature for rules that were extracted from selected sentences in
@@ -51,7 +52,7 @@ public class InDomainRule extends DerivationFeaturizer<IString, String> {
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     final int featureIndex = f.sourceInputProperties.containsKey(InputProperty.RuleFeatureIndex) ?
         Integer.valueOf((String) f.sourceInputProperties.get(InputProperty.RuleFeatureIndex)) : -1;
     

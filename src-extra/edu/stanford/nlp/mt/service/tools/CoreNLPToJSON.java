@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.service.tools;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ import edu.stanford.nlp.trees.tregex.TregexPattern;
 import edu.stanford.nlp.trees.tregex.tsurgeon.Tsurgeon;
 import edu.stanford.nlp.trees.tregex.tsurgeon.TsurgeonPattern;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Converts an input to JSON using StanfordCoreNLP.
@@ -118,7 +119,7 @@ public final class CoreNLPToJSON {
   }
 
   public static List<String> makeLayoutSpec(SymmetricalWordAlignment alignment) {
-    List<String> formatSpec = Generics.newArrayList(alignment.eSize());
+    List<String> formatSpec = new ArrayList<>(alignment.eSize());
     int lastFIndex = -1;
     for (int j = 0, size = alignment.eSize(); j < size; ++j) {
       Set<Integer> e2fSet = alignment.e2f(j);

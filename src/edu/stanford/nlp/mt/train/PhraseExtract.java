@@ -28,8 +28,11 @@
 package edu.stanford.nlp.mt.train;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -42,7 +45,6 @@ import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 
 import edu.stanford.nlp.objectbank.ObjectBank;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.Index;
@@ -144,9 +146,9 @@ public class PhraseExtract {
   static public final String LEX_REORDERING_START_CLASS_OPT = "orientationModelHasStart";
   static public final String LEX_REORDERING_2DISC_CLASS_OPT = "orientationModelHas2Disc";
 
-  static final Set<String> REQUIRED_OPTS = Generics.newHashSet();
-  static final Set<String> OPTIONAL_OPTS = Generics.newHashSet();
-  static final Set<String> ALL_RECOGNIZED_OPTS = Generics.newHashSet();
+  static final Set<String> REQUIRED_OPTS = new HashSet<>();
+  static final Set<String> OPTIONAL_OPTS = new HashSet<>();
+  static final Set<String> ALL_RECOGNIZED_OPTS = new HashSet<>();
 
   static {
     REQUIRED_OPTS.addAll(Arrays.asList(F_CORPUS_OPT, E_CORPUS_OPT));
@@ -231,8 +233,8 @@ public class PhraseExtract {
   private int minPhraseCount = 0;
 
   // Data structures to support multiple file output.
-  private final Map<AbstractFeatureExtractor,String> extractorToFileString = Generics.newHashMap();
-  private final Map<String,PrintStream> fileStringToWriter = Generics.newHashMap();
+  private final Map<AbstractFeatureExtractor,String> extractorToFileString = new HashMap<>();
+  private final Map<String,PrintStream> fileStringToWriter = new HashMap<>();
   
   public PhraseExtract(Properties prop) throws IOException {
     processProperties(prop);
@@ -290,7 +292,7 @@ public class PhraseExtract {
 
     // Check required, optional properties:
     if (!prop.keySet().containsAll(REQUIRED_OPTS)) {
-      Set<String> missingFields = Generics.newHashSet(REQUIRED_OPTS);
+      Set<String> missingFields = new HashSet<>(REQUIRED_OPTS);
       missingFields.removeAll(prop.keySet());
       usage();
       throw new RuntimeException(String.format(
@@ -298,7 +300,7 @@ public class PhraseExtract {
     }
 
     if (!ALL_RECOGNIZED_OPTS.containsAll(prop.keySet())) {
-      Set<Object> extraFields = Generics.newHashSet(prop.keySet());
+      Set<Object> extraFields = new HashSet<>(prop.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_OPTS);
       usage();
       throw new RuntimeException(String.format(
@@ -398,7 +400,7 @@ public class PhraseExtract {
 
     alTemps = new AlignmentTemplates(prop, sourceFilter);
     alTemp = new AlignmentTemplateInstance();
-    extractors = Generics.newArrayList();
+    extractors = new ArrayList<>();
     phrasePrinter = null;
 
     // Load the feature extractors
@@ -775,7 +777,7 @@ public class PhraseExtract {
       ruleStr.append(phrasePrinter.toString(alTemp, withAlign));
       ruleStr.append(" ").append(AlignmentTemplate.DELIM).append(" ");
 
-      Map<String,StringBuilder> fileToScores = Generics.newHashMap();
+      Map<String,StringBuilder> fileToScores = new HashMap<>();
       for (String file : fileStringToWriter.keySet()) {
         fileToScores.put(file, new StringBuilder());
       }

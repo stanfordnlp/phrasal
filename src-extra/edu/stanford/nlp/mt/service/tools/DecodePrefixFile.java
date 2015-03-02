@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.service.tools;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * 
@@ -47,7 +48,7 @@ public class DecodePrefixFile {
       Sequence<IString> source = IStrings.tokenize(line);
       String prefix = prefixReader.readLine();
       Sequence<IString> targetPrefix = IStrings.tokenize(prefix);
-      List<Sequence<IString>> prefixes = Generics.newLinkedList();
+      List<Sequence<IString>> prefixes = new LinkedList<>();
       prefixes.add(targetPrefix);
       InputProperties inputProperties = new InputProperties();
       inputProperties.put(InputProperty.TargetPrefix, true);

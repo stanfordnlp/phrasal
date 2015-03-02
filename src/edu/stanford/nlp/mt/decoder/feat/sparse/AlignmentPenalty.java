@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -7,7 +8,7 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Add a penalty for the number of unaligned source and target words.
@@ -46,7 +47,7 @@ public class AlignmentPenalty implements RuleFeaturizer<IString, String> {
       if (! covered) ++nUnalignedSource;
     }
     
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     features.add(new FeatureValue<String>(FEATURE_PREFIX + "src", nUnalignedSource));
     features.add(new FeatureValue<String>(FEATURE_PREFIX + "tgt", nUnalignedTarget));
     return features;

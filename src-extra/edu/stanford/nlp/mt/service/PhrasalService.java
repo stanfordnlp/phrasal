@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.service;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -15,7 +16,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -39,7 +39,7 @@ public final class PhrasalService {
    * @return
    */
   private static Map<String, Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("p", 1);
     optionArgDefs.put("d", 1);
     optionArgDefs.put("m", 0);

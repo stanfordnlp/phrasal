@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -8,7 +9,7 @@ import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Recombination filter that considers all featurizer states.
@@ -37,7 +38,7 @@ RecombinationFilter<Derivation<IString, String>> {
   private final RecombinationFilter<Derivation<IString, String>> sourceCoverageFilter;
 
   public ExactRecombinationFilter(List<Featurizer<IString, String>> featurizers) {
-    this.featurizers = Generics.newLinkedList();
+    this.featurizers = new LinkedList<>();
     for (Featurizer<IString, String> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
         this.featurizers.add((DerivationFeaturizer<IString, String>) featurizer);

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -9,7 +10,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.lm.LMState;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Implements n-gram language model recombination.
@@ -29,7 +30,7 @@ public class TranslationNgramRecombinationFilter
    */
   public TranslationNgramRecombinationFilter(
       List<Featurizer<IString, String>> featurizers) {
-    lmFeaturizers = Generics.newLinkedList();
+    lmFeaturizers = new LinkedList<>();
     for (Featurizer<IString,String> featurizer : featurizers) {
       if (featurizer instanceof NGramLanguageModelFeaturizer) {
         lmFeaturizers.add((NGramLanguageModelFeaturizer) featurizer);

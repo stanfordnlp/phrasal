@@ -15,7 +15,6 @@ import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.util.FactoryUtil;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Load translation model feature extractors.
@@ -85,7 +84,7 @@ public final class FeaturizerFactory {
                     "Baseline featurizers requires that a language model is specificed using the parameter '%s'",
                     ARPA_LM_PARAMETER));
       }
-      List<Featurizer<IString, String>> baselineFeaturizers = Generics.newLinkedList();
+      List<Featurizer<IString, String>> baselineFeaturizers = new LinkedList<>();
       baselineFeaturizers.addAll(gapFeaturizers);
 
       // ARPA LM
@@ -106,7 +105,7 @@ public final class FeaturizerFactory {
       return new FeatureExtractor<IString, String>(baselineFeaturizers);
     
     } else if (featurizerName.equals(MOSES_DENSE_FEATURES)) {
-      List<Featurizer<IString, String>> pharaohFeaturizers = Generics.newLinkedList();
+      List<Featurizer<IString, String>> pharaohFeaturizers = new LinkedList<>();
       pharaohFeaturizers.addAll(gapFeaturizers);
 
       DerivationFeaturizer<IString, String> arpaLmFeaturizer;

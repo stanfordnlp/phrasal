@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -14,7 +16,6 @@ import edu.stanford.nlp.mt.decoder.feat.base.PhrasePenaltyFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Convenience functions for the sparse feature templates.
@@ -32,7 +33,7 @@ public final class FeatureUtils {
   // Extended phrase table, hierarchical reordering, one language model 
   public static final Set<String> BASELINE_DENSE_FEATURES;
   static {
-    Set<String> features = Generics.newHashSet();
+    Set<String> features = new HashSet<>();
     features.add(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
     features.add(LinearFutureCostFeaturizer.FEATURE_NAME);
     features.add(WordPenaltyFeaturizer.FEATURE_NAME);
@@ -65,7 +66,7 @@ public final class FeatureUtils {
    * @return
    */
   public static <FV> List<FeatureValue<FV>> wrapFeature(FeatureValue<FV> feature) {
-    List<FeatureValue<FV>> features = Generics.newArrayList(1);
+    List<FeatureValue<FV>> features = new ArrayList<>(1);
     features.add(feature);
     return features;
   }

@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
-import edu.stanford.nlp.util.Generics;
+import java.util.HashMap;
 
 /**
  * Maps target words to a word class.
@@ -13,7 +13,7 @@ public final class TargetClassMap extends AbstractWordClassMap {
   private static TargetClassMap instance;
 
   private TargetClassMap() {
-    wordToClass = Generics.newHashMap();
+    wordToClass = new HashMap<>();
   }
 
   public static TargetClassMap getInstance() {

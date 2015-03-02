@@ -13,7 +13,7 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -24,7 +24,7 @@ public class SerializedDependencyToCoNLL {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("annotations", 1);
     optionArgDefs.put("changepreps", 0);
 
@@ -73,7 +73,7 @@ public class SerializedDependencyToCoNLL {
     for (TypedDependency dep : dependencies) {
       int govIndex = dep.gov().index();
       int depIndex = dep.dep().index();
-      reverseDependencies.put(depIndex, Generics.newPair(govIndex, dep.reln().getShortName()));
+      reverseDependencies.put(depIndex, new Pair<Integer, String>(govIndex, dep.reln().getShortName()));
     }
     
     List<CoreLabel> tokens = annotation.get(CoreAnnotations.TokensAnnotation.class);

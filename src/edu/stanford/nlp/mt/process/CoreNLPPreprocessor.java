@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.process;
 
 import java.io.StringReader;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.ling.CoreLabel;
@@ -13,7 +14,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.process.TokenizerFactory;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Abstract class which is appropriate for the CoreNLP finite-state
@@ -43,7 +44,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
   public Sequence<IString> process(String input) {
     String tokenizerInput = toUncased(input.trim());
     Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(tokenizerInput));
-    List<String> outputStrings = Generics.newLinkedList();
+    List<String> outputStrings = new LinkedList<>();
     while (tokenizer.hasNext()) {
       String string = tokenizer.next().get(TextAnnotation.class);
       outputStrings.add(string);

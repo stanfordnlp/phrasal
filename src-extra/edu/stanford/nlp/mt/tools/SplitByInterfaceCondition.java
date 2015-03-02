@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,7 +17,6 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -72,7 +72,7 @@ public class SplitByInterfaceCondition {
   }
 
   private static Map<String,Integer> argDefs() {
-    Map<String,Integer> argDefs = Generics.newHashMap();
+    Map<String,Integer> argDefs = new HashMap<>();
     argDefs.put("u", 1);
     argDefs.put("d", 1);
     return argDefs;
@@ -101,7 +101,7 @@ public class SplitByInterfaceCondition {
     final List<String> srcProvenance = loadProvenanceFile(refIdFilename);
     
     // Parse the input files
-    Map<String,List<SentencePair>> domainToSentencePairs = Generics.newHashMap();
+    Map<String,List<SentencePair>> domainToSentencePairs = new HashMap<>();
     for (int i = 4; i < positionalArgs.length; ++i) {
       String transFileName = positionalArgs[i];
       System.err.println("Reading: " + transFileName);
@@ -175,7 +175,7 @@ public class SplitByInterfaceCondition {
    * @return
    */
   private static Map<String,UserDerivation> loadUserFile(String userFileName) {
-    Map<String,UserDerivation> map = Generics.newHashMap();
+    Map<String,UserDerivation> map = new HashMap<>();
     LineNumberReader reader = IOTools.getReaderFromFile(userFileName);
     try {
       boolean seenHeader = false;
@@ -207,7 +207,7 @@ public class SplitByInterfaceCondition {
    * @return
    */
   private static List<String> loadProvenanceFile(String refIdFilename) {
-    List<String> provenance = Generics.newArrayList();
+    List<String> provenance = new ArrayList<>();
     LineNumberReader reader = IOTools.getReaderFromFile(refIdFilename);
     try {
       for (String line; (line = reader.readLine()) != null;) {

@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -8,7 +9,6 @@ import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Dense phrase table / rule feature extractor.
@@ -65,7 +65,7 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
           createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames);
 
     // construct array of FeatureValue objects
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     final int numEffectiveFeatures = Math.min(this.numFeatures, featureNames.length);
     for (int i = 0; i < numEffectiveFeatures; i++) {
       features.add((i < featurizable.translationScores.length) ? new FeatureValue<String>(

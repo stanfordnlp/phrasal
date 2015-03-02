@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -23,7 +25,6 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -100,7 +101,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         
     // Create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
-    final List<BundleBeam<TK,FV>> beams = Generics.newLinkedList();
+    final List<BundleBeam<TK,FV>> beams = new LinkedList<>();
 
     // TM (phrase table) query for applicable rules
     Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
@@ -127,7 +128,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
   
-    List<List<ConcreteRule<TK,FV>>> allOptions = Generics.newArrayList(1);
+    List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>(1);
     allOptions.add(ruleList);
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
         heuristic, scorer, allOptions);
@@ -233,7 +234,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    List<Item<TK,FV>> consequents = Generics.newArrayList(2);
+    List<Item<TK,FV>> consequents = new ArrayList<>(2);
     List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
     for (Consequent<TK,FV> successor : successors) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);

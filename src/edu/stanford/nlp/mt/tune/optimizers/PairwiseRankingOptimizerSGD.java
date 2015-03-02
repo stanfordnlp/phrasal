@@ -23,7 +23,7 @@ import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.Triple;
 
 /**
@@ -154,7 +154,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       List<Sequence<IString>> references) {
     int[] sourceIds = new int[1];
     sourceIds[0] = sourceId;
-    List<Sequence<IString>> sources = Generics.newArrayList(1);
+    List<Sequence<IString>> sources = new ArrayList<>(1);
     sources.add(source);
     List<List<RichTranslation<IString, String>>> translationList = new ArrayList<List<RichTranslation<IString, String>>>(1);
     translationList.add(translations);

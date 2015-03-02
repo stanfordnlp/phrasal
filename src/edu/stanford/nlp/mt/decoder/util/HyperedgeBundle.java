@@ -1,10 +1,11 @@
 package edu.stanford.nlp.mt.decoder.util;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Implements a sorted bundle of hypothesis and an assorted list of scored hypotheses. Generates
@@ -43,7 +44,7 @@ public class HyperedgeBundle<TK,FV> {
    * @return
    */
   public List<Consequent<TK,FV>> nextSuccessors(Consequent<TK,FV> antecedent) {
-    List<Consequent<TK,FV>> consequentList = Generics.newArrayList(2);
+    List<Consequent<TK,FV>> consequentList = new ArrayList<>(2);
     if (expandedItems.cardinality() == 0) {
       // Top-left corner of the grid
       assert antecedent == null || (antecedent.itemId < 0 && antecedent.ruleId < 0);

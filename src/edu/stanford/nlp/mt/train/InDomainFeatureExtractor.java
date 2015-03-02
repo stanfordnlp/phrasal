@@ -2,13 +2,14 @@ package edu.stanford.nlp.mt.train;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.util.IOTools;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Extractor for marking in-domain rules given a zero-indexed file of lineids.
@@ -37,8 +38,8 @@ public class InDomainFeatureExtractor extends AbstractFeatureExtractor {
     if (args.length == 0) {
       throw new RuntimeException("Format: zero-indexed line id file");
     }
-    inDomainSetList = Generics.newArrayList(args.length);
-    inDomainKeyList = Generics.newArrayList(args.length);
+    inDomainSetList = new ArrayList<>(args.length);
+    inDomainKeyList = new ArrayList<>(args.length);
     for (String filename : args) {
       Set<Integer> inDomainSet = load(filename);
       inDomainSetList.add(inDomainSet);

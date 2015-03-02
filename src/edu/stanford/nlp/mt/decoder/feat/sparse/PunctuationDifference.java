@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -10,7 +11,7 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * A measure of how much punctuation should be translated.
@@ -44,7 +45,7 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
         ++numTargetPunctuationTokens;
       }
     }
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     double featureValue = (double) numTargetPunctuationTokens / (double) numSourcePunctuationTokens;
     features.add(new FeatureValue<String>(FEATURE_NAME, featureValue));
     return features;

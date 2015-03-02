@@ -10,6 +10,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -26,7 +27,6 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -51,7 +51,7 @@ public class BLEUConditionSignificanceTest {
   
   private static List<List<String>> loadTranslations(
       Map<String, File> subjectToTgt) throws IOException {
-    List<List<String>> translations = Generics.newArrayList();
+    List<List<String>> translations = new ArrayList<>();
     for (String subjectId : subjectToTgt.keySet()) {
       LineNumberReader reader = IOTools.getReaderFromFile(subjectToTgt.get(subjectId));
       for (String line; (line = reader.readLine()) != null;) {
@@ -96,8 +96,8 @@ public class BLEUConditionSignificanceTest {
       List<List<Sequence<IString>>> referencesList) throws IOException {
     
     int size = translationList.size();
-    List<String> lines = Generics.newArrayList(size);
-    List<InputProperties> inputProperties = Generics.newArrayList(size);
+    List<String> lines = new ArrayList<>(size);
+    List<InputProperties> inputProperties = new ArrayList<>(size);
     Random random = new Random();
     for (int i = 0; i < size; ++i) {
       boolean isPE = random.nextBoolean();
@@ -122,10 +122,10 @@ public class BLEUConditionSignificanceTest {
   
   private static double computeBLEU(List<String> translations, List<String> references) {
     // Convert references to Sequences
-    List<List<Sequence<IString>>> refSequences = Generics.newArrayList();
+    List<List<Sequence<IString>>> refSequences = new ArrayList<>();
     for (String line : references) {
       line = NISTTokenizer.tokenize(line);
-      List<Sequence<IString>> refList = Generics.newArrayList();
+      List<Sequence<IString>> refList = new ArrayList<>();
       refList.add(IStrings.tokenize(line));
       refSequences.add(refList);
     }
@@ -144,9 +144,9 @@ public class BLEUConditionSignificanceTest {
   }
   
   private static Map<Integer,List<String>> deepCopy(Map<Integer,List<String>> list) {
-    Map<Integer,List<String>> listOfLists = Generics.newHashMap();
+    Map<Integer,List<String>> listOfLists = new HashMap<>();
     for (Integer key : list.keySet()) {
-      List<String> nl = Generics.newArrayList(list.get(key));
+      List<String> nl = new ArrayList<>(list.get(key));
       listOfLists.put(key, nl);
     }
     return listOfLists;
@@ -167,14 +167,14 @@ public class BLEUConditionSignificanceTest {
       List<List<Sequence<IString>>> referencesList) throws IOException {
 
     // Read the data
-    List<String> imtTranslations = Generics.newArrayList();
-    List<String> imtReferences = Generics.newArrayList();
-    List<Integer> imtIds = Generics.newArrayList();
-    List<String> peTranslations = Generics.newArrayList();
-    List<String> peReferences = Generics.newArrayList();
-    List<Integer> peIds = Generics.newArrayList();
-    Map<Integer,List<String>> pooledTranslations = Generics.newHashMap();
-    List<String> references = Generics.newArrayList();
+    List<String> imtTranslations = new ArrayList<>();
+    List<String> imtReferences = new ArrayList<>();
+    List<Integer> imtIds = new ArrayList<>();
+    List<String> peTranslations = new ArrayList<>();
+    List<String> peReferences = new ArrayList<>();
+    List<Integer> peIds = new ArrayList<>();
+    Map<Integer,List<String>> pooledTranslations = new HashMap<>();
+    List<String> references = new ArrayList<>();
     for (String subjectId : subjectSet) {
       assert subjectToProps.containsKey(subjectId) : subjectId;
       assert subjectToTgt.containsKey(subjectId) : subjectId;
@@ -204,7 +204,7 @@ public class BLEUConditionSignificanceTest {
             continue;
         }
         if ( ! pooledTranslations.containsKey(sourceId)) {
-          List<String> l = Generics.newArrayList();
+          List<String> l = new ArrayList<>();
           pooledTranslations.put(sourceId, l);
         }
         pooledTranslations.get(sourceId).add(line.trim());
@@ -228,8 +228,8 @@ public class BLEUConditionSignificanceTest {
         System.err.printf(".");
       
       Map<Integer,List<String>> pTranslations = deepCopy(pooledTranslations);
-      List<String> imtSampleTranslations = Generics.newArrayList();
-      List<String> peSampleTranslations = Generics.newArrayList();
+      List<String> imtSampleTranslations = new ArrayList<>();
+      List<String> peSampleTranslations = new ArrayList<>();
 
       // Sample PE translations
       for (int sourceId : peIds) {
@@ -314,8 +314,8 @@ public class BLEUConditionSignificanceTest {
     String path = "."; 
     File folder = new File(path);
     File[] files = folder.listFiles((dir, name) -> name.startsWith(prefix));
-    Map<String,List<InputProperties>> subjectToProps = Generics.newHashMap();
-    Map<String,File> subjectToTgt = Generics.newHashMap();
+    Map<String,List<InputProperties>> subjectToProps = new HashMap<>();
+    Map<String,File> subjectToTgt = new HashMap<>();
     for (File file : files) {
       String filename = file.getName();
       String subject = basename(filename);
@@ -328,7 +328,7 @@ public class BLEUConditionSignificanceTest {
       }
     }
     assert subjectToProps.keySet().size() == subjectToTgt.keySet().size();
-    Set<String> subjectSet = Generics.newHashSet(subjectToProps.keySet());
+    Set<String> subjectSet = new HashSet<>(subjectToProps.keySet());
     final double observedDifference = computeObserved(subjectToProps, subjectToTgt, subjectSet, referencesList);
     List<List<String>> translationList = loadTranslations(subjectToTgt);
     

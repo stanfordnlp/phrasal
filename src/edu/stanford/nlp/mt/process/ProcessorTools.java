@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.process;
 
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +24,7 @@ import edu.stanford.nlp.objectbank.LineIterator;
 import edu.stanford.nlp.process.SerializableFunction;
 import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Utility methods for character-level, sequence-based post-processors.
@@ -70,7 +71,7 @@ public final class ProcessorTools {
    * @return
    */
   public static List<CoreLabel> toCharacterSequence(Sequence<IString> tokenSequence) {
-    List<CoreLabel> charSequence = Generics.newArrayList(tokenSequence.size() * 7);
+    List<CoreLabel> charSequence = new ArrayList<>(tokenSequence.size() * 7);
     for (IString token : tokenSequence) {
       String tokenStr = token.toString();
       if (charSequence.size() > 0) {
@@ -106,7 +107,7 @@ public final class ProcessorTools {
    * @return
    */
   public static List<CoreLabel> alignedPairToLabeledSequence(SymmetricalWordAlignment alignment) {
-    List<CoreLabel> sequence = Generics.newArrayList(alignment.eSize() * 7);
+    List<CoreLabel> sequence = new ArrayList<>(alignment.eSize() * 7);
     
     for (int i = 0; i < alignment.fSize(); ++i) {
       if (sequence.size() > 0) sequence.add(createDatum(WHITESPACE, Operation.Whitespace.toString(), sequence.size(), WHITESPACE, 0));
@@ -116,7 +117,7 @@ public final class ProcessorTools {
         System.err.printf("%s: WARNING: discarding unaligned token (%s)%n", ProcessorTools.class.getName(), token);
         
       } else {
-        List<String> eTokens = Generics.newArrayList(eAlignments.size());
+        List<String> eTokens = new ArrayList<>(eAlignments.size());
         for (int j : eAlignments) {
           eTokens.add(alignment.e().get(j).toString());
         }
@@ -151,7 +152,7 @@ public final class ProcessorTools {
     assert t2sGrid.length == target.length();
     
     // Loop over the target
-    List<CoreLabel> sequence = Generics.newArrayList(target.length());
+    List<CoreLabel> sequence = new ArrayList<>(target.length());
     int[] s2t = new int[sourceToken.length()];
     Arrays.fill(s2t, -1);
     int parentIndex = 0;
@@ -341,7 +342,7 @@ public final class ProcessorTools {
    * @return
    */
   public static List<CoreLabel> toPostProcessedSequence(List<CoreLabel> charSequence) {
-    List<CoreLabel> tokenSequence = Generics.newArrayList();
+    List<CoreLabel> tokenSequence = new ArrayList<>();
     StringBuilder originalToken = new StringBuilder();
     StringBuilder currentToken = new StringBuilder();
     

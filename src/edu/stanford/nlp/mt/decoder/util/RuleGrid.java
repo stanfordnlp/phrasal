@@ -8,7 +8,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Grid of ConcreteRules (translation rules) for a given
@@ -57,7 +57,7 @@ public class RuleGrid<TK,FV> {
       assert endPos < sourceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sourceLength);
       
       int offset = getIndex(startPos, endPos);
-      if (grid[offset] == null) grid[offset] = Generics.newArrayList();
+      if (grid[offset] == null) grid[offset] = new ArrayList<>();
       grid[offset].add(rule);
     }
     this.completeCoverage = (coverage.cardinality() == sourceLength);

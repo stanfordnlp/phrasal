@@ -8,6 +8,7 @@ import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -20,7 +21,6 @@ import edu.stanford.nlp.mt.util.AbstractWordClassMap;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -54,7 +54,7 @@ public class BuildDependencyLMData2 {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("input", 1); 
     optionArgDefs.put("outdir", 1);
     optionArgDefs.put("alignment", 1);
@@ -138,10 +138,10 @@ public class BuildDependencyLMData2 {
         
         String headWord = iw.word();
 
-        List<IString> leftChildren = Generics.newLinkedList();
-        List<IString> rightChildren = Generics.newLinkedList();
+        List<IString> leftChildren = new LinkedList<>();
+        List<IString> rightChildren = new LinkedList<>();
         
-        List<Integer> sortedChildren = Generics.newLinkedList();
+        List<Integer> sortedChildren = new LinkedList<>();
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {
@@ -276,7 +276,7 @@ public class BuildDependencyLMData2 {
 
   private static class LocalWordClassMap extends AbstractWordClassMap {
     public LocalWordClassMap() {
-      wordToClass = Generics.newHashMap();
+      wordToClass = new HashMap<>();
     }
   }
   

@@ -9,6 +9,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -28,7 +30,6 @@ import edu.stanford.nlp.sequences.DocumentReaderAndWriter;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
@@ -63,7 +64,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
   }
 
   protected static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("help", 0);
     optionArgDefs.put("orthoOptions", 1);
     optionArgDefs.put("trainFile", 1);
@@ -146,7 +147,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     List<CoreLabel> labeledTokens = ProcessorTools.toCharacterSequence(inputSequence);
     labeledTokens = classifier.classify(labeledTokens);
     List<CoreLabel> outputTokens = ProcessorTools.toPostProcessedSequence(labeledTokens);
-    List<String> outputStrings = Generics.newLinkedList();
+    List<String> outputStrings = new LinkedList<>();
     for (CoreLabel label : outputTokens) {
       outputStrings.add(label.word());
     }

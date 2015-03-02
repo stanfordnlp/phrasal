@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -131,7 +131,7 @@ public final class Sequences {
    * @return
    */
   public static <T> List<String> toStringList(Sequence<T> sequence) {
-    List<String> stringList = Generics.newArrayList(sequence.size());
+    List<String> stringList = new ArrayList<>(sequence.size());
     for (T token : sequence) {
       stringList.add(token.toString());
     }

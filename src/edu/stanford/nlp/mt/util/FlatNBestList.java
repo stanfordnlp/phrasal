@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
@@ -72,12 +72,12 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
     long preNBestListLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     final long startTime = System.nanoTime();
 
-    Map<String, String> featureNameSelfMap = Generics.newHashMap();
+    Map<String, String> featureNameSelfMap = new HashMap<>();
 
-    nbestLists = Generics.newArrayList(initialCapacity);
+    nbestLists = new ArrayList<>(initialCapacity);
 
     List<ScoredFeaturizedTranslation<IString, String>> currentNbest =
-        Generics.newLinkedList();
+        new LinkedList<>();
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     int lastId = -1;

@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -19,7 +21,6 @@ import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 
 /**
@@ -90,7 +91,7 @@ public class TargetFunctionWordInsertion extends DerivationFeaturizer<IString, S
         }
       }
       reader.close();
-      Set<IString> set = Generics.newHashSet(Counters.topKeys(counter, rankCutoff));
+      Set<IString> set = new HashSet<>(Counters.topKeys(counter, rankCutoff));
       for (IString word : set) {
         System.err.printf(" %s%n", word);
       }
@@ -127,7 +128,7 @@ public class TargetFunctionWordInsertion extends DerivationFeaturizer<IString, S
         ++numTargetFunctionTokens;
       }
     }
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     features.add(new FeatureValue<String>(FEATURE_NAME, (double) numTargetFunctionTokens / (double) numSourceFunctionTokens));
     return features;
   }

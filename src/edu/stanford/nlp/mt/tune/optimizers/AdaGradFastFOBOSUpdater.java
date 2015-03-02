@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Fast AdaGrad update rule from Duchi et al. (2010).
@@ -64,7 +64,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     // Special case: gradient is non-zero where the weight is 0
     Set<String> featuresToUpdate = gradient.keySet();
     if (endOfEpoch) {
-      featuresToUpdate = Generics.newHashSet(weights.keySet());
+      featuresToUpdate = new HashSet<>(weights.keySet());
       featuresToUpdate.addAll(gradient.keySet());
       logger.info(String.format("Full regularization step for %d features", featuresToUpdate.size()));
     }

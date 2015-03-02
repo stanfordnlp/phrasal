@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +33,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Synchronous handler for phrase table query messages.
@@ -114,7 +115,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
 
       // Process the query
       double normalizer = 0.0;
-      List<RuleQuery> queriedRules = Generics.newArrayList(ruleRequest.spanLimit);
+      List<RuleQuery> queriedRules = new ArrayList<>(ruleRequest.spanLimit);
       for(ConcreteRule<IString,String> rule : rulesForSpan) {
         if (queriedRules.size() >= ruleRequest.spanLimit) {
           break;
@@ -208,7 +209,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
       SymmetricalWordAlignment tPrime2t, int tContextOffset) {
 
     // Alignments
-    List<String> alignmentList = Generics.newLinkedList();
+    List<String> alignmentList = new LinkedList<>();
     Set<Integer> alignments = s2sPrime.f2e(0);
     for (int i : alignments) {
       Set<Integer> alignments2 = sPrime2tPrime.f2e(i);

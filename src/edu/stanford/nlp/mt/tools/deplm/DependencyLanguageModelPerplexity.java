@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.ling.IndexedWord;
@@ -14,7 +15,6 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -63,15 +63,15 @@ public final class DependencyLanguageModelPerplexity {
           System.err.println("DEBUG: Scoring head" + seq.toString());
         }
       } else {
-        List<IString> leftChildren = Generics.newLinkedList();
-        List<IString> rightChildren = Generics.newLinkedList();
+        List<IString> leftChildren = new LinkedList<>();
+        List<IString> rightChildren = new LinkedList<>();
 
         
         
         rightChildren.add(new IString(headWord.toLowerCase() + HEAD_SUFFIX));
 
         
-        List<Integer> sortedChildren = Generics.newLinkedList();
+        List<Integer> sortedChildren = new LinkedList<>();
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {

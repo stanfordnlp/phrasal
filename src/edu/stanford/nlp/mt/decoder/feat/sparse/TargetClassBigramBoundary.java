@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -11,7 +12,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Target rule boundary bigrams.
@@ -32,7 +33,7 @@ public class TargetClassBigramBoundary extends DerivationFeaturizer<IString, Str
 
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     // Detect last phrase
     BoundaryState priorState = f.prior == null ? null : (BoundaryState) f.prior.getState(this);
     IString leftEdge = priorState == null ? TokenUtils.START_TOKEN : priorState.classId;

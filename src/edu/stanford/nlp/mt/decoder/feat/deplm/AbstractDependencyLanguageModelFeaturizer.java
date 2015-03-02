@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.feat.deplm;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -27,7 +28,6 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 public abstract class AbstractDependencyLanguageModelFeaturizer extends DerivationFeaturizer<IString, String>  implements NeedsCloneable<IString, String> {
@@ -99,7 +99,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     final int ruleTgtIndex = tgtIndex - f.targetPosition;
     final int ruleSrcIndex = sourceHeadIndex - f.sourcePosition;
     
-    List<Set<Integer>> s2t = Generics.newArrayList(srcLength);
+    List<Set<Integer>> s2t = new ArrayList<>(srcLength);
     for (int i = 0; i < srcLength; ++i) {
       s2t.add(new HashSet<Integer>());
     }
@@ -135,7 +135,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   
 
   public Set<Integer> reachableNodes(int root, int depth) {
-    Set<Integer> reachableNodes = Generics.newHashSet();
+    Set<Integer> reachableNodes = new HashSet<>();
     reachableNodes.add(root);
     Set<Integer> children = this.head2Dependent.get(root);
     if (children == null)
@@ -260,8 +260,8 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = Generics.newLinkedList();
-    List<Double> lmScores = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
+    List<Double> lmScores = new LinkedList<>();
     
     
     // Lookup the state
@@ -451,7 +451,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       }
     }
     
-    features = Generics.newLinkedList();
+    features = new LinkedList<>();
     
     double oldLmScore = state.f * state.scoredTokens;
     double newAverageLmScore = scoredTokens == 0 ? 0.0 : ((oldLmScore + newLmScore) / scoredTokens);

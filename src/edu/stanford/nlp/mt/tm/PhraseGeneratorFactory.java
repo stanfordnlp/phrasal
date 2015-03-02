@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -55,7 +55,7 @@ public class PhraseGeneratorFactory {
       final boolean withGaps = pgName.equals(DTU_GENERATOR);
 
       List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
-      List<PhraseTable<IString>> tables = Generics.newLinkedList();
+      List<PhraseTable<IString>> tables = new LinkedList<>();
 
       for (String filename : filenames.split(SEPARATOR)) {
         PhraseGenerator<IString,FV> pt;

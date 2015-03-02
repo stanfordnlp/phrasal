@@ -1,8 +1,7 @@
 package edu.stanford.nlp.mt.service.tools;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import edu.stanford.nlp.util.Generics;
 
 /**
  * Source segment format served by the middleware and loaded by
@@ -25,10 +24,10 @@ public class SourceSegment {
    * @param numTokens
    */
   public SourceSegment(int numTokens) {
-    this.tokens = Generics.newArrayList(numTokens);
-    this.pos = Generics.newArrayList(numTokens);
-    this.ner = Generics.newArrayList(numTokens);
-    this.layoutSpec = Generics.newArrayList(numTokens);
+    this.tokens = new ArrayList<>(numTokens);
+    this.pos = new ArrayList<>(numTokens);
+    this.ner = new ArrayList<>(numTokens);
+    this.layoutSpec = new ArrayList<>(numTokens);
     this.chunkVector = new int[numTokens];
   }
 }

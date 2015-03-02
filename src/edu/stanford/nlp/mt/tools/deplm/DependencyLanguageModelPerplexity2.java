@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -149,10 +149,10 @@ public final class DependencyLanguageModelPerplexity2 {
       } else {
         String headWord = dependencies.get(gov).first.word();
         
-        List<IString> leftChildren = Generics.newLinkedList();
-        List<IString> rightChildren = Generics.newLinkedList();
+        List<IString> leftChildren = new LinkedList<>();
+        List<IString> rightChildren = new LinkedList<>();
         
-        List<Integer> sortedChildren = Generics.newLinkedList();
+        List<Integer> sortedChildren = new LinkedList<>();
         sortedChildren.addAll(dependencies.get(gov).second);
         Collections.sort(sortedChildren);
         for (Integer dep : sortedChildren) {

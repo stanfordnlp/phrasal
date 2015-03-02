@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * 
@@ -54,7 +54,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   
   @Override
   public List<String> getFeatureNames() {
-    List<String> featureNames = Generics.newArrayList();
+    List<String> featureNames = new ArrayList<>();
     for (PhraseGenerator<TK,FV> generator : phraseGenerators) {
       featureNames.addAll(generator.getFeatureNames());
     }

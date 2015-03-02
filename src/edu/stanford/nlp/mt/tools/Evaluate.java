@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -16,7 +17,6 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -42,7 +42,7 @@ public class Evaluate {
   }
 
   private static Map<String,Integer> argDefs() {
-    Map<String,Integer> argDefs = Generics.newHashMap();
+    Map<String,Integer> argDefs = new HashMap<>();
     argDefs.put("no-nist", 0);
     argDefs.put("cased", 0);
     return argDefs;

@@ -1,7 +1,11 @@
 package edu.stanford.nlp.mt.decoder;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +28,6 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -93,7 +96,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     if (coverage.cardinality() != source.size()) {
       if (filterUnknownWords) {
         // Filter OOVs from the source and then query the phrase table again
-        List<TK> filteredToks = Generics.newLinkedList();
+        List<TK> filteredToks = new LinkedList<>();
         for (int i = 0, sz = source.size(); i  < sz; i++) {
           if (coverage.get(i)) {
             filteredToks.add(source.get(i));
@@ -146,7 +149,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       // Decoder failure
       return null;
     }
-    List<Derivation<TK, FV>> goalStates = Generics.newArrayList(beam.size());
+    List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
     for (Derivation<TK, FV> hyp : beam) {
       goalStates.add(hyp);
     }
@@ -154,10 +157,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // Setup for n-best extraction
     StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<Derivation<TK, FV>>(
         goalStates, recombinationHistory);
-    Set<Sequence<TK>> distinctSurfaceTranslations = Generics.newHashSet();
+    Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<>();
 
     // Extract
-    List<RichTranslation<TK, FV>> translations = Generics.newLinkedList();
+    List<RichTranslation<TK, FV>> translations = new LinkedList<>();
     final long nbestStartTime = System.nanoTime();
     
     // Limit the number of popped items in the case of distinct nbest lists.
@@ -171,7 +174,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
       // DTU stuff
       boolean withDTUs = false;
-      Set<Rule<TK>> seenOptions = Generics.newHashSet();
+      Set<Rule<TK>> seenOptions = new HashSet<>();
       
       // TODO(spenceg): This is very inefficient. Reconstruct the derivation
       // from the lattice path since the current n-best list extractor
@@ -319,7 +322,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @author danielcer
    */
   public class CoverageBeams {
-    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = Generics.newHashMap();
+    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = new HashMap<>();
     final private Set<CoverageSet>[] coverageCountToCoverageSets;
     final private RecombinationHistory<Derivation<TK, FV>> recombinationHistory;
 
@@ -328,7 +331,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
       coverageCountToCoverageSets = new Set[sourceSize + 1];
       for (int i = 0; i < sourceSize + 1; i++) {
-        coverageCountToCoverageSets[i] = Generics.newHashSet();
+        coverageCountToCoverageSets[i] = new HashSet<>();
       }
       this.recombinationHistory = recombinationHistory;
     }
@@ -350,7 +353,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
 
     public List<Derivation<TK, FV>> getHypotheses(int coverageCount) {
-      List<Derivation<TK, FV>> hypothesisList = Generics.newLinkedList();
+      List<Derivation<TK, FV>> hypothesisList = new LinkedList<>();
 
       for (CoverageSet coverage : coverageCountToCoverageSets[coverageCount]) {
         Beam<Derivation<TK, FV>> hypothesisBeam = get(coverage);

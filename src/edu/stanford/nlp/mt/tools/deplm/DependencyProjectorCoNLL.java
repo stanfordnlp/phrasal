@@ -20,7 +20,7 @@ import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesAnnotation;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -32,7 +32,7 @@ public class DependencyProjectorCoNLL {
   private static int skippedSentences = 0;
   private static int processedSentences = 0;
     
-  private static Map<String, Integer> DEFAULT_ATTACHMENT = Generics.newHashMap();
+  private static Map<String, Integer> DEFAULT_ATTACHMENT = new HashMap<>();
   
   static {
     //root = 0
@@ -56,7 +56,7 @@ public class DependencyProjectorCoNLL {
    * Command-line option specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionArgDefs = Generics.newHashMap();
+    Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("annotationsSplit", 0); 
     optionArgDefs.put("sourceTokens", 1); 
     optionArgDefs.put("targetTokens", 1); 
@@ -79,7 +79,7 @@ public class DependencyProjectorCoNLL {
   }
   
   public static void printDependencies(Map<Integer, NavigableSet<Integer>> dependencies, Sequence<IString> tokens, int maxFragments, boolean posTagged) {
-    Map<Integer,Integer> reverseDependencies = Generics.newHashMap();
+    Map<Integer,Integer> reverseDependencies = new HashMap<>();
     
     for (int head : dependencies.keySet()) {
       for (int dep : dependencies.get(head)) {
@@ -198,13 +198,13 @@ public class DependencyProjectorCoNLL {
   
    
   public static Map<Integer, NavigableSet<Integer>> projectDependencies(Map<Integer, Integer> reverseDependencies , SymmetricalWordAlignment alignment, boolean transitive) {
-    Map<Integer, NavigableSet<Integer>> projectedDependencies = Generics.newHashMap();
+    Map<Integer, NavigableSet<Integer>> projectedDependencies = new HashMap<>();
     
     //source to target token aligment (we force 1:1)
-    Map<Integer, Integer> alignedSourceTokens = Generics.newHashMap();
+    Map<Integer, Integer> alignedSourceTokens = new HashMap<>();
     
     //left dependencies indexed by source head index
-    Map<Integer, SortedSet<Integer>> leftDependencies = Generics.newHashMap();
+    Map<Integer, SortedSet<Integer>> leftDependencies = new HashMap<>();
     
     
     if (transitive) {

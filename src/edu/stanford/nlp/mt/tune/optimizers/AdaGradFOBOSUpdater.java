@@ -1,13 +1,14 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Generics;
+
 
 
 
@@ -92,7 +93,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     public Set<String> get(Object k) {
       Set<String> v = super.get(k);
       if ((v == null) && !this.containsKey(k)) {
-        Set<String> aSet = Generics.newHashSet(1);
+        Set<String> aSet = new HashSet<>(1);
         this.put((String)k, aSet);
         return aSet;
       } else 

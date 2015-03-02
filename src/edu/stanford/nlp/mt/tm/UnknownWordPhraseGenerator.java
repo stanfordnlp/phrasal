@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.util.EmptySequence;
@@ -9,7 +10,7 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Unknown word model. Generates synthetic rules for unknown words.
@@ -61,7 +62,7 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
     if (sequence.size() > longestSourcePhrase()) {
       throw new RuntimeException("Only single-word queries accepted. Query size: " + String.valueOf(sequence.size()));
     }
-    List<Rule<TK>> list = Generics.newLinkedList();
+    List<Rule<TK>> list = new LinkedList<>();
 
     // Check to see if this word is unknown
     RawSequence<TK> sourceWord = new RawSequence<TK>(sequence);

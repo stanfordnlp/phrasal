@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -14,7 +16,7 @@ import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Cross-entropy objective function.             
@@ -78,7 +80,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     
     // Compute the score for everything in the n-best list
     // Don't know where the top K are yet.
-    List<GoldScoredTranslation> metricScoredList = Generics.newArrayList(translations.size());
+    List<GoldScoredTranslation> metricScoredList = new ArrayList<>(translations.size());
     double qNormalizer = 0.0;
     
     for (int i = 0, sz = translations.size(); i < sz; ++i) {
@@ -93,7 +95,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
     double lastScore = Double.NEGATIVE_INFINITY;
     int rank = 0;
     int id = 1;
-    Map<Long,GoldScoredTranslation> items = Generics.newHashMap();
+    Map<Long,GoldScoredTranslation> items = new HashMap<>();
     for (GoldScoredTranslation g : metricScoredList) {
       if (g.goldScore != lastScore) {
         rank = id;

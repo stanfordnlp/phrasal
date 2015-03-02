@@ -55,7 +55,7 @@ import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.Generics;
+
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
@@ -478,7 +478,7 @@ public final class OnlineTuner {
       logger.info("Start of epoch: " + epoch);
       
       // n-best lists. Purge for each epoch
-      Map<Integer,Sequence<IString>> nbestLists = Generics.newHashMap(tuneSetSize);
+      Map<Integer,Sequence<IString>> nbestLists = new HashMap<>(tuneSetSize);
       if (createPseudoReferences) updatePseudoReferences(epoch);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
@@ -683,7 +683,7 @@ public final class OnlineTuner {
     Counter<String> weights = IOTools.readWeights(wtsInitialFile);
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
-      Set<String> featureNames = Generics.newHashSet(weights.keySet());
+      Set<String> featureNames = new HashSet<>(weights.keySet());
       featureNames.addAll(FeatureUtils.BASELINE_DENSE_FEATURES);
       for (String key : featureNames) {
         if (key.startsWith(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME)) {

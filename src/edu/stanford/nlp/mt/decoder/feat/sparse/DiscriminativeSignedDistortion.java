@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -9,7 +10,7 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Signed discriminative distortion bins. (see <code>ConcreteRule</code>)
@@ -30,7 +31,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     int distortion = f.prior == null ? f.sourcePosition :
       f.prior.sourcePosition + f.prior.sourcePhrase.size() - f.sourcePosition;
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     
     if (distortion < 0) {
       String featureString = FEATURE_NAME + ":neg";

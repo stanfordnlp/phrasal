@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -21,7 +22,6 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -103,7 +103,7 @@ public class FilterOOVByPhraseTable {
   }
 
   private static Map<String,Integer> argDefs() {
-    Map<String,Integer> argDefs = Generics.newHashMap();
+    Map<String,Integer> argDefs = new HashMap<>();
     argDefs.put("a", 0);
     return argDefs;
   }

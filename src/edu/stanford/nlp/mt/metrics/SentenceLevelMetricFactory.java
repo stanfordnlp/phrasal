@@ -1,11 +1,12 @@
 package edu.stanford.nlp.mt.metrics;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Factory for sentence-level scoring metrics.
@@ -131,49 +132,49 @@ public final class SentenceLevelMetricFactory {
       return new SLTERMetric<IString,String>();
     
     } else if (scoreMetricStr.equals("2bleun-ter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{2.0, 1.0}, metrics);
     
     } else if (scoreMetricStr.equals("bleun-ter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 1.0}, metrics);
     
     } else if (scoreMetricStr.equals("bleun-2ter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
     } else if (scoreMetricStr.equals("bleu-2ter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, metrics);
     
     } else if (scoreMetricStr.equals("bleun-ter/2")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{0.5, 0.5}, metrics);
     
     } else if (scoreMetricStr.equals("bleu-ter/2")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{0.5, 0.5}, metrics);
       
     } else if (scoreMetricStr.equals("bleu-ter-len/3")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(3);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(3);
       metrics.add(new BLEUGain<IString,String>());
       metrics.add(new SLTERMetric<IString,String>());
       metrics.add(new LengthMetric<IString,String>());
@@ -181,21 +182,21 @@ public final class SentenceLevelMetricFactory {
         new double[]{1.0/3.0, 1.0/3.0, 1.0/3.0}, metrics);
     
     } else if (scoreMetricStr.equals("bleunX2ter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLGeometricCombinationMetric<IString,String>(
         new double[]{1.0, 2.0}, new boolean[]{false, true}, metrics);
     
     } else if (scoreMetricStr.equals("bleunXter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLGeometricCombinationMetric<IString,String>(
         new double[]{1.0, 1.0}, new boolean[]{false, true}, metrics);
     
     } else if (scoreMetricStr.equals("bleun-2fastter")) {
-      List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(2);
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>(5));
       return new SLLinearCombinationMetric<IString,String>(new double[]{1.0, 2.0}, metrics);
@@ -241,7 +242,7 @@ public final class SentenceLevelMetricFactory {
 	}
 	
 	public static SLLinearCombinationMetric makeLinearCombMetric(String[] args) {
-		List<SentenceLevelMetric<IString,String>> metrics = Generics.newArrayList(args.length/2);
+		List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(args.length/2);
 		double[] weights = new double[args.length/2];
 
 		for(int i=0; i<args.length; i+=2) {			

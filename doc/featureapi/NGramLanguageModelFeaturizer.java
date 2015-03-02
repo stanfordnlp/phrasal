@@ -7,7 +7,7 @@ public class NGramLanguageModelFeaturizer extends
 
     double lmScore = getScore(startPos, limit, f.targetPrefix);
 
-    List<FeatureValue<String>> features = Generics.newLinkedList();
+    List<FeatureValue<String>> features = new LinkedList<>();
     features.add(new FeatureValue<String>(featureName, lmScore));
 
     return features;

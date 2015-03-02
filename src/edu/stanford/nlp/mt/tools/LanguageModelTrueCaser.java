@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.CubePruningDecoder;
@@ -26,7 +28,7 @@ import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 
-import edu.stanford.nlp.util.Generics;
+
 
 /**
  * Language Model-based TrueCasing.
@@ -52,7 +54,7 @@ public class LanguageModelTrueCaser {
     // Read in LM & create LM featurizer
     NGramLanguageModelFeaturizer lmFeaturizer = new NGramLanguageModelFeaturizer(lmFilename, 
         NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
-    List<Featurizer<IString, String>> listFeaturizers = Generics.newLinkedList();
+    List<Featurizer<IString, String>> listFeaturizers = new LinkedList<>();
     listFeaturizers.add(lmFeaturizer);
     FeatureExtractor<IString, String> combinedFeaturizer = new FeatureExtractor<IString, String>(
         listFeaturizers);
@@ -109,7 +111,7 @@ public class LanguageModelTrueCaser {
     }
 
     private static List<String> getCasings(String token) {
-      List<String> casings = Generics.newLinkedList();
+      List<String> casings = new LinkedList<>();
       // Identity
       casings.add(token);
       if (token.length() == 0) return casings;
@@ -144,7 +146,7 @@ public class LanguageModelTrueCaser {
       if (sourceSequence.size() != longestSourcePhrase()) {
         throw new RuntimeException("Subsequence length != " + String.valueOf(longestSourcePhrase()));
       }
-      List<Rule<IString>> list = Generics.newLinkedList();
+      List<Rule<IString>> list = new LinkedList<>();
       String token = sourceSequence.get(0).toString();
       List<String> casings = getCasings(token);
       for (String casing : casings) {
@@ -169,7 +171,7 @@ public class LanguageModelTrueCaser {
 
     @Override
     public List<String> getFeatureNames() {
-      return Generics.newArrayList(1);
+      return new ArrayList<>(1);
     }
   }
 

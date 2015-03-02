@@ -1,7 +1,9 @@
 package edu.stanford.nlp.mt.service.handlers;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +41,6 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.SystemLogger.LogName;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
@@ -166,7 +167,7 @@ public class TranslationRequestHandler implements RequestHandler {
             Sequence<IString> prefix = IStrings.tokenize(input.tgtPrefix);
             t2t = identityAlignment(prefix);
           }
-          targets = Generics.newLinkedList();
+          targets = new LinkedList<>();
           targets.add(t2t.e());
         }
         input.properties.put(InputProperty.TargetPrefix, targets != null);
@@ -182,12 +183,12 @@ public class TranslationRequestHandler implements RequestHandler {
         
         // Result extraction and post-processing
         final long postprocStart = System.nanoTime();
-        List<Sequence<IString>> translationList = Generics.newArrayList(numRequestedTranslations);
-        List<List<String>> alignments = Generics.newArrayList(numRequestedTranslations);
-        List<Double> scoreList = Generics.newArrayList(numRequestedTranslations);
+        List<Sequence<IString>> translationList = new ArrayList<>(numRequestedTranslations);
+        List<List<String>> alignments = new ArrayList<>(numRequestedTranslations);
+        List<Double> scoreList = new ArrayList<>(numRequestedTranslations);
         
         // Introduce additional diversity
-        Set<Sequence<IString>> diversityPool = Generics.newHashSet(translations.size());
+        Set<Sequence<IString>> diversityPool = new HashSet<>(translations.size());
         final int startIndex = targets == null ? 0 : targets.get(0).size();
         for (RichTranslation<IString,String> translation : translations) {
           if (translationList.size() == numRequestedTranslations) {
@@ -323,7 +324,7 @@ public class TranslationRequestHandler implements RequestHandler {
         }
       }
       
-      List<String> alignmentList = Generics.newLinkedList();
+      List<String> alignmentList = new LinkedList<>();
       for (int i = 0, size = s2sPrime.fSize(); i < size; ++i) {
         Set<Integer> alignments = s2sPrime.f2e(i);
         for (int j : alignments) {
@@ -370,7 +371,7 @@ public class TranslationRequestHandler implements RequestHandler {
     final int nTranslations = translationList.size();
     double normalizer = 0.0;
     for (double d : scoreList) normalizer += d;
-    List<TranslationQuery> sortedList = Generics.newArrayList(nTranslations);
+    List<TranslationQuery> sortedList = new ArrayList<>(nTranslations);
     for (int i = 0; i < nTranslations; ++i) {
       TranslationQuery query = new TranslationQuery(Sequences.toStringList(translationList.get(i)),
           alignments.get(i), scoreList.get(i) / normalizer);

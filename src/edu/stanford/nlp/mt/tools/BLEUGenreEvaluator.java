@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -20,7 +21,6 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -45,7 +45,7 @@ public class BLEUGenreEvaluator {
    */
   public static Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> run(List<List<Sequence<IString>>> referencesList,
       List<InputProperties> inputProperties, int order, InputStream inputStream) throws IOException {
-    List<String> lines = Generics.newArrayList();
+    List<String> lines = new ArrayList<>();
     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
     for (String line; (line = reader.readLine()) != null;) {
       lines.add(line);
@@ -65,8 +65,8 @@ public class BLEUGenreEvaluator {
    */
   public static Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> run(List<List<Sequence<IString>>> referencesList,
       List<InputProperties> inputProperties, int order, List<String> lines) throws IOException {
-    Set<String> genreList = Generics.newHashSet();
-    Map<String,List<List<Sequence<IString>>>> refsByGenre = Generics.newHashMap();
+    Set<String> genreList = new HashSet<>();
+    Map<String,List<List<Sequence<IString>>>> refsByGenre = new HashMap<>();
     for (int sourceId = 0; sourceId < referencesList.size(); ++sourceId) {
       String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
           : DEFAULT_GENRE;
@@ -77,7 +77,7 @@ public class BLEUGenreEvaluator {
       refsByGenre.get(genre).add(referencesList.get(sourceId));
     }
     
-    Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> metrics = Generics.newHashMap(genreList.size());
+    Map<String,BLEUMetric<IString, String>.BLEUIncrementalMetric> metrics = new HashMap<>(genreList.size());
     for (String genre : genreList) {
       BLEUMetric<IString, String> bleu = new BLEUMetric<IString, String>(refsByGenre.get(genre), order,
           false);

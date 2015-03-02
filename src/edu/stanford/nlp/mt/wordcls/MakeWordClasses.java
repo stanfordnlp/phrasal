@@ -4,9 +4,13 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -25,7 +29,6 @@ import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
@@ -113,7 +116,7 @@ public class MakeWordClasses {
     }
 
     // Internal data structures
-    wordToClass = Generics.newHashMap(INITIAL_CAPACITY);
+    wordToClass = new HashMap<>(INITIAL_CAPACITY);
     wordCount = new ClassicCounter<IString>(INITIAL_CAPACITY);
     classCount = new ClassicCounter<Integer>(numClasses);
     historyCount = new TwoDimensionalCounter<IString,NgramHistory>();
@@ -127,7 +130,7 @@ public class MakeWordClasses {
    * @throws IOException
    */
   private void initialize(String[] filenames) throws IOException {
-    List<IString> defaultHistory = Generics.newLinkedList();
+    List<IString> defaultHistory = new LinkedList<>();
     for (int i = 0; i < order-1; ++i) {
       defaultHistory.add(TokenUtils.START_TOKEN);
     }
@@ -141,7 +144,7 @@ public class MakeWordClasses {
         line = line.trim();
         if (line.length() == 0) continue;
         Sequence<IString> tokens = IStrings.tokenize(line);
-        List<IString> history = Generics.newLinkedList(defaultHistory);
+        List<IString> history = new LinkedList<>(defaultHistory);
         for (IString token : tokens) {
           if (normalizeDigits && TokenUtils.hasDigit(token.toString())) {
             token = new IString(TokenUtils.normalizeDigits(token.toString()));
@@ -163,8 +166,8 @@ public class MakeWordClasses {
         wordCount.keySet().size(), (int) wordCount.totalCount(), (int) historyCount.totalCount()));
 
     // Collapse vocabulary by mapping rare words to <unk>
-    Set<IString> fullVocabulary = Generics.newHashSet(wordCount.keySet());
-    Set<IString> filteredWords = Generics.newHashSet(fullVocabulary.size());
+    Set<IString> fullVocabulary = new HashSet<>(wordCount.keySet());
+    Set<IString> filteredWords = new HashSet<>(fullVocabulary.size());
     for (IString word : fullVocabulary) {
       int count = (int) wordCount.getCount(word);
       if (vocabThreshold > 0 && count < vocabThreshold) {
@@ -186,7 +189,7 @@ public class MakeWordClasses {
       fullVocabulary.add(TokenUtils.UNK_TOKEN);
     }
     fullVocabulary.removeAll(filteredWords);
-    effectiveVocabulary = Generics.newArrayList(fullVocabulary);
+    effectiveVocabulary = new ArrayList<>(fullVocabulary);
 
     // Initialize clustering
     Collections.sort(effectiveVocabulary, Counters.toComparator(wordCount, false, true));
@@ -404,7 +407,7 @@ public class MakeWordClasses {
   }
 
   private static Map<String, Integer> optionArgDefs() {
-    Map<String,Integer> argDefs = Generics.newHashMap();
+    Map<String,Integer> argDefs = new HashMap<>();
     argDefs.put("order", 1);
     argDefs.put("nthreads", 1);
     argDefs.put("nclasses", 1);

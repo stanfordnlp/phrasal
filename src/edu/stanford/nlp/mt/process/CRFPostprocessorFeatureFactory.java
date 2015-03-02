@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.process;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -10,7 +12,6 @@ import edu.stanford.nlp.sequences.Clique;
 import edu.stanford.nlp.sequences.FeatureFactory;
 import edu.stanford.nlp.sequences.SeqClassifierFlags;
 import edu.stanford.nlp.util.Characters;
-import edu.stanford.nlp.util.Generics;
 import edu.stanford.nlp.util.PaddedList;
 
 /**
@@ -35,7 +36,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
    * @param loc  The index at which to extract features.
    */
   public Collection<String> getCliqueFeatures(PaddedList<IN> cInfo, int loc, Clique clique) {
-    Collection<String> features = Generics.newHashSet();
+    Collection<String> features = new HashSet<>();
 
     if (clique == cliqueC) {
       addAllInterningAndSuffixing(features, featuresC(cInfo, loc), "C");
@@ -52,7 +53,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
   }
 
   protected Collection<String> featuresC(PaddedList<? extends CoreLabel> cInfo, int loc) {
-    Collection<String> features = Generics.newArrayList();
+    Collection<String> features = new ArrayList<>();
     CoreLabel c = cInfo.get(loc);
     CoreLabel n = cInfo.get(loc + 1);
     CoreLabel n2 = cInfo.get(loc + 2);
@@ -233,7 +234,7 @@ public class CRFPostprocessorFeatureFactory<IN extends CoreLabel> extends Featur
   }
 
   private Collection<String> featuresCpC(PaddedList<IN> cInfo, int loc) {
-    Collection<String> features = Generics.newArrayList();
+    Collection<String> features = new ArrayList<>();
 
     // Caused overfitting.
     //    CoreLabel c = cInfo.get(loc);
