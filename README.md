@@ -10,7 +10,7 @@ Both ant and [Gradle](http://gradle.org) installation build scripts are provided
 
 The Phrasal decoder requires that you also install [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml). We recommend that you clone and build [the latest repository from Github](https://github.com/stanfordnlp/CoreNLP).
 
-Some advanced Phrasal features have external dependencies. If you build Phrasal with Gradle, these dependencies will be retrieved for you. Otherwise, a script to fetch and configure these dependencies is included in `scripts/get-dependencies.sh`.
+Some advanced Phrasal features have external dependencies. If you build Phrasal with Gradle, these dependencies will be retrieved for you.
 
 ### Linux
 
@@ -22,9 +22,11 @@ Some advanced Phrasal features have external dependencies. If you build Phrasal 
 
 4. (Optional, requires [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
 
+5. (Optional) Create classpath and startup scripts for Phrasal: `gradle startupScripts`.
+
 ### Windows
 
-We recommend installation of Cygwin. 
+Installation of Gradle is required. Follow the Linux instructions above. Then be sure to run `gradle startupScripts` to generate a .bat file for running Phrasal.
 
 ### Stanford NLP cluster
 

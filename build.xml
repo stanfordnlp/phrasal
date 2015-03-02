@@ -1,6 +1,6 @@
 <project name="mt" default="compile" basedir=".">
   <property environment="env"/>
-  <property name="project.core"   value="/${env.JAVANLP_HOME}/projects/core" />
+  <property name="project.core"   value="${env.JAVANLP_HOME}/projects/core" />
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
   <property name="source-extra.path"    value="${basedir}/src-extra" />
@@ -45,7 +45,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
-    <javac srcdir="${source.path}:${source-extra.path}:${tests.path}:${itests.path}"
+    <javac srcdir="${source.path}:${tests.path}:${itests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
          encoding="${compile.encoding}"   
@@ -64,9 +64,6 @@ includeantruntime="false">
     <!-- Copy application resources -->
     <copy  todir="${build.path}">
       <fileset dir="${source.path}" excludes="**/*.java"/>
-    </copy>
-    <copy  todir="${build.path}">
-      <fileset dir="${source-extra.path}" excludes="**/*.java"/>
     </copy>
   </target>
  
