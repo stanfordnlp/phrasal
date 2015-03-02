@@ -84,8 +84,9 @@ public final class ProcessorFactory {
       case "es":
       case "spanish":
         return new SpanishPostprocessor(options);
+        
+      default:
+        return new IdentityPostprocessor();
     }
-    
-    throw new IllegalArgumentException("Invalid postprocessor language code: " + language);
   }
 }
