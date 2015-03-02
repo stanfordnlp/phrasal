@@ -25,14 +25,13 @@ src-cc/kenlm/query
 # IntelliJ and Eclipse metadata
 .idea
 .metadata
-
-#ignore OS X Finder dirs
-.DS_Store
-
-# ignore eclipse settings files
+.classpath
 .settings/**
 
-# ignore gradle settings
+# Ignore OS X Finder dirs
+.DS_Store
+
+# Ignore gradle settings
 .gradle/
 build/
 bin/
