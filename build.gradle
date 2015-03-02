@@ -6,14 +6,6 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'application'
 
-// TODO: You must clone and built Stanford CoreNLP
-//   http://github.com/stanfordnlp/CoreNLP
-//
-// Then you must set the CORENLP_HOME environment variable
-// to point to CoreNLP
-def coreNlpHome = "$System.env.CORENLP_HOME"
-def corePath = coreNlpHome + '/classes'
-
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 version = '3.4.1'
@@ -72,13 +64,13 @@ task compileKenLM(type: Exec) {
 }
 
 dependencies {
+  // TERp jars that are no longer available on the web.
   compile fileTree(dir: 'lib', include: '*.jar')
   
   // CoreNLP dependencies
-  compile files([corePath])
-  compile fileTree(dir: coreNlpHome + '/lib', include: '*.jar')
+  compile project(":CoreNLP")
 
-  // Maven dependencies
+  // lilt/core Maven dependencies
   compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
   compile group: 'it.unimi.dsi', name: 'fastutil', version: '6.6.2'
   compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'
@@ -94,7 +86,7 @@ dependencies {
 // Eclipse plugin setup
 eclipse {
   classpath {
-    defaultOutputDir = file('classes/')
+    defaultOutputDir = file('bin/')
     file {
       beforeMerged { classpath ->
         classpath.entries.removeAll { entry -> entry.kind == 'lib' }
