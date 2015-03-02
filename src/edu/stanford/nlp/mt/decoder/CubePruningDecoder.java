@@ -6,7 +6,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
@@ -17,14 +19,10 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.decoder.util.SmartBundleBeam;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
-import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -37,13 +35,14 @@ import edu.stanford.nlp.util.Pair;
  */
 public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
+  private static final Logger logger = LogManager.getLogger(CubePruningDecoder.class.getName());
+  
   // 1200 gives roughly the same baseline performance as the default beam size
   // of MultiBeamDecoder
   public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
   protected final int maxDistortion;
-  protected final Logger logger;
 
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
     return new CubePruningDecoderBuilder<TK, FV>();
@@ -52,8 +51,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected CubePruningDecoder(CubePruningDecoderBuilder<TK, FV> builder) {
     super(builder);
     maxDistortion = builder.maxDistortion;
-    logger = Logger.getLogger(CubePruningDecoder.class.getSimpleName() + String.valueOf(builder.decoderId));
-    SystemLogger.attach(logger, LogName.DECODE);
 
     if (maxDistortion != -1) {
       System.err.printf("Cube pruning decoder %d. Distortion limit: %d%n", builder.decoderId, 
@@ -115,13 +112,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // to the references
     final int originalLength = ruleList.size();
     ruleList = outputSpace.filter(ruleList);
-    logger.info(String.format("input %d: Rule list after pruning by output constraint: %d/%d",
-        sourceInputId, ruleList.size(), originalLength));
+    logger.info("input {}: Rule list after pruning by output constraint: {}/{}",
+        sourceInputId, ruleList.size(), originalLength);
     
     // Create rule lookup chart. Rules can be fetched by span.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
     if ( ! ruleGrid.isCoverageComplete()) {
-      logger.warning(String.format("Incomplete coverage for source input %d", sourceInputId));
+      logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }
     
     // Fill Beam 0...only has one cube
@@ -210,8 +207,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         if (outputSpace.allowableFinal(bestHyp)) {
           if ( ! isGoalBeam) {
             final int coveredTokens = sourceLength - bestHyp.numUntranslatedSourceTokens;
-            logger.warning(String.format("input %d: DECODER FAILURE, but backed off to coverage %d/%d: ", sourceInputId,
-                coveredTokens, sourceLength));
+            logger.warn("input {}: DECODER FAILURE, but backed off to coverage {}/{}: ", sourceInputId,
+                coveredTokens, sourceLength);
           }
           return beam;
         }
@@ -219,7 +216,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       isGoalBeam = false;
     }
 
-    logger.warning(String.format("input %d: DECODER FAILURE", sourceInputId));
+    logger.warn("input {}: DECODER FAILURE", sourceInputId);
     return null;
   }
 

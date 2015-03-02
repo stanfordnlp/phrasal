@@ -6,11 +6,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -31,8 +32,6 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 
 
 /**
@@ -44,12 +43,12 @@ import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 public class RuleQueryRequestHandler implements RequestHandler {
 
   private static final AtomicInteger qId = new AtomicInteger();
+  private static final Logger logger = LogManager.getLogger(RuleQueryRequestHandler.class.getName());
 
   private final PhraseGenerator<IString, String> phraseTable;
   private final Scorer<String> scorer;
   private final Preprocessor preprocessor;
   private final Postprocessor postprocessor;
-  private final Logger logger;
 
   /**
    * Constructor.
@@ -65,8 +64,6 @@ public class RuleQueryRequestHandler implements RequestHandler {
     this.scorer = scorer;
     this.preprocessor = preprocessor;
     this.postprocessor = postprocessor;
-    this.logger = Logger.getLogger(RuleQueryRequestHandler.class.getName());
-    SystemLogger.attach(logger, LogName.SERVICE);
   }
 
   @Override
@@ -156,14 +153,14 @@ public class RuleQueryRequestHandler implements RequestHandler {
       response = new ServiceResponse(reply, t);
 
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Rule query request failed", e);
+      logger.error("Rule query request failed", e);
       RuleQueryReply reply = new RuleQueryReply(new LinkedList<RuleQuery>());
       Type t = new TypeToken<RuleQueryReply>() {}.getType();
       response = new ServiceResponse(reply, t);
     }
 
     double querySeconds = (System.nanoTime() - startTime) / 1e9;
-    logger.info(String.format("Rule query elapsed time: %.3fs", querySeconds));
+    logger.info("Rule query elapsed time: {}s", querySeconds);
 
     return response;
   }

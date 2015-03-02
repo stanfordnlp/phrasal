@@ -1,7 +1,9 @@
 package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.List;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineOptimizer;
@@ -9,8 +11,6 @@ import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -31,18 +31,14 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
 
   private final double C;
   
-  private final Logger logger;
-
+  private static final Logger logger = LogManager.getLogger(MIRA1BestHopeFearOptimizer.class.getName());
+  
   public MIRA1BestHopeFearOptimizer(double C) {
     this.C = C;
-    logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
-    SystemLogger.attach(logger, LogName.ONLINE);
   }
 
   public MIRA1BestHopeFearOptimizer(String... args) {
     C = (args == null || args.length != 1) ? DEFAULT_C : Double.parseDouble(args[0]);
-    logger = Logger.getLogger(MIRA1BestHopeFearOptimizer.class.getCanonicalName());
-    SystemLogger.attach(logger, LogName.ONLINE);
   }
   
   @Override
@@ -66,11 +62,11 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
     synchronized(scoreMetric) {
       // The "correct" derivation (Crammer et al. (2006) fig.2)
       dHope = getBestHopeDerivation(scoreMetric, translations, references, referenceWeights, sourceId, source);
-      logger.fine("Hope derivation: " + dHope.toString());
+      logger.info("Hope derivation: {}", dHope.toString());
 
       // The "max-loss" derivation (Crammer et al. (2006) fig.2)
       dFear = getBestFearDerivation(scoreMetric, translations, references, referenceWeights, dHope, sourceId, source);
-      logger.fine("Fear derivation: " + dFear.toString());
+      logger.info("Fear derivation: {}", dFear.toString());
 
       // Update the loss function with the hope derivation a la
       // Cherry and Foster (2012) (Chiang (2012) uses the 1-best translation).
@@ -96,18 +92,18 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
       Counter<String> hopeFeatures = OptimizerUtils.featureValueCollectionToCounter(dHope.hypothesis.features);
       Counter<String> fearFeatures = OptimizerUtils.featureValueCollectionToCounter(dFear.hypothesis.features);
       gradient = Counters.diff(hopeFeatures, fearFeatures);
-      logger.fine("Feature difference: " + gradient.toString());
+      logger.info("Feature difference: {}", gradient.toString());
       
       // Compute the update
       double sumSquaredFeatureDiff = Counters.sumSquares(gradient);
       double tau = Math.min(C, loss / sumSquaredFeatureDiff);
-      logger.fine(String.format("tau: %e", tau));
+      logger.info("tau: {}", tau);
       
       // Update the weights
       Counters.multiplyInPlace(gradient, tau);
     
     } else {
-      logger.info(String.format("NO UPDATE (loss: %e)", loss));
+      logger.info("NO UPDATE (loss: {})", loss);
     }
     
     return gradient;
@@ -195,7 +191,7 @@ public class MIRA1BestHopeFearOptimizer implements OnlineOptimizer<IString,Strin
 
     if (d == null) {
       // Logger is threadsafe. No worries.
-      logger.warning("No fear derivation for: " + translationId);
+      logger.warn("No fear derivation for: {}", translationId);
     }
     
     return d == null ? dHope : new Derivation(d, dCost, dId);

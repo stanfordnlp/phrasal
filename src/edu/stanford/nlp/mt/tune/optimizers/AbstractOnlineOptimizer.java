@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineOptimizer;
@@ -16,8 +18,6 @@ import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -45,7 +45,8 @@ OnlineOptimizer<IString, String> {
   private boolean l2Regularization;
   private final String regconfig;
 
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(AbstractOnlineOptimizer.class.getName());
+
   private final int expectedNumFeatures;
 
   final double sigmaSq;
@@ -79,17 +80,8 @@ OnlineOptimizer<IString, String> {
     this.l2Regularization = !Double.isInfinite(sigma);
     this.sigmaSq = l2Regularization ? sigma * sigma : 0.0;
 
-    // Setup the logger
-    logger = Logger.getLogger(AbstractOnlineOptimizer.class
-        .getCanonicalName());
-    SystemLogger.attach(logger, LogName.ONLINE);
-    System.err.printf("AbstractOnlineOptimizer\n");
-    System.err.printf("\ttuneSetSize: %d\n", tuneSetSize);
-    System.err.printf("\tlearningRate: %e\n", learningRate);
-    System.err.printf("\tL1lambda: %e\n", L1lambda);
-    System.err.printf("\tl2Regularization: %b\n", l2Regularization);
-    System.err.printf("\tsigmaSq: %e\n", sigmaSq);
-
+    logger.info("tuneSetSize: {}  learningRate: {}  L1lambda: {}  l2Regularization: {}  sigmaSq: {}",
+        tuneSetSize, learningRate, L1lambda, l2Regularization, sigmaSq);
   }
 
   @Override

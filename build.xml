@@ -5,7 +5,6 @@
   <property name="source.path"    value="${basedir}/src" />
   <property name="source-extra.path"    value="${basedir}/src-extra" />
   <property name="tests.path"     value="${basedir}/test/src" />
-  <property name="itests.path"     value="${basedir}/itest/src" />
   <property name="kenlm.path"     value="${basedir}/src-cc" />
   
   <property name="compile.debug"       value="true"/>
@@ -45,7 +44,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <mkdir    dir="${build.path}" />
-    <javac srcdir="${source.path}:${tests.path}:${itests.path}"
+    <javac srcdir="${source.path}:${tests.path}"
           destdir="${build.path}"
             debug="${compile.debug}"
          encoding="${compile.encoding}"   
@@ -82,7 +81,7 @@ includeantruntime="false">
     <exec executable="${kenlm.path}/compile_JNI.sh" dir="${kenlm.path}" osfamily="unix"/>
   </target>
 
-  <target name="test" depends="classpath,compile"
+  <target name="test" depends="classpath,compile,kenlm"
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
@@ -94,29 +93,11 @@ includeantruntime="false">
       <batchtest fork="yes">
         <fileset dir="${tests.path}">
           <include name="**/*Test.java"/>
-          <exclude name="**/*ITest.java"/>
         </fileset>
       </batchtest>
     </junit>
   </target>
   
-  <target name="itest" depends="classpath,compile,kenlm"
-          description="Run mt integration tests">
-    <echo message="${ant.project.name}" />
-    <junit fork="true" maxmemory="2g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
-      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
-      <jvmarg value="-Djava.library.path=${basedir}/lib"/>
-      <classpath refid="classpath"/>
-      <classpath path="${build.path}"/>
-      <formatter type="brief" usefile="false"/>
-      <batchtest fork="yes">
-        <fileset dir="${itests.path}">
-          <include name="**/*ITest.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-  </target>
-
   <target name="compile-all" depends="compile"
           description="Compile everything" />
 

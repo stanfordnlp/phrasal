@@ -30,25 +30,31 @@ uploadArchives {
     }
 }
 
-// TODO(spenceg): Fix gradle build
-// Dependency configurations
-// 'compile' is the default configuration
-//configurations {
-//  extra {
-//    extendsFrom compile
-//  }
-//}
-
-// Add src-extra build target
+// Configure build targets
 sourceSets {
   main {
     java.srcDirs = ['src/']
-    resources.srcDirs = ['src/']
+    resources.srcDirs = ['resources/']
   }
   extra {
     java.srcDirs = ['src-extra/']
-    resources.srcDirs = ['src/']
+    resources.srcDirs = ['resources/']
   }
+  test {
+    java.srcDirs = ['test/']
+    resources.srcDirs = ['test-resources/','src-cc']
+  }
+}
+
+//
+// KenLM tasks: compile and add to JVM library path
+//
+task compileKenLM(type: Exec) {
+  commandLine 'src-cc/compile_JNI.sh'
+}
+
+tasks.withType(Test) {
+    systemProperty "java.library.path", "src-cc"
 }
 
 repositories {
@@ -57,10 +63,6 @@ repositories {
 
 task listDeps << {
     configurations.compile.each { File file -> println file.name }
-}
-
-task compileKenLM(type: Exec) {
-  commandLine 'src-cc/compile_JNI.sh'
 }
 
 dependencies {

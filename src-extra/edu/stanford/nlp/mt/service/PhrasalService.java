@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.Handler;
@@ -14,8 +14,6 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -27,6 +25,8 @@ import edu.stanford.nlp.util.StringUtils;
  */
 public final class PhrasalService {
 
+  private static final Logger logger = LogManager.getLogger(PhrasalService.class);
+  
   private static String DEBUG_URL = "127.0.0.1";
   private static int DEFAULT_HTTP_PORT = 8017;
   private static String SERVLET_ROOT = "/x";
@@ -41,7 +41,6 @@ public final class PhrasalService {
   private static Map<String, Integer> optionArgDefs() {
     Map<String,Integer> optionArgDefs = new HashMap<>();
     optionArgDefs.put("p", 1);
-    optionArgDefs.put("d", 1);
     optionArgDefs.put("m", 0);
     optionArgDefs.put("l", 0);
     optionArgDefs.put("u", 1);
@@ -60,7 +59,6 @@ public final class PhrasalService {
     sb.append(String.format("Usage: java %s [OPTS] phrasal_ini%n%n", PhrasalService.class.getName()));
     sb.append("Options:").append(nl);
     sb.append(" -p       : Port (default: ").append(DEFAULT_HTTP_PORT).append(")").append(nl);
-    sb.append(" -d level : Logging level from java.util.logging.Level (default: WARNING)").append(nl);
     sb.append(" -l       : Run on localhost").append(nl);
     sb.append(" -m       : Load mock servlet").append(nl);
     sb.append(" -u file  : UI to load (html file)").append(nl);
@@ -76,7 +74,6 @@ public final class PhrasalService {
   public static void main(String[] args) {
     Properties options = StringUtils.argsToProperties(args, optionArgDefs());
     int port = PropertiesUtils.getInt(options, "p", DEFAULT_HTTP_PORT);
-    Level logLevel = options.containsKey("d") ? Level.parse(options.getProperty("d")) : Level.WARNING;
     boolean loadMockServlet = PropertiesUtils.getBool(options, "m", false);
     boolean localHost = PropertiesUtils.getBool(options, "l", false);
     String uiFile = options.getProperty("u", "debug.html");
@@ -107,10 +104,6 @@ public final class PhrasalService {
     if (localHost) {
       connector.setHost(DEBUG_URL);
     }
-    SystemLogger.setLevel(LogName.SERVICE, logLevel);
-    SystemLogger.disableConsoleLogger();
-    Logger logger = Logger.getLogger(PhrasalService.class.getName());
-    SystemLogger.attach(logger, LogName.SERVICE);
     
     // Setup the servlet context
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
@@ -140,7 +133,8 @@ public final class PhrasalService {
       server.start();
       server.join();
     } catch (Exception e) {
-      logger.log(Level.SEVERE, "Servlet crashed. Service shutting down.", e);
+      logger.error("Servlet crashed. Service shutting down.");
+      e.printStackTrace();
     }
   }
 }

@@ -3,11 +3,9 @@ package edu.stanford.nlp.mt.wordcls;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -15,16 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -47,14 +44,14 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class MakeWordClasses {
 
+  private static final Logger logger = LogManager.getLogger(MakeWordClasses.class);
+  
   private final int numIterations;
   private final int numClasses;
   private final int numThreads;
   private final int vparts;
   private final int order;
   private final String inputEncoding;
-
-  private final Logger logger;
 
   private static enum OutputFormat {SRILM, TSV};
 
@@ -98,19 +95,12 @@ public class MakeWordClasses {
     this.outputFormat = OutputFormat.valueOf(
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
 
-    logger = Logger.getLogger(this.getClass().getName());
-    SystemLogger.setLevel(LogName.WORD_CLASS, Level.FINE);
-    SimpleDateFormat sdf = new SimpleDateFormat("HH-mm-ss");
-    SystemLogger.setPrefix(properties.getProperty("name", 
-        String.format("%d-classes.%s", numClasses, sdf.format(new Date()))));
-    SystemLogger.attach(logger, LogName.WORD_CLASS);
-    
-    logger.info("#iterations: " + String.valueOf(numIterations));
-    logger.info("#classes: " + String.valueOf(numClasses));
-    logger.info("order: " + String.valueOf(order));
-    logger.info("#vocabulary partitions: " + String.valueOf(vparts));
-    logger.info("Rare word threshold: " + String.valueOf(vocabThreshold));
-    logger.info("Input file encoding: " + inputEncoding);
+    logger.info("#iterations: {}", numIterations);
+    logger.info("#classes: {}", numClasses);
+    logger.info("order: {}", order);
+    logger.info("#vocabulary partitions: {}", vparts);
+    logger.info("Rare word threshold: {}", vocabThreshold);
+    logger.info("Input file encoding: {}", inputEncoding);
     if (normalizeDigits) {
       logger.info("Mapping all ASCII digit characters to 0");
     }
@@ -311,7 +301,7 @@ public class MakeWordClasses {
       if (count > 0.0) {
         objValue -= count * Math.log(count);
       } else {
-        logger.warning("Empty cluster: " + String.valueOf(classId));
+        logger.warn("Empty cluster: {}", classId);
       }
     }
     return objValue;

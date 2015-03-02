@@ -10,12 +10,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
@@ -39,8 +39,6 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
 
@@ -52,6 +50,8 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class TranslationRequestHandler implements RequestHandler {
 
+  private static final Logger logger = LogManager.getLogger(TranslationRequestHandler.class.getName());
+  
   private static final int DIVERSITY_WINDOW = 3;
   private static final int NBEST_MULTIPLIER = 20;
   private static final int MAX_RETRIES_PER_REQUEST = 2;
@@ -62,7 +62,6 @@ public class TranslationRequestHandler implements RequestHandler {
   // Threadsafe fields shared among decoding threads
   private static final ConcurrentHashMap<Language,Preprocessor> targetPreprocessorCache =
       new ConcurrentHashMap<Language,Preprocessor>();
-  private static Logger logger;
   private static AtomicInteger inputId = new AtomicInteger();
 
   /**
@@ -76,8 +75,6 @@ public class TranslationRequestHandler implements RequestHandler {
     // needed to restart the request after processing.
     wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
         new DecoderService(0, decoder), false);
-    logger = Logger.getLogger(TranslationRequestHandler.class.getName());
-    SystemLogger.attach(logger, LogName.SERVICE);
   }
 
   private static class DecoderInput {
@@ -136,7 +133,7 @@ public class TranslationRequestHandler implements RequestHandler {
 
     @Override
     public DecoderOutput process(DecoderInput input) {
-      logger.info(String.format("Input %d: %s", input.inputId, input.text));
+      logger.info("Input {}: {}", input.inputId, input.text);
       try {
         // Source pre-processing
         final long preprocStart = System.nanoTime();
@@ -163,7 +160,7 @@ public class TranslationRequestHandler implements RequestHandler {
             t2t = targetPreprocessorCache.get(targetLanguage).processAndAlign(input.tgtPrefix);
             
           } catch (Exception e) {
-            logger.log(Level.WARNING, "Prefix preprocessor threw an exception", e);
+            logger.warn("Prefix preprocessor threw an exception", e);
             Sequence<IString> prefix = IStrings.tokenize(input.tgtPrefix);
             t2t = identityAlignment(prefix);
           }
@@ -178,8 +175,8 @@ public class TranslationRequestHandler implements RequestHandler {
         final int numTranslationsToGenerate = input.n * NBEST_MULTIPLIER;
         List<RichTranslation<IString,String>> translations = 
             decoder.decode(source, input.inputId, threadId, numTranslationsToGenerate, targets, input.properties); 
-        logger.info(String.format("Input %d decoder: #translations: %d",
-            input.inputId, translations.size()));
+        logger.info("Input {} decoder: #translations: {}",
+            input.inputId, translations.size());
         
         // Result extraction and post-processing
         final long postprocStart = System.nanoTime();
@@ -230,8 +227,8 @@ public class TranslationRequestHandler implements RequestHandler {
         double decodeSeconds = (postprocStart - decodeStart) / 1e9;
         double postprocSeconds = (doneTime - postprocStart) / 1e9;
         double querySeconds = (doneTime - input.submitTime) / 1e9;
-        logger.info(String.format("Input %d timing: elapsed %.3fs (pre: %.3fs  decode: %.3fs  post: %.3fs)",
-            input.inputId, querySeconds, preprocSeconds, decodeSeconds, postprocSeconds));
+        logger.info("Input {} timing: elapsed {}s (pre: {}s  decode: {}s  post: {}s)",
+            input.inputId, querySeconds, preprocSeconds, decodeSeconds, postprocSeconds);
 
         // Create the service reply
         TranslationRequestHandler.populateRequest(input.request, translationList, alignments, scoreList);
@@ -241,7 +238,7 @@ public class TranslationRequestHandler implements RequestHandler {
       
       } catch(Exception e) {
         // Catch all exception handler. Generate an empty response.
-        logger.log(Level.SEVERE, "Decoding of request failed: " + input.toString(), e);
+        logger.error("Decoding of request failed: " + input.toString(), e);
         TranslationRequestHandler.populateRequest(input.request, new LinkedList<Sequence<IString>>(), 
             new LinkedList<List<String>>(), new LinkedList<Double>());
         input.continuation.resume(); // Re-dispatch/ resume to generate response
@@ -423,25 +420,25 @@ public class TranslationRequestHandler implements RequestHandler {
           DecoderOutput status = wrapper.poll();
           sourceId = status.inputId;
           if (status.success) {
-            logger.info(String.format("Input id %s: status %b", status.inputId, status.success));
+            logger.info("Input id {}: status {}", status.inputId, status.success);
           } else {
-            logger.severe(String.format("Input id %s: status %b", status.inputId, status.success));
+            logger.error("Input id {}: status {}", status.inputId, status.success);
           }
         }
         
       } catch (RejectedExecutionException e) {
-        logger.log(Level.SEVERE, "Threadpool corrupted by underlying exceptions. Restarting...", e);
+        logger.error("Threadpool corrupted by underlying exceptions. Restarting...", e);
         wrapper.join();
         wrapper = new MulticoreWrapper<DecoderInput,DecoderOutput>(decoder.getNumThreads(), 
             new DecoderService(0, decoder), false);
         logger.info("Restarted threadpool");
       } catch (Exception e) {
-        logger.log(Level.SEVERE, "Exception while processing request", e);
+        logger.error("Exception while processing request", e);
       }
     }
     
     if ( ! requestSubmitted) {
-      logger.severe("Decoding of request failed: " + input.toString());
+      logger.error("Decoding of request failed: {}", input);
       TranslationRequestHandler.populateRequest(input.request, new LinkedList<Sequence<IString>>(), 
           new LinkedList<List<String>>(), new LinkedList<Double>());
       input.continuation.resume(); // Re-dispatch/ resume to generate response

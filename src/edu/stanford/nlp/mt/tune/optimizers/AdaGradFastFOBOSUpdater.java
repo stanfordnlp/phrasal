@@ -2,14 +2,13 @@ package edu.stanford.nlp.mt.tune.optimizers;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-
 
 /**
  * Fast AdaGrad update rule from Duchi et al. (2010).
@@ -39,7 +38,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private int timeStepOffset = 0;
   private int lastTimeStep = 0;
   
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(AdaGradFastFOBOSUpdater.class.getName());
 
   public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
     this.rate = initialRate;
@@ -47,10 +46,6 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
     lastUpdated = new ClassicCounter<String>(expectedNumFeatures);
     this.customL1 = customL1;
-    
-    // Setup the logger
-    logger = Logger.getLogger(AdaGradFastFOBOSUpdater.class.getCanonicalName());
-    SystemLogger.attach(logger, LogName.ONLINE);
   }
 
   @Override

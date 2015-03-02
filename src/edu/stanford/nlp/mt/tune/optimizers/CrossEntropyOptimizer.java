@@ -5,15 +5,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -32,7 +32,7 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
   private int topK = DEFAULT_TOPK;
   private boolean printDebugOutput = false;
 
-  private final Logger logger;
+  private static final Logger logger = LogManager.getLogger(CrossEntropyOptimizer.class.getName());
   
   /**
    * Constructor.
@@ -43,8 +43,6 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
    */
   public CrossEntropyOptimizer(int tuneSetSize, int expectedNumFeatures, String[] args) {
     super(tuneSetSize, expectedNumFeatures, args);
-    logger = Logger.getLogger(CrossEntropyOptimizer.class.getName());
-    SystemLogger.attach(logger, LogName.ONLINE);
     
     // Process optimizer specific arguments
     for (String arg : args) {
@@ -59,8 +57,8 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
         printDebugOutput = Boolean.valueOf(args[1]);
       }
     }
-    logger.info("Top K: " + String.valueOf(topK));
-    logger.info("Debug mode: " + String.valueOf(printDebugOutput));
+    logger.info("Top K: {}", String.valueOf(topK));
+    logger.info("Debug mode: {}", String.valueOf(printDebugOutput));
   }	
 
   @Override

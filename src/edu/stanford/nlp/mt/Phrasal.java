@@ -43,8 +43,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
@@ -82,10 +84,8 @@ import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
-import edu.stanford.nlp.mt.util.SystemLogger;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -167,6 +167,8 @@ public class Phrasal {
        ;
     return sb.toString();
   }
+  
+  private static final Logger logger = LogManager.getLogger(Phrasal.class);
 
   public static final String TRANSLATION_TABLE_OPT = "ttable-file";
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
@@ -368,13 +370,6 @@ public class Phrasal {
   
   // TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
   public static void initStaticMembers(Map<String, List<String>> config) {
-    SystemLogger.disableConsoleLogger();
-    if (config.containsKey(LOG_PREFIX)) {
-      SystemLogger.setPrefix(config.get(LOG_PREFIX).get(0));
-    }
-    if (config.containsKey(LOG_LEVEL)) {
-      SystemLogger.setLevel(LogName.DECODE, Level.parse(config.get(LOG_LEVEL).get(0)));
-    }
     withGaps = config.containsKey(GAPS_OPT);
     gapOpts = withGaps ? config.get(GAPS_OPT) : null;
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))

@@ -9,7 +9,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.tune.OnlineOptimizer;
@@ -18,12 +20,9 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-
 import edu.stanford.nlp.util.Triple;
 
 /**
@@ -34,6 +33,8 @@ import edu.stanford.nlp.util.Triple;
  */
 public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,String> {
 
+  private static final Logger logger = LogManager.getLogger(PairwiseRankingOptimizerSGD.class.getName());
+  
   // Batch defaults
   //  static public final int DEFAULT_GAMMA = 5000;
   //  static public final int DEFAULT_XI = 50;
@@ -67,9 +68,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   private final double sigmaSq;
   private final String regconfig;
 
-  private final Logger logger;
   private final int expectedNumFeatures;
-
+  
   /**
    * Constructor.
    * 
@@ -139,10 +139,6 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     // L2 regularization
     this.l2Regularization = ! Double.isInfinite(sigma);
     this.sigmaSq = l2Regularization ? sigma*sigma : 0.0;
-
-    // Setup the logger
-    logger = Logger.getLogger(PairwiseRankingOptimizerSGD.class.getCanonicalName());
-    SystemLogger.attach(logger, LogName.ONLINE);
   }
 
   /**
@@ -282,7 +278,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     List<Datum> dataset = sampleNbestList(sourceId, source, scoreMetric, translations, references);
     Counter<String> gradient = computeGradient(dataset, weights, 1);
     if (dataset.size() == 0) {
-      logger.warning("Null gradient for sourceId: " + sourceId);
+      logger.warn("Null gradient for sourceId: {}", sourceId);
     }
     
     if (VERBOSE) {
@@ -312,7 +308,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
     List<Datum> dataset = sampleNbestLists(sourceIds, sources, scoreMetric, translations, references);
     Counter<String> gradient = computeGradient(dataset, weights, sourceIds.length);
     if (dataset.isEmpty()) {
-      logger.warning("Null gradient for mini-batch: " + Arrays.toString(sourceIds));
+      logger.warn("Null gradient for mini-batch: {}", Arrays.toString(sourceIds));
     }
     
     if (VERBOSE) {

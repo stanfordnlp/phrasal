@@ -16,8 +16,9 @@ import java.util.TreeMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.ArrayMath;
@@ -49,13 +50,10 @@ import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
@@ -110,7 +108,7 @@ public final class OnlineTuner {
   private List<List<Sequence<IString>>> pseudoReferences;
   private double[] referenceWeights;
   
-  private final Logger logger;  
+  private static final Logger logger = LogManager.getLogger(OnlineTuner.class.getName());
   
   /**
    * Constructor.
@@ -125,13 +123,13 @@ public final class OnlineTuner {
    * @param randomizeStartWeights
    * @param expectedNumFeatures
    * @param wrapBoundary 
+   * @param experimentName 
    */
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
-      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, boolean wrapBoundary) {
-    logger = Logger.getLogger(OnlineTuner.class.getName());
-    SystemLogger.attach(logger, LogName.ONLINE);
-    this.outputWeightPrefix = SystemLogger.getPrefix() + "." + LogName.ONLINE.toString().toLowerCase();
+      boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, 
+      boolean wrapBoundary, String experimentName) {
+    this.outputWeightPrefix = experimentName + ".online";
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
@@ -516,7 +514,7 @@ public final class OnlineTuner {
       try {
         IOUtils.writeObjectToFile(updater.getState(), epochFilePrefix + STATE_FILE_EXTENSION);
       } catch (IOException e) {
-        logger.warning("Could not write online updater state to: " + epochFilePrefix + STATE_FILE_EXTENSION);
+        logger.warn("Could not write online updater state to: {}{}", epochFilePrefix, STATE_FILE_EXTENSION);
       }
       
       // Debug info for this epoch
@@ -547,7 +545,7 @@ public final class OnlineTuner {
         nbestLists = new FlatNBestList(nbestFilename, references.size());
       } catch (IOException e) {
         e.printStackTrace();
-        logger.severe("Could not load pseudo references from:" + nbestFilename);
+        logger.error("Could not load pseudo references from: {}", nbestFilename);
         throw new RuntimeException("Could not load pseudo references from:" + nbestFilename);
       }
       List<ScoredFeaturizedTranslation<IString, String>> maxFeaturizedTranslations = searchAlgorithm
@@ -802,7 +800,6 @@ public final class OnlineTuner {
     optionMap.put("bw", 0);
     optionMap.put("a", 0);
     optionMap.put("b", 1);
-    optionMap.put("l", 1);
     optionMap.put("ef", 1);
     optionMap.put("wi", 1);
     optionMap.put("fmc", 1);
@@ -833,7 +830,6 @@ public final class OnlineTuner {
       .append("   -bw        : Set final weights to the best training epoch.").append(nl)
       .append("   -a         : Enable Collins-style parameter averaging between epochs").append(nl)
       .append("   -b num     : Mini-batch size (optimizer must support mini-batch learning").append(nl)
-      .append("   -l level   : Set java.logging level").append(nl)
       .append("   -ef        : Expected # of features").append(nl)
       .append("   -wi        : # of minibatches between intermediate weight file writeouts within an epoch").append(nl)
       .append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl)
@@ -864,7 +860,6 @@ public final class OnlineTuner {
     boolean doParameterAveraging = PropertiesUtils.getBool(opts, "a", false);
     int batchSize = PropertiesUtils.getInt(opts, "b", 1);
     boolean randomizeStartingWeights = PropertiesUtils.getBool(opts, "rw", false);
-    SystemLogger.setLevel(LogName.ONLINE, Level.parse(opts.getProperty("l", "INFO")));
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
@@ -884,8 +879,6 @@ public final class OnlineTuner {
     String wtsInitialFile = parsedArgs[3];
 
     final long startTime = System.nanoTime();
-    SystemLogger.setPrefix(experimentName);
-    SystemLogger.disableConsoleLogger();
     System.out.println("Phrasal Online Tuner");
     System.out.printf("Startup: %s%n", new Date());
     System.out.println("====================");
@@ -900,7 +893,7 @@ public final class OnlineTuner {
     final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
         optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-        expectedNumFeatures, wrapBoundary);
+        expectedNumFeatures, wrapBoundary, experimentName);
     if (refStr != null) {
       tuner.loadReferences(refStr, wrapBoundary);
     }

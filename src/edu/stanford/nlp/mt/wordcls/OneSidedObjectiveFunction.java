@@ -2,11 +2,11 @@ package edu.stanford.nlp.mt.wordcls;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.SystemLogger;
-import edu.stanford.nlp.mt.util.SystemLogger.LogName;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.TwoDimensionalCounter;
@@ -21,6 +21,8 @@ import edu.stanford.nlp.stats.TwoDimensionalCounter;
  */
 public class OneSidedObjectiveFunction {
 
+  private static final Logger logger = LogManager.getLogger(OneSidedObjectiveFunction.class.getName());
+  
   private double objValue = 0.0;
 
   private final ClustererState inputState;
@@ -29,8 +31,11 @@ public class OneSidedObjectiveFunction {
   private final Counter<Integer> deltaClassCount;
   private final TwoDimensionalCounter<Integer, NgramHistory> deltaClassHistoryCount;
 
-  private final Logger logger;
-  
+  /**
+   * Constructor.
+   * 
+   * @param input
+   */
   public OneSidedObjectiveFunction(ClustererState input) {
     // Setup delta data structures
     this.inputState = input;
@@ -42,9 +47,6 @@ public class OneSidedObjectiveFunction {
       localWordToClass.put(word, classId);
     }
     this.objValue = input.currentObjectiveValue;
-    
-    logger = Logger.getLogger(this.getClass().getName());
-    SystemLogger.attach(logger, LogName.WORD_CLASS);
   }
 
   public PartialStateUpdate cluster() {
@@ -69,8 +71,8 @@ public class OneSidedObjectiveFunction {
         // Should be the same computation, but with updates to state
         double newObjValue = move(word, currentClass, argMaxClass, true);
         assert newObjValue == maxObjectiveValue;
-//        logger.info(String.format("%s %d --> %d (%.3f)", word.toString(), currentClass, argMaxClass, 
-//            newObjValue - objValue));
+        logger.info("{} {} --> {} ({})", word, currentClass, argMaxClass, 
+            newObjValue - objValue);
         objValue = newObjValue;
       }
     }

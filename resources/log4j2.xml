@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn" name="phrasal" packages="">
+  <Properties>
+    <Property name="log-path">/var/log</Property>
+  </Properties>
+
+  <Appenders>
+    <RollingFile name="file-log" fileName="${log-path}/phrasal.log"
+filePattern="${log-path}/phrasal-%d{yyyy-MM-dd}.log">
+      <PatternLayout>
+	<pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+      </PatternLayout>
+      <Policies>
+	<OnStartupTriggeringPolicy />
+	<SizeBasedTriggeringPolicy size="250 MB" />
+	<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+      </Policies>
+    </RollingFile>
+
+    <Async name="Async">
+      <AppenderRef ref="file-log"/>
+    </Async>
+
+    <Console name="console" target="SYSTEM_OUT">
+      <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
+    </Console>
+  </Appenders>
+
+  <Loggers>
+    <Logger name="edu.stanford.nlp.mt" level="info" additivity="false">
+      <appender-ref ref="file-log" level="info"/>
+    </Logger>
+
+    <Root level="warn" additivity="false">
+      <appender-ref ref="console"/>
+    </Root>
+  </Loggers>
+</Configuration>
