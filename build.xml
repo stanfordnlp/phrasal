@@ -4,7 +4,7 @@
   <property name="build.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
   <property name="source-extra.path"    value="${basedir}/src-extra" />
-  <property name="tests.path"     value="${basedir}/test/src" />
+  <property name="tests.path"     value="${basedir}/test" />
   <property name="kenlm.path"     value="${basedir}/src-cc" />
   
   <property name="compile.debug"       value="true"/>
@@ -25,7 +25,7 @@
       <pathelement path="${project.core}/classes" />
 	  
       <!-- depends on local libs -->
-      <fileset dir="${basedir}/lib">
+      <fileset dir="${basedir}/libs">
         <include name="*.jar"/>
         <exclude name="javanlp*"/>
       </fileset>
@@ -85,8 +85,7 @@ includeantruntime="false">
           description="Run mt unit tests">
     <echo message="${ant.project.name}" />
     <junit fork="true" maxmemory="4g" printsummary="off" outputtoformatters="false" forkmode="perBatch" haltonfailure="true">
-      <jvmarg value="-Djava.library.path=${basedir}/lib"/>
-      <sysproperty key="java.library.path" path="${basedir}/src-cc"/>
+      <jvmarg value="-Djava.library.path=${basedir}/src-cc"/>
       <classpath refid="classpath"/>
       <classpath path="${build.path}"/>
       <formatter type="brief" usefile="false"/>

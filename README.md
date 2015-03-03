@@ -32,7 +32,9 @@ Installation of Gradle is required. Follow the Linux instructions above. Then be
 
 1. Ensure that JAVANLP_HOME is set.
 
-2. `ant all`
+2. Download external dependencies: `gradle copyDeps`
+
+3. `ant all`
 
 
 ## Contributors

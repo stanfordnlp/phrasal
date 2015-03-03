@@ -65,6 +65,15 @@ task listDeps << {
     configurations.compile.each { File file -> println file.name }
 }
 
+task copyDeps(type: Copy) {
+  from configurations.runtime
+  into 'libs'
+
+  // Remove conflicting versions from CoreNLP dependencies
+  exclude 'log4j-1.2.16.jar'
+  exclude 'CoreNLP-3.4.1.jar'
+}
+
 dependencies {
   // TERp jars that are no longer available on the web.
   compile fileTree(dir: 'lib', include: '*.jar')
