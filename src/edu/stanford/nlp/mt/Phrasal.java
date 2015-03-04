@@ -260,7 +260,7 @@ public class Phrasal {
   /**
    * Inference objects, one per thread
    */
-  public List<Inferer<IString, String>> inferers;
+  private List<Inferer<IString, String>> inferers;
 
   /**
    * Holds the model weights, one per inferer. The model weights have a shared feature index.
