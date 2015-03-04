@@ -53,10 +53,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     maxDistortion = builder.maxDistortion;
 
     if (maxDistortion != -1) {
-      System.err.printf("Cube pruning decoder %d. Distortion limit: %d%n", builder.decoderId, 
+      logger.info("Cube pruning decoder {}. Distortion limit: {}", builder.decoderId, 
           maxDistortion);
     } else {
-      System.err.printf("Cube pruning decoder %d. No hard distortion limit%n", builder.decoderId);
+      logger.info("Cube pruning decoder {}. No hard distortion limit", builder.decoderId);
     }    
   }
 
