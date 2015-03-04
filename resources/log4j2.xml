@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn" name="phrasal" packages="">
   <Properties>
-    <Property name="log-path">/var/log/phrasal</Property>
+    <Property name="log-path">logs</Property>
   </Properties>
 
   <Appenders>
