@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.reflect.TypeToken;
 
-import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
+import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
