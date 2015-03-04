@@ -25,7 +25,7 @@ import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
-import edu.stanford.nlp.mt.process.ProcessorFactory.Language;
+import edu.stanford.nlp.mt.service.Messages.Language;
 import edu.stanford.nlp.mt.service.PhrasalServlet;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.TranslationReply;
