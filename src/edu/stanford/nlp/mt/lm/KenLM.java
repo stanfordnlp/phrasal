@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * KenLM language model support via JNI.
@@ -111,27 +110,6 @@ public class KenLM {
    */
   public float score(int words[]) {
     return scoreFromMarshalled(marshalledScore(words));
-  }
-
-  /**
-   * Just get the score of a sequence of words (in normal order), i.e. p(words[words.size-1] | words[0..words.size-2])
-   */
-  // Thang Mar14
-  public float score(List<String> words) {
-  	int[] wordIds = new int[words.size()];
-  	int i=words.size()-1;
-  	for (String word : words) {
-			wordIds[i--] = index(word);
-		}
-    return score(wordIds);
-  }
-  public float score(String[] words) {
-  	int[] wordIds = new int[words.length];
-  	int i=words.length-1;
-  	for (String word : words) {
-			wordIds[i--] = index(word);
-		}
-    return score(wordIds);
   }
   
   /**

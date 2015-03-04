@@ -21,6 +21,8 @@ import edu.stanford.nlp.mt.util.Sequences;
  */
 public final class LanguageModelPerplexity {
   
+  private LanguageModelPerplexity() {}
+  
   /**
    * 
    * @param args
