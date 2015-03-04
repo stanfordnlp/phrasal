@@ -335,18 +335,33 @@ public class Phrasal {
   
   public Preprocessor getPreprocessor() { return preprocessor; }
   public Postprocessor getPostprocessor() { return postprocessor; }
-  
+
   /**
-   * Access the decoder's scorer, which contains the model weights. THere is one scorer
-   * per thread.
-   *
-   * @return the scorer
+   * Access each decoder's thread-local Scorer, which contains the model weights.
+   * 
+   * @param threadId
+   * @return
    */
   public Scorer<String> getScorer(int threadId) {
-    if(threadId >= 0 && threadId < numThreads) {
-      return scorers.get(threadId);
+    if(threadId < 0 && threadId >= numThreads) {
+      logger.error("Thread id out of range: {} / {}", threadId, numThreads);
+      throw new IllegalArgumentException();
     }
-    throw new RuntimeException("Illegal thread id: " + String.valueOf(threadId));
+    return scorers.get(threadId);
+  }
+  
+  /**
+   * Convenience class for setting the thread-local model weights for a decoder.
+   * 
+   * @param threadId
+   * @param w
+   */
+  public void setModelWeights(int threadId, Counter<String> w) {
+    if(threadId < 0 && threadId >= numThreads) {
+      logger.error("Thread id out of range: {} / {}", threadId, numThreads);
+      throw new IllegalArgumentException();
+    }
+    scorers.get(threadId).updateWeights(w);
   }
 
   /**
