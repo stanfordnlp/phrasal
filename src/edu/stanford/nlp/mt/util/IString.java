@@ -12,7 +12,7 @@ import java.io.Serializable;
  * @author Spence Green
  *
  */
-public class IString implements CharSequence, Serializable, HasIntegerIdentity, Comparable<IString> {
+public class IString implements CharSequence, Serializable, Comparable<IString> {
 
   private static final long serialVersionUID = 7535218805035757457L;
 
@@ -71,7 +71,6 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity, 
     return TranslationModelIndex.systemGet(id);
   }
 
-  @Override
   public int getId() {
     return id;
   }
