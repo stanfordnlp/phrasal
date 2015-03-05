@@ -37,7 +37,7 @@ public class TranslationModelIndex {
    * @param initialCapacity
    */
   public TranslationModelIndex(int initialCapacity) {
-    index = new NegativeHashIndex<String>(initialCapacity);
+    index = new DecoderLocalIndex<String>(initialCapacity);
   }
 
   /**

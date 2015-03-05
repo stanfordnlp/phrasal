@@ -14,13 +14,13 @@ import edu.stanford.nlp.util.Index;
  * @author Spence Green
  *
  */
-public class NegativeHashIndexTest {
+public class DecoderLocalIndexTest {
 
   protected Index<String> index;
 
   @Before
   public void setUp() {
-    index = new NegativeHashIndex<String>();
+    index = new DecoderLocalIndex<String>();
     index.add("The");
     index.add("Beast");
   }
