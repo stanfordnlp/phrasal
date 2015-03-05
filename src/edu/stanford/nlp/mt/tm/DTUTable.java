@@ -339,12 +339,12 @@ implements PhraseTable<IString> {
     int[] arr = new int[seq.size()];
     for (int i = 0; i < seq.size(); ++i) {
       IString el = seq.get(i);
-      char c0 = el.word().charAt(0);
+      char c0 = el.toString().charAt(0);
       if (Character.isUpperCase(c0)) {
-        if (el.word().startsWith(GAP_STR.word())) {
+        if (el.toString().startsWith(GAP_STR.toString())) {
           arr[i] = GAP_STR.id;
         } else {
-          System.err.println("Ill-formed symbol: "+el.word());
+          System.err.println("Ill-formed symbol: "+ el.toString());
           arr[i] = el.id;
         }
       } else {
@@ -365,11 +365,11 @@ implements PhraseTable<IString> {
     List<float[]> list = new LinkedList<float[]>();
     for (int i = 0; i < seq.size(); ++i) {
       IString el = seq.get(i);
-      char c0 = el.word().charAt(0);
+      char c0 = el.toString().charAt(0);
       if (Character.isUpperCase(c0)) {
-        if (el.word().startsWith(GAP_STR.word())) {
+        if (el.toString().startsWith(GAP_STR.toString())) {
           if (el.id != GAP_STR.id) {
-            String[] strs = pattern.split(el.word());
+            String[] strs = pattern.split(el.toString());
             assert (strs.length == 5);
             float[] scores = new float[strs.length - 1];
             for (int j = 1; j < strs.length; ++j) {

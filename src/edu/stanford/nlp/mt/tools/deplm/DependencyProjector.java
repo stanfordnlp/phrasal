@@ -124,12 +124,12 @@ public class DependencyProjector {
       if (idx > -1)  {
         if (parentString.length() > 0)
           System.out.print(" ");
-        System.out.print(tokens.get(idx).word());
+        System.out.print(tokens.get(idx).toString());
         
       }
      System.out.println("");
     } else {
-      String word = idx > -1 ? tokens.get(idx).word() : "";
+      String word = idx > -1 ? tokens.get(idx).toString() : "";
       String baseString = parentString.length() > 0 && idx > -1 ? parentString + " " + word : parentString + word;
       for (Integer child : dependencies.get(idx)) {
         printDependencyString(dependencies, child, tokens, baseString);
@@ -145,27 +145,27 @@ public class DependencyProjector {
             NavigableSet<Integer> rightNodes =  dependencies.get(idx).tailSet(idx, false);
   
             if (!leftNodes.isEmpty()) {
-              leftDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
+              leftDepLMWriter.write(tokens.get(idx).toString() + HEAD_SUFFIX);
               leftDepLMWriter.write(" ");
               for (Integer child : leftNodes.descendingSet()) {
-                leftDepLMWriter.write(tokens.get(child).word());
+                leftDepLMWriter.write(tokens.get(child).toString());
                 leftDepLMWriter.write(" ");
               }
               leftDepLMWriter.write("\n");
             }
             
             if (!rightNodes.isEmpty()) {
-              rightDepLMWriter.write(tokens.get(idx).word() + HEAD_SUFFIX);
+              rightDepLMWriter.write(tokens.get(idx).toString() + HEAD_SUFFIX);
               rightDepLMWriter.write(" ");
               for (Integer child : rightNodes) {
-                rightDepLMWriter.write(tokens.get(child).word());
+                rightDepLMWriter.write(tokens.get(child).toString());
                 rightDepLMWriter.write(" ");
               }
               rightDepLMWriter.write("\n");
             }          
         } else {
           for (int headIdx : dependencies.get(idx)) {
-            headDepLMWriter.write(tokens.get(headIdx).word());
+            headDepLMWriter.write(tokens.get(headIdx).toString());
             headDepLMWriter.write("\n");
           }
         }
@@ -215,7 +215,7 @@ public class DependencyProjector {
 
     for (int i = 0; i < len; i++) {
       IString token = alignment.e().get(i);
-      if (token.word().length() < 1 || !isWord(token.word()))
+      if (token.toString().length() < 1 || !isWord(token.toString()))
         continue;
       if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1)
         continue;
@@ -350,7 +350,7 @@ public class DependencyProjector {
     posTags = new ArrayList<>(len);
     
     for (int j = 0; j < len; j++) {
-      tokens.add(alignment.e().get(j).word());
+      tokens.add(alignment.e().get(j).toString());
       SortedSet<Integer> sourceIdxs = alignment.e2f(j);
       if (!sourceIdxs.isEmpty()) {
         posTags.add(posTagLabels.get(sourceIdxs.last()).value());

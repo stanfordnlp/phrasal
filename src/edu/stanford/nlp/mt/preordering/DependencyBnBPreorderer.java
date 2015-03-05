@@ -776,15 +776,15 @@ public class DependencyBnBPreorderer {
     }
     
     String getWordOrClass(IndexedWord iw) {
-      if (mostFrequentTokens.contains(iw.word().toLowerCase())) {
-        return iw.word().toLowerCase();
+      if (mostFrequentTokens.contains(iw.toString().toLowerCase())) {
+        return iw.toString().toLowerCase();
       }
       return this.getClass(iw);
     }
     
     String getClass(IndexedWord iw) {
-      //return iw.word();
-      return classMap.get(new IString(iw.word().toLowerCase())).word();
+      //return iw.toString();
+      return classMap.get(new IString(iw.toString().toLowerCase())).toString();
     }
     
   }

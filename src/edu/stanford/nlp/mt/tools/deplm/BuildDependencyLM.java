@@ -52,13 +52,13 @@ public class BuildDependencyLM {
       if (dep.gov().index() > 0) {
         SortedSet<Integer> govIds = alignment.f2e(dep.gov().index() - 1);
         if (govIds.size() > 0 && depIds.size() > 0) {
-          String head = alignment.e().get(govIds.last()).word();
-          String dependent = alignment.e().get(depIds.last()).word();
+          String head = alignment.e().get(govIds.last()).toString();
+          String dependent = alignment.e().get(depIds.last()).toString();
           dependencyCounter.incrementCount(head, dependent);
 
         }
       } else if (depIds.size() > 0) {
-        String dependent = alignment.e().get(depIds.last()).word();
+        String dependent = alignment.e().get(depIds.last()).toString();
         dependencyCounter.incrementCount("ROOT", dependent);
       }
     }

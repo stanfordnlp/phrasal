@@ -105,7 +105,7 @@ RuleFeaturizer<IString, String> {
     
     IString[] array = new IString[targetSequence.size()];
     for (int i = 0; i < array.length; ++i) {
-      if (wrapBoundary && (targetSequence.get(i).word().equals(this.startToken.word()) || targetSequence.get(i).word().equals(this.endToken.word())))
+      if (wrapBoundary && (targetSequence.get(i).equals(this.startToken) || targetSequence.get(i).equals(this.endToken)))
         array[i] = targetSequence.get(i);
       else
         array[i] = targetClassMap.get(targetSequence.get(i));

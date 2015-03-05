@@ -278,7 +278,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       
       IString tgtToken = f.targetPhrase.get(i);
-      if (tgtToken.word().length() == 0 || TokenUtils.isPunctuation(tgtToken.word()))
+      if (tgtToken.length() == 0 || TokenUtils.isPunctuation(tgtToken.toString()))
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
         // Unaligned -- try to attach to the next translated word in the rule
