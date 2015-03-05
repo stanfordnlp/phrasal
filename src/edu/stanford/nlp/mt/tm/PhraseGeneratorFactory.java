@@ -21,7 +21,7 @@ public class PhraseGeneratorFactory {
   public static final String QUERY_LIMIT_OPTION = "querylimit";
   public static final String FEATURE_PREFIX_OPTION = "featpref";
   public static final String SEPARATOR = ":";
-
+  
   /**
    * Factory method for phrase table loading.
    * 
@@ -31,7 +31,7 @@ public class PhraseGeneratorFactory {
    */
   @SuppressWarnings("unchecked")
   static public <FV> Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> factory(
-      String pgName, String filenames, String...options) throws IOException {
+      String pgName, String filename, String...options) throws IOException {
     
     // Parse options
     int queryLimit = -1;
@@ -57,20 +57,18 @@ public class PhraseGeneratorFactory {
       List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
       List<PhraseTable<IString>> tables = new LinkedList<>();
 
-      for (String filename : filenames.split(SEPARATOR)) {
-        PhraseGenerator<IString,FV> pt;
-        if (withGaps) {
-          pt = new DTUTable<FV>(filename);
+      PhraseGenerator<IString,FV> pt;
+      if (withGaps) {
+        pt = new DTUTable<FV>(filename);
+      } else {
+        if (featurePrefix == null) {
+          pt = new FlatPhraseTable<FV>(filename);
         } else {
-          if (featurePrefix == null) {
-            pt = new FlatPhraseTable<FV>(filename);
-          } else {
-            pt = new FlatPhraseTable<FV>(featurePrefix, filename);
-          }
+          pt = new FlatPhraseTable<FV>(featurePrefix, filename);
         }
-        generators.add(pt);
-        tables.add((PhraseTable<IString>) pt);
       }
+      generators.add(pt);
+      tables.add((PhraseTable<IString>) pt);
 
       CombinedPhraseGenerator<IString,FV> gen = queryLimit == -1 ? 
           new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE) :
