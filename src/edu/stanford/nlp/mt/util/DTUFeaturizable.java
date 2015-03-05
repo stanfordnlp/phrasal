@@ -15,7 +15,7 @@ public class DTUFeaturizable<TK, FV> extends Featurizable<TK, FV> {
 
   public DTUFeaturizable(Derivation<TK, FV> hypothesis,
       Rule<TK> abstractOption, int sourceInputId,
-      int nbStatefulFeaturizers, RawSequence<TK> targetPhrase,
+      int nbStatefulFeaturizers, Sequence<TK> targetPhrase,
       boolean hasPendingPhrases, int segmentIdx) {
     super(hypothesis, sourceInputId, nbStatefulFeaturizers, targetPhrase,
         hasPendingPhrases, segmentIdx > 0);

@@ -248,18 +248,17 @@ implements PhraseTable<IString> {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
-                RawSequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
+                Sequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
                 for (int i = 0; i < multiIntTransOpt.dtus.length; ++i) {
-                  dtus[i] = new RawSequence<IString>(multiIntTransOpt.dtus[i],
-                      IString.identityIndex());
+                  dtus[i] = IStrings.getIStringSequence(multiIntTransOpt.dtus[i]);
                 }
                 transOpts.add(new DTURule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
                         s.foreign), intTransOpt.alignment));
               } else {
                 // No gaps in target:
-                RawSequence<IString> translation = new RawSequence<IString>(
-                    intTransOpt.targetArray, IString.identityIndex());
+                Sequence<IString> translation = IStrings.getIStringSequence(
+                    intTransOpt.targetArray);
                 transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
                     new RawSequence<IString>(s.foreign), intTransOpt.alignment));

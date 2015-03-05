@@ -13,7 +13,6 @@ import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 
@@ -186,7 +185,7 @@ State<Derivation<TK, FV>> {
       Rule<TK> abstractRule, int insertionPosition,
       Derivation<TK, FV> base, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
-      RawSequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
+      Sequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.rule = rule;

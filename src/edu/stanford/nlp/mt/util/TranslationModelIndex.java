@@ -40,20 +40,51 @@ public class TranslationModelIndex {
     index = new NegativeHashIndex<String>(initialCapacity);
   }
 
+  /**
+   * System index size.
+   * 
+   * @return
+   */
   public static int systemSize() {
     return systemIndex.size();
   }
 
+  /**
+   * Get a string for this id from the system index.
+   * 
+   * @param i
+   * @return
+   */
   public static String systemGet(int i) {
     return systemIndex.get(i);
   }
 
+  /**
+   * Get the id for a string from the system index.
+   * 
+   * @param o
+   * @return
+   */
   public static int systemIndexOf(String o) {
     return systemIndex.indexOf(o);
   }
 
+  /**
+   * Add a string to the index.
+   * 
+   * @param o
+   * @return
+   */
   public static int systemAdd(String o) {
     return systemIndex.addToIndex(o);
+  }
+  
+  /**
+   * Clear the system index.
+   * 
+   */
+  public static void systemClear() {
+    systemIndex.clear();
   }
 
   /**
@@ -100,7 +131,7 @@ public class TranslationModelIndex {
     return index.toString();
   }
 
-  // Thread local variable containing each thread's ID
+  // Thread local copies of translation model indices
   private static final ThreadLocal<TranslationModelIndex> threadLocalCache =
       new ThreadLocal<TranslationModelIndex>();
 

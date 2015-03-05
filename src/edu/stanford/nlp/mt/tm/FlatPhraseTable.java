@@ -219,8 +219,8 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     for (PhraseTableEntry intTransOpt : intTransOpts) {
-      RawSequence<IString> targetSequence = new RawSequence<IString>(
-          intTransOpt.targetArray, IString.identityIndex());
+      Sequence<IString> targetSequence = IStrings.getIStringSequence(
+          intTransOpt.targetArray);
       transOpts.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, targetSequence, sourceSequence,
           intTransOpt.alignment));
