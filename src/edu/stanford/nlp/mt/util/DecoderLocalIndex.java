@@ -21,7 +21,7 @@ import edu.stanford.nlp.util.Index;
  *
  * @param <E>
  */
-public class NegativeHashIndex<E> implements Index<E> {
+public class DecoderLocalIndex<E> implements Index<E> {
 
   private static final long serialVersionUID = 2165256186126958509L;
 
@@ -33,7 +33,7 @@ public class NegativeHashIndex<E> implements Index<E> {
   /**
    * Constructor.
    */
-  public NegativeHashIndex() {
+  public DecoderLocalIndex() {
     index = new HashMap<>();
     objects = new ArrayList<>();
   }
@@ -43,7 +43,7 @@ public class NegativeHashIndex<E> implements Index<E> {
    * 
    * @param initialCapacity
    */
-  public NegativeHashIndex(int initialCapacity) {
+  public DecoderLocalIndex(int initialCapacity) {
     index = new HashMap<>(initialCapacity);
     objects = new ArrayList<>(initialCapacity);
   }
