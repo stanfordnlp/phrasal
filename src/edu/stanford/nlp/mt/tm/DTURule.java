@@ -32,7 +32,7 @@ public class DTURule<T> extends Rule<T> {
     StringBuilder sbuf = new StringBuilder("DTURule: \"");
     for (int i = 0; i < dtus.length; ++i) {
       if (i > 0)
-        sbuf.append(" ").append(DTUTable.GAP_STR.word()).append(" ");
+        sbuf.append(" ").append(DTUTable.GAP_STR.toString()).append(" ");
       sbuf.append(dtus[i].toString());
     }
     sbuf.append(String.format("\" scores: %s%n", Arrays.toString(scores)));

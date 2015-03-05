@@ -89,7 +89,7 @@ public class DependencyProjectorCoNLL {
     int fragmentCount = 1;
     for (int i = 0; i < tokens.size(); i++) {
       if (reverseDependencies.get(i) == null) {
-        if (tokens.get(i).word().length() > 0 && isWord(tokens.get(i).word())) {
+        if (tokens.get(i).toString().length() > 0 && isWord(tokens.get(i).toString())) {
           reverseDependencies.put(i, -2);
           fragmentCount++;
         } else {
@@ -106,7 +106,7 @@ public class DependencyProjectorCoNLL {
     }
     
     for (int i = 0; i < tokens.size(); i++) {
-      String token = tokens.get(i).word();
+      String token = tokens.get(i).toString();
       String parts[] = token.split("_");
       String pos = "POS";
       String word = token;
@@ -236,7 +236,7 @@ public class DependencyProjectorCoNLL {
 
     for (int i = 0; i < len; i++) {
       IString token = alignment.e().get(i);
-      if (token.word().length() < 1 || !isWord(token.word()))
+      if (token.toString().length() < 1 || !isWord(token.toString()))
         continue;
       if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1) {
         
@@ -306,10 +306,10 @@ public class DependencyProjectorCoNLL {
     //TODO: What to do about circles?
     /*for (int i = 0; i < len; i++) {
       IString token = alignment.e().get(i);
-      if (token.word().length() < 1 || !isWord(token.word()))
+      if (token.toString().length() < 1 || !isWord(token.toString()))
         continue;
       if (alignment.e2f(i) == null || alignment.e2f(i).size() < 1) {
-        String parts[] = token.word().split("_");
+        String parts[] = token.toString().split("_");
         if (parts.length > 1) {
           String pos = parts[parts.length - 1];
           int dir = DEFAULT_ATTACHMENT.get(pos.toLowerCase());

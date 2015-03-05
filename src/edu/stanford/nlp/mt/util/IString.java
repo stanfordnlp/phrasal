@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.util;
 
-import edu.stanford.nlp.ling.HasWord;
-
 import java.io.Serializable;
 
 /**
@@ -14,8 +12,7 @@ import java.io.Serializable;
  * @author Spence Green
  *
  */
-public class IString implements CharSequence, Serializable, HasIntegerIdentity,
-HasWord, Comparable<IString> {
+public class IString implements CharSequence, Serializable, HasIntegerIdentity, Comparable<IString> {
 
   private static final long serialVersionUID = 7535218805035757457L;
 
@@ -77,16 +74,6 @@ HasWord, Comparable<IString> {
   @Override
   public int getId() {
     return id;
-  }
-
-  @Override
-  public String word() {
-    return toString();
-  }
-
-  @Override
-  public void setWord(String word) {
-    throw new UnsupportedOperationException();
   }
 
   @Override
