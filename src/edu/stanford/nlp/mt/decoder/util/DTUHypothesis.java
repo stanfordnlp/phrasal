@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.RawSequence;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.Pair;
 
@@ -502,7 +503,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
     hasExpired = true; // Answer: no
   }
 
-  private static <TK, FV> RawSequence<TK> getTranslation(Derivation<TK, FV> hyp) {
+  private static <TK, FV> Sequence<TK> getTranslation(Derivation<TK, FV> hyp) {
 
     if (hyp instanceof DTUHypothesis) {
 
@@ -524,7 +525,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
         : null;
   }
 
-  private static <TK> RawSequence<TK> getSegment(Rule<TK> option,
+  private static <TK> Sequence<TK> getSegment(Rule<TK> option,
       int idx) {
     if (option instanceof DTURule)
       return ((DTURule<TK>) option).dtus[idx];

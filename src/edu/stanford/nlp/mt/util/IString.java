@@ -1,28 +1,23 @@
 package edu.stanford.nlp.mt.util;
 
 import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
 import java.io.Serializable;
-import java.io.Writer;
-import java.io.IOException;
-import java.util.List;
-import java.util.Collection;
-import java.util.Iterator;
 
 /**
  * Represents a String with a corresponding integer ID. Keeps a static index of
  * all the Strings, indexed by ID.
  *
+ * TODO(spenceg) Add support for decoder-local indices.
+ *
  * @author danielcer
+ * @author Spence Green
  *
  */
 public class IString implements CharSequence, Serializable, HasIntegerIdentity,
-    HasWord, Comparable<IString> {
-  private static final long serialVersionUID = 2718L;
+HasWord, Comparable<IString> {
 
-  public static final Index<String> index = new ConcurrentHashIndex<String>(100000);
+  private static final long serialVersionUID = 7535218805035757457L;
 
   public final int id;
 
@@ -30,26 +25,31 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
    * Constructor.
    */
   public IString(String string) {
-    id = index.addToIndex(string);
+    id = TranslationModelIndex.systemAdd(string);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param id
+   */
   public IString(int id) {
     this.id = id;
   }
 
   @Override
   public char charAt(int charIndex) {
-    return index.get(id).charAt(charIndex);
+    return TranslationModelIndex.systemGet(id).charAt(charIndex);
   }
 
   @Override
   public int length() {
-    return index.get(id).length();
+    return TranslationModelIndex.systemGet(id).length();
   }
 
   @Override
   public CharSequence subSequence(int start, int end) {
-    return index.get(id).subSequence(start, end);
+    return TranslationModelIndex.systemGet(id).subSequence(start, end);
   }
 
   @Override
@@ -71,16 +71,12 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
 
   @Override
   public String toString() {
-    return index.get(id);
+    return TranslationModelIndex.systemGet(id);
   }
 
   @Override
   public int getId() {
     return id;
-  }
-
-  public static String getString(int id) {
-    return index.get(id);
   }
 
   @Override
@@ -93,110 +89,8 @@ public class IString implements CharSequence, Serializable, HasIntegerIdentity,
     throw new UnsupportedOperationException();
   }
 
-  private static WrapperIndex wrapperIndex; // = null;
-
-  public static Index<IString> identityIndex() {
-    if (wrapperIndex == null) {
-      wrapperIndex = new WrapperIndex();
-    }
-    return wrapperIndex;
-  }
-
-  private static class WrapperIndex implements Index<IString> {
-
-    private static final long serialVersionUID = 2718L;
-
-    @Override
-    public boolean contains(Object o) {
-      if (!(o instanceof IString))
-        return false;
-      return true; // all IStrings are in the index;
-    }
-
-    @Override
-    public IString get(int i) {
-      return new IString(i);
-    }
-
-    @Override
-    public int indexOf(IString o) {
-      return o.id;
-    }
-
-    @Override
-    public int addToIndex(IString o) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    @Deprecated
-    public int indexOf(IString o, boolean add) {
-      return o.id;
-    }
-
-    @Override
-    public int size() {
-      return index.size();
-    }
-
-    @Override
-    public List<IString> objectsList() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Collection<IString> objects(int[] ints) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean isLocked() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void lock() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void unlock() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void saveToWriter(Writer out) throws IOException {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void saveToFilename(String s) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Iterator<IString> iterator() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean add(IString iString) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends IString> c) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clear() {
-      throw new UnsupportedOperationException();
-    }
-  }
-
   @Override
   public int compareTo(IString o) {
-    return index.get(id).compareTo(index.get(o.id));
+    return TranslationModelIndex.systemGet(id).compareTo(TranslationModelIndex.systemGet(o.id));
   }
 }

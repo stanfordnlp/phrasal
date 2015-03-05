@@ -52,13 +52,19 @@ public class TranslationModelIndexTest {
    */
   @Test
   public void testSystemIndex() {
+    // Sanity check
+    TranslationModelIndex.systemClear();
+    
     TranslationModelIndex.systemAdd("We");
     TranslationModelIndex.systemAdd("three");
     TranslationModelIndex.systemAdd("kings");
     assertEquals(3, TranslationModelIndex.systemSize());
-    assertEquals(0,TranslationModelIndex.systemIndexOf("We"));
-    assertEquals(1,TranslationModelIndex.systemIndexOf("three"));
-    assertEquals(2,TranslationModelIndex.systemIndexOf("kings"));
+    assertEquals(0, TranslationModelIndex.systemIndexOf("We"));
+    assertEquals(1, TranslationModelIndex.systemIndexOf("three"));
+    assertEquals(2, TranslationModelIndex.systemIndexOf("kings"));
+    
+    // Clean up after ourselves
+    TranslationModelIndex.systemClear();
   }
 
   /**
