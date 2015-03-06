@@ -67,11 +67,11 @@ task listDeps << {
 
 task copyDeps(type: Copy) {
   from configurations.runtime
-  into 'libs'
+  into 'lib'
 
   // Remove conflicting versions from CoreNLP dependencies
   exclude 'log4j-1.2.16.jar'
-  exclude 'CoreNLP-3.4.1.jar'
+  exclude 'CoreNLP*.jar'
 }
 
 dependencies {
