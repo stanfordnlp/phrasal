@@ -6,8 +6,6 @@ import java.io.Serializable;
  * Represents a String with a corresponding integer ID. Keeps a static index of
  * all the Strings, indexed by ID.
  *
- * TODO(spenceg) Add support for decoder-local indices.
- *
  * @author danielcer
  * @author Spence Green
  *
@@ -15,7 +13,7 @@ import java.io.Serializable;
 public class IString implements CharSequence, Serializable, Comparable<IString> {
 
   private static final long serialVersionUID = 7535218805035757457L;
-
+  
   public final int id;
 
   /**
@@ -31,6 +29,9 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
    * @param id
    */
   public IString(int id) {
+    if (id == TranslationModelIndex.UNKNOWN_ID) {
+      throw new IllegalArgumentException("Invalid id: " + String.valueOf(id));
+    }
     this.id = id;
   }
 

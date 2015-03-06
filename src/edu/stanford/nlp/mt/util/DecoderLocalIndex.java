@@ -24,8 +24,8 @@ import edu.stanford.nlp.util.Index;
 public class DecoderLocalIndex<E> implements Index<E> {
 
   private static final long serialVersionUID = 2165256186126958509L;
-
-  private static final int NOT_IN_INDEX = -1;
+  
+  public static final int MIN_INDEX = TranslationModelIndex.UNKNOWN_ID - 1;
   
   private final Map<E,Integer> index;
   private final List<E> objects;
@@ -70,7 +70,7 @@ public class DecoderLocalIndex<E> implements Index<E> {
 
   @Override
   public int indexOf(E o) {
-    return index.containsKey(o) ? index.get(o) : NOT_IN_INDEX;
+    return index.containsKey(o) ? index.get(o) : TranslationModelIndex.UNKNOWN_ID;
   }
 
   @Override
@@ -79,7 +79,7 @@ public class DecoderLocalIndex<E> implements Index<E> {
       return index.get(o);
     
     } else {
-      final int newIndex = -1 * (index.size() + 2);
+      final int newIndex = -1 * (index.size() - MIN_INDEX);
       index.put(o, newIndex);
       objects.add(o);
       return newIndex;
@@ -150,7 +150,7 @@ public class DecoderLocalIndex<E> implements Index<E> {
 
   @Override
   public boolean add(E e) {
-    return addToIndex(e) != NOT_IN_INDEX;
+    return addToIndex(e) != TranslationModelIndex.UNKNOWN_ID;
   }
 
   @Override

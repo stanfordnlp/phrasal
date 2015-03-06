@@ -18,9 +18,12 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
  */
 public class TranslationModelIndex {
 
+  // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
   private static final Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
-
+  public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
+  
+  // Thread-local translation model index
   private static final int INITIAL_CAPACITY = 10000;
   private final Index<String> index;
 
