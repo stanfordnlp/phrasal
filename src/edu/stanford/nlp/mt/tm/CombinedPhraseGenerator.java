@@ -70,11 +70,16 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source, InputProperties sourceInputProperties, 
       List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
     final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = new HashMap<>(source.size() * source.size());
-    
-    // TODO(spenceg) A decoder-local TM (if active) should be added to the list of phraseGenerators
+
+    // Support for decoder-local translation models
+    List<PhraseGenerator<TK,FV>> translationModels = phraseGenerators;
+    if (DecoderLocalTranslationModel.get() != null) {
+      translationModels = new ArrayList<>(phraseGenerators);
+      translationModels.add(DecoderLocalTranslationModel.get());
+    }
     
     int modelId = 0;
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+    for (PhraseGenerator<TK,FV> phraseGenerator : translationModels) {
       for (ConcreteRule<TK,FV> opt : phraseGenerator.getRules(source, sourceInputProperties, targets, 
           sourceInputId, scorer)) {
         addToRuleList(opt, ruleLists, modelId);
@@ -94,7 +99,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
       }
       
     } else {
-      // TODO(spenceg) Merge the sorted lists of rules, and create a RuleGrid directly.
       for (CoverageSet coverage : ruleLists.keySet()) {
         List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
         
