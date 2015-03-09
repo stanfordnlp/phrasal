@@ -168,31 +168,32 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // retrieve translation options
     if (DEBUG)
       System.err.println("Generating Translation Options");
-    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+    Pair<Sequence<TK>, RuleGrid<TK,FV>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
     if (source == null || source.size() == 0) return null;
     final int sourceSz = source.size();
-    List<ConcreteRule<TK,FV>> options = sourceRulePair.second();
+    RuleGrid<TK,FV> ruleGrid = sourceRulePair.second();
     
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:
-    List<ConcreteRule<TK,FV>> optionsWithoutGaps = new ArrayList<ConcreteRule<TK,FV>>(), optionsWithGaps = new ArrayList<ConcreteRule<TK,FV>>();
+    List<ConcreteRule<TK,FV>> optionsWithoutGaps = new ArrayList<ConcreteRule<TK,FV>>(), 
+        optionsWithGaps = new ArrayList<ConcreteRule<TK,FV>>();
 
-    for (ConcreteRule<TK,FV> opt : options) {
+    for (ConcreteRule<TK,FV> opt : ruleGrid) {
       if (isContiguous(opt.sourceCoverage))
         optionsWithoutGaps.add(opt);
       else if (gapsInFutureCost)
         optionsWithGaps.add(opt);
     }
 
-    System.err.printf("Translation options: %d%n", options.size());
+    System.err.printf("Translation options: %d%n", ruleGrid.numRules());
     System.err.printf("Translation options (no gaps): %d%n",
         optionsWithoutGaps.size());
     System.err.printf("Translation options (with gaps): %d%n",
         optionsWithGaps.size());
 
-    List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<List<ConcreteRule<TK,FV>>>();
+    List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>();
     allOptions.add(optionsWithoutGaps);
     if (gapsInFutureCost)
       allOptions.add(optionsWithGaps);
@@ -201,7 +202,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<%n");
-        for (ConcreteRule<TK,FV> option : options)
+        for (ConcreteRule<TK,FV> option : ruleGrid)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s%n", sentId,
               option.abstractRule.source, option.abstractRule.target,
               option.isolationScore, option.sourceCoverage);
@@ -209,13 +210,13 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       }
     }
 
-    options = outputSpace.filter(options);
+    outputSpace.filter(ruleGrid);
     System.err
     .printf(
         "Translation options after reduction by output space constraint: %d%n",
-        options.size());
+        ruleGrid.numRules());
 
-    DTUOptionGrid optionGrid = new DTUOptionGrid(options, source);
+    DTUOptionGrid optionGrid = new DTUOptionGrid(ruleGrid, source);
 
     // insert initial hypothesis
     Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties,
@@ -230,7 +231,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     int totalHypothesesGenerated = 1;
 
-    featurizer.initialize(sourceInputId, options, source);
+    featurizer.initialize(sourceInputId, source);
 
     // main translation loop
     long decodeLoopTime = -System.currentTimeMillis();
@@ -602,7 +603,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     private final int sourceSz;
 
     @SuppressWarnings("unchecked")
-    public DTUOptionGrid(List<ConcreteRule<TK,FV>> options,
+    public DTUOptionGrid(RuleGrid<TK, FV> ruleGrid,
         Sequence<TK> source) {
       sourceSz = source.size();
       grid = new List[sourceSz * sourceSz];
@@ -611,7 +612,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
           grid[getIndex(startIdx, endIdx)] = new LinkedList<ConcreteRule<TK,FV>>();
         }
       }
-      for (ConcreteRule<TK,FV> opt : options) {
+      for (ConcreteRule<TK,FV> opt : ruleGrid) {
         int startPos = opt.sourcePosition;
         int endPos = opt.sourceCoverage.length() - 1;
         grid[getIndex(startPos, endPos)].add(opt);

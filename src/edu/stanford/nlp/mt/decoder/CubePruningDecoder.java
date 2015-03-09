@@ -101,22 +101,16 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<BundleBeam<TK,FV>> beams = new LinkedList<>();
 
     // TM (phrase table) query for applicable rules
-    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+    Pair<Sequence<TK>, RuleGrid<TK,FV>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
     if (source == null || source.size() == 0) return null;
     final int sourceLength = source.size();
-    List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    RuleGrid<TK,FV> ruleGrid = sourceRulePair.second();
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
-    final int originalLength = ruleList.size();
-    ruleList = outputSpace.filter(ruleList);
-    logger.info("input {}: Rule list after pruning by output constraint: {}/{}",
-        sourceInputId, ruleList.size(), originalLength);
-    
-    // Create rule lookup chart. Rules can be fetched by span.
-    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(ruleList, source, true);
+    outputSpace.filter(ruleGrid);
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }
@@ -125,15 +119,16 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
   
+    // Has to be a list of lists for DTUDecoder
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>(1);
-    allOptions.add(ruleList);
+    allOptions.add(ruleGrid.asList());
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
         heuristic, scorer, allOptions);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
 
     // Initialize feature extractors
-    featurizer.initialize(sourceInputId, ruleList, source);
+    featurizer.initialize(sourceInputId, source);
 
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.longestSourcePhrase();

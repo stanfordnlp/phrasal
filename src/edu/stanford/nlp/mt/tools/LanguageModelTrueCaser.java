@@ -13,6 +13,8 @@ import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
@@ -24,6 +26,7 @@ import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -172,6 +175,13 @@ public class LanguageModelTrueCaser {
     @Override
     public List<String> getFeatureNames() {
       return new ArrayList<>(1);
+    }
+
+    @Override
+    public RuleGrid<IString, String> getRuleGrid(Sequence<IString> source,
+        InputProperties sourceInputProperties, List<Sequence<IString>> targets,
+        int sourceInputId, Scorer<String> scorer) {
+      throw new UnsupportedOperationException("Not yet implemented.");
     }
   }
 

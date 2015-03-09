@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.lm.LMState;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tools.deplm.DependencyUtils;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -250,7 +249,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   }
   
   @Override
-  public void initialize(int sourceInputId, List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+  public void initialize(int sourceInputId, Sequence<IString> source) {
     this.head2Dependent = forwardDependenciesCache.get(sourceInputId);
     this.dependent2Head = reverseDependenciesCache.get(sourceInputId);
     if (reachableNodesCache.get(sourceInputId) == null)

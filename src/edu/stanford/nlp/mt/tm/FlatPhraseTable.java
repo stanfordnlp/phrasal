@@ -5,19 +5,22 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -47,7 +50,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   protected final int minRuleIndex;
   protected final String[] scoreNames;
   protected final String name;
-  protected final List<List<PhraseTableEntry>> translations;
+  protected final List<List<PhraseTableEntry>> ruleLists;
 
   protected int longestSourcePhrase = -1;
   protected int longestTargetPhrase = -1;
@@ -76,7 +79,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     File f = new File(filename);
     name = String.format("%s:%s", this.getClass().getName(), f.getPath()).intern();
     minRuleIndex = ruleIdCounter.get();
-    translations = new ArrayList<>(INITIAL_CAPACITY);
+    ruleLists = new ArrayList<>(INITIAL_CAPACITY);
     sourceToRuleIndex = new ProbingIntegerArrayRawIndex();
     targetIndex = new ProbingIntegerArrayIndex();
     int countScores = init(f);
@@ -105,14 +108,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     int fIndex = sourceToRuleIndex.insertIntoIndex(sourceArray);
     int eIndex = this.targetIndex.indexOf(targetArray, true);
 
-    if (translations.size() <= fIndex) {
-      while (translations.size() <= fIndex)
-        translations.add(null);
+    if (ruleLists.size() <= fIndex) {
+      while (ruleLists.size() <= fIndex)
+        ruleLists.add(null);
     }
-    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     if (intTransOpts == null) {
       intTransOpts = new LinkedList<>();
-      translations.set(fIndex, intTransOpts);
+      ruleLists.set(fIndex, intTransOpts);
     }
     intTransOpts.add(new PhraseTableEntry(ruleIdCounter.getAndIncrement(),
         targetIndex.get(eIndex), scores, alignment));
@@ -183,6 +186,11 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     }
     reader.close();
 
+    // Sort the entries in the phrase table.
+    for (List<PhraseTableEntry> ruleList : ruleLists) {
+      Collections.sort(ruleList);
+    }
+    
     // print some status information
     long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
@@ -211,9 +219,9 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       Sequence<IString> sourceSequence) {
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int fIndex = sourceToRuleIndex.getIndex(sourceArray);
-    if (fIndex == -1 || fIndex >= translations.size())
+    if (fIndex == -1 || fIndex >= ruleLists.size())
       return null;
-    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     if (intTransOpts == null)
       return null;
     List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
@@ -233,10 +241,10 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       Sequence<IString> targetSequence) {
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int fIndex = sourceToRuleIndex.getIndex(sourceArray);
-    if (fIndex == -1 || fIndex >= translations.size()) {
+    if (fIndex == -1 || fIndex >= ruleLists.size()) {
       return -1;
     }
-    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     int[] targetArray = Sequences.toIntArray(targetSequence);
     for (PhraseTableEntry intTransOpt : intTransOpts) {
       if (Arrays.equals(targetArray, intTransOpt.targetArray)) {
@@ -306,5 +314,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       System.out.printf("\t%s : %s%n", opt.target,
           Arrays.toString(opt.scores));
     }
+  }
+
+  @Override
+  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
+      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 }

@@ -5,7 +5,6 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -27,7 +26,7 @@ public class PunctuationDifference extends DerivationFeaturizer<IString, String>
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+      Sequence<IString> source) {
     numSourcePunctuationTokens = 0;
     for (IString token : source) {
       if (TokenUtils.isPunctuation(token.toString())) {
