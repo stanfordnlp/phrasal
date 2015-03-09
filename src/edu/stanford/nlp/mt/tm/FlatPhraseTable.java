@@ -185,11 +185,6 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       }
     }
     reader.close();
-
-    // Sort the entries in the phrase table.
-    for (List<PhraseTableEntry> ruleList : ruleLists) {
-      Collections.sort(ruleList);
-    }
     
     // print some status information
     long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
@@ -224,16 +219,16 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     if (intTransOpts == null)
       return null;
-    List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
+    List<Rule<IString>> ruleList = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     for (PhraseTableEntry intTransOpt : intTransOpts) {
       Sequence<IString> targetSequence = IStrings.getIStringSequence(
           intTransOpt.targetArray);
-      transOpts.add(new Rule<IString>(intTransOpt.id,
+      ruleList.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, targetSequence, sourceSequence,
           intTransOpt.alignment));
     }
-    return transOpts;
+    return ruleList;
   }
 
   @Override

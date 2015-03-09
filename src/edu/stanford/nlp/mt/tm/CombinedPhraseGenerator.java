@@ -23,9 +23,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   static public final int FORCE_ADD_LIMIT = Integer.MAX_VALUE; // 200;
-  static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
-  static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_OPT, "false"));
+  static public final boolean DEBUG = false;
 
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -85,8 +83,8 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
 
     // TODO(spenceg) A decoder-local TM (if active) should be added to the list of phraseGenerators
     
+    int modelId = 0;
     if (type.equals(Type.CONCATENATIVE)) {
-      int modelId = 0;
       for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
          if (DEBUG) {
             System.err.println("PhraseGenerator: " + phraseGenerator.getClass().getCanonicalName());
@@ -110,7 +108,6 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     
     } else if (type.equals(Type.STRICT_DOMINANCE)) {
       CoverageSet coverage = new CoverageSet(source.size());
-      int modelId = 0;
       for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
         
         if (DEBUG) {
@@ -144,27 +141,41 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
           "Unsupported combination type: %s", type));
     }
 
-    // TODO(spenceg) Merge the sorted lists of rules, and create a RuleGrid directly.
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(source.size());
-    for (CoverageSet coverage : ruleLists.keySet()) {
-      List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
-      
-      // Effectively cube pruning!
-      Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
-      for (List<ConcreteRule<TK,FV>> list : ruleList) {
-        if (list.size() > 0) {
-          pq.add(new Item<TK,FV>(list.remove(0), list));
+    if (modelId == 1) {
+      for (CoverageSet coverage : ruleLists.keySet()) {
+        List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
+        assert ruleList.size() <= 1;
+        int numRules = 0;
+        for (ConcreteRule<TK,FV> rule : ruleList.get(0)) {
+          if (numRules >= ruleQueryLimit) break;
+          ruleGrid.addEntry(rule);
+          ++numRules;
         }
       }
-      int numPoppedItems = 0;
-      while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
-        Item<TK, FV> item = pq.poll();
-        if (item == null) {
-          break;
-        } else {
-          ruleGrid.addEntry(item.rule);
-          if (item.list.size() > 0) {
-            pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
+      
+    } else {
+      // TODO(spenceg) Merge the sorted lists of rules, and create a RuleGrid directly.
+      for (CoverageSet coverage : ruleLists.keySet()) {
+        List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
+
+        // Effectively cube pruning!
+        Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
+        for (List<ConcreteRule<TK,FV>> list : ruleList) {
+          if (list.size() > 0) {
+            pq.add(new Item<TK,FV>(list.remove(0), list));
+          }
+        }
+        int numPoppedItems = 0;
+        while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
+          Item<TK, FV> item = pq.poll();
+          if (item == null) {
+            break;
+          } else {
+            ruleGrid.addEntry(item.rule);
+            if (item.list.size() > 0) {
+              pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
+            }
           }
         }
       }

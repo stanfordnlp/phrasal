@@ -200,6 +200,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   public List<ConcreteRule<TK, FV>> asList() {
     List<ConcreteRule<TK,FV>> ruleList = new ArrayList<>();
     for (int i = 0; i < grid.length; ++i) {
+      if (grid[i] == null) continue;
       ruleList.addAll(grid[i]);
     }
     return ruleList;
@@ -241,5 +242,14 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
         }
       }
     };
+  }
+  
+  @Override
+  public int hashCode() {
+    int hashCode = 0;
+    for (ConcreteRule<TK,FV> rule : this) {
+      hashCode += Double.hashCode(rule.isolationScore) + rule.abstractRule.source.hashCode() + rule.abstractRule.target.hashCode() + rule.sourceCoverage.hashCode();
+    }
+    return hashCode;
   }
 }
