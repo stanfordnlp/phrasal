@@ -5,7 +5,6 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -24,7 +23,7 @@ public class DiscriminativeSignedDistortion extends DerivationFeaturizer<IString
   
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+      Sequence<IString> source) {
   }
 
   @Override

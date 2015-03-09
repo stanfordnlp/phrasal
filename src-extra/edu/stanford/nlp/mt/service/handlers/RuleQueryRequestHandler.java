@@ -24,7 +24,7 @@ import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryReply;
 import edu.stanford.nlp.mt.service.Messages.RuleQueryRequest;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.IString;
@@ -45,7 +45,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
   private static final AtomicInteger qId = new AtomicInteger();
   private static final Logger logger = LogManager.getLogger(RuleQueryRequestHandler.class.getName());
 
-  private final PhraseGenerator<IString, String> phraseTable;
+  private final TranslationModel<IString, String> phraseTable;
   private final Scorer<String> scorer;
   private final Preprocessor preprocessor;
   private final Postprocessor postprocessor;
@@ -58,7 +58,7 @@ public class RuleQueryRequestHandler implements RequestHandler {
    * @param preprocessor
    * @param postprocessor
    */
-  public RuleQueryRequestHandler(PhraseGenerator<IString,String> phraseGenerator, 
+  public RuleQueryRequestHandler(TranslationModel<IString,String> phraseGenerator, 
       Scorer<String> scorer, Preprocessor preprocessor, Postprocessor postprocessor) {
     this.phraseTable = phraseGenerator;
     this.scorer = scorer;

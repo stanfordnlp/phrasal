@@ -46,12 +46,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
    * The source/target word-word alignments.
    */
   public final PhraseAlignment alignment;
-  
-  /**
-   * TODO(spenceg): Not sure what this does....
-   */
-  public final boolean forceAdd;
-  
+    
   private int hashCode = -1;
 
   /**
@@ -79,34 +74,17 @@ public class Rule<T> implements Comparable<Rule<T>>{
    * @param target
    * @param source
    * @param alignment
-   */
-  public Rule(int id, float[] scores, String[] phraseScoreNames,
-      Sequence<T> target, Sequence<T> source,
-      PhraseAlignment alignment) {
-    this(id, scores, phraseScoreNames, target, source, alignment, false);
-  }
-
-  /**
-   * Constructor.
-   * 
-   * @param id
-   * @param scores
-   * @param phraseScoreNames
-   * @param target
-   * @param source
-   * @param alignment
    * @param forceAdd
    */
   public Rule(int id, float[] scores, String[] phraseScoreNames,
       Sequence<T> target, Sequence<T> source,
-      PhraseAlignment alignment, boolean forceAdd) {
+      PhraseAlignment alignment) {
     this.id = id;
     this.alignment = alignment;
     this.scores = Arrays.copyOf(scores, scores.length);
     this.target = target;
     this.source = source;
     this.phraseScoreNames = phraseScoreNames;
-    this.forceAdd = forceAdd;
   }
 
   /**

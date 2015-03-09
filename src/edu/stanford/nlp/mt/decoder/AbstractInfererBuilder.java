@@ -5,7 +5,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.tm.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.TranslationModel;
 
 /**
  * An abstract factory for an inference algorithm.
@@ -15,12 +15,12 @@ import edu.stanford.nlp.mt.tm.PhraseGenerator;
  */
 abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<TK, FV> {
   protected FeatureExtractor<TK, FV> incrementalFeaturizer;
-  protected PhraseGenerator<TK,FV> phraseGenerator;
+  protected TranslationModel<TK,FV> phraseGenerator;
   protected Scorer<FV> scorer;
   protected SearchHeuristic<TK, FV> heuristic;
   protected RecombinationFilter<Derivation<TK, FV>> filter;
   protected boolean filterUnknownWords;
-  protected PhraseGenerator<TK, FV> unknownWordModel;
+  protected TranslationModel<TK, FV> unknownWordModel;
 
   @Override
   abstract public Inferer<TK, FV> newInferer();
@@ -35,7 +35,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
 
   @Override
   public InfererBuilder<TK, FV> setPhraseGenerator(
-      PhraseGenerator<TK,FV> phraseGenerator) {
+      TranslationModel<TK,FV> phraseGenerator) {
     this.phraseGenerator = phraseGenerator;
     return this;
   }
@@ -54,7 +54,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
   }
 
   @Override
-  public InfererBuilder<TK, FV> setUnknownWordModel(PhraseGenerator<TK, FV> unknownWordModel, boolean filterUnknownWords) {
+  public InfererBuilder<TK, FV> setUnknownWordModel(TranslationModel<TK, FV> unknownWordModel, boolean filterUnknownWords) {
     this.unknownWordModel = unknownWordModel;
     this.filterUnknownWords = filterUnknownWords;
     return this;

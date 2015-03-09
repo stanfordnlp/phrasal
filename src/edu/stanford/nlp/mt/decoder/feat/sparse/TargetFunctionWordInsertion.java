@@ -11,7 +11,6 @@ import java.util.Set;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -109,7 +108,7 @@ public class TargetFunctionWordInsertion extends DerivationFeaturizer<IString, S
   
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+      Sequence<IString> source) {
     numSourceFunctionTokens = 0;
     for (IString token : source) {
       if (sourceFunctionWordSet.contains(token)) {

@@ -5,7 +5,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.tm.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.TranslationModel;
 
 /**
  * Configure an Inferer, which is an instance of a search procedure.
@@ -24,7 +24,7 @@ public interface InfererBuilder<TK, FV> {
    * @param phraseGenerator
    * @return
    */
-  InfererBuilder<TK, FV> setPhraseGenerator(PhraseGenerator<TK,FV> phraseGenerator);
+  InfererBuilder<TK, FV> setPhraseGenerator(TranslationModel<TK,FV> phraseGenerator);
 
   /**
    * Set the featurizer.
@@ -66,7 +66,7 @@ public interface InfererBuilder<TK, FV> {
    * @param filterUnknownWords if true, then remove unknown words from source. Use unknownWordModel otherwise.
    * @return
    */
-  InfererBuilder<TK, FV> setUnknownWordModel(PhraseGenerator<TK, FV> unknownWordModel, 
+  InfererBuilder<TK, FV> setUnknownWordModel(TranslationModel<TK, FV> unknownWordModel, 
       boolean filterUnknownWords);
 
   /**

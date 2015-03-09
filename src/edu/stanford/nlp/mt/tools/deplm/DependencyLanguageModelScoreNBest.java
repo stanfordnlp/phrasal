@@ -148,7 +148,7 @@ public class DependencyLanguageModelScoreNBest {
     HashMap<Integer, Pair<IndexedWord, List<Integer>>> forwardDependencies = new HashMap<Integer, Pair<IndexedWord, List<Integer>>>();
 
     for (int i = 1; i <= e.size(); i++) {
-      String word = e.get(i-1).word();
+      String word = e.get(i-1).toString();
 
       IndexedWord iw = new IndexedWord();
       iw.setIndex(i);

@@ -12,8 +12,8 @@ import java.util.Properties;
 
 import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.PhraseGenerator;
-import edu.stanford.nlp.mt.tm.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.tm.TranslationModel;
+import edu.stanford.nlp.mt.tm.TranslationModelFactory;
 import edu.stanford.nlp.mt.tm.PhraseTable;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.CoverageSet;
@@ -43,13 +43,13 @@ public class FilterOOVByPhraseTable {
    * @return
    * @throws IOException
    */
-  public static PhraseGenerator<IString,String> load(String filename) throws IOException {
-    String generatorName = PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR;
-    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair =  
-        PhraseGeneratorFactory.<String>factory(generatorName, filename);
-    PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
+  public static TranslationModel<IString,String> load(String filename) throws IOException {
+    String generatorName = TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR;
+    Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair =  
+        TranslationModelFactory.<String>factory(generatorName, filename);
+    TranslationModel<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
         Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(true)),
-        CombinedPhraseGenerator.Type.STRICT_DOMINANCE, QUERY_LIMIT);
+        QUERY_LIMIT);
     return phraseGenerator;
   }
 
@@ -62,7 +62,7 @@ public class FilterOOVByPhraseTable {
    * @return
    */
   private static Sequence<IString> filterUnknownWords(String input, 
-      PhraseGenerator<IString,String> phraseGenerator, boolean keepASCII) {
+      TranslationModel<IString,String> phraseGenerator, boolean keepASCII) {
     Sequence<IString> source = IStrings.tokenize(input);
     List<ConcreteRule<IString,String>> rules = phraseGenerator.getRules(source, null, null, -1, null);
 
@@ -120,7 +120,7 @@ public class FilterOOVByPhraseTable {
     Properties options = StringUtils.argsToProperties(args, argDefs());
     boolean keepASCII = options.containsKey("a");
     String filename = options.getProperty("");
-    PhraseGenerator<IString,String> phraseGenerator = null;
+    TranslationModel<IString,String> phraseGenerator = null;
     try {
       System.err.println("Loading phrase table: " + filename);
       phraseGenerator = load(filename);

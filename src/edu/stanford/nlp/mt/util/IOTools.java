@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.ErasureUtils;
@@ -274,7 +274,7 @@ public final class IOTools {
       } else if (outputType.equals("nnlm-bolt")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, true);
       } else {
-        sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+        sb.append(sourceInputId).append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
         sb.append(translation.toString());
       }
       sb.append(nl);
@@ -288,10 +288,10 @@ public final class IOTools {
   public static void writeEmptyNBest(int sourceInputId, PrintStream nbestListWriter) {
     StringBuilder sb = new StringBuilder(50);
     String nl = System.getProperty("line.separator");
-    sb.append(sourceInputId).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
-    sb.append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
-    sb.append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
-    sb.append(" 0.0000E0 ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(sourceInputId).append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
+    sb.append(" 0.0000E0 ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
     sb.append(" ");
     sb.append(nl);
     nbestListWriter.append(sb.toString());

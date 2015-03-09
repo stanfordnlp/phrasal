@@ -319,7 +319,7 @@ public final class OnlineTuner {
       assert input.weights != null;
       
       // The decoder does not copy the weight vector; ProcessorInput should have.
-      decoder.getScorer(threadId).updateWeights(input.weights);
+      decoder.setModelWeights(threadId, input.weights);
       
       int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = 
@@ -358,7 +358,6 @@ public final class OnlineTuner {
         } 
        
       }
-     
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
     }
