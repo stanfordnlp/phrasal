@@ -28,7 +28,6 @@
 package edu.stanford.nlp.mt;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -588,7 +587,7 @@ public class Phrasal {
                  filename, generatorOptions); 
          generators.add(generatorPair.first());
        }
-       phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE, ruleQueryLimit);
+       phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, ruleQueryLimit);
     }
 
     // Load the lexicalized reordering model(s) and associated featurizers

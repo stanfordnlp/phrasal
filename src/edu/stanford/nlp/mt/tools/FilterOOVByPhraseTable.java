@@ -49,7 +49,7 @@ public class FilterOOVByPhraseTable {
         PhraseGeneratorFactory.<String>factory(generatorName, filename);
     PhraseGenerator<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
         Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(true)),
-        CombinedPhraseGenerator.Type.STRICT_DOMINANCE, QUERY_LIMIT);
+        QUERY_LIMIT);
     return phraseGenerator;
   }
 
