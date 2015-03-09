@@ -19,12 +19,6 @@ public class UnconstrainedOutputSpace<TK, FV> implements
     OutputSpace<IString, String> {
 
   @Override
-  public List<ConcreteRule<IString, String>> filter(
-      List<ConcreteRule<IString, String>> ruleList) {
-    return ruleList;
-  }
-
-  @Override
   public boolean allowableContinuation(
       Featurizable<IString, String> featurizable,
       ConcreteRule<IString, String> rule) {
@@ -43,4 +37,8 @@ public class UnconstrainedOutputSpace<TK, FV> implements
 
   @Override
   public void setSourceSequence(Sequence<IString> sourceSequence) {}
+
+  @Override
+  public void filter(RuleGrid<IString, String> ruleGrid) {
+  }
 }

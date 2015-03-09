@@ -3,12 +3,12 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Sequence;
-
 
 /**
  * Grid of ConcreteRules (translation rules) for a given
@@ -22,12 +22,17 @@ import edu.stanford.nlp.mt.util.Sequence;
  * 
  * @param <TK>
  */
-public class RuleGrid<TK,FV> {
+public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
+  
+  private final List<ConcreteRule<TK,FV>> EMPTY_LIST = Collections.unmodifiableList(new ArrayList<>(1));
+  
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
   private final boolean doLazySorting;
-  private final boolean completeCoverage;
+  private boolean completeCoverage;
+  private BitSet incrementalCoverage;
+  private int size = 0;
   
   /**
    * Constructor.
@@ -50,24 +55,94 @@ public class RuleGrid<TK,FV> {
     CoverageSet coverage = new CoverageSet();
     for (ConcreteRule<TK,FV> rule : ruleList) {
       coverage.or(rule.sourceCoverage);
-      int startPos = rule.sourcePosition;
-      int endPos = startPos + rule.abstractRule.source.size() - 1;
-      // Sanity checks
-      assert startPos <= endPos : String.format("Illegal span: [%d,%d]", startPos, endPos);
-      assert endPos < sourceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sourceLength);
-      
-      int offset = getIndex(startPos, endPos);
-      if (grid[offset] == null) grid[offset] = new ArrayList<>();
-      grid[offset].add(rule);
+      addEntry(rule);
     }
     this.completeCoverage = (coverage.cardinality() == sourceLength);
   }
+  
+  /**
+   * Constructor for creating a RuleGrid incrementally.
+   * 
+   * IMPORTANT: if a RuleGrid is constructed incrementally, then it is assumed
+   * that the calls to addEntry insert rules in sorted order.
+   * 
+   * @param source
+   */
+  @SuppressWarnings("unchecked")
+  public RuleGrid(int sourceLength) {
+    this.sourceLength = sourceLength;
+    isSorted = new BitSet();
+    isSorted.set(0, sourceLength);
+    doLazySorting = false;
+    grid = new List[sourceLength * sourceLength];
+    completeCoverage = false;
+    incrementalCoverage = new BitSet();
+  }
 
+  /**
+   * Add a new entry to the rule table.
+   * 
+   * @param rule
+   */
+  public void addEntry(ConcreteRule<TK,FV> rule) {
+    int startPos = rule.sourcePosition;
+    int endPos = startPos + rule.abstractRule.source.size() - 1;
+    // Sanity checks
+    assert startPos <= endPos : String.format("Illegal span: [%d,%d]", startPos, endPos);
+    assert endPos < sourceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sourceLength);
+    
+    int offset = getIndex(startPos, endPos);
+    if (grid[offset] == null) grid[offset] = new ArrayList<>();
+    grid[offset].add(rule);
+    incrementalCoverage.or(rule.sourceCoverage);
+    completeCoverage = (incrementalCoverage.cardinality() == sourceLength);
+    ++size;
+  }
+  
   /**
    * True if the grid completely covers the source input. Otherwise, false.
    * @return
    */
   public boolean isCoverageComplete() { return completeCoverage; }
+
+  /**
+   * Return the number of unique converages in this grid.
+   * 
+   * @return
+   */
+  public int numberOfCoverages() { return grid.length; }
+  
+  /**
+   * Return all rules associated with a coverage id.
+   * 
+   * @param i
+   * @return
+   */
+  public List<ConcreteRule<TK,FV>> getRulesForCoverageId(int i) {
+    if (i < 0 || i >= grid.length) throw new ArrayIndexOutOfBoundsException();
+    return grid[i] == null ? EMPTY_LIST : grid[i];
+  }
+  
+  /**
+   * Return the number of rules in this grid.
+   * 
+   * @return
+   */
+  public int numRules() { return size; }
+  
+  /**
+   * Remove a rule from the grid.
+   * 
+   * @param coverageId
+   * @param ruleIndex
+   * @return
+   */
+  public ConcreteRule<TK,FV> remove(int coverageId, int ruleIndex) {
+    if (coverageId >= grid.length || grid[coverageId] == null || ruleIndex >= grid[coverageId].size()) {
+      throw new IllegalArgumentException();
+    }
+    return grid[coverageId].remove(ruleIndex);
+  }
   
   /**
    * True if this list of rules has been sorted, false otherwise.
@@ -104,13 +179,67 @@ public class RuleGrid<TK,FV> {
     if (grid[offset] != null && doLazySorting && ! isSorted.get(offset)) {
       Collections.sort(grid[offset]);
     }
-    return grid[offset] == null ? new ArrayList<ConcreteRule<TK,FV>>(1) : grid[offset];
+    return grid[offset] == null ? EMPTY_LIST : grid[offset];
   }
 
   /**
-	 * 
-	 */
+   * 
+   * @param startPos
+   * @param endPos
+   * @return
+   */
   private int getIndex(int startPos, int endPos) {
     return startPos * sourceLength + endPos;
+  }
+
+  /**
+   * Return the RuleGrid as a flat list.
+   * 
+   * @return
+   */
+  public List<ConcreteRule<TK, FV>> asList() {
+    List<ConcreteRule<TK,FV>> ruleList = new ArrayList<>();
+    for (int i = 0; i < grid.length; ++i) {
+      ruleList.addAll(grid[i]);
+    }
+    return ruleList;
+  }
+
+  @Override
+  public Iterator<ConcreteRule<TK, FV>> iterator() {
+    return new Iterator<ConcreteRule<TK,FV>>() {
+      int coverageId = 0;
+      int ruleId = 0;
+      boolean setup = false;
+      
+      @Override
+      public boolean hasNext() {
+        if ( ! setup) {
+          // First call. Set the pointers
+          setCoverageId();
+          setup = true;
+        }
+        return (coverageId < grid.length && ruleId < grid[coverageId].size());
+      }
+
+      @Override
+      public ConcreteRule<TK, FV> next() {
+        ConcreteRule<TK,FV> rule = grid[coverageId].get(ruleId++);
+        if (ruleId >= grid[coverageId].size()) {
+          ruleId = 0;
+          ++coverageId;
+          setCoverageId();
+        }
+        return rule;
+      }
+      
+      private void setCoverageId() {
+        for (; coverageId < grid.length; ++coverageId) {
+          if (grid[coverageId] != null) {
+            break;
+          }
+        }
+      }
+    };
   }
 }

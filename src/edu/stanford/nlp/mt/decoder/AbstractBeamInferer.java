@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
@@ -77,40 +78,35 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @param scorer
    * @return
    */
-  protected Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>> getRules(Sequence<TK> source,
+  protected Pair<Sequence<TK>,RuleGrid<TK,FV>> getRules(Sequence<TK> source,
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
     // Initial query
-    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    RuleGrid<TK,FV> ruleGrid = phraseGenerator
+        .getRuleGrid(source, sourceInputProperties, targets, sourceInputId, scorer);
     
-    // Compute source coverage of initial query
-    CoverageSet coverage = new CoverageSet();
-    for (ConcreteRule<TK,FV> rule : ruleList) {
-      if (rule.abstractRule.target.size() > 0) {
-        coverage.or(rule.sourceCoverage);
-      }
-    }
-
     // Decide what to do if the coverage set is incomplete
-    if (coverage.cardinality() != source.size()) {
+    if ( ! ruleGrid.isCoverageComplete()) {
       if (filterUnknownWords) {
         // Filter OOVs from the source and then query the phrase table again
         List<TK> filteredToks = new LinkedList<>();
         for (int i = 0, sz = source.size(); i  < sz; i++) {
-          if (coverage.get(i)) {
+          if (ruleGrid.get(i, i).size() > 0) {
             filteredToks.add(source.get(i));
           }
         }
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
-        List<ConcreteRule<TK,FV>> ruleListFiltered = phraseGenerator
-            .getRules(sourceFiltered, sourceInputProperties, targets, sourceInputId, scorer);
-        return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(sourceFiltered, ruleListFiltered);
+        ruleGrid = phraseGenerator
+            .getRuleGrid(sourceFiltered, sourceInputProperties, targets, sourceInputId, scorer);
+        return new Pair<Sequence<TK>,RuleGrid<TK,FV>>(sourceFiltered, ruleGrid);
         
       } else {
         // Add rules from the OOV model
-        for (int gapIndex = coverage.nextClearBit(0), sz = source.size(); gapIndex < sz; 
-            gapIndex = coverage.nextClearBit(gapIndex + 1)) {
+        for (int i = 0, sz = source.size(); i  < sz; i++) {
+          if (ruleGrid.get(i, i).size() > 0) {
+            continue;
+          }
+          int gapIndex = i;
           Sequence<TK> queryWord = source.subsequence(gapIndex, gapIndex + 1);
           List<ConcreteRule<TK,FV>> oovRules = 
               unknownWordModel.getRules(queryWord, sourceInputProperties, targets, sourceInputId, scorer);
@@ -118,14 +114,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           oovCoverage.set(gapIndex);
           for (ConcreteRule<TK,FV> rule : oovRules) {
             // Update the coverage set for the output of the OOV model
-            ruleList.add(new ConcreteRule<TK,FV>(rule.abstractRule, 
+            ruleGrid.addEntry(new ConcreteRule<TK,FV>(rule.abstractRule, 
                 oovCoverage, featurizer, scorer, source, rule.phraseTableName, 
                 sourceInputId, sourceInputProperties));
           }
         }
       }
     }
-    return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(source, ruleList);
+    return new Pair<Sequence<TK>, RuleGrid<TK,FV>>(source, ruleGrid);
   }
   
   /**

@@ -23,15 +23,13 @@ public interface OutputSpace<TK, FV> {
    * @param sourceSequence
    */
   public void setSourceSequence(Sequence<TK> sourceSequence);
-  
+
   /**
-   * Filter a list of translation rules to a set of target
-   * sequences.
+   * Filter a grid of translation rules.
    * 
-   * @param ruleList
-   * @return
+   * @param ruleGrid
    */
-  public List<ConcreteRule<TK,FV>> filter(List<ConcreteRule<TK,FV>> ruleList);
+  public void filter(RuleGrid<TK,FV> ruleGrid);
 
   /**
    * Returns true if the derivation created by the concatenation of

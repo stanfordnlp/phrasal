@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
+import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
@@ -31,16 +32,19 @@ public class TranslationModelIndex {
    * Constructor.
    */
   public TranslationModelIndex() {
-    this(INITIAL_CAPACITY);
+    this(INITIAL_CAPACITY, false);
   }
-
+  
   /**
    * Constructor.
    * 
    * @param initialCapacity
+   * @param isSystemIndex -- Create a system index (e.g., during TM extraction) instead
+   * of a decoder-local index.
    */
-  public TranslationModelIndex(int initialCapacity) {
-    index = new DecoderLocalIndex<String>(initialCapacity);
+  public TranslationModelIndex(int initialCapacity, boolean isSystemIndex) {
+    index = isSystemIndex ? new HashIndex<String>(initialCapacity) : 
+      new DecoderLocalIndex<String>(initialCapacity);
   }
 
   /**
@@ -49,7 +53,9 @@ public class TranslationModelIndex {
    * @return
    */
   public static int systemSize() {
-    return systemIndex.size();
+    TranslationModelIndex localIndex = threadLocalCache.get();
+    return localIndex == null ? systemIndex.size() : 
+      systemIndex.size() + localIndex.size();
   }
 
   /**
@@ -59,7 +65,9 @@ public class TranslationModelIndex {
    * @return
    */
   public static String systemGet(int i) {
-    return systemIndex.get(i);
+    TranslationModelIndex localIndex = threadLocalCache.get();
+    return (localIndex != null && i <= DecoderLocalIndex.MIN_INDEX) ? 
+      localIndex.get(i) : systemIndex.get(i);
   }
 
   /**
@@ -69,11 +77,18 @@ public class TranslationModelIndex {
    * @return
    */
   public static int systemIndexOf(String o) {
-    return systemIndex.indexOf(o);
+    TranslationModelIndex localIndex = threadLocalCache.get();
+    if (localIndex == null) {
+      return systemIndex.indexOf(o);
+    } else {
+      int index = systemIndex.indexOf(o);
+      return index == UNKNOWN_ID ? localIndex.indexOf(o) : index;
+    }
   }
 
   /**
-   * Add a string to the index.
+   * Add a string to the system index. Additions to decoder-local
+   * indices are not allowed.
    * 
    * @param o
    * @return

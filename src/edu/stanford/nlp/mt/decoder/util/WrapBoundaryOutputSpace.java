@@ -8,15 +8,17 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.IString;
 
+/**
+ * 
+ * @author Sebastian Schuster
+ *
+ * @param <TK>
+ * @param <FV>
+ */
 public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
    
   @Override
   public void setSourceSequence(Sequence<TK> sourceSequence) {}
-
-  @Override
-  public List<ConcreteRule<TK, FV>> filter(List<ConcreteRule<TK, FV>> ruleList) {
-    return ruleList;
-  }
 
   @Override
   public boolean allowableContinuation(Featurizable<TK, FV> featurizable,
@@ -109,4 +111,7 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
     return null;
   }
 
+  @Override
+  public void filter(RuleGrid<TK, FV> ruleGrid) {
+  }
 }

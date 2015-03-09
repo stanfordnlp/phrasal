@@ -71,7 +71,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   }
   
   @Override
-  public List<ConcreteRule<IString, String>> filter(List<ConcreteRule<IString, String>> ruleList) {
+  public void filter(RuleGrid<IString, String> ruleGrid) {
     // Allow any target word to map anywhere into the source, but with high
     // cost so that only OOVs and words outside the distortion limit will
     // be used.
@@ -80,10 +80,9 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       for (int j = 0, size = allowablePrefix.size(); j < size; ++j) {
         ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, 
             allowablePrefix.subsequence(j, j+1), i);
-        ruleList.add(syntheticRule);
+        ruleGrid.addEntry(syntheticRule);
       }
     }
-    return ruleList;
   }
 
   /**

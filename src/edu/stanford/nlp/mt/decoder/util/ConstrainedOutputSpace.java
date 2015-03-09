@@ -158,42 +158,33 @@ public class ConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public List<ConcreteRule<TK,FV>> filter(List<ConcreteRule<TK,FV>> ruleList) {
-    List<ConcreteRule<TK,FV>> filteredOptions = new ArrayList<ConcreteRule<TK,FV>>(
-        ruleList.size());
-
-    for (ConcreteRule<TK,FV> option : ruleList) {
-      if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
-        System.err.printf("Examining: %s %s\n",
-            option.abstractRule.target, option.sourceCoverage);
-      }
-      for (Sequence<TK> allowableSequence : allowableSequences) {
-        if (allowableSequence.contains(option.abstractRule.target)) {
-          filteredOptions.add(option);
-          if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
-            System.err.printf("\tAccepted!\n");
+  public void filter(RuleGrid<TK,FV> ruleGrid) {
+    for (int i = 0, sz = ruleGrid.numberOfCoverages(); i < sz; ++i) {
+      List<Integer> filteredIndices = new ArrayList<>();
+      for (int j = 0, numRules = ruleGrid.getRulesForCoverageId(i).size(); j < numRules; ++j) {
+        final ConcreteRule<TK,FV> rule = ruleGrid.getRulesForCoverageId(i).get(j);
+        if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
+          System.err.printf("Examining: %s %s\n",
+              rule.abstractRule.target, rule.sourceCoverage);
+        }
+        boolean notObserved = true;
+        for (Sequence<TK> allowableSequence : allowableSequences) {
+          if (allowableSequence.contains(rule.abstractRule.target)) {
+            notObserved = false;
+            if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
+              System.err.printf("\tAccepted!\n");
+            }
+            break;
           }
-          break;
+        }
+        if (notObserved) {
+          filteredIndices.add(j);
         }
       }
-    }
-
-    if (DEBUG >= DEBUG_LEVEL_RESULTS) {
-      System.err.println("Reference Set");
-      System.err.println("--------------");
-      for (Sequence<TK> allowableSequence : allowableSequences) {
-        System.err.println(allowableSequence);
+      for (int ruleId : filteredIndices) {
+        ruleGrid.remove(i, ruleId);
       }
-      System.err.println("Filtered options");
-      System.err.println("----------------");
-      for (ConcreteRule<TK,FV> option : filteredOptions) {
-        System.err.printf("\t%s %s\n", option.abstractRule.target,
-            option.sourceCoverage);
-      }
-      System.err.println("--\n");
     }
-
-    return filteredOptions;
   }
 
   @Override

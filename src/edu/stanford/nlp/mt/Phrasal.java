@@ -163,7 +163,7 @@ public class Phrasal {
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
-      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).")
+      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).").append(nl)
        ;
     return sb.toString();
   }
@@ -571,11 +571,13 @@ public class Phrasal {
          if (fields.length == 1) {
            generatorOptions = new String[1];
            generatorOptions[0] = makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString);
+         
          } else if (fields.length == 2) {
            generatorOptions = new String[2];
            generatorOptions[0] = makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString);
            generatorOptions[1] = makePair(PhraseGeneratorFactory.FEATURE_PREFIX_OPTION, fields[0]);
            filename = fields[1];
+         
          } else {
            throw new RuntimeException("Invalid phrase table specification: " + filename);
          }
@@ -1167,16 +1169,16 @@ public class Phrasal {
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       InputProperties inputProperties) {
-    // Sanity checks
-    
-    if (wrapBoundary)
-      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
-    
     if (threadId < 0 || threadId >= numThreads) {
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
     }
     if (sourceInputId < 0) {
       throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
+    }
+    
+    // Wrapping input for TMs with boundary tokens
+    if (wrapBoundary) {
+      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
     }
 
     // Output space of the decoder
@@ -1186,6 +1188,14 @@ public class Phrasal {
         targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(),
         wrapBoundary);
 
+    // Decoder-local TM and weight vector?
+    if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
+      // Set the TM for this decoder
+    }
+    if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
+      // Set the weights for this scorer
+    }
+    
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 

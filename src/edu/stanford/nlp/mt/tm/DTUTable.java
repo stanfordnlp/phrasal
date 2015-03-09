@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.LineNumberReader;
 import java.util.regex.Pattern;
 
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -23,7 +24,6 @@ import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
-
 import edu.stanford.nlp.util.StringUtils;
 
 public class DTUTable<FV> extends AbstractPhraseGenerator<IString, FV>
@@ -510,5 +510,12 @@ implements PhraseTable<IString> {
   @Override
   public int minRuleIndex() {
     return 0;
+  }
+
+  @Override
+  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
+      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented.");
   }
 }
