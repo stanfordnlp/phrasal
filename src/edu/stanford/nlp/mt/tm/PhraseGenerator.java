@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 public interface PhraseGenerator<TK,FV> extends Cloneable {
 
   /**
-   * Return a list of scored rules mapped into the source sequence.
+   * Return a list of *sorted* scored rules mapped into the source sequence.
    * 
    * @param source
    * @param sourceInputProperties
