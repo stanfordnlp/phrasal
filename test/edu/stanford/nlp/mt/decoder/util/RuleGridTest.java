@@ -8,7 +8,7 @@ import org.junit.Test;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;
@@ -31,7 +31,7 @@ public class RuleGridTest {
       // TODO(spenceg) This ignores the phrase penalty. Bad for now! But this is another
       // reason why the phrase penalty should be a separate featurizer.
       // Emulate the FlatPhraseTable feature naming convention
-      PHRASE_SCORE_NAMES[i] = String.format("%s.%d", FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
+      PHRASE_SCORE_NAMES[i] = String.format("%s.%d", CompiledPhraseTable.DEFAULT_FEATURE_PREFIX, i);
       PHRASE_SCORES[i] = -99.0f;
     }
   }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.SortedSet;
 
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -137,8 +137,8 @@ public class AbstractWordAlignment implements WordAlignment {
    */
   static public String[] escape(String[] words) {
     for (int i = 0; i < words.length; ++i) {
-      if (words[i].contains(FlatPhraseTable.FIELD_DELIM)) {
-        words[i] = words[i].replace(FlatPhraseTable.FIELD_DELIM, ",");
+      if (words[i].contains(CompiledPhraseTable.FIELD_DELIM)) {
+        words[i] = words[i].replace(CompiledPhraseTable.FIELD_DELIM, ",");
       }
     }
     return words;

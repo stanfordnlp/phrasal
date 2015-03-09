@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.Pair;
  * @author Daniel Cer
  * @author Spence Green
  */
-public class PhraseGeneratorFactory {
+public class TranslationModelFactory {
 
   public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
   public static final String DTU_GENERATOR = "dtu";
@@ -30,7 +30,7 @@ public class PhraseGeneratorFactory {
    * @throws IOException
    */
   @SuppressWarnings("unchecked")
-  static public <FV> Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> factory(
+  static public <FV> Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>> factory(
       String pgName, String filename, String...options) throws IOException {
     
     // Parse options
@@ -54,17 +54,17 @@ public class PhraseGeneratorFactory {
 
       final boolean withGaps = pgName.equals(DTU_GENERATOR);
 
-      List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
+      List<TranslationModel<IString,FV>> generators = new LinkedList<TranslationModel<IString,FV>>();
       List<PhraseTable<IString>> tables = new LinkedList<>();
 
-      PhraseGenerator<IString,FV> pt;
+      TranslationModel<IString,FV> pt;
       if (withGaps) {
         pt = new DTUTable<FV>(filename);
       } else {
         if (featurePrefix == null) {
-          pt = new FlatPhraseTable<FV>(filename);
+          pt = new CompiledPhraseTable<FV>(filename);
         } else {
-          pt = new FlatPhraseTable<FV>(featurePrefix, filename);
+          pt = new CompiledPhraseTable<FV>(featurePrefix, filename);
         }
       }
       generators.add(pt);
@@ -73,8 +73,8 @@ public class PhraseGeneratorFactory {
       CombinedPhraseGenerator<IString,FV> gen = queryLimit == -1 ? 
           new CombinedPhraseGenerator<IString,FV>(generators) :
             new CombinedPhraseGenerator<IString,FV>(generators, queryLimit);
-      Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> pair =
-          new Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>>(
+      Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>> pair =
+          new Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>>(
               gen, tables);
       return pair;
     }

@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  * @param <TK>
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
-    PhraseGenerator<TK,FV> {
+    TranslationModel<TK,FV> {
   
   protected RuleFeaturizer<TK, FV> phraseFeaturizer;
 

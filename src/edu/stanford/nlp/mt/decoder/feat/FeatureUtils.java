@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
@@ -53,7 +53,7 @@ public final class FeatureUtils {
     // 6 translation model scores described in Green et al. (2013).
     for (int i = 0; i < 6; ++i) {
       String fName = String.format("%s:%s.%d", TranslationModelFeaturizer.FEATURE_PREFIX,
-          FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
+          CompiledPhraseTable.DEFAULT_FEATURE_PREFIX, i);
       features.add(fName);
     }
     BASELINE_DENSE_FEATURES = Collections.unmodifiableSet(features);

@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.tm.PhraseGenerator;
+import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.FeatureValueCollection;
 
@@ -22,12 +22,12 @@ import edu.stanford.nlp.mt.util.FeatureValueCollection;
  */
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final FeatureExtractor<TK, FV> featurizer;
-  protected final PhraseGenerator<TK,FV> phraseGenerator;
+  protected final TranslationModel<TK,FV> phraseGenerator;
   protected final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Derivation<TK, FV>> filter;
   protected final boolean filterUnknownWords;
-  protected final PhraseGenerator<TK,FV> unknownWordModel;
+  protected final TranslationModel<TK,FV> unknownWordModel;
 
   /**
    * Constructor.

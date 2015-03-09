@@ -32,7 +32,7 @@ import edu.stanford.nlp.util.StringUtils;
  * @author Spence Green
  *
  */
-public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
+public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
 
   private static final int INITIAL_CAPACITY = 50000;
@@ -60,7 +60,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @param filename
    * @throws IOException
    */
-  public FlatPhraseTable(String filename) throws IOException {
+  public CompiledPhraseTable(String filename) throws IOException {
     this(DEFAULT_FEATURE_PREFIX, filename);
   }
 
@@ -71,7 +71,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @param filename
    * @throws IOException
    */
-  public FlatPhraseTable(
+  public CompiledPhraseTable(
       String featurePrefix,
       String filename) throws IOException {
     super(null);
@@ -138,7 +138,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
     for (String line; (line = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatPhraseTable.FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, CompiledPhraseTable.FIELD_DELIM);
 
       // The standard format has five fields
       assert fields.size() == 5 : String.format("phrase table line %d has %d fields",
@@ -284,7 +284,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     String phrase = args[1];
     long startTimeMillis = System.currentTimeMillis();
     System.out.printf("Loading phrase table: %s%n", model);
-    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(model);
+    CompiledPhraseTable<String> ppt = new CompiledPhraseTable<String>(model);
     long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
     long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
     double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
