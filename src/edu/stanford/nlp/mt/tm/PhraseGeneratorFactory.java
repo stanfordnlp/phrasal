@@ -71,9 +71,8 @@ public class PhraseGeneratorFactory {
       tables.add((PhraseTable<IString>) pt);
 
       CombinedPhraseGenerator<IString,FV> gen = queryLimit == -1 ? 
-          new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE) :
-            new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE,
-                queryLimit);
+          new CombinedPhraseGenerator<IString,FV>(generators) :
+            new CombinedPhraseGenerator<IString,FV>(generators, queryLimit);
       Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> pair =
           new Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>>(
               gen, tables);
