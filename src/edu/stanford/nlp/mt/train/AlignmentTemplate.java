@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.train;
 import java.util.*;
 import java.io.IOException;
 
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -21,7 +21,7 @@ public class AlignmentTemplate {
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  public static final String DELIM = FlatPhraseTable.FIELD_DELIM;
+  public static final String DELIM = CompiledPhraseTable.FIELD_DELIM;
 
   // phrases:
   Sequence<IString> f;

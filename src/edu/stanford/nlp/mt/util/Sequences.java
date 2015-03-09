@@ -3,8 +3,6 @@ package edu.stanford.nlp.mt.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.stanford.nlp.util.Index;
-
 /**
  * Helper functions for working with Sequences.
  *
@@ -22,33 +20,12 @@ public final class Sequences {
    * @param sequence
    * @return
    */
-  public static <T extends HasIntegerIdentity> int[] toIntArray(
-      Sequence<T> sequence) {
+  public static int[] toIntArray(
+      Sequence<IString> sequence) {
     int sz = sequence.size();
-    int[] intArray = new int[sz];
+    int[] intArray = new int[sequence.size()];
     for (int i = 0; i < sz; i++) {
-      T token = sequence.get(i);
-      intArray[i] = token.getId();
-    }
-    return intArray;
-  }
-
-  /**
-   *
-   * @param <T>
-   */
-  @SuppressWarnings("unchecked")
-  public static <T> int[] toIntArray(Sequence<T> sequence, Index<T> index) {
-    int sz = sequence.size();
-    if (sz != 0) {
-      if (sequence.get(0) instanceof HasIntegerIdentity) {
-        return toIntArray((Sequence<HasIntegerIdentity>) sequence);
-      }
-    }
-    int[] intArray = new int[sz];
-    for (int i = 0; i < sz; i++) {
-      T token = sequence.get(i);
-      intArray[i] = index.addToIndex(token);
+      intArray[i] = sequence.get(i).getId();
     }
     return intArray;
   }

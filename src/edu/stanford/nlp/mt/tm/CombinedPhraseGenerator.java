@@ -1,215 +1,187 @@
 package edu.stanford.nlp.mt.tm;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 
-
 /**
+ * Translation model query from multiple phrase tables.
  * 
  * @author Daniel Cer
  * 
  * @param <TK>
  */
-public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
-  static public final int FORCE_ADD_LIMIT = Integer.MAX_VALUE; // 200;
-  static public final String DEBUG_OPT = "CombinedPhraseGeneratorDebug";
-  static public final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_OPT, "false"));
+public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
+  
+  static public final boolean DEBUG = false;
 
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
   }
 
-  public enum Type {
-    CONCATENATIVE, STRICT_DOMINANCE
-  }
-
-  static public final Type DEFAULT_TYPE = Type.CONCATENATIVE;
   static public final int DEFAULT_PHRASE_LIMIT = 50;
 
-  final List<PhraseGenerator<TK,FV>> phraseGenerators;
-  final Type type;
-  final int phraseLimit;
+  private final List<TranslationModel<TK,FV>> phraseGenerators;
+  private final int ruleQueryLimit;
 
-  private void addToMap(ConcreteRule<TK,FV> opt,
-      Map<CoverageSet, List<ConcreteRule<TK,FV>>> optsMap) {
-    List<ConcreteRule<TK,FV>> optList = optsMap
-        .get(opt.sourceCoverage);
-    if (optList == null) {
-      optList = new LinkedList<ConcreteRule<TK,FV>>();
-      optsMap.put(opt.sourceCoverage, optList);
+  /**
+   * Add to the rule list that is being constructed during a query
+   * 
+   * @param opt
+   * @param ruleLists
+   * @param modelId 
+   */
+  private void addToRuleList(ConcreteRule<TK,FV> opt,
+      Map<CoverageSet, List<List<ConcreteRule<TK, FV>>>> ruleLists, int modelId) {
+    if ( ! ruleLists.containsKey(opt.sourceCoverage)) {
+      ruleLists.put(opt.sourceCoverage, new LinkedList<>());
     }
-    optList.add(opt);
-  }
-
-  public int getPhraseLimit() {
-    return phraseLimit;
+    if ( modelId >= ruleLists.get(opt.sourceCoverage).size()) {
+      for (int i = 0; i <= modelId; ++i) {
+        ruleLists.get(opt.sourceCoverage).add(new LinkedList<>());
+      }
+    }
+    ruleLists.get(opt.sourceCoverage).get(modelId).add(opt);
   }
   
   @Override
   public List<String> getFeatureNames() {
     List<String> featureNames = new ArrayList<>();
-    for (PhraseGenerator<TK,FV> generator : phraseGenerators) {
+    for (TranslationModel<TK,FV> generator : phraseGenerators) {
       featureNames.addAll(generator.getFeatureNames());
     }
     return featureNames;
   }
 
   @Override
-  public List<ConcreteRule<TK,FV>> getRules(
-      Sequence<TK> sequence, InputProperties sourceInputProperties, List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
-    Map<CoverageSet, List<ConcreteRule<TK,FV>>> optsMap = new HashMap<CoverageSet, List<ConcreteRule<TK,FV>>>();
-    
-    if (DEBUG) {
-      System.err.printf(
-          "CombinedPhraseGenerator#translationOptions type: %s\n", type);
-    }
+  public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source, InputProperties sourceInputProperties, 
+      List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
+    final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = new HashMap<>(source.size() * source.size());
 
-    if (type.equals(Type.CONCATENATIVE)) {
-      for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
-         if (DEBUG) {
-            System.err.println("PhraseGenerator: "+phraseGenerator.getClass().getCanonicalName());
-         }
-         try {
-           for (ConcreteRule<TK,FV> opt : phraseGenerator
-              .getRules(sequence, sourceInputProperties, targets, sourceInputId, scorer)) {
-             if (DEBUG) {
-               System.err.println("  opt: " + opt);
-             }
-                      
-             addToMap(opt, optsMap);
-           }
-         } catch (Exception e) {
-            System.err.printf("Warning %s threw exception %s", phraseGenerator.getClass().getCanonicalName(), e);
-            e.printStackTrace();
-         }
+    // Support for decoder-local translation models
+    List<TranslationModel<TK,FV>> translationModels = phraseGenerators;
+    if (DecoderLocalTranslationModel.get() != null) {
+      translationModels = new ArrayList<>(phraseGenerators);
+      translationModels.add(DecoderLocalTranslationModel.get());
+    }
+    
+    int modelId = 0;
+    for (TranslationModel<TK,FV> phraseGenerator : translationModels) {
+      for (ConcreteRule<TK,FV> opt : phraseGenerator.getRules(source, sourceInputProperties, targets, 
+          sourceInputId, scorer)) {
+        addToRuleList(opt, ruleLists, modelId);
       }
-    } else if (type.equals(Type.STRICT_DOMINANCE)) {
-      CoverageSet coverage = new CoverageSet(sequence.size());
-      for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
-        if (DEBUG) {
-          System.err.printf("Generator: %s\n", phraseGenerator.getClass()
-              .getName());
+      ++modelId;
+    }
+    
+    // Merge the lists of rules
+    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(source.size());
+    if (modelId == 1) {
+      for (CoverageSet coverage : ruleLists.keySet()) {
+        List<ConcreteRule<TK,FV>> ruleList = ruleLists.get(coverage).get(0);
+        Collections.sort(ruleList);
+        for (int i = 0, sz = ruleList.size(); i < ruleQueryLimit && i < sz; ++i) {
+          ruleGrid.addEntry(ruleList.get(i));
         }
-        List<ConcreteRule<TK,FV>> potentialOptions = phraseGenerator
-            .getRules(sequence, sourceInputProperties, targets, sourceInputId, scorer);
-        BitSet novelCoverage = new CoverageSet(sequence.size());
-        for (ConcreteRule<TK,FV> option : potentialOptions) {
-          if (DEBUG) {
-            System.err.println("  opt: " + option);
-          }
-          if (coverage.intersects(option.sourceCoverage)) {
-            if (DEBUG) {
-              System.err.printf("Skipping %s intersects %s\n", coverage,
-                  option.sourceCoverage);
-              System.err.printf("%s\n--\n", option);
-            }
-            continue;
-          }
-          novelCoverage.or(option.sourceCoverage);
-          addToMap(option, optsMap);
-        }
-        coverage.or(novelCoverage);
       }
+      
     } else {
-      throw new RuntimeException(String.format(
-          "Unsupported combination type: %s", type));
-    }
-
-    if (DEBUG) { 
-       System.err.println("All preCutOpts:");
-       System.err.println("===============");
-       for (List<ConcreteRule<TK,FV>> preCutOpts : optsMap.values()) {       
-             System.err.println(preCutOpts);
-       }   
-    }
-    
-    List<ConcreteRule<TK,FV>> cutoffOpts = new LinkedList<ConcreteRule<TK,FV>>();
-    for (List<ConcreteRule<TK,FV>> preCutOpts : optsMap.values()) {
-      int sz = preCutOpts.size();
-      if (sz <= phraseLimit) {
-        cutoffOpts.addAll(preCutOpts);
-        continue;
-      }
-
-      List<ConcreteRule<TK,FV>> preCutOptsArray = new ArrayList<ConcreteRule<TK,FV>>(
-          preCutOpts);
-
-      Collections.sort(preCutOptsArray);
-
-      if (DEBUG) {
-        System.err.println("Sorted Options");
-        for (ConcreteRule<TK,FV> opt : preCutOpts) {
-          System.err.println("--");
-          System.err.printf("%s => %s : %f\n", opt.abstractRule.source,
-              opt.abstractRule.target, opt.isolationScore);
-          System.err.printf("%s\n", Arrays.toString(opt.abstractRule.scores));
-        }
-      }
-
-      int preCutOptsArraySz = preCutOptsArray.size();
-
-      int forceAddCnt = 0;
-      for (int i = 0; (i < phraseLimit)
-          || (phraseLimit == 0 && i < preCutOptsArraySz); i++) {
-        if (preCutOptsArray.get(i).abstractRule.forceAdd) {
-          forceAddCnt++;
-        }
-        cutoffOpts.add(preCutOptsArray.get(i));
-      }
-
-      if (phraseLimit != 0)
-        for (int i = phraseLimit; i < preCutOptsArraySz
-            && forceAddCnt < FORCE_ADD_LIMIT; i++) {
-          if (preCutOptsArray.get(i).abstractRule.forceAdd) {
-            cutoffOpts.add(preCutOptsArray.get(i));
-            forceAddCnt++;
+      for (CoverageSet coverage : ruleLists.keySet()) {
+        List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
+        
+        // Effectively cube pruning!
+        Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
+        for (List<ConcreteRule<TK,FV>> list : ruleList) {
+          Collections.sort(list);
+          if (list.size() > 0) {
+            pq.add(new Item<TK,FV>(list.remove(0), list));
           }
         }
+        int numPoppedItems = 0;
+        while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
+          Item<TK, FV> item = pq.poll();
+          if (item == null) {
+            break;
+          } else {
+            ruleGrid.addEntry(item.rule);
+            if (item.list.size() > 0) {
+              pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
+            }
+          }
+        }
+      }
+    } 
+    return ruleGrid;
+  }
+  
+  /**
+   * Queue item for merging multiple query lists.
+   * 
+   * @author Spence Green
+   *
+   * @param <TK>
+   * @param <FV>
+   */
+  protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
+    public final ConcreteRule<TK,FV> rule;
+    public final List<ConcreteRule<TK,FV>> list;
+
+    public Item(ConcreteRule<TK,FV> rule, List<ConcreteRule<TK,FV>> list) {
+      this.rule = rule;
+      this.list = list;
     }
 
-    return cutoffOpts;
+    @Override
+    public int compareTo(Item<TK,FV> o) {
+      if (rule == null && o.rule == null) {
+        return 0;
+      } else if (rule == null) {
+        return -1;
+      } else if (o.rule == null) {
+        return 1;
+      }
+      return this.rule.compareTo(o.rule);
+    }
   }
 
   /**
-	 * 
-	 */
-  public CombinedPhraseGenerator(List<PhraseGenerator<TK,FV>> phraseGenerators) {
-    this.phraseGenerators = phraseGenerators;
-    this.type = DEFAULT_TYPE;
-    this.phraseLimit = DEFAULT_PHRASE_LIMIT;
+   * Constructor.
+   * 
+   * @param phraseGenerators
+   */
+  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators) {
+    this(phraseGenerators, DEFAULT_PHRASE_LIMIT);
   }
 
   /**
-	 * 
-	 */
-  public CombinedPhraseGenerator(List<PhraseGenerator<TK,FV>> phraseGenerators,
-      Type type) {
+   * Constructor.
+   * 
+   * @param phraseGenerators
+   * @param phraseLimit
+   */
+  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators,
+      int phraseLimit) {
     this.phraseGenerators = phraseGenerators;
-    this.type = type;
-    this.phraseLimit = DEFAULT_PHRASE_LIMIT;
-  }
-
-  /**
-	 * 
-	 */
-  public CombinedPhraseGenerator(List<PhraseGenerator<TK,FV>> phraseGenerators,
-      Type type, int phraseLimit) {
-    this.phraseGenerators = phraseGenerators;
-    this.type = type;
-    this.phraseLimit = phraseLimit;
+    this.ruleQueryLimit = phraseLimit;
   }
 
   @Override
   public int longestSourcePhrase() {
     int longest = -1;
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
       if (longest < phraseGenerator.longestSourcePhrase())
         longest = phraseGenerator.longestSourcePhrase();
     }
@@ -218,7 +190,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
 
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
-    for (PhraseGenerator<TK,FV> phraseTable : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseTable : phraseGenerators) {
       phraseTable.setFeaturizer(featurizer);
     }
   }
@@ -226,7 +198,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   @Override
   public int longestTargetPhrase() {
     int longest = -1;
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
       if (longest < phraseGenerator.longestTargetPhrase())
         longest = phraseGenerator.longestTargetPhrase();
     }
@@ -236,5 +208,12 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   @Override
   public String getName() {
     return this.getClass().getSimpleName();
+  }
+
+  @Override
+  public List<ConcreteRule<TK, FV>> getRules(Sequence<TK> source,
+      InputProperties sourceInputProperties, List<Sequence<TK>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented. Call getRuleGrid()");
   }
 }

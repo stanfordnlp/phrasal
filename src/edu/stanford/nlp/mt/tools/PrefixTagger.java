@@ -79,7 +79,7 @@ public class PrefixTagger extends TestSentence {
     this.origWords = null;
     this.sent = new ArrayList<String>(size);
     for (int j = 0; j < size; j++)
-      this.sent.add(s[j].word());
+      this.sent.add(s[j].toString());
     localContextScores = new double[size][];
     len = size + leftWindow;
   }
@@ -172,7 +172,7 @@ public class PrefixTagger extends TestSentence {
         // System.err.printf("tagging(%d,%d,%d,%s): %s\n",from,to,offset,tag.first.word(),Arrays.toString(seq));
         System.out.print(seq[loc]);
         System.out.print("/");
-        System.out.print(tag.first.word());
+        System.out.print(tag.first.toString());
       }
       System.out.print("\n");
     }

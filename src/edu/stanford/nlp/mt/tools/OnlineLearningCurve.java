@@ -74,7 +74,7 @@ public class OnlineLearningCurve {
     for (String wtsFile : wts) {
       Counter<String> w = IOTools.readWeights(wtsFile);
       for (int i = 0; i < numThreads; ++i) {
-        p.getScorer(i).updateWeights(w);
+        p.setModelWeights(i, w);
       }
       
       System.err.printf("Decoding with %s%n", wtsFile);

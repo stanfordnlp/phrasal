@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.lm.LMState;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tools.deplm.DependencyUtils;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -250,7 +249,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
   }
   
   @Override
-  public void initialize(int sourceInputId, List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+  public void initialize(int sourceInputId, Sequence<IString> source) {
     this.head2Dependent = forwardDependenciesCache.get(sourceInputId);
     this.dependent2Head = reverseDependenciesCache.get(sourceInputId);
     if (reachableNodesCache.get(sourceInputId) == null)
@@ -278,7 +277,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       
       IString tgtToken = f.targetPhrase.get(i);
-      if (tgtToken.word().length() == 0 || TokenUtils.isPunctuation(tgtToken.word()))
+      if (tgtToken.length() == 0 || TokenUtils.isPunctuation(tgtToken.toString()))
         continue;
       if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
         // Unaligned -- try to attach to the next translated word in the rule

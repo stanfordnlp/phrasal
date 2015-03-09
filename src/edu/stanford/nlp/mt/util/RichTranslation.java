@@ -5,7 +5,7 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
 /**
@@ -75,7 +75,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
    *          Print the derivation history. 
    */
   public void nbestToMosesStringBuilder(int id, StringBuilder sbuf, Pattern featurePattern, boolean bolt, boolean printHistory) {
-    final String delim = FlatPhraseTable.FIELD_DELIM;
+    final String delim = CompiledPhraseTable.FIELD_DELIM;
     sbuf.append(id);
     sbuf.append(' ').append(delim).append(' ');
     sbuf.append(this.translation);
@@ -137,7 +137,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
   
   // Thang May14: copy toString, to debug CubePrunningDecoder/CubePrunningNNLMDecoder
   public String toStringNoLatticeId() {
-    final String delim = FlatPhraseTable.FIELD_DELIM;
+    final String delim = CompiledPhraseTable.FIELD_DELIM;
     StringBuilder sb = new StringBuilder();
     sb.append(this.translation.toString());
     sb.append(' ').append(delim);

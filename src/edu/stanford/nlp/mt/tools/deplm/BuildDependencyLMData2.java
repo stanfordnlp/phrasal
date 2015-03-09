@@ -97,11 +97,11 @@ public class BuildDependencyLMData2 {
     lmWriter.write(sibling + " " + direction + " " + head + " " + child);
     lmWriter.write("\n");
 
-    noEventWriter.write(head.word());
+    noEventWriter.write(head.toString());
     noEventWriter.write("\n");
-    noEventWriter.write(direction.word());
+    noEventWriter.write(direction.toString());
     noEventWriter.write("\n");
-    noEventWriter.write(sibling.word());
+    noEventWriter.write(sibling.toString());
     noEventWriter.write("\n");
 
     

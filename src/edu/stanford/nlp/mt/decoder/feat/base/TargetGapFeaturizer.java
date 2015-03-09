@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTURule;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.tm.Rule;
@@ -236,7 +235,7 @@ public class TargetGapFeaturizer extends DerivationFeaturizer<IString,String> im
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
+      Sequence<IString> foreign) {
   }
 
   private static int getGapCount(Featurizable<IString, String> f) {

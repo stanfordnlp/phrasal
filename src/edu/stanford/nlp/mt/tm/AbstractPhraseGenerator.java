@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.tm;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  * @param <TK>
  */
 abstract public class AbstractPhraseGenerator<TK, FV> implements
-    PhraseGenerator<TK,FV> {
+    TranslationModel<TK,FV> {
   
   protected RuleFeaturizer<TK, FV> phraseFeaturizer;
 
@@ -41,8 +41,8 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   public List<ConcreteRule<TK,FV>> getRules(
       Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, 
       int sourceInputId, Scorer<FV> scorer) {
-    List<ConcreteRule<TK,FV>> opts = new LinkedList<>();
-    if (source == null || source.size() == 0) return opts;
+    if (source == null || source.size() == 0) return new ArrayList<>(1);
+    List<ConcreteRule<TK,FV>> opts = new ArrayList<>(source.size() * source.size() * 100);
     int sequenceSz = source.size();
     int longestForeignPhrase = this.longestSourcePhrase();
     if (longestForeignPhrase < 0)

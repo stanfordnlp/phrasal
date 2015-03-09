@@ -6,7 +6,6 @@ import java.io.*;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable.ReorderingTypes;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
@@ -607,7 +606,7 @@ public class HierarchicalReorderingFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
+      Sequence<IString> foreign) {
   }
 
   @Override
