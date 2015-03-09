@@ -68,6 +68,7 @@ import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
+import edu.stanford.nlp.mt.tm.DecoderLocalTranslationModel;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.FlatPhraseTable;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
@@ -250,6 +251,11 @@ public class Phrasal {
   private int ruleQueryLimit = 20;
   
   /**
+   * Global model loaded at startup.
+   */
+  private Counter<String> globalModel;
+  
+  /**
    * DTU options
    * 
    * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
@@ -271,7 +277,7 @@ public class Phrasal {
    * Phrase table / translation model
    */
   private PhraseGenerator<IString,String> phraseGenerator;
-
+  
   /**
    * Whether to filter unknown words in the output
    */
@@ -332,6 +338,7 @@ public class Phrasal {
    */
   private Preprocessor preprocessor;
   private Postprocessor postprocessor;
+
   
   public Preprocessor getPreprocessor() { return preprocessor; }
   public Postprocessor getPostprocessor() { return postprocessor; }
@@ -750,11 +757,11 @@ public class Phrasal {
     phraseGenerator.setFeaturizer(featurizer);
 
     // Create Scorer / weight vector
-    Counter<String> weightVector = new ClassicCounter<String>();
+    this.globalModel = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s%n", config.get(WEIGHTS_FILE).get(0));
-      weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
+      globalModel = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     }
 
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
@@ -781,7 +788,7 @@ public class Phrasal {
       }
     }
 
-    System.err.printf("WeightConfig: '%s' %s%n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
+    System.err.printf("WeightConfig: '%s' %s%n", Counters.toBiggestValuesFirstString(globalModel, 100), (globalModel.size() > 100 ? "..." : ""));
 
 
     // Create Recombination Filter
@@ -826,7 +833,7 @@ public class Phrasal {
         infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
         infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, globalModel, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
@@ -1188,14 +1195,34 @@ public class Phrasal {
         targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(),
         wrapBoundary);
 
-    // Decoder-local TM and weight vector?
+    // Configure the translation model
     if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
-      // Set the TM for this decoder
+      String phraseTable = (String) inputProperties.get(InputProperty.DecoderLocalTM);
+      final String optionLimitString = String.valueOf(this.ruleQueryLimit);
+      try {
+        Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
+            PhraseGeneratorFactory.<String>factory(PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable,
+                makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString));
+        DecoderLocalTranslationModel.set(phraseTablePair.first());
+        System.err.printf("Loaded decoder-local translation model from %s%n", phraseTable);
+      
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    } else {
+      // Sanity check
+      DecoderLocalTranslationModel.set(null);
     }
     if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
-      // Set the weights for this scorer
+      String fileName = (String) inputProperties.get(InputProperty.DecoderLocalWeights);
+      Counter<String> weights = IOTools.readWeights(fileName);
+      this.getScorer(threadId).updateWeights(weights);
+    
+    } else {
+      this.getScorer(threadId).updateWeights(this.globalModel);      
     }
     
+    // Decode
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 
