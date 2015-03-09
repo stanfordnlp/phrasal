@@ -12,15 +12,15 @@ public final class DecoderLocalTranslationModel {
   
 
   // Thread local copies of translation model indices
-  private static final ThreadLocal<PhraseGenerator> threadLocalCache =
-      new ThreadLocal<PhraseGenerator>();
+  private static final ThreadLocal<TranslationModel> threadLocalCache =
+      new ThreadLocal<TranslationModel>();
 
   /**
    * Set the thread-local index.
    * 
    * @param index
    */
-  public static void set(PhraseGenerator translationModel) {
+  public static void set(TranslationModel translationModel) {
     threadLocalCache.set(translationModel);
   }
 
@@ -29,7 +29,7 @@ public final class DecoderLocalTranslationModel {
    * 
    * @return
    */
-  public static PhraseGenerator get() {
+  public static TranslationModel get() {
     return threadLocalCache.get();
   }
 }

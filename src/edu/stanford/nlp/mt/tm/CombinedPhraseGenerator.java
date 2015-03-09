@@ -23,7 +23,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  * 
  * @param <TK>
  */
-public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
+public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   
   static public final boolean DEBUG = false;
 
@@ -34,7 +34,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
 
   static public final int DEFAULT_PHRASE_LIMIT = 50;
 
-  private final List<PhraseGenerator<TK,FV>> phraseGenerators;
+  private final List<TranslationModel<TK,FV>> phraseGenerators;
   private final int ruleQueryLimit;
 
   /**
@@ -60,7 +60,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   @Override
   public List<String> getFeatureNames() {
     List<String> featureNames = new ArrayList<>();
-    for (PhraseGenerator<TK,FV> generator : phraseGenerators) {
+    for (TranslationModel<TK,FV> generator : phraseGenerators) {
       featureNames.addAll(generator.getFeatureNames());
     }
     return featureNames;
@@ -72,14 +72,14 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
     final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = new HashMap<>(source.size() * source.size());
 
     // Support for decoder-local translation models
-    List<PhraseGenerator<TK,FV>> translationModels = phraseGenerators;
+    List<TranslationModel<TK,FV>> translationModels = phraseGenerators;
     if (DecoderLocalTranslationModel.get() != null) {
       translationModels = new ArrayList<>(phraseGenerators);
       translationModels.add(DecoderLocalTranslationModel.get());
     }
     
     int modelId = 0;
-    for (PhraseGenerator<TK,FV> phraseGenerator : translationModels) {
+    for (TranslationModel<TK,FV> phraseGenerator : translationModels) {
       for (ConcreteRule<TK,FV> opt : phraseGenerator.getRules(source, sourceInputProperties, targets, 
           sourceInputId, scorer)) {
         addToRuleList(opt, ruleLists, modelId);
@@ -162,7 +162,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
    * 
    * @param phraseGenerators
    */
-  public CombinedPhraseGenerator(List<PhraseGenerator<TK,FV>> phraseGenerators) {
+  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators) {
     this(phraseGenerators, DEFAULT_PHRASE_LIMIT);
   }
 
@@ -172,7 +172,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
    * @param phraseGenerators
    * @param phraseLimit
    */
-  public CombinedPhraseGenerator(List<PhraseGenerator<TK,FV>> phraseGenerators,
+  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators,
       int phraseLimit) {
     this.phraseGenerators = phraseGenerators;
     this.ruleQueryLimit = phraseLimit;
@@ -181,7 +181,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   @Override
   public int longestSourcePhrase() {
     int longest = -1;
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
       if (longest < phraseGenerator.longestSourcePhrase())
         longest = phraseGenerator.longestSourcePhrase();
     }
@@ -190,7 +190,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
 
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
-    for (PhraseGenerator<TK,FV> phraseTable : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseTable : phraseGenerators) {
       phraseTable.setFeaturizer(featurizer);
     }
   }
@@ -198,7 +198,7 @@ public class CombinedPhraseGenerator<TK,FV> implements PhraseGenerator<TK,FV> {
   @Override
   public int longestTargetPhrase() {
     int longest = -1;
-    for (PhraseGenerator<TK,FV> phraseGenerator : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
       if (longest < phraseGenerator.longestTargetPhrase())
         longest = phraseGenerator.longestTargetPhrase();
     }

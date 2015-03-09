@@ -16,7 +16,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  * 
  * @param <TK>
  */
-public interface PhraseGenerator<TK,FV> extends Cloneable {
+public interface TranslationModel<TK,FV> extends Cloneable {
 
   /**
    * Return a list of *sorted* scored rules mapped into the source sequence.

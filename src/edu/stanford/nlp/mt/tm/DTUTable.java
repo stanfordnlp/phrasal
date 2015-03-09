@@ -86,7 +86,7 @@ implements PhraseTable<IString> {
     int countScores = init(f);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
-      scoreNames[i] = String.format("%s.%d", FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
+      scoreNames[i] = String.format("%s.%d", CompiledPhraseTable.DEFAULT_FEATURE_PREFIX, i);
     }
   }
   
@@ -106,7 +106,7 @@ implements PhraseTable<IString> {
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
     for (String line; (line = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatPhraseTable.FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, CompiledPhraseTable.FIELD_DELIM);
       
       // The standard format has five fields
       assert fields.size() == 5 : String.format("phrase table line %d has %d fields", 
