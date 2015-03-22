@@ -204,7 +204,7 @@ public class FeatureExtractor<TK, FV> extends
       if (featureAugmentationMode == 0 ||
           (featureAugmentationMode == 1 && fv.isDenseFeature) ||
           (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
-        String featureValue = String.format("%s-%s", fv.name.toString(), genre);
+        String featureValue = String.format("aug-%s-%s", genre, fv.name.toString());
         featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
       }
     }
