@@ -1,0 +1,81 @@
+system-dir: /media/scr/decoder
+experiment:
+  name: my_experiment
+copy-data:
+  - /home/rayder441/sandbox
+corpus:
+  source: /
+  target: /
+  align:
+    - file 1
+    - file 2
+  mono:
+    - file 1
+    - file 2
+    - file 3
+    - file 4
+translation-model:
+  file-path: /path/to/file
+  options:
+    - option 1
+    - option 2
+    - option 3
+language-model:
+  file-path: /path/to/file
+  type: probing
+  compile-options:
+    - option 1
+    - option 2
+tune:
+  source: /path/to/file
+  refs:
+    - ref 1
+    - ref 2
+    - ref 3
+  initial-wts: /path/to/file
+  options:
+    - option 1
+    - option 2
+    - option 3
+decoder-config:
+  ini-options:
+    lmodel-file: kenlm:/media/read-data/lm/5gm-probing.bin
+    ttable-file: remote-data/phrase-table.gz
+    ttable-limit: 20
+    distortion-limit: 5
+    reordering-model:
+      - hierarchical
+      - remote-data/lo-hier.msd2-bidirectional-fe.gz
+      - msd2-bidirectional-fe
+      - hierarchical
+      - hierarchical
+      - bin
+    threads: 4
+    stack: 800
+    weights-file: remote-data/uist14tune.dense.online.final.binwts
+    recombination-mode: exact
+    preprocessor-filter: french
+    postprocessor-filter: 
+      - english
+      - remote-data/train.en.all.prep.2.ser.gz
+evaluate:
+  metric: bleu
+  source: /path/to/file
+  refs:
+    - file 1
+    - file 2
+    - file 3
+build:
+  /opt/core:
+    branch: master
+    build-cmd: gradle installDist
+runtime:
+  environment: /opt/core/prod/setup.bash
+  jvm-opts:
+    - -Xmx30g
+    - -Xmx30g
+    - -server
+    - -ea
+    - -XX:+UseParallelGC
+    - -XX:+UseParallelOldGC
+    - -Djava.library.path=/home/rayder441/lilt/phrasal/src-cc
