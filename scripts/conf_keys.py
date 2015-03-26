@@ -11,6 +11,7 @@ TASK_COPY_DATA = 'copy-data'
 CORPUS = 'corpus'
 CORPUS_SRC = 'source'
 CORPUS_TGT = 'target'
+CORPUS_MONO = 'mono'
 CORPUS_ALIGN = 'align'
 
 # TASK: translation model
@@ -49,5 +50,4 @@ BUILD_CMD = 'build-cmd'
 # TASK: create run script
 TASK_RUNTIME = 'runtime'
 RUNTIME_JVM = 'jvm-opts'
-RUNTIME_ENV = 'environment'
 

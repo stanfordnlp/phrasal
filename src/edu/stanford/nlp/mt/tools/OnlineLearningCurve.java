@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
-import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -43,8 +42,7 @@ public class OnlineLearningCurve {
     String iniFile = args[0];
     String sourceFile = args[1];
     String[] refFiles = args[2].split(",");
-    String slMetricStr = args[3];
-    String clMetricStr = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(slMetricStr);
+    String clMetricStr = args[3];
     System.err.printf("Evaluation metric: %s%n", clMetricStr.toUpperCase());
     
     // Read the references and apply NIST tokenization
