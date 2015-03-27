@@ -24,7 +24,6 @@ import os.path
 from os.path import basename
 import shutil
 import subprocess
-from cat import CatFile
 import conf_keys as k
 import re
 
