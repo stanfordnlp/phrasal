@@ -1,13 +1,16 @@
 #!/usr/local/bin/doit -f
 #
 # (The above location is the standard if pydoit is installed
-#  via 'pip install doit'.
+#  via 'pip install doit'.)
 #
 # A pydoit script for running the full Phrasal
 # pipeline. This script replaces the old phrasal.sh.
 #
 # This script executes all underlying commands in a
 # platform-independent manner.
+#
+# NOTE: This script is written for Python 2.7. Py3k support
+#       is untested.
 #
 # Author: Spence Green
 #
@@ -33,7 +36,9 @@ import fileinput
 # Doit configuration
 #
 DOIT_CONFIG = {
-    # output from actions should be sent to the terminal/console
+    # 0 := dont' print anything
+    # 1 := print stderr only
+    # 2 := print stderr and stdout
     'verbosity': 2,
     # use multi-processing / parallel execution
     'num_process': 1
@@ -82,6 +87,8 @@ CHECKPOINT_BUILD = p(k.TASK_BUILD)
 def qualify_path(path):
     if path.startswith(COPY_DATA_LOC):
         return os.path.join(SYSTEM_DIR, path)
+    elif path.startswith(k.SYSTEM_DIR):
+        return os.path.join(SYSTEM_DIR, basename(path))
     else:
         return path
 
@@ -116,25 +123,23 @@ def get_log_file_path(name):
     """
     return os.path.join(LOGS_DIR, '%s.%s.log' % (EXPERIMENT_NAME, name))
         
-def execute_shell_cmd(cmd, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT):
+def execute_shell_cmd(cmd, stdin=None, stdout=subprocess.PIPE,
+                      stderr=subprocess.STDOUT):
     """
     Executes a bash script as a sub-process. Execution is
-    platform-dependent (i.e., a shell is required).
+    platform-dependent (i.e., a shell is required). But this
+    should work on at least MacOS and Linux. Untested on Windows.
 
     Returns:
       The process handle.
     """
+    print 'Executing:', cmd
     return subprocess.Popen(cmd, shell=True,
                             cwd=SYSTEM_DIR, env=os.environ,
                             universal_newlines=True,
                             stdin=stdin,
                             stdout=stdout,
                             stderr=stderr)
-    #    script_file = tempfile.NamedTemporaryFile('wt')
-    #    script_file.write(script)
-    #    script_file.flush()
-    #    return subprocess.Popen(['bash', script_file.name], shell=True,
-
 
 def get_java_cmd(class_str):
     """
@@ -185,9 +190,13 @@ def task_build():
                     retval = p.wait()
                     if current_branch != branch:
                         retval = execute_shell_cmd('git checkout ' + branch).wait()
+                        if retval != 0:
+                            return
                 elif action == k.BUILD_CMD:
                     with open(get_log_file_path('build'), 'w') as log_file:
                         retval = execute_shell_cmd(value, stdout=log_file).wait()
+                        if retval != 0:
+                            return
             os.chdir(cwd)
         checkpoint(CHECKPOINT_BUILD, 'done')
             
@@ -255,11 +264,28 @@ def task_compile_lm():
         # Binarize ARPA file
         bin_cmd = "%s %s %s.arpa %s" % (build_bin, bin_type, LM_FILE, LM_FILE)
         with open(get_log_file_path('lm'), 'w') as log_file:
-            with CatFile(mono_files) as infile:
-                retval = execute_shell_cmd(lmplz_cmd, stdin=infile,
-                                     stdout=log_file).wait()
-            retval = execute_shell_cmd(bin_cmd, stdout=log_file).wait()
-        shutil.rmtree(tmp_dir)
+            if len(mono_data) == 1:
+                with open(mono_data[0]) as infile:
+                    retval = execute_shell_cmd(lmplz_cmd,
+                                               stdin=infile,
+                                               stdout=log_file).wait()
+            else:
+                # One-line cat command that handles both compressed
+                # and uncompressed files in a platform-independent
+                # way. Magic.
+                cat_cmd = 'python -c "import fileinput; import sys; map(lambda x : sys.stdout.write(x), fileinput.input(openhook=fileinput.hook_compressed))" ' + ' '.join(mono_data)
+                p_cat = execute_shell_cmd(cat_cmd)
+                retval = execute_shell_cmd(lmplz_cmd,
+                                               stdin=p_cat.stdout,
+                                               stdout=log_file).wait()
+            shutil.rmtree(tmp_dir)
+            # Binarize
+            if retval != 0 or not os.path.exists(LM_FILE + '.arpa'):
+                return
+            retval = execute_shell_cmd(bin_cmd,
+                                       stdout=log_file).wait()
+            if retval != 0:
+                return
     
     return { 'actions' : [make_lm],
              'file_dep' : [CHECKPOINT_COPY_DATA],
@@ -268,7 +294,9 @@ def task_compile_lm():
 
 def task_extract_tm():
     """
-    Build a suffix-array based translation model.
+    Extract a translation model.
+    TODO(spenceg) Assumes the new unfiltered TM builder,
+    whatever that is.
     """
     def make_tm():
         if os.path.exists(TM_FILE):
@@ -287,7 +315,10 @@ def task_extract_tm():
         cmd = "%s %s %s %s %s %s" % (java_cmd, tm_options, TM_FILE, source, target, align)
         with open(get_log_file_path('tm'), 'w') as log_file:
             retval = execute_shell_cmd(cmd, stdout=log_file).wait()
-        
+        if retval != 0:
+            os.remove(TM_FILE)
+            return
+            
     return { 'actions' : [make_tm],
              'file_dep' : [CHECKPOINT_COPY_DATA],
              'targets' : [TM_FILE]
@@ -349,6 +380,8 @@ def task_tune():
         cmd = '%s %s %s %s %s %s' % (java_cmd, source, ref, DECODER_TUNE_INI, wts, options)
         with open(get_log_file_path('tune'), 'w') as log_file:
             retval = execute_shell_cmd(cmd, stdout=log_file).wait()
+        if retval != 0:
+            return
 
         # Generate the decoder ini file
         generate_ini(DECODER_INI, TUNE_WTS)
@@ -372,8 +405,12 @@ def task_evaluate():
         with open(get_log_file_path('decode'), 'w') as log_file:
             with codecs.open(EVAL_FILE, 'w', encoding='utf-8') as outfile:
                 with codecs.open(src, encoding='utf-8') as infile:
-                    retval = execute_shell_cmd(cmd, stdin=infile, stdout=outfile, stderr=log_file).wait()
-            
+                    retval = execute_shell_cmd(cmd, stdin=infile,
+                                               stdout=outfile,
+                                               stderr=log_file).wait()
+        if retval != 0:
+            os.remove(EVAL_FILE)
+                        
     def evaluate():
         """
         Evaluate a test set according to an evaluation metric.
@@ -394,6 +431,8 @@ def task_evaluate():
                     retval = execute_shell_cmd(cmd, stdin=infile,
                                                stdout=outfile,
                                                stderr=log_file).wait()
+        if retval != 0:
+            os.remove(EVAL_FILE + '.eval')
                 
     return { 'actions' : [decode, evaluate],
              'file_dep' : [TM_FILE, LM_FILE, DECODER_INI],
@@ -411,8 +450,10 @@ def task_learning_curve():
         src = d[k.EVAL_SRC]
         if isinstance(refs, list):
             refs = ','.join(refs)
+        # TODO(spenceg) Filter the weights correctly.
         all_wts = [x for x in os.listdir(SYSTEM_DIR) if re.search('\.binwts', x)]
         assert len(all_wts) > 0
+        # TODO(spenceg) Sort the weights
         java_cmd = get_java_cmd('edu.stanford.nlp.mt.tools.OnlineLearningCurve')
         cmd = '%s %s %s %s %s %s' % (java_cmd, DECODER_INI,
                                      src, refs, metric,
@@ -421,6 +462,8 @@ def task_learning_curve():
             with open(LEARN_CURVE, 'w') as outfile:
                 retval = execute_shell_cmd(cmd, stdout=outfile,
                                            stderr=log_file).wait()
+        if retval != 0:
+            os.remove(LEARN_CURVE)
 
     return { 'actions' : [generate_curve],
              'file_dep' : [TM_FILE, LM_FILE, DECODER_INI],

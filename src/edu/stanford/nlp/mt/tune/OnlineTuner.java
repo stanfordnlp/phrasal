@@ -708,6 +708,7 @@ public final class OnlineTuner {
    */
   private static UpdaterState loadUpdaterState(String wtsInitialFile) {
     int delim = wtsInitialFile.lastIndexOf('.');
+    if (delim < 0) return null;
     String fileName = wtsInitialFile.substring(0, delim) + STATE_FILE_EXTENSION;
     File file = new File(fileName);
     if (file.exists()) {
