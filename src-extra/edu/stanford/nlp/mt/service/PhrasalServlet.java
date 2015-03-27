@@ -12,6 +12,7 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import edu.stanford.nlp.mt.Phrasal;
+import edu.stanford.nlp.mt.decoder.util.SparseScorer;
 import edu.stanford.nlp.mt.service.Messages.MessageType;
 import edu.stanford.nlp.mt.service.Messages.Request;
 import edu.stanford.nlp.mt.service.handlers.RequestHandler;
@@ -26,7 +27,6 @@ import edu.stanford.nlp.util.Pair;
 /**
  * Servlet that loads Phrasal as a private member.
  *
- * TODO(spenceg):
  * 
  * @author Spence Green
  *
@@ -88,7 +88,7 @@ public class PhrasalServlet extends HttpServlet {
 
       } else if (type == MessageType.RULE_QUERY_REQUEST) {
         handlers[type.ordinal()] = loadMock ? new RuleQueryRequestHandlerMock() :
-          new RuleQueryRequestHandler(decoder.getPhraseTable(), decoder.getScorer(0),
+          new RuleQueryRequestHandler(decoder.getPhraseTable(), new SparseScorer(decoder.getModel()),
               decoder.getPreprocessor(), decoder.getPostprocessor());
 
       } else if (type == MessageType.UNKNOWN_REQUEST) {

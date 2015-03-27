@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -50,12 +51,6 @@ public class OnlineLearningCurve {
     // Read the references and apply NIST tokenization
     final List<List<Sequence<IString>>> references = MetricUtils.readReferences(refFiles, true);
     
-    // Read the list of weights
-    List<String> wts = new ArrayList<String>();
-    for (int i = 4; i < args.length; ++i) {
-      wts.add(args[i]);
-    }
-
     System.err.println("Loading Phrasal...");
     Phrasal p = null;
     Map<String, List<String>> config = IOTools.readConfigFile(iniFile);
@@ -70,12 +65,10 @@ public class OnlineLearningCurve {
     }
     p = Phrasal.loadDecoder(config);
 
-    final int numThreads = p.getNumThreads();
+    String[] wts = Arrays.copyOfRange(args, 4, args.length);
     for (String wtsFile : wts) {
       Counter<String> w = IOTools.readWeights(wtsFile);
-      for (int i = 0; i < numThreads; ++i) {
-        p.setModelWeights(i, w);
-      }
+      p.setModel(w);
       
       System.err.printf("Decoding with %s%n", wtsFile);
       
