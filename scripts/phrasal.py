@@ -39,7 +39,7 @@ DOIT_CONFIG = {
     # 0 := dont' print anything
     # 1 := print stderr only
     # 2 := print stderr and stdout
-    'verbosity': 2,
+    'verbosity': 1,
     # use multi-processing / parallel execution
     'num_process': 1
 }
@@ -102,6 +102,7 @@ TM_FILE = qualify_path(CONFIG[k.TASK_TM][k.TM_OUTPUT])
 EVAL_FILE = '%s.%s.trans' % (CONFIG[k.TASK_EVAL][k.EVAL_SRC], EXPERIMENT_NAME) if k.TASK_EVAL in CONFIG else None
 if EVAL_FILE:
     EVAL_FILE = make_abs(EVAL_FILE)
+EVAL_FILE_METRIC = EVAL_FILE + '.eval'
 TUNE_WTS = make_abs('%s.online.final.binwts' % (EXPERIMENT_NAME))
 LEARN_CURVE = make_abs('%s.learn-curve' % (EXPERIMENT_NAME))
 
@@ -377,7 +378,7 @@ def task_tune():
         options += ' -n ' + EXPERIMENT_NAME
         wts = d[k.TUNE_WTS]
         java_cmd = get_java_cmd('edu.stanford.nlp.mt.tune.OnlineTuner')
-        cmd = '%s %s %s %s %s %s' % (java_cmd, source, ref, DECODER_TUNE_INI, wts, options)
+        cmd = '%s %s %s %s %s %s' % (java_cmd, options, source, ref, DECODER_TUNE_INI, wts)
         with open(get_log_file_path('tune'), 'w') as log_file:
             retval = execute_shell_cmd(cmd, stdout=log_file).wait()
         if retval != 0:
@@ -391,7 +392,7 @@ def task_tune():
              'targets' : [DECODER_INI, TUNE_WTS]
          }
 
-def task_evaluate():
+def task_decode():
     """
     Decode and evaluate test set.
     """
@@ -410,11 +411,17 @@ def task_evaluate():
                                                stderr=log_file).wait()
         if retval != 0:
             os.remove(EVAL_FILE)
-                        
+
+    return { 'actions' : [decode],
+             'file_dep' : [TM_FILE, LM_FILE, DECODER_INI],
+             'targets' : [EVAL_FILE]
+         }
+            
+def task_evaluate():
+    """
+    Evaluate a test set according to an evaluation metric.
+    """
     def evaluate():
-        """
-        Evaluate a test set according to an evaluation metric.
-        """
         if not os.path.exists(EVAL_FILE):
             # Nothing to evaluate
             return
@@ -426,19 +433,19 @@ def task_evaluate():
         java_cmd = get_java_cmd('edu.stanford.nlp.mt.tools.Evaluate')
         cmd = '%s %s %s' % (java_cmd, metric, refs)
         with open(get_log_file_path('evaluate'), 'w') as log_file:
-            with codecs.open(EVAL_FILE, encoding='utf-8') as infile:
-                with open(EVAL_FILE + '.eval', 'w') as outfile:
+            with open(EVAL_FILE) as infile:
+                with open(EVAL_FILE_METRIC, 'w') as outfile:
                     retval = execute_shell_cmd(cmd, stdin=infile,
                                                stdout=outfile,
                                                stderr=log_file).wait()
         if retval != 0:
-            os.remove(EVAL_FILE + '.eval')
-                
-    return { 'actions' : [decode, evaluate],
-             'file_dep' : [TM_FILE, LM_FILE, DECODER_INI],
-             'targets' : [EVAL_FILE]
-         }
+            os.remove(EVAL_FILE_METRIC)
 
+    return { 'actions' : [evaluate],
+             'file_dep' : [EVAL_FILE],
+             'targets' : [EVAL_FILE_METRIC]
+         }
+                
 def task_learning_curve():
     """
     Generate a learning curve. Requires execution of the tuning task.
