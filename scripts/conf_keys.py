@@ -38,9 +38,11 @@ TUNE_OPTIONS = 'options'
 
 # TASK: evaluate
 TASK_EVAL = 'evaluate'
-EVAL_SRC = 'source'
 EVAL_METRIC = 'metric'
-EVAL_REFS = 'refs'
+
+# TASK: learn curve
+TASK_LEARN_CURVE = 'learn-curve'
+CURVE_METRIC = 'metric'
 
 # TASK: build repositories
 TASK_BUILD = 'build'
