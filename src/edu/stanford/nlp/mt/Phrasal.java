@@ -344,33 +344,19 @@ public class Phrasal {
   public Postprocessor getPostprocessor() { return postprocessor; }
 
   /**
-   * Access each decoder's thread-local Scorer, which contains the model weights.
+   * Set the global model used by Phrasal.
    * 
-   * @param threadId
+   * @param m
+   */
+  public void setModel(Counter<String> m) { this.globalModel = m; }
+
+  /**
+   * Return the global Phrasal model.
+   * 
    * @return
    */
-  public Scorer<String> getScorer(int threadId) {
-    if(threadId < 0 && threadId >= numThreads) {
-      logger.error("Thread id out of range: {} / {}", threadId, numThreads);
-      throw new IllegalArgumentException();
-    }
-    return scorers.get(threadId);
-  }
+  public Counter<String> getModel() { return this.globalModel; }
   
-  /**
-   * Convenience class for setting the thread-local model weights for a decoder.
-   * 
-   * @param threadId
-   * @param w
-   */
-  public void setModelWeights(int threadId, Counter<String> w) {
-    if(threadId < 0 && threadId >= numThreads) {
-      logger.error("Thread id out of range: {} / {}", threadId, numThreads);
-      throw new IllegalArgumentException();
-    }
-    scorers.get(threadId).updateWeights(w);
-  }
-
   /**
    * @return the number of threads specified in the ini file.
    */
@@ -1094,6 +1080,9 @@ public class Phrasal {
     final List<RichTranslation<IString,String>> bestTranslationList = outputToConsole ? null :
       new ArrayList<RichTranslation<IString,String>>();
     
+    // Sanity check -- Set each thread's model to the current global model.
+    this.scorers.stream().forEach(scorer -> scorer.updateWeights(globalModel));
+    
     final long startTime = System.nanoTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
@@ -1162,6 +1151,22 @@ public class Phrasal {
   }
   
   /**
+   * Decode a tokenized input string with associated {@link InputProperties}.
+   * 
+   * @param source
+   * @param sourceInputId
+   * @param threadId
+   * @param inputProperties
+   * @return
+   */
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
+      int sourceInputId, int threadId, InputProperties inputProperties) {
+    List<Sequence<IString>> targets = 
+        forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, inputProperties);
+  }
+  
+  /**
    * Decode a tokenized input string. Returns an n-best list of translations
    * specified by the parameter.
    *
@@ -1173,6 +1178,7 @@ public class Phrasal {
    * @param numTranslations number of translations to generate
    * 
    */
+  @SuppressWarnings("unchecked")
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       InputProperties inputProperties) {
@@ -1196,8 +1202,8 @@ public class Phrasal {
         wrapBoundary);
 
     // Configure the translation model
-    if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
-      String phraseTable = (String) inputProperties.get(InputProperty.DecoderLocalTM);
+    if (inputProperties.containsKey(InputProperty.DecoderLocalTMPath)) {
+      String phraseTable = (String) inputProperties.get(InputProperty.DecoderLocalTMPath);
       final String optionLimitString = String.valueOf(this.ruleQueryLimit);
       try {
         Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
@@ -1214,12 +1220,11 @@ public class Phrasal {
       DecoderLocalTranslationModel.set(null);
     }
     if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
-      String fileName = (String) inputProperties.get(InputProperty.DecoderLocalWeights);
-      Counter<String> weights = IOTools.readWeights(fileName);
-      this.getScorer(threadId).updateWeights(weights);
+      Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.DecoderLocalWeights);
+      this.scorers.get(threadId).updateWeights(weights);
     
     } else {
-      this.getScorer(threadId).updateWeights(this.globalModel);      
+      this.scorers.get(threadId).updateWeights(this.globalModel);      
     }
     
     // Decode
