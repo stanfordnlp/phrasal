@@ -28,6 +28,7 @@ LM_OPTIONS = 'compile-options'
 # TASK: decoder config
 TASK_DECODER_CONFIG = 'decoder-config'
 DECODER_OPTIONS = 'ini-options'
+DECODER_LM_LOADER = 'lm-loader'
 
 # TASK: tune
 TASK_TUNE = 'tune'
