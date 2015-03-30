@@ -126,9 +126,8 @@ def get_log_file_path(name):
 def execute_shell_cmd(cmd, stdin=None, stdout=subprocess.PIPE,
                       stderr=subprocess.STDOUT):
     """
-    Executes a bash script as a sub-process. Execution is
-    platform-dependent (i.e., a shell is required). But this
-    should work on at least MacOS and Linux. Untested on Windows.
+    Executes a command as a sub-process. Requires an underlying
+    shell from the OS, but this should work on most platforms.
 
     Returns:
       The process handle.
@@ -193,10 +192,12 @@ def task_build():
                         if retval != 0:
                             return
                 elif action == k.BUILD_CMD:
-                    with open(get_log_file_path('build'), 'w') as log_file:
+                    repo_name = basename(repo_path)
+                    log_name = 'build-' + repo_name
+                    with open(get_log_file_path(log_name), 'w') as log_file:
                         retval = execute_shell_cmd(value, stdout=log_file).wait()
-                        if retval != 0:
-                            return
+                    if retval != 0:
+                        return
             os.chdir(cwd)
         checkpoint(CHECKPOINT_BUILD, 'done')
             
