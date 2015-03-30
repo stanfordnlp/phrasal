@@ -29,4 +29,12 @@ public enum InputProperty {
   
   // Generic flag for indicating a "validity" condition of the input
   IsValid,
+  
+  // A decoder-local translation model.
+  // Type: String
+  DecoderLocalTMPath,
+  
+  // A decoder-local weight vector
+  // Type: Counter<String>
+  DecoderLocalWeights,
 }

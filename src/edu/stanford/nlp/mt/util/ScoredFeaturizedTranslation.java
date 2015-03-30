@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.util;
 
 import java.text.DecimalFormat;
 
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 
 /**
  * A hypothesis with associated feature values and score under the current model.
@@ -53,7 +53,7 @@ public class ScoredFeaturizedTranslation<TK, FV> extends
 
   @Override
   public String toString() {
-    final String delim = FlatPhraseTable.FIELD_DELIM;
+    final String delim = CompiledPhraseTable.FIELD_DELIM;
     StringBuilder sb = new StringBuilder();
     sb.append(this.translation.toString());
     sb.append(' ').append(delim);

@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
-import edu.stanford.nlp.mt.util.HasIntegerIdentity;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
@@ -15,7 +14,7 @@ import edu.stanford.nlp.mt.util.IntegerArrayIndex;
  * @author Spence Green
  *
  */
-public class NgramHistory implements Iterable<IString>,HasIntegerIdentity {
+public class NgramHistory implements Iterable<IString> {
   
   private static final IntegerArrayIndex index = new ProbingIntegerArrayIndex();
   
@@ -33,9 +32,6 @@ public class NgramHistory implements Iterable<IString>,HasIntegerIdentity {
     }
     id = index.indexOf(intArray, true);
   }
-
-  @Override
-  public int getId() { return id; }
   
   public static void lockIndex() { index.lock(); }
   

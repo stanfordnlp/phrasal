@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,6 @@ import edu.stanford.nlp.mt.metrics.CorpusLevelMetricFactory;
 import edu.stanford.nlp.mt.metrics.EvaluationMetric;
 import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
-import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -43,19 +43,12 @@ public class OnlineLearningCurve {
     String iniFile = args[0];
     String sourceFile = args[1];
     String[] refFiles = args[2].split(",");
-    String slMetricStr = args[3];
-    String clMetricStr = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(slMetricStr);
+    String clMetricStr = args[3];
     System.err.printf("Evaluation metric: %s%n", clMetricStr.toUpperCase());
     
     // Read the references and apply NIST tokenization
     final List<List<Sequence<IString>>> references = MetricUtils.readReferences(refFiles, true);
     
-    // Read the list of weights
-    List<String> wts = new ArrayList<String>();
-    for (int i = 4; i < args.length; ++i) {
-      wts.add(args[i]);
-    }
-
     System.err.println("Loading Phrasal...");
     Phrasal p = null;
     Map<String, List<String>> config = IOTools.readConfigFile(iniFile);
@@ -70,12 +63,10 @@ public class OnlineLearningCurve {
     }
     p = Phrasal.loadDecoder(config);
 
-    final int numThreads = p.getNumThreads();
+    String[] wts = Arrays.copyOfRange(args, 4, args.length);
     for (String wtsFile : wts) {
       Counter<String> w = IOTools.readWeights(wtsFile);
-      for (int i = 0; i < numThreads; ++i) {
-        p.getScorer(i).updateWeights(w);
-      }
+      p.setModel(w);
       
       System.err.printf("Decoding with %s%n", wtsFile);
       

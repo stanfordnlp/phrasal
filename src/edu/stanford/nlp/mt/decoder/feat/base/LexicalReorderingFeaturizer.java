@@ -113,7 +113,7 @@ public class LexicalReorderingFeaturizer extends
   
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
+      Sequence<IString> foreign) {
   }
 
   @Override

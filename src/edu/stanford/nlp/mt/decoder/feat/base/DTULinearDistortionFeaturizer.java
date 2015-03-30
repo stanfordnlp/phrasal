@@ -7,7 +7,6 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -122,7 +121,7 @@ public class DTULinearDistortionFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
+      Sequence<IString> foreign) {
   }
 
   @Override

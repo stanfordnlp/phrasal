@@ -28,8 +28,9 @@ src-cc/kenlm/query
 .classpath
 .settings/**
 
-# Ignore OS X Finder dirs
+# Misc. stuff
 .DS_Store
+.doit.db
 
 # Ignore gradle settings
 .gradle/

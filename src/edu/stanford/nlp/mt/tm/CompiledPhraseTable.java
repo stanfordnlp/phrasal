@@ -9,15 +9,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -30,7 +32,7 @@ import edu.stanford.nlp.util.StringUtils;
  * @author Spence Green
  *
  */
-public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
+public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     implements PhraseTable<IString> {
 
   private static final int INITIAL_CAPACITY = 50000;
@@ -47,7 +49,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
   protected final int minRuleIndex;
   protected final String[] scoreNames;
   protected final String name;
-  protected final List<List<PhraseTableEntry>> translations;
+  protected final List<List<PhraseTableEntry>> ruleLists;
 
   protected int longestSourcePhrase = -1;
   protected int longestTargetPhrase = -1;
@@ -58,7 +60,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @param filename
    * @throws IOException
    */
-  public FlatPhraseTable(String filename) throws IOException {
+  public CompiledPhraseTable(String filename) throws IOException {
     this(DEFAULT_FEATURE_PREFIX, filename);
   }
 
@@ -69,14 +71,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
    * @param filename
    * @throws IOException
    */
-  public FlatPhraseTable(
+  public CompiledPhraseTable(
       String featurePrefix,
       String filename) throws IOException {
     super(null);
     File f = new File(filename);
     name = String.format("%s:%s", this.getClass().getName(), f.getPath()).intern();
     minRuleIndex = ruleIdCounter.get();
-    translations = new ArrayList<>(INITIAL_CAPACITY);
+    ruleLists = new ArrayList<>(INITIAL_CAPACITY);
     sourceToRuleIndex = new ProbingIntegerArrayRawIndex();
     targetIndex = new ProbingIntegerArrayIndex();
     int countScores = init(f);
@@ -105,14 +107,14 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     int fIndex = sourceToRuleIndex.insertIntoIndex(sourceArray);
     int eIndex = this.targetIndex.indexOf(targetArray, true);
 
-    if (translations.size() <= fIndex) {
-      while (translations.size() <= fIndex)
-        translations.add(null);
+    if (ruleLists.size() <= fIndex) {
+      while (ruleLists.size() <= fIndex)
+        ruleLists.add(null);
     }
-    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     if (intTransOpts == null) {
       intTransOpts = new LinkedList<>();
-      translations.set(fIndex, intTransOpts);
+      ruleLists.set(fIndex, intTransOpts);
     }
     intTransOpts.add(new PhraseTableEntry(ruleIdCounter.getAndIncrement(),
         targetIndex.get(eIndex), scores, alignment));
@@ -136,7 +138,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
     for (String line; (line = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatPhraseTable.FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, CompiledPhraseTable.FIELD_DELIM);
 
       // The standard format has five fields
       assert fields.size() == 5 : String.format("phrase table line %d has %d fields",
@@ -182,7 +184,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       }
     }
     reader.close();
-
+    
     // print some status information
     long postPhraseTableLoadMemUsed = rt.totalMemory() - rt.freeMemory();
     double elapsedTime = ((double) System.nanoTime() - startTime) / 1e9;
@@ -211,21 +213,21 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       Sequence<IString> sourceSequence) {
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int fIndex = sourceToRuleIndex.getIndex(sourceArray);
-    if (fIndex == -1 || fIndex >= translations.size())
+    if (fIndex == -1 || fIndex >= ruleLists.size())
       return null;
-    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     if (intTransOpts == null)
       return null;
-    List<Rule<IString>> transOpts = new ArrayList<Rule<IString>>(
+    List<Rule<IString>> ruleList = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     for (PhraseTableEntry intTransOpt : intTransOpts) {
-      RawSequence<IString> targetSequence = new RawSequence<IString>(
-          intTransOpt.targetArray, IString.identityIndex());
-      transOpts.add(new Rule<IString>(intTransOpt.id,
+      Sequence<IString> targetSequence = IStrings.getIStringSequence(
+          intTransOpt.targetArray);
+      ruleList.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, targetSequence, sourceSequence,
           intTransOpt.alignment));
     }
-    return transOpts;
+    return ruleList;
   }
 
   @Override
@@ -233,10 +235,10 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       Sequence<IString> targetSequence) {
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int fIndex = sourceToRuleIndex.getIndex(sourceArray);
-    if (fIndex == -1 || fIndex >= translations.size()) {
+    if (fIndex == -1 || fIndex >= ruleLists.size()) {
       return -1;
     }
-    List<PhraseTableEntry> intTransOpts = translations.get(fIndex);
+    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     int[] targetArray = Sequences.toIntArray(targetSequence);
     for (PhraseTableEntry intTransOpt : intTransOpts) {
       if (Arrays.equals(targetArray, intTransOpt.targetArray)) {
@@ -282,7 +284,7 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
     String phrase = args[1];
     long startTimeMillis = System.currentTimeMillis();
     System.out.printf("Loading phrase table: %s%n", model);
-    FlatPhraseTable<String> ppt = new FlatPhraseTable<String>(model);
+    CompiledPhraseTable<String> ppt = new CompiledPhraseTable<String>(model);
     long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
     long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
     double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
@@ -306,5 +308,12 @@ public class FlatPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV>
       System.out.printf("\t%s : %s%n", opt.target,
           Arrays.toString(opt.scores));
     }
+  }
+
+  @Override
+  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
+      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented");
   }
 }

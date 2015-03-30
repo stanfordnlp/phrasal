@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -212,10 +211,10 @@ public class FeatureExtractor<TK, FV> extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> sourceSequence) {
+      Sequence<TK> sourceSequence) {
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
-        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, ruleList, sourceSequence);
+        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, sourceSequence);
       }
     }
   }

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.LineNumberReader;
 import java.util.regex.Pattern;
 
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -23,7 +24,6 @@ import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
-
 import edu.stanford.nlp.util.StringUtils;
 
 public class DTUTable<FV> extends AbstractPhraseGenerator<IString, FV>
@@ -86,7 +86,7 @@ implements PhraseTable<IString> {
     int countScores = init(f);
     scoreNames = new String[countScores];
     for (int i = 0; i < countScores; i++) {
-      scoreNames[i] = String.format("%s.%d", FlatPhraseTable.DEFAULT_FEATURE_PREFIX, i);
+      scoreNames[i] = String.format("%s.%d", CompiledPhraseTable.DEFAULT_FEATURE_PREFIX, i);
     }
   }
   
@@ -106,7 +106,7 @@ implements PhraseTable<IString> {
     LineNumberReader reader = IOTools.getReaderFromFile(f);
     int numScores = -1;
     for (String line; (line = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(line, FlatPhraseTable.FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(line, CompiledPhraseTable.FIELD_DELIM);
       
       // The standard format has five fields
       assert fields.size() == 5 : String.format("phrase table line %d has %d fields", 
@@ -248,18 +248,17 @@ implements PhraseTable<IString> {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
-                RawSequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
+                Sequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
                 for (int i = 0; i < multiIntTransOpt.dtus.length; ++i) {
-                  dtus[i] = new RawSequence<IString>(multiIntTransOpt.dtus[i],
-                      IString.identityIndex());
+                  dtus[i] = IStrings.getIStringSequence(multiIntTransOpt.dtus[i]);
                 }
                 transOpts.add(new DTURule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
                         s.foreign), intTransOpt.alignment));
               } else {
                 // No gaps in target:
-                RawSequence<IString> translation = new RawSequence<IString>(
-                    intTransOpt.targetArray, IString.identityIndex());
+                Sequence<IString> translation = IStrings.getIStringSequence(
+                    intTransOpt.targetArray);
                 transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
                     new RawSequence<IString>(s.foreign), intTransOpt.alignment));
@@ -340,12 +339,12 @@ implements PhraseTable<IString> {
     int[] arr = new int[seq.size()];
     for (int i = 0; i < seq.size(); ++i) {
       IString el = seq.get(i);
-      char c0 = el.word().charAt(0);
+      char c0 = el.toString().charAt(0);
       if (Character.isUpperCase(c0)) {
-        if (el.word().startsWith(GAP_STR.word())) {
+        if (el.toString().startsWith(GAP_STR.toString())) {
           arr[i] = GAP_STR.id;
         } else {
-          System.err.println("Ill-formed symbol: "+el.word());
+          System.err.println("Ill-formed symbol: "+ el.toString());
           arr[i] = el.id;
         }
       } else {
@@ -366,11 +365,11 @@ implements PhraseTable<IString> {
     List<float[]> list = new LinkedList<float[]>();
     for (int i = 0; i < seq.size(); ++i) {
       IString el = seq.get(i);
-      char c0 = el.word().charAt(0);
+      char c0 = el.toString().charAt(0);
       if (Character.isUpperCase(c0)) {
-        if (el.word().startsWith(GAP_STR.word())) {
+        if (el.toString().startsWith(GAP_STR.toString())) {
           if (el.id != GAP_STR.id) {
-            String[] strs = pattern.split(el.word());
+            String[] strs = pattern.split(el.toString());
             assert (strs.length == 5);
             float[] scores = new float[strs.length - 1];
             for (int j = 1; j < strs.length; ++j) {
@@ -511,5 +510,12 @@ implements PhraseTable<IString> {
   @Override
   public int minRuleIndex() {
     return 0;
+  }
+
+  @Override
+  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
+      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented.");
   }
 }

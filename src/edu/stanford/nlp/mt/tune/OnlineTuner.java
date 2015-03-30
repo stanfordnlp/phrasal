@@ -45,6 +45,8 @@ import edu.stanford.nlp.mt.util.FlatNBestList;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
@@ -337,7 +339,8 @@ public final class OnlineTuner {
       assert input.weights != null;
       
       // The decoder does not copy the weight vector; ProcessorInput should have.
-      decoder.getScorer(threadId).updateWeights(input.weights);
+      InputProperties inputProperties = new InputProperties();
+      inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
       
       int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = 
@@ -345,8 +348,8 @@ public final class OnlineTuner {
       Counter<String> gradient;
       if (batchSize == 1) {
         // Conventional online learning
-        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), input.translationIds[0], 
-            threadId);
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), 
+            input.translationIds[0], threadId, inputProperties);
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestList, input.references.get(0), referenceWeights, scoreMetric);
         nbestLists.add(nbestList);
@@ -357,7 +360,8 @@ public final class OnlineTuner {
           int translationId = input.translationIds[i];
           Sequence<IString> source = input.source.get(i);
           
-          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, threadId);
+          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
+              threadId, inputProperties);
           
           nbestLists.add(nbestList);
         }
@@ -376,7 +380,6 @@ public final class OnlineTuner {
         } 
        
       }
-     
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
     }
@@ -735,6 +738,7 @@ public final class OnlineTuner {
    */
   private static UpdaterState loadUpdaterState(String wtsInitialFile) {
     int delim = wtsInitialFile.lastIndexOf('.');
+    if (delim < 0) return null;
     String fileName = wtsInitialFile.substring(0, delim) + STATE_FILE_EXTENSION;
     File file = new File(fileName);
     if (file.exists()) {
