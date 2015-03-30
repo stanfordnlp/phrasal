@@ -1,6 +1,10 @@
 system-dir: /home/rayder441/sandbox/prod
 experiment:
   name: debug
+build:
+  /home/rayder441/lilt/core:
+    branch: master
+    build-cmd: gradle installDist
 copy-data:
   - /home/rayder441/sandbox/phrasal/mt06.tables/phrase-table.gz
   - /home/rayder441/sandbox/phrasal/mt06.tables/lo-hier.msd2-bidirectional-fe.gz
