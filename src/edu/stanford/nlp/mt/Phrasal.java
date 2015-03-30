@@ -68,11 +68,12 @@ import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
+import edu.stanford.nlp.mt.tm.DecoderLocalTranslationModel;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
-import edu.stanford.nlp.mt.tm.PhraseGenerator;
-import edu.stanford.nlp.mt.tm.PhraseGeneratorFactory;
+import edu.stanford.nlp.mt.tm.TranslationModel;
+import edu.stanford.nlp.mt.tm.TranslationModelFactory;
 import edu.stanford.nlp.mt.tm.PhraseTable;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -163,7 +164,7 @@ public class Phrasal {
       .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
-      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).")
+      .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).").append(nl)
        ;
     return sb.toString();
   }
@@ -250,6 +251,11 @@ public class Phrasal {
   private int ruleQueryLimit = 20;
   
   /**
+   * Global model loaded at startup.
+   */
+  private Counter<String> globalModel;
+  
+  /**
    * DTU options
    * 
    * TODO(spenceg): Remove static members. The Phrasal object itself is not threadsafe.
@@ -260,7 +266,7 @@ public class Phrasal {
   /**
    * Inference objects, one per thread
    */
-  public List<Inferer<IString, String>> inferers;
+  private List<Inferer<IString, String>> inferers;
 
   /**
    * Holds the model weights, one per inferer. The model weights have a shared feature index.
@@ -270,8 +276,8 @@ public class Phrasal {
   /**
    * Phrase table / translation model
    */
-  private PhraseGenerator<IString,String> phraseGenerator;
-
+  private TranslationModel<IString,String> phraseGenerator;
+  
   /**
    * Whether to filter unknown words in the output
    */
@@ -332,23 +338,25 @@ public class Phrasal {
    */
   private Preprocessor preprocessor;
   private Postprocessor postprocessor;
+
   
   public Preprocessor getPreprocessor() { return preprocessor; }
   public Postprocessor getPostprocessor() { return postprocessor; }
-  
-  /**
-   * Access the decoder's scorer, which contains the model weights. THere is one scorer
-   * per thread.
-   *
-   * @return the scorer
-   */
-  public Scorer<String> getScorer(int threadId) {
-    if(threadId >= 0 && threadId < numThreads) {
-      return scorers.get(threadId);
-    }
-    throw new RuntimeException("Illegal thread id: " + String.valueOf(threadId));
-  }
 
+  /**
+   * Set the global model used by Phrasal.
+   * 
+   * @param m
+   */
+  public void setModel(Counter<String> m) { this.globalModel = m; }
+
+  /**
+   * Return the global Phrasal model.
+   * 
+   * @return
+   */
+  public Counter<String> getModel() { return this.globalModel; }
+  
   /**
    * @return the number of threads specified in the ini file.
    */
@@ -359,7 +367,7 @@ public class Phrasal {
    * 
    * @return
    */
-  public PhraseGenerator<IString,String> getPhraseTable() { return phraseGenerator; }
+  public TranslationModel<IString,String> getPhraseTable() { return phraseGenerator; }
  
   /**
    * @return The wrap boundary property specified in the ini file.
@@ -539,38 +547,40 @@ public class Phrasal {
 
     // Create the phrase table(s) 
     final String optionLimitString = String.valueOf(this.ruleQueryLimit);
-    final String phraseTableType = withGaps ? PhraseGeneratorFactory.DTU_GENERATOR
-        : PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR; 
-    Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        PhraseGeneratorFactory.<String>factory(phraseTableType, phraseTable,
-            makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString));
+    final String phraseTableType = withGaps ? TranslationModelFactory.DTU_GENERATOR
+        : TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR; 
+    Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
+        TranslationModelFactory.<String>factory(phraseTableType, phraseTable,
+            makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString));
     phraseGenerator = phraseTablePair.first();
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
     if (config.get(INDEPENDENT_PHRASE_TABLES) != null) {
-       List<PhraseGenerator<IString,String>> generators = new LinkedList<>();
+       List<TranslationModel<IString,String>> generators = new LinkedList<>();
        generators.add(phraseGenerator);
        for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
          String[] fields = filename.split(":");
          String[] generatorOptions;
          if (fields.length == 1) {
            generatorOptions = new String[1];
-           generatorOptions[0] = makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString);
+           generatorOptions[0] = makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString);
+         
          } else if (fields.length == 2) {
            generatorOptions = new String[2];
-           generatorOptions[0] = makePair(PhraseGeneratorFactory.QUERY_LIMIT_OPTION, optionLimitString);
-           generatorOptions[1] = makePair(PhraseGeneratorFactory.FEATURE_PREFIX_OPTION, fields[0]);
+           generatorOptions[0] = makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString);
+           generatorOptions[1] = makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]);
            filename = fields[1];
+         
          } else {
            throw new RuntimeException("Invalid phrase table specification: " + filename);
          }
          System.err.printf("Loading independent phrase table: %s %s%n", filename, Arrays.toString(generatorOptions));
-         Pair<PhraseGenerator<IString,String>,List<PhraseTable<IString>>> generatorPair =  
-             PhraseGeneratorFactory.<String>factory(PhraseGeneratorFactory.PSEUDO_PHARAOH_GENERATOR, 
+         Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> generatorPair =  
+             TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, 
                  filename, generatorOptions); 
          generators.add(generatorPair.first());
        }
-       phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE, ruleQueryLimit);
+       phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, ruleQueryLimit);
     }
 
     // Load the lexicalized reordering model(s) and associated featurizers
@@ -583,7 +593,7 @@ public class Phrasal {
         throw new RuntimeException(REORDERING_MODEL + " parameter requires at least three arguments");
       }
       String modelType = parameters.get(0);
-      String[] modelFilenames = parameters.get(1).split(PhraseGeneratorFactory.SEPARATOR);
+      String[] modelFilenames = parameters.get(1).split(TranslationModelFactory.SEPARATOR);
       String modelSpecification = parameters.get(2);
       parameters = parameters.subList(3, parameters.size());
       if (modelFilenames.length != phraseTables.size()) {
@@ -733,11 +743,11 @@ public class Phrasal {
     phraseGenerator.setFeaturizer(featurizer);
 
     // Create Scorer / weight vector
-    Counter<String> weightVector = new ClassicCounter<String>();
+    this.globalModel = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
       System.err.printf("Weights file: %s%n", config.get(WEIGHTS_FILE).get(0));
-      weightVector = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
+      globalModel = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     }
 
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
@@ -764,7 +774,7 @@ public class Phrasal {
       }
     }
 
-    System.err.printf("WeightConfig: '%s' %s%n", Counters.toBiggestValuesFirstString(weightVector, 100), (weightVector.size() > 100 ? "..." : ""));
+    System.err.printf("WeightConfig: '%s' %s%n", Counters.toBiggestValuesFirstString(globalModel, 100), (globalModel.size() > 100 ? "..." : ""));
 
 
     // Create Recombination Filter
@@ -783,7 +793,7 @@ public class Phrasal {
       dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
     }
     System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
-    PhraseGenerator<IString,String> oovModel = 
+    TranslationModel<IString,String> oovModel = 
         new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords);
     
     // Create Inferers and scorers
@@ -808,8 +818,8 @@ public class Phrasal {
       try {
         infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
         infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
-        infererBuilder.setPhraseGenerator((PhraseGenerator<IString,String>) phraseGenerator.clone());
-        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, weightVector, null);
+        infererBuilder.setPhraseGenerator((TranslationModel<IString,String>) phraseGenerator.clone());
+        Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, globalModel, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
         infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
@@ -1029,7 +1039,7 @@ public class Phrasal {
       // Output the alignments if necessary
       if (alignmentWriter != null) {
         for (RichTranslation<IString,String> translation : translations) {
-          alignmentWriter.printf("%d %s %s%n", sourceInputId, FlatPhraseTable.FIELD_DELIM, 
+          alignmentWriter.printf("%d %s %s%n", sourceInputId, CompiledPhraseTable.FIELD_DELIM, 
               translation.alignmentString());
         }
       }
@@ -1069,6 +1079,9 @@ public class Phrasal {
         inputStream, "UTF-8"));
     final List<RichTranslation<IString,String>> bestTranslationList = outputToConsole ? null :
       new ArrayList<RichTranslation<IString,String>>();
+    
+    // Sanity check -- Set each thread's model to the current global model.
+    this.scorers.stream().forEach(scorer -> scorer.updateWeights(globalModel));
     
     final long startTime = System.nanoTime();
     int sourceInputId = 0;
@@ -1138,6 +1151,22 @@ public class Phrasal {
   }
   
   /**
+   * Decode a tokenized input string with associated {@link InputProperties}.
+   * 
+   * @param source
+   * @param sourceInputId
+   * @param threadId
+   * @param inputProperties
+   * @return
+   */
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
+      int sourceInputId, int threadId, InputProperties inputProperties) {
+    List<Sequence<IString>> targets = 
+        forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, inputProperties);
+  }
+  
+  /**
    * Decode a tokenized input string. Returns an n-best list of translations
    * specified by the parameter.
    *
@@ -1149,19 +1178,20 @@ public class Phrasal {
    * @param numTranslations number of translations to generate
    * 
    */
+  @SuppressWarnings("unchecked")
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       InputProperties inputProperties) {
-    // Sanity checks
-    
-    if (wrapBoundary)
-      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
-    
     if (threadId < 0 || threadId >= numThreads) {
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
     }
     if (sourceInputId < 0) {
       throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
+    }
+    
+    // Wrapping input for TMs with boundary tokens
+    if (wrapBoundary) {
+      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
     }
 
     // Output space of the decoder
@@ -1171,6 +1201,33 @@ public class Phrasal {
         targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(),
         wrapBoundary);
 
+    // Configure the translation model
+    if (inputProperties.containsKey(InputProperty.DecoderLocalTMPath)) {
+      String phraseTable = (String) inputProperties.get(InputProperty.DecoderLocalTMPath);
+      final String optionLimitString = String.valueOf(this.ruleQueryLimit);
+      try {
+        Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
+            TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable,
+                makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString));
+        DecoderLocalTranslationModel.set(phraseTablePair.first());
+        System.err.printf("Loaded decoder-local translation model from %s%n", phraseTable);
+      
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    } else {
+      // Sanity check
+      DecoderLocalTranslationModel.set(null);
+    }
+    if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
+      Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.DecoderLocalWeights);
+      this.scorers.get(threadId).updateWeights(weights);
+    
+    } else {
+      this.scorers.get(threadId).updateWeights(this.globalModel);      
+    }
+    
+    // Decode
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, 

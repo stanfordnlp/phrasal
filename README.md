@@ -34,15 +34,15 @@ We used to commit some third-party dependencies to the repository, and for other
 
 1. Download and unpack [Gradle](http://gradle.org) into your home directory.
 
-2. export PATH="$PATH":/u/username/NLP-HOME/gradle/bin
+2. Add Gradle to PATH: `export PATH="$PATH":/u/username/NLP-HOME/gradle/bin`
 
-3. export CORENLP_HOME=/u/username/NLP-HOME/javanlp/projects/core
+3. Set reference to JavaNLP: `export CORENLP_HOME=/u/username/NLP-HOME/javanlp/projects/core`
 
 4. Download external dependencies: `gradle copyDeps`
 
 5. `ant all`
 
-6. export CLASSPATH=$CLASSPATH:/u/username/NLP-HOME/phrasal/classes:/u/username/NLP-HOME/phrasal/classes
+6. Update CLASSPATH: `export CLASSPATH=$CLASSPATH:/u/username/NLP-HOME/phrasal/classes`
 
 ## Contributors
 

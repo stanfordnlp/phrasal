@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import edu.stanford.nlp.mt.tm.FlatPhraseTable;
+import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.StringUtils;
@@ -82,7 +82,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     int lastId = -1;
     for (String inline; (inline = reader.readLine()) != null;) {
-      List<List<String>> fields = StringUtils.splitFieldsFast(inline.trim(), FlatPhraseTable.FIELD_DELIM);
+      List<List<String>> fields = StringUtils.splitFieldsFast(inline.trim(), CompiledPhraseTable.FIELD_DELIM);
 
       if (fields.size() < 3) {
         System.err.printf(
@@ -252,7 +252,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
       for (int j = 0; j < nbestLists.get(i).size(); j++) {
         ScoredFeaturizedTranslation<IString, String> tr = nbestLists.get(i)
             .get(j);
-        sbuf.append(i).append(" ").append(FlatPhraseTable.FIELD_DELIM).append(" ");
+        sbuf.append(i).append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
         sbuf.append(tr.toString());
         sbuf.append(nl);
       }

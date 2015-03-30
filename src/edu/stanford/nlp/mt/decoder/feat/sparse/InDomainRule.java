@@ -7,7 +7,6 @@ import java.util.Properties;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -46,7 +45,7 @@ public class InDomainRule extends DerivationFeaturizer<IString, String> {
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {}
+      Sequence<IString> source) {}
 
   @Override
   public List<FeatureValue<String>> featurize(

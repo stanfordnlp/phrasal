@@ -4,13 +4,14 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
+import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.EmptySequence;
-import edu.stanford.nlp.mt.util.HasIntegerIdentity;
+import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-
 
 /**
  * Unknown word model. Generates synthetic rules for unknown words.
@@ -20,7 +21,7 @@ import edu.stanford.nlp.mt.util.TokenUtils;
  *
  * @param <TK>
  */
-public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> extends
+public class UnknownWordPhraseGenerator<TK, FV> extends
     AbstractPhraseGenerator<TK, FV> {
 
   public static final String PHRASE_TABLE_NAME = UnknownWordPhraseGenerator.class.getName();
@@ -101,5 +102,12 @@ public class UnknownWordPhraseGenerator<TK extends HasIntegerIdentity, FV> exten
   @Override
   public int longestTargetPhrase() {
     return 1;
+  }
+
+  @Override
+  public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source,
+      InputProperties sourceInputProperties, List<Sequence<TK>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented.");
   }
 }

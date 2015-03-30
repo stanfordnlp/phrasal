@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.train.DTUFeatureExtractor;
 import edu.stanford.nlp.mt.util.CoverageSet;
@@ -233,6 +232,6 @@ public class SourceGapFeaturizer extends
 
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString,String>> options, Sequence<IString> foreign) {
+      Sequence<IString> foreign) {
   }
 }

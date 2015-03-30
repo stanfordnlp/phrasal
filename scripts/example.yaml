@@ -1,0 +1,89 @@
+system-dir: /home/rayder441/sandbox/prod
+experiment:
+  name: debug
+copy-data:
+  - /home/rayder441/sandbox/phrasal/mt06.tables/phrase-table.gz
+  - /home/rayder441/sandbox/phrasal/mt06.tables/lo-hier.msd2-bidirectional-fe.gz
+  - /home/rayder441/sandbox/phrasal/mt06.prep
+  - /home/rayder441/sandbox/phrasal/eval/mt06/ref0
+  - /home/rayder441/sandbox/phrasal/eval/mt06/ref1
+  - /home/rayder441/sandbox/phrasal/eval/mt06/ref2
+  - /home/rayder441/sandbox/phrasal/eval/mt06/ref3
+corpus:
+  source: /home/rayder441/sandbox/phrasal/corpus/corpus.ar
+  target: /home/rayder441/sandbox/phrasal/corpus/corpus.en
+  align:
+    - /home/rayder441/sandbox/phrasal/corpus/corpus.tok.filt.ar-en.A3.out.out.out
+    - /home/rayder441/sandbox/phrasal/corpus/corpus.tok.filt.en-ar.A3.out.out.out
+  mono:
+    - /home/rayder441/sandbox/phrasal/corpus/corpus.en.mono.samp.gz
+translation-model:
+  file-path: copy-data/phrase-table.gz
+language-model:
+  file-path: system-dir/3gm-probing.bin
+  type: probing
+  compile-options:
+    - -o 3
+    - --interpolate_unigrams
+    - -S 80%
+tune:
+  source: copy-data/mt06.prep
+  refs:
+    - copy-data/ref0
+    - copy-data/ref1
+    - copy-data/ref2
+    - copy-data/ref3
+  initial-wts: /home/rayder441/sandbox/prod/initial.binwts
+  options:
+    - -e 2
+    - -b 20
+    - -uw
+    - -m bleu-smooth
+    - -o expectedBLEU
+    - -of Infinity,0.02,adagradl1f,0.001
+decoder-config:
+  ini-options:
+    lmodel-file: kenlm:3gm-probing.bin
+    ttable-file: copy-data/phrase-table.gz
+    ttable-limit: 20
+    distortion-limit: 5
+    n-best-list: 100
+    recombination-mode: pharoah
+    reordering-model:
+      - hierarchical
+      - copy-data/lo-hier.msd2-bidirectional-fe.gz
+      - msd2-bidirectional-fe
+      - hierarchical
+      - hierarchical
+      - bin
+    threads: 4
+evaluate:
+  metric: bleu
+  copy-data/mt06.prep:
+    - copy-data/ref0
+    - copy-data/ref1
+    - copy-data/ref2
+    - copy-data/ref3
+  /home/rayder441/sandbox/phrasal/mt05.prep: 
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref0.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref1.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref2.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref3.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref4.400
+learn-curve:
+  metric: bleu
+  /home/rayder441/sandbox/phrasal/mt05.prep: 
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref0.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref1.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref2.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref3.400
+    - /home/rayder441/sandbox/phrasal/eval/mt05/ref4.400    
+runtime:
+  jvm-opts:
+    - -Xmx5g
+    - -Xmx5g
+    - -server
+    - -ea
+    - -XX:+UseParallelGC
+    - -XX:+UseParallelOldGC
+    - -Djava.library.path=/home/rayder441/lilt/phrasal/src-cc

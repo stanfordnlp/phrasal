@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequences;
-
+import edu.stanford.nlp.mt.util.TranslationModelIndex;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 // Int2IntLinkedOpenHashMap is second choice
 // (overhead caused by this hashmap is relatively small)
@@ -175,7 +175,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     buf.append(", a-counts=");
     buf.append(aCounter.size());
     buf.append(", istring=");
-    buf.append(IString.index.size());
+    buf.append(TranslationModelIndex.systemSize());
     return buf.toString();
   }
 

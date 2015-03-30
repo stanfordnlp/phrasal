@@ -14,7 +14,6 @@ import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.NeedsCloneable;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.CoreNLPCache;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
@@ -77,7 +76,7 @@ private void loadProbabilities(String filename) throws IOException {
   
   @Override
   public void initialize(int sourceInputId,
-      List<ConcreteRule<IString, String>> ruleList, Sequence<IString> source) {
+      Sequence<IString> source) {
       Tree parseTree = CoreNLPCache.get(sourceInputId).get(TreeAnnotation.class);
       this.posTags = parseTree.preTerminalYield();
       

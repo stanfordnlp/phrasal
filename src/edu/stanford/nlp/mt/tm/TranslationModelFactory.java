@@ -14,14 +14,14 @@ import edu.stanford.nlp.util.Pair;
  * @author Daniel Cer
  * @author Spence Green
  */
-public class PhraseGeneratorFactory {
+public class TranslationModelFactory {
 
   public static final String PSEUDO_PHARAOH_GENERATOR = "pseudopharaoh";
   public static final String DTU_GENERATOR = "dtu";
   public static final String QUERY_LIMIT_OPTION = "querylimit";
   public static final String FEATURE_PREFIX_OPTION = "featpref";
   public static final String SEPARATOR = ":";
-
+  
   /**
    * Factory method for phrase table loading.
    * 
@@ -30,8 +30,8 @@ public class PhraseGeneratorFactory {
    * @throws IOException
    */
   @SuppressWarnings("unchecked")
-  static public <FV> Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> factory(
-      String pgName, String filenames, String...options) throws IOException {
+  static public <FV> Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>> factory(
+      String pgName, String filename, String...options) throws IOException {
     
     // Parse options
     int queryLimit = -1;
@@ -54,30 +54,27 @@ public class PhraseGeneratorFactory {
 
       final boolean withGaps = pgName.equals(DTU_GENERATOR);
 
-      List<PhraseGenerator<IString,FV>> generators = new LinkedList<PhraseGenerator<IString,FV>>();
+      List<TranslationModel<IString,FV>> generators = new LinkedList<TranslationModel<IString,FV>>();
       List<PhraseTable<IString>> tables = new LinkedList<>();
 
-      for (String filename : filenames.split(SEPARATOR)) {
-        PhraseGenerator<IString,FV> pt;
-        if (withGaps) {
-          pt = new DTUTable<FV>(filename);
+      TranslationModel<IString,FV> pt;
+      if (withGaps) {
+        pt = new DTUTable<FV>(filename);
+      } else {
+        if (featurePrefix == null) {
+          pt = new CompiledPhraseTable<FV>(filename);
         } else {
-          if (featurePrefix == null) {
-            pt = new FlatPhraseTable<FV>(filename);
-          } else {
-            pt = new FlatPhraseTable<FV>(featurePrefix, filename);
-          }
+          pt = new CompiledPhraseTable<FV>(featurePrefix, filename);
         }
-        generators.add(pt);
-        tables.add((PhraseTable<IString>) pt);
       }
+      generators.add(pt);
+      tables.add((PhraseTable<IString>) pt);
 
       CombinedPhraseGenerator<IString,FV> gen = queryLimit == -1 ? 
-          new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE) :
-            new CombinedPhraseGenerator<IString,FV>(generators, CombinedPhraseGenerator.Type.CONCATENATIVE,
-                queryLimit);
-      Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>> pair =
-          new Pair<PhraseGenerator<IString,FV>,List<PhraseTable<IString>>>(
+          new CombinedPhraseGenerator<IString,FV>(generators) :
+            new CombinedPhraseGenerator<IString,FV>(generators, queryLimit);
+      Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>> pair =
+          new Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>>(
               gen, tables);
       return pair;
     }

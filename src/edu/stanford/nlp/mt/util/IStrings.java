@@ -113,17 +113,6 @@ public final class IStrings {
   }
 
   /**
-   * Convert an array of ids to an array of String.
-   */
-  static public String[] toStringArray(int[] ids) {
-    String[] strs = new String[ids.length];
-    for (int i = 0; i < strs.length; i++) {
-      strs[i] = IString.getString(ids[i]);
-    }
-    return strs;
-  }
-
-  /**
    * Get a sequence of IString from an array of IString indices.
    */
   public static Sequence<IString> getIStringSequence(int[] indices){
