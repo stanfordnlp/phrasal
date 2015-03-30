@@ -80,6 +80,7 @@ public final class OnlineTuner {
   // Various options
   private boolean returnBestDev = false;
   private boolean doParameterAveraging = false;
+  private boolean shuffleDev = true;
   
   private final boolean discardInitialWeightState;
   private final String initialWtsFileName;
@@ -93,6 +94,9 @@ public final class OnlineTuner {
   private Phrasal decoder;
   
   private String outputWeightPrefix;
+  
+  // output single best translation?
+  private boolean outputSingleBest = false;
   
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
@@ -210,6 +214,20 @@ public final class OnlineTuner {
    */
   private void doParameterAveraging(boolean b) { this.doParameterAveraging = b; }
 
+  /**
+   * Randomize dev set order.
+   * 
+   * @param b
+   */
+  private void shuffleDev(boolean b) { this.shuffleDev = b; }
+  
+  /**
+   * Output single best translation?
+   * 
+   * @param b
+   */
+  private void outputSingleBest(boolean b) { this.outputSingleBest = b; }
+  
   /**
    * Determine whether a feature has been seen enough times
    * to learn a decoding model weight for it
@@ -483,7 +501,9 @@ public final class OnlineTuner {
       if (createPseudoReferences) updatePseudoReferences(epoch);
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
-      ArrayMath.shuffle(indices);
+      if(shuffleDev)
+        ArrayMath.shuffle(indices);
+      
       logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
       for (int t = 0; t < numBatches; ++t) {
         logger.info(String.format("Epoch %d batch %d memory free: %d  max: %d", epoch, t, runtime.freeMemory(), 
@@ -518,6 +538,12 @@ public final class OnlineTuner {
         IOUtils.writeObjectToFile(updater.getState(), epochFilePrefix + STATE_FILE_EXTENSION);
       } catch (IOException e) {
         logger.warn("Could not write online updater state to: {}{}", epochFilePrefix, STATE_FILE_EXTENSION);
+      }
+      
+      if(outputSingleBest) {
+        PrintStream ps = IOTools.getWriterFromFile(epochFilePrefix + ".trans");
+        IOTools.writeSingleBest(nbestLists, ps);
+        ps.close();
       }
       
       // Debug info for this epoch
@@ -839,7 +865,9 @@ public final class OnlineTuner {
       .append("   -fmc num   : Minimum number of times a feature must appear (default: 0)").append(nl)
       .append("   -tmp path  : Temp directory (default: /tmp)").append(nl)
       .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl)
-      .append("   -s         : Wrap references and source inputs in boundary tokens");
+      .append("   -s         : Wrap references and source inputs in boundary tokens").append(nl)
+      .append("   -rand      : Randomize dev set before tuning (default: true)").append(nl)
+      .append("   -sb        : Specify for single best output. ");
     
     return sb.toString();
   }
@@ -870,7 +898,9 @@ public final class OnlineTuner {
     String tmpPath = opts.getProperty("tmp", "/tmp");
     String pseudoRefOptions = opts.getProperty("p", null);
     boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
-   
+    boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);
+    boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
+    
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
     if (parsedArgs.length != 4) {
@@ -891,7 +921,7 @@ public final class OnlineTuner {
     }
     System.out.println("====================");
     System.out.println();
-
+      
     // Run optimization
     final SentenceLevelMetric<IString,String> slScoreMetric = SentenceLevelMetricFactory.getMetric(scoreMetricStr, scoreMetricOpts);
     final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
@@ -907,6 +937,8 @@ public final class OnlineTuner {
     tuner.doParameterAveraging(doParameterAveraging);
     tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
     tuner.minFeatureCount(minFeatureCount);
+    tuner.shuffleDev(shuffleDev);
+    tuner.outputSingleBest(outputSingleBest);
     tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
 
     final long elapsedTime = System.nanoTime() - startTime;

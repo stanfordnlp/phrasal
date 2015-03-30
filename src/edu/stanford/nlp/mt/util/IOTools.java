@@ -282,6 +282,26 @@ public final class IOTools {
     nbestListWriter.append(sb.toString());
   }
 
+  
+  /**
+   * Write single best translations to file.
+   *
+   * @param translations
+   * @param singleBestWriter
+   */
+  public static void writeSingleBest(Map<Integer,Sequence<IString>> translations,
+      PrintStream singleBestWriter) {
+    assert translations != null;
+    assert singleBestWriter != null;
+    String nl = System.getProperty("line.separator");
+    
+    for(int i = 0; i < translations.size(); ++i) {
+      assert translations.containsKey(i);
+      singleBestWriter.append(translations.get(i).toString() + nl);
+    }
+  }
+
+  
   /**
    * Write an empty entry to a n-best list file.
    */
