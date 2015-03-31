@@ -82,6 +82,7 @@ dependencies {
   compile project(":CoreNLP")
 
   // lilt/core Maven dependencies
+  compile group: 'com.esotericsoftware', name: 'kryo', version: '3.0.1'
   compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
   compile group: 'it.unimi.dsi', name: 'fastutil', version: '6.6.2'
   compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.1'
