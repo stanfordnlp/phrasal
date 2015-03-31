@@ -150,7 +150,7 @@ public class TranslationModelIndex {
   }
 
   // Thread local copies of translation model indices
-  private static final ThreadLocal<TranslationModelIndex> threadLocalCache =
+  private static transient final ThreadLocal<TranslationModelIndex> threadLocalCache =
       new ThreadLocal<TranslationModelIndex>();
 
   /**

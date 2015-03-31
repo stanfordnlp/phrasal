@@ -69,10 +69,8 @@ public class AlignmentTemplate {
   void init(String fStr, String eStr, String aStr, boolean lazy)
       throws IOException {
     reset();
-    f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fStr
-        .split("\\s+")));
-    e = new SimpleSequence<IString>(true, IStrings.toIStringArray(eStr
-        .split("\\s+")));
+    f = IStrings.tokenize(fStr);
+    e = IStrings.tokenize(eStr);
     String[] aligns = aStr.split("\\s+");
     if (!lazy)
       allocAlignmentArrays();
