@@ -101,6 +101,8 @@ def qualify_path(path):
     elif path.startswith(k.SYSTEM_DIR):
         path = re.sub('%s/' % (re.escape(SYSTEM_DIR_LOC)), '', path)
         return os.path.join(SYSTEM_DIR, path)
+    elif path.startswith('/'):
+        return path
     else:
         return make_abs(path)
 
@@ -341,9 +343,11 @@ def generate_ini(filename, weights_file=None):
     to_param = lambda x : '[%s]' % (x)
     seen_tm = False
     seen_lm = False
+    seen_wts = False
     with open(filename, 'w') as outfile:
         ini = lambda x : outfile.write(str(x) + os.linesep)
         # Iterate over ini options
+        
         for key in d[k.DECODER_OPTIONS]:
             if key == 'lmodel-file':
                 seen_lm = True
@@ -355,9 +359,15 @@ def generate_ini(filename, weights_file=None):
                 for value in d[k.DECODER_OPTIONS][key]:
                     ini(value)
             elif key == 'weights-file':
+                seen_wts = True
                 ini(weights_file if weights_file else d[k.DECODER_OPTIONS][key])
             else:
                 ini(d[k.DECODER_OPTIONS][key])
+            ini('')
+    
+        if weights_file and not seen_wts:
+            ini(to_param('weights-file'))            
+            ini(weights_file)
             ini('')
         if not seen_tm:
             ini(to_param('ttable-file'))
@@ -409,7 +419,7 @@ def task_tune():
 
         # Generate the decoder ini file
         generate_ini(DECODER_INI, TUNE_WTS)
-        
+
     return { 'actions' : [tune],
              'file_dep' : [TM_FILE, LM_FILE],
              'targets' : [DECODER_INI, TUNE_WTS]
