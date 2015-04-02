@@ -15,6 +15,7 @@ import codecs
 import os
 import gzip
 from os.path import basename,splitext
+from itertools import izip_longest
 
 sys.stdin = codecs.getreader('utf-8')(sys.stdin)
 sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -44,42 +45,44 @@ def clean_corpus(file1_name, file2_name, min_chars, max_tokens, do_dedup):
     out1 = get_outfile_name(file1_name)
     out2 = get_outfile_name(file2_name)
     dup_hashes = set()
-    with get_reader(file1_name) as infile1:
-        with get_reader(file2_name) as infile2:
-            with gz_utf8_writer(out1) as outfile1:
-                with gz_utf8_writer(out2) as outfile2:
-                    n_filtered = 0
-                    n_dup = 0
-                    for i,line1 in enumerate(infile1):
-                        line2 = infile2.readline()
-                        if line2:
-                            line1 = line1.strip()
-                            line2 = line2.strip()
-                            if do_dedup:
-                                item_key = hash('%s|||%s' % (line1,line2))
-                                if item_key in dup_hashes:
-                                    n_dup += 1
-                                    continue
-                                dup_hashes.add(item_key)
-                            if len(line1) > min_chars \
-                               and len(line2) > min_chars \
-                               and len(line1.split()) < max_tokens \
-                               and len(line2.split()) < max_tokens:
-                                outfile1.write(line1 + os.linesep)
-                                outfile2.write(line2 + os.linesep)
-                            else:
-                                n_filtered += 1
-                        else:
-                            sys.stderr.write('file2 exhausted after %d lines%s' % (i, os.linesep))
-                            sys.exit(-1)
-                    # Ensure that infile2 is exhausted
-                    if infile2.readline():
-                        sys.stderr.write('file1 exhausted after %d lines)%s'\
-                                          % (i, os.linesep))
-                        sys.exit(-1)
-    print 'Filtered %d / %d lines' % (n_filtered, i+1)
+    fv="(*&(*&@@#$$@*)@#"
+    with get_reader(file1_name) as infile1, get_reader(file2_name) as infile2, gz_utf8_writer(out1) as outfile1, gz_utf8_writer(out2) as outfile2:
+        n_filtered = 0
+        n_dup = 0
+        n_lines = 0
+        for line1,line2 in izip_longest(infile1,infile2,fillvalue=fv):
+            assert not line1 == fv
+            assert not line2 == fv
+            n_lines += 1
+            line1 = line1.strip()
+            line2 = line2.strip()
+            if do_dedup:
+                item_key = hash('%s|||%s' % (line1,line2))
+                if item_key in dup_hashes:
+                    n_dup += 1
+                    continue
+                dup_hashes.add(item_key)
+            line1_tokens = line1.split()
+            len_line1 = len(line1_tokens)
+            line2_tokens = line2.split()
+            len_line2 = len(line2_tokens)
+            if len_line1 == 0 or len_line2 == 0:
+                fertility = 1000
+            else:
+                fertility = len_line1 / len_line2 if len_line1 > len_line2 else len_line2 / len_line1
+            # Max fertility is the value from GIZA++
+            if fertility < 9 \
+               and len(line1) > min_chars \
+               and len(line2) > min_chars \
+               and len(line1_tokens) < max_tokens \
+               and len(line2_tokens) < max_tokens:
+                outfile1.write(line1 + os.linesep)
+                outfile2.write(line2 + os.linesep)
+            else:
+                n_filtered += 1
+    print 'Filtered %d / %d lines' % (n_filtered, n_lines)
     if do_dedup:
-        print 'Duplicates %d / %d lines' % (n_dup, i+1)
+        print 'Duplicates: %d / %d lines' % (n_dup, n_lines)
 
 def main():
     desc = 'Filter a parallel bitext.'
