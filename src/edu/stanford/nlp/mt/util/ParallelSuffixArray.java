@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,11 +15,19 @@ import org.apache.logging.log4j.Logger;
  * 
  * NOTE: The fields are public, non-final for fast serialization/deserialization.
  * 
+ * TODO(spenceg) Implement IStrings methods for processing IStrings with
+ * a different underlying vocabulary.
+ * 
  * @author Spence Green
  *
  */
-public class ParallelSuffixArray {
+public class ParallelSuffixArray implements Serializable {
   
+  /**
+   * TODO(spenceg) Replace with kryo
+   */
+  private static final long serialVersionUID = -5403502473957235135L;
+
   private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
   
   public ParallelCorpus corpus;
@@ -35,6 +44,7 @@ public class ParallelSuffixArray {
   public ParallelSuffixArray(ParallelCorpus corpus) {
     this.corpus = corpus;
 
+    // Build source suffix array
     boolean isSource = true;
     PrefixTreeNode prefixTree = createPrefixTree(isSource, corpus);
     createSuffixArray(prefixTree, isSource);
@@ -77,7 +87,7 @@ public class ParallelSuffixArray {
     return null;
   }
 
-  private void createSuffixArray(PrefixTreeNode prefixTree, boolean isSource) {
+  private void createSuffixArray(PrefixTreeNode root, boolean isSource) {
     // TODO Auto-generated method stub
     
   }
@@ -96,9 +106,9 @@ public class ParallelSuffixArray {
    */
   private static class PrefixTreeNode implements Comparable<PrefixTreeNode> { 
     public IString token;
-    List<PrefixTreeNode> children;
-    public Set<Integer> sentenceIds;
-    public Set<Integer> wordPositions;
+    Set<PrefixTreeNode> children;
+    public List<Integer> sentenceIds;
+    public List<Integer> wordPositions;
     
     /**
      * Constructor.
@@ -107,13 +117,16 @@ public class ParallelSuffixArray {
      */
     public PrefixTreeNode(IString token) {
       this.token = token;
-      children = new ArrayList<>();
-      sentenceIds = new HashSet<>();
-      wordPositions = new HashSet<>();
+      children = new HashSet<>();
+      sentenceIds = new ArrayList<>();
+      wordPositions = new ArrayList<>();
     }
 
     @Override
-    public String toString() { return token.toString(); }
+    public String toString() { 
+      return String.format("[%s #children: %d #positions: %d]", token.toString(), 
+          children.size(), wordPositions.size()); 
+    }
     
     @Override
     public int compareTo(PrefixTreeNode o) {

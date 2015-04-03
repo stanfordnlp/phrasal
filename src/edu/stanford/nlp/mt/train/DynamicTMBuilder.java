@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -7,13 +8,15 @@ import java.util.Properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.ParallelCorpus;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * 
+ * Builds a dynamic translation model based on suffix arrays.
  * 
  * @author Spence Green
  *
@@ -36,8 +39,8 @@ public class DynamicTMBuilder {
     sa = symmetrizeAndCreateSuffixArray(sourceFile, targetFile, feAlign, efAlign, expectedSize);
   }
   
-  public DynamicTranslationModel getModel() {
-    
+  public DynamicTranslationModel<IString,String> getModel() {
+    // TODO(spenceg) 
     return null;
   }
   
@@ -68,6 +71,10 @@ public class DynamicTMBuilder {
     return sb.toString();
   }
   
+  /**
+   * 
+   * @param args
+   */
   public static void main(String[] args) {
     if (args.length < 1 || args[0].equals("-h") || args[0].equals("-help")) {
       System.err.print(usage());
@@ -80,7 +87,7 @@ public class DynamicTMBuilder {
       System.exit(-1);      
     }
     
-    String outputFileName = options.getProperty("o", "tm.kryo");
+    String outputFileName = options.getProperty("o", "tm.ser.gz");
     int initialCapacity = PropertiesUtils.getInt(options, "e", 10000);
     
     String sourceFile = positionalArgs[0];
@@ -94,8 +101,14 @@ public class DynamicTMBuilder {
     if (alignEFfile != null) logger.info("Alignment file (e2f): {}", alignEFfile);
     DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity) :
       new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity);
-    DynamicTranslationModel tm = tmBuilder.getModel();
-    // TODO(spenceg) Serialize with kryo
+    DynamicTranslationModel<IString,String> tm = tmBuilder.getModel();
+    
+    try {
+      logger.info("Serializing to: " + outputFileName);
+      IOTools.serialize(outputFileName, tm);
+    } catch (IOException e) {
+      logger.error("Unable to serialize to: " + outputFileName, e);
+    }
   }
 
 

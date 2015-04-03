@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.Serializable;
+
 import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
@@ -12,16 +14,18 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
  * mappings are negative integers. The polarity of the mappings are transparent
  * to the user via the IString.toString() method.
  * 
- * TODO(spenceg) Add serialization and deserialization format.
+ * TODO(spenceg) Serialize with kryo.
  * 
  * @author Spence Green
  *
  */
-public class TranslationModelIndex {
+public class TranslationModelIndex implements Serializable {
 
+  private static final long serialVersionUID = 5124110481914822964L;
+  
   // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
-  private static final Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
+  private static transient final Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
   // Thread-local translation model index
