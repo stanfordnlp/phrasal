@@ -27,7 +27,6 @@ import java.util.zip.GZIPOutputStream;
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -189,6 +188,48 @@ public final class IOTools {
   }
 
   /**
+   * Deserialize an object.
+   * 
+   * @param filename
+   * @return
+   * @throws IOException
+   * @throws ClassNotFoundException
+   */
+  @SuppressWarnings({ "unchecked" })
+  public static <T> T deserialize(String filename) throws IOException, ClassNotFoundException {
+    try {
+      FileInputStream input = new FileInputStream(new File(filename));
+      ObjectInputStream inStream = filename.endsWith(".gz") ? 
+          new ObjectInputStream(new GZIPInputStream(input)) : 
+            new ObjectInputStream(input);
+      
+      T object = (T) inStream.readObject();
+      inStream.close();
+      return object;
+      
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    return null;
+  }
+  
+  /**
+   * Serialize an object.
+   * 
+   * @param filename
+   * @param o
+   * @throws IOException
+   */
+  public static void serialize(String filename, Object o) throws IOException {
+    FileOutputStream out = new FileOutputStream(new File(filename));
+    ObjectOutputStream output = filename.endsWith(".gz") ? 
+        new ObjectOutputStream(new GZIPOutputStream(out)) :
+          new ObjectOutputStream(out);
+    output.writeObject(o);
+    output.close();
+  }
+  
+  /**
    * Read weights from a file. Supports both binary and text formats.
    *
    * @param filename
@@ -197,14 +238,16 @@ public final class IOTools {
    * @throws IOException
    * @throws ClassNotFoundException
    */
+  @SuppressWarnings("unchecked")
   public static Counter<String> readWeights(String filename,
       Index<String> featureIndex) {
     Counter<String> wts;
     try {
       ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
           filename));
-      wts =  ErasureUtils.<Counter<String>>uncheckedCast(ois.readObject());
+      wts = (Counter<String>) ois.readObject();
       ois.close();
+    
     } catch (IOException e) {
        wts = Counters.loadCounter(filename, String.class);
     } catch (ClassNotFoundException e) {

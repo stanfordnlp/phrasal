@@ -1,12 +1,19 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.Serializable;
+
 /**
  * Lightweight implementation of a training example.
  * 
  * @author Spence Green
  *
  */
-public class AlignedSentence {
+public class AlignedSentence implements Serializable {
+  /**
+   * TODO(spenceg) Replace with kryo
+   */
+  private static final long serialVersionUID = 1481297672562948109L;
+  
   public int[] source;
   public int[][] alignments;
   public int[] target;

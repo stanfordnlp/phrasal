@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.util;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,8 +20,13 @@ import org.apache.logging.log4j.Logger;
  * @author Spence Green
  *
  */
-public class ParallelCorpus implements Iterable<AlignedSentence> {
+public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   
+  /**
+   * TODO(spenceg) Replace with kryo
+   */
+  private static final long serialVersionUID = 5837610708369154242L;
+
   private static transient final Logger logger = LogManager.getLogger(ParallelCorpus.class);
 
   private static final int DEFAULT_CAPACITY = 10000;
