@@ -66,6 +66,8 @@ ZH_SEG="$ZH_SEG_PATH/segment.sh"
 # Spanish tokenizer setup (same parameters as French)
 ES_TOK="java $JAVA_OPTS edu.stanford.nlp.international.spanish.process.SpanishTokenizer -noSGML -options ptb3Escaping=false"
 
+SCRIPTDIR="$( cd "$( dirname "$0" )" && pwd )"
+
 #
 # Process command line options
 #
@@ -75,13 +77,13 @@ DE_SEG=tee
 DE_PP=tee
 for op in $*; do
     if [ $op == "clean" ]; then
-	    fixnl="python2.7 $JAVANLP_HOME/projects/mt/scripts-private/cleanup_txt.py --sgml --sql"
+	    fixnl="python2.7 $SCRIPTDIR/cleanup_txt.py --sgml --sql"
         if [ $lang == "German" ] || [ $lang == "English" ] || [ $lang == "French" ]; then
             fixnl="$fixnl --latin"
         fi    
 
     elif [ $op == "clean_keep" ]; then
-        fixnl="python2.7 $JAVANLP_HOME/projects/mt/scripts-private/cleanup_txt.py"
+        fixnl="python2.7 $SCRIPTDIR/cleanup_txt.py"
 
     elif [ $op == "tolower" ]; then
 	EN_TOK="$EN_TOK -lowerCase"
