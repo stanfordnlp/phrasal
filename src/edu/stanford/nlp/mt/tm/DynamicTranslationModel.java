@@ -1,4 +1,4 @@
-package edu.stanford.nlp.mt.train;
+package edu.stanford.nlp.mt.tm;
 
 import java.io.Serializable;
 import java.util.List;
@@ -6,8 +6,6 @@ import java.util.List;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.mt.util.Sequence;
