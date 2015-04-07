@@ -16,6 +16,12 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 
+/**
+ * Test case.
+ * 
+ * @author Spence Green
+ *
+ */
 public class RuleGridTest {
 
   private static final String PHRASE_TABLE_NAME = "SoftTargetGenerator";
@@ -44,7 +50,7 @@ public class RuleGridTest {
   }
 
   @Test
-  public void test() {
+  public void testRuleGrid() {
     Sequence<IString> sourceSequence = IStrings.tokenize("This is a test sentence.");
     Sequence<IString> targetSequence = IStrings.tokenize("TEST");
     

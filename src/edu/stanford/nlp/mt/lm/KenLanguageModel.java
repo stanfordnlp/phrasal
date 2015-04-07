@@ -19,9 +19,17 @@ import edu.stanford.nlp.mt.util.TranslationModelIndex;
 public class KenLanguageModel implements LanguageModel<IString> {
 
   private static final int[] EMPTY_INT_ARRAY = new int[0];
-
+  public static final String KENLM_LIBRARY_NAME = "PhrasalKenLM";
+  
   static {
-    System.loadLibrary("PhrasalKenLM");
+    try {
+      System.loadLibrary(KENLM_LIBRARY_NAME);
+    
+    } catch (java.lang.UnsatisfiedLinkError e) {
+      System.err.println("KenLM has not been compiled!");
+      e.printStackTrace();
+      System.exit(-1);
+    }
   }
 
   private KenLM model;
