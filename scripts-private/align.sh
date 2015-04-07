@@ -53,8 +53,7 @@ elif [ $tgt_ext == "bz2" ]; then
 	CAT2=bzcat
 fi
 
-
-scriptdir=${JAVANLP_HOME}/projects/mt/scripts-private
+scriptdir="$( cd "$( dirname "$0" )" && pwd )"
 mkconf=${scriptdir}/mkconf.py
 if $write_posterior; then
   conf_template=${scriptdir}/ucb-align-posterior.conf
@@ -62,7 +61,7 @@ if $write_posterior; then
 else
   conf_template=${scriptdir}/ucb-align.conf
 fi
-align=${JAVANLP_HOME}/projects/mt/scripts/align
+align=${scriptdir}/../scripts/align
 
 
 # Step 1: Split the bitext
