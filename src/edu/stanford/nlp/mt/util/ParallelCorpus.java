@@ -34,35 +34,39 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   public List<AlignedSentence> corpus;
   public TranslationModelIndex index;
   
+  /**
+   * Constructor.
+   */
   public ParallelCorpus() {
     this(DEFAULT_CAPACITY);
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param initialCapacity
+   */
   public ParallelCorpus(int initialCapacity) {
-    corpus = new ArrayList<>(initialCapacity);
+    this(DEFAULT_CAPACITY, false);
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param initialCapacity
+   * @param isDecoderLocal
+   */
+  public ParallelCorpus(int initialCapacity, boolean isDecoderLocal) {
+    corpus = new ArrayList<>(initialCapacity);
+    boolean isSystemIndex = ! isDecoderLocal;
+    index = new TranslationModelIndex(initialCapacity, isSystemIndex);
+  }
+
   public AlignedSentence add(String source, String target, String align) {
     int[] f = stringToArray(source);
     int[] e = stringToArray(target);
     int[][] f2e = alignStringToArray(align, f.length, e.length);
     AlignedSentence s = new AlignedSentence(f, e, f2e);
-    corpus.add(s);
-    return s;
-  }
-  
-  /**
-   * TODO(spenceg) Might need to make the IStrings in the sequence consistent
-   * with the corpus index.
-   * 
-   * @param source
-   * @param target
-   * @param align
-   * @return
-   */
-  public AlignedSentence add(Sequence<IString> source, Sequence<IString> target, int[][] align) {
-    AlignedSentence s = new AlignedSentence(Sequences.toIntArray(source),
-        Sequences.toIntArray(target), align);
     corpus.add(s);
     return s;
   }
@@ -130,19 +134,21 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @param targetFile
    * @param alignmentFile
    * @param expectedSize
+   * @param isDecoderLocal 
    * @return
    * @throws IOException
    */
   public static ParallelCorpus loadCorpusFromFiles(String sourceFile, String targetFile,
-      String alignmentFile, int expectedSize) throws IOException {
-    ParallelCorpus corpus = new ParallelCorpus(expectedSize);
+      String alignmentFile, int expectedSize, boolean isDecoderLocal) throws IOException {
+    boolean isSystemIndex = ! isDecoderLocal;
+    ParallelCorpus corpus = new ParallelCorpus(expectedSize, isSystemIndex);
     LineNumberReader srcReader = IOTools.getReaderFromFile(sourceFile);
     LineNumberReader tgtReader = IOTools.getReaderFromFile(targetFile);
     LineNumberReader algnReader = IOTools.getReaderFromFile(alignmentFile);
     for (String srcLine; (srcLine = srcReader.readLine()) != null;) {
       String tgtLine = tgtReader.readLine();
       String algnLine = algnReader.readLine();
-      AlignedSentence example = corpus.add(srcLine, tgtLine, algnLine);
+      corpus.add(srcLine, tgtLine, algnLine);
     }
     srcReader.close();
     tgtReader.close();

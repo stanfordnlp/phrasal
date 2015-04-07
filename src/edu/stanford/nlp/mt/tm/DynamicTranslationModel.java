@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.TranslationModelIndex;
 
 /**
  * 
@@ -26,11 +25,9 @@ public class DynamicTranslationModel<TK,FV> implements TranslationModel<TK,FV>,S
   private static final long serialVersionUID = 5876435802959430120L;
   
   public ParallelSuffixArray sa;
-  public TranslationModelIndex idx;
   
-  public DynamicTranslationModel(ParallelSuffixArray suffixArray, TranslationModelIndex idx) {
+  public DynamicTranslationModel(ParallelSuffixArray suffixArray) {
     this.sa = suffixArray;
-    this.idx = idx;
   }
 
   @Override
