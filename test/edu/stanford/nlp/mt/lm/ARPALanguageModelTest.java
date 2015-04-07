@@ -2,7 +2,10 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.IOException;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -16,10 +19,12 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
  * 
  * @author Spence Green
  */
-public class ARPALanguageModelTest extends TestCase {
+public class ARPALanguageModelTest {
 
-  private static ARPALanguageModel lm;
-  static {
+  private ARPALanguageModel lm;
+
+  @Before
+  public void setUp() {
     try {
       lm = (ARPALanguageModel) LanguageModelFactory
           .load("test-resources/inputs/3gm-probing.arpa.gz");
@@ -28,6 +33,7 @@ public class ARPALanguageModelTest extends TestCase {
     }
   }
 
+  @Test
   public void testScore() {
     assertTrue(lm.tables.length == 3);
     String sent = "This is a test sentence to be scored by the language model";
