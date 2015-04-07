@@ -28,12 +28,12 @@ public class TranslationModelIndex implements Serializable {
   private static transient final Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
-  // Thread-local translation model index
+  // Decoder-local translation model index
   private static final int INITIAL_CAPACITY = 10000;
   private final Index<String> index;
 
   /**
-   * Constructor.
+   * Constructor. Creates a decoder-local index.
    */
   public TranslationModelIndex() {
     this(INITIAL_CAPACITY, false);

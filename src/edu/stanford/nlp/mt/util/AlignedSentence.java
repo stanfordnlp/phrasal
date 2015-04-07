@@ -13,11 +13,11 @@ public class AlignedSentence implements Serializable {
    * TODO(spenceg) Replace with kryo
    */
   private static final long serialVersionUID = 1481297672562948109L;
-  
+
   public int[] source;
   public int[][] alignments;
   public int[] target;
-  
+
   /**
    * Constructor.
    * 
@@ -31,8 +31,24 @@ public class AlignedSentence implements Serializable {
     this.target = target;
     this.alignments = alignments;
   }
-  
-  public Sequence<IString> getSource() { return IStrings.getIStringSequence(source); }
-  
-  public Sequence<IString> getTarget() { return IStrings.getIStringSequence(target); }
+
+  /**
+   * Get the source sentence as an {@link Sequence} object.
+   * 
+   * @param index
+   * @return
+   */
+  public Sequence<IString> getSource(TranslationModelIndex index) { 
+    return IStrings.getIStringSequence(source, index); 
+  }
+
+  /**
+   * Get the target sentence as an {@link Sequence} object.
+   * 
+   * @param index
+   * @return
+   */
+  public Sequence<IString> getTarget(TranslationModelIndex index) { 
+    return IStrings.getIStringSequence(target, index); 
+  }
 }

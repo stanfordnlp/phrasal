@@ -15,39 +15,66 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
   private static final long serialVersionUID = 7535218805035757457L;
   
   public final int id;
-
+  private final TranslationModelIndex index;
+  
   /**
    * Constructor.
    */
   public IString(String string) {
-    id = TranslationModelIndex.systemAdd(string);
+    this(string, null);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param string
+   * @param index
+   */
+  public IString(String string, TranslationModelIndex index) {
+    this.id = index == null ? TranslationModelIndex.systemAdd(string) :
+      index.add(string);
+    this.index = index;
+  }
+  
   /**
    * Constructor.
    * 
    * @param id
    */
   public IString(int id) {
+    this(id, null);
+  }
+  
+  /**
+   * Constructor.
+   * 
+   * @param id
+   * @param index
+   */
+  public IString(int id, TranslationModelIndex index) {
     if (id == TranslationModelIndex.UNKNOWN_ID) {
       throw new IllegalArgumentException("Invalid id: " + String.valueOf(id));
     }
     this.id = id;
+    this.index = index;
   }
 
   @Override
   public char charAt(int charIndex) {
-    return TranslationModelIndex.systemGet(id).charAt(charIndex);
+    return index == null ? TranslationModelIndex.systemGet(id).charAt(charIndex) :
+        index.get(id).charAt(charIndex);
   }
 
   @Override
   public int length() {
-    return TranslationModelIndex.systemGet(id).length();
+    return index == null ? TranslationModelIndex.systemGet(id).length() :
+        index.get(id).length();
   }
 
   @Override
   public CharSequence subSequence(int start, int end) {
-    return TranslationModelIndex.systemGet(id).subSequence(start, end);
+    return index == null ? TranslationModelIndex.systemGet(id).subSequence(start, end) :
+      index.get(id).substring(start, end);
   }
 
   @Override
@@ -69,15 +96,22 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
 
   @Override
   public String toString() {
-    return TranslationModelIndex.systemGet(id);
+    return index == null ? TranslationModelIndex.systemGet(id) :
+      index.get(id);
   }
 
+  /**
+   * Get the underlying integer id.
+   * 
+   * @return
+   */
   public int getId() {
     return id;
   }
 
   @Override
   public int compareTo(IString o) {
-    return TranslationModelIndex.systemGet(id).compareTo(TranslationModelIndex.systemGet(o.id));
+    return index == null ? TranslationModelIndex.systemGet(id).compareTo(TranslationModelIndex.systemGet(o.id)) :
+      index.get(id).compareTo(index.get(id));
   }
 }

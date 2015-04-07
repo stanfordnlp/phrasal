@@ -62,10 +62,12 @@ public class ParallelSuffixArray implements Serializable {
    * @param targetFile
    * @param alignmentFile
    * @param expectedSize
+   * @param isDecoderLocal 
    */
-  public ParallelSuffixArray(String sourceFile, String targetFile, String alignmentFile, int expectedSize) {
+  public ParallelSuffixArray(String sourceFile, String targetFile, String alignmentFile, int expectedSize, 
+      boolean isDecoderLocal) {
     try {
-      this.corpus = ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignmentFile, expectedSize);
+      this.corpus = ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignmentFile, expectedSize, isDecoderLocal);
     } catch (IOException e) {
       logger.error("Unable to load from corpus.", e);
       throw new RuntimeException(e);
