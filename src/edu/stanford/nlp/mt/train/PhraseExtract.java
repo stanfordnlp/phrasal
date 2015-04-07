@@ -933,7 +933,6 @@ public class PhraseExtract {
       e.extractAll();
     } catch (Exception e) {
       e.printStackTrace();
-      usage();
     }
 
     System.err.println("Extraction ended at " + formatter.format(new Date()));
