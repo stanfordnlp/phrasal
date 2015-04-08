@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.util;
 
-import edu.stanford.nlp.util.Index;
-
 /**
  * 
  * @author danielcer
@@ -23,13 +21,6 @@ public class RawSequence<TK> extends AbstractSequence<TK> {
     elements = new Object[sequence.size()];
     for (int i = 0; i < elements.length; i++) {
       elements[i] = sequence.get(i);
-    }
-  }
-
-  public RawSequence(int[] intElements, Index<TK> index) {
-    elements = new Object[intElements.length];
-    for (int i = 0; i < intElements.length; i++) {
-      elements[i] = index.get(intElements[i]);
     }
   }
 

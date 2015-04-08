@@ -2,7 +2,9 @@ package edu.stanford.nlp.mt.util;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import edu.stanford.nlp.mt.tools.NISTTokenizer;
 
@@ -33,7 +35,7 @@ public final class IStrings {
    * applying NIST tokenization.
    */
   static public List<Sequence<IString>> tokenizeFile(String filename, boolean doNIST) {
-    List<Sequence<IString>> sequences = new ArrayList<Sequence<IString>>();
+    List<Sequence<IString>> sequences = new ArrayList<>();
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     try {
       for (String line; (line = reader.readLine()) != null;) {
