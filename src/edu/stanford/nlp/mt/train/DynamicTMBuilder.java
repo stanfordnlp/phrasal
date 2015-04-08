@@ -30,15 +30,40 @@ public class DynamicTMBuilder {
 
   private ParallelSuffixArray sa;
   
+  /**
+   * Constructor.
+   * 
+   * @param corpus
+   */
   public DynamicTMBuilder(ParallelCorpus corpus) {
     sa = new ParallelSuffixArray(corpus);
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param sourceFile
+   * @param targetFile
+   * @param align
+   * @param expectedSize
+   * @param isDecoderLocal
+   */
   public DynamicTMBuilder(String sourceFile, String targetFile, String align, int expectedSize, 
       boolean isDecoderLocal) {
     sa = new ParallelSuffixArray(sourceFile, targetFile, align, expectedSize, isDecoderLocal);
   }
   
+  /**
+   * Constructor.
+   * 
+   * @param sourceFile
+   * @param targetFile
+   * @param feAlign
+   * @param efAlign
+   * @param expectedSize
+   * @param type
+   * @param isDecoderLocal
+   */
   public DynamicTMBuilder(String sourceFile, String targetFile, String feAlign, String efAlign, 
       int expectedSize, SymmetrizationType type, boolean isDecoderLocal) {
     sa = symmetrizeAndCreateSuffixArray(sourceFile, targetFile, feAlign, efAlign, type, expectedSize, isDecoderLocal);
