@@ -3,9 +3,9 @@ package edu.stanford.nlp.mt.util;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,13 +46,11 @@ public class ParallelSuffixArray implements Serializable {
 
     // Build source suffix array
     boolean isSource = true;
-    PrefixTreeNode prefixTree = createPrefixTree(isSource, corpus);
-    createSuffixArray(prefixTree, isSource);
+    createPrefixTree(isSource, corpus);
     
     // Build target suffix array
     isSource = false;
-    prefixTree = createPrefixTree(isSource, corpus);
-    createSuffixArray(prefixTree, isSource);
+    createPrefixTree(isSource, corpus);
   }
 
   /**
@@ -75,23 +73,72 @@ public class ParallelSuffixArray implements Serializable {
     
     // Build source prefix array
     boolean isSource = true;
-    PrefixTreeNode prefixTree = createPrefixTree(isSource, corpus);
-    createSuffixArray(prefixTree, isSource);
+    createPrefixTree(isSource, corpus);
     
     // Build target suffix array
     isSource = false;
-    prefixTree = createPrefixTree(isSource, corpus);
-    createSuffixArray(prefixTree, isSource);
+    createPrefixTree(isSource, corpus);
   }
 
-  private static PrefixTreeNode createPrefixTree(boolean isSource, ParallelCorpus corpus) {
-    // TODO Auto-generated method stub
-    return null;
-  }
+  private void createPrefixTree(boolean isSource, ParallelCorpus corpus) {
+    PrefixTreeNode root = new PrefixTreeNode(null);
+    int[] posToSentenceId = new int[corpus.size()];
 
-  private void createSuffixArray(PrefixTreeNode root, boolean isSource) {
-    // TODO Auto-generated method stub
+    // Iterate over suffixes to build the tree
+    int corpusPosition = 0;
+    int i = 0;
+    for (AlignedSentence example : corpus) {
+      Sequence<IString> source = example.getSource(corpus.index);
+      for (int j = 0, sz = source.size(); j < sz; ++j) {
+        Sequence<IString> suffix = source.subsequence(j, sz);
+        add(root, suffix, corpusPosition++);
+      }
+      posToSentenceId[i++] = corpusPosition - 1;
+    }
     
+    if (isSource) {
+      srcPosToSentenceId = posToSentenceId;
+    } else {
+      tgtPosToSentenceId = posToSentenceId;
+    }
+    
+    // Create the suffix array
+    createSuffixArray(root, isSource, corpusPosition);
+  }
+
+  private void addHelper(PrefixTreeNode root, Sequence<IString> suffix, int index, int corpusPosition) {
+    if (index == suffix.size()) {
+      root.corpusPositions.add(corpusPosition);
+      
+    } else {
+      IString focus = suffix.get(index);
+      PrefixTreeNode child = root.children.getOrDefault(focus, null);
+      if (child == null) {
+        child = new PrefixTreeNode(focus);
+        root.children.put(focus, child);
+      }
+      addHelper(child, suffix, ++index, corpusPosition);
+    }
+  }
+  
+  private void add(PrefixTreeNode root, Sequence<IString> suffix, int corpusPosition) {
+    IString leftEdge = suffix.get(0);
+    PrefixTreeNode child = root.children.getOrDefault(leftEdge, null);
+    if (child == null) {
+      child = new PrefixTreeNode(leftEdge);
+      root.children.put(leftEdge, child);
+    }
+    addHelper(child, suffix, 1, corpusPosition);
+  }
+
+//  private void visitChildren(PrefixTreeNode node, )
+  
+  private void createSuffixArray(PrefixTreeNode root, boolean isSource, int numPositions) {
+    int[] sa = new int[numPositions];
+    root.children.keySet().stream().sorted().forEach(x -> 
+    {
+      
+    });
   }
   
   public int numSentences() {
@@ -107,10 +154,10 @@ public class ParallelSuffixArray implements Serializable {
    *
    */
   private static class PrefixTreeNode implements Comparable<PrefixTreeNode> { 
+    
     public IString token;
-    Set<PrefixTreeNode> children;
-    public List<Integer> sentenceIds;
-    public List<Integer> wordPositions;
+    public List<Integer> corpusPositions;
+    public Map<IString,PrefixTreeNode> children;
     
     /**
      * Constructor.
@@ -119,20 +166,18 @@ public class ParallelSuffixArray implements Serializable {
      */
     public PrefixTreeNode(IString token) {
       this.token = token;
-      children = new HashSet<>();
-      sentenceIds = new ArrayList<>();
-      wordPositions = new ArrayList<>();
+      children = new HashMap<>();
+      corpusPositions = new ArrayList<>();
     }
 
     @Override
     public String toString() { 
       return String.format("[%s #children: %d #positions: %d]", token.toString(), 
-          children.size(), wordPositions.size()); 
+          children.size(), corpusPositions.size()); 
     }
     
     @Override
     public int compareTo(PrefixTreeNode o) {
-      // TODO(spenceg) WARNING This may not be the correct underlying vocabulary.
       return token.toString().compareTo(o.token.toString());
     }
   }
