@@ -8,6 +8,7 @@ apply plugin: 'application'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+compileJava.options.encoding = 'UTF-8'
 version = '3.4.1'
 
 // Gradle application plugin
