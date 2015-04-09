@@ -3,9 +3,7 @@ package edu.stanford.nlp.mt.util;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,7 +96,6 @@ public class ParallelSuffixArray implements Serializable {
     {
       AlignedSentence exX = corpus.get(x.sentenceId);
       int[] xSeq = isSource ? exX.source : exX.target;
-      
       AlignedSentence exY = corpus.get(y.sentenceId);
       int[] ySeq = isSource ? exY.source : exY.target;
 
@@ -219,44 +216,6 @@ public class ParallelSuffixArray implements Serializable {
     public SentenceSample(AlignedSentence sentence, int wordPosition) {
       this.sentence = sentence;
       this.wordPosition = wordPosition;
-    }
-  }
-  
-  // TODO(spenceg) Query functions: counts for words and n-grams
-  // TODO(spenceg) 
-
-  /**
-   * For creating a prefix-tree for linear-time construction.
-   * 
-   * @author Spence Green
-   *
-   */
-  private static class PrefixTreeNode implements Comparable<PrefixTreeNode> { 
-    
-    public IString token;
-    public List<Integer> corpusPositions;
-    public Map<IString,PrefixTreeNode> children;
-    
-    /**
-     * Constructor.
-     * 
-     * @param token
-     */
-    public PrefixTreeNode(IString token) {
-      this.token = token;
-      children = new HashMap<>();
-      corpusPositions = new ArrayList<>();
-    }
-
-    @Override
-    public String toString() { 
-      return String.format("[%s #children: %d #positions: %d]", token.toString(), 
-          children.size(), corpusPositions.size()); 
-    }
-    
-    @Override
-    public int compareTo(PrefixTreeNode o) {
-      return token.toString().compareTo(o.token.toString());
     }
   }
 }
