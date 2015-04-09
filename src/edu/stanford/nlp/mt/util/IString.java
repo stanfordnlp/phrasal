@@ -112,6 +112,6 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
   @Override
   public int compareTo(IString o) {
     return index == null ? TranslationModelIndex.systemGet(id).compareTo(TranslationModelIndex.systemGet(o.id)) :
-      index.get(id).compareTo(index.get(id));
+      index.get(id).compareTo(index.get(o.id));
   }
 }

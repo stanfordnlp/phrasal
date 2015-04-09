@@ -120,8 +120,8 @@ public final class IStrings {
    * @param indices
    * @return
    */
-  public static Sequence<IString> getIStringSequence(int[] indices) {
-    return getIStringSequence(indices, null);
+  public static Sequence<IString> toIStringSequence(int[] indices) {
+    return toIStringSequence(indices, null);
   }
   
   /**
@@ -131,11 +131,11 @@ public final class IStrings {
    * @param index
    * @return
    */
-  public static Sequence<IString> getIStringSequence(int[] indices, TranslationModelIndex index) {
-    List<IString> istringList = new ArrayList<IString>();
-    for (int id : indices) {
-      istringList.add(new IString(id, index));
+  public static Sequence<IString> toIStringSequence(int[] indices, TranslationModelIndex index) {
+    IString[] istringList = new IString[indices.length];
+    for (int i = 0; i < indices.length; ++i) {
+      istringList[i] = new IString(indices[i], index);
     }
-    return new SimpleSequence<IString>(istringList);    
+    return new SimpleSequence<IString>(true, istringList);    
   }
 }
