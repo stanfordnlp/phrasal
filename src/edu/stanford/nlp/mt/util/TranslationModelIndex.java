@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.util;
 
 import java.io.Serializable;
 
-import edu.stanford.nlp.util.HashIndex;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
@@ -47,7 +46,7 @@ public class TranslationModelIndex implements Serializable {
    * of a decoder-local index.
    */
   public TranslationModelIndex(int initialCapacity, boolean isSystemIndex) {
-    index = isSystemIndex ? new HashIndex<String>(initialCapacity) : 
+    index = isSystemIndex ? new ConcurrentHashIndex<String>(initialCapacity) : 
       new DecoderLocalIndex<String>(initialCapacity);
   }
 

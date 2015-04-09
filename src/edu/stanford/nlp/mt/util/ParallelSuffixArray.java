@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,12 +52,14 @@ public class ParallelSuffixArray implements Serializable {
     logger.info("# corpus positions src: {} tgt: {}", corpus.numSourcePositions(), corpus.numTargetPositions());
     
     // Build source suffix array
-    boolean isSource = true;
-    createPrefixTree(isSource, corpus);
-    
-    // Build target suffix array
-    isSource = false;
-    createPrefixTree(isSource, corpus);
+    createArray(true);
+    createArray(false);
+//    boolean isSource = true;
+//    createPrefixTree(isSource, corpus);
+//    
+//    // Build target suffix array
+//    isSource = false;
+//    createPrefixTree(isSource, corpus);
   }
 
   /**
@@ -76,101 +77,81 @@ public class ParallelSuffixArray implements Serializable {
     this(ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignmentFile, expectedSize, isDecoderLocal));
   }
 
-  private void createPrefixTree(boolean isSource, ParallelCorpus corpus) {
-    logger.info("Creating {} prefix tree", isSource ? "source" : "target");
-    PrefixTreeNode root = new PrefixTreeNode(null);
+  private void createArray(boolean isSource) {
     int[] posToSentenceId = new int[corpus.size()];
 
     // Iterate over suffixes to build the tree
+    logger.info("Enumerating {} corpus...", isSource ? "source" : "target");
     long startTime = System.nanoTime();
     int corpusPosition = 0;
     int i = 0;
+    List<CorpusPosition> positions = new ArrayList<>(isSource ? corpus.numSourcePositions() : corpus.numTargetPositions());
     for (AlignedSentence example : corpus) {
-      Sequence<IString> sequence = isSource ? example.getSource(corpus.index) : example.getTarget(corpus.index);
-      for (int j = 0, sz = sequence.size(); j < sz; ++j) {
-        Sequence<IString> suffix = sequence.subsequence(j, sz);
-        addSuffix(root, suffix, corpusPosition++);
+      int len = isSource ? example.sourceLength() : example.targetLength();
+      for (int j = 0; j < len; ++j) {
+        positions.add(new CorpusPosition(corpusPosition++, i, j));
       }
       posToSentenceId[i++] = corpusPosition - 1;
-      if ( (i+1) % 1000 == 0) System.err.printf("%d,", i);
     }
     
     long treeTime = System.nanoTime() - startTime;
     double treeSecs = (double) treeTime / 1e9;
-    logger.info("Done creating {} prefix tree: {}s", isSource ? "source" : "target", treeSecs);
+    logger.info("Done enumerating {} corpus: {}s", isSource ? "source" : "target", treeSecs);
 
-    // Create the sentence indices
-    if (isSource) {
-      srcPosToSentenceId = posToSentenceId;
-    } else {
-      tgtPosToSentenceId = posToSentenceId;
-    }
-    
-    // Create the suffix array
+    // Create the suffix array (in parallel)
     startTime = System.nanoTime();
-    logger.info("Creating {} suffix array", isSource ? "source" : "target");
-    createSuffixArray(root, isSource, corpusPosition);
+    logger.info("Creating {} suffix array...", isSource ? "source" : "target");
+    final int[] sa = positions.parallelStream().sorted((x,y) ->
+    {
+      AlignedSentence exX = corpus.get(x.sentenceId);
+      int[] xSeq = isSource ? exX.source : exX.target;
+      
+      AlignedSentence exY = corpus.get(y.sentenceId);
+      int[] ySeq = isSource ? exY.source : exY.target;
+
+      for (int yPos = y.sentPos, xPos = x.sentPos; 
+          xPos < xSeq.length && yPos < ySeq.length; 
+          xPos++, yPos++) {
+        int xId = xSeq[xPos];
+        int yId = ySeq[yPos];
+        int cmp = corpus.index.get(xId).compareTo(corpus.index.get(yId));
+        if (cmp != 0) return cmp;
+      }
+      // Check the lengths
+      int xLength = xSeq.length - x.sentPos;
+      int yLength = ySeq.length - y.sentPos;
+      return xLength - yLength;
+    }).mapToInt(a -> a.corpusPos).toArray();
     
     long saTime = System.nanoTime() - startTime;
     double saSecs = (double) saTime / 1e9;
     logger.info("Done creating {} suffix array: {}s", isSource ? "source" : "target", saSecs);
-  }
-
-  private void addHelper(PrefixTreeNode root, Sequence<IString> suffix, int index, int corpusPosition) {
-    if (index == suffix.size()) {
-      root.corpusPositions.add(corpusPosition);
-      
-    } else {
-      IString focus = suffix.get(index);
-      PrefixTreeNode child = root.children.getOrDefault(focus, null);
-      if (child == null) {
-        child = new PrefixTreeNode(focus);
-        root.children.put(focus, child);
-      }
-      addHelper(child, suffix, ++index, corpusPosition);
-    }
-  }
-  
-  private void addSuffix(PrefixTreeNode root, Sequence<IString> suffix, int corpusPosition) {
-    IString leftEdge = suffix.get(0);
-    PrefixTreeNode child = root.children.getOrDefault(leftEdge, null);
-    if (child == null) {
-      child = new PrefixTreeNode(leftEdge);
-      root.children.put(leftEdge, child);
-    }
-    addHelper(child, suffix, 1, corpusPosition);
-  }
-
-  private int visitChild(PrefixTreeNode node, int[] sa, int saIndex) {
-    if (node.corpusPositions.size() > 0) {
-      int[] nodePositions = node.corpusPositions.stream().mapToInt(i -> (int) i).toArray();
-      System.arraycopy(nodePositions, 0, sa, saIndex, nodePositions.length);
-      saIndex += nodePositions.length;
-    }
-    if (node.children.size() > 0) {
-      List<IString> children = node.children.keySet().parallelStream().sorted().collect(Collectors.toList());
-      for (IString childKey : children) {
-        PrefixTreeNode child = node.children.get(childKey);
-        saIndex = visitChild(child, sa, saIndex);
-      }
-    }
-    System.err.println(saIndex);
-    return saIndex;
-  }
-  
-  private void createSuffixArray(PrefixTreeNode root, boolean isSource, int numPositions) {
-    int[] sa = new int[numPositions];
-    int saIndex = 0;
-    System.err.println(root.children.size());
-    List<IString> children = root.children.keySet().parallelStream().sorted().collect(Collectors.toList());
-    for (IString childKey : children) {
-      PrefixTreeNode child = root.children.get(childKey);
-      saIndex = visitChild(child, sa, saIndex);
-    }
+    
+    // Setup the arrays
     if (isSource) {
+      srcPosToSentenceId = posToSentenceId;
       this.srcSuffixArray = sa;
+    
     } else {
+      tgtPosToSentenceId = posToSentenceId;
       this.tgtSuffixArray = sa;
+    }
+  }
+  
+  /**
+   * Marks a corpus position for fast sorting.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class CorpusPosition {
+    public final int corpusPos;
+    public final int sentenceId;
+    public final int sentPos;
+    public CorpusPosition(int c, int s, int sentPos) {
+      this.corpusPos = c;
+      this.sentenceId = s;
+      this.sentPos = sentPos;
     }
   }
   
