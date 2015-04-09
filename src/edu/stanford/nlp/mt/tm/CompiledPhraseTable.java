@@ -221,7 +221,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     List<Rule<IString>> ruleList = new ArrayList<Rule<IString>>(
         intTransOpts.size());
     for (PhraseTableEntry intTransOpt : intTransOpts) {
-      Sequence<IString> targetSequence = IStrings.getIStringSequence(
+      Sequence<IString> targetSequence = IStrings.toIStringSequence(
           intTransOpt.targetArray);
       ruleList.add(new Rule<IString>(intTransOpt.id,
           intTransOpt.scores, scoreNames, targetSequence, sourceSequence,

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +34,8 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   
   public List<AlignedSentence> corpus;
   public TranslationModelIndex index;
+  public int numSourcePos = 0;
+  public int numTargetPos = 0;
   
   /**
    * Constructor.
@@ -64,7 +67,9 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
 
   public AlignedSentence add(String source, String target, String align) {
     int[] f = stringToArray(source);
+    numSourcePos += f.length;
     int[] e = stringToArray(target);
+    numTargetPos += e.length;
     int[][] f2e = alignStringToArray(align, f.length, e.length);
     AlignedSentence s = new AlignedSentence(f, e, f2e);
     corpus.add(s);
@@ -72,12 +77,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   }
   
   private int[] stringToArray(String string) {
-    String[] tokens = string.trim().split("\\s+");
-    int[] indices = new int[tokens.length];
-    for (int i = 0; i < tokens.length; ++i) {
-      indices[i] = index.add(tokens[i]);
-    }
-    return indices;
+    return Arrays.asList(string.trim().split("\\s+")).stream().mapToInt(i -> index.add(i)).toArray();
   }
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -85,14 +85,13 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     Set[] f2e = new HashSet[sourceLen];
     String[] alignmentPoints = alignStr.split("\\s+");
     for (String point : alignmentPoints) {
-      int srcPos = Integer.parseInt(point.substring(0, 1));
+      final int splitIdx = point.indexOf("-");
+      int srcPos = Integer.parseInt(point.substring(0, splitIdx));
       if (srcPos < 0 || srcPos >= sourceLen) {
         throw new ArrayIndexOutOfBoundsException(String.format("Source length: %d  source index: %d", sourceLen, srcPos));
       }
       if (f2e[srcPos] == null) f2e[srcPos] = new HashSet<>();
-      for (String tgtStr : point.substring(2, point.length()).split(",")) {
-        if (tgtStr.length() == 0)
-          continue;
+      for (String tgtStr : point.substring(splitIdx+1, point.length()).split(",")) {
         int tgtPos = Integer.parseInt(tgtStr);
         if (tgtPos < 0 || tgtPos >= targetLen) {
           throw new ArrayIndexOutOfBoundsException(String.format("Target length: %d  target index: %d", targetLen, tgtPos));          
@@ -121,6 +120,14 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   }
 
   public int size() { return corpus.size(); }
+  
+  public int numSourcePositions() {
+    return numSourcePos;
+  }
+  
+  public int numTargetPositions() {
+    return numTargetPos;
+  }
   
   @Override
   public Iterator<AlignedSentence> iterator() {

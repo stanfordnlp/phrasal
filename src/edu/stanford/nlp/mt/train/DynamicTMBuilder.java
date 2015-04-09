@@ -50,7 +50,11 @@ public class DynamicTMBuilder {
    */
   public DynamicTMBuilder(String sourceFile, String targetFile, String align, int expectedSize, 
       boolean isDecoderLocal) {
-    sa = new ParallelSuffixArray(sourceFile, targetFile, align, expectedSize, isDecoderLocal);
+    try {
+      sa = new ParallelSuffixArray(sourceFile, targetFile, align, expectedSize, isDecoderLocal);
+    } catch (IOException e) {
+      logger.error("Unable to load corpus from file.", e);
+    }
   }
   
   /**
@@ -110,7 +114,8 @@ public class DynamicTMBuilder {
             .symmetrize(gizaAlign, type);
         symAlign.reverse();
         String aLine = symAlign.toString().trim();
-        corpus.add(fLine, eLine, aLine);
+        // Sometimes there are no consistent alignments.
+        if ( ! aLine.isEmpty()) corpus.add(fLine, eLine, aLine);
       }
 
       fReader.close();
@@ -178,9 +183,14 @@ public class DynamicTMBuilder {
     logger.info("Target file: {}", targetFile);
     logger.info("Alignment file (f2e): {}", alignFEfile);
     if (alignEFfile != null) logger.info("Alignment file (e2f): {}", alignEFfile);
+    
+    long startTime = System.nanoTime();
     DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity, isDecoderLocal) :
       new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type, isDecoderLocal);
     DynamicTranslationModel<IString,String> tm = tmBuilder.getModel();
+    long elapsedTime = System.nanoTime() - startTime;
+    double numSecs = ((double) elapsedTime) / 1e9;
+    logger.info("Construction time: {}s", numSecs);
     
     // TODO(spenceg) Replace with kryo
     try {

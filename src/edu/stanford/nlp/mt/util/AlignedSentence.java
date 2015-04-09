@@ -39,7 +39,7 @@ public class AlignedSentence implements Serializable {
    * @return
    */
   public Sequence<IString> getSource(TranslationModelIndex index) { 
-    return IStrings.getIStringSequence(source, index); 
+    return IStrings.toIStringSequence(source, index); 
   }
 
   /**
@@ -49,6 +49,6 @@ public class AlignedSentence implements Serializable {
    * @return
    */
   public Sequence<IString> getTarget(TranslationModelIndex index) { 
-    return IStrings.getIStringSequence(target, index); 
+    return IStrings.toIStringSequence(target, index); 
   }
 }
