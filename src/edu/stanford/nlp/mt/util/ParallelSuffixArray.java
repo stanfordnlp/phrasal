@@ -51,15 +51,8 @@ public class ParallelSuffixArray implements Serializable {
     logger.info("Corpus size: {}", corpus.size());
     logger.info("# corpus positions src: {} tgt: {}", corpus.numSourcePositions(), corpus.numTargetPositions());
     
-    // Build source suffix array
     createArray(true);
     createArray(false);
-//    boolean isSource = true;
-//    createPrefixTree(isSource, corpus);
-//    
-//    // Build target suffix array
-//    isSource = false;
-//    createPrefixTree(isSource, corpus);
   }
 
   /**
