@@ -5,15 +5,15 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.util.Index;
 
 /**
- * An non-threadsafe, contiguous index from [-2, 2^31-1]. For compatibility with
+ * A contiguous index from [-2, 2^31-1]. For compatibility with
  * the Index implementations in CoreNLP, -1 is still reserved as the flag for
  * values that don't occur in the index.
  * 
@@ -34,7 +34,7 @@ public class DecoderLocalIndex<E> implements Index<E> {
    * Constructor.
    */
   public DecoderLocalIndex() {
-    index = new HashMap<>();
+    index = new ConcurrentHashMap<>();
     objects = new ArrayList<>();
   }
   
@@ -44,7 +44,7 @@ public class DecoderLocalIndex<E> implements Index<E> {
    * @param initialCapacity
    */
   public DecoderLocalIndex(int initialCapacity) {
-    index = new HashMap<>(initialCapacity);
+    index = new ConcurrentHashMap<>(initialCapacity);
     objects = new ArrayList<>(initialCapacity);
   }
   

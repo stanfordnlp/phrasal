@@ -32,6 +32,10 @@ public class AlignedSentence implements Serializable {
     this.alignments = alignments;
   }
 
+  public int sourceLength() { return source.length; }
+  
+  public int targetLength() { return target.length; }
+  
   /**
    * Get the source sentence as an {@link Sequence} object.
    * 
