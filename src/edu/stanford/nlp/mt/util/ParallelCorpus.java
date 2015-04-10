@@ -147,8 +147,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    */
   public static ParallelCorpus loadCorpusFromFiles(String sourceFile, String targetFile,
       String alignmentFile, int expectedSize, boolean isDecoderLocal) throws IOException {
-    boolean isSystemIndex = ! isDecoderLocal;
-    ParallelCorpus corpus = new ParallelCorpus(expectedSize, isSystemIndex);
+    ParallelCorpus corpus = new ParallelCorpus(expectedSize, isDecoderLocal);
     LineNumberReader srcReader = IOTools.getReaderFromFile(sourceFile);
     LineNumberReader tgtReader = IOTools.getReaderFromFile(targetFile);
     LineNumberReader algnReader = IOTools.getReaderFromFile(alignmentFile);

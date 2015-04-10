@@ -1,14 +1,22 @@
 package edu.stanford.nlp.mt.tm;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
+import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentenceSample;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.TranslationModelIndex;
 
 /**
  * 
@@ -87,4 +95,30 @@ public class DynamicTranslationModel<TK,FV> implements TranslationModel<TK,FV>,S
   // TODO(spenceg) Setup caches
   // Top-k rules
   // LRU cache
+  
+  public static void main(String[] args) {
+    String fileName = args[0];
+    String queryString = args[1];
+    
+    try {
+      DynamicTranslationModel<IString,String> tm = IOTools.deserialize(fileName);
+      TranslationModelIndex.setSystemIndex(tm.sa.getIndex());      
+//      PrintWriter pw = new PrintWriter(System.out);
+//      tm.sa.print(true, pw);
+//      pw.flush();
+//      System.exit(-1);
+      
+      Sequence<IString> query = IStrings.tokenize(queryString);
+      int[] queryInts = Sequences.toIntArray(query);
+      System.out.printf("%s :: %d%n", queryString, tm.sa.count(queryInts, true));
+      List<SentenceSample> samples = tm.sa.sample(queryInts, true, 100);
+      for (SentenceSample sample : samples) {
+        System.out.printf("%d\t%s%n", sample.sentenceId, sample.sentence.getSource(tm.sa.getIndex()));
+      }
+      
+    } catch (ClassNotFoundException | IOException e) {
+      e.printStackTrace();
+    }
+  }
+  
 }
