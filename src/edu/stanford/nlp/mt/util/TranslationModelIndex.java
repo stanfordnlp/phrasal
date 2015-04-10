@@ -24,7 +24,7 @@ public class TranslationModelIndex implements Serializable {
   
   // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
-  private static transient final Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
+  private static transient Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
   // Decoder-local translation model index
@@ -50,6 +50,15 @@ public class TranslationModelIndex implements Serializable {
       new DecoderLocalIndex<String>(initialCapacity);
   }
 
+  /**
+   * Set the system-wide index.
+   * 
+   * @param index
+   */
+  public static void setSystemIndex(TranslationModelIndex index) {
+    systemIndex = index.index;
+  }
+  
   /**
    * System index size.
    * 
