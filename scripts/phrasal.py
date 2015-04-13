@@ -413,6 +413,10 @@ def task_tune():
             ref = ref[0]
         options += ' -n ' + EXPERIMENT_NAME
         wts = d[k.TUNE_WTS]
+        
+        if not os.path.exists(qualify_path(wts)):
+            execute_shell_cmd('touch %s' % wts)
+        
         java_cmd = get_java_cmd('edu.stanford.nlp.mt.tune.OnlineTuner')
         cmd = '%s %s %s %s %s %s' % (java_cmd, options, source, ref, DECODER_TUNE_INI, wts)
         with open(get_log_file_path('tune'), 'w') as log_file:
