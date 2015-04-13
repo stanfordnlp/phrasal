@@ -246,6 +246,7 @@ def task_compile_lm():
     Calls KenLM to compile a language model.
     """
     def make_lm():
+        sys.stderr.write("Looking for LM file " + LM_FILE)
         if os.path.exists(LM_FILE):
             # Don't run KenLM if the LM already exists on disk
             # Otherwise, doit will always run this task at least
