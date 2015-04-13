@@ -88,7 +88,7 @@ public class PhrasalServlet extends HttpServlet {
 
       } else if (type == MessageType.RULE_QUERY_REQUEST) {
         handlers[type.ordinal()] = loadMock ? new RuleQueryRequestHandlerMock() :
-          new RuleQueryRequestHandler(decoder.getPhraseTable(), new SparseScorer(decoder.getModel()),
+          new RuleQueryRequestHandler(decoder.getTranslationModel(), new SparseScorer(decoder.getModel()),
               decoder.getPreprocessor(), decoder.getPostprocessor());
 
       } else if (type == MessageType.UNKNOWN_REQUEST) {
