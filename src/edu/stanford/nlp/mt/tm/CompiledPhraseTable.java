@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -209,23 +210,21 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
   }
 
   @Override
-  public List<Rule<IString>> query(
-      Sequence<IString> sourceSequence) {
+  public List<Rule<IString>> query(Sequence<IString> sourceSequence) {
     int[] sourceArray = Sequences.toIntArray(sourceSequence);
     int fIndex = sourceToRuleIndex.getIndex(sourceArray);
     if (fIndex == -1 || fIndex >= ruleLists.size())
       return null;
-    List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
-    if (intTransOpts == null)
+    List<PhraseTableEntry> hits = ruleLists.get(fIndex);
+    if (hits == null)
       return null;
-    List<Rule<IString>> ruleList = new ArrayList<Rule<IString>>(
-        intTransOpts.size());
-    for (PhraseTableEntry intTransOpt : intTransOpts) {
+    List<Rule<IString>> ruleList = new ArrayList<>(hits.size());
+    for (PhraseTableEntry hit : hits) {
       Sequence<IString> targetSequence = IStrings.toIStringSequence(
-          intTransOpt.targetArray);
-      ruleList.add(new Rule<IString>(intTransOpt.id,
-          intTransOpt.scores, scoreNames, targetSequence, sourceSequence,
-          intTransOpt.alignment));
+          hit.targetArray);
+      ruleList.add(new Rule<IString>(hit.id,
+          hit.scores, scoreNames, targetSequence, sourceSequence,
+          hit.alignment));
     }
     return ruleList;
   }

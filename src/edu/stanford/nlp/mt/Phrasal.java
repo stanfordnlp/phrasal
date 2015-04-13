@@ -274,6 +274,11 @@ public class Phrasal {
   private List<Scorer<String>> scorers;
 
   /**
+   * The feature extractor.
+   */
+  private FeatureExtractor<IString, String> featurizer;
+  
+  /**
    * Phrase table / translation model
    */
   private TranslationModel<IString,String> phraseGenerator;
@@ -701,7 +706,7 @@ public class Phrasal {
 
     final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
         : LinearFutureCostFeaturizer.class.getName();
-    FeatureExtractor<IString, String> featurizer;
+    
     if (lgModel != null) {
       System.err.printf("Language model: %s%n", lgModel);
       featurizer = FeaturizerFactory.factory(
@@ -1203,14 +1208,15 @@ public class Phrasal {
 
     // Configure the translation model
     if (inputProperties.containsKey(InputProperty.DecoderLocalTMPath)) {
-      String phraseTable = (String) inputProperties.get(InputProperty.DecoderLocalTMPath);
+      String phraseTableFile = (String) inputProperties.get(InputProperty.DecoderLocalTMPath);
       final String optionLimitString = String.valueOf(this.ruleQueryLimit);
       try {
         Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-            TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, phraseTable,
+            TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, phraseTableFile,
                 makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString));
+        phraseTablePair.first().setFeaturizer(featurizer);
         DecoderLocalTranslationModel.set(phraseTablePair.first());
-        System.err.printf("Loaded decoder-local translation model from %s%n", phraseTable);
+        System.err.printf("Loaded decoder-local translation model from %s%n", phraseTableFile);
       
       } catch (IOException e) {
         e.printStackTrace();

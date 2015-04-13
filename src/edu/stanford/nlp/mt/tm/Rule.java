@@ -97,10 +97,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   
   @Override
   public String toString() {
-    StringBuilder sbuf = new StringBuilder();
-    sbuf.append(String.format("Rule: \"%s\" scores: %s\n",
-        target, Arrays.toString(scores)));
-    return sbuf.toString();
+    return String.format("%s ||| %s", target, Arrays.toString(scores));
   }
 
   @Override

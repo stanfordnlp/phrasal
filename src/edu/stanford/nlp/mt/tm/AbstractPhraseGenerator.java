@@ -41,31 +41,30 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   public List<ConcreteRule<TK,FV>> getRules(
       Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, 
       int sourceInputId, Scorer<FV> scorer) {
-    if (source == null || source.size() == 0) return new ArrayList<>(1);
-    List<ConcreteRule<TK,FV>> opts = new ArrayList<>(source.size() * source.size() * 100);
-    int sequenceSz = source.size();
-    int longestForeignPhrase = this.longestSourcePhrase();
-    if (longestForeignPhrase < 0)
-      longestForeignPhrase = -longestForeignPhrase;
-    for (int startIdx = 0; startIdx < sequenceSz; startIdx++) {
-      for (int len = 1; len <= longestForeignPhrase; len++) {
-        int endIdx = startIdx + len;
-        if (endIdx > sequenceSz)
+    if (source == null || source.size() == 0) return new ArrayList<>(0);
+    List<ConcreteRule<TK,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
+    int longestSourcePhrase = this.longestSourcePhrase();
+    if (longestSourcePhrase < 0)
+      longestSourcePhrase = -longestSourcePhrase;
+    for (int i = 0, sz = source.size(); i < sz; i++) {
+      for (int len = 1; len <= longestSourcePhrase; len++) {
+        final int j = i + len;
+        if (j > sz)
           break;
-        CoverageSet foreignCoverage = new CoverageSet(sequenceSz);
-        foreignCoverage.set(startIdx, endIdx);
-        Sequence<TK> foreignPhrase = source.subsequence(startIdx, endIdx);
-        List<Rule<TK>> abstractOpts = this.query(foreignPhrase);
-        if (abstractOpts != null) {
-          for (Rule<TK> abstractOpt : abstractOpts) {
-            opts.add(new ConcreteRule<TK,FV>(abstractOpt, 
-                foreignCoverage, phraseFeaturizer, scorer, source, this
+        CoverageSet sourceCoverage = new CoverageSet(sz);
+        sourceCoverage.set(i, j);
+        Sequence<TK> sourcePhrase = source.subsequence(i, j);
+        List<Rule<TK>> rules = this.query(sourcePhrase);
+        if (rules != null) {
+          for (Rule<TK> ruleOpt : rules) {
+            concreteRules.add(new ConcreteRule<TK,FV>(ruleOpt, 
+                sourceCoverage, phraseFeaturizer, scorer, source, this
                 .getName(), sourceInputId, sourceInputProperties));
           }
         }
       }
     }
-    return opts;
+    return concreteRules;
   }
 
   /**

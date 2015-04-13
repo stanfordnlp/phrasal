@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.util.IOTools;
-import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.ParallelCorpus;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.util.PropertiesUtils;
@@ -73,7 +72,7 @@ public class DynamicTMBuilder {
     sa = symmetrizeAndCreateSuffixArray(sourceFile, targetFile, feAlign, efAlign, type, expectedSize, isDecoderLocal);
   }
   
-  public DynamicTranslationModel<IString,String> getModel() {
+  public DynamicTranslationModel<String> getModel() {
     return new DynamicTranslationModel<>(sa);
   }
   
@@ -187,7 +186,7 @@ public class DynamicTMBuilder {
     long startTime = System.nanoTime();
     DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity, isDecoderLocal) :
       new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type, isDecoderLocal);
-    DynamicTranslationModel<IString,String> tm = tmBuilder.getModel();
+    DynamicTranslationModel<String> tm = tmBuilder.getModel();
     long elapsedTime = System.nanoTime() - startTime;
     double numSecs = ((double) elapsedTime) / 1e9;
     logger.info("Construction time: {}s", numSecs);
