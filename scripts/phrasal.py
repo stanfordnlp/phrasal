@@ -310,6 +310,7 @@ def task_extract_tm():
     whatever that is.
     """
     def make_tm():
+        sys.stderr.write("Looking for TM file " + TM_FILE)
         if os.path.exists(TM_FILE):
             # Don't build the TM if it already exists on disk
             # Otherwise doit will run this task at least once
