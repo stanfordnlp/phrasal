@@ -201,12 +201,12 @@ public class ParallelSuffixArray implements Serializable {
    * 
    * @param suffix
    * @param query
-   * @param suffixLeftIndex
+   * @param suffixStart
    * @return
    */
-  private int startsWith(final int[] suffix, final int[] query, int suffixLeftIndex) {
+  private int startsWith(final int[] suffix, final int[] query, int suffixStart) {
     boolean consumedQuery = false;
-    for (int i = 0, j = suffixLeftIndex; 
+    for (int i = 0, j = suffixStart; 
         i < query.length && j < suffix.length; 
         i++, j++) {
       consumedQuery = (i == query.length-1);
@@ -220,7 +220,7 @@ public class ParallelSuffixArray implements Serializable {
       }
     }
     // Check the lengths
-    int yLength = suffix.length - suffixLeftIndex;
+    int yLength = suffix.length - suffixStart;
     return consumedQuery ? 0 : query.length - yLength;
   }
 
@@ -344,17 +344,23 @@ public class ParallelSuffixArray implements Serializable {
     int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
     int lb = findBound(query, isSource, true, 0);
     if (lb < 0) return new ArrayList<>(0);
-    int ub = findBound(query, isSource, false, lb);
+//    int ub = findBound(query, isSource, false, lb);
     List<SentenceSample> hits = new ArrayList<>(sampleSize);
-    for (int i = lb; i <= ub && hits.size() <= sampleSize; ++i) {
+    for (int i = lb, numHits = 0; i < sa.length && numHits < sampleSize; ++i, ++numHits) {
       // TODO(spenceg) Sample with replacement if the number of hits exceeds
       // the sample size.
       // ThreadLocalRandom.current().nextInt(lb, ub + 1);
       int corpusPosition = sa[i];
       int sentenceId = positionToSentence(corpusPosition, isSource);
       int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-      int wordPosition = corpusPosition - offset - 1;
-      hits.add(new SentenceSample(this.corpus.get(sentenceId), wordPosition, sentenceId));
+      int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
+      AlignedSentence sample = this.corpus.get(sentenceId);
+      int[] suffix = isSource ? sample.source : sample.target;
+      if (this.startsWith(suffix, query, start) == 0) {
+        hits.add(new SentenceSample(sample, start, sentenceId));
+      } else {
+        break;
+      }
     }
     return hits;
   }

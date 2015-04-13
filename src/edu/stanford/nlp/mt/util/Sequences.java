@@ -31,6 +31,23 @@ public final class Sequences {
   }
 
   /**
+   * Convert to to an array of ints with the index argument.
+   * 
+   * @param sequence
+   * @param index
+   * @return
+   */
+  public static int[] toIntArray(Sequence<IString> sequence,
+      TranslationModelIndex index) {
+    int sz = sequence.size();
+    int[] intArray = new int[sequence.size()];
+    for (int i = 0; i < sz; i++) {
+      intArray[i] = index.indexOf(sequence.get(i).toString());
+    }
+    return intArray;
+  }
+  
+  /**
    * Returns true if seq starts with prefix, and false otherwise.
    *
    * @param seq

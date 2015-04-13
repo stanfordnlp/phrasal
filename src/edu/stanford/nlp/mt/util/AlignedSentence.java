@@ -15,7 +15,7 @@ public class AlignedSentence implements Serializable {
   private static final long serialVersionUID = 1481297672562948109L;
 
   public int[] source;
-  public int[][] alignments;
+  public int[][] f2e;
   public int[] target;
 
   /**
@@ -23,13 +23,13 @@ public class AlignedSentence implements Serializable {
    * 
    * @param source
    * @param target
-   * @param alignments
+   * @param f2e
    */
   public AlignedSentence(int[] source, int[] target, 
-      int[][] alignments) {
+      int[][] f2e) {
     this.source = source;
     this.target = target;
-    this.alignments = alignments;
+    this.f2e = f2e;
   }
 
   public int sourceLength() { return source.length; }

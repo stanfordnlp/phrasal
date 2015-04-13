@@ -70,7 +70,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     numSourcePos += f.length;
     int[] e = stringToArray(target);
     numTargetPos += e.length;
-    int[][] f2e = alignStringToArray(align, f.length, e.length);
+    int[][] f2e = alignStringToF2E(align, f.length, e.length);
     AlignedSentence s = new AlignedSentence(f, e, f2e);
     corpus.add(s);
     return s;
@@ -81,7 +81,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   }
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static int[][] alignStringToArray(String alignStr, int sourceLen, int targetLen) {
+  public static int[][] alignStringToF2E(String alignStr, int sourceLen, int targetLen) {
     Set[] f2e = new HashSet[sourceLen];
     String[] alignmentPoints = alignStr.split("\\s+");
     for (String point : alignmentPoints) {
