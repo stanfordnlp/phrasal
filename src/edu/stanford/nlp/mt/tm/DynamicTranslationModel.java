@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.collect.ConcurrentHashMultiset;
+
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -123,8 +125,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
   @Override
   public List<String> getFeatureNames() {
-    // TODO Auto-generated method stub
-    return null;
+    return Arrays.asList(featureNames);
   }
 
   @Override
@@ -146,7 +147,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     final int[] sourceInts = isSystemIndex ? Sequences.toIntArray(source) : 
-      Sequences.toIntArray(source, this.sa.getIndex());
+      Sequences.toIntArray(source, sa.getIndex());
+    final LexCoocTable coocTable = new LexCoocTable(sourceInts, sa);
     final BitSet misses = new BitSet(source.size());
     final int longestSourcePhrase = Math.min(maxSourcePhrase, source.size());
     // Iterate over source span lengths
@@ -298,6 +300,63 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     throw new UnsupportedOperationException("Not yet implemented");
   }
   
+  /**
+   * Create a lexical cooccurrance table for a source input.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class LexCoocTable {
+
+    private static final int MAX_SAMPLES = 5000;
+    
+    private final ConcurrentHashMultiset<Integer> srcMarginals = ConcurrentHashMultiset.create();
+    private final ConcurrentHashMultiset<Integer> tgtMarginals = ConcurrentHashMultiset.create();
+    private final List<ConcurrentHashMultiset<Integer>> jointCooc;
+    
+    /**
+     * Constructor.
+     * 
+     * @param sourceInts
+     * @param sa
+     */
+    public LexCoocTable(int[] sourceInts, ParallelSuffixArray sa) {
+      jointCooc = new ArrayList<>();
+      for (int i = 0; i < sourceInts.length; ++i) {
+        jointCooc.add(ConcurrentHashMultiset.create());
+      }
+      IntStream.range(0, sourceInts.length).parallel().forEach(i -> {
+        int[] query = new int[] { sourceInts[i] };
+        List<SentenceSample> samples = sa.sample(query, true, MAX_SAMPLES);
+        srcMarginals.add(query[0], samples.size());
+        for (SentenceSample s : samples) {
+          int srcPos = s.wordPosition;
+          int[] tgtAligned = s.sentence.f2e[srcPos];
+          for (int tgtPos : tgtAligned) {
+            tgtMarginals.add(tgtPos);
+            jointCooc.get(i).add(tgtPos);
+          }
+        }
+      });
+    }
+    
+    public int getSrcMarginal(int srcId) { return srcMarginals.count(srcId); }
+    
+    public int getTgtMarginal(int tgtId) { return tgtMarginals.count(tgtId); }
+    
+    /**
+     * 
+     * @param srcIndex -- CAREFUL! The index into the source sequence, not the vocabulary item.
+     * @param tgtId
+     * @return
+     */
+    public int getJointCount(int srcIndex, int tgtId) {
+      if (srcIndex < 0 || srcIndex >= jointCooc.size()) {
+        throw new ArrayIndexOutOfBoundsException(srcIndex);
+      }
+      return jointCooc.get(srcIndex).count(tgtId);
+    }
+  }
   
   /**
    * Read an input file and extract rules from a model.
