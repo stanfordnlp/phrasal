@@ -414,6 +414,14 @@ public class ParallelSuffixArray implements Serializable {
     public final AlignedSentence sentence;
     public final int wordPosition;
     public final int sentenceId;
+    
+    /**
+     * Constructor.
+     * 
+     * @param sentence
+     * @param wordPosition
+     * @param sentenceId
+     */
     public SentenceSample(AlignedSentence sentence, int wordPosition, int sentenceId) {
       this.sentence = sentence;
       this.wordPosition = wordPosition;

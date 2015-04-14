@@ -27,15 +27,36 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   
   static public final boolean DEBUG = false;
 
-  @Override
-  public Object clone() throws CloneNotSupportedException {
-    return super.clone();
-  }
-
   static public final int DEFAULT_PHRASE_LIMIT = 50;
 
   private final List<TranslationModel<TK,FV>> phraseGenerators;
   private final int ruleQueryLimit;
+
+  /**
+   * Constructor.
+   * 
+   * @param phraseGenerators
+   */
+  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators) {
+    this(phraseGenerators, DEFAULT_PHRASE_LIMIT);
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param phraseGenerators
+   * @param phraseLimit
+   */
+  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators,
+      int phraseLimit) {
+    this.phraseGenerators = phraseGenerators;
+    this.ruleQueryLimit = phraseLimit;
+  }
+
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
+  }
 
   /**
    * Add to the rule list that is being constructed during a query
@@ -157,33 +178,12 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
     }
   }
 
-  /**
-   * Constructor.
-   * 
-   * @param phraseGenerators
-   */
-  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators) {
-    this(phraseGenerators, DEFAULT_PHRASE_LIMIT);
-  }
-
-  /**
-   * Constructor.
-   * 
-   * @param phraseGenerators
-   * @param phraseLimit
-   */
-  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators,
-      int phraseLimit) {
-    this.phraseGenerators = phraseGenerators;
-    this.ruleQueryLimit = phraseLimit;
-  }
-
   @Override
-  public int longestSourcePhrase() {
+  public int maxLengthSource() {
     int longest = -1;
     for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
-      if (longest < phraseGenerator.longestSourcePhrase())
-        longest = phraseGenerator.longestSourcePhrase();
+      if (longest < phraseGenerator.maxLengthSource())
+        longest = phraseGenerator.maxLengthSource();
     }
     return longest;
   }
@@ -196,11 +196,11 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   }
 
   @Override
-  public int longestTargetPhrase() {
+  public int maxLengthTarget() {
     int longest = -1;
     for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
-      if (longest < phraseGenerator.longestTargetPhrase())
-        longest = phraseGenerator.longestTargetPhrase();
+      if (longest < phraseGenerator.maxLengthTarget())
+        longest = phraseGenerator.maxLengthTarget();
     }
     return longest;
   }

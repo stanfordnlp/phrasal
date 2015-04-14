@@ -200,12 +200,12 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
   }
 
   @Override
-  public int longestSourcePhrase() {
+  public int maxLengthSource() {
     return longestSourcePhrase;
   }
 
   @Override
-  public int longestTargetPhrase() {
+  public int maxLengthTarget() {
     return longestTargetPhrase;
   }
 

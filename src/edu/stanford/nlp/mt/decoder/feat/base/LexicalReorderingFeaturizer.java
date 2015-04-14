@@ -18,7 +18,6 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -34,8 +33,6 @@ public class LexicalReorderingFeaturizer extends
     DerivationFeaturizer<IString, String> {
 
   private static final boolean DETAILED_DEBUG = false;
-  private static final Sequence<IString> INITIAL_PHRASE = new SimpleSequence<IString>(
-      TokenUtils.START_TOKEN);
   
   private static final String DISCRIMINATIVE_PREFIX = "Disc";
   public static final String FEATURE_PREFIX = "LexR";
@@ -132,9 +129,9 @@ public class LexicalReorderingFeaturizer extends
         if (usePrior(mrt)) {
           String ruleRep;
           if (useAlignmentConstellations) {
-            IString priorAlignConst = (f.prior != null ? f.prior.rule.abstractRule.alignment
-                .toIString() : INITIAL_PHRASE.get(0));
-            ruleRep = priorAlignConst.toString();
+            String priorAlignConst = (f.prior != null ? f.prior.rule.abstractRule.alignment
+                .toString() : TokenUtils.START_TOKEN.toString());
+            ruleRep = priorAlignConst;
           
           } else {
             ruleRep = getDiscriminativeRepresentation(f.prior);
@@ -220,7 +217,7 @@ public class LexicalReorderingFeaturizer extends
   private String getDiscriminativeRepresentation(Featurizable<IString, String> f) {
     String rep = "";
     if (f == null) {
-      rep = String.format("%s>%s", INITIAL_PHRASE, INITIAL_PHRASE);
+      rep = String.format("%s>%s", TokenUtils.START_TOKEN, TokenUtils.START_TOKEN);
     
     } else if (useClasses) {
       // Class-based

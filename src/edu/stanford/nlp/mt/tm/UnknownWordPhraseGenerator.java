@@ -60,7 +60,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
   @Override
   public List<Rule<TK>> query(Sequence<TK> sequence) {
-    if (sequence.size() > longestSourcePhrase()) {
+    if (sequence.size() > maxLengthSource()) {
       throw new RuntimeException("Only single-word queries accepted. Query size: " + String.valueOf(sequence.size()));
     }
     List<Rule<TK>> list = new LinkedList<>();
@@ -94,13 +94,13 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
   }
 
   @Override
-  public int longestSourcePhrase() {
+  public int maxLengthSource() {
     // DO NOT change this value unless you know what you're doing.
     return 1;
   }
 
   @Override
-  public int longestTargetPhrase() {
+  public int maxLengthTarget() {
     return 1;
   }
 

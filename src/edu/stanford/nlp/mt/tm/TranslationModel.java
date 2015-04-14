@@ -48,9 +48,9 @@ public interface TranslationModel<TK,FV> extends Cloneable {
 
   public Object clone() throws CloneNotSupportedException;
 
-  public int longestSourcePhrase();
+  public int maxLengthSource();
   
-  public int longestTargetPhrase();
+  public int maxLengthTarget();
   
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer);
   

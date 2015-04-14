@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
 import java.io.Serializable;
+import java.util.BitSet;
 
 /**
  * Lightweight implementation of a training example.
@@ -18,6 +19,8 @@ public class AlignedSentence implements Serializable {
   public int[][] f2e;
   public int[] target;
 
+  private transient BitSet targetAligned;
+  
   /**
    * Constructor.
    * 
@@ -54,5 +57,23 @@ public class AlignedSentence implements Serializable {
    */
   public Sequence<IString> getTarget(TranslationModelIndex index) { 
     return IStrings.toIStringSequence(target, index); 
+  }
+  
+  /**
+   * Get a BitSet indicating target aligned words. Analogous information for the
+   * source can be obtained by inspecting f2e directly.
+   * 
+   * @return
+   */
+  public BitSet getTargetAlignedCoverage() {
+    if (targetAligned == null) {
+      targetAligned = new BitSet();
+      for (int i = 0; i < f2e.length; i++) {
+        for (int j = 0; j < f2e[i].length; ++j) {
+          targetAligned.set(f2e[i][j]);
+        }
+      }
+    }
+    return targetAligned;
   }
 }

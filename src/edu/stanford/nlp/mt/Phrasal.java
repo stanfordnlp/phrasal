@@ -1203,7 +1203,7 @@ public class Phrasal {
     final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix) ? 
         (Boolean) inputProperties.get(InputProperty.TargetPrefix) : false;
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, 
-        targets, targetsArePrefixes, phraseGenerator.longestSourcePhrase(), phraseGenerator.longestTargetPhrase(),
+        targets, targetsArePrefixes, phraseGenerator.maxLengthSource(), phraseGenerator.maxLengthTarget(),
         wrapBoundary);
 
     // Configure the translation model

@@ -65,6 +65,14 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     index = new TranslationModelIndex(initialCapacity, isSystemIndex);
   }
 
+  /**
+   * Add an aligned sentence to the corpus.
+   * 
+   * @param source
+   * @param target
+   * @param align
+   * @return
+   */
   public AlignedSentence add(String source, String target, String align) {
     int[] f = stringToArray(source);
     numSourcePos += f.length;
@@ -103,15 +111,18 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     // Convert to a grid of alignment points
     int[][] f2eArr = new int[sourceLen][];
     for (int i = 0; i < sourceLen; ++i) {
-      if (f2e[i] == null) {
-        f2eArr[i] = new int[0];
-      } else {
-        f2eArr[i] = f2e[i].stream().mapToInt(x -> (int) x).sorted().toArray();
-      }
+      f2eArr[i] = f2e[i] == null ? new int[0] :
+        f2e[i].stream().mapToInt(x -> (int) x).sorted().toArray();
     }
     return f2eArr;
   }
   
+  /**
+   * Get the sentence from the corpus.
+   * 
+   * @param sourceId
+   * @return
+   */
   public AlignedSentence get(int sourceId) {
     if (sourceId < 0 || sourceId >= corpus.size()) {
       throw new ArrayIndexOutOfBoundsException();
@@ -119,12 +130,27 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     return corpus.get(sourceId);
   }
 
+  /**
+   * Number of segments in the corpus.
+   * 
+   * @return
+   */
   public int size() { return corpus.size(); }
   
+  /**
+   * Number of source corpus positions.
+   * 
+   * @return
+   */
   public int numSourcePositions() {
     return numSourcePos;
   }
   
+  /**
+   * Number of target corpus positions.
+   * 
+   * @return
+   */
   public int numTargetPositions() {
     return numTargetPos;
   }
