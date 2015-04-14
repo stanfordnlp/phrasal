@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.util;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,7 +27,7 @@ public class PhraseAlignment {
 
   public static final String MONOTONE_ALIGNMENT = "I-I";
   
-  private final IString str;
+  private String str;
   private final int[][] t2s;
 
   private PhraseAlignment(String s) {
@@ -54,15 +52,22 @@ public class PhraseAlignment {
         }
       }
     }
-    str = new IString(stringRep);
-    // System.err.println(Arrays.deepToString(e2f));
+    str = s.intern();
+  }
+
+  public PhraseAlignment(int[][] e2f) {
+    this.t2s = e2f;
   }
 
   @Override
   public boolean equals(Object o) {
-    assert (o instanceof PhraseAlignment);
-    PhraseAlignment a = (PhraseAlignment) o;
-    return this.str.id == a.str.id;
+    if (this == o) {
+      return true;
+    } else if ( ! (o instanceof PhraseAlignment)) {
+      return false;
+    } else {
+      return this.str.equals(((PhraseAlignment) o).str);
+    }
   }
 
   @Override
@@ -91,35 +96,27 @@ public class PhraseAlignment {
     return sb.toString();
   }
 
-  public String t2sStr() {
-    return toStr(t2s);
-  }
-  
-  public String s2tStr() {
-    return toStr(s2t());
-  }
-
-  private int[][] s2t() {
-    if (t2s == null) return null;
-    List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
-    for (int ei=0; ei<t2s.length; ++ei) {
-      if (t2s[ei] != null) {
-        for (int fi : t2s[ei]) {
-          while (f2eL.size() <= fi)
-            f2eL.add(new LinkedList<Integer>());
-          f2eL.get(fi).add(ei);
-        }
-      }
-    }
-    int[][] s2t = new int[f2eL.size()][];
-    for (int fi=0; fi<f2eL.size(); ++fi) {
-      s2t[fi] = new int[f2eL.get(fi).size()];
-      for (int ei=0; ei<f2eL.get(fi).size(); ++ei) {
-        s2t[fi][ei] = f2eL.get(fi).get(ei);
-      }
-    }
-    return s2t;
-  }
+//  private int[][] s2t() {
+//    if (t2s == null) return null;
+//    List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
+//    for (int ei=0; ei<t2s.length; ++ei) {
+//      if (t2s[ei] != null) {
+//        for (int fi : t2s[ei]) {
+//          while (f2eL.size() <= fi)
+//            f2eL.add(new LinkedList<Integer>());
+//          f2eL.get(fi).add(ei);
+//        }
+//      }
+//    }
+//    int[][] s2t = new int[f2eL.size()][];
+//    for (int fi=0; fi<f2eL.size(); ++fi) {
+//      s2t[fi] = new int[f2eL.get(fi).size()];
+//      for (int ei=0; ei<f2eL.get(fi).size(); ++ei) {
+//        s2t[fi][ei] = f2eL.get(fi).get(ei);
+//      }
+//    }
+//    return s2t;
+//  }
 
   private static final Map<String, PhraseAlignment> map = new ConcurrentHashMap<String, PhraseAlignment>(1000);
 
@@ -134,15 +131,10 @@ public class PhraseAlignment {
 
   @Override
   public String toString() {
-    return str.toString();
-  }
-
-  public IString toIString() {
+    if (str == null) {
+      str = toStr(t2s);
+    }
     return str;
-  }
-
-  public boolean hasAlignment() {
-    return t2s != null;
   }
 
   public int size() {

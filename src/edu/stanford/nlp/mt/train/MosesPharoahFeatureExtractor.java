@@ -2,9 +2,7 @@ package edu.stanford.nlp.mt.train;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
 import edu.stanford.nlp.mt.tm.DTUTable;
@@ -12,8 +10,9 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Index;
-import edu.stanford.nlp.util.HashIndex;
+import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -44,26 +43,18 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   protected int numPasses = 1;
 
   protected final IntegerArrayIndex lexIndex = new ProbingIntegerArrayIndex();
-  protected final Index<Integer> fLexIndex = new HashIndex<Integer>(),
-      eLexIndex = new HashIndex<Integer>();
+  protected final Index<Integer> fLexIndex = new ConcurrentHashIndex<Integer>(),
+      eLexIndex = new ConcurrentHashIndex<Integer>();
 
   protected final IntArrayList feCounts = new IntArrayList();
   protected final IntArrayList fCounts = new IntArrayList();
   protected final IntArrayList eCounts = new IntArrayList();
-  protected final List<Double> totalCounts = new ArrayList<>();
-  protected double totalFECount = -1;
-  protected double totalFCount = -1;
-  protected double totalECount = -1;
-  protected final List<Double> totalLexCounts = new ArrayList<>();
-  protected double totalFELexCount = -1;
-  protected double totalFLexCount = -1;
-  protected double totalELexCount = -1;
 
   protected final IntArrayList feLexCounts = new IntArrayList();
   protected final IntArrayList fLexCounts = new IntArrayList();
   protected final IntArrayList eLexCounts = new IntArrayList();
 
-  public static final IString NULL_STR = new IString("NULL");
+  public static final IString NULL_STR = TokenUtils.NULL_TOKEN;
 
   @Override
   public void init(Properties prop, Index<String> featureIndex,
@@ -253,22 +244,18 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   }
 
   private int indexOfFLex(IString f, boolean add) {
-    synchronized (fLexIndex) {
-      if (add) {
-        return fLexIndex.addToIndex(f.getId());
-      } else {
-        return fLexIndex.indexOf(f.getId());
-      }
+    if (add) {
+      return fLexIndex.addToIndex(f.getId());
+    } else {
+      return fLexIndex.indexOf(f.getId());
     }
   }
 
   private int indexOfELex(IString e, boolean add) {
-    synchronized (eLexIndex) {
-      if (add) {
-        return eLexIndex.addToIndex(e.getId());
-      } else {
-        return eLexIndex.indexOf(e.getId());
-      }
+    if (add) {
+      return eLexIndex.addToIndex(e.getId());
+    } else {
+      return eLexIndex.indexOf(e.getId());
     }
   }
 

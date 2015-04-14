@@ -36,7 +36,7 @@ public interface PhraseTable<T> {
    * 
    * @return
    */
-  int longestSourcePhrase();
+  int maxLengthSource();
 
   /**
    * Return the name of the phrase table.

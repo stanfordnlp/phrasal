@@ -4,7 +4,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.ArrayList;
 
 /**
- * A probing index that uses MurmurHash.
+ * A probing index that uses MurmurHash. This data structure is thread-safe.
  * 
  * @author Kenneth Heafield
  *

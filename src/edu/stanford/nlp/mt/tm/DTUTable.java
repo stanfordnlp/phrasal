@@ -498,12 +498,12 @@ implements PhraseTable<IString> {
   }
 
   @Override
-  public int longestSourcePhrase() {
+  public int maxLengthSource() {
     return longestSourcePhrase;
   }
   
   @Override
-  public int longestTargetPhrase() {
+  public int maxLengthTarget() {
     return longestTargetPhrase;
   }
 

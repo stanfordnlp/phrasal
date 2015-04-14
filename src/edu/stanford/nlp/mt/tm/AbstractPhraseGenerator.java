@@ -43,7 +43,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
       int sourceInputId, Scorer<FV> scorer) {
     if (source == null || source.size() == 0) return new ArrayList<>(0);
     List<ConcreteRule<TK,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
-    int longestSourcePhrase = this.longestSourcePhrase();
+    int longestSourcePhrase = this.maxLengthSource();
     if (longestSourcePhrase < 0)
       longestSourcePhrase = -longestSourcePhrase;
     for (int i = 0, sz = source.size(); i < sz; i++) {
@@ -76,10 +76,10 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
   abstract public List<Rule<TK>> query(Sequence<TK> sequence);
 
   @Override
-  abstract public int longestSourcePhrase();
+  abstract public int maxLengthSource();
   
   @Override
-  abstract public int longestTargetPhrase();
+  abstract public int maxLengthTarget();
   
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {

@@ -146,8 +146,8 @@ public class LanguageModelTrueCaser {
     @Override
     public List<Rule<IString>> query(
         Sequence<IString> sourceSequence) {
-      if (sourceSequence.size() != longestSourcePhrase()) {
-        throw new RuntimeException("Subsequence length != " + String.valueOf(longestSourcePhrase()));
+      if (sourceSequence.size() != maxLengthSource()) {
+        throw new RuntimeException("Subsequence length != " + String.valueOf(maxLengthSource()));
       }
       List<Rule<IString>> list = new LinkedList<>();
       String token = sourceSequence.get(0).toString();
@@ -161,13 +161,13 @@ public class LanguageModelTrueCaser {
     }
 
     @Override
-    public int longestSourcePhrase() {
+    public int maxLengthSource() {
       // DO NOT CHANGE THIS!
       return 1;
     }
 
     @Override
-    public int longestTargetPhrase() {
+    public int maxLengthTarget() {
       // DO NOT CHANGE THIS!
       return 1;
     }
