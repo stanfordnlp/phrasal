@@ -344,7 +344,12 @@ public final class OnlineTuner {
       // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
-        InputProperties inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
+        InputProperties inputProperties;
+        
+        if(decoder.getInputProperties().size() > sourceId)
+            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
+        else
+            inputProperties = new InputProperties();
         inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(i), sourceId, 
             threadId, inputProperties);
