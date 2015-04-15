@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -23,7 +22,7 @@ import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -267,6 +266,13 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     return minRuleIndex;
   }
 
+  @Override
+  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
+      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    throw new UnsupportedOperationException("Not yet implemented");
+  }
+  
   /**
    *
    * @param args
@@ -274,45 +280,41 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
    */
   public static void main(String[] args) throws Exception {
     if (args.length != 2) {
-      System.out
-          .println("Usage:\n\tjava ...FlatPhraseTable (phrasetable file) (entry to look up)");
+      System.err.printf("Usage: java %s pt_file file%n", 
+          CompiledPhraseTable.class.getName());
       System.exit(-1);
     }
-
     String model = args[0];
-    String phrase = args[1];
-    long startTimeMillis = System.currentTimeMillis();
-    System.out.printf("Loading phrase table: %s%n", model);
-    CompiledPhraseTable<String> ppt = new CompiledPhraseTable<String>(model);
-    long totalMemory = Runtime.getRuntime().totalMemory() / (1L << 20);
-    long freeMemory = Runtime.getRuntime().freeMemory() / (1L << 20);
-    double totalSecs = (System.currentTimeMillis() - startTimeMillis) / 1000.0;
-    System.err.printf(
-        "size = %d, secs = %.3f, totalmem = %dm, freemem = %dm%n",
-        ppt.size(), totalSecs, totalMemory, freeMemory);
+    String inputFile = args[1];
+    final int queryLimit = 100;
+    
+    // Load
+    long startTime = System.nanoTime();
+    Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
+        TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, model,
+            String.format("%s:%d", TranslationModelFactory.QUERY_LIMIT_OPTION, queryLimit));
+    long elapsedTime = System.nanoTime() - startTime;
+    double numSecs = elapsedTime / 1e9;
+    System.out.printf("Load time: %.3fs%n", numSecs);
+    TranslationModel<IString,String> tm = phraseTablePair.first();
 
-    List<Rule<IString>> translationOptions = ppt
-        .query(new SimpleSequence<IString>(IStrings
-            .toIStringArray(phrase.split("\\s+"))));
-
-    System.out.printf("Phrase: %s%n", phrase);
-
-    if (translationOptions == null) {
-      System.out.printf("No translation options found.");
-      System.exit(-1);
+    List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
+    System.out.printf("#source segments: %d%n", sourceFile.size());
+    
+    // Query
+    startTime = System.nanoTime();
+    for (Sequence<IString> source : sourceFile) {
+      for (int len = 1; len <= tm.maxLengthSource(); ++len) {
+        for (int i = 0; i < source.size() - len; ++i) {
+          final int j = i+len;
+          tm.getRuleGrid(source.subsequence(i, j), null, null, 0, null);
+        }
+      }
     }
-
-    System.out.printf("Options:%n");
-    for (Rule<IString> opt : translationOptions) {
-      System.out.printf("\t%s : %s%n", opt.target,
-          Arrays.toString(opt.scores));
-    }
-  }
-
-  @Override
-  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
-      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
-    throw new UnsupportedOperationException("Not yet implemented");
+    elapsedTime = System.nanoTime() - startTime;
+    numSecs = (double) elapsedTime / 1e9;
+    double timePerSegment = numSecs / (double) sourceFile.size();
+    System.out.printf("Elapsed time:\t%.3fs%n", numSecs);
+    System.out.printf("Time/segment:\t%.3fs%n", timePerSegment);
   }
 }

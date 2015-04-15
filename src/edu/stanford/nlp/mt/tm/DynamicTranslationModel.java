@@ -148,7 +148,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     final int[] sourceInts = isSystemIndex ? Sequences.toIntArray(source) : 
       Sequences.toIntArray(source, sa.getIndex());
-    final LexCoocTable coocTable = new LexCoocTable(sourceInts, sa);
+//    final LexCoocTable coocTable = new LexCoocTable(sourceInts, sa);
     final BitSet misses = new BitSet(source.size());
     final int longestSourcePhrase = Math.min(maxSourcePhrase, source.size());
     // Iterate over source span lengths
@@ -179,23 +179,21 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             fCounts = new ClassicCounter<>();
         for (SentenceSample s : samples) {
           List<SampledRule> rules = extractRules(s, order);
+          // TODO(spenceg) Handle multiple alignment templates for lex scores
           for (SampledRule rule : rules) {
             feCounts.incrementCount(rule);
             eCounts.incrementCount(rule.eID);
             fCounts.incrementCount(rule.fID);
             
-            // TODO(spenceg) Collect lex counts lex counts
+            // Compute lex scores
           }
         }
         
-        // Create histograms for the feature values
-        
+        // Create histograms for the phrase feature values
         List<SampledRule> sampledRules = new ArrayList<>(feCounts.keySet());
         int[] histogram = new int[sampledRules.size()];
         for (int r = 0; r < histogram.length; ++r) {
           histogram[r] = (int) feCounts.getCount(sampledRules.get(r));
-          // TODO(spenceg) Compute lex probabilities
-          
         }
         
         // TODO(spenceg) Compute confidence intervals for phrase scores
@@ -391,8 +389,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         for (int len = 1; len <= DEFAULT_MAX_PHRASE_LEN; ++len) {
           for (int i = 0; i < source.size() - len; ++i) {
             final int j = i+len;
-            List<ConcreteRule<IString, String>> ruleList = tm.getRules(source.subsequence(i, j),
-                null, null, 0, null);
+            tm.getRules(source.subsequence(i, j), null, null, 0, null);
           }
         }
       }

@@ -292,7 +292,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
         wSum = getLexProb(alTemp.f().get(fi), NULL_STR);
       } else {
         for (int ei : alTemp.f2e(fi)) {
-          assert (!alTemp.e().get(ei).equals(DTUTable.GAP_STR));
+//          assert (!alTemp.e().get(ei).equals(DTUTable.GAP_STR));
           wSum += getLexProb(alTemp.f().get(fi), alTemp.e().get(ei));
         }
         wSum /= alCount;

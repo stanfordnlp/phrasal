@@ -209,7 +209,7 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   public String getName() {
     return this.getClass().getSimpleName();
   }
-
+  
   @Override
   public List<ConcreteRule<TK, FV>> getRules(Sequence<TK> source,
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
