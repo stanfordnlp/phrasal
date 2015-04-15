@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.train;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import com.google.common.collect.ConcurrentHashMultiset;
 
 /**
  * Extractor for printing the number of occurrences of each alignment template.
@@ -15,7 +15,7 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
 
   private static final double EXP_M1 = Math.exp(-1);
 
-  IntArrayList feCounts = new IntArrayList();
+  private ConcurrentHashMultiset<Integer> feCounts = ConcurrentHashMultiset.create();
 
   @Override
   public void featurizePhrase(AlignmentTemplateInstance alTemp,
@@ -27,21 +27,16 @@ public class CountFeatureExtractor extends AbstractFeatureExtractor {
   @Override
   public Object score(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
-    double c = feCounts.get(idx);
+    double c = feCounts.count(idx);
     return new double[] { c, ((c > 1) ? 1.0 : EXP_M1) };
   }
 
-  private static void addCountToArray(final IntArrayList list, int idx) {
+  private static void addCountToArray(final ConcurrentHashMultiset<Integer> counter, int idx) {
     if (idx < 0)
       return;
-    synchronized (list) {
-      while (idx >= list.size())
-        list.add(0);
-      int newCount = list.get(idx) + 1;
-      list.set(idx, newCount);
-    }
+    counter.add(idx);
     if (DEBUG_LEVEL >= 3)
-      System.err.println("Increasing count idx=" + idx + " in vector (" + list
+      System.err.println("Increasing count idx=" + idx + " in vector (" + counter
           + ").");
   }
 

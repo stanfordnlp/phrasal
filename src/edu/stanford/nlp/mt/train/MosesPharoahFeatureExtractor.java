@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
 
+import com.google.common.collect.ConcurrentHashMultiset;
+
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
@@ -13,8 +15,6 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
-import it.unimi.dsi.fastutil.ints.AbstractIntList;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
  * Extractor for the four base feature functions of Moses/Pharaoh (four
@@ -46,13 +46,13 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   protected final Index<Integer> fLexIndex = new ConcurrentHashIndex<Integer>(),
       eLexIndex = new ConcurrentHashIndex<Integer>();
 
-  protected final IntArrayList feCounts = new IntArrayList();
-  protected final IntArrayList fCounts = new IntArrayList();
-  protected final IntArrayList eCounts = new IntArrayList();
+  protected final ConcurrentHashMultiset<Integer> feCounts = ConcurrentHashMultiset.create();
+  protected final ConcurrentHashMultiset<Integer> fCounts = ConcurrentHashMultiset.create();
+  protected final ConcurrentHashMultiset<Integer> eCounts = ConcurrentHashMultiset.create();
 
-  protected final IntArrayList feLexCounts = new IntArrayList();
-  protected final IntArrayList fLexCounts = new IntArrayList();
-  protected final IntArrayList eLexCounts = new IntArrayList();
+  protected final ConcurrentHashMultiset<Integer> feLexCounts = ConcurrentHashMultiset.create();
+  protected final ConcurrentHashMultiset<Integer> fLexCounts = ConcurrentHashMultiset.create();
+  protected final ConcurrentHashMultiset<Integer> eLexCounts = ConcurrentHashMultiset.create();
 
   public static final IString NULL_STR = TokenUtils.NULL_TOKEN;
 
@@ -137,18 +137,13 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     int idx = alTemp.getKey();
     int idxF = alTemp.getFKey();
     int idxE = alTemp.getEKey();
-    if (idx >= feCounts.size() || idxF >= fCounts.size()
-        || idxE >= eCounts.size()) {
-      System.err.println("can't get Pharaoh translation features for phrase: "
-          + alTemp.toString(true));
-      return null;
+    if ( ! (feCounts.contains(idx) && eCounts.contains(idxE) && fCounts.contains(idxF))) {
+      throw new RuntimeException("Unknown alignment template");
     }
-    assert (idx >= 0 && idxF >= 0 && idxE >= 0);
-    assert (idx < feCounts.size());
     // Compute phi features p(f|e) and p(e|f):
-    double pairCount = feCounts.get(idx);
-    double eCount = eCounts.get(idxE);
-    double fCount = fCounts.get(idxF);
+    double pairCount = feCounts.count(idx);
+    double eCount = eCounts.count(idxE);
+    double fCount = fCounts.count(idxF);
     double phi_f_e = pairCount * 1.0 / eCount;
     double phi_e_f = pairCount * 1.0 / fCount;
 
@@ -172,7 +167,7 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     if (PRINT_COUNTS) {
       // -- Additional info for debugging purposes:
       return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f,
-          feCounts.get(idx), eCounts.get(idxE), fCounts.get(idxF) };
+          pairCount, eCount, fCount };
     } else if (onlyPhi) {
       // -- only two features: relative freq. in both directions:
       return new double[] { phi_f_e, phi_e_f };
@@ -259,17 +254,12 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     }
   }
 
-  private static void addCountToArray(AbstractIntList list, int idx) {
+  private static void addCountToArray(ConcurrentHashMultiset<Integer> counter, int idx) {
     if (idx < 0)
       return;
-    synchronized (list) {
-      while (idx >= list.size())
-        list.add(0);
-      int newCount = list.get(idx) + 1;
-      list.set(idx, newCount);
-    }
+    counter.add(idx);
     if (DEBUG_LEVEL >= 3)
-      System.err.println("Increasing count idx=" + idx + " in vector (" + list
+      System.err.println("Increasing count idx=" + idx + " in vector (" + counter
           + ").");
   }
 
@@ -410,15 +400,15 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   private double getLexProb(IString f, IString e) {
     if (DEBUG_LEVEL >= 1) {
       System.err.print("p(f = \"" + f + "\" | e = \"" + e + "\") = ");
-      System.err.print(feLexCounts.get(indexOfLex(f, e, false)));
+      System.err.print(feLexCounts.count(indexOfLex(f, e, false)));
       System.err.print("/");
-      System.err.println(eLexCounts.get(indexOfELex(e, false)));
+      System.err.println(eLexCounts.count(indexOfELex(e, false)));
     }
     int fei = indexOfLex(f, e, false);
     int ei = indexOfELex(e, false);
     if (fei < 0 || ei < 0)
       return 0.0;
-    return feLexCounts.get(fei) * 1.0 / eLexCounts.get(ei);
+    return (double) feLexCounts.count(fei) * 1.0 / (double) eLexCounts.count(ei);
   }
 
   /**
@@ -429,15 +419,15 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
   private double getLexProbInv(IString f, IString e) {
     if (DEBUG_LEVEL >= 1) {
       System.err.print("p(e = \"" + e + "\" | f = \"" + f + "\") = ");
-      System.err.print(feLexCounts.get(indexOfLex(f, e, false)));
+      System.err.print(feLexCounts.count(indexOfLex(f, e, false)));
       System.err.print("/");
-      System.err.println(fLexCounts.get(indexOfFLex(f, false)));
+      System.err.println(fLexCounts.count(indexOfFLex(f, false)));
     }
     int fei = indexOfLex(f, e, false);
     int fi = indexOfFLex(f, false);
     if (fei < 0 || fi < 0)
       return 0.0;
-    return feLexCounts.get(fei) * 1.0 / fLexCounts.get(fi);
+    return (double) feLexCounts.count(fei) * 1.0 / (double) fLexCounts.count(fi);
   }
 
   @Override
