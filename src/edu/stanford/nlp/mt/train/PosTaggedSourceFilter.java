@@ -1,13 +1,11 @@
 package edu.stanford.nlp.mt.train;
 
-import java.io.*;
-import java.util.regex.*;
+import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -21,8 +19,8 @@ public class PosTaggedSourceFilter extends AbstractSourceFilter {
   protected Pattern targetPattern = Pattern.compile("\\p{Punct}+");
 
   public PosTaggedSourceFilter(int maxPhraseLenF) {
-    super(maxPhraseLenF, new DynamicIntegerArrayIndex());
-    phraseWithoutContentPosTable = new DynamicIntegerArrayIndex();
+    super(maxPhraseLenF, new ProbingIntegerArrayIndex());
+    phraseWithoutContentPosTable = new ProbingIntegerArrayIndex();
   }
 
   private boolean isContentPOS(String pos, String word) {

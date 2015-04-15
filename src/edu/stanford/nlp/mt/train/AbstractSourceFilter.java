@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.train;
 
-import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequences;
 
 import java.io.IOException;
@@ -71,7 +71,7 @@ public abstract class AbstractSourceFilter implements SourceFilter {
     System.err.println("Excluding " + phrasesToExclude.size() + " phrases before extraction.\nfirst phrase is:" +
       phrasesToExclude.get(0));
     if (excludePhraseTable == null)
-      excludePhraseTable = new DynamicIntegerArrayIndex();
+      excludePhraseTable = new ProbingIntegerArrayIndex();
     for (String fLine: phrasesToExclude) {
       int[] f = IStrings.toIntArray(IStrings.toIStringArray(fLine
           .split("\\s+")));
