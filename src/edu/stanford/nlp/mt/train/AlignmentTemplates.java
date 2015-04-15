@@ -3,16 +3,15 @@ package edu.stanford.nlp.mt.train;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
+import com.google.common.collect.ConcurrentHashMultiset;
+
 import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
-import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.TranslationModelIndex;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-// Int2IntLinkedOpenHashMap is second choice
-// (overhead caused by this hashmap is relatively small)
 
 /**
  * AlignmentTemplates is a collection that maps between
@@ -41,7 +40,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
       aIndex = new DynamicIntegerArrayIndex(),
       eIndex = new DynamicIntegerArrayIndex();
 
-  private final ArrayList<Int2IntArrayMap> aCounter = new ArrayList<Int2IntArrayMap>();
+  private final List<ConcurrentHashMultiset<Integer>> aCounter = new ArrayList<>();
 
   private boolean storeAlignmentCounts = false;
   private double maxFertility = Double.MAX_VALUE;
@@ -101,21 +100,16 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     if (storeAlignmentCounts) {
       int idx = alTemp.getKey();
       int alIdx = alTemp.getAKey();
-      final Int2IntArrayMap aCounts;
+      final ConcurrentHashMultiset<Integer> aCounts;
       if (idx >= 0) {
         assert (idx <= index.size());
         synchronized (aCounter) {
           // assert(idx <= aCounter.size());
           while (idx >= aCounter.size())
-            aCounter.add(new Int2IntArrayMap());
+            aCounter.add(ConcurrentHashMultiset.create());
           aCounts = aCounter.get(idx);
         }
-        synchronized (aCounts) {
-          assert (aCounts != null);
-          int oldCount = aCounts.get(alIdx);
-          if (oldCount < Integer.MAX_VALUE)
-            aCounts.put(alIdx, 1 + oldCount);
-        }
+        aCounts.add(alIdx);
       }
     }
   }
@@ -127,7 +121,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   public int getAlignmentCount(AlignmentTemplate alTemp) {
     int idx = alTemp.getKey();
     int alIdx = alTemp.getAKey();
-    return aCounter.get(idx).get(alIdx);
+    return aCounter.get(idx).count(alIdx);
   }
 
   /**
@@ -231,12 +225,12 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     if (idx >= aCounter.size())
       return -1;
     // Linear search:
-    Int2IntArrayMap aCounts = aCounter.get(idx);
+    ConcurrentHashMultiset<Integer> aCounts = aCounter.get(idx);
     int maxK = -1;
     int maxV = Integer.MIN_VALUE;
     String maxKLex = null;
-    for (int k : aCounts.keySet()) {
-      int v = aCounts.get(k);
+    for (int k : aCounts.elementSet()) {
+      int v = aCounts.count(k);
       if (v == maxV) {
         // If there is a tie, take lexicographic order as defined in Moses:
         String kLex = AlignmentTemplate.alignmentToString(aIndex.get(k));

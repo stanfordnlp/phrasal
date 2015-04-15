@@ -1,7 +1,5 @@
 package edu.stanford.nlp.mt.train;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-
 import java.util.*;
 import java.io.PrintStream;
 import java.io.IOException;
@@ -102,7 +100,7 @@ public class ParaphraseExtractor extends PhraseExtract {
           // / P(f)P(f') = P(f'|f)/P(f'),
           // i.e., above score divited by P(f'):
           if (PMI) {
-            double denom = e.fCounts.get(fKey2) / totalFCount;
+            double denom = (double) e.fCounts.count(fKey2) / (double) totalFCount;
             score /= denom;
           }
           scores.put(fh.i, sum + score);
@@ -141,7 +139,7 @@ public class ParaphraseExtractor extends PhraseExtract {
    *          If true, return k-best f according to P(f|e).
    */
   private Map<Integer, Beam<PhraseHyp>> getKBest(int k, boolean inv) {
-    Map<Integer, Beam<PhraseHyp>> m = new Int2ObjectOpenHashMap<Beam<PhraseHyp>>();
+    Map<Integer, Beam<PhraseHyp>> m = new HashMap<>();
 
     assert (extractors.size() == 1);
     MosesPharoahFeatureExtractor e = (MosesPharoahFeatureExtractor) extractors.get(0);

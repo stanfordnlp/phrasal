@@ -1,10 +1,10 @@
 package edu.stanford.nlp.mt.train;
 
+import java.util.Properties;
+
 import edu.stanford.nlp.util.Index;
 
-import java.util.*;
-
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import com.google.common.collect.ConcurrentHashMultiset;
 
 /**
  * Extractor for p(e|f), one of the five base feature functions of
@@ -20,8 +20,8 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
 
   double phiFilter = 0.0;
 
-  IntArrayList feCounts = new IntArrayList();
-  IntArrayList fCounts = new IntArrayList();
+  ConcurrentHashMultiset<Integer> feCounts = ConcurrentHashMultiset.create();
+  ConcurrentHashMultiset<Integer> fCounts = ConcurrentHashMultiset.create();
 
   @Override
   public void init(Properties prop, Index<String> featureIndex,
@@ -69,24 +69,19 @@ public class PhiFeatureExtractor extends AbstractFeatureExtractor {
     assert (idx >= 0 && idxF >= 0);
     assert (idx < feCounts.size());
     // Compute phi features p(e|f):
-    double phi_e_f = feCounts.get(idx) * 1.0 / fCounts.get(idxF);
+    double phi_e_f = feCounts.count(idx) * 1.0 / fCounts.count(idxF);
     // Determine if need to filter phrase:
     if (phiFilter > phi_e_f)
       return null;
     return new double[] {};
   }
 
-  private static void addCountToArray(IntArrayList list, int idx) {
+  private static void addCountToArray(ConcurrentHashMultiset<Integer> counter, int idx) {
     if (idx < 0)
       return;
-    synchronized (list) {
-      while (idx >= list.size())
-        list.add(0);
-      int newCount = list.get(idx) + 1;
-      list.set(idx, newCount);
-      if (DEBUG_LEVEL >= 3)
-        System.err.println("Increasing count idx=" + idx + " in vector ("
-            + list + ").");
-    }
+    counter.add(idx);
+    if (DEBUG_LEVEL >= 3)
+      System.err.println("Increasing count idx=" + idx + " in vector ("
+          + counter + ").");
   }
 }

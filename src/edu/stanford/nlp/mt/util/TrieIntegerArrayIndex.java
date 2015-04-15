@@ -1,8 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
-import it.unimi.dsi.fastutil.longs.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,9 +17,6 @@ import java.util.Map;
 public class TrieIntegerArrayIndex implements IntegerArrayIndex,
     IntegerArrayRawIndex {
 
-  private static final int GROWTH_FACTOR = 4; // slow growth, we want to save
-                                              // space
-
   public static final int IDX_ROOT = 0;
   public static final int IDX_NOSUCCESSOR = Integer.MIN_VALUE;
 
@@ -28,7 +24,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
 
   private Function<Integer, Integer> transitionNormalizer;
 
-  public final Long2IntOpenHashMap map;
+  public final ConcurrentHashMap<Long,Integer> map;
   // maps transitions to next state. Each transition is a long, whose 32 first
   // bits
   // identify an input symbol, and 32 last bits identify the current state.
@@ -41,11 +37,9 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
 
   public TrieIntegerArrayIndex(int sz) {
     if (sz > 0)
-      map = new Long2IntOpenHashMap(sz);
+      map = new ConcurrentHashMap<>(sz);
     else
-      map = new Long2IntOpenHashMap();
-    map.growthFactor(GROWTH_FACTOR);
-    map.defaultReturnValue(IDX_NOSUCCESSOR);
+      map = new ConcurrentHashMap<>();
     // System.err.println("TrieIntegerArrayIndex: constructor.");
     this.transitionNormalizer = x -> x;
   }
@@ -110,16 +104,6 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
     System.err.printf("Map size:%d\n", map.size());
   }
 
-  public void rehash() {
-    map.rehash();
-  }
-
-  public static void main(String[] args) {
-    TrieIntegerArrayIndex idx = new TrieIntegerArrayIndex();
-    test(idx);
-    idx.printInfo();
-  }
-
   private int indexOf_unsync(int[] input, boolean add) {
     // System.err.println("Adding to index: "+
     // Arrays.toString(IStrings.toStringArray(input)));
@@ -128,7 +112,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
       long transition = getTransition(curState,
           transitionNormalizer.apply(anInput));
       assert (map != null);
-      int nextState = map.get(transition);
+      int nextState = map.getOrDefault(transition, IDX_NOSUCCESSOR);
       if (nextState == IDX_NOSUCCESSOR) {
         if (!add)
           return -1;
@@ -181,5 +165,15 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
     }
     Collections.sort(vals);
     return vals.toString();
+  }
+  
+  /**
+   * 
+   * @param args
+   */
+  public static void main(String[] args) {
+    TrieIntegerArrayIndex idx = new TrieIntegerArrayIndex();
+    test(idx);
+    idx.printInfo();
   }
 }
