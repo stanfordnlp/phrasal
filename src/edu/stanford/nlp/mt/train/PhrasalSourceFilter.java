@@ -1,11 +1,12 @@
 package edu.stanford.nlp.mt.train;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.LineNumberReader;
 
-import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
+import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -16,7 +17,7 @@ public class PhrasalSourceFilter extends AbstractSourceFilter {
   private final boolean addBoundaryMarkers;
 
   public PhrasalSourceFilter(int maxPhraseLenF, boolean addBoundaryMarkers) {
-    super(maxPhraseLenF, new DynamicIntegerArrayIndex());
+    super(maxPhraseLenF, new ProbingIntegerArrayIndex());
     System.err.println("creating PhrasalSourceFilter with maxPhraseLenF=" + maxPhraseLenF);
     this.addBoundaryMarkers = addBoundaryMarkers;
   }

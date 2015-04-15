@@ -1,7 +1,15 @@
 package edu.stanford.nlp.mt.util;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
 import java.util.zip.GZIPInputStream;
 
 import static java.lang.System.*;
@@ -12,7 +20,7 @@ import static java.lang.System.*;
  * 
  */
 public class IBMModel1 {
-  final DynamicIntegerArrayIndex foreignIndex = new DynamicIntegerArrayIndex();
+  final IntegerArrayIndex foreignIndex = new ProbingIntegerArrayIndex();
   final double[] scores;
   private static final double epsilon = 1.0;
   private static final double logEpsilon = Math.log(epsilon);
