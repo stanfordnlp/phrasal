@@ -30,12 +30,17 @@ public class ParallelSuffixArray implements Serializable {
 
   private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
 
-  public ParallelCorpus corpus;
-  public int[] srcSuffixArray; 
-  public int[] tgtSuffixArray;
-  public int[] srcPosToSentenceId;
-  public int[] tgtPosToSentenceId;
+  protected ParallelCorpus corpus;
+  protected int[] srcSuffixArray; 
+  protected int[] tgtSuffixArray;
+  protected int[] srcPosToSentenceId;
+  protected int[] tgtPosToSentenceId;
 
+  /**
+   * No-arg constructor for deserialization.
+   */
+  public ParallelSuffixArray() {}
+  
   /**
    * Constructor.
    * 

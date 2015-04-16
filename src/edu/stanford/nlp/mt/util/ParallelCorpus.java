@@ -32,10 +32,10 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
 
   private static final int DEFAULT_CAPACITY = 10000;
   
-  public List<AlignedSentence> corpus;
-  public TranslationModelIndex index;
-  public int numSourcePos = 0;
-  public int numTargetPos = 0;
+  protected List<AlignedSentence> corpus;
+  protected TranslationModelIndex index;
+  protected int numSourcePos = 0;
+  protected int numTargetPos = 0;
   
   /**
    * Constructor.

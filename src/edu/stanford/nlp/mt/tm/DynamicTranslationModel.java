@@ -47,15 +47,20 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   public static enum FeatureTemplate {DENSE, DENSE_EXT, DENSE_EXT_LEX};
   
-  public ParallelSuffixArray sa;
+  protected ParallelSuffixArray sa;
   
-  private transient int maxSourcePhrase;
-  private transient int maxTargetPhrase;
-  private transient FeatureTemplate featureTemplate;
-  private transient RuleFeaturizer<IString, FV> featurizer;
-  private transient boolean isSystemIndex;
-  private transient int sampleSize;
-  private transient String[] featureNames;
+  protected int maxSourcePhrase;
+  protected int maxTargetPhrase;
+  protected FeatureTemplate featureTemplate;
+  protected RuleFeaturizer<IString, FV> featurizer;
+  protected boolean isSystemIndex;
+  protected int sampleSize;
+  protected String[] featureNames;
+  
+  /**
+   * No-arg constructor for deserialization.
+   */
+  public DynamicTranslationModel() {}
   
   /**
    * Constructor.
@@ -367,12 +372,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     try {
       long startTime = System.nanoTime();
-      DynamicTranslationModel<String> tm = IOTools.deserialize(fileName);
+      DynamicTranslationModel<String> tm = IOTools.deserialize(fileName, DynamicTranslationModel.class);
       tm.setSystemIndex(true);
-      tm.setMaxSourcePhrase(DEFAULT_MAX_PHRASE_LEN);
-      tm.setMaxTargetPhrase(DEFAULT_MAX_PHRASE_LEN);
       tm.setSampleSize(100);
-      tm.setFeatureTemplate(FeatureTemplate.DENSE);
+      
       long elapsedTime = System.nanoTime() - startTime;
       double numSecs = (double) elapsedTime / 1e9;
       System.out.printf("Loading time: %.3fs%n", numSecs);
@@ -399,7 +402,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       System.out.printf("Sample time:\t%.3fs%n", numSecs);
       System.out.printf("Time/segment:\t%.3fs%n", timePerSegment);
       
-    } catch (ClassNotFoundException | IOException e) {
+    } catch (IOException e) {
       e.printStackTrace();
     }
   }
