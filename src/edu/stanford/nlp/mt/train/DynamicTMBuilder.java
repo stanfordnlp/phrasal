@@ -167,7 +167,7 @@ public class DynamicTMBuilder {
       System.exit(-1);      
     }
     
-    String outputFileName = options.getProperty("o", "tm.ser.gz");
+    String outputFileName = options.getProperty("o", "tm.bin");
     SymmetrizationType type = options.containsKey("s") ? SymmetrizationType.valueOf(options.getProperty("s"))
         : null;
     int initialCapacity = PropertiesUtils.getInt(options, "e", 10000);

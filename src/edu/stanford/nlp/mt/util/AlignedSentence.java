@@ -22,6 +22,11 @@ public class AlignedSentence implements Serializable {
   private transient BitSet targetAligned;
   
   /**
+   * No-arg constructor for deserialization.
+   */
+  public AlignedSentence() {}
+  
+  /**
    * Constructor.
    * 
    * @param source

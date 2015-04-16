@@ -24,6 +24,12 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.kryo.io.UnsafeInput;
+import com.esotericsoftware.kryo.io.UnsafeOutput;
+
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -45,6 +51,9 @@ public final class IOTools {
   public static final String DEFAULT_ENCODING = "UTF-8";
 
   public static final String WEIGHTS_FILE_EXTENSION = ".binwts";
+  public static final String GZ_EXTENSION = ".gz";
+  public static final String BIN_EXTENSION = ".bin";
+  public static final String GZ_BIN_EXTENSION = BIN_EXTENSION + GZ_EXTENSION;
 
   private IOTools() {}
 
@@ -78,7 +87,7 @@ public final class IOTools {
     LineNumberReader reader; // = null;
     File f = new File(fileName);
     try {
-      if (f.getAbsolutePath().endsWith(".gz")) {
+      if (f.getAbsolutePath().endsWith(GZ_EXTENSION)) {
         reader = new LineNumberReader(new InputStreamReader(
             new GZIPInputStream(new FileInputStream(f), 8192), encoding));
       } else {
@@ -104,7 +113,7 @@ public final class IOTools {
     PrintStream output = null;
     try {
       if (fileName != null) {
-        if (fileName.endsWith(".gz")) {
+        if (fileName.endsWith(GZ_EXTENSION)) {
           output = new PrintStream(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
               fileName))), false, encoding);
         } else {
@@ -195,22 +204,34 @@ public final class IOTools {
    * @throws IOException
    * @throws ClassNotFoundException
    */
-  @SuppressWarnings({ "unchecked" })
-  public static <T> T deserialize(String filename) throws IOException, ClassNotFoundException {
+  public static <T> T deserialize(String filename, Class<T> type) throws IOException {
     try {
-      FileInputStream input = new FileInputStream(new File(filename));
-      ObjectInputStream inStream = filename.endsWith(".gz") ? 
-          new ObjectInputStream(new GZIPInputStream(input)) : 
-            new ObjectInputStream(input);
-      
-      T object = (T) inStream.readObject();
-      inStream.close();
+      T object;
+      if (filename.endsWith(GZ_BIN_EXTENSION) || filename.endsWith(BIN_EXTENSION)) {
+        Kryo kryo = new Kryo();
+        Input input = new UnsafeInput(filename.endsWith(GZ_EXTENSION) ? 
+            new GZIPInputStream(new FileInputStream(filename)) : new FileInputStream(filename));
+        object = kryo.readObject(input, type);
+        input.close();
+        
+      } else if (filename.endsWith(GZ_EXTENSION)) {
+        FileInputStream input = new FileInputStream(new File(filename));
+        ObjectInputStream inStream = new ObjectInputStream(new GZIPInputStream(input));
+        object = type.cast(inStream.readObject());
+        inStream.close();
+
+      } else {
+        FileInputStream input = new FileInputStream(new File(filename));
+        ObjectInputStream inStream = new ObjectInputStream(input);
+        object = type.cast(inStream.readObject());
+        inStream.close();
+      }
+
       return object;
       
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
+    } catch (FileNotFoundException | ClassNotFoundException e) {
+      throw new RuntimeException(e);
     }
-    return null;
   }
   
   /**
@@ -221,12 +242,25 @@ public final class IOTools {
    * @throws IOException
    */
   public static void serialize(String filename, Object o) throws IOException {
-    FileOutputStream out = new FileOutputStream(new File(filename));
-    ObjectOutputStream output = filename.endsWith(".gz") ? 
-        new ObjectOutputStream(new GZIPOutputStream(out)) :
-          new ObjectOutputStream(out);
-    output.writeObject(o);
-    output.close();
+    if (filename.endsWith(GZ_BIN_EXTENSION) || filename.endsWith(BIN_EXTENSION)) {
+      Kryo kryo = new Kryo();
+      Output output = new UnsafeOutput(filename.endsWith(GZ_EXTENSION) ? 
+          new GZIPOutputStream(new FileOutputStream(filename)) : new FileOutputStream(filename));
+      kryo.writeObject(output, o);
+      output.close();
+      
+    } else if (filename.endsWith(GZ_EXTENSION)) {
+      FileOutputStream out = new FileOutputStream(new File(filename));
+      ObjectOutputStream output = new ObjectOutputStream(new GZIPOutputStream(out));
+      output.writeObject(o);
+      output.close();
+      
+    } else {
+      FileOutputStream out = new FileOutputStream(new File(filename));
+      ObjectOutputStream output = new ObjectOutputStream(out);
+      output.writeObject(o);
+      output.close();
+    }
   }
   
   /**
