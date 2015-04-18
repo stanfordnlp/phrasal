@@ -23,9 +23,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class ParallelSuffixArray implements Serializable {
 
-  /**
-   * TODO(spenceg) Replace with kryo
-   */
   private static final long serialVersionUID = -5403502473957235135L;
 
   private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
@@ -328,14 +325,16 @@ public class ParallelSuffixArray implements Serializable {
    */
   public int count(final int[] query, boolean isSource) {
     int lb = findBound(query, isSource, true, 0);
-    if (lb < 0) {
-      return 0;
-    } else {
+    if (lb >= 0) {
       int ub = findBound(query, isSource, false, lb);
       return ub - lb + 1;
     }
+    return 0;
   }
-
+  
+  public List<QueryResult> query(final int[] query, boolean isSource) {
+    return query(query, isSource, Integer.MAX_VALUE);
+  }
   /**
    * Return a sample of sentences from this suffix array.
    * 
@@ -344,17 +343,14 @@ public class ParallelSuffixArray implements Serializable {
    * @param sampleSize
    * @return
    */
-  public List<SentenceSample> sample(final int[] query, boolean isSource, int sampleSize) {
+  public List<QueryResult> query(final int[] query, boolean isSource, int maxHits) {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
     int lb = findBound(query, isSource, true, 0);
     if (lb < 0) return new ArrayList<>(0);
-//    int ub = findBound(query, isSource, false, lb);
-    List<SentenceSample> hits = new ArrayList<>(sampleSize);
-    for (int i = lb, numHits = 0; i < sa.length && numHits < sampleSize; ++i, ++numHits) {
-      // TODO(spenceg) Sample with replacement if the number of hits exceeds
-      // the sample size.
-      // ThreadLocalRandom.current().nextInt(lb, ub + 1);
+    List<QueryResult> hits = new ArrayList<>();
+    int numHits = 0;
+    for (int i = lb, limit = sa.length; i < limit && numHits < maxHits; ++i) {
       int corpusPosition = sa[i];
       int sentenceId = positionToSentence(corpusPosition, isSource);
       int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
@@ -362,7 +358,8 @@ public class ParallelSuffixArray implements Serializable {
       AlignedSentence sample = this.corpus.get(sentenceId);
       int[] suffix = isSource ? sample.source : sample.target;
       if (this.startsWith(suffix, query, start) == 0) {
-        hits.add(new SentenceSample(sample, start, sentenceId));
+        hits.add(new QueryResult(sample, start, sentenceId));
+        ++numHits;
       } else {
         break;
       }
@@ -415,7 +412,7 @@ public class ParallelSuffixArray implements Serializable {
    * @author Spence Green
    *
    */
-  public static class SentenceSample {
+  public static class QueryResult {
     public final AlignedSentence sentence;
     public final int wordPosition;
     public final int sentenceId;
@@ -427,7 +424,7 @@ public class ParallelSuffixArray implements Serializable {
      * @param wordPosition
      * @param sentenceId
      */
-    public SentenceSample(AlignedSentence sentence, int wordPosition, int sentenceId) {
+    public QueryResult(AlignedSentence sentence, int wordPosition, int sentenceId) {
       this.sentence = sentence;
       this.wordPosition = wordPosition;
       this.sentenceId = sentenceId;
