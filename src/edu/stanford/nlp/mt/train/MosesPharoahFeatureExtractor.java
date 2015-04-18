@@ -1,8 +1,5 @@
 package edu.stanford.nlp.mt.train;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.Properties;
 
 import com.google.common.collect.ConcurrentHashMultiset;
@@ -174,53 +171,6 @@ public class MosesPharoahFeatureExtractor extends AbstractFeatureExtractor imple
     } else {
       // -- 4 basic features functions of Moses:
       return new double[] { phi_f_e, lex_f_e, phi_e_f, lex_e_f };
-    }
-  }
-
-  /**
-   * Check features against those read from Moses phrase table.
-   */
-  public void checkAgainst(BufferedReader ref) {
-    try {
-      for (String fLine; (fLine = ref.readLine()) != null;) {
-        // Read alignment template from file:
-        String[] els = fLine.split("\\s+\\|\\|\\|\\s+");
-        if (els.length != 5) {
-          System.err.println(Arrays.toString(els));
-          throw new RuntimeException(
-              "Expecting five fields in phrase table, found: " + els.length);
-        }
-        String oldStr = els[0] + " ||| " + els[1] + " ||| " + els[2] + " ||| "
-            + els[3];
-        AlignmentTemplate alTemp = new AlignmentTemplate(els[0], els[1],
-            els[2], false);
-        assert (alTemp.toString().equals(oldStr));
-        alTemps.addToIndex(alTemp);
-        // Get our scores for it:
-        double[] ourScores = (double[]) score(alTemp);
-        // Compare them to scores in the file:
-        String[] mosesScores = els[4].split("\\s+");
-        for (int i = 0; i < mosesScores.length; ++i) {
-          double mosesScore = Double.parseDouble(mosesScores[i]);
-          double error = 1 - mosesScore / ourScores[i];
-          if (Math.abs(error) > 1e-2) {
-            System.err.printf(
-                "Different score for feature %d : %.3f != %.3f\n", i,
-                mosesScore, ourScores[i]);
-            System.err.println("Phrase from Moses phrase table: " + oldStr);
-            System.err.println("Phrase from our model: " + alTemp.toString());
-            System.err.println("Features from Moses phrase table: " + els[4]);
-            System.err.println("Features from our computation: "
-                + Arrays.toString(ourScores));
-          } else {
-            if (DEBUG_LEVEL >= 2)
-              System.err.printf("Same score for feature %d : %.3f\n", i,
-                  mosesScore);
-          }
-        }
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
     }
   }
 

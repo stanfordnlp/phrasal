@@ -10,13 +10,12 @@ import java.util.BitSet;
  *
  */
 public class AlignedSentence implements Serializable {
-  /**
-   * TODO(spenceg) Replace with kryo
-   */
+
   private static final long serialVersionUID = 1481297672562948109L;
 
   public int[] source;
   public int[][] f2e;
+  public int[][] e2f;
   public int[] target;
 
   private transient BitSet targetAligned;
@@ -34,10 +33,11 @@ public class AlignedSentence implements Serializable {
    * @param f2e
    */
   public AlignedSentence(int[] source, int[] target, 
-      int[][] f2e) {
+      int[][] f2e, int[][] e2f) {
     this.source = source;
     this.target = target;
     this.f2e = f2e;
+    this.e2f = e2f;
   }
 
   public int sourceLength() { return source.length; }

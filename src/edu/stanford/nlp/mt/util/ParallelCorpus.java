@@ -23,9 +23,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   
-  /**
-   * TODO(spenceg) Replace with kryo
-   */
   private static final long serialVersionUID = 5837610708369154242L;
 
   private static transient final Logger logger = LogManager.getLogger(ParallelCorpus.class);
@@ -78,8 +75,8 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     numSourcePos += f.length;
     int[] e = stringToArray(target);
     numTargetPos += e.length;
-    int[][] f2e = alignStringToF2E(align, f.length, e.length);
-    AlignedSentence s = new AlignedSentence(f, e, f2e);
+    Alignment a = extractAlignment(align, f.length, e.length);
+    AlignedSentence s = new AlignedSentence(f, e, a.f2e, a.e2f);
     corpus.add(s);
     return s;
   }
@@ -89,8 +86,9 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   }
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static int[][] alignStringToF2E(String alignStr, int sourceLen, int targetLen) {
+  public static Alignment extractAlignment(String alignStr, int sourceLen, int targetLen) {
     Set[] f2e = new HashSet[sourceLen];
+    Set[] e2f = new HashSet[targetLen];
     String[] alignmentPoints = alignStr.split("\\s+");
     for (String point : alignmentPoints) {
       final int splitIdx = point.indexOf("-");
@@ -105,16 +103,35 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
           throw new ArrayIndexOutOfBoundsException(String.format("Target length: %d  target index: %d", targetLen, tgtPos));          
         }
         f2e[srcPos].add(tgtPos);
+        if (e2f[tgtPos] == null) e2f[tgtPos] = new HashSet<>();
+        e2f[tgtPos].add(srcPos);
       }
     }
+    return new Alignment(f2e, e2f);
+  }
 
-    // Convert to a grid of alignment points
-    int[][] f2eArr = new int[sourceLen][];
-    for (int i = 0; i < sourceLen; ++i) {
-      f2eArr[i] = f2e[i] == null ? new int[0] :
-        f2e[i].stream().mapToInt(x -> (int) x).sorted().toArray();
+  /**
+   * Container class for alignments.
+   * 
+   * @author Spence Green
+   *
+   */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static class Alignment {
+    public int[][] f2e;
+    public int[][] e2f;
+    public Alignment(Set[] f2e, Set[] e2f) {
+      this.f2e = flatten(f2e);
+      this.e2f = flatten(e2f);
     }
-    return f2eArr;
+    private static int[][] flatten(Set[] f2e) {
+      int[][] f2eArr = new int[f2e.length][];
+      for (int i = 0; i < f2e.length; ++i) {
+        f2eArr[i] = f2e[i] == null ? new int[0] :
+          f2e[i].stream().mapToInt(x -> (int) x).sorted().toArray();
+      }
+      return f2eArr;
+    }
   }
   
   /**
