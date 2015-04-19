@@ -6,9 +6,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import edu.stanford.nlp.mt.stats.Sampling;
 
 /**
  * An implementation of a parallel suffix array.
@@ -331,26 +335,21 @@ public class ParallelSuffixArray implements Serializable {
     }
     return 0;
   }
-  
-  public List<QueryResult> query(final int[] query, boolean isSource) {
-    return query(query, isSource, Integer.MAX_VALUE);
-  }
+
   /**
-   * Return a sample of sentences from this suffix array.
+   * Get all results for this query.
    * 
-   * @param sequence
+   * @param query
    * @param isSource
-   * @param sampleSize
    * @return
    */
-  public List<QueryResult> query(final int[] query, boolean isSource, int maxHits) {
+  public List<QueryResult> query(final int[] query, boolean isSource) {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
     int lb = findBound(query, isSource, true, 0);
     if (lb < 0) return new ArrayList<>(0);
     List<QueryResult> hits = new ArrayList<>();
-    int numHits = 0;
-    for (int i = lb, limit = sa.length; i < limit && numHits < maxHits; ++i) {
+    for (int i = lb, limit = sa.length; i < limit; ++i) {
       int corpusPosition = sa[i];
       int sentenceId = positionToSentence(corpusPosition, isSource);
       int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
@@ -359,12 +358,43 @@ public class ParallelSuffixArray implements Serializable {
       int[] suffix = isSource ? sample.source : sample.target;
       if (this.startsWith(suffix, query, start) == 0) {
         hits.add(new QueryResult(sample, start, sentenceId));
-        ++numHits;
       } else {
         break;
       }
     }
     return hits;
+  }
+  
+  /**
+   * Return a sample of sentences from this suffix array.
+   * 
+   * @param sequence
+   * @param isSource
+   * @param sampleSize
+   * @return
+   */
+  public SuffixArraySample sample(final int[] query, boolean isSource, int maxHits) {
+    int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
+    int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
+    int lb = findBound(query, isSource, true, 0);
+    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), 0.0);
+    int ub = findBound(query, isSource, false, lb);
+    assert ub > 0;
+    int numHits = ub - lb + 1;
+    List<QueryResult> hits;
+    try (IntStream indices = numHits > maxHits ? Sampling.sampleWithoutReplacement(lb, ub, maxHits) :
+      IntStream.rangeClosed(lb, ub)) {
+      hits = indices.mapToObj( i -> {
+        int corpusPosition = sa[i];
+        int sentenceId = positionToSentence(corpusPosition, isSource);
+        int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
+        int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
+        AlignedSentence sample = this.corpus.get(sentenceId);
+        return new QueryResult(sample, start, sentenceId);
+      }).collect(Collectors.toList());
+    }
+    double sampleRate = maxHits / (double) numHits;
+    return new SuffixArraySample(hits, sampleRate);
   }
 
   /**
@@ -416,18 +446,25 @@ public class ParallelSuffixArray implements Serializable {
     public final AlignedSentence sentence;
     public final int wordPosition;
     public final int sentenceId;
-    
-    /**
-     * Constructor.
-     * 
-     * @param sentence
-     * @param wordPosition
-     * @param sentenceId
-     */
     public QueryResult(AlignedSentence sentence, int wordPosition, int sentenceId) {
       this.sentence = sentence;
       this.wordPosition = wordPosition;
       this.sentenceId = sentenceId;
+    }
+  }
+  
+  /**
+   * A struct to hold the result of a sample of a suffix array.
+   * 
+   * @author Spence Green
+   *
+   */
+  public static class SuffixArraySample {
+    public final List<QueryResult> samples;
+    public final double sampleRate;
+    public SuffixArraySample(List<QueryResult> q, double sampleRate) {
+      this.samples = q;
+      this.sampleRate = sampleRate;
     }
   }
 }

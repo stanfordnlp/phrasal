@@ -23,9 +23,9 @@ public class SampledRule {
   public final int tgtEndExclusive;
   public final int[] src;
   public final int[] tgt;
-  public final QueryResult s;
-  public float log_lex_e_f = Float.MAX_VALUE;
-  public float log_lex_f_e = Float.MAX_VALUE;
+  public final QueryResult saEntry;
+  public float lex_e_f = 0.0f;
+  public float lex_f_e = 0.0f;
   private final int hashCode;
   
   /**
@@ -39,11 +39,13 @@ public class SampledRule {
    */
   public SampledRule(int srcStartInclusive, int srcEndExclusive, int tgtStartInclusive, int tgtEndExclusive, 
       QueryResult s) {
+    assert srcEndExclusive - srcStartInclusive > 0;
+    assert tgtEndExclusive - tgtStartInclusive > 0;
     this.srcStartInclusive = srcStartInclusive;
     this.srcEndExclusive = srcEndExclusive;
     this.tgtStartInclusive = tgtStartInclusive;
     this.tgtEndExclusive = tgtEndExclusive;
-    this.s = s;
+    this.saEntry = s;
     this.src = Arrays.copyOfRange(s.sentence.source, srcStartInclusive, srcEndExclusive);
     this.tgt = Arrays.copyOfRange(s.sentence.target, tgtStartInclusive, tgtEndExclusive);
     int fID = MurmurHash.hash32(src, src.length, 1);
@@ -92,11 +94,46 @@ public class SampledRule {
   }
 
   /**
+   * Return the rule-internal target-source alignment grid.
    * 
    * @return
    */
   public int[][] e2f() {
-    // TODO Auto-generated method stub
-    return null;
+    int eDim = tgtEndExclusive - tgtStartInclusive;
+    int[][] e2f = new int[eDim][];
+    for (int i = tgtStartInclusive; i < tgtEndExclusive; ++i) {
+      int localIdx = i - tgtStartInclusive;
+      int srcAlignDim = saEntry.sentence.e2f[i].length;
+      e2f[localIdx] = new int[srcAlignDim];
+      if (srcAlignDim > 0) {
+        System.arraycopy(saEntry.sentence.e2f[i], 0, e2f[localIdx], 0, srcAlignDim);
+        for (int j = 0; j < srcAlignDim; ++j) {
+          e2f[localIdx][j] -= srcStartInclusive;
+        }
+      }
+    }
+    return e2f;
+  }
+  
+  /**
+   * Return the rule-internal source-target alignment grid.
+   * 
+   * @return
+   */
+  public int[][] f2e() {
+    int fDim = srcEndExclusive - srcStartInclusive;
+    int[][] f2e = new int[fDim][];
+    for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
+      int localIdx = i - srcStartInclusive;
+      int tgtAlignDim = saEntry.sentence.f2e[i].length;
+      f2e[localIdx] = new int[tgtAlignDim];
+      if (tgtAlignDim > 0) {
+        System.arraycopy(saEntry.sentence.f2e[i], 0, f2e[localIdx], 0, f2e[localIdx].length);
+        for (int j = 0; j < f2e[localIdx].length; ++j) {
+          f2e[localIdx][j] -= tgtStartInclusive;
+        }
+      }
+    }
+    return f2e;
   }
 }
