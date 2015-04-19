@@ -33,6 +33,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private Counter<String> sumGradSquare;
   private Counter<String> lastUpdated;
   private Counter<String> customL1;
+  private HashSet<String> fixedFeatures;
 
   // Fields needed for warm restarts
   private int timeStepOffset = 0;
@@ -41,11 +42,16 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private static final Logger logger = LogManager.getLogger(AdaGradFastFOBOSUpdater.class.getName());
 
   public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
+    this(initialRate, expectedNumFeatures, L1lambda, customL1, null);
+  }
+      
+  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1, HashSet<String> fixedFeatures) {
     this.rate = initialRate;
     this.L1lambda = L1lambda;
     sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
     lastUpdated = new ClassicCounter<String>(expectedNumFeatures);
     this.customL1 = customL1;
+    this.fixedFeatures = fixedFeatures;
   }
 
   @Override
@@ -67,6 +73,13 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     // w_{t+1} := w_t - nu*g_t
     Set<String> featuresToRemove = new HashSet<String>();
     for (String feature : featuresToUpdate) {
+      
+      if(fixedFeatures != null && 
+              fixedFeatures.size() > 0 &&
+              fixedFeatures.contains(feature)) {
+        continue;
+      }
+      
       double gradf = gradient.getCount(feature);
       double prevrate = rate / (Math.sqrt(sumGradSquare.getCount(feature))+eps);     
 
@@ -113,7 +126,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   
   @Override
   public UpdaterState getState() {
-    return new AdaGradFastFOBOSState(sumGradSquare, customL1, lastUpdated, lastTimeStep);
+    return new AdaGradFastFOBOSState(sumGradSquare, customL1, fixedFeatures, lastUpdated, lastTimeStep);
   }
 
   @Override
@@ -122,6 +135,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
       AdaGradFastFOBOSState adaGradState = (AdaGradFastFOBOSState) state;
       sumGradSquare = adaGradState.gradHistory;
       customL1 = adaGradState.customReg;
+      fixedFeatures = adaGradState.fixedFeatures;
       lastUpdated = adaGradState.lastUp;
       timeStepOffset = adaGradState.timeStep + 1;
     }
@@ -137,11 +151,13 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     private static final long serialVersionUID = 5395903981292983859L;
     private final Counter<String> gradHistory;
     private final Counter<String> customReg;
+    private final HashSet<String> fixedFeatures;
     private final Counter<String> lastUp;
     private final int timeStep;
-    public AdaGradFastFOBOSState(Counter<String> h, Counter<String> r, Counter<String> u, int t) {
+    public AdaGradFastFOBOSState(Counter<String> h, Counter<String> r, HashSet<String> f, Counter<String> u, int t) {
       this.gradHistory = h;
       this.customReg = r;
+      this.fixedFeatures = f;
       this.lastUp = u;
       this.timeStep = t;
     }
