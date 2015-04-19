@@ -36,12 +36,18 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   private Counter<String> sumGradSquare;
   private Norm norm;
   private Counter<String> customL1;
+  private HashSet<String> fixedFeatures;
 
   public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm, Counter<String> customL1) {
+    this(initialRate, expectedNumFeatures, lambda, norm, customL1, null);
+  }
+  
+  public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm, Counter<String> customL1, HashSet<String> fixedFeatures) {
     this.rate = initialRate;
     this.lambda = lambda;
     this.norm = norm;
     this.customL1 = customL1;
+    this.fixedFeatures = fixedFeatures;
     
     sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
   }
@@ -147,6 +153,13 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
       Counter<String> testUpdateCache = new ClassicCounter<String>(groupSize);
       Counter<String> currentRateCache = new ClassicCounter<String>(groupSize);
       for (String feature: fGroup) {
+        
+        if(fixedFeatures != null && 
+            fixedFeatures.size() > 0 &&
+            fixedFeatures.contains(feature)) {
+          continue;
+        }
+
         gValue = gradient.getCount(feature);
         sgsValue = sumGradSquare.getCount(feature);
         wValue = weights.getCount(feature);
@@ -157,20 +170,27 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
         currentRateCache.incrementCount(feature, currentrate);
       }
       for (String feature: fGroup) {
+        
+        if(fixedFeatures != null && 
+            fixedFeatures.size() > 0 &&
+            fixedFeatures.contains(feature)) {
+          continue;
+        }
+        
         currentrate = currentRateCache.getCount(feature);
         testupdate = testUpdateCache.getCount(feature);
         double l1 = this.lambda;
-	if(customL1 != null && customL1.size()>0)
-	    for (String prefix : customL1.keySet())
-		{
-		    if(feature.startsWith(prefix))
-			{
+        if(customL1 != null && customL1.size()>0)
+          for (String prefix : customL1.keySet())
+          {
+            if(feature.startsWith(prefix))
+            {
 
-			    l1 = customL1.getCount(prefix);
-			    // System.out.println("Using custom L1 for "+prefix + " valued " + l1);                                  
-			    break;
-			}
-		}
+              l1 = customL1.getCount(prefix);
+              // System.out.println("Using custom L1 for "+prefix + " valued " + l1);                                  
+              break;
+            }
+          }
 
         tau = (currentrate * l1) / (1 + currentrate * l1 * groupSize) * testUpdateAbsSum;
         realupdate = Math.signum(testupdate) * pospart(Math.abs(testupdate) - tau);
@@ -191,7 +211,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
 
   @Override
   public UpdaterState getState() {
-    return new AdaGradFOBOSState(sumGradSquare, customL1);
+    return new AdaGradFOBOSState(sumGradSquare, customL1, fixedFeatures);
   }
 
   @Override
@@ -199,6 +219,7 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     if (state instanceof AdaGradFOBOSState) {
       sumGradSquare = ((AdaGradFOBOSState) state).gradHistory;
       customL1 = ((AdaGradFOBOSState) state).customReg;
+      fixedFeatures = ((AdaGradFOBOSState) state).fixedFeatures;
     }
   }
   
@@ -212,9 +233,11 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     private static final long serialVersionUID = -7994685877722145964L;
     private final Counter<String> gradHistory;
     private final Counter<String> customReg;
-    public AdaGradFOBOSState(Counter<String> h, Counter<String> r) {
+    private final HashSet<String> fixedFeatures;
+    public AdaGradFOBOSState(Counter<String> h, Counter<String> r, HashSet<String> f) {
       this.gradHistory = h;
       this.customReg = r;
+      this.fixedFeatures = f;
     }
   }
 }
