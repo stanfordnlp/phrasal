@@ -6,23 +6,19 @@ Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior Univ
 
 ## Installation
 
-Both ant and [Gradle](http://gradle.org) installation build scripts are provided. We strongly recommend that you use Gradle, which will fetch dependencies and build a jar for you.
+[Gradle](http://gradle.org) installation build scripts are provided. Gradle will fetch dependencies and build a jar for you.
 
-The Phrasal decoder requires that you also install [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml). We recommend that you clone and build [the latest repository from Github](https://github.com/stanfordnlp/CoreNLP).
-
-Some advanced Phrasal features have external dependencies. If you build Phrasal with Gradle, these dependencies will be retrieved for you.
+Phrasal depends on [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml). We recommend that you clone and build [the latest repository from Github](https://github.com/stanfordnlp/CoreNLP).
 
 ### Linux
 
-1. Set the CORENLP_HOME environment variable to the root of the CoreNLP repository, which should have been built.
+1. Set the CORENLP_HOME environment variable to the root of the CoreNLP repository, which contains a Gradle script. Phrasal's Gradle script will execute the CoreNLP script for you..
 
-2. `gradle build`
+2. `gradle installDist`
 
 3. (Optional) Build Eclipse project files by typing: `gradle eclipse`.
 
 4. (Optional, requires [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
-
-5. (Optional) Create classpath and startup scripts for Phrasal: `gradle startupScripts`.
 
 ### Windows
 
@@ -32,26 +28,22 @@ Installation of Gradle is required. Follow the Linux instructions above. Then be
 
 We used to commit some third-party dependencies to the repository, and for others we had a bash script that would try to wget the rest. The script would fail when URLs for archived versions of libraries would change (this was especially true for jetty). Now we use Gradle/Maven to fetch the dependencies. Once you've fetched them, you can then compile with ant as before.
 
-1. Download and unpack [Gradle](http://gradle.org) into your home directory.
+1. Download and unpack [Gradle](http://gradle.org) into your home directory, or into /u/nlp/packages.
 
-2. Add Gradle to PATH: `export PATH="$PATH":/u/username/NLP-HOME/gradle/bin`
+2. Add Gradle to PATH: `export PATH="$PATH":/path/to/gradle/bin`
 
 3. Set reference to JavaNLP: `export CORENLP_HOME=/u/username/NLP-HOME/javanlp/projects/core`
 
-4. Download external dependencies: `gradle copyDeps`
+4. `gradle installDist`
 
-5. `ant all`
-
-6. Update CLASSPATH: `export CLASSPATH=$CLASSPATH:/u/username/NLP-HOME/phrasal/classes`
+6. Update CLASSPATH: `export CLASSPATH=/u/username/NLP-HOME/phrasal/build/install/phrasal/lib`
 
 ## Contributors
 
 * Daniel Cer (original author)
 * Michel Galley
 * Spence Green
-* John Bauer
 * Chris Manning
-
 
 ## Documentation / User Guide
 

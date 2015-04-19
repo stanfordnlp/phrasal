@@ -117,7 +117,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    *
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  private static class Alignment {
+  public static class Alignment {
     public int[][] f2e;
     public int[][] e2f;
     public Alignment(Set[] f2e, Set[] e2f) {
