@@ -38,7 +38,7 @@ public final class Sequences {
    * @return
    */
   public static int[] toIntArray(Sequence<IString> sequence,
-      TranslationModelIndex index) {
+      Vocabulary index) {
     int sz = sequence.size();
     int[] intArray = new int[sequence.size()];
     for (int i = 0; i < sz; i++) {

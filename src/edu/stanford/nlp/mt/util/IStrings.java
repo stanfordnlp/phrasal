@@ -131,7 +131,7 @@ public final class IStrings {
    * @param index
    * @return
    */
-  public static Sequence<IString> toIStringSequence(int[] indices, TranslationModelIndex index) {
+  public static Sequence<IString> toIStringSequence(int[] indices, Vocabulary index) {
     IString[] istringList = new IString[indices.length];
     for (int i = 0; i < indices.length; ++i) {
       istringList[i] = new IString(indices[i], index);

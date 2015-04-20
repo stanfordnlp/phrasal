@@ -11,7 +11,7 @@ import com.google.common.collect.ConcurrentHashMultiset;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.TranslationModelIndex;
+import edu.stanford.nlp.mt.util.Vocabulary;
 
 /**
  * AlignmentTemplates is a collection that maps between
@@ -169,7 +169,7 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
     buf.append(", a-counts=");
     buf.append(aCounter.size());
     buf.append(", istring=");
-    buf.append(TranslationModelIndex.systemSize());
+    buf.append(Vocabulary.systemSize());
     return buf.toString();
   }
 

@@ -15,7 +15,7 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
   private static final long serialVersionUID = 7535218805035757457L;
   
   public final int id;
-  private final TranslationModelIndex index;
+  private final Vocabulary index;
   
   /**
    * Constructor.
@@ -30,8 +30,8 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
    * @param string
    * @param index
    */
-  public IString(String string, TranslationModelIndex index) {
-    this.id = index == null ? TranslationModelIndex.systemAdd(string) :
+  public IString(String string, Vocabulary index) {
+    this.id = index == null ? Vocabulary.systemAdd(string) :
       index.add(string);
     this.index = index;
   }
@@ -51,8 +51,8 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
    * @param id
    * @param index
    */
-  public IString(int id, TranslationModelIndex index) {
-    if (id == TranslationModelIndex.UNKNOWN_ID) {
+  public IString(int id, Vocabulary index) {
+    if (id == Vocabulary.UNKNOWN_ID) {
       throw new IllegalArgumentException("Invalid id: " + String.valueOf(id));
     }
     this.id = id;
@@ -61,19 +61,19 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
 
   @Override
   public char charAt(int charIndex) {
-    return index == null ? TranslationModelIndex.systemGet(id).charAt(charIndex) :
+    return index == null ? Vocabulary.systemGet(id).charAt(charIndex) :
         index.get(id).charAt(charIndex);
   }
 
   @Override
   public int length() {
-    return index == null ? TranslationModelIndex.systemGet(id).length() :
+    return index == null ? Vocabulary.systemGet(id).length() :
         index.get(id).length();
   }
 
   @Override
   public CharSequence subSequence(int start, int end) {
-    return index == null ? TranslationModelIndex.systemGet(id).subSequence(start, end) :
+    return index == null ? Vocabulary.systemGet(id).subSequence(start, end) :
       index.get(id).substring(start, end);
   }
 
@@ -96,7 +96,7 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
 
   @Override
   public String toString() {
-    return index == null ? TranslationModelIndex.systemGet(id) :
+    return index == null ? Vocabulary.systemGet(id) :
       index.get(id);
   }
 
@@ -111,7 +111,7 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
 
   @Override
   public int compareTo(IString o) {
-    return index == null ? TranslationModelIndex.systemGet(id).compareTo(TranslationModelIndex.systemGet(o.id)) :
+    return index == null ? Vocabulary.systemGet(id).compareTo(Vocabulary.systemGet(o.id)) :
       index.get(id).compareTo(index.get(o.id));
   }
 }

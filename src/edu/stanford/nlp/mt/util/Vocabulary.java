@@ -18,7 +18,7 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
  * @author Spence Green
  *
  */
-public class TranslationModelIndex implements Serializable {
+public class Vocabulary implements Serializable {
 
   private static final long serialVersionUID = 5124110481914822964L;
   
@@ -34,7 +34,7 @@ public class TranslationModelIndex implements Serializable {
   /**
    * Constructor. Creates a decoder-local index.
    */
-  public TranslationModelIndex() {
+  public Vocabulary() {
     this(INITIAL_CAPACITY, false);
   }
   
@@ -45,7 +45,7 @@ public class TranslationModelIndex implements Serializable {
    * @param isSystemIndex -- Create a system index (e.g., during TM extraction) instead
    * of a decoder-local index.
    */
-  public TranslationModelIndex(int initialCapacity, boolean isSystemIndex) {
+  public Vocabulary(int initialCapacity, boolean isSystemIndex) {
     index = new ConcurrentHashIndex<String>(initialCapacity);
   }
 
@@ -54,7 +54,7 @@ public class TranslationModelIndex implements Serializable {
    * 
    * @param index
    */
-  public static void setSystemIndex(TranslationModelIndex index) {
+  public static void setSystemIndex(Vocabulary index) {
     systemIndex = index.index;
   }
   
@@ -151,15 +151,15 @@ public class TranslationModelIndex implements Serializable {
   }
 
   // Thread local copies of translation model indices
-  private static transient final ThreadLocal<TranslationModelIndex> threadLocalCache =
-      new ThreadLocal<TranslationModelIndex>();
+  private static transient final ThreadLocal<Vocabulary> threadLocalCache =
+      new ThreadLocal<Vocabulary>();
 
   /**
    * Set the thread-local index.
    * 
    * @param index
    */
-  public static void setThreadLocalIndex(TranslationModelIndex index) {
+  public static void setThreadLocalIndex(Vocabulary index) {
     threadLocalCache.set(index);
   }
 
@@ -168,7 +168,7 @@ public class TranslationModelIndex implements Serializable {
    * 
    * @return
    */
-  public static TranslationModelIndex getThreadLocalIndex() {
+  public static Vocabulary getThreadLocalIndex() {
     return threadLocalCache.get();
   }
 }

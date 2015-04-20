@@ -16,11 +16,11 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class TranslationModelIndexTest {
 
-  protected TranslationModelIndex index;
+  protected Vocabulary index;
 
   @Before
   public void setUp() throws Exception {
-    index = new TranslationModelIndex();
+    index = new Vocabulary();
     index.add("The");
     index.add("Beast");
   }
@@ -53,18 +53,18 @@ public class TranslationModelIndexTest {
   @Test
   public void testSystemIndex() {
     // Sanity check
-    TranslationModelIndex.systemClear();
+    Vocabulary.systemClear();
     
-    TranslationModelIndex.systemAdd("We");
-    TranslationModelIndex.systemAdd("three");
-    TranslationModelIndex.systemAdd("kings");
-    assertEquals(3, TranslationModelIndex.systemSize());
-    assertEquals(0, TranslationModelIndex.systemIndexOf("We"));
-    assertEquals(1, TranslationModelIndex.systemIndexOf("three"));
-    assertEquals(2, TranslationModelIndex.systemIndexOf("kings"));
+    Vocabulary.systemAdd("We");
+    Vocabulary.systemAdd("three");
+    Vocabulary.systemAdd("kings");
+    assertEquals(3, Vocabulary.systemSize());
+    assertEquals(0, Vocabulary.systemIndexOf("We"));
+    assertEquals(1, Vocabulary.systemIndexOf("three"));
+    assertEquals(2, Vocabulary.systemIndexOf("kings"));
     
     // Clean up after ourselves
-    TranslationModelIndex.systemClear();
+    Vocabulary.systemClear();
   }
 
   /**
@@ -101,8 +101,8 @@ public class TranslationModelIndexTest {
     public Boolean process(Boolean startAtZero) {
       // These must be called inside process(), which is called from
       // within a threadpool thread.
-      TranslationModelIndex.setThreadLocalIndex(new TranslationModelIndex());
-      TranslationModelIndex index = TranslationModelIndex.getThreadLocalIndex();
+      Vocabulary.setThreadLocalIndex(new Vocabulary());
+      Vocabulary index = Vocabulary.getThreadLocalIndex();
       boolean ret = true;
       if (startAtZero) {
         index.add(sentence[0]);

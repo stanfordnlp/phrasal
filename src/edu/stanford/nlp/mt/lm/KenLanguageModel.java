@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.mt.util.TranslationModelIndex;
+import edu.stanford.nlp.mt.util.Vocabulary;
 
 /**
  * KenLM language model support via JNI.
@@ -59,9 +59,9 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // building the index.
     System.err.printf("Special tokens: start: %s  end: %s%n", TokenUtils.START_TOKEN.toString(),
         TokenUtils.END_TOKEN.toString());
-    int[] table = new int[TranslationModelIndex.systemSize()];
+    int[] table = new int[Vocabulary.systemSize()];
     for (int i = 0; i < table.length; ++i) {
-      table[i] = model.index(TranslationModelIndex.systemGet(i));
+      table[i] = model.index(Vocabulary.systemGet(i));
     }
     istringIdToKenLMId = new AtomicReference<int[]>(table);
   }
@@ -90,10 +90,10 @@ public class KenLanguageModel implements LanguageModel<IString> {
         if (token.id < oldTable.length) {
           return oldTable[token.id];
         }
-        int[] newTable = new int[TranslationModelIndex.systemSize()];
+        int[] newTable = new int[Vocabulary.systemSize()];
         System.arraycopy(oldTable, 0, newTable, 0, oldTable.length);
         for (int i = oldTable.length; i < newTable.length; ++i) {
-          newTable[i] = model.index(TranslationModelIndex.systemGet(i));
+          newTable[i] = model.index(Vocabulary.systemGet(i));
         }
         istringIdToKenLMId.set(newTable);
         return newTable[token.id];

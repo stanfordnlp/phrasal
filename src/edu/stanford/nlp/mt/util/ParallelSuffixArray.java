@@ -81,7 +81,7 @@ public class ParallelSuffixArray implements Serializable {
    * 
    * @return
    */
-  public TranslationModelIndex getIndex() { return this.corpus.index; }
+  public Vocabulary getIndex() { return this.corpus.index; }
 
   /**
    * Create the underlying suffix array from the parallel corpus.
