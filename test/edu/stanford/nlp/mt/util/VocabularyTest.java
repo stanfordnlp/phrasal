@@ -14,7 +14,7 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  * @author Spence Green
  *
  */
-public class TranslationModelIndexTest {
+public class VocabularyTest {
 
   protected Vocabulary index;
 

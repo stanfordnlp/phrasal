@@ -137,6 +137,15 @@ public final class OnlineTuner {
       boolean wrapBoundary, String experimentName) {
     this.outputWeightPrefix = experimentName + ".online";
 
+    // Load Phrasal
+    try {
+      decoder = Phrasal.loadDecoder(phrasalIniFile);
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(-1);
+    }
+    logger.info("Loaded Phrasal from: " + phrasalIniFile);
+
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
     this.initialWtsFileName = initialWtsFile;
@@ -149,16 +158,7 @@ public final class OnlineTuner {
     assert tuneSource.size() > 0;
     loadReferences(tgtFile, wrapBoundary);
     logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
-    
-    // Load Phrasal
-    try {
-      decoder = Phrasal.loadDecoder(phrasalIniFile);
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(-1);
-    }
-    logger.info("Loaded Phrasal from: " + phrasalIniFile);
-    
+        
     // Load the optimizer last since some optimizers depend on fields initialized
     // by OnlineTuner.
     optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
