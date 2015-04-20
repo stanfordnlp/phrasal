@@ -337,35 +337,33 @@ public final class OnlineTuner {
     @Override
     public ProcessorOutput process(ProcessorInput input) {
       assert input.weights != null;
-      
-      // The decoder does not copy the weight vector; ProcessorInput should have.
-      InputProperties inputProperties = new InputProperties();
-      inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
-      
-      int batchSize = input.translationIds.length;
-      List<List<RichTranslation<IString,String>>> nbestLists = 
-          new ArrayList<List<RichTranslation<IString,String>>>(input.translationIds.length);
+            
+      final int batchSize = input.translationIds.length;
+      List<List<RichTranslation<IString,String>>> nbestLists = new ArrayList<>(input.translationIds.length);
+
+      // Decode
+      for (int i = 0; i < batchSize; ++i) {
+        final int sourceId = input.translationIds[i];
+        InputProperties inputProperties;
+        
+        if(decoder.getInputProperties().size() > sourceId)
+            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
+        else
+            inputProperties = new InputProperties();
+        inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(i), sourceId, 
+            threadId, inputProperties);
+        nbestLists.add(nbestList);
+      }
+
+      // Compute gradient
       Counter<String> gradient;
       if (batchSize == 1) {
-        // Conventional online learning
-        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(0), 
-            input.translationIds[0], threadId, inputProperties);
         gradient = optimizer.getGradient(input.weights, input.source.get(0), 
-            input.translationIds[0], nbestList, input.references.get(0), referenceWeights, scoreMetric);
-        nbestLists.add(nbestList);
+            input.translationIds[0], nbestLists.get(0), input.references.get(0), 
+            referenceWeights, scoreMetric);
         
       } else {
-        // Mini-batch learning
-        for (int i = 0; i < input.translationIds.length; ++i) {
-          int translationId = input.translationIds[i];
-          Sequence<IString> source = input.source.get(i);
-          
-          List<RichTranslation<IString,String>> nbestList = decoder.decode(source, translationId, 
-              threadId, inputProperties);
-          
-          nbestLists.add(nbestList);
-        }
-
         gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, referenceWeights, scoreMetric);
       }
@@ -378,7 +376,6 @@ public final class OnlineTuner {
               gradient.remove(feature);
            }
         } 
-       
       }
 
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
