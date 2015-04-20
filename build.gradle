@@ -36,11 +36,7 @@ uploadArchives {
 // Configure build targets
 sourceSets {
   main {
-    java.srcDirs = ['src/']
-    resources.srcDirs = ['resources/']
-  }
-  extra {
-    java.srcDirs = ['src-extra/']
+    java.srcDirs = ['src/', 'src-extra/']
     resources.srcDirs = ['resources/']
   }
   test {

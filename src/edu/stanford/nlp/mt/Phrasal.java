@@ -36,6 +36,7 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -372,8 +373,17 @@ public class Phrasal {
    * 
    * @return
    */
-  public TranslationModel<IString,String> getPhraseTable() { return phraseGenerator; }
+  public TranslationModel<IString,String> getTranslationModel() { return phraseGenerator; }
  
+  /**
+   * Return the input properties loaded with the ini file.
+   * 
+   * @return
+   */
+  public List<InputProperties> getInputProperties() { 
+    return Collections.unmodifiableList(inputPropertiesList); 
+  }
+  
   /**
    * @return The wrap boundary property specified in the ini file.
    */

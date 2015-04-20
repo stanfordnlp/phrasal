@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
 /**
  * Specify properties of the segment input. The string format is
  * key/value pairs (separated by <code>KEY_VALUE_DELIMITER</code>) separated
@@ -25,7 +23,23 @@ public class InputProperties extends HashMap<InputProperty, Object> {
   public static final String KEY_VALUE_DELIMITER = "=";
 
   public static final String PAIR_DELIMITER = " ";
-  
+
+  /**
+   * Constructor.
+   */
+  public InputProperties() {
+    super();
+  }
+
+  /**
+   * Copy constructor.
+   * 
+   * @param inputProperties
+   */
+  public InputProperties(InputProperties inputProperties) {
+    super(inputProperties);
+  }
+
   /**
    * Parse a string into an <code>InputProperties</code> object.
    */
@@ -61,7 +75,7 @@ public class InputProperties extends HashMap<InputProperty, Object> {
     }
     return propertiesList;
   }
-  
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
