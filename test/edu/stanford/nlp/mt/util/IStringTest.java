@@ -29,17 +29,17 @@ public class IStringTest extends TestCase {
   @Test
 	public void testSystemIndex() {
     // Sanity check
-    TranslationModelIndex.systemClear();
+    Vocabulary.systemClear();
 
     IString test1 = new IString("AnIString1");
 		IString test2 = new IString("AnotherIString2");
 		IString test3 = new IString("YetAnotherIString2");
-		assertTrue(test1.id == TranslationModelIndex.systemIndexOf(test1.toString()));
-		assertTrue(test2.id == TranslationModelIndex.systemIndexOf(test2.toString()));
-		assertTrue(test3.id == TranslationModelIndex.systemIndexOf(test3.toString()));
+		assertTrue(test1.id == Vocabulary.systemIndexOf(test1.toString()));
+		assertTrue(test2.id == Vocabulary.systemIndexOf(test2.toString()));
+		assertTrue(test3.id == Vocabulary.systemIndexOf(test3.toString()));
 		
 		// Clean up for other unit tests
-		TranslationModelIndex.systemClear();
+		Vocabulary.systemClear();
 	}
 	
   @Test

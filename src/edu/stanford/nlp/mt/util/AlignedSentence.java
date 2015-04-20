@@ -50,7 +50,7 @@ public class AlignedSentence implements Serializable {
    * @param index
    * @return
    */
-  public Sequence<IString> getSource(TranslationModelIndex index) { 
+  public Sequence<IString> getSource(Vocabulary index) { 
     return IStrings.toIStringSequence(source, index); 
   }
 
@@ -60,7 +60,7 @@ public class AlignedSentence implements Serializable {
    * @param index
    * @return
    */
-  public Sequence<IString> getTarget(TranslationModelIndex index) { 
+  public Sequence<IString> getTarget(Vocabulary index) { 
     return IStrings.toIStringSequence(target, index); 
   }
   

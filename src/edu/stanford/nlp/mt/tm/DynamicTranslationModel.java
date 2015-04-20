@@ -29,7 +29,7 @@ import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.TranslationModelIndex;
+import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -135,7 +135,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private void createRuleCaches() {
     ruleCache = new ConcurrentHashMap<>(1000);
-    TranslationModelIndex index = sa.getIndex();
+    Vocabulary index = sa.getIndex();
     IntStream.range(0, index.size()).parallel().forEach(i -> {
       int[] query = new int[]{i};
       List<QueryResult> samples = sa.query(query, true);
@@ -151,7 +151,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private void createLexCaches() {
     coocCache = new LexCoocTable();
-    TranslationModelIndex index = sa.getIndex();
+    Vocabulary index = sa.getIndex();
     IntStream.range(0, index.size()).parallel().forEach(i -> {
       int[] query = new int[]{i};
       
@@ -232,7 +232,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public void setSystemIndex(boolean b) {
     this.isSystemIndex = b;
     if (b) {
-      TranslationModelIndex.setSystemIndex(sa.getIndex());
+      Vocabulary.setSystemIndex(sa.getIndex());
     }
   }
   

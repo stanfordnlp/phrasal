@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.TranslationModelIndex;
+import edu.stanford.nlp.mt.util.Vocabulary;
 
 /**
  * A rule sampled from the bitext.
@@ -63,7 +63,7 @@ public class SampledRule {
    * @param index
    * @return
    */
-  public Rule<IString> getRule(float[] scores, String[] featureNames, TranslationModelIndex index) {
+  public Rule<IString> getRule(float[] scores, String[] featureNames, Vocabulary index) {
     PhraseAlignment alignment = new PhraseAlignment(e2f());
     Sequence<IString> srcSeq = IStrings.toIStringSequence(src, index);
     Sequence<IString> tgtSeq = IStrings.toIStringSequence(tgt, index);

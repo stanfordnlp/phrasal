@@ -30,7 +30,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   private static final int DEFAULT_CAPACITY = 10000;
   
   protected List<AlignedSentence> corpus;
-  protected TranslationModelIndex index;
+  protected Vocabulary index;
   protected int numSourcePos = 0;
   protected int numTargetPos = 0;
   
@@ -59,7 +59,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   public ParallelCorpus(int initialCapacity, boolean isDecoderLocal) {
     corpus = new ArrayList<>(initialCapacity);
     boolean isSystemIndex = ! isDecoderLocal;
-    index = new TranslationModelIndex(initialCapacity, isSystemIndex);
+    index = new Vocabulary(initialCapacity, isSystemIndex);
   }
 
   /**

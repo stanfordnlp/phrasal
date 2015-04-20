@@ -161,7 +161,7 @@ public class TrieIntegerArrayIndex implements IntegerArrayIndex,
     List<String> vals = new LinkedList<String>();
     for (Map.Entry<Long, Integer> e : map.entrySet()) {
       int v = e.getValue();
-      vals.add(TranslationModelIndex.systemGet(v));
+      vals.add(Vocabulary.systemGet(v));
     }
     Collections.sort(vals);
     return vals.toString();
