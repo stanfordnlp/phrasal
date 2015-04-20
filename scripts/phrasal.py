@@ -34,7 +34,7 @@ DOIT_CONFIG = {
     # 0 := dont' print anything
     # 1 := print stderr only
     # 2 := print stderr and stdout
-    'verbosity': 1,
+    'verbosity': 2,
 
     # Use multi-processing / parallel execution of tasks
     # Better to let Phrasal pipeline run sequentially so that
@@ -246,7 +246,7 @@ def task_compile_lm():
     Calls KenLM to compile a language model.
     """
     def make_lm():
-        sys.stderr.write("Looking for LM file " + LM_FILE)
+        sys.stderr.write('Looking for LM file ' + LM_FILE + '\n')
         if os.path.exists(LM_FILE):
             # Don't run KenLM if the LM already exists on disk
             # Otherwise, doit will always run this task at least
@@ -310,7 +310,7 @@ def task_extract_tm():
     whatever that is.
     """
     def make_tm():
-        sys.stderr.write("Looking for TM file " + TM_FILE)
+        sys.stderr.write('Looking for TM file ' + TM_FILE + '\n')
         if os.path.exists(TM_FILE):
             # Don't build the TM if it already exists on disk
             # Otherwise doit will run this task at least once
@@ -318,12 +318,13 @@ def task_extract_tm():
         d = CONFIG[k.CORPUS]
         source = qualify_path(d[k.CORPUS_SRC])
         target = qualify_path(d[k.CORPUS_TGT])
-        align = qualify_path(d[k.CORPUS_ALIGN])
-        if isinstance(align, list):
-            align = ' '.join([qualify_path(x) for x in align])        
+        if isinstance(d[k.CORPUS_ALIGN], list):
+            align = ' '.join([qualify_path(x) for x in d[k.CORPUS_ALIGN]]) 
+        else:
+            align = qualify_path(d[k.CORPUS_ALIGN])      
         tm_options = ' '.join(CONFIG[k.TASK_TM][k.TM_OPTIONS]) if k.TM_OPTIONS in CONFIG[k.TASK_TM] else ''
-        java_cmd = get_jvm_cmd('edu.stanford.nlp.mt.train.DynamicTMBuilder')
-        cmd = "%s %s %s %s %s %s" % (java_cmd, tm_options, TM_FILE, source, target, align)
+        java_cmd = get_java_cmd('edu.stanford.nlp.mt.train.DynamicTMBuilder')
+        cmd = "%s %s -o %s %s %s %s" % (java_cmd, tm_options, TM_FILE, source, target, align)
         with open(get_log_file_path('tm'), 'w') as log_file:
             retval = execute_shell_cmd(cmd, stdout=log_file).wait()
         if retval != 0:
