@@ -14,10 +14,10 @@ import java.util.stream.IntStream;
 
 import com.google.common.collect.ConcurrentHashMultiset;
 
+import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
-import edu.stanford.nlp.mt.stats.ConfidenceIntervals;
 import edu.stanford.nlp.mt.util.AtomicBitSet;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -54,6 +54,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   /**
    * Feature specification:
+   * TODO(spenceg) Add additional dense features from Lin (2015) paper.
    *  
    *  [0] := phi_f_e
    *  [1] := lex_f_e
@@ -117,15 +118,38 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     tm.isSystemIndex = false;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
-    tm.createCaches();
     return tm;
   }
   
   /**
-   * Setup caches for high-frequency rules and aligned words.
+   * Create in-memory caches for frequent rules and phrases.
    */
   public void createCaches() {
+    // Lex cache must be created before the rule cache.
+    createLexCaches();
+    createRuleCaches();
+  }
+  
+  /**
+   * Setup unigram rule cache.
+   */
+  private void createRuleCaches() {
     ruleCache = new ConcurrentHashMap<>(1000);
+    TranslationModelIndex index = sa.getIndex();
+    IntStream.range(0, index.size()).parallel().forEach(i -> {
+      int[] query = new int[]{i};
+      List<QueryResult> samples = sa.query(query, true);
+      if (samples.size() > CACHE_THRESHOLD) {
+        ruleCache.put(i, samplesToRules(samples, 1, 1.0));
+      }
+    });
+    ruleCache = Collections.unmodifiableMap(ruleCache);
+  }
+
+  /**
+   * Setup cache for lexical translations.
+   */
+  private void createLexCaches() {
     coocCache = new LexCoocTable();
     TranslationModelIndex index = sa.getIndex();
     IntStream.range(0, index.size()).parallel().forEach(i -> {
@@ -134,12 +158,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Sample the source
       List<QueryResult> samples = sa.query(query, true);
       if (samples.size() > 0) {
-        if (samples.size() > CACHE_THRESHOLD) {
-          ruleCache.put(i, samplesToRules(samples, 1, 1.0));
-        }
         for (QueryResult q : samples) {
           int srcIndex = q.wordPosition;
           int srcId = q.sentence.source[srcIndex];
+          assert srcId == i;
           int[] tgtAlign = q.sentence.f2e[srcIndex];
           if (tgtAlign.length > 0) {
             coocCache.incrementSrcMarginal(srcId, tgtAlign.length);
@@ -159,12 +181,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       if (samples.size() > 0) {
         for (QueryResult q : samples) {
           int tgtIndex = q.wordPosition;
-          int tgtId = q.sentence.source[tgtIndex];
+          int tgtId = q.sentence.target[tgtIndex];
+          assert tgtId == i;
           int[] srcAlign = q.sentence.e2f[tgtIndex];
           if (srcAlign.length > 0) {
             coocCache.incrementTgtMarginal(tgtId, srcAlign.length);
             for (int srcIndex : srcAlign) {
-              int srcId = q.sentence.target[srcIndex];
+              int srcId = q.sentence.source[srcIndex];
               coocCache.addCooc(tgtId, srcId);
             }
           } else {
@@ -174,7 +197,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         }
       }
     });
-    ruleCache = Collections.unmodifiableMap(ruleCache);
   }
 
   /**
@@ -183,7 +205,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param t
    */
   public void setFeatureTemplate(FeatureTemplate t) {
-    featureTemplate = t;
+    this.featureTemplate = t;
     if (t == FeatureTemplate.DENSE) {
       featureNames = (String[]) IntStream.range(0, 4).mapToObj(i -> {
         return String.format("%s.%d", FEATURE_PREFIX, i);
@@ -285,7 +307,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           // Sample from the suffix array
           final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
           SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
-          return samplesToRules(s.samples, order, s.sampleRate).stream().map(r -> new ConcreteRule<IString,FV>(
+          double sampleRate = s.samples.size() / (double) s.numHits;
+          return samplesToRules(s.samples, order, sampleRate).stream().map(r -> new ConcreteRule<IString,FV>(
               r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
               .collect(Collectors.toList());
         }
@@ -307,15 +330,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     });
     
     // Create histograms for the phrase feature values
-    List<SampledRule> sampledRules = new ArrayList<>(feCounts.keySet());
-    int[] histogram = new int[sampledRules.size()];
+    final List<SampledRule> sampledRules = new ArrayList<>(feCounts.keySet());
+    double[] histogram = new double[sampledRules.size()];
     for (int r = 0; r < histogram.length; ++r) {
-      histogram[r] = (int) feCounts.getCount(sampledRules.get(r));
+      histogram[r] = feCounts.getCount(sampledRules.get(r));
     }
     
     // TODO(spenceg) Compute confidence intervals for phrase scores
     // Count and divide for now
-    double[][] ci = ConfidenceIntervals.multinomialSison(histogram);
+//    double[][] ci = ConfidenceIntervals.multinomialSison(histogram);
+    double ef_denom = ArrayMath.sum(histogram);
     
     List<Rule<IString>> scoredRules = new ArrayList<>(histogram.length);
     for (int r = 0; r < histogram.length; ++r) {
@@ -324,10 +348,29 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       float[] scores;
       if (featureTemplate == FeatureTemplate.DENSE) {
         scores = new float[4];
+        scores[0] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
+        scores[1] = (float) Math.log(rule.lex_f_e);
+        // U. Germann's approximation
+        int cnt = sa.count(rule.tgt, false);
+        double num = cnt - histogram[r] * sampleRate;
+        scores[2] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
+        
+        scores[3] = (float) Math.log(rule.lex_e_f);
+        
       
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
-      
+        scores[0] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
+        scores[1] = (float) Math.log(rule.lex_f_e);
+        // U. Germann's approximation
+        int cnt = sa.count(rule.tgt, false);
+        double num = cnt - histogram[r] * sampleRate;
+        scores[2] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
+        
+        scores[3] = (float) Math.log(rule.lex_e_f);
+        scores[4] = (float) Math.log(histogram[r]);
+        scores[5] = histogram[r] == 1.0 ? 1.0f : 0.0f;
+        
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
       }
@@ -343,10 +386,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param rule
    */
   private void scoreLex(SampledRule rule) {
-    int[][] f2e = rule.saEntry.sentence.f2e;
-    int[][] e2f = rule.saEntry.sentence.e2f;
-    int[] source = rule.saEntry.sentence.source;
-    int[] target = rule.saEntry.sentence.target;
+    final int[][] f2e = rule.saEntry.sentence.f2e;
+    final int[][] e2f = rule.saEntry.sentence.e2f;
+    final int[] source = rule.saEntry.sentence.source;
+    final int[] target = rule.saEntry.sentence.target;
     
     // Forward score
     double lex_e_f = 1.0;
@@ -354,14 +397,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       final int srcId = source[i];
       int[] tgtAlign = f2e[i];
       double efSum = 0.0;
-      for (int j : tgtAlign) {
-        int tgtId = target[j];
-        int c_e_f = coocCache.getJointCount(srcId, tgtId);
+      if (tgtAlign.length > 0) {
+        for (int j : tgtAlign) {
+          int tgtId = target[j];
+          int c_e_f = coocCache.getJointCount(srcId, tgtId);
+          int c_f = coocCache.getSrcMarginal(srcId);
+          assert c_f > 0 : String.format("%d", srcId);
+          efSum += c_e_f / (double) c_f;
+        }
+        efSum /= tgtAlign.length;
+        
+      } else {
+        int c_e_f = coocCache.getJointCount(srcId, LexCoocTable.NULL_ID);
         int c_f = coocCache.getSrcMarginal(srcId);
-        efSum += c_e_f / (double) c_f;
+        assert c_f > 0;
+        efSum = c_e_f / (double) c_f;
       }
       if (efSum == 0.0) efSum = MIN_LEX_PROB;
-      lex_e_f *= (efSum / tgtAlign.length);
+      lex_e_f *= efSum;
     }
     
     // Backward score
@@ -370,14 +423,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       final int tgtId = target[i];
       int[] srcAlign = e2f[i];
       double feSum = 0.0;
-      for (int j : srcAlign) {
-        int srcId = source[j];
-        int c_f_e = coocCache.getJointCount(tgtId, srcId);
+      if (srcAlign.length > 0) {
+        for (int j : srcAlign) {
+          int srcId = source[j];
+          int c_f_e = coocCache.getJointCount(tgtId, srcId);
+          int c_e = coocCache.getTgtMarginal(tgtId);
+          assert c_e > 0;
+          feSum += c_f_e / (double) c_e;
+        }
+        feSum /= srcAlign.length;
+        
+      } else {
+        int c_f_e = coocCache.getJointCount(tgtId, LexCoocTable.NULL_ID);
         int c_e = coocCache.getTgtMarginal(tgtId);
-        feSum += c_f_e / (double) c_e;
+        assert c_e > 0;
+        feSum = c_f_e / (double) c_e;
       }
       if (feSum == 0.0) feSum = MIN_LEX_PROB;
-      lex_f_e *= (feSum / srcAlign.length);
+      lex_f_e *= feSum;
     }
 
     // Compare to the existing scores
@@ -487,8 +550,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     public void incrementTgtMarginal(int tgtId, int count) {
       while (true) {
-        int oldCount = srcMarginals.count(tgtId);
-        if (srcMarginals.setCount(tgtId, oldCount, oldCount + count)) break;
+        int oldCount = tgtMarginals.count(tgtId);
+        if (tgtMarginals.setCount(tgtId, oldCount, oldCount + count)) break;
       }
     }
     
@@ -516,6 +579,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName);
       tm.setSystemIndex(true);
       tm.setSampleSize(100);
+      tm.setFeatureTemplate(FeatureTemplate.DENSE_EXT);
+      tm.createCaches();
       
       long elapsedTime = System.nanoTime() - startTime;
       double numSecs = (double) elapsedTime / 1e9;
