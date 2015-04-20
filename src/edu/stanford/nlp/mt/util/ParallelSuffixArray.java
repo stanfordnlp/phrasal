@@ -408,31 +408,31 @@ public class ParallelSuffixArray implements Serializable {
     if (corpusPosition < 0) throw new IllegalArgumentException();
     int[] posToSentenceId = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
     int low = 0;
-    int high = posToSentenceId.length;
+    int high = posToSentenceId.length - 1;
     while(low <= high) {
       final int mid = (low + high) >>> 1;
-    final int lastPosition = posToSentenceId[mid];
-    final int cmp = corpusPosition - lastPosition;
-    if (cmp < 0) {
-      if (mid == 0) return mid;
-      int left = posToSentenceId[mid-1];
-      int cmp2 = corpusPosition - left;
-      if (cmp2 > 0) return mid;
-      high = mid - 1;
+      final int lastPosition = posToSentenceId[mid];
+      final int cmp = corpusPosition - lastPosition;
+      if (cmp < 0) {
+        if (mid == 0) return mid;
+        int left = posToSentenceId[mid-1];
+        int cmp2 = corpusPosition - left;
+        if (cmp2 > 0) return mid;
+        high = mid - 1;
 
-    } else if (cmp > 0) {
-      if (mid == posToSentenceId.length - 1) return mid;
-      int right = posToSentenceId[mid+1];
-      int cmp2 = corpusPosition - right;
-      if (cmp2 < 0) return mid + 1;
-      low = mid + 1;
+      } else if (cmp > 0) {
+        if (mid == posToSentenceId.length - 1) return mid;
+        int right = posToSentenceId[mid+1];
+        int cmp2 = corpusPosition - right;
+        if (cmp2 < 0) return mid + 1;
+        low = mid + 1;
 
-    } else {
-      return mid;
-    }
+      } else {
+        return mid;
+      }
     }
     // Corpus position not found? 
-        throw new IllegalArgumentException();
+    throw new IllegalArgumentException();
   }
 
   /**
