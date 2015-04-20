@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.util.Pair;
 
@@ -68,6 +69,7 @@ public class TranslationModelFactory {
       String file = filename.substring(DYNAMIC_TAG.length());
       translationModel = DynamicTranslationModel.load(file);
       ((DynamicTranslationModel) translationModel).initialize(setSystemIndex, dynamicSampleSize);
+      ((DynamicTranslationModel) translationModel).setFeatureTemplate(FeatureTemplate.DENSE_EXT);
       
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename) :
