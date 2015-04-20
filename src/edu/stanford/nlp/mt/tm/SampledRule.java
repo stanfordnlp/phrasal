@@ -3,12 +3,11 @@ package edu.stanford.nlp.mt.tm;
 import java.util.Arrays;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.Vocabulary;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * A rule sampled from the bitext.
@@ -63,14 +62,30 @@ public class SampledRule {
    * @param index
    * @return
    */
-  public Rule<IString> getRule(float[] scores, String[] featureNames, Vocabulary index) {
+  public Rule<IString> getRule(float[] scores, String[] featureNames,
+      Sequence<IString> sourceSpan, int[] tm2Sys) {
     PhraseAlignment alignment = new PhraseAlignment(e2f());
-    Sequence<IString> srcSeq = IStrings.toIStringSequence(src, index);
-    Sequence<IString> tgtSeq = IStrings.toIStringSequence(tgt, index);
+    Sequence<IString> tgtSeq = toSystemSequence(tgt, tm2Sys);
     return new Rule<IString>(scores, featureNames,
-        tgtSeq, srcSeq, alignment);
+        tgtSeq, sourceSpan, alignment);
   }
   
+  /**
+   * Convert the target span from translation model ids to system ids.
+   * 
+   * @param tgt
+   * @param tm2Sys
+   * @return
+   */
+  private Sequence<IString> toSystemSequence(int[] tgt, int[] tm2Sys) {
+    IString[] tokens = new IString[tgt.length];
+    for (int i = 0; i < tgt.length; ++i) {
+      int systemId = tm2Sys[tgt[i]];
+      tokens[i] = new IString(systemId);
+    }
+    return new SimpleSequence<IString>(true, tokens);
+  }
+
   @Override
   public String toString() {
     return String.format("%s => %s", Arrays.toString(src),

@@ -5,9 +5,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -28,7 +26,6 @@ import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -45,11 +42,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
   private static final long serialVersionUID = 5876435802959430120L;
   
-  private static final String FEATURE_PREFIX = "TM";
+  private static final String FEATURE_PREFIX = "DYN";
   private static final String NAME = "dynamic-tm";
-  private static final int DEFAULT_MAX_PHRASE_LEN = 7;
-  private static final int DEFAULT_SAMPLE_SIZE = 100;
-  private static final int CACHE_THRESHOLD = 1000;
+  public static final int DEFAULT_MAX_PHRASE_LEN = 7;
+  public static final int DEFAULT_SAMPLE_SIZE = 100;
+  private static final int RULE_CACHE_THRESHOLD = 1000;
   public static final double MIN_LEX_PROB = 1e-5;
   
   /**
@@ -73,13 +70,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient int maxTargetPhrase;
   protected transient FeatureTemplate featureTemplate;
   protected transient RuleFeaturizer<IString, FV> featurizer;
-  protected transient boolean isSystemIndex;
   protected transient int sampleSize;
   protected transient String[] featureNames;
   
   // Caches
-  protected transient Map<Integer,List<Rule<IString>>> ruleCache;
   protected transient LexCoocTable coocCache;
+  
+  // Vocabulary translation arrays
+  protected transient int[] sys2TM;
+  protected transient int[] tm2Sys;
   
   /**
    * No-arg constructor for deserialization.
@@ -97,14 +96,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     this.sa = suffixArray;
     this.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     this.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
-    this.isSystemIndex = false;
     this.sampleSize = DEFAULT_SAMPLE_SIZE;
     setFeatureTemplate(FeatureTemplate.DENSE);
   }
   
   
   /**
-   * Load a model from file. This method creates the caches.
+   * Load a model from file. This is the only supported method for loading the dynamic TM.
    * 
    * @param filename
    * @return
@@ -115,35 +113,39 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
-    tm.isSystemIndex = false;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
     return tm;
   }
   
   /**
+   * Create mappings between the system vocabulary and the translation model vocabulary.
+   */
+  private void createIdArrays() {
+    final int sysSize = Vocabulary.systemSize();
+    final Vocabulary tmVocab = sa.getVocabulary();
+    sys2TM = new int[sysSize];
+    IntStream.range(0, sysSize).parallel().forEach(i -> {
+      sys2TM[i] = tmVocab.indexOf(Vocabulary.systemGet(i));
+    });
+    int tmSize = tmVocab.size();
+    tm2Sys = new int[tmSize];
+    IntStream.range(0, tmSize).parallel().forEach(i -> {
+      tm2Sys[i] = Vocabulary.systemIndexOf(tmVocab.get(i));
+    });
+  }
+
+  /**
    * Create in-memory caches for frequent rules and phrases.
    */
-  public void createCaches() {
+  public void initialize(boolean initializeSystemVocabulary, int sampleSize) {
+    if (initializeSystemVocabulary) populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    createIdArrays();
     // Lex cache must be created before the rule cache.
     createLexCaches();
-    createRuleCaches();
-  }
-  
-  /**
-   * Setup unigram rule cache.
-   */
-  private void createRuleCaches() {
-    ruleCache = new ConcurrentHashMap<>(1000);
-    Vocabulary index = sa.getIndex();
-    IntStream.range(0, index.size()).parallel().forEach(i -> {
-      int[] query = new int[]{i};
-      List<QueryResult> samples = sa.query(query, true);
-      if (samples.size() > CACHE_THRESHOLD) {
-        ruleCache.put(i, samplesToRules(samples, 1, 1.0));
-      }
-    });
-    ruleCache = Collections.unmodifiableMap(ruleCache);
+    this.sampleSize = sampleSize;
+    sa.createRuleCaches(sampleSize, RULE_CACHE_THRESHOLD);
   }
 
   /**
@@ -151,7 +153,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private void createLexCaches() {
     coocCache = new LexCoocTable();
-    Vocabulary index = sa.getIndex();
+    Vocabulary index = sa.getVocabulary();
     IntStream.range(0, index.size()).parallel().forEach(i -> {
       int[] query = new int[]{i};
       
@@ -229,15 +231,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     maxTargetPhrase = dim;
   }
   
-  public void setSystemIndex(boolean b) {
-    this.isSystemIndex = b;
-    if (b) {
-      Vocabulary.setSystemIndex(sa.getIndex());
-    }
-  }
-  
-  public void setSampleSize(int k) {
-    this.sampleSize = k;
+  /**
+   * Inject the TM vocabulary into the system vocabulary.
+   */
+  private void populateSystemVocabulary() {
+    final Vocabulary tmVocab = sa.getVocabulary();
+    int tmSize = tmVocab.size();
+    tm2Sys = new int[tmSize];
+    IntStream.range(0, tmSize).parallel().forEach(i -> {
+      String wordType = tmVocab.get(i);
+      Vocabulary.systemAdd(wordType);
+    });
   }
   
   @Override
@@ -273,9 +277,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     if (source == null || source.size() == 0) return new ArrayList<>(0);
     
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
-    final int[] sourceInts = isSystemIndex ? Sequences.toIntArray(source) : 
-      Sequences.toIntArray(source, sa.getIndex());
+    final int[] sourceInts = toTMArray(source);
     AtomicBitSet misses = new AtomicBitSet(source.size());
+    // Mark OOVs immediately as misses
+    for (int i = 0; i < sourceInts.length; ++i) {
+      if (sourceInts[i] < 0) misses.set(i);
+    }
     final int longestSourcePhrase = Math.min(maxSourcePhrase, source.size());
     // Iterate over source span lengths
     for (int len = 1; len <= longestSourcePhrase; len++) {
@@ -288,31 +295,29 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           .parallel().mapToObj(i -> {
         final int j = i + order;
 
-        // Check for misses
+        // Check for lower-order misses
         int nextMiss = currentMisses.nextSetBit(i);
         if (nextMiss >= 0 && nextMiss < j) {
-          newMisses.set(i, j);
+          newMisses.set(i, j-1);
           return null;
         }
         
-        // Check the cache
         final CoverageSet sourceCoverage = new CoverageSet(source.size());
         sourceCoverage.set(i, j);
-        if (order == 1 && ruleCache.containsKey(sourceInts[i])) {
-          return ruleCache.get(sourceInts[i]).stream().map(r ->  new ConcreteRule<IString,FV>(r, 
-              sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
-              .collect(Collectors.toList());
-        
-        } else {
-          // Sample from the suffix array
-          final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
-          SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
-          double sampleRate = s.samples.size() / (double) s.numHits;
-          return samplesToRules(s.samples, order, sampleRate).stream().map(r -> new ConcreteRule<IString,FV>(
-              r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
-              .collect(Collectors.toList());
+        // Sample from the suffix array
+        final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
+        SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
+        if (s.samples.size() == 0) {
+          // No hits
+          newMisses.set(i, j-1);
+          return null;
         }
-      }).flatMap(l -> l.stream()).collect(Collectors.toList());
+        double sampleRate = s.samples.size() / (double) s.numHits;
+        Sequence<IString> sourceSpan = source.subsequence(i, j);
+        return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+            r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+            .collect(Collectors.toList());
+      }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
       misses = newMisses;
       concreteRules.addAll(ruleList);
     }
@@ -320,8 +325,25 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return concreteRules;
   }
 
+  /**
+   * Convert the source span to translation model indices.
+   * 
+   * @param source
+   * @return
+   */
+  private int[] toTMArray(Sequence<IString> source) {
+    int sourceSize = source.size();
+    int[] tmIds = new int[sourceSize];
+    for (int i = 0; i < sourceSize; ++i) {
+      IString word = source.get(i);
+      // TODO(spenceg) The array should be lengthened for OOVs
+      tmIds[i] = word.id < this.sys2TM.length ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
+    }
+    return tmIds;
+  }
+
   private List<Rule<IString>> samplesToRules(List<QueryResult> samples, final int order, 
-      double sampleRate) {
+      double sampleRate, Sequence<IString> sourceSpan) {
     // Extract rules and histograms
     final Counter<SampledRule> feCounts = new ClassicCounter<>();
     samples.stream().flatMap(s -> extractRules(s, order).stream()).forEach(rule -> {
@@ -374,7 +396,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
       }
-      Rule<IString> scoredRule = rule.getRule(scores, featureNames, this.sa.getIndex());
+      Rule<IString> scoredRule = rule.getRule(scores, featureNames, sourceSpan, this.tm2Sys);
       scoredRules.add(scoredRule);
     }
     return scoredRules;
@@ -577,9 +599,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     try {
       long startTime = System.nanoTime();
       DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName);
-      tm.setSystemIndex(true);
+      tm.initialize(true, DEFAULT_SAMPLE_SIZE);
       tm.setFeatureTemplate(FeatureTemplate.DENSE_EXT);
-      tm.createCaches();
       
       long elapsedTime = System.nanoTime() - startTime;
       double numSecs = (double) elapsedTime / 1e9;

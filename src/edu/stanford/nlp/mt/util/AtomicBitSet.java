@@ -71,7 +71,7 @@ public class AtomicBitSet {
    */
   public void set(int i, int j) {
     if (i < 0 || j < 0 || j >= length || j-i < 0)
-      throw new IndexOutOfBoundsException(String.format("%d,%d < 0 ",i,j));
+      throw new IndexOutOfBoundsException(String.format("%d,%d // %d ",i,j, length));
     for (int start = i; start <= j; ++start) set(start);
   }
 

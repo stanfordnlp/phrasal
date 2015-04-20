@@ -69,7 +69,6 @@ import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.tm.DecoderLocalTranslationModel;
-import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
@@ -88,7 +87,6 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -557,7 +555,8 @@ public class Phrasal {
     Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
         TranslationModelFactory.<String>factory(translationModelFile,
             makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString),
-            makePair(TranslationModelFactory.SETUP_DYNAMIC, "true"));
+            makePair(TranslationModelFactory.DYNAMIC_INDEX, "true"));
+    // TODO(spenceg) Add dynamic TM sample size
     phraseGenerator = phraseTablePair.first();
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
