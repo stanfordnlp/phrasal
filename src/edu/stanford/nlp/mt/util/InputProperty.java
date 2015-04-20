@@ -31,8 +31,8 @@ public enum InputProperty {
   IsValid,
   
   // A decoder-local translation model.
-  // Type: String
-  DecoderLocalTMPath,
+  // Type: TranslationModel
+  DecoderLocalTM,
   
   // A decoder-local weight vector
   // Type: Counter<String>

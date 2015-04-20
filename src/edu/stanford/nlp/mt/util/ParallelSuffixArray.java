@@ -233,6 +233,9 @@ public class ParallelSuffixArray implements Serializable {
   /**
    * Find a lower or upper bound in the suffix array.
    * 
+   * TODO(spenceg) Runtime is dominated by the calls to getSuffix(), which in turn
+   * call positionToSentence.
+   * 
    * @param query
    * @param isSource
    * @param lowerBound

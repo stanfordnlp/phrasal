@@ -578,7 +578,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       long startTime = System.nanoTime();
       DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName);
       tm.setSystemIndex(true);
-      tm.setSampleSize(100);
       tm.setFeatureTemplate(FeatureTemplate.DENSE_EXT);
       tm.createCaches();
       
