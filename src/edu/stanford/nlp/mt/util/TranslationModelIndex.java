@@ -46,8 +46,7 @@ public class TranslationModelIndex implements Serializable {
    * of a decoder-local index.
    */
   public TranslationModelIndex(int initialCapacity, boolean isSystemIndex) {
-    index = isSystemIndex ? new ConcurrentHashIndex<String>(initialCapacity) : 
-      new DecoderLocalIndex<String>(initialCapacity);
+    index = new ConcurrentHashIndex<String>(initialCapacity);
   }
 
   /**
@@ -65,9 +64,7 @@ public class TranslationModelIndex implements Serializable {
    * @return
    */
   public static int systemSize() {
-    TranslationModelIndex localIndex = threadLocalCache.get();
-    return localIndex == null ? systemIndex.size() : 
-      systemIndex.size() + localIndex.size();
+    return systemIndex.size();
   }
 
   /**
@@ -77,9 +74,7 @@ public class TranslationModelIndex implements Serializable {
    * @return
    */
   public static String systemGet(int i) {
-    TranslationModelIndex localIndex = threadLocalCache.get();
-    return (localIndex != null && i <= DecoderLocalIndex.MIN_INDEX) ? 
-      localIndex.get(i) : systemIndex.get(i);
+    return systemIndex.get(i);
   }
 
   /**
@@ -89,13 +84,7 @@ public class TranslationModelIndex implements Serializable {
    * @return
    */
   public static int systemIndexOf(String o) {
-    TranslationModelIndex localIndex = threadLocalCache.get();
-    if (localIndex == null) {
-      return systemIndex.indexOf(o);
-    } else {
-      int index = systemIndex.indexOf(o);
-      return index == UNKNOWN_ID ? localIndex.indexOf(o) : index;
-    }
+    return systemIndex.indexOf(o);
   }
 
   /**

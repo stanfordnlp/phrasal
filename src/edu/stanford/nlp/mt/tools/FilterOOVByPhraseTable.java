@@ -44,9 +44,8 @@ public class FilterOOVByPhraseTable {
    * @throws IOException
    */
   public static TranslationModel<IString,String> load(String filename) throws IOException {
-    String generatorName = TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR;
     Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair =  
-        TranslationModelFactory.<String>factory(generatorName, filename);
+        TranslationModelFactory.<String>factory(filename);
     TranslationModel<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
         Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(true)),
         QUERY_LIMIT);

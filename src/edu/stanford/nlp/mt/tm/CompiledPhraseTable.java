@@ -291,7 +291,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     // Load
     long startTime = System.nanoTime();
     Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, model,
+        TranslationModelFactory.<String>factory(model,
             String.format("%s:%d", TranslationModelFactory.QUERY_LIMIT_OPTION, queryLimit));
     long elapsedTime = System.nanoTime() - startTime;
     double numSecs = elapsedTime / 1e9;

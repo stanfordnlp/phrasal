@@ -87,6 +87,7 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
     return featureNames;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source, InputProperties sourceInputProperties, 
       List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {

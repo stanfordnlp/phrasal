@@ -69,6 +69,7 @@ import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.tm.DecoderLocalTranslationModel;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
@@ -87,6 +88,7 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TokenUtils;
+import edu.stanford.nlp.mt.util.TranslationModelIndex;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -508,11 +510,11 @@ public class Phrasal {
 
     // Phrase table(s), which is a required parameter
     List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
-    String phraseTable = ptOpts.get(0);
+    String translationModelFile = ptOpts.get(0);
     int numPhraseFeatures = Integer.MAX_VALUE;
     if (ptOpts.size() == 2) {
       numPhraseFeatures = Integer.valueOf(ptOpts.get(1));
-      System.err.printf("Number of features for %s: %d%n", phraseTable, numPhraseFeatures);
+      System.err.printf("Number of features for %s: %d%n", translationModelFile, numPhraseFeatures);
     }
 
     if (withGaps) {
@@ -552,11 +554,10 @@ public class Phrasal {
 
     // Create the phrase table(s) 
     final String optionLimitString = String.valueOf(this.ruleQueryLimit);
-    final String phraseTableType = withGaps ? TranslationModelFactory.DTU_GENERATOR
-        : TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR; 
     Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        TranslationModelFactory.<String>factory(phraseTableType, phraseTable,
-            makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString));
+        TranslationModelFactory.<String>factory(translationModelFile,
+            makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString),
+            makePair(TranslationModelFactory.SETUP_DYNAMIC, "true"));
     phraseGenerator = phraseTablePair.first();
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
@@ -581,8 +582,7 @@ public class Phrasal {
          }
          System.err.printf("Loading independent phrase table: %s %s%n", filename, Arrays.toString(generatorOptions));
          Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> generatorPair =  
-             TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, 
-                 filename, generatorOptions); 
+             TranslationModelFactory.<String>factory(filename, generatorOptions); 
          generators.add(generatorPair.first());
        }
        phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, ruleQueryLimit);
@@ -603,7 +603,7 @@ public class Phrasal {
       parameters = parameters.subList(3, parameters.size());
       if (modelFilenames.length != phraseTables.size()) {
         // Constraint: each phrase table must have an associated lexicalized reordering model
-        throw new RuntimeException("Each phrase table must have an associated reordering model: " + phraseTable +
+        throw new RuntimeException("Each phrase table must have an associated reordering model: " + translationModelFile +
             " ||| " + parameters.get(1));
       }
       
@@ -1207,20 +1207,14 @@ public class Phrasal {
         wrapBoundary);
 
     // Configure the translation model
-    if (inputProperties.containsKey(InputProperty.DecoderLocalTMPath)) {
-      String phraseTableFile = (String) inputProperties.get(InputProperty.DecoderLocalTMPath);
+    if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
       final String optionLimitString = String.valueOf(this.ruleQueryLimit);
-      try {
-        Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-            TranslationModelFactory.<String>factory(TranslationModelFactory.PSEUDO_PHARAOH_GENERATOR, phraseTableFile,
-                makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString));
-        phraseTablePair.first().setFeaturizer(featurizer);
-        DecoderLocalTranslationModel.set(phraseTablePair.first());
-        System.err.printf("Loaded decoder-local translation model from %s%n", phraseTableFile);
-      
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      TranslationModel<IString,String> tm = (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
+      tm.setFeaturizer(featurizer);
+
+      DecoderLocalTranslationModel.set(tm);
+      System.err.printf("Loaded decoder-local translation model from %s%n", tm.getName());
+
     } else {
       // Sanity check
       DecoderLocalTranslationModel.set(null);
