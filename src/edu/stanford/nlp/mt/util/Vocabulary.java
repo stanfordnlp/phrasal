@@ -35,17 +35,15 @@ public class Vocabulary implements Serializable {
    * Constructor. Creates a decoder-local index.
    */
   public Vocabulary() {
-    this(INITIAL_CAPACITY, false);
+    this(INITIAL_CAPACITY);
   }
   
   /**
    * Constructor.
    * 
    * @param initialCapacity
-   * @param isSystemIndex -- Create a system index (e.g., during TM extraction) instead
-   * of a decoder-local index.
    */
-  public Vocabulary(int initialCapacity, boolean isSystemIndex) {
+  public Vocabulary(int initialCapacity) {
     index = new ConcurrentHashIndex<String>(initialCapacity);
   }
 

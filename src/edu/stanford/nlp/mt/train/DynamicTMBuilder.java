@@ -45,12 +45,10 @@ public class DynamicTMBuilder {
    * @param targetFile
    * @param align
    * @param expectedSize
-   * @param isDecoderLocal
    */
-  public DynamicTMBuilder(String sourceFile, String targetFile, String align, int expectedSize, 
-      boolean isDecoderLocal) {
+  public DynamicTMBuilder(String sourceFile, String targetFile, String align, int expectedSize) {
     try {
-      sa = new ParallelSuffixArray(sourceFile, targetFile, align, expectedSize, isDecoderLocal);
+      sa = new ParallelSuffixArray(sourceFile, targetFile, align, expectedSize);
     } catch (IOException e) {
       logger.error("Unable to load corpus from file.", e);
     }
@@ -65,11 +63,10 @@ public class DynamicTMBuilder {
    * @param efAlign
    * @param expectedSize
    * @param type
-   * @param isDecoderLocal
    */
   public DynamicTMBuilder(String sourceFile, String targetFile, String feAlign, String efAlign, 
-      int expectedSize, SymmetrizationType type, boolean isDecoderLocal) {
-    sa = symmetrizeAndCreateSuffixArray(sourceFile, targetFile, feAlign, efAlign, type, expectedSize, isDecoderLocal);
+      int expectedSize, SymmetrizationType type) {
+    sa = symmetrizeAndCreateSuffixArray(sourceFile, targetFile, feAlign, efAlign, type, expectedSize);
   }
   
   public DynamicTranslationModel<String> getModel() {
@@ -84,13 +81,12 @@ public class DynamicTMBuilder {
    * @param feAlign
    * @param efAlign
    * @param initialCapacity
-   * @param isDecoderLocal 
    * @return
    */
   private ParallelSuffixArray symmetrizeAndCreateSuffixArray(String sourceFile,
       String targetFile, String feAlign, String efAlign, SymmetrizationType type, 
-      int initialCapacity, boolean isDecoderLocal) {
-    ParallelCorpus corpus = new ParallelCorpus(initialCapacity, isDecoderLocal);
+      int initialCapacity) {
+    ParallelCorpus corpus = new ParallelCorpus(initialCapacity);
     
     LineNumberReader fReader = IOTools.getReaderFromFile(sourceFile);
     LineNumberReader eReader = IOTools.getReaderFromFile(targetFile);
@@ -135,7 +131,6 @@ public class DynamicTMBuilder {
     optionDefs.put("o", 1);
     optionDefs.put("e", 1);
     optionDefs.put("s", 1);
-    optionDefs.put("d", 0);
     return optionDefs;
   }  
 
@@ -146,8 +141,7 @@ public class DynamicTMBuilder {
     sb.append(nl).append(" Options:").append(nl)
     .append("   -o file-name   : Output file name.").append(nl)
     .append("   -e num         : Estimated size of corpus (num. lines)").append(nl)
-    .append("   -s type        : Symmetrization type.").append(nl)
-    .append("   -d             : Decoder-local translation model.").append(nl);
+    .append("   -s type        : Symmetrization type.").append(nl);
     return sb.toString();
   }
   
@@ -171,7 +165,6 @@ public class DynamicTMBuilder {
     SymmetrizationType type = options.containsKey("s") ? SymmetrizationType.valueOf(options.getProperty("s"))
         : SymmetrizationType.valueOf("grow_diag_final_and");
     int initialCapacity = PropertiesUtils.getInt(options, "e", 10000);
-    boolean isDecoderLocal = PropertiesUtils.getBool(options, "d", false);
     
     String sourceFile = positionalArgs[0];
     String targetFile = positionalArgs[1];
@@ -184,8 +177,8 @@ public class DynamicTMBuilder {
     if (alignEFfile != null) logger.info("Alignment file (e2f): {}", alignEFfile);
     
     long startTime = System.nanoTime();
-    DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity, isDecoderLocal) :
-      new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type, isDecoderLocal);
+    DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity) :
+      new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type);
     DynamicTranslationModel<String> tm = tmBuilder.getModel();
     long elapsedTime = System.nanoTime() - startTime;
     double numSecs = ((double) elapsedTime) / 1e9;

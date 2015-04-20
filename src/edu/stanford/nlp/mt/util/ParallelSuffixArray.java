@@ -14,8 +14,6 @@ import java.util.stream.IntStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import edu.stanford.nlp.mt.stats.Sampling;
-
 /**
  * An implementation of a parallel suffix array.
  * 
@@ -75,9 +73,8 @@ public class ParallelSuffixArray implements Serializable {
    * @param isDecoderLocal 
    * @throws IOException 
    */
-  public ParallelSuffixArray(String sourceFile, String targetFile, String alignmentFile, int expectedSize, 
-      boolean isDecoderLocal) throws IOException {
-    this(ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignmentFile, expectedSize, isDecoderLocal));
+  public ParallelSuffixArray(String sourceFile, String targetFile, String alignmentFile, int expectedSize) throws IOException {
+    this(ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignmentFile, expectedSize));
   }
 
   /**

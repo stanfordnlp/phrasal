@@ -47,19 +47,8 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @param initialCapacity
    */
   public ParallelCorpus(int initialCapacity) {
-    this(DEFAULT_CAPACITY, false);
-  }
-  
-  /**
-   * Constructor.
-   * 
-   * @param initialCapacity
-   * @param isDecoderLocal
-   */
-  public ParallelCorpus(int initialCapacity, boolean isDecoderLocal) {
     corpus = new ArrayList<>(initialCapacity);
-    boolean isSystemIndex = ! isDecoderLocal;
-    index = new Vocabulary(initialCapacity, isSystemIndex);
+    index = new Vocabulary(initialCapacity);
   }
 
   /**
@@ -184,13 +173,12 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @param targetFile
    * @param alignmentFile
    * @param expectedSize
-   * @param isDecoderLocal 
    * @return
    * @throws IOException
    */
   public static ParallelCorpus loadCorpusFromFiles(String sourceFile, String targetFile,
-      String alignmentFile, int expectedSize, boolean isDecoderLocal) throws IOException {
-    ParallelCorpus corpus = new ParallelCorpus(expectedSize, isDecoderLocal);
+      String alignmentFile, int expectedSize) throws IOException {
+    ParallelCorpus corpus = new ParallelCorpus(expectedSize);
     LineNumberReader srcReader = IOTools.getReaderFromFile(sourceFile);
     LineNumberReader tgtReader = IOTools.getReaderFromFile(targetFile);
     LineNumberReader algnReader = IOTools.getReaderFromFile(alignmentFile);

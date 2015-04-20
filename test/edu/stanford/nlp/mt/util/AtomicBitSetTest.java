@@ -14,7 +14,7 @@ public class AtomicBitSetTest {
 
   @Test
   public void testGetSetInt() {
-    AtomicBitSet bitSet = new AtomicBitSet(33);
+    AtomicBitSet bitSet = new AtomicBitSet(34);
     bitSet.set(0);
     assertTrue(bitSet.get(0));
     bitSet.set(32);
@@ -43,7 +43,7 @@ public class AtomicBitSetTest {
 
   @Test
   public void testAtomicBitSetAtomicBitSet() {
-    AtomicBitSet bitSet = new AtomicBitSet(33);
+    AtomicBitSet bitSet = new AtomicBitSet(34);
     bitSet.set(0);
     bitSet.set(32);
     AtomicBitSet bitSet2 = new AtomicBitSet(bitSet);
