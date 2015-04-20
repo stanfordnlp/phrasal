@@ -169,7 +169,7 @@ public class DynamicTMBuilder {
     
     String outputFileName = options.getProperty("o", "tm.bin");
     SymmetrizationType type = options.containsKey("s") ? SymmetrizationType.valueOf(options.getProperty("s"))
-        : null;
+        : SymmetrizationType.valueOf("grow_diag_final_and");
     int initialCapacity = PropertiesUtils.getInt(options, "e", 10000);
     boolean isDecoderLocal = PropertiesUtils.getBool(options, "d", false);
     
