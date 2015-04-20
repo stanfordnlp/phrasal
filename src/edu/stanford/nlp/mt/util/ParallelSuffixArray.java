@@ -242,42 +242,43 @@ public class ParallelSuffixArray implements Serializable {
   private int findBound(final int[] query, boolean isSource, boolean lowerBound, int startFrom) {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int low = startFrom;
-    int high = sa.length;
+    int high = sa.length - 1;
     while(low <= high) {
       final int mid = (low + high) >>> 1;
-        final int corpusPos = sa[mid];
-        final Suffix suffix = getSuffix(corpusPos, isSource);
-        final int cmp = startsWith(suffix.sequence, query, suffix.start);
+      assert mid < sa.length;
+      final int corpusPos = sa[mid];
+      final Suffix suffix = getSuffix(corpusPos, isSource);
+      final int cmp = startsWith(suffix.sequence, query, suffix.start);
 
-        if (cmp < 0) {
+      if (cmp < 0) {
+        // Search left
+        high = mid - 1;
+
+      } else if (cmp > 0) {
+        // Search right
+        low = mid + 1;
+
+      } else {
+        // Check to see if this is the bound, then search
+        if (lowerBound) {
+          if (mid == 0) return 0;
+          Suffix leftSuffix = getSuffix(sa[mid-1], isSource);
+          int cmp2 = startsWith(leftSuffix.sequence, query, leftSuffix.start);
+          if (cmp2 > 0) return mid;
           // Search left
+          assert cmp2 == 0;
           high = mid - 1;
 
-        } else if (cmp > 0) {
-          // Search right
-          low = mid + 1;
-
         } else {
-          // Check to see if this is the bound, then search
-          if (lowerBound) {
-            if (mid == 0) return 0;
-            Suffix leftSuffix = getSuffix(sa[mid-1], isSource);
-            int cmp2 = startsWith(leftSuffix.sequence, query, leftSuffix.start);
-            if (cmp2 > 0) return mid;
-            // Search left
-            assert cmp2 == 0;
-            high = mid - 1;
-
-          } else {
-            if (mid == sa.length - 1) return mid;
-            Suffix rightSuffix = getSuffix(sa[mid+1], isSource);
-            int cmp2 = startsWith(rightSuffix.sequence, query, rightSuffix.start);
-            if (cmp2 < 0) return mid;
-            // Search right
-            assert cmp2 == 0;
-            low = mid + 1;
-          }
+          if (mid == sa.length - 1) return mid;
+          Suffix rightSuffix = getSuffix(sa[mid+1], isSource);
+          int cmp2 = startsWith(rightSuffix.sequence, query, rightSuffix.start);
+          if (cmp2 < 0) return mid;
+          // Search right
+          assert cmp2 == 0;
+          low = mid + 1;
         }
+      }
     }
     // Key not found
     return -1;
@@ -377,14 +378,14 @@ public class ParallelSuffixArray implements Serializable {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
     int lb = findBound(query, isSource, true, 0);
-    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), 0.0);
+    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), 0);
     int ub = findBound(query, isSource, false, lb);
     assert ub > 0;
     int numHits = ub - lb + 1;
-    List<QueryResult> hits;
+    List<QueryResult> samples;
     try (IntStream indices = numHits > maxHits ? Sampling.sampleWithoutReplacement(lb, ub, maxHits) :
       IntStream.rangeClosed(lb, ub)) {
-      hits = indices.mapToObj( i -> {
+      samples = indices.mapToObj( i -> {
         int corpusPosition = sa[i];
         int sentenceId = positionToSentence(corpusPosition, isSource);
         int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
@@ -393,8 +394,7 @@ public class ParallelSuffixArray implements Serializable {
         return new QueryResult(sample, start, sentenceId);
       }).collect(Collectors.toList());
     }
-    double sampleRate = maxHits / (double) numHits;
-    return new SuffixArraySample(hits, sampleRate);
+    return new SuffixArraySample(samples, numHits);
   }
 
   /**
@@ -461,10 +461,10 @@ public class ParallelSuffixArray implements Serializable {
    */
   public static class SuffixArraySample {
     public final List<QueryResult> samples;
-    public final double sampleRate;
-    public SuffixArraySample(List<QueryResult> q, double sampleRate) {
+    public final int numHits;
+    public SuffixArraySample(List<QueryResult> q, int numHits) {
       this.samples = q;
-      this.sampleRate = sampleRate;
+      this.numHits = numHits;
     }
   }
 }

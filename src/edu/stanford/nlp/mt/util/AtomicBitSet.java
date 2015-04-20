@@ -3,7 +3,10 @@ package edu.stanford.nlp.mt.util;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /**
- * A threadsafe bitset implementation. Inspired by:
+ * A threadsafe bit vector implementation. The bit vector must have a positive
+ * fixed length.
+ * 
+ * Inspired by:
  * 
  *   http://stackoverflow.com/questions/12424633/atomicbitset-implementation-for-java
  *   
@@ -16,13 +19,16 @@ public class AtomicBitSet {
   private static final int WORD_MASK = 0xffffffff;
 
   private final AtomicIntegerArray array;
-
+  private final int length;
+  
   /**
    * Constructor.
    * 
    * @param length
    */
   public AtomicBitSet(int length) {
+    if (length <= 0) throw new IllegalArgumentException("Length must be greater than 0");
+    this.length = length;
     int intLength = (length + 31) / 32;
     array = new AtomicIntegerArray(intLength);
   }
@@ -33,6 +39,7 @@ public class AtomicBitSet {
    * @param bitSet
    */
   public AtomicBitSet(AtomicBitSet bitSet) {
+    this.length = bitSet.length;
     this.array = new AtomicIntegerArray(bitSet.array.length());
     for (int i = 0, sz = bitSet.array.length(); i < sz; ++i) {
       this.array.set(i, bitSet.array.get(i));
@@ -45,8 +52,7 @@ public class AtomicBitSet {
    * @param n
    */
   public void set(int n) {
-    if (n < 0)
-      throw new IndexOutOfBoundsException("n < 0: " + n);
+    if (n < 0 || n >= length) throw new IndexOutOfBoundsException("n < 0 or n > max length " + n);
     int bit = 1 << n;
     int idx = n >>> 5;
     while (true) {
@@ -58,12 +64,13 @@ public class AtomicBitSet {
   }
 
   /**
+   * Set the bits in the range [i,j].
    * 
-   * @param i
-   * @param j
+   * @param i inclusive
+   * @param j inclusive
    */
   public void set(int i, int j) {
-    if (i < 0 || j < 0 || j-i < 0)
+    if (i < 0 || j < 0 || j >= length || j-i < 0)
       throw new IndexOutOfBoundsException(String.format("%d,%d < 0 ",i,j));
     for (int start = i; start <= j; ++start) set(start);
   }
@@ -75,8 +82,8 @@ public class AtomicBitSet {
    * @return
    */
   public boolean get(int n) {
-    if (n < 0)
-      throw new IndexOutOfBoundsException("n < 0: " + n);
+    if (n < 0 || n >= length)
+      throw new IndexOutOfBoundsException("n < 0 or n > max length" + n);
     int bit = 1 << n;
     int idx = n >>> 5;
     if (idx > array.length()) {
@@ -99,8 +106,8 @@ public class AtomicBitSet {
    * @return
    */
   public int nextSetBit(int fromIndex) {
-    if (fromIndex < 0)
-      throw new IndexOutOfBoundsException("fromIndex < 0: " + fromIndex);
+    if (fromIndex < 0 || fromIndex >= length)
+      throw new IndexOutOfBoundsException("fromIndex < 0 or fromIndex > max length " + fromIndex);
 
     int idx = fromIndex >>> 5;
     if (idx >= array.length())
