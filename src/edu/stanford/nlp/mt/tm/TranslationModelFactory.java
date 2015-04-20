@@ -17,7 +17,8 @@ public class TranslationModelFactory {
 
   public static final String QUERY_LIMIT_OPTION = "querylimit";
   public static final String FEATURE_PREFIX_OPTION = "featpref";
-  public static final String SETUP_DYNAMIC = "setupdyn";
+  public static final String DYNAMIC_INDEX = "dyn-index";
+  public static final String DYNAMIC_SAMPLE_SIZE = "dyn-sample";
   public static final String SEPARATOR = ":";
   
   public static final String DYNAMIC_TAG = "dyn:";
@@ -30,14 +31,15 @@ public class TranslationModelFactory {
    * @return
    * @throws IOException
    */
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   static public <FV> Pair<TranslationModel<IString,FV>,List<PhraseTable<IString>>> factory(
       String filename, String...options) throws IOException {
     
     // Parse options
     int queryLimit = -1;
     String featurePrefix = null;
-    boolean setupDynamic = false;
+    boolean setSystemIndex = false;
+    int dynamicSampleSize = DynamicTranslationModel.DEFAULT_SAMPLE_SIZE;
     for (String option : options) {
       String[] fields = option.split(SEPARATOR);
       assert fields.length == 2 : String.format("Invalid option: " + option);
@@ -47,8 +49,10 @@ public class TranslationModelFactory {
         queryLimit = Integer.parseInt(value);
       } else if (key.equals(FEATURE_PREFIX_OPTION)) {
         featurePrefix = value;
-      } else if (key.equals(SETUP_DYNAMIC)) {
-        setupDynamic = true;
+      } else if (key.equals(DYNAMIC_INDEX)) {
+        setSystemIndex = true;
+      } else if (key.equals(DYNAMIC_SAMPLE_SIZE)) {
+        dynamicSampleSize = Integer.valueOf(value);
       }
     }
     
@@ -63,12 +67,7 @@ public class TranslationModelFactory {
     } else if (filename.startsWith(DYNAMIC_TAG)) {
       String file = filename.substring(DYNAMIC_TAG.length());
       translationModel = DynamicTranslationModel.load(file);
-      if (setupDynamic) {
-        // TODO(spenceg) Is this the right place for Dynamic TM configuration?
-        System.err.print("Configuring dynamic translation model...");
-        ((DynamicTranslationModel) translationModel).createCaches();
-        System.err.println("done!");
-      }
+      ((DynamicTranslationModel) translationModel).initialize(setSystemIndex, dynamicSampleSize);
       
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename) :

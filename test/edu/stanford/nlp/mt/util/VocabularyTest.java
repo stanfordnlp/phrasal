@@ -101,8 +101,8 @@ public class VocabularyTest {
     public Boolean process(Boolean startAtZero) {
       // These must be called inside process(), which is called from
       // within a threadpool thread.
-      Vocabulary.setThreadLocalIndex(new Vocabulary());
-      Vocabulary index = Vocabulary.getThreadLocalIndex();
+      Vocabulary.setThreadLocalVocabulary(new Vocabulary());
+      Vocabulary index = Vocabulary.getThreadLocalVocabulary();
       boolean ret = true;
       if (startAtZero) {
         index.add(sentence[0]);

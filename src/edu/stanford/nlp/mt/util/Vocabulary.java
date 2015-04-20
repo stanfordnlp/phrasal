@@ -50,15 +50,6 @@ public class Vocabulary implements Serializable {
   }
 
   /**
-   * Set the system-wide index.
-   * 
-   * @param index
-   */
-  public static void setSystemIndex(Vocabulary index) {
-    systemIndex = index.index;
-  }
-  
-  /**
    * System index size.
    * 
    * @return
@@ -155,20 +146,20 @@ public class Vocabulary implements Serializable {
       new ThreadLocal<Vocabulary>();
 
   /**
-   * Set the thread-local index.
+   * Set the thread-local vocabulary.
    * 
    * @param index
    */
-  public static void setThreadLocalIndex(Vocabulary index) {
+  public static void setThreadLocalVocabulary(Vocabulary index) {
     threadLocalCache.set(index);
   }
 
   /**
-   * Get the thread-local index.
+   * Get the thread-local vocabulary.
    * 
    * @return
    */
-  public static Vocabulary getThreadLocalIndex() {
+  public static Vocabulary getThreadLocalVocabulary() {
     return threadLocalCache.get();
   }
 }
