@@ -73,14 +73,14 @@ public class SampledRule {
   /**
    * Convert the target span from translation model ids to system ids.
    * 
-   * @param tgt
+   * @param tmTokens
    * @param tm2Sys
    * @return
    */
-  private Sequence<IString> toSystemSequence(int[] tgt, int[] tm2Sys) {
-    IString[] tokens = new IString[tgt.length];
-    for (int i = 0; i < tgt.length; ++i) {
-      int systemId = tm2Sys[tgt[i]];
+  public static Sequence<IString> toSystemSequence(int[] tmTokens, int[] tm2Sys) {
+    IString[] tokens = new IString[tmTokens.length];
+    for (int i = 0; i < tmTokens.length; ++i) {
+      int systemId = tm2Sys[tmTokens[i]];
       tokens[i] = new IString(systemId);
     }
     return new SimpleSequence<IString>(true, tokens);
