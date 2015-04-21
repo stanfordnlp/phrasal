@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -24,6 +26,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
+import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -75,6 +78,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   // Caches
   protected transient LexCoocTable coocCache;
+  protected transient Map<Sequence<IString>,List<Rule<IString>>> ruleCache;
   
   // Vocabulary translation arrays
   protected transient int[] sys2TM;
@@ -145,7 +149,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Lex cache must be created before the rule cache.
     createLexCaches();
     this.sampleSize = sampleSize;
-    sa.createRuleCaches(sampleSize, RULE_CACHE_THRESHOLD);
+    
+    // Now that we have a lexical co-occurence table, build the rule cache.
+    Map<Span,SuffixArraySample> queryCache = sa.lookupFrequentNgrams(sampleSize, RULE_CACHE_THRESHOLD);
+    ruleCache = new ConcurrentHashMap<>(queryCache.size());
+    for (Entry<Span,SuffixArraySample> entry : queryCache.entrySet()) {
+      Span span = entry.getKey();
+      SuffixArraySample sample = entry.getValue();
+      Sequence<IString> sourceSpan = SampledRule.toSystemSequence(span.tokens, tm2Sys);
+      List<Rule<IString>> rules = samplesToRules(sample.samples, span.tokens.length, 1.0, sourceSpan);
+      ruleCache.put(sourceSpan, rules);
+    }
   }
 
   /**
@@ -237,7 +251,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private void populateSystemVocabulary() {
     final Vocabulary tmVocab = sa.getVocabulary();
     int tmSize = tmVocab.size();
-    tm2Sys = new int[tmSize];
     IntStream.range(0, tmSize).parallel().forEach(i -> {
       String wordType = tmVocab.get(i);
       Vocabulary.systemAdd(wordType);
@@ -302,21 +315,30 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           return null;
         }
         
+        // Generate rules for this span
+        final Sequence<IString> sourceSpan = source.subsequence(i, j);
         final CoverageSet sourceCoverage = new CoverageSet(source.size());
         sourceCoverage.set(i, j);
-        // Sample from the suffix array
-        final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
-        SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
-        if (s.samples.size() == 0) {
-          // No hits
-          newMisses.set(i, j-1);
-          return null;
+        if (ruleCache.containsKey(sourceSpan)) {
+          // Get from the rule cache
+          return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+              r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+              .collect(Collectors.toList());
+          
+        } else {
+          // Sample from the suffix array
+          final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
+          SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
+          if (s.samples.size() == 0) {
+            // This span is not present in the training data.
+            newMisses.set(i, j-1);
+            return null;
+          }
+          double sampleRate = s.samples.size() / (double) s.numHits;
+          return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+              r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+              .collect(Collectors.toList());
         }
-        double sampleRate = s.samples.size() / (double) s.numHits;
-        Sequence<IString> sourceSpan = source.subsequence(i, j);
-        return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-            r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
-            .collect(Collectors.toList());
       }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
       misses = newMisses;
       concreteRules.addAll(ruleList);
