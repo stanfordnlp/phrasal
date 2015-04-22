@@ -184,7 +184,6 @@ public class DynamicTMBuilder {
     double numSecs = ((double) elapsedTime) / 1e9;
     logger.info("Construction time: {}s", numSecs);
     
-    // TODO(spenceg) Replace with kryo
     try {
       logger.info("Serializing to: " + outputFileName);
       IOTools.serialize(outputFileName, tm);
