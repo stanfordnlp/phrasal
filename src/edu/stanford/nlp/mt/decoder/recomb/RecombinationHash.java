@@ -23,7 +23,6 @@ public class RecombinationHash<S extends State<S>> {
       DEBUG_OPT, "false"));
   public static boolean DETAILED_DEBUG = false;
   private static int expensiveComparisons = 0;
-  private static int comparisons = 0;
   private static int equalityExpensiveComparisions = 0;
 
   private final HashMap<FilterWrappedHypothesis, FilterWrappedHypothesis> recombinationHash;
@@ -44,14 +43,10 @@ public class RecombinationHash<S extends State<S>> {
   static private void displayStats() {
     System.err.println("RecombinationHash stats:");
     System.err.println("------------------------");
-    System.err.printf("Comparisons: %d\n", comparisons);
-    System.err.printf("Expensive Comparisions: %d (%f %%)\n",
-        expensiveComparisons, (expensiveComparisons * 100.0 / comparisons));
     System.err
         .printf(
-            "Filter Equality Expensive Comparisions: %d (%f %% total) (%f %% expensive)\n",
+            "Filter Equality Expensive Comparisions: %d (%f %% expensive)\n",
             equalityExpensiveComparisions,
-            (equalityExpensiveComparisions * 100.0 / comparisons),
             (equalityExpensiveComparisions * 100.0 / expensiveComparisons));
   }
 
@@ -185,40 +180,35 @@ public class RecombinationHash<S extends State<S>> {
     @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {
-
-      comparisons++;
-      if (!(o instanceof RecombinationHash.FilterWrappedHypothesis)) {
-        return false;
-      }
-
-      FilterWrappedHypothesis wrappedHyp = (FilterWrappedHypothesis) o;
-      if (wrappedHyp.hypothesis == this.hypothesis) {
+      if (this == o) {
         return true;
-      }
-
-      if (wrappedHyp.longHashCode() != this.longHashCode()) {
+      
+      } else if (!(o instanceof RecombinationHash.FilterWrappedHypothesis)) {
         return false;
-      }
 
-      boolean isCombinable = filter.combinable(this.hypothesis,
-          wrappedHyp.hypothesis);
-
-      if (DEBUG) {
-        expensiveComparisons++;
-        if (isCombinable) {
-          equalityExpensiveComparisions++;
+      } else {
+        FilterWrappedHypothesis wrappedHyp = (FilterWrappedHypothesis) o;
+        if (wrappedHyp.hypothesis == this.hypothesis) {
+          return true;
+        } else if (hashCode != wrappedHyp.hashCode) {
+          return false;
+        } else {
+          boolean isCombinable = filter.combinable(this.hypothesis,
+              wrappedHyp.hypothesis);
+          if (DEBUG) {
+            expensiveComparisons++;
+            if (isCombinable) {
+              equalityExpensiveComparisions++;
+            }
+          }
+          return isCombinable;
         }
       }
-      return isCombinable;
-    }
-
-    private long longHashCode() {
-      return hashCode;
     }
 
     @Override
     public int hashCode() {
-      return (int) (longHashCode() >> 32);
+      return (int) (hashCode >> 32);
     }
   }
 
