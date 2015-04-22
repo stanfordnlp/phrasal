@@ -104,9 +104,9 @@ public class ParallelSuffixArray implements Serializable {
       posToSentenceId[i++] = corpusPosition - 1;
     }
 
-    long treeTime = System.nanoTime() - startTime;
-    double treeSecs = (double) treeTime / 1e9;
-    logger.info("Done enumerating {} corpus: {}s", isSource ? "source" : "target", treeSecs);
+    long enumTime = System.nanoTime() - startTime;
+    double enumSecs = (double) enumTime / 1e9;
+    logger.info("Done enumerating {} corpus: {}s", isSource ? "source" : "target", enumSecs);
 
     // Create the suffix array (in parallel)
     startTime = System.nanoTime();
