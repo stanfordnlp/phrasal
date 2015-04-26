@@ -56,7 +56,11 @@ public final class IStrings {
    * of IString objects.
    */
   static public Sequence<IString> tokenize(String str) {
-    String[] strings = str.trim().split("\\s+");
+    String[] strings;
+    if(str.trim().isEmpty())
+      strings = new String[0];
+    else
+      strings = str.trim().split("\\s+");
     IString[] istrs = toIStringArray(strings);
     return new SimpleSequence<IString>(true, istrs);
   }
