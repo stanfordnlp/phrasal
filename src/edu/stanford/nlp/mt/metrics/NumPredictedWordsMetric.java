@@ -159,9 +159,12 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
     
     Sequence<TK> prefix = references.get(0);
     
-    if(!tran.startsWith(prefix))
+    if(prefix.size() != 0 && 
+        !tran.startsWith(prefix) && 
+        !prefix.startsWith(tran)) {
       throw new RuntimeException(
-          "NumPredictedWordsMetric: hypothesis in line " + id + " does not conform to prefix.");
+          "NumPredictedWordsMetric: hypothesis in line " + (id + 1) + " does not conform to prefix.");
+    }
     
     boolean foundRef = false;
     int maxPredictedWords = 0;
@@ -173,7 +176,9 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
       
       foundRef = true;
       int predictedWords = 0;
-      for(int j = prefix.size(); tran.get(j).equals(ref.get(j)); ++j) {
+      for(int j = prefix.size(); 
+          j < tran.size() && j < ref.size() && tran.get(j).equals(ref.get(j)); 
+          ++j) {
         predictedWords++;
       }
       
@@ -182,7 +187,7 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
     
     if(!foundRef)
       throw new RuntimeException(
-          "NumPredictedWordsMetric: No reference found with correct prefix in line " + id);
+          "NumPredictedWordsMetric: No reference found with correct prefix in line " + (id + 1));
     
     return maxPredictedWords;
   }
