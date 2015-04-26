@@ -672,6 +672,7 @@ public final class OnlineTuner {
     
     try {
       String[] filenames = refStr.split(",");
+      System.err.println("reading references: " + refStr);
       references = MetricUtils.readReferences(filenames);
       assert references.get(0).size() == filenames.length;
       numReferences = filenames.length;
