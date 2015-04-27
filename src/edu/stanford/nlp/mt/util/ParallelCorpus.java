@@ -61,8 +61,8 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    */
   public AlignedSentence add(String source, String target, String align) {
     int[] f = stringToArray(source);
-    numSourcePos += f.length;
     int[] e = stringToArray(target);
+    numSourcePos += f.length;
     numTargetPos += e.length;
     Alignment a = extractAlignment(align, f.length, e.length);
     AlignedSentence s = new AlignedSentence(f, e, a.f2e, a.e2f);

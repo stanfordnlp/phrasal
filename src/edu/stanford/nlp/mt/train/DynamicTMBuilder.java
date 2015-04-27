@@ -184,6 +184,10 @@ public class DynamicTMBuilder {
     double numSecs = ((double) elapsedTime) / 1e9;
     logger.info("Construction time: {}s", numSecs);
     
+    // WSGDEBUG
+//    long numBytes = MemoryUtil.deepMemoryUsageOf(tm);
+//    System.out.println("#bytes: " + String.valueOf(numBytes));
+    
     try {
       logger.info("Serializing to: " + outputFileName);
       IOTools.serialize(outputFileName, tm);

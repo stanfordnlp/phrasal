@@ -37,10 +37,27 @@ public class ParallelSuffixArray implements Serializable {
   protected int[] srcPosToSentenceId;
   protected int[] tgtPosToSentenceId;
   
+  // Sources of slowdown
+  // String comparisons in startsWith (use LCP arrays)
+  // No initialization of upper and lower bounds
+  // The unnecessary sort in the sample procedure. Stratify instead.
+  
+  // TODO(caches)
+  // Left and right source LCP arrays (He et al. 2013 p.326) using the algorithm of Kasai (2001)
+  // Left and right target LCP arrays
+  // Unigram caches -- source and target with associated functions
+  // Source postings lists (target postings lists don't seem to help)
+  
+  // TODO(spenceg) Add option to pre-compute and serialize these caches (for the foreground arrays)
+  // Otherwise compute them dynamically
+  
   /**
    * No-arg constructor for deserialization.
    */
-  public ParallelSuffixArray() {}
+  public ParallelSuffixArray() {
+    
+    // TODO(spenceg) Build the caches here if they weren't serialized
+  }
   
   /**
    * Constructor.
@@ -83,7 +100,8 @@ public class ParallelSuffixArray implements Serializable {
   public Vocabulary getVocabulary() { return this.corpus.index; }
 
   /**
-   * Create the underlying suffix array from the parallel corpus.
+   * Create the underlying suffix array from the parallel corpus in O(nlogn) time (naive algorithm...
+   * but easy to parallelize).
    * 
    * @param isSource
    */
@@ -180,11 +198,11 @@ public class ParallelSuffixArray implements Serializable {
    * Find all source spans up to dimension == 3.
    * 
    * @param sampleSize
-   * @param ruleCacheThreshold
+   * @param minOccurrences
    */
-  public Map<Span,SuffixArraySample> lookupFrequentNgrams(int sampleSize, int ruleCacheThreshold) {
-    if (sampleSize >= ruleCacheThreshold) throw new IllegalArgumentException();
-    logger.info("Building query cache with threshold {}", ruleCacheThreshold);
+  public Map<Span,SuffixArraySample> lookupFrequentSourceNgrams(int sampleSize, int minOccurrences) {
+    if (sampleSize >= minOccurrences) throw new IllegalArgumentException();
+    logger.info("Building query cache with threshold {}", minOccurrences);
     Map<Span,SuffixArraySample> queryCache = new HashMap<>(1000);
     int nCnt = 1, nnCnt = 1, nnnCnt = 1;
     Span nSpan = null, nnSpan = null, nnnSpan = null;
@@ -193,15 +211,15 @@ public class ParallelSuffixArray implements Serializable {
       Span nSpanThis = Span.getSpan(suffix.tokens, suffix.start, 1, i);
       Span nnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 2, i);
       Span nnnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 3, i);
-      nCnt = checkSpan(nSpan, nSpanThis, nCnt, ruleCacheThreshold, sampleSize, queryCache);
+      nCnt = checkSpan(nSpan, nSpanThis, nCnt, minOccurrences, sampleSize, queryCache);
       if (nCnt == 1) {
         nSpan = nSpanThis;
       }
-      nnCnt = checkSpan(nnSpan, nnSpanThis, nnCnt, ruleCacheThreshold, sampleSize, queryCache);
+      nnCnt = checkSpan(nnSpan, nnSpanThis, nnCnt, minOccurrences, sampleSize, queryCache);
       if (nnCnt == 1) {
         nnSpan = nnSpanThis;
       }
-      nnnCnt = checkSpan(nnnSpan, nnnSpanThis, nnnCnt, ruleCacheThreshold, sampleSize, queryCache);
+      nnnCnt = checkSpan(nnnSpan, nnnSpanThis, nnnCnt, minOccurrences, sampleSize, queryCache);
       if (nnnCnt == 1) {
         nnnSpan = nnnSpanThis;
       }
@@ -308,6 +326,8 @@ public class ParallelSuffixArray implements Serializable {
 
   /**
    * Determine if a suffix starts with the query sequence.
+   * 
+   * TODO(spenceg) This should be an LCP comparison?
    * 
    * @param suffix
    * @param query
@@ -503,6 +523,11 @@ public class ParallelSuffixArray implements Serializable {
       }
 
     } else {
+      // Deterministic selection of the top k rules
+      
+      // Lopez stratifies the sample throughout the bitext
+      // TODO(spenceg) Don't sort here. Stratify the sample
+      // through the positions in the SA.
       int[] positions = Arrays.copyOfRange(sa, lb, ub+1);
       try (IntStream indices = IntStream.of(positions).sorted().limit(maxHits)) {
         List<QueryResult> samples = indices.mapToObj(corpusPosition -> {
