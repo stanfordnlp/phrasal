@@ -118,10 +118,11 @@ public class SampledRule {
     int[][] e2f = new int[eDim][];
     for (int i = tgtStartInclusive; i < tgtEndExclusive; ++i) {
       int localIdx = i - tgtStartInclusive;
-      int srcAlignDim = saEntry.sentence.e2f[i].length;
+      int[] e2fI = saEntry.sentence.e2f(i);
+      int srcAlignDim = e2fI.length;
       e2f[localIdx] = new int[srcAlignDim];
       if (srcAlignDim > 0) {
-        System.arraycopy(saEntry.sentence.e2f[i], 0, e2f[localIdx], 0, srcAlignDim);
+        System.arraycopy(e2fI, 0, e2f[localIdx], 0, srcAlignDim);
         for (int j = 0; j < srcAlignDim; ++j) {
           e2f[localIdx][j] -= srcStartInclusive;
         }
@@ -140,10 +141,11 @@ public class SampledRule {
     int[][] f2e = new int[fDim][];
     for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
       int localIdx = i - srcStartInclusive;
-      int tgtAlignDim = saEntry.sentence.f2e[i].length;
+      int[] f2eI = saEntry.sentence.f2e(i);
+      int tgtAlignDim = f2eI.length;
       f2e[localIdx] = new int[tgtAlignDim];
       if (tgtAlignDim > 0) {
-        System.arraycopy(saEntry.sentence.f2e[i], 0, f2e[localIdx], 0, f2e[localIdx].length);
+        System.arraycopy(f2eI, 0, f2e[localIdx], 0, f2e[localIdx].length);
         for (int j = 0; j < f2e[localIdx].length; ++j) {
           f2e[localIdx][j] -= tgtStartInclusive;
         }

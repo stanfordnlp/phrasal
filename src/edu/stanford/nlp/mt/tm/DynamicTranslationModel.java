@@ -87,7 +87,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * No-arg constructor for deserialization.
    */
-  public DynamicTranslationModel() {}
+  public DynamicTranslationModel() {
+    
+    // TODO(spenceg) Move cache creation here.
+  }
   
   /**
    * Constructor.
@@ -151,7 +154,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     this.sampleSize = sampleSize;
     
     // Now that we have a lexical co-occurence table, build the rule cache.
-    Map<Span,SuffixArraySample> queryCache = sa.lookupFrequentNgrams(sampleSize, RULE_CACHE_THRESHOLD);
+    Map<Span,SuffixArraySample> queryCache = sa.lookupFrequentSourceNgrams(sampleSize, RULE_CACHE_THRESHOLD);
     ruleCache = new ConcurrentHashMap<>(queryCache.size());
     for (Entry<Span,SuffixArraySample> entry : queryCache.entrySet()) {
       Span span = entry.getKey();
@@ -178,7 +181,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           int srcIndex = q.wordPosition;
           int srcId = q.sentence.source[srcIndex];
           assert srcId == i;
-          int[] tgtAlign = q.sentence.f2e[srcIndex];
+          int[] tgtAlign = q.sentence.f2e(srcIndex);
           if (tgtAlign.length > 0) {
             coocCache.incrementSrcMarginal(srcId, tgtAlign.length);
             for (int tgtIndex : tgtAlign) {
@@ -199,7 +202,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           int tgtIndex = q.wordPosition;
           int tgtId = q.sentence.target[tgtIndex];
           assert tgtId == i;
-          int[] srcAlign = q.sentence.e2f[tgtIndex];
+          int[] srcAlign = q.sentence.e2f(tgtIndex);
           if (srcAlign.length > 0) {
             coocCache.incrementTgtMarginal(tgtId, srcAlign.length);
             for (int srcIndex : srcAlign) {
@@ -291,10 +294,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     final int[] sourceInts = toTMArray(source);
+    
+    // Zhang and Vogel (2005) trick -- prune higher-order queries using lower-order misses
     AtomicBitSet misses = new AtomicBitSet(source.size());
-    // Mark OOVs immediately as misses
+    // Mark OOV and unigram misses
     for (int i = 0; i < sourceInts.length; ++i) {
       if (sourceInts[i] < 0) misses.set(i);
+      // Lookup unigrams in constant time here
     }
     final int longestSourcePhrase = Math.min(maxSourcePhrase, source.size());
     // Iterate over source span lengths
@@ -303,7 +309,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       final AtomicBitSet currentMisses = misses;
       final int order = len;
 
+      // TODO(spenceg) Move range check here and prune bad ranges
+      // Also, save bounds of each prefix for initialization
+      
       // Parallel extraction
+      // TODO(spenceg) Lots of wasted threads here.
       List<ConcreteRule<IString,FV>> ruleList = IntStream.rangeClosed(0, source.size() - len)
           .parallel().mapToObj(i -> {
         final int j = i + order;
@@ -407,6 +417,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[0] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
         scores[1] = (float) Math.log(rule.lex_f_e);
         // U. Germann's approximation
+        // TODO(spenceg) Should be histogram[r] / sampleRate / cnt ?
         int cnt = sa.count(rule.tgt, false);
         double num = cnt - histogram[r] * sampleRate;
         scores[2] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
@@ -430,8 +441,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param rule
    */
   private void scoreLex(SampledRule rule) {
-    final int[][] f2e = rule.saEntry.sentence.f2e;
-    final int[][] e2f = rule.saEntry.sentence.e2f;
     final int[] source = rule.saEntry.sentence.source;
     final int[] target = rule.saEntry.sentence.target;
     
@@ -439,7 +448,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     double lex_e_f = 1.0;
     for (int i = rule.srcStartInclusive; i < rule.srcEndExclusive; ++i) {
       final int srcId = source[i];
-      int[] tgtAlign = f2e[i];
+      int[] tgtAlign = rule.saEntry.sentence.f2e(i);
       double efSum = 0.0;
       if (tgtAlign.length > 0) {
         for (int j : tgtAlign) {
@@ -465,7 +474,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     double lex_f_e = 1.0;
     for (int i = rule.tgtStartInclusive; i < rule.tgtEndExclusive; ++i) {
       final int tgtId = target[i];
-      int[] srcAlign = e2f[i];
+      int[] srcAlign = rule.saEntry.sentence.e2f(i);
       double feSum = 0.0;
       if (srcAlign.length > 0) {
         for (int j : srcAlign) {
@@ -513,7 +522,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final int endSource = startSource + length;
     for(int sourcePos = startSource; sourcePos < endSource; sourcePos++) {
       assert sourcePos < s.sentence.source.length : String.format("[%d,%d) %d %d ", startSource, endSource, sourcePos, s.sentence.source.length);
-      int[] alignedList = s.sentence.f2e[sourcePos];
+      int[] alignedList = s.sentence.f2e(sourcePos);
       if (alignedList.length == 0) continue;
       for(int ind = 0; ind < alignedList.length; ind++) {
         int targetPos = alignedList[ind];
