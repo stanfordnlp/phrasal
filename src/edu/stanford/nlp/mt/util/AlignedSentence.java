@@ -54,7 +54,7 @@ public class AlignedSentence implements Serializable {
       int numLinks = Math.min(MAX_FERTILITY, algn[i].length);
       int al = 0;
       for (int j = 0; j < numLinks; ++j) {
-        int pos = algn[i][j] << (j*8);
+        int pos = (algn[i][j]+1) << (j*8);
         al |= pos;
       }
       flatArr[i] = al;
@@ -80,7 +80,7 @@ public class AlignedSentence implements Serializable {
       int pos = i * 8;
       int mask = 0xff << pos;
       int lnk = (al & mask) >> pos;
-      links[i] = lnk;
+      links[i] = lnk - 1;
     }
     return links;
   }
