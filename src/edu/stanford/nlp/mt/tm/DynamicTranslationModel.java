@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ConcurrentHashMultiset;
 
@@ -300,56 +301,78 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final int longestSourcePhrase = Math.min(maxSourcePhrase, source.size());
     // Iterate over source span lengths
     for (int len = 1; len <= longestSourcePhrase; len++) {
-      final AtomicBitSet newMisses = new AtomicBitSet(source.size());
-      final AtomicBitSet currentMisses = misses;
-      final int order = len;
-
-      // TODO(spenceg) Move range check here and prune bad ranges
-      // Also, save bounds of each prefix for initialization
-      
-      // Parallel extraction
-      // TODO(spenceg) Lots of wasted threads here.
-      List<ConcreteRule<IString,FV>> ruleList = IntStream.rangeClosed(0, source.size() - order)
-          .parallel().mapToObj(i -> {
-        final int j = i + order;
-
-        // Check for lower-order misses
-        int nextMiss = currentMisses.nextSetBit(i);
+      List<Range> ranges = new ArrayList<>();
+      for (int i = 0, sz = source.size() - len; i < sz; ++i) {
+        int j = i + len;
+        int nextMiss = misses.nextSetBit(i);
         if (nextMiss >= 0 && nextMiss < j) {
-          newMisses.set(i, j-1);
-          return null;
-        }
-        
-        // Generate rules for this span
-        final Sequence<IString> sourceSpan = source.subsequence(i, j);
-        final CoverageSet sourceCoverage = new CoverageSet(source.size());
-        sourceCoverage.set(i, j);
-        if (ruleCache.containsKey(sourceSpan)) {
-          // Get from the rule cache
-          return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-              r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
-              .collect(Collectors.toList());
-          
+          // Every prefix of [i,nextMiss] is also a miss
+          misses.set(i, nextMiss);
         } else {
-          // Sample from the suffix array
-          final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
-          SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
-          if (s.samples.size() == 0) {
-            // This span is not present in the training data.
-            newMisses.set(i, j-1);
-            return null;
-          }
-          double sampleRate = s.samples.size() / (double) s.numHits;
-          return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-              r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
-              .collect(Collectors.toList());
+          ranges.add(new Range(i, j));
         }
-      }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
-      misses = newMisses;
-      concreteRules.addAll(ruleList);
+      }
+      
+//      System.out.printf("%d\t%d %d%n", sourceInputId, len, ranges.size());
+      
+      if (ranges.size() == 0) {
+        // There can't be any higher order matches
+        break;
+      }
+      
+      // Only use a parallel stream if the overhead is justified
+      try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
+          : ranges.stream()) {
+        List<ConcreteRule<IString,FV>> ruleList = rangeStream.map(range -> {
+          int i = range.i;
+          int j = range.j;
+          int order = j - i;
+
+          // Generate rules for this span
+          final Sequence<IString> sourceSpan = source.subsequence(i, j);
+          final CoverageSet sourceCoverage = new CoverageSet(source.size());
+          sourceCoverage.set(i, j);
+          if (ruleCache.containsKey(sourceSpan)) {
+            // Get from the rule cache
+            return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+                r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+                .collect(Collectors.toList());
+
+          } else {
+            // Sample from the suffix array
+            final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
+            for (int k = 0; k < sourcePhrase.length; ++k) {
+              if (sourcePhrase[k] < 0) {
+                System.err.println();
+              }
+                
+            }
+            SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
+            if (s.samples.size() == 0) {
+              // This span is not present in the training data.
+              misses.set(i, j-1);
+              return null;
+            }
+            double sampleRate = s.samples.size() / (double) s.numHits;
+            return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+                r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+                .collect(Collectors.toList());
+          }
+        }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
+        concreteRules.addAll(ruleList);
+      }
     }
 
     return concreteRules;
+  }
+  
+  private static class Range {
+    public final int i;
+    public final int j;
+    public Range(int i, int j) {
+      this.i = i;
+      this.j = j;
+    }
   }
 
   /**
@@ -639,13 +662,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       System.out.printf("#source segments: %d%n", sourceFile.size());
       
       startTime = System.nanoTime();
+      int sourceId = 0;
       for (Sequence<IString> source : sourceFile) {
-        for (int len = 1; len <= DEFAULT_MAX_PHRASE_LEN; ++len) {
-          for (int i = 0; i < source.size() - len; ++i) {
-            final int j = i+len;
-            tm.getRules(source.subsequence(i, j), null, null, 0, null);
-          }
-        }
+        tm.getRules(source, null, null, sourceId++, null);
       }
       elapsedTime = System.nanoTime() - startTime;
       numSecs = (double) elapsedTime / 1e9;

@@ -54,10 +54,7 @@ public class ParallelSuffixArray implements Serializable {
   /**
    * No-arg constructor for deserialization.
    */
-  public ParallelSuffixArray() {
-    
-    // TODO(spenceg) Build the caches here if they weren't serialized
-  }
+  public ParallelSuffixArray() {}
   
   /**
    * Constructor.
