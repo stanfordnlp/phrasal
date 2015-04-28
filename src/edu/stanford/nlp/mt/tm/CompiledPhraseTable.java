@@ -304,12 +304,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     // Query
     startTime = System.nanoTime();
     for (Sequence<IString> source : sourceFile) {
-      for (int len = 1; len <= tm.maxLengthSource(); ++len) {
-        for (int i = 0; i < source.size() - len; ++i) {
-          final int j = i+len;
-          tm.getRuleGrid(source.subsequence(i, j), null, null, 0, null);
-        }
-      }
+      tm.getRuleGrid(source, null, null, 0, null);
     }
     elapsedTime = System.nanoTime() - startTime;
     numSecs = (double) elapsedTime / 1e9;
