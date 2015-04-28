@@ -22,16 +22,23 @@ public class AlignedSentenceTest {
   public void testAlignment() {
     Alignment al = ParallelCorpus.extractAlignment(alignment, source.length, target.length);
     AlignedSentence sentence = new AlignedSentence(source, target, al.f2e, al.e2f);
+    
     int[] f0Links = sentence.f2e(0);
     assertEquals(2, f0Links.length);
     assertEquals(1, f0Links[0]);
     assertEquals(2, f0Links[1]);
+    
+    int[] f1Links = sentence.f2e(1);
+    assertEquals(1, f1Links.length);
+    assertEquals(0, f1Links[0]);
+    
     int[] f2Links = sentence.f2e(2);
     assertEquals(4, f2Links.length);
     assertEquals(3, f2Links[0]);
     assertEquals(4, f2Links[1]);
     assertEquals(5, f2Links[2]);
     assertEquals(6, f2Links[3]);
+    
     int[] f3Links = sentence.f2e(3);
     assertEquals(0, f3Links.length);
   }

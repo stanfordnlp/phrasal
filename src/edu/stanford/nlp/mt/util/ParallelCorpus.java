@@ -86,14 +86,17 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
         throw new ArrayIndexOutOfBoundsException(String.format("Source length: %d  source index: %d", sourceLen, srcPos));
       }
       if (f2e[srcPos] == null) f2e[srcPos] = new HashSet<>();
+      int numLinks = 0;
       for (String tgtStr : point.substring(splitIdx+1, point.length()).split(",")) {
         int tgtPos = Integer.parseInt(tgtStr);
         if (tgtPos < 0 || tgtPos >= targetLen) {
           throw new ArrayIndexOutOfBoundsException(String.format("Target length: %d  target index: %d", targetLen, tgtPos));          
         }
+        if (numLinks >= AlignedSentence.MAX_FERTILITY) break;
         f2e[srcPos].add(tgtPos);
         if (e2f[tgtPos] == null) e2f[tgtPos] = new HashSet<>();
         e2f[tgtPos].add(srcPos);
+        ++numLinks;
       }
     }
     return new Alignment(f2e, e2f);
@@ -110,10 +113,10 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     public int[][] f2e;
     public int[][] e2f;
     public Alignment(Set[] f2e, Set[] e2f) {
-      this.f2e = flatten(f2e);
-      this.e2f = flatten(e2f);
+      this.f2e = toArray(f2e);
+      this.e2f = toArray(e2f);
     }
-    private static int[][] flatten(Set[] f2e) {
+    private static int[][] toArray(Set[] f2e) {
       int[][] f2eArr = new int[f2e.length][];
       for (int i = 0; i < f2e.length; ++i) {
         f2eArr[i] = f2e[i] == null ? new int[0] :
