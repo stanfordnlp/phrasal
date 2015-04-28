@@ -85,12 +85,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient int[] tm2Sys;
   
   /**
-   * No-arg constructor for deserialization.
+   * No-arg constructor for deserialization. Creates caches
    */
-  public DynamicTranslationModel() {
-    
-    // TODO(spenceg) Move cache creation here.
-  }
+  public DynamicTranslationModel() {}
   
   /**
    * Constructor.
@@ -116,12 +113,29 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @throws IOException
    */
   @SuppressWarnings("unchecked")
-  public static <FV> DynamicTranslationModel<FV> load(String filename) throws IOException {
+  public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary) throws IOException {
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
+    
+    if (initializeSystemVocabulary) tm.populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    tm.createIdArrays();
+    
+    // Lex cache must be created before the rule cache.
+    tm.createLexCaches();
+    // Now that we have a lexical co-occurence table, build the rule cache.
+    Map<Span,SuffixArraySample> queryCache = tm.sa.lookupFrequentSourceNgrams(tm.sampleSize, RULE_CACHE_THRESHOLD);
+    tm.ruleCache = new ConcurrentHashMap<>(queryCache.size());
+    for (Entry<Span,SuffixArraySample> entry : queryCache.entrySet()) {
+      Span span = entry.getKey();
+      SuffixArraySample sample = entry.getValue();
+      Sequence<IString> sourceSpan = SampledRule.toSystemSequence(span.tokens, tm.tm2Sys);
+      List<Rule<IString>> rules = tm.samplesToRules(sample.samples, span.tokens.length, 1.0, sourceSpan);
+      tm.ruleCache.put(sourceSpan, rules);
+    }
     return tm;
   }
   
@@ -140,29 +154,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     IntStream.range(0, tmSize).parallel().forEach(i -> {
       tm2Sys[i] = Vocabulary.systemIndexOf(tmVocab.get(i));
     });
-  }
-
-  /**
-   * Create in-memory caches for frequent rules and phrases.
-   */
-  public void initialize(boolean initializeSystemVocabulary, int sampleSize) {
-    if (initializeSystemVocabulary) populateSystemVocabulary();
-    // Id arrays must be created after any modification of the system vocabulary.
-    createIdArrays();
-    // Lex cache must be created before the rule cache.
-    createLexCaches();
-    this.sampleSize = sampleSize;
-    
-    // Now that we have a lexical co-occurence table, build the rule cache.
-    Map<Span,SuffixArraySample> queryCache = sa.lookupFrequentSourceNgrams(sampleSize, RULE_CACHE_THRESHOLD);
-    ruleCache = new ConcurrentHashMap<>(queryCache.size());
-    for (Entry<Span,SuffixArraySample> entry : queryCache.entrySet()) {
-      Span span = entry.getKey();
-      SuffixArraySample sample = entry.getValue();
-      Sequence<IString> sourceSpan = SampledRule.toSystemSequence(span.tokens, tm2Sys);
-      List<Rule<IString>> rules = samplesToRules(sample.samples, span.tokens.length, 1.0, sourceSpan);
-      ruleCache.put(sourceSpan, rules);
-    }
   }
 
   /**
@@ -248,6 +239,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     maxTargetPhrase = dim;
   }
   
+  public void setSampleSize(int sz) {
+    this.sampleSize = sz;
+  }
+  
   /**
    * Inject the TM vocabulary into the system vocabulary.
    */
@@ -314,7 +309,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       
       // Parallel extraction
       // TODO(spenceg) Lots of wasted threads here.
-      List<ConcreteRule<IString,FV>> ruleList = IntStream.rangeClosed(0, source.size() - len)
+      List<ConcreteRule<IString,FV>> ruleList = IntStream.rangeClosed(0, source.size() - order)
           .parallel().mapToObj(i -> {
         final int j = i + order;
 
@@ -629,8 +624,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     try {
       long startTime = System.nanoTime();
-      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName);
-      tm.initialize(true, DEFAULT_SAMPLE_SIZE);
+      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true);
       tm.setFeatureTemplate(FeatureTemplate.DENSE_EXT);
       
       long elapsedTime = System.nanoTime() - startTime;

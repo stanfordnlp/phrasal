@@ -510,35 +510,33 @@ public class ParallelSuffixArray implements Serializable {
     assert ub > 0;
     int numHits = ub - lb + 1;
     if(numHits < maxHits) {
-      try(IntStream indices = IntStream.rangeClosed(lb, ub)) {
-        List<QueryResult> samples = indices.mapToObj(i -> {
-          int corpusPosition = sa[i];
-          int sentenceId = positionToSentence(corpusPosition, isSource);
-          int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-          int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-          AlignedSentence sample = this.corpus.get(sentenceId);
-          return new QueryResult(sample, start, sentenceId);
-        }).collect(Collectors.toList());
-        return new SuffixArraySample(samples, numHits);
+      List<QueryResult> samples = new ArrayList<>(numHits);
+      for (int i = lb; i <= ub; ++i) {
+        int corpusPosition = sa[i];
+        int sentenceId = positionToSentence(corpusPosition, isSource);
+        int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
+        int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
+        AlignedSentence sample = this.corpus.get(sentenceId);
+        samples.add(new QueryResult(sample, start, sentenceId));
       }
+      return new SuffixArraySample(samples, numHits);
 
     } else {
-      // Deterministic selection of the top k rules
-      
-      // Lopez stratifies the sample throughout the bitext
-      // TODO(spenceg) Don't sort here. Stratify the sample
-      // through the positions in the SA.
-      int[] positions = Arrays.copyOfRange(sa, lb, ub+1);
-      try (IntStream indices = IntStream.of(positions).sorted().limit(maxHits)) {
-        List<QueryResult> samples = indices.mapToObj(corpusPosition -> {
-          int sentenceId = positionToSentence(corpusPosition, isSource);
-          int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-          int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-          AlignedSentence sample = this.corpus.get(sentenceId);
-          return new QueryResult(sample, start, sentenceId);
-        }).collect(Collectors.toList());
-        return new SuffixArraySample(samples, numHits);
+      // Stratified sample through the list of positions
+      int stepSize = numHits / maxHits;
+      List<QueryResult> samples = new ArrayList<>(maxHits);
+      for (int i = 0; i < maxHits; ++i) {
+        int saIdx = lb + (i*stepSize);
+        int corpusPosition = sa[saIdx];
+        int sentenceId = positionToSentence(corpusPosition, isSource);
+        int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
+        int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
+        AlignedSentence sample = this.corpus.get(sentenceId);
+        assert query[0] == sample.source[start];
+        assert start + query.length <= sample.sourceLength();
+        samples.add(new QueryResult(sample, start, sentenceId));
       }
+      return new SuffixArraySample(samples, numHits);
     }
   }
 

@@ -67,8 +67,8 @@ public class TranslationModelFactory {
     
     } else if (filename.startsWith(DYNAMIC_TAG)) {
       String file = filename.substring(DYNAMIC_TAG.length());
-      translationModel = DynamicTranslationModel.load(file);
-      ((DynamicTranslationModel) translationModel).initialize(setSystemIndex, dynamicSampleSize);
+      translationModel = DynamicTranslationModel.load(file, setSystemIndex);
+      ((DynamicTranslationModel) translationModel).setSampleSize(dynamicSampleSize);
       ((DynamicTranslationModel) translationModel).setFeatureTemplate(FeatureTemplate.DENSE_EXT);
       
     } else {
