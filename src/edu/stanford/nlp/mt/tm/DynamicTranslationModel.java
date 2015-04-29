@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.collect.ConcurrentHashMultiset;
 
 import edu.stanford.nlp.math.ArrayMath;
@@ -69,6 +72,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   protected ParallelSuffixArray sa;
   
+  private static transient final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
+  
   // Parameters
   protected transient int maxSourcePhrase;
   protected transient int maxTargetPhrase;
@@ -114,12 +119,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @throws IOException
    */
   @SuppressWarnings("unchecked")
-  public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary) throws IOException {
+  public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary,
+      FeatureTemplate template) throws IOException {
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
-    tm.setFeatureTemplate(FeatureTemplate.DENSE);
+    tm.setFeatureTemplate(template);
     
     if (initializeSystemVocabulary) tm.populateSystemVocabulary();
     // Id arrays must be created after any modification of the system vocabulary.
@@ -215,7 +221,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param t
    */
-  public void setFeatureTemplate(FeatureTemplate t) {
+  private void setFeatureTemplate(FeatureTemplate t) {
     this.featureTemplate = t;
     if (t == FeatureTemplate.DENSE) {
       featureNames = (String[]) IntStream.range(0, 4).mapToObj(i -> {
@@ -292,28 +298,26 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final int[] sourceInts = toTMArray(source);
     
     // Zhang and Vogel (2005) trick -- prune higher-order queries using lower-order misses
-    AtomicBitSet misses = new AtomicBitSet(source.size());
-    // Mark OOV and unigram misses
-    for (int i = 0; i < sourceInts.length; ++i) {
-      if (sourceInts[i] < 0) misses.set(i);
-      // Lookup unigrams in constant time here
-    }
-    final int longestSourcePhrase = Math.min(maxSourcePhrase, source.size());
+    boolean[][] misses = new boolean[source.size()][source.size()+1];
+    
     // Iterate over source span lengths
-    for (int len = 1; len <= longestSourcePhrase; len++) {
+    for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
+        len <= longestSourcePhrase; len++) {
+      // Filter higher-order ranges based on lower-order misses
       List<Range> ranges = new ArrayList<>();
-      for (int i = 0, sz = source.size() - len; i < sz; ++i) {
-        int j = i + len;
-        int nextMiss = misses.nextSetBit(i);
-        if (nextMiss >= 0 && nextMiss < j) {
-          // Every prefix of [i,nextMiss] is also a miss
-          misses.set(i, nextMiss);
+      for (int i = 0, sz = source.size() - len; i <= sz; ++i) {
+        final int j = i + len;
+        // Check lower-order n-grams for misses
+        boolean miss = (len == 1 && sourceInts[i] < 0);
+        for(int a = i, b = i + len - 1; len > 1 && b <= j && ! miss; ++a, ++b) {
+          miss = misses[a][b];
+        }
+        if (miss) {
+          misses[i][j] = true;
         } else {
           ranges.add(new Range(i, j));
         }
       }
-      
-//      System.out.printf("%d\t%d %d%n", sourceInputId, len, ranges.size());
       
       if (ranges.size() == 0) {
         // There can't be any higher order matches
@@ -341,16 +345,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           } else {
             // Sample from the suffix array
             final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
-            for (int k = 0; k < sourcePhrase.length; ++k) {
-              if (sourcePhrase[k] < 0) {
-                System.err.println();
-              }
-                
-            }
             SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
             if (s.samples.size() == 0) {
               // This span is not present in the training data.
-              misses.set(i, j-1);
+              misses[i][j] = true;
               return null;
             }
             double sampleRate = s.samples.size() / (double) s.numHits;
@@ -359,6 +357,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
                 .collect(Collectors.toList());
           }
         }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
+
+//        System.out.printf("%d\t%d %d%n", sourceInputId, len, ruleList.size());
+        
         concreteRules.addAll(ruleList);
       }
     }
@@ -366,6 +367,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return concreteRules;
   }
   
+  // TODO(spenceg) SuffixArraySample returns the prefix bounds. Add those to the Range
+  // to speed up the query.
   private static class Range {
     public final int i;
     public final int j;
@@ -386,7 +389,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     int[] tmIds = new int[sourceSize];
     for (int i = 0; i < sourceSize; ++i) {
       IString word = source.get(i);
-      // TODO(spenceg) The array should be lengthened for OOVs
+      // TODO(spenceg) The array must be grown if material is added to the phrase table
       tmIds[i] = word.id < this.sys2TM.length ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
     }
     return tmIds;
@@ -647,8 +650,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     try {
       long startTime = System.nanoTime();
-      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true);
-      tm.setFeatureTemplate(FeatureTemplate.DENSE_EXT);
+      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, 
+          FeatureTemplate.DENSE_EXT);
       
       long elapsedTime = System.nanoTime() - startTime;
       double numSecs = (double) elapsedTime / 1e9;
