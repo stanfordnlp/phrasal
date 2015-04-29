@@ -244,7 +244,7 @@ public class ParallelSuffixArray implements Serializable {
           AlignedSentence sample = this.corpus.get(sentenceId);
           return new QueryResult(sample, startIndex, sentenceId);
         }).collect(Collectors.toList());
-        queryCache.put(currentSpan, new SuffixArraySample(hits, positions.length));
+        queryCache.put(currentSpan, new SuffixArraySample(hits, positions.length, start, end-1));
       }
       return 1;
     }
@@ -502,7 +502,7 @@ public class ParallelSuffixArray implements Serializable {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
     int lb = findBound(query, isSource, true, 0);
-    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), 0);
+    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), 0, -1, -1);
     int ub = findBound(query, isSource, false, lb);
     assert ub > 0;
     int numHits = ub - lb + 1;
@@ -516,7 +516,7 @@ public class ParallelSuffixArray implements Serializable {
         AlignedSentence sample = this.corpus.get(sentenceId);
         samples.add(new QueryResult(sample, start, sentenceId));
       }
-      return new SuffixArraySample(samples, numHits);
+      return new SuffixArraySample(samples, numHits, lb, ub);
 
     } else {
       // Stratified sample through the list of positions
@@ -533,7 +533,7 @@ public class ParallelSuffixArray implements Serializable {
         assert start + query.length <= sample.sourceLength();
         samples.add(new QueryResult(sample, start, sentenceId));
       }
-      return new SuffixArraySample(samples, numHits);
+      return new SuffixArraySample(samples, numHits, lb, ub);
     }
   }
 
@@ -602,9 +602,13 @@ public class ParallelSuffixArray implements Serializable {
   public static class SuffixArraySample {
     public final List<QueryResult> samples;
     public final int numHits;
-    public SuffixArraySample(List<QueryResult> q, int numHits) {
+    public final int lb;
+    public final int ub;
+    public SuffixArraySample(List<QueryResult> q, int numHits, int lb, int ub) {
       this.samples = q;
       this.numHits = numHits;
+      this.lb = lb;
+      this.ub = ub;
     }
   }
 }

@@ -92,7 +92,10 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
         if (tgtPos < 0 || tgtPos >= targetLen) {
           throw new ArrayIndexOutOfBoundsException(String.format("Target length: %d  target index: %d", targetLen, tgtPos));          
         }
-        if (numLinks >= AlignedSentence.MAX_FERTILITY) break;
+        if (numLinks >= AlignedSentence.MAX_FERTILITY) {
+          logger.info("Max fertility exceeded: " + alignStr);
+          break;
+        }
         f2e[srcPos].add(tgtPos);
         if (e2f[tgtPos] == null) e2f[tgtPos] = new HashSet<>();
         e2f[tgtPos].add(srcPos);
