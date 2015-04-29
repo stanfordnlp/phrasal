@@ -1,14 +1,15 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
+import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.NGramLanguageModelFeaturizer;
@@ -28,11 +29,13 @@ public final class FeatureUtils {
   private static final String TRUE = String.valueOf(true);
   
   private FeatureUtils() {}
-  
-  // Baseline dense configuration from edu.stanford.nlp.mt.decoder.feat.base
-  // Extended phrase table, hierarchical reordering, one language model 
-  public static final Set<String> BASELINE_DENSE_FEATURES;
-  static {
+
+  /**
+   * Get the baseline dense features from Green et al. (2013).
+   * @param tm
+   * @return
+   */
+  public static Set<String> getBaselineFeatures(TranslationModel<IString,String> tm) {
     Set<String> features = new HashSet<>();
     features.add(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME);
     features.add(LinearFutureCostFeaturizer.FEATURE_NAME);
@@ -50,13 +53,10 @@ public final class FeatureUtils {
     features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":swapWithNext");
     features.add(LexicalReorderingFeaturizer.FEATURE_PREFIX + ":swapWithPrevious");
     
-    // 6 translation model scores described in Green et al. (2013).
-    for (int i = 0; i < 6; ++i) {
-      String fName = String.format("%s:%s.%d", TranslationModelFeaturizer.FEATURE_PREFIX,
-          CompiledPhraseTable.DEFAULT_FEATURE_PREFIX, i);
-      features.add(fName);
-    }
-    BASELINE_DENSE_FEATURES = Collections.unmodifiableSet(features);
+    // Dense translation model features
+    features.addAll(tm.getFeatureNames().stream().map(s -> TranslationModelFeaturizer.toTMFeature(s))
+        .collect(Collectors.toList()));
+    return features;
   }
   
   /**

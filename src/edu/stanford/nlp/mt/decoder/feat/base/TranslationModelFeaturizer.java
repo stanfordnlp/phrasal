@@ -1,8 +1,10 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
@@ -20,20 +22,31 @@ import edu.stanford.nlp.mt.util.IString;
  */
 public class TranslationModelFeaturizer implements RuleFeaturizer<IString, String> {
   public static final String FEATURE_PREFIX = "TM";
-  private static final FeatureValue<String> emptyFV = new FeatureValue<String>(
-      "", 0.0);
 
   // Only construct the feature strings once for each phrase table
   private final ConcurrentHashMap<String, String[]> featureNamesHash;
   private final int numFeatures;
 
+  /**
+   * Convert the feature name to a format that is easily greppable in the weight vector.
+   * 
+   * @param featureName
+   * @return
+   */
+  public static String toTMFeature(String featureName) {
+    return String.format("%s:%s", FEATURE_PREFIX, featureName);
+  }
+  
+  /**
+   * Add a prefix to the feature names.
+   * 
+   * @param phraseTableName
+   * @param phraseScoreNames
+   * @return
+   */
   private String[] createAndCacheFeatureNames(String phraseTableName, String[] phraseScoreNames) {
-    String[] featureNames = new String[phraseScoreNames.length];
-    for (int i = 0; i < featureNames.length; i++) {
-      if (phraseScoreNames[i] != null) {
-        featureNames[i] = String.format("%s:%s", FEATURE_PREFIX, phraseScoreNames[i]);
-      }
-    }
+    String[] featureNames = Arrays.stream(phraseScoreNames).filter(s -> s != null)
+        .map(s -> toTMFeature(s)).toArray(String[]::new);
     featureNamesHash.putIfAbsent(phraseTableName, featureNames);
     return featureNames;
   }
@@ -65,13 +78,10 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
           createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames);
 
     // construct array of FeatureValue objects
-    List<FeatureValue<String>> features = new LinkedList<>();
     final int numEffectiveFeatures = Math.min(this.numFeatures, featureNames.length);
-    for (int i = 0; i < numEffectiveFeatures; i++) {
-      features.add((i < featurizable.translationScores.length) ? new FeatureValue<String>(
-          featureNames[i], featurizable.translationScores[i], true) : emptyFV);
-    }
-    return features;
+    assert numEffectiveFeatures <= featurizable.translationScores.length;
+    return IntStream.range(0, numEffectiveFeatures).mapToObj(i -> new FeatureValue<String>(
+        featureNames[i], featurizable.translationScores[i], true)).collect(Collectors.toList());
   }
 
   @Override

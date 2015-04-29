@@ -33,6 +33,7 @@ import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
 import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
@@ -150,7 +151,8 @@ public final class OnlineTuner {
     this.expectedNumFeatures = expectedNumFeatures;
     this.initialWtsFileName = initialWtsFile;
     this.discardInitialWeightState = uniformStartWeights || randomizeStartWeights;
-    wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights);
+    wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights, 
+        decoder.getTranslationModel());
     logger.info("Initial weights: " + wtsAccumulator.toString());
 
     // Load the tuning set
@@ -700,15 +702,16 @@ public final class OnlineTuner {
 
   /**
    * Configure weights stored on file.
+   * @param translationModel 
    */
   private static Counter<String> loadWeights(String wtsInitialFile,
-      boolean uniformStartWeights, boolean randomizeStartWeights) {
+      boolean uniformStartWeights, boolean randomizeStartWeights, TranslationModel<IString, String> translationModel) {
 
     Counter<String> weights = IOTools.readWeights(wtsInitialFile);
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
       Set<String> featureNames = new HashSet<>(weights.keySet());
-      featureNames.addAll(FeatureUtils.BASELINE_DENSE_FEATURES);
+      featureNames.addAll(FeatureUtils.getBaselineFeatures(translationModel));
       for (String key : featureNames) {
         if (key.startsWith(NGramLanguageModelFeaturizer.DEFAULT_FEATURE_NAME)) {
           weights.setCount(key, 0.5);
