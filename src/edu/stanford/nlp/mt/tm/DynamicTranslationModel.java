@@ -423,7 +423,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       float[] scores;
       if (featureTemplate == FeatureTemplate.DENSE) {
         scores = new float[4];
-        scores[0] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
+        scores[0] = (float) Math.log(histogram[r] / ef_denom);
         scores[1] = (float) Math.log(rule.lex_f_e);
         // U. Germann's approximation
         int cnt = sa.count(rule.tgt, false);
@@ -435,7 +435,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
-        scores[0] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
+        scores[0] = (float) Math.log(histogram[r] / ef_denom);
         scores[1] = (float) Math.log(rule.lex_f_e);
         // U. Germann's approximation
         // TODO(spenceg) Should be histogram[r] / sampleRate / cnt ?
@@ -444,8 +444,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[2] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
         
         scores[3] = (float) Math.log(rule.lex_e_f);
-        scores[4] = (float) Math.log(histogram[r]);
-        scores[5] = histogram[r] == 1.0 ? 1.0f : 0.0f;
+        scores[4] = (float) Math.log(histogram[r] / sampleRate);
+        scores[5] = cnt == 1 ? 1.0f : 0.0f;
         
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
