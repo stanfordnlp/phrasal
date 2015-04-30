@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.util;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -136,7 +135,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
       for (int i = 0; i < sz; ++i) {
         codes[i] = get(i).hashCode();
       }
-      hashCode = Arrays.hashCode(codes);
+      hashCode = MurmurHash.hash32(codes, sz, 1);
     }
     return hashCode;
   }

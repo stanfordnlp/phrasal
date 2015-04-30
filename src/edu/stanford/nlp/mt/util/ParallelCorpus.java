@@ -5,6 +5,7 @@ import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -27,9 +28,10 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
 
   private static transient final Logger logger = LogManager.getLogger(ParallelCorpus.class);
 
+  public static final int MAX_SENTENCE_LENGTH = AlignedSentence.MAX_SENTENCE_LENGTH;
   private static final int DEFAULT_CAPACITY = 10000;
   
-  protected List<AlignedSentence> corpus;
+  protected List<AlignedSentence> segments;
   protected Vocabulary index;
   protected int numSourcePos = 0;
   protected int numTargetPos = 0;
@@ -47,7 +49,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @param initialCapacity
    */
   public ParallelCorpus(int initialCapacity) {
-    corpus = new ArrayList<>(initialCapacity);
+    segments = new ArrayList<>(initialCapacity);
     index = new Vocabulary(initialCapacity);
   }
 
@@ -59,15 +61,19 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @param align
    * @return
    */
-  public AlignedSentence add(String source, String target, String align) {
+  public boolean add(String source, String target, String align) {
     int[] f = stringToArray(source);
     int[] e = stringToArray(target);
+    if (f.length > MAX_SENTENCE_LENGTH || 
+        e.length > MAX_SENTENCE_LENGTH) {
+      return false;
+    }
     numSourcePos += f.length;
     numTargetPos += e.length;
     Alignment a = extractAlignment(align, f.length, e.length);
     AlignedSentence s = new AlignedSentence(f, e, a.f2e, a.e2f);
-    corpus.add(s);
-    return s;
+    segments.add(s);
+    return true;
   }
   
   private int[] stringToArray(String string) {
@@ -102,6 +108,16 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
         ++numLinks;
       }
     }
+    
+    // WSGDEBUG
+//    int numUnalignedTarget = 0;
+//    for (int i = 0; i < e2f.length; ++i) {
+//      if (e2f[i] == null) ++numUnalignedTarget;
+//    }
+//    if (numUnalignedTarget > 5) {
+//      System.err.println();
+//    }
+    
     return new Alignment(f2e, e2f);
   }
 
@@ -119,13 +135,13 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
       this.f2e = toArray(f2e);
       this.e2f = toArray(e2f);
     }
-    private static int[][] toArray(Set[] f2e) {
-      int[][] f2eArr = new int[f2e.length][];
-      for (int i = 0; i < f2e.length; ++i) {
-        f2eArr[i] = f2e[i] == null ? new int[0] :
-          f2e[i].stream().mapToInt(x -> (int) x).sorted().toArray();
+    private static int[][] toArray(Set[] objectArr) {
+      int[][] arr = new int[objectArr.length][];
+      for (int i = 0; i < objectArr.length; ++i) {
+        arr[i] = objectArr[i] == null ? new int[0] :
+          objectArr[i].stream().mapToInt(x -> (int) x).sorted().toArray();
       }
-      return f2eArr;
+      return arr;
     }
   }
   
@@ -136,10 +152,10 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @return
    */
   public AlignedSentence get(int sourceId) {
-    if (sourceId < 0 || sourceId >= corpus.size()) {
+    if (sourceId < 0 || sourceId >= segments.size()) {
       throw new ArrayIndexOutOfBoundsException();
     }
-    return corpus.get(sourceId);
+    return segments.get(sourceId);
   }
 
   /**
@@ -147,7 +163,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * 
    * @return
    */
-  public int size() { return corpus.size(); }
+  public int size() { return segments.size(); }
   
   /**
    * Number of source corpus positions.
@@ -169,7 +185,16 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   
   @Override
   public Iterator<AlignedSentence> iterator() {
-    return corpus.iterator();
+    return segments.iterator();
+  }
+  
+  /**
+   * Get an unmodifiable view of the underlying list of segments.
+   * 
+   * @return
+   */
+  public List<AlignedSentence> getSegments() {
+    return Collections.unmodifiableList(segments);
   }
   
   /**

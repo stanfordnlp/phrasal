@@ -105,6 +105,10 @@ public class DynamicTMBuilder {
 
         GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2,
             fe3, ef1, ef2, ef3);
+        if (gizaAlign.e().size() > ParallelCorpus.MAX_SENTENCE_LENGTH ||
+            gizaAlign.f().size() > ParallelCorpus.MAX_SENTENCE_LENGTH) {
+          continue;
+        }
         SymmetricalWordAlignment symAlign = AlignmentSymmetrizer
             .symmetrize(gizaAlign, type);
         symAlign.reverse();
