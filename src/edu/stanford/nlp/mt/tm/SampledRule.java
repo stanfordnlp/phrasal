@@ -47,10 +47,8 @@ public class SampledRule {
     this.saEntry = s;
     this.src = Arrays.copyOfRange(s.sentence.source, srcStartInclusive, srcEndExclusive);
     this.tgt = Arrays.copyOfRange(s.sentence.target, tgtStartInclusive, tgtEndExclusive);
-//    int fID = MurmurHash.hash32(src, src.length, 1);
-//    int eID = MurmurHash.hash32(tgt, tgt.length, 1);
     
-    // Tie the sampled rule to a sentence so that we don't double count.
+    // Tie the SampledRule to a sentence so that we don't double count.
     int[] hashArr = new int[] {s.sentenceId, srcStartInclusive, srcEndExclusive, tgtStartInclusive, 
         tgtEndExclusive};
     this.hashCode = MurmurHash.hash32(hashArr, hashArr.length, 1);

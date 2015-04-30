@@ -199,7 +199,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           coocTable.incrementSrcMarginal(srcId, 1);
         }
       }
-      // Look for unaligned target words
+      // Look for unaligned target words that were skipped in the loop
+      // above.
       for(int i = 0; i < s.target.length; ++i) {
         if (s.isTargetUnaligned(i)) {
           int tgtId = s.target[i];
@@ -408,27 +409,28 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Organize rules by candidate translation
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order).stream())
         .collect(Collectors.toList());
-    Map<TargetSpan,Set<SampledRule>> tgtToRule = new HashMap<>();
+    Map<TargetSpan,Set<SampledRule>> tgtToTemplate = new HashMap<>();
     for (SampledRule rule : rules) {
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
-      if ( ! tgtToRule.containsKey(tgtSpan)) {
-        tgtToRule.put(tgtSpan, new HashSet<>());
+      if ( ! tgtToTemplate.containsKey(tgtSpan)) {
+        tgtToTemplate.put(tgtSpan, new HashSet<>());
       }
-      tgtToRule.get(tgtSpan).add(rule);
+      tgtToTemplate.get(tgtSpan).add(rule);
     }
 
     // Collect phrase counts and choose the best alignment template
     // for each src => target rule.
-    List<TargetSpan> tgtSpans = new ArrayList<>(tgtToRule.keySet());
+    List<TargetSpan> tgtSpans = new ArrayList<>(tgtToTemplate.keySet());
+    List<SampledRule> ruleList = new ArrayList<>(tgtSpans.size());
     int[] histogram = new int[tgtSpans.size()];
     for (int i = 0; i < histogram.length; ++i) {
       TargetSpan tgt = tgtSpans.get(i);
-      Set<SampledRule> uniqRules = tgtToRule.get(tgt);
-      histogram[i] = uniqRules.size();
+      Set<SampledRule> alignmentTemplates = tgtToTemplate.get(tgt);
+      histogram[i] = alignmentTemplates.size();
       double max_lex_f_e = 0.0;
       double max_lex_e_f = 0.0;
       SampledRule maxRule = null;
-      for (SampledRule rule : uniqRules) {
+      for (SampledRule rule : alignmentTemplates) {
         scoreLex(rule);
         if (rule.lex_e_f > max_lex_e_f && rule.lex_f_e > max_lex_f_e) {
           maxRule = rule;
@@ -436,9 +438,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           max_lex_e_f = rule.lex_e_f;
         }
       }
-      uniqRules.clear();
-      uniqRules.add(maxRule);
+      ruleList.add(maxRule);
     }
+    assert ruleList.size() == histogram.length;
     
     // TODO(spenceg) Compute confidence intervals for phrase scores
     // MLE point estimates for now.
@@ -447,8 +449,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     List<Rule<IString>> scoredRules = new ArrayList<>(histogram.length);
     for (int r = 0; r < histogram.length; ++r) {
-      TargetSpan tgt = tgtSpans.get(r);
-      SampledRule rule = tgtToRule.get(tgt).iterator().next();
+      SampledRule rule = ruleList.get(r);
       
       float[] scores;
       if (featureTemplate == FeatureTemplate.DENSE) {
@@ -465,26 +466,32 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
-        // U. Germann's approximation
-        // TODO(spenceg) Should be histogram[r] / sampleRate / cnt ?
+
         int eCnt = sa.count(rule.tgt, false);
-//        double num = eCnt - histogram[r] * sampleRate;
-//        scores[2] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
-      
         int adjustedCount = (int) ((double) histogram[r] / sampleRate);
+        
 //        if(adjustedCount > eCnt) {
 //          System.out.println(String.format("%d %d %d %s", histogram[r], adjustedCount, eCnt, rule.toString()));
 //        }
-        // Clip since we sometimes overestimate when we scale by the sample rate.
+//        // Clip since we sometimes overestimate when we scale by the sample rate.
+//        if (histogram[r] > eCnt) {
+//          System.err.println();
+//        }
+        
+        // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
+        // bitext.
         adjustedCount = Math.min(adjustedCount, eCnt);
+        
         scores[0] = (float) (Math.log(adjustedCount) - Math.log(eCnt));
+        // U. Germann's approximation
+//        double num = eCnt - histogram[r] * sampleRate;
+//        scores[0] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
         
         scores[1] = (float) Math.log(rule.lex_f_e);
         scores[2] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
         scores[3] = (float) Math.log(rule.lex_e_f);
         
         // See train.CountFeatureExtractor
-//        System.out.printf("%d %.3f %d%n", histogram[r], sampleRate, adjustedCount);
         scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
         scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
         
