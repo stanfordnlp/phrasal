@@ -491,9 +491,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[2] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
         scores[3] = (float) Math.log(rule.lex_e_f);
         
-        // See train.CountFeatureExtractor
-        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
-        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
+        // See train.CountFeatureExtractor -- the sampled count seems to work
+        // better than the adjustedCount, which is an approximation of the global count.
+        // In the offline extractor, this feature is tied to the filter corpus, so it
+        // isn't really a global count either. Maybe tying the counts with the
+        // specific sentence in question is what really matters. Almost like
+        // segment-level domain adaptation.
+        scores[4] = histogram[r] > 1 ? (float) Math.log(histogram[r]) : 0.0f;
+        scores[5] = histogram[r] == 1 ? -1.0f : 0.0f;
         
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
@@ -613,7 +618,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Find the target span
     int minTarget = Integer.MAX_VALUE;
     int maxTarget = -1;
-//    CoverageSet targetCoverage = new CoverageSet(s.sentence.target.length);
     final int startSource = s.wordPosition;
     final int endSource = startSource + length;
     for(int sourcePos = startSource; sourcePos < endSource; sourcePos++) {
@@ -626,16 +630,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         if (targetPos > maxTarget) {
           maxTarget = targetPos;
         }
-//        targetCoverage.set(targetPos);
       }
     }
     
     List<SampledRule> ruleList = new ArrayList<>();
-//    final boolean targetGapExists = targetCoverage.nextClearBit(minTarget) <= maxTarget;
     if (maxTarget < 0 || maxTarget-minTarget >= maxTargetPhrase) return ruleList;
     
     // Admissibility check
-//    CoverageSet sourceCoverage = new CoverageSet(s.sentence.source.length);
     for (int i = minTarget; i <= maxTarget; ++i) {
       int[] srcAligned = s.sentence.e2f(i);
       for (int j : srcAligned) {
@@ -643,12 +644,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           // Failed check
           return ruleList;
         }
-//        sourceCoverage.set(j);
       }
     }
-    
-//    final boolean sourceGapExists = sourceCoverage.nextSetBit(startSource) < endSource;
-//    if (sourceGapExists) return ruleList;
     
     // "Loose" heuristic to grow the target
     // Try to grow the left bound of the target
