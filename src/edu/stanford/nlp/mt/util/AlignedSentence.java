@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
 import java.io.Serializable;
-import java.util.BitSet;
 
 /**
  * Lightweight implementation of a training example.
@@ -15,7 +14,7 @@ public class AlignedSentence implements Serializable {
 
   // 256-1, since 0 is used to indicate a null alignment in the compact
   // representation.
-  public static final int MAX_SENTENCE_LENGTH = 255;
+  public static final int MAX_SENTENCE_LENGTH = 256 - 1;
   public static final int MAX_FERTILITY = 4;
   
   public int[] source;
@@ -23,8 +22,6 @@ public class AlignedSentence implements Serializable {
 
   protected int[] f2e;
   protected int[] e2f;
-
-  private transient BitSet targetAligned;
   
   /**
    * No-arg constructor for deserialization.
@@ -63,13 +60,23 @@ public class AlignedSentence implements Serializable {
   }
   
   public int[] f2e(int i) {
-    if (i < 0 || i >= f2e.length) throw new IndexOutOfBoundsException();
+    if (i < 0 || i >= source.length) throw new IndexOutOfBoundsException();
     return expand(f2e[i]);
   }
   
   public int[] e2f(int i) {
-    if (i < 0 || i >= e2f.length) throw new IndexOutOfBoundsException();
+    if (i < 0 || i >= target.length) throw new IndexOutOfBoundsException();
     return expand(e2f[i]);
+  }
+  
+  public boolean isSourceUnaligned(int i) {
+    if (i < 0 || i >= source.length) throw new IndexOutOfBoundsException();
+    return f2e[i] == 0;
+  }
+  
+  public boolean isTargetUnaligned(int i) {
+    if (i < 0 || i >= target.length) throw new IndexOutOfBoundsException();
+    return e2f[i] == 0;
   }
   
   private int[] expand(int al) {
@@ -107,24 +114,5 @@ public class AlignedSentence implements Serializable {
    */
   public Sequence<IString> getTarget(Vocabulary index) { 
     return IStrings.toIStringSequence(target, index); 
-  }
-  
-  /**
-   * Get a BitSet indicating target aligned words. Analogous information for the
-   * source can be obtained by inspecting f2e directly.
-   * 
-   * @return
-   */
-  public BitSet getTargetAlignedCoverage() {
-    if (targetAligned == null) {
-      targetAligned = new BitSet();
-      for (int i = 0; i < f2e.length; i++) {
-        int[] f2eI = f2e(i);
-        for (int j = 0; j < f2eI.length; ++j) {
-          targetAligned.set(f2eI[j]);
-        }
-      }
-    }
-    return targetAligned;
   }
 }

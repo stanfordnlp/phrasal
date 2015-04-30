@@ -61,9 +61,9 @@ public class FlatPhraseExtractor extends AbstractPhraseExtractor {
 
       int f1 = Integer.MAX_VALUE;
       int f2 = Integer.MIN_VALUE;
-      int laste = Math.min(esize, e1 + maxPhraseLenE) - 1;
+      int lastE = Math.min(esize, e1 + maxPhraseLenE) - 1;
 
-      for (int e2 = e1; e2 <= laste; ++e2) {
+      for (int e2 = e1; e2 <= lastE; ++e2) {
 
         // Find range of f aligning to e1...e2:
         SortedSet<Integer> fss = sent.e2f(e2);

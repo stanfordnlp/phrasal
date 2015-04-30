@@ -30,7 +30,7 @@ public class ParallelSuffixArray implements Serializable {
   private static final long serialVersionUID = -5403502473957235135L;
 
   private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
-
+  
   protected ParallelCorpus corpus;
   protected int[] srcSuffixArray; 
   protected int[] tgtSuffixArray;
@@ -94,8 +94,15 @@ public class ParallelSuffixArray implements Serializable {
    * 
    * @return
    */
-  public Vocabulary getVocabulary() { return this.corpus.index; }
+  public Vocabulary getVocabulary() { return corpus.index; }
 
+  /**
+   * Get the underlying corpus.
+   * 
+   * @return
+   */
+  public ParallelCorpus getCorpus() { return corpus; }
+  
   /**
    * Create the underlying suffix array from the parallel corpus in O(nlogn) time (naive algorithm...
    * but easy to parallelize).

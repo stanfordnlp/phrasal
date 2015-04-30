@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
+import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -97,14 +98,31 @@ public class Rule<T> implements Comparable<Rule<T>>{
   
   @Override
   public String toString() {
-    return String.format("%s ||| %s", target, Arrays.toString(scores));
+    return String.format("%s => %s ||| %s", source, target, Arrays.toString(scores));
   }
 
   @Override
   public int hashCode() {
-    if (hashCode == -1)
-      hashCode = super.hashCode();
+    if (hashCode == -1) {
+      int[] codes = new int[2];
+      codes[0] = source.hashCode();
+      codes[1] = source.hashCode();
+      hashCode = MurmurHash.hash32(codes, codes.length, 1);
+    }
     return hashCode;
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    } else if ( ! (o instanceof Rule)) {
+      return false;
+    } else {
+      Rule<T> other = (Rule<T>) o;
+      return source.equals(other.source) && target.equals(other.target);
+    }
   }
 
   public boolean hasTargetGap() {

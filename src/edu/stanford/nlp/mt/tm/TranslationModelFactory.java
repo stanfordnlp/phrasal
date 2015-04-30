@@ -67,8 +67,9 @@ public class TranslationModelFactory {
     
     } else if (filename.startsWith(DYNAMIC_TAG)) {
       String file = filename.substring(DYNAMIC_TAG.length());
-      translationModel = DynamicTranslationModel.load(file, setSystemIndex, FeatureTemplate.DENSE_EXT);
+      translationModel = DynamicTranslationModel.load(file, setSystemIndex);
       ((DynamicTranslationModel) translationModel).setSampleSize(dynamicSampleSize);
+      ((DynamicTranslationModel) translationModel).createQueryCache(FeatureTemplate.DENSE_EXT);
       
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename) :
