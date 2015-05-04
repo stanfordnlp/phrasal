@@ -375,8 +375,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return concreteRules;
   }
   
-  // TODO(spenceg) SuffixArraySample returns the prefix bounds. Add those to the Range
-  // to speed up the query.
   private static class Range {
     public final int i;
     public final int j;
@@ -420,13 +418,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Organize rules by candidate translation
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order).stream())
         .collect(Collectors.toList());
-    Map<TargetSpan,Set<SampledRule>> tgtToTemplate = new HashMap<>();
+    Map<TargetSpan,Set<SampledRule>> tgtToTemplate = new HashMap<>(rules.size());
     for (SampledRule rule : rules) {
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
-      if ( ! tgtToTemplate.containsKey(tgtSpan)) {
-        tgtToTemplate.put(tgtSpan, new HashSet<>());
+      Set<SampledRule> templateSet = tgtToTemplate.get(tgtSpan);
+      if (templateSet == null) {
+        templateSet = new HashSet<>();
+        tgtToTemplate.put(tgtSpan, templateSet);        
       }
-      tgtToTemplate.get(tgtSpan).add(rule);
+      templateSet.add(rule);
     }
 
     // Collect phrase counts and choose the best alignment template
@@ -438,18 +438,18 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       TargetSpan tgt = tgtSpans.get(i);
       Set<SampledRule> alignmentTemplates = tgtToTemplate.get(tgt);
       histogram[i] = alignmentTemplates.size();
-      double max_lex_f_e = 0.0;
-      double max_lex_e_f = 0.0;
-      SampledRule maxRule = null;
+      double max_lex_f_e = -1.0;
+      double max_lex_e_f = -1.0;
+      SampledRule maxTemplate = null;
       for (SampledRule rule : alignmentTemplates) {
         scoreLex(rule);
         if (rule.lex_e_f > max_lex_e_f && rule.lex_f_e > max_lex_f_e) {
-          maxRule = rule;
+          maxTemplate = rule;
           max_lex_f_e = rule.lex_f_e;
           max_lex_e_f = rule.lex_e_f;
         }
       }
-      ruleList.add(maxRule);
+      ruleList.add(maxTemplate);
     }
     assert ruleList.size() == histogram.length;
     
