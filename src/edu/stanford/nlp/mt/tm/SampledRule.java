@@ -23,8 +23,8 @@ public class SampledRule {
   public final int[] src;
   public final int[] tgt;
   public final QueryResult saEntry;
-  public float lex_e_f = 0.0f;
-  public float lex_f_e = 0.0f;
+  public double lex_e_f = 0.0;
+  public double lex_f_e = 0.0;
   private final int hashCode;
   
   /**
