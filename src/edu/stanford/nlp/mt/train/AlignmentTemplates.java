@@ -84,16 +84,6 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
   }
 
   /**
-   * Add alignment template to phrase table if the source-language phrase is in
-   * the dev corpus.
-   */
-  public void addToIndexIfInDev(AlignmentTemplate alTemp) {
-    int fKey = indexOfF(alTemp, false);
-    boolean add = (fKey >= 0);
-    addToIndex(alTemp, add);
-  }
-
-  /**
    * Increment count for a given alignment for a given phrase-pair.
    */
   public void incrementAlignmentCount(AlignmentTemplate alTemp) {

@@ -5,11 +5,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -21,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.MapMaker;
 
-import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -164,7 +161,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Span span = entry.getKey();
       SuffixArraySample sample = entry.getValue();
       Sequence<IString> sourceSpan = SampledRule.toSystemSequence(span.tokens, tm2Sys);
-      List<Rule<IString>> rules = samplesToRules(sample.samples, span.tokens.length, 1.0, sourceSpan);
+      int numHits = sample.ub - sample.lb + 1;
+      double sampleRate = sample.samples.size() / (double) numHits;
+      List<Rule<IString>> rules = samplesToRules(sample.samples, span.tokens.length, sampleRate, sourceSpan);
       ruleCache.put(sourceSpan, rules);
     }
   }
@@ -417,6 +416,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private List<Rule<IString>> samplesToRules(List<QueryResult> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
     
+//    if (sourceSpan.toString().equals("على الاعتراف ب#")) {
+//      int c = 10;
+//    }
+//    
     // Organize rules by candidate translation and compute lexical scores
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order).stream())
         .collect(Collectors.toList());
@@ -447,6 +450,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       SampledRule rule = ruleList.get(i);
       TargetSpan tgt = new TargetSpan(rule.tgt);
       histogram[i] = (int) spanCounter.getCount(tgt);
+      assert histogram[i] > 0;
       ef_denom += histogram[i];
     }
     
@@ -462,7 +466,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       if (featureTemplate == FeatureTemplate.DENSE) {
         scores = new float[4];
         int eCnt = sa.count(rule.tgt, false);
-        int adjustedCount = (int) ((double) histogram[r] / sampleRate);
+        int adjustedCount = (int) (histogram[r] / sampleRate);
         
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
         // bitext.
@@ -477,7 +481,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
         int eCnt = sa.count(rule.tgt, false);
-        int adjustedCount = (int) ((double) histogram[r] / sampleRate);
+        int adjustedCount = (int) (histogram[r] / sampleRate);
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
         // bitext.
         adjustedCount = Math.min(adjustedCount, eCnt);
@@ -497,10 +501,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         // isn't really a global count either. Maybe tying the counts with the
         // specific sentence in question is what really matters. Almost like
         // segment-level domain adaptation.
-        scores[4] = histogram[r] > 1 ? (float) Math.log(histogram[r]) : 0.0f;
-        scores[5] = histogram[r] == 1 ? -1.0f : 0.0f;
-//        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
-//        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
+//        scores[4] = histogram[r] > 1 ? (float) Math.log(histogram[r]) : 0.0f;
+//        scores[5] = histogram[r] == 1 ? -1.0f : 0.0f;
+        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
+        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
         
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
@@ -517,7 +521,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  private static class TargetSpan {
+  private class TargetSpan {
     private final int[] tgt;
     private final int hashCode;
     public TargetSpan(int[] tgt) {
@@ -526,19 +530,25 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
     @Override
     public int hashCode() { return hashCode; }
+    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
         return true;
-      } else if ( ! (o instanceof TargetSpan)) {
-        return false;
       } else {
         TargetSpan other = (TargetSpan) o;
         return Arrays.equals(this.tgt, other.tgt);
       }
     }
     @Override
-    public String toString() { return Arrays.toString(this.tgt); }
+    public String toString() { 
+      StringBuilder sb = new StringBuilder();
+      for (int tgtId : tgt) {
+        if (sb.length() > 0) sb.append(" ");
+        sb.append(sa.getVocabulary().get(tgtId));
+      }
+      return sb.toString();
+    }
   }
   
   /**
