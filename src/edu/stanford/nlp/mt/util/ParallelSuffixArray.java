@@ -239,18 +239,21 @@ public class ParallelSuffixArray implements Serializable {
       
     } else {
       if (cnt > ruleCacheThreshold) {
+        int maxHits = 10*sampleSize;
         int start = currentSpan.saIndex;
         int end = nextSpan.saIndex;
-        int[] positions = Arrays.copyOfRange(srcSuffixArray, start, end);
-        assert positions.length >= ruleCacheThreshold;
-        List<QueryResult> hits = IntStream.of(positions).sorted().limit(sampleSize)
-            .mapToObj(corpusPosition -> {
+        int numHits = end - start;
+        int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
+        assert stepSize > 0;
+        List<QueryResult> hits = new ArrayList<>(maxHits);
+        for (int i = start; i < end && hits.size() < maxHits; i += stepSize) {
+          int corpusPosition = srcSuffixArray[i];
           int sentenceId = positionToSentence(corpusPosition, true);
           int offset = sentenceId == 0 ? 0 : srcPosToSentenceId[sentenceId - 1];
           int startIndex = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
           AlignedSentence sample = this.corpus.get(sentenceId);
-          return new QueryResult(sample, startIndex, sentenceId);
-        }).collect(Collectors.toList());
+          hits.add(new QueryResult(sample, startIndex, sentenceId));
+        }
         queryCache.put(currentSpan, new SuffixArraySample(hits, start, end-1));
       }
       return 1;
@@ -524,35 +527,21 @@ public class ParallelSuffixArray implements Serializable {
       findBound(query, isSource, false, lb);
     assert ub > 0;
     int numHits = ub - lb + 1;
-    if(numHits < maxHits) {
-      List<QueryResult> samples = new ArrayList<>(numHits);
-      for (int i = lb; i <= ub; ++i) {
-        int corpusPosition = sa[i];
-        int sentenceId = positionToSentence(corpusPosition, isSource);
-        int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-        int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-        AlignedSentence sample = this.corpus.get(sentenceId);
-        samples.add(new QueryResult(sample, start, sentenceId));
-      }
-      return new SuffixArraySample(samples, lb, ub);
-
-    } else {
-      // Stratified sample through the list of positions
-      int stepSize = numHits / maxHits;
-      List<QueryResult> samples = new ArrayList<>(maxHits);
-      for (int i = 0; i < maxHits; ++i) {
-        int saIdx = lb + (i*stepSize);
-        int corpusPosition = sa[saIdx];
-        int sentenceId = positionToSentence(corpusPosition, isSource);
-        int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-        int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-        AlignedSentence sample = this.corpus.get(sentenceId);
-        assert query[0] == sample.source[start];
-        assert start + query.length <= sample.sourceLength();
-        samples.add(new QueryResult(sample, start, sentenceId));
-      }
-      return new SuffixArraySample(samples, lb, ub);
+    int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
+    assert stepSize > 0;
+    // Stratified sample through the list of positions
+    List<QueryResult> samples = new ArrayList<>(maxHits);
+    for (int i = lb; i <= ub && samples.size() < maxHits; i += stepSize) {
+      int corpusPosition = sa[i];
+      int sentenceId = positionToSentence(corpusPosition, isSource);
+      int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
+      int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
+      AlignedSentence sample = this.corpus.get(sentenceId);
+      assert query[0] == sample.source[start];
+      assert start + query.length <= sample.sourceLength();
+      samples.add(new QueryResult(sample, start, sentenceId));
     }
+    return new SuffixArraySample(samples, lb, ub);
   }
 
   /**
