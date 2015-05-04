@@ -39,6 +39,8 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.Vocabulary;
+import edu.stanford.nlp.stats.ClassicCounter;
+import edu.stanford.nlp.stats.Counter;
 
 /**
  * A dynamic translation model backed by a suffix array.
@@ -415,48 +417,42 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private List<Rule<IString>> samplesToRules(List<QueryResult> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
     
-    // Organize rules by candidate translation
+    // Organize rules by candidate translation and compute lexical scores
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order).stream())
         .collect(Collectors.toList());
-    Map<TargetSpan,Set<SampledRule>> tgtToTemplate = new HashMap<>(rules.size());
+    Map<TargetSpan,SampledRule> tgtToTemplate = new HashMap<>(rules.size());
+    Counter<TargetSpan> spanCounter = new ClassicCounter<>(rules.size());
     for (SampledRule rule : rules) {
+      scoreLex(rule);
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
-      Set<SampledRule> templateSet = tgtToTemplate.get(tgtSpan);
-      if (templateSet == null) {
-        templateSet = new HashSet<>();
-        tgtToTemplate.put(tgtSpan, templateSet);        
+      spanCounter.incrementCount(tgtSpan);
+      SampledRule maxTemplate = tgtToTemplate.get(tgtSpan);
+      if (maxTemplate == null) {
+        tgtToTemplate.put(tgtSpan, rule);
+        
+      } else {
+        if (rule.lex_e_f > maxTemplate.lex_e_f && rule.lex_f_e > maxTemplate.lex_f_e) {
+          tgtToTemplate.put(tgtSpan, rule);
+        }
       }
-      templateSet.add(rule);
     }
+    assert rules.size() == spanCounter.totalCount();
 
     // Collect phrase counts and choose the best alignment template
     // for each src => target rule.
-    List<TargetSpan> tgtSpans = new ArrayList<>(tgtToTemplate.keySet());
-    List<SampledRule> ruleList = new ArrayList<>(tgtSpans.size());
-    int[] histogram = new int[tgtSpans.size()];
+    List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.values());
+    int[] histogram = new int[ruleList.size()];
+    int ef_denom = 0;
     for (int i = 0; i < histogram.length; ++i) {
-      TargetSpan tgt = tgtSpans.get(i);
-      Set<SampledRule> alignmentTemplates = tgtToTemplate.get(tgt);
-      histogram[i] = alignmentTemplates.size();
-      double max_lex_f_e = -1.0;
-      double max_lex_e_f = -1.0;
-      SampledRule maxTemplate = null;
-      for (SampledRule rule : alignmentTemplates) {
-        scoreLex(rule);
-        if (rule.lex_e_f > max_lex_e_f && rule.lex_f_e > max_lex_f_e) {
-          maxTemplate = rule;
-          max_lex_f_e = rule.lex_f_e;
-          max_lex_e_f = rule.lex_e_f;
-        }
-      }
-      ruleList.add(maxTemplate);
+      SampledRule rule = ruleList.get(i);
+      TargetSpan tgt = new TargetSpan(rule.tgt);
+      histogram[i] = (int) spanCounter.getCount(tgt);
+      ef_denom += histogram[i];
     }
-    assert ruleList.size() == histogram.length;
     
     // TODO(spenceg) Compute confidence intervals for phrase scores
     // MLE point estimates for now.
 //    double[][] ci = ConfidenceIntervals.multinomialSison(histogram);
-    int ef_denom = ArrayMath.sum(histogram);
     
     List<Rule<IString>> scoredRules = new ArrayList<>(histogram.length);
     for (int r = 0; r < histogram.length; ++r) {
@@ -538,11 +534,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         return false;
       } else {
         TargetSpan other = (TargetSpan) o;
-        return Arrays.equals(tgt, other.tgt);
+        return Arrays.equals(this.tgt, other.tgt);
       }
     }
     @Override
-    public String toString() { return Arrays.toString(tgt); }
+    public String toString() { return Arrays.toString(this.tgt); }
   }
   
   /**
