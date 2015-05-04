@@ -19,6 +19,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.MapMaker;
 
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -35,6 +36,8 @@ import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TimingUtils;
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.Vocabulary;
 
 /**
@@ -123,19 +126,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   @SuppressWarnings("unchecked")
   public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary) throws IOException {
+    TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
+    timer.mark("Deserialization");
     
     if (initializeSystemVocabulary) tm.populateSystemVocabulary();
     // Id arrays must be created after any modification of the system vocabulary.
     tm.createIdArrays();
+    timer.mark("Vocabulary setup");
     
     // Lex cache must be created before any rules can be scored.
-    tm.createLexCoocTable();
+    tm.createLexCoocTable(tm.sa.getVocabulary().size());
+    timer.mark("Lexical cooc table");
     
+    logger.info("Dynamic TM loading stats: {}", timer);
     return tm;
   }
   
@@ -179,24 +187,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Setup cache for lexical translations by iterating over every alignment point
    * in the underlying corpus.
+   * @param vocabSize 
+   * @param vocabSize 
    */
-  private void createLexCoocTable() {
-    coocTable = new LexCoocTable();
-    // Iterate over every alignment point in parallel
+  private void createLexCoocTable(int vocabSize) {
+    coocTable = new LexCoocTable(2*vocabSize);
+    // Iterate over every (symmetric) alignment point in parallel
     sa.getCorpus().getSegments().parallelStream().forEach(s -> {
       for(int i = 0; i < s.source.length; ++i) {
-        int[] tgtAlign = s.f2e(i);
-        int srcId = s.source[i];
-        if (tgtAlign.length > 0) {
-          coocTable.incrementSrcMarginal(srcId, tgtAlign.length);
+        final int srcId = s.source[i];
+        if (s.isSourceUnaligned(i)) {
+          coocTable.addCooc(srcId, LexCoocTable.NULL_ID);
+        } else {
+          int[] tgtAlign = s.f2e(i);
           for (int j : tgtAlign) {
             int tgtId = s.target[j];
             coocTable.addCooc(srcId, tgtId);
-            coocTable.incrementTgtMarginal(tgtId, 1);
           }
-        } else {
-          coocTable.addCooc(srcId, LexCoocTable.NULL_ID);
-          coocTable.incrementSrcMarginal(srcId, 1);
         }
       }
       // Look for unaligned target words that were skipped in the loop
@@ -205,7 +212,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         if (s.isTargetUnaligned(i)) {
           int tgtId = s.target[i];
           coocTable.addCooc(LexCoocTable.NULL_ID, tgtId);
-          coocTable.incrementTgtMarginal(tgtId, 1);
         }
       }
     });
@@ -454,11 +460,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       float[] scores;
       if (featureTemplate == FeatureTemplate.DENSE) {
         scores = new float[4];
-        // U. Germann's approximation
-        // TODO(spenceg) Update this approximation.
-        int cnt = sa.count(rule.tgt, false);
-        double num = cnt - histogram[r] * sampleRate;
-        scores[0] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
+        int eCnt = sa.count(rule.tgt, false);
+        int adjustedCount = (int) ((double) histogram[r] / sampleRate);
+        
+        // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
+        // bitext.
+        adjustedCount = Math.min(adjustedCount, eCnt);
+        
+        scores[0] = (float) (Math.log(adjustedCount) - Math.log(eCnt));
         scores[1] = (float) Math.log(rule.lex_f_e);
         scores[2] = (float) (Math.log(histogram[r]) -  Math.log(ef_denom));
         scores[3] = (float) Math.log(rule.lex_e_f);
@@ -466,18 +475,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
-
         int eCnt = sa.count(rule.tgt, false);
         int adjustedCount = (int) ((double) histogram[r] / sampleRate);
-        
-//        if(adjustedCount > eCnt) {
-//          System.out.println(String.format("%d %d %d %s", histogram[r], adjustedCount, eCnt, rule.toString()));
-//        }
-//        // Clip since we sometimes overestimate when we scale by the sample rate.
-//        if (histogram[r] > eCnt) {
-//          System.err.println();
-//        }
-        
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
         // bitext.
         adjustedCount = Math.min(adjustedCount, eCnt);
@@ -499,6 +498,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         // segment-level domain adaptation.
         scores[4] = histogram[r] > 1 ? (float) Math.log(histogram[r]) : 0.0f;
         scores[5] = histogram[r] == 1 ? -1.0f : 0.0f;
+//        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
+//        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
         
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
@@ -553,23 +554,22 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     double lex_e_f = 1.0;
     for (int i = rule.srcStartInclusive; i < rule.srcEndExclusive; ++i) {
       final int srcId = source[i];
-      int[] tgtAlign = rule.saEntry.sentence.f2e(i);
+      double c_f = coocTable.getSrcMarginal(srcId);
+      assert c_f > 0 : String.format("%d", srcId);
       double efSum = 0.0;
-      if (tgtAlign.length > 0) {
+      if (rule.saEntry.sentence.isSourceUnaligned(i)) {
+        int c_e_f = coocTable.getJointCount(srcId, LexCoocTable.NULL_ID);
+        assert c_f > 0;
+        efSum = c_e_f / c_f;
+        
+      } else {
+        int[] tgtAlign = rule.saEntry.sentence.f2e(i);
         for (int j : tgtAlign) {
           int tgtId = target[j];
           int c_e_f = coocTable.getJointCount(srcId, tgtId);
-          int c_f = coocTable.getSrcMarginal(srcId);
-          assert c_f > 0 : String.format("%d", srcId);
-          efSum += (c_e_f / (double) c_f);
+          efSum += (c_e_f / c_f);
         }
         efSum /= (double) tgtAlign.length;
-        
-      } else {
-        int c_e_f = coocTable.getJointCount(srcId, LexCoocTable.NULL_ID);
-        int c_f = coocTable.getSrcMarginal(srcId);
-        assert c_f > 0;
-        efSum = (c_e_f / (double) c_f);
       }
       if (efSum == 0.0) efSum = MIN_LEX_PROB;
       lex_e_f *= efSum;
@@ -580,31 +580,30 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     double lex_f_e = 1.0;
     for (int i = rule.tgtStartInclusive; i < rule.tgtEndExclusive; ++i) {
       final int tgtId = target[i];
-      int[] srcAlign = rule.saEntry.sentence.e2f(i);
+      double c_e = coocTable.getTgtMarginal(tgtId);
+      assert c_e > 0 : String.format("%d", tgtId);
       double feSum = 0.0;
-      if (srcAlign.length > 0) {
+      if (rule.saEntry.sentence.isTargetUnaligned(i)) {
+        int c_f_e = coocTable.getJointCount(LexCoocTable.NULL_ID, tgtId);
+        feSum = c_f_e / c_e;
+        
+      } else {
+        int[] srcAlign = rule.saEntry.sentence.e2f(i);
         for (int j : srcAlign) {
-          int srcId = source[j];
+          final int srcId = source[j];
           int c_f_e = coocTable.getJointCount(srcId, tgtId);
-          int c_e = coocTable.getTgtMarginal(tgtId);
-          assert c_e > 0;
-          feSum += (c_f_e / (double) c_e);
+          feSum += (c_f_e / c_e);
         }
         feSum /= (double) srcAlign.length;
         
-      } else {
-        int c_f_e = coocTable.getJointCount(LexCoocTable.NULL_ID, tgtId);
-        int c_e = coocTable.getTgtMarginal(tgtId);
-        assert c_e > 0;
-        feSum = (c_f_e / (double) c_e);
       }
       if (feSum == 0.0) feSum = MIN_LEX_PROB;
       lex_f_e *= feSum;
     }
     assert lex_f_e >= 0.0 && lex_f_e <= 1.0;
 
-    rule.lex_e_f = (float) lex_e_f;
-    rule.lex_f_e = (float) lex_f_e;
+    rule.lex_e_f = lex_e_f;
+    rule.lex_f_e = lex_f_e;
   }
 
   /**
@@ -684,44 +683,78 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private class LexCoocTable {
 
     public static final int NULL_ID = -1;
+    private static final int MARGINALIZE = Integer.MIN_VALUE;
     
-    private final ConcurrentHashMultiset<Integer> srcMarginals = ConcurrentHashMultiset.create();
-    private final ConcurrentHashMultiset<Integer> tgtMarginals = ConcurrentHashMultiset.create();
-    private final ConcurrentHashMap<Integer,ConcurrentHashMultiset<Integer>> jointCooc = 
-        new ConcurrentHashMap<>();
+    private final ConcurrentHashMultiset<LexCooc> counts;
     
-    public LexCoocTable() {}
-    
-    public boolean contains(int id) {
-      return jointCooc.containsKey(id);
+    /**
+     * Constructor.
+     * 
+     * @param initialCapacity
+     */
+    public LexCoocTable(int initialCapacity) {
+      counts = ConcurrentHashMultiset.create(new MapMaker().initialCapacity(initialCapacity));
     }
     
+    /**
+     * Add a word-word cooccurrence.
+     * 
+     * @param srcId
+     * @param tgtId
+     */
     public void addCooc(int srcId, int tgtId) {
-      jointCooc.putIfAbsent(srcId, ConcurrentHashMultiset.create());
-      jointCooc.get(srcId).add(tgtId);
+      counts.add(new LexCooc(srcId, tgtId));
+      counts.add(new LexCooc(MARGINALIZE, tgtId));
+      counts.add(new LexCooc(srcId, MARGINALIZE));
     }
     
-    public void incrementSrcMarginal(int srcId, int count) {
-      while (true) {
-        int oldCount = srcMarginals.count(srcId);
-        if (srcMarginals.setCount(srcId, oldCount, oldCount + count)) break;
+    /**
+     * Source marginal count.
+     * 
+     * @param srcId
+     * @return
+     */
+    public int getSrcMarginal(int srcId) { return counts.count(new LexCooc(srcId, MARGINALIZE)); }
+    
+    /**
+     * Target marginal count.
+     * 
+     * @param tgtId
+     * @return
+     */
+    public int getTgtMarginal(int tgtId) { return counts.count(new LexCooc(MARGINALIZE, tgtId)); }
+    
+    /**
+     * Joint count.
+     * 
+     * @param srcId
+     * @param tgtId
+     * @return
+     */
+    public int getJointCount(int srcId, int tgtId) { return counts.count(new LexCooc(srcId, tgtId)); }
+  }
+  
+  private static class LexCooc {
+    public int srcId;
+    public int tgtId;
+    public LexCooc(int srcId, int tgtId) {
+      this.srcId = srcId;
+      this.tgtId = tgtId;
+    }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      } else if ( ! (o instanceof LexCooc)) {
+        return false;
+      } else {
+        LexCooc other = (LexCooc) o;
+        return this.srcId == other.srcId && this.tgtId == other.tgtId;
       }
     }
-    
-    public void incrementTgtMarginal(int tgtId, int count) {
-      while (true) {
-        int oldCount = tgtMarginals.count(tgtId);
-        if (tgtMarginals.setCount(tgtId, oldCount, oldCount + count)) break;
-      }
-    }
-    
-    public int getSrcMarginal(int srcId) { return srcMarginals.count(srcId); }
-    
-    public int getTgtMarginal(int tgtId) { return tgtMarginals.count(tgtId); }
-    
-    public int getJointCount(int srcId, int tgtId) {
-      return jointCooc.containsKey(srcId) ? jointCooc.get(srcId).count(tgtId)
-          : 0;
+    @Override
+    public int hashCode() {
+      return (((srcId << 16) | tgtId) * srcId) + tgtId*32; 
     }
   }
   
@@ -735,13 +768,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     String inputFile = args[1];
     
     try {
-      long startTime = System.nanoTime();
       DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true);
       tm.createQueryCache(FeatureTemplate.DENSE_EXT);
-      
-      long elapsedTime = System.nanoTime() - startTime;
-      double numSecs = (double) elapsedTime / 1e9;
-      System.out.printf("Loading time: %.3fs%n", numSecs);
       System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
       System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
       
@@ -750,20 +778,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       
       System.out.printf("#source segments: %d%n", sourceFile.size());
       
-      startTime = System.nanoTime();
+      long startTime = System.nanoTime();
       int sourceId = 0;
       for (Sequence<IString> source : sourceFile) {
         tm.getRules(source, null, null, sourceId++, null);
       }
-      elapsedTime = System.nanoTime() - startTime;
-      numSecs = (double) elapsedTime / 1e9;
-      double timePerSegment = numSecs / (double) sourceFile.size();
+      double numSecs = TimingUtils.elapsedSeconds(startTime);
       System.out.printf("Sample time:\t%.3fs%n", numSecs);
-      System.out.printf("Time/segment:\t%.3fs%n", timePerSegment);
+      System.out.printf("Time/segment:\t%.3fs%n", numSecs / (double) sourceFile.size());
       
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
-  
 }

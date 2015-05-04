@@ -23,6 +23,7 @@ import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -135,7 +136,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     int totalHypothesesGenerated = 1;
     int numRecombined = 0;
     int numPruned = 0;
-    final long startTime = System.nanoTime();
+    final long startTime = TimingUtils.startTime();
     for (int i = 1; i <= sourceLength; i++) {
       // Prune old beams
       int startBeam = Math.max(0, i-maxPhraseLength);
@@ -187,11 +188,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // Debug statistics
-    final double elapsedTime = (System.nanoTime() - startTime) / 1e9;
-    logger.info(String.format("input %d: Decoding time: %.3fsec", sourceInputId, elapsedTime));
-    logger.info(String.format("input %d: #derivations generated: %d", sourceInputId, totalHypothesesGenerated));
-    logger.info(String.format("input %d: #recombined: %d", sourceInputId, numRecombined));
-    logger.info(String.format("input %d: #pruned by output constraint: %d", sourceInputId, numPruned));
+    final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
+    logger.info("input {}: Decoding time: {}sec", sourceInputId, elapsedTime);
+    logger.info("input {}: #derivations generated: {}", sourceInputId, totalHypothesesGenerated);
+    logger.info("input {}: #recombined: {}", sourceInputId, numRecombined);
+    logger.info("input {}: #pruned by output constraint: {}", sourceInputId, numPruned);
 
     // Return the best beam, which should be the goal beam
     boolean isGoalBeam = true;

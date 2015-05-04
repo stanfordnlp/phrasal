@@ -167,12 +167,12 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   /**
    * Return rules by the given span.
    * 
-   * @param startPos Absolute left edge of the span.
-   * @param endPos Absolute right edge of the span.
+   * @param startInclusive Absolute left edge of the span.
+   * @param endInclusive Absolute right edge of the span.
    * @return
    */
-  public List<ConcreteRule<TK,FV>> get(int startPos, int endPos) {
-    final int offset = getIndex(startPos, endPos);
+  public List<ConcreteRule<TK,FV>> get(int startInclusive, int endInclusive) {
+    final int offset = getIndex(startInclusive, endInclusive);
     if (offset < 0 || offset >= grid.length) {
       throw new IllegalArgumentException("Span is out-of-bounds");
     }
