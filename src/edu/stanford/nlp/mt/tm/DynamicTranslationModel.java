@@ -301,6 +301,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Zhang and Vogel (2005) trick -- prune higher-order queries using lower-order misses
     boolean[][] misses = new boolean[source.size()][source.size()+1];
     
+    // Speed up higher-order queries with bounds from lower-order queries
+    int[][][] searchBounds = new int[source.size()][source.size()+1][];
+    
     // Iterate over source span lengths
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
@@ -319,8 +322,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           ranges.add(new Range(i, j));
         }
       }
-      
-      // TODO(spenceg) Only sample each unique n-gram once.
       
       if (ranges.size() == 0) {
         // There can't be any higher order matches
@@ -348,13 +349,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           } else {
             // Sample from the suffix array
             final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
-            SuffixArraySample s = sa.sample(sourcePhrase, true, sampleSize);
+            int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
+            SuffixArraySample s = prefixBounds == null ? sa.sample(sourcePhrase, true, sampleSize)
+                : sa.sample(sourcePhrase, true, sampleSize, prefixBounds[0], prefixBounds[1]);
             if (s.samples.size() == 0) {
               // This span is not present in the training data.
               misses[i][j] = true;
               return null;
             }
-            double sampleRate = s.samples.size() / (double) s.numHits;
+            searchBounds[i][j] = new int[]{s.lb, s.ub};
+            int numHits = s.ub - s.lb + 1;
+            double sampleRate = s.samples.size() / (double) numHits;
             return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
                 r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
                 .collect(Collectors.toList());

@@ -251,7 +251,7 @@ public class ParallelSuffixArray implements Serializable {
           AlignedSentence sample = this.corpus.get(sentenceId);
           return new QueryResult(sample, startIndex, sentenceId);
         }).collect(Collectors.toList());
-        queryCache.put(currentSpan, new SuffixArraySample(hits, positions.length, start, end-1));
+        queryCache.put(currentSpan, new SuffixArraySample(hits, start, end-1));
       }
       return 1;
     }
@@ -372,8 +372,13 @@ public class ParallelSuffixArray implements Serializable {
    */
   private int findBound(final int[] query, boolean isSource, boolean lowerBound, int startFrom) {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
-    int low = startFrom;
-    int high = sa.length - 1;
+    return findBound(query, isSource, lowerBound, startFrom, sa.length - 1);
+  }
+  
+  private int findBound(final int[] query, boolean isSource, boolean lowerBound, int lo, int hi) {
+    int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
+    int low = lo;
+    int high = hi;
     while(low <= high) {
       final int mid = (low + high) >>> 1;
       assert mid < sa.length;
@@ -506,11 +511,17 @@ public class ParallelSuffixArray implements Serializable {
    * @return
    */
   public SuffixArraySample sample(final int[] query, boolean isSource, int maxHits) {
+    return sample(query, isSource, maxHits, 0, -1);
+  }
+  
+  public SuffixArraySample sample(final int[] query, boolean isSource, int maxHits, int minBound, int maxBound) {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
-    int lb = findBound(query, isSource, true, 0);
-    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), 0, -1, -1);
-    int ub = findBound(query, isSource, false, lb);
+    int lb = maxBound > minBound ? findBound(query, isSource, true, minBound, maxBound) :
+      findBound(query, isSource, true, minBound);
+    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    int ub = maxBound > lb ? findBound(query, isSource, false, lb, maxBound) :
+      findBound(query, isSource, false, lb);
     assert ub > 0;
     int numHits = ub - lb + 1;
     if(numHits < maxHits) {
@@ -523,7 +534,7 @@ public class ParallelSuffixArray implements Serializable {
         AlignedSentence sample = this.corpus.get(sentenceId);
         samples.add(new QueryResult(sample, start, sentenceId));
       }
-      return new SuffixArraySample(samples, numHits, lb, ub);
+      return new SuffixArraySample(samples, lb, ub);
 
     } else {
       // Stratified sample through the list of positions
@@ -540,7 +551,7 @@ public class ParallelSuffixArray implements Serializable {
         assert start + query.length <= sample.sourceLength();
         samples.add(new QueryResult(sample, start, sentenceId));
       }
-      return new SuffixArraySample(samples, numHits, lb, ub);
+      return new SuffixArraySample(samples, lb, ub);
     }
   }
 
@@ -608,12 +619,10 @@ public class ParallelSuffixArray implements Serializable {
    */
   public static class SuffixArraySample {
     public final List<QueryResult> samples;
-    public final int numHits;
     public final int lb;
     public final int ub;
-    public SuffixArraySample(List<QueryResult> q, int numHits, int lb, int ub) {
+    public SuffixArraySample(List<QueryResult> q, int lb, int ub) {
       this.samples = q;
-      this.numHits = numHits;
       this.lb = lb;
       this.ub = ub;
     }

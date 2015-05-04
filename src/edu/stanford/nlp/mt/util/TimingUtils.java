@@ -60,7 +60,6 @@ public final class TimingUtils {
     public String toString() {
       StringBuilder sb = new StringBuilder();
       NumberFormat nf = new DecimalFormat("0.000");
-      sb.append("TIMING REPORT: ");
       for (int i = 1, sz = marks.size(); i < sz; ++i) {
         if (i > 1) sb.append(" || ");
         double elapsed = elapsedSeconds(marks.get(i-1), marks.get(i));
