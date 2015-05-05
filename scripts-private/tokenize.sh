@@ -41,7 +41,7 @@ outfile=$outfile.tok
 
 # Path to cdec on the cluster
 # Currently runs on CentOS 6 boxes only
-CDEC_PATH=/u/nlp/packages/cdec
+CDEC_PATH=/Users/joewue/work/src/cdec
 
 JAVA_OPTS="-server -XX:+UseParallelGC -XX:+UseParallelOldGC"
 
@@ -91,7 +91,7 @@ for op in $*; do
 	ES_TOK="$ES_TOK -lowerCase"
 
 	# This applies to other languages
-    	tolower=tolower-utf8.py
+    	tolower=$PHRASAL_PATH/scripts-private/tolower-utf8.py
 
     elif [ $op == "segment_de" ]; then
         # spenceg[aug.2013] Segmentation was used in WMT2013, but German people
