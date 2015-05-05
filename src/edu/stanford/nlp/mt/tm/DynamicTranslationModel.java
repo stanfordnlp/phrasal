@@ -9,15 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import com.google.common.collect.ConcurrentHashMultiset;
-import com.google.common.collect.MapMaker;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
@@ -193,7 +191,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param vocabSize 
    */
   private void createLexCoocTable(int vocabSize) {
-    coocTable = new LexCoocTable(2*vocabSize);
+    // Constant chosen empirically
+    coocTable = new LexCoocTable(7*vocabSize);
     // Iterate over every (symmetric) alignment point in parallel
     sa.getCorpus().getSegments().parallelStream().forEach(s -> {
       for(int i = 0; i < s.source.length; ++i) {
@@ -710,17 +709,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
-   * Create a lexical cooccurrance table for a source input.
+   * A lexical co-occurrence table. This object is threadsafe.
    * 
    * @author Spence Green
    *
    */
-  private class LexCoocTable {
+  public static class LexCoocTable {
 
     public static final int NULL_ID = -1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;
     
-    private final ConcurrentHashMultiset<LexCooc> counts;
+    private final ConcurrentHashMap<Long,AtomicInteger> counts;
     
     /**
      * Constructor.
@@ -728,7 +727,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @param initialCapacity
      */
     public LexCoocTable(int initialCapacity) {
-      counts = ConcurrentHashMultiset.create(new MapMaker().initialCapacity(initialCapacity));
+      counts = new ConcurrentHashMap<>(initialCapacity);
     }
     
     /**
@@ -738,18 +737,27 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @param tgtId
      */
     public void addCooc(int srcId, int tgtId) {
-      counts.add(new LexCooc(srcId, tgtId));
-      counts.add(new LexCooc(MARGINALIZE, tgtId));
-      counts.add(new LexCooc(srcId, MARGINALIZE));
+      increment(pack(srcId, tgtId));
+      increment(pack(MARGINALIZE, tgtId));
+      increment(pack(srcId, MARGINALIZE));
     }
     
+    private void increment(long key) {
+      AtomicInteger counter = counts.get(key);
+      if (counter == null) {
+        counts.putIfAbsent(key, new AtomicInteger());
+        counter = counts.get(key);
+      }
+      counter.incrementAndGet();
+    }
+
     /**
      * Source marginal count.
      * 
      * @param srcId
      * @return
      */
-    public int getSrcMarginal(int srcId) { return counts.count(new LexCooc(srcId, MARGINALIZE)); }
+    public int getSrcMarginal(int srcId) { return getJointCount(srcId, MARGINALIZE); }
     
     /**
      * Target marginal count.
@@ -757,7 +765,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @param tgtId
      * @return
      */
-    public int getTgtMarginal(int tgtId) { return counts.count(new LexCooc(MARGINALIZE, tgtId)); }
+    public int getTgtMarginal(int tgtId) { return getJointCount(MARGINALIZE, tgtId); }
     
     /**
      * Joint count.
@@ -766,30 +774,28 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @param tgtId
      * @return
      */
-    public int getJointCount(int srcId, int tgtId) { return counts.count(new LexCooc(srcId, tgtId)); }
-  }
-  
-  private static class LexCooc {
-    public int srcId;
-    public int tgtId;
-    public LexCooc(int srcId, int tgtId) {
-      this.srcId = srcId;
-      this.tgtId = tgtId;
+    public int getJointCount(int srcId, int tgtId) { 
+      AtomicInteger counter = counts.get(pack(srcId, tgtId));
+      return counter == null ? 0 : counter.get();
     }
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      } else if ( ! (o instanceof LexCooc)) {
-        return false;
-      } else {
-        LexCooc other = (LexCooc) o;
-        return this.srcId == other.srcId && this.tgtId == other.tgtId;
-      }
-    }
-    @Override
-    public int hashCode() {
-      return (((srcId << 16) | tgtId) * srcId) + tgtId*17; 
+    
+    /**
+     * Number of entries in the table.
+     * 
+     * @return
+     */
+    public int size() { return counts.keySet().size(); }
+    
+    /**
+     * Merge two interger ids into an unsigned long value. This is two unwrapped calls
+     * to Integer.toUnsignedLong().
+     * 
+     * @param srcId
+     * @param tgtId
+     * @return
+     */
+    public long pack(int srcId, int tgtId) {
+      return ((((long) srcId) & 0xffffffffL) << 32) | ((long) tgtId) & 0xffffffffL;
     }
   }
   
@@ -801,23 +807,26 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static void main(String[] args) {
     String fileName = args[0];
     String inputFile = args[1];
-    
     try {
       DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true);
       tm.createQueryCache(FeatureTemplate.DENSE_EXT);
       System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
       System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
+      System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
+      System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
       
       // TODO(spenceg) Requires classmexer in the local directory.
-//      long numBytes = MemoryUtil.deepMemoryUsageOf(tm);
-//      System.out.printf("In-memory size: %d bytes%n", numBytes);
+//      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
+//      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
+//      System.out.printf("In-memory size cooc: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.coocTable));
+//      System.out.printf("In-memory size rule cache: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.ruleCache));
       
       // Read the source at once for accurate timing of queries
       List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
       
       System.out.printf("#source segments: %d%n", sourceFile.size());
       
-      long startTime = System.nanoTime();
+      long startTime = TimingUtils.startTime();
       int sourceId = 0;
       for (Sequence<IString> source : sourceFile) {
         tm.getRules(source, null, null, sourceId++, null);

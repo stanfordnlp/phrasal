@@ -1,34 +1,21 @@
 package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.Set;
 
-import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.SparseScorer;
-import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
-import edu.stanford.nlp.mt.tm.PhraseTable;
 import edu.stanford.nlp.mt.tm.TranslationModelFactory;
-import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
-import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Tool for comparing dynamic and pre-compiled TMs.
