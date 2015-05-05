@@ -54,6 +54,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("ter") || scoreMetricStr.equals("tergain")) {
       return "ter";
       
+    } else if (scoreMetricStr.equals("numPredictedWords")) {
+      return scoreMetricStr;
+      
     } else if (scoreMetricStr.equals("2bleu-ter") || scoreMetricStr.equals("2bleun-ter")) {
       return scoreMetricStr;
     
@@ -130,7 +133,10 @@ public final class SentenceLevelMetricFactory {
       
     } else if (scoreMetricStr.equals("ter")) {
       return new SLTERMetric<IString,String>();
-    
+      
+    } else if (scoreMetricStr.equals("numPredictedWords")) {
+      return new LocalNumPredictedWordsMetric<IString,String>();
+     
     } else if (scoreMetricStr.equals("2bleun-ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));

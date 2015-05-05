@@ -87,6 +87,9 @@ public final class CorpusLevelMetricFactory {
 
     } else if (evalMetric.equals("per")) {
       emetric = new PERMetric<IString, String>(references);
+      
+    } else if (evalMetric.equals("numPredictedWords")) {
+      emetric = new NumPredictedWordsMetric<IString, String>(references);
     } else {
 			throw new UnsupportedOperationException(String.format(
 																								"Unrecognized metric: %s%n", evalMetric));
