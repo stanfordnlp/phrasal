@@ -154,4 +154,22 @@ public class SampledRule {
     }
     return f2e;
   }
+  
+  /**
+   * Generate an integer key from the alignment template.
+   * 
+   * @return
+   */
+  public int getAlignmentKey() {
+    int key = srcStartInclusive + tgtEndExclusive;
+    for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
+      if (saEntry.sentence.isSourceUnaligned(i)) {
+        key = i % 2 == 0 ? key << (i % 16) : key >> (i % 8);
+      } else {
+        int[] f2eI = saEntry.sentence.f2e(i);
+        key *= MurmurHash.hash32(f2eI, f2eI.length, 1);
+      }
+    }
+    return key;
+  }
 }
