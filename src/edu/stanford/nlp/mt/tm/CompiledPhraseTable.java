@@ -141,8 +141,8 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
       List<List<String>> fields = StringUtils.splitFieldsFast(line, CompiledPhraseTable.FIELD_DELIM);
 
       // The standard format has five fields
-      assert fields.size() == 5 : String.format("phrase table line %d has %d fields",
-          reader.getLineNumber(), fields.size());
+      assert fields.size() == 5 : String.format("phrase table line %d has %d fields: %s",
+          reader.getLineNumber(), fields.size(), line);
       Sequence<IString> source = IStrings.toIStringSequence(fields.get(0));
       Sequence<IString> target = IStrings.toIStringSequence(fields.get(1));
 //      String sourceConstellation = fields[2];
