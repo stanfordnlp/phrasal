@@ -390,19 +390,21 @@ public class Phrasal {
     if (!config.keySet().containsAll(REQUIRED_FIELDS)) {
       Set<String> missingFields = new HashSet<>(REQUIRED_FIELDS);
       missingFields.removeAll(config.keySet());
-      throw new RuntimeException(String.format(
-          "The following required fields are missing: %s%n", missingFields));
+      logger.fatal("The following required fields are missing: {}", missingFields);
+      throw new RuntimeException();
     }
     // Check for unrecognized parameters
     if (!ALL_RECOGNIZED_FIELDS.containsAll(config.keySet())) {
       Set<String> extraFields = new HashSet<>(config.keySet());
       extraFields.removeAll(ALL_RECOGNIZED_FIELDS);
-      throw new RuntimeException(String.format(
-          "The following fields are unrecognized: %s%n", extraFields));
+      logger.warn("The following fields are unrecognized: {}", extraFields);
     }
 
     numThreads = config.containsKey(NUM_THREADS) ? Integer.parseInt(config.get(NUM_THREADS).get(0)) : 1;
-    if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
+    if (numThreads < 1) {
+      logger.fatal("Number of threads must be positive: {}", numThreads);
+      throw new RuntimeException();
+    }
     logger.info("Number of threads: {}", numThreads);
 
     if (withGaps) {
@@ -425,7 +427,10 @@ public class Phrasal {
     // are only applied automatically to text read from the console.
     if (config.containsKey(PREPROCESSOR_FILTER)) {
       List<String> parameters = config.get(PREPROCESSOR_FILTER);
-      if (parameters.size() == 0) throw new RuntimeException("Preprocessor configuration requires at least one argument");
+      if (parameters.size() == 0) {
+        logger.fatal("Preprocessor configuration requires at least one argument");
+        throw new RuntimeException();
+      }
       String language = parameters.get(0);
       String[] options = parameters.size() > 1 ? parameters.get(1).split("\\s+") : (String[]) null;
       preprocessor = ProcessorFactory.getPreprocessor(language, options);
@@ -433,7 +438,10 @@ public class Phrasal {
     }
     if (config.containsKey(POSTPROCESSOR_FILTER)) {
       List<String> parameters = config.get(POSTPROCESSOR_FILTER);
-      if (parameters.size() == 0) throw new RuntimeException("Postprocessor configuration requires at least one argument");
+      if (parameters.size() == 0) {
+        logger.fatal("Postprocessor configuration requires at least one argument");
+        throw new RuntimeException();
+      }
       String language = parameters.get(0);
       String[] options = parameters.size() > 1 ? parameters.get(1).split("\\s+") : (String[]) null;
       postprocessor = ProcessorFactory.getPostprocessor(language, options);
@@ -443,7 +451,10 @@ public class Phrasal {
     // Word->class maps
     if (config.containsKey(SOURCE_CLASS_MAP)) {
       List<String> parameters = config.get(SOURCE_CLASS_MAP);
-      if (parameters.size() == 0) throw new RuntimeException("Source class map requires a file argument");
+      if (parameters.size() == 0) {
+        logger.fatal("Source class map requires a file argument");
+        throw new RuntimeException();
+      }
       SourceClassMap map = SourceClassMap.getInstance();
       for (String filename : parameters) {
         map.load(filename);
@@ -452,7 +463,10 @@ public class Phrasal {
     }
     if (config.containsKey(TARGET_CLASS_MAP)) {
       List<String> parameters = config.get(TARGET_CLASS_MAP);
-      if (parameters.size() == 0) throw new RuntimeException("Target class map requires a file argument");
+      if (parameters.size() == 0) {
+        logger.fatal("Target class map requires a file argument");
+        throw new RuntimeException();
+      }
       TargetClassMap map = TargetClassMap.getInstance();
       for (String filename : parameters) {
         map.load(filename);
@@ -469,18 +483,10 @@ public class Phrasal {
     if (config.containsKey(DISTORTION_LIMIT)) {
       List<String> strDistortionLimit = config.get(DISTORTION_LIMIT);
       if (strDistortionLimit.size() != 1) {
-        throw new RuntimeException(String.format(
-            "Parameter '%s' takes one and only one argument", DISTORTION_LIMIT));
+        logger.fatal("Parameter '{}' takes one and only one argument", DISTORTION_LIMIT);
+        throw new RuntimeException();
       }
-      try {
-        distortionLimit = Integer.parseInt(strDistortionLimit.get(0));
-      } catch (NumberFormatException e) {
-        throw new RuntimeException(
-            String
-                .format(
-                    "Argument '%s' to parameter '%s' can not be parsed as an integer value%n",
-                    strDistortionLimit.get(0), DISTORTION_LIMIT));
-      }
+      distortionLimit = Integer.parseInt(strDistortionLimit.get(0));
     }
     
     // DTU decoding
@@ -561,7 +567,8 @@ public class Phrasal {
            filename = fields[1];
          
          } else {
-           throw new RuntimeException("Invalid phrase table specification: " + filename);
+           logger.fatal("Invalid phrase table specification: {}", filename);
+           throw new RuntimeException();
          }
          logger.info("Loading independent phrase table: {} {}", filename, Arrays.toString(generatorOptions));
          Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> generatorPair =  
@@ -578,7 +585,8 @@ public class Phrasal {
       
       List<String> parameters = config.get(REORDERING_MODEL);
       if (parameters.size() < 3) {
-        throw new RuntimeException(REORDERING_MODEL + " parameter requires at least three arguments");
+        logger.fatal(REORDERING_MODEL + " parameter requires at least three arguments");
+        throw new RuntimeException();
       }
       String modelType = parameters.get(0);
       String[] modelFilenames = parameters.get(1).split(TranslationModelFactory.SEPARATOR);
@@ -586,8 +594,9 @@ public class Phrasal {
       parameters = parameters.subList(3, parameters.size());
       if (modelFilenames.length != phraseTables.size()) {
         // Constraint: each phrase table must have an associated lexicalized reordering model
-        throw new RuntimeException("Each phrase table must have an associated reordering model: " + translationModelFile +
-            " ||| " + parameters.get(1));
+        logger.fatal("Each phrase table must have an associated reordering model: {} ||| {}", translationModelFile, 
+            parameters.get(1));
+        throw new RuntimeException();
       }
       
       for (int i = 0, sz = modelFilenames.length; i < sz; ++i) {
@@ -602,7 +611,8 @@ public class Phrasal {
           lexReorderFeaturizers.add(new HierarchicalReorderingFeaturizer(mlrt, parameters));
 
         } else {
-          throw new RuntimeException("Unsupported reordering model type: " + modelType);
+          logger.fatal("Unsupported reordering model type: " + modelType);
+          throw new RuntimeException();
         }
       }
     }
@@ -646,9 +656,9 @@ public class Phrasal {
               args = token.replaceFirst(".*\\(", "");
             }
           } else {
-            logger.error("Error: '(' expected immediately after feature name {}", token);
-            logger.error("Note that no whitespace between '(' and the associated feature name is allowed");
-            System.exit(-1);
+            logger.fatal("Error: '(' expected immediately after feature name {}", token);
+            logger.fatal("Note that no whitespace between '(' and the associated feature name is allowed");
+            throw new RuntimeException();
           }
         } else {
           if (token.endsWith(")")) {
@@ -672,8 +682,8 @@ public class Phrasal {
         }
       }
       if (featurizerName != null) {
-        logger.info("Error: no ')' found for featurizer {}", featurizerName);
-        System.exit(-1);
+        logger.fatal("Error: no ')' found for featurizer {}", featurizerName);
+        throw new RuntimeException();
       }
     }
 
@@ -736,27 +746,12 @@ public class Phrasal {
     }
 
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {
-      try {
-        maxSentenceSize = Integer.parseInt(config.get(MAX_SENTENCE_LENGTH).get(
-            0));
-        if (maxSentenceSize == 0)
-          maxSentenceSize = Integer.MAX_VALUE;
-      } catch (NumberFormatException e) {
-        throw new RuntimeException(String.format(
-            "Argument %s to %s can not be parsed as an integer",
-            config.get(MAX_SENTENCE_LENGTH), MAX_SENTENCE_LENGTH));
-      }
+      maxSentenceSize = Integer.parseInt(config.get(MAX_SENTENCE_LENGTH).get(0));
+      if (maxSentenceSize == 0) maxSentenceSize = Integer.MAX_VALUE;
     }
 
     if (config.containsKey(MIN_SENTENCE_LENGTH)) {
-      try {
-        minSentenceSize = Integer.parseInt(config.get(MIN_SENTENCE_LENGTH).get(
-            0));
-      } catch (NumberFormatException e) {
-        throw new RuntimeException(String.format(
-            "Argument %s to %s can not be parsed as an integer",
-            config.get(MIN_SENTENCE_LENGTH), MIN_SENTENCE_LENGTH));
-      }
+      minSentenceSize = Integer.parseInt(config.get(MIN_SENTENCE_LENGTH).get(0));
     }
 
     logger.info("WeightConfig: '{}' {}", Counters.toBiggestValuesFirstString(globalModel, 20), 
@@ -812,7 +807,8 @@ public class Phrasal {
         infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
       
       } catch (CloneNotSupportedException e) {
-        throw new RuntimeException(e);
+        logger.fatal("Could not clone an inferer member", e);
+        throw new RuntimeException();
       }
 
       // Silently ignored by the cube pruning decoder
@@ -828,16 +824,8 @@ public class Phrasal {
       }
 
       if (config.containsKey(BEAM_SIZE)) {
-        try {
-          int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
-          infererBuilder.setBeamSize(beamSize);
-        } catch (NumberFormatException e) {
-          throw new RuntimeException(
-              String
-                  .format(
-                      "Beam size %s, as specified by argument %s, can not be parsed as an integer value%n",
-                      config.get(BEAM_SIZE).get(0), BEAM_SIZE));
-        }
+        int beamSize = Integer.parseInt(config.get(BEAM_SIZE).get(0));
+        infererBuilder.setBeamSize(beamSize);
       }
       inferers.add(infererBuilder.newInferer());
     }
@@ -871,9 +859,8 @@ public class Phrasal {
             nbestListFilename, nbestListSize);
 
       } else {
-        throw new RuntimeException(
-            String.format("%s requires 1 to 4 arguments, not %d", NBEST_LIST_OPT,
-                nbestOpt.size()));
+        logger.fatal("{} requires 1 to 4 arguments, not {}", NBEST_LIST_OPT, nbestOpt.size());
+        throw new RuntimeException();
       }
 
     } else {
@@ -1272,8 +1259,7 @@ public class Phrasal {
    * @throws IOException
    */
   public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
-    Map<String, List<String>> config = IOTools.readConfigFile(phrasalIniFile);
-    return loadDecoder(config);
+    return loadDecoder(IOTools.readConfigFile(phrasalIniFile));
   }
 
   /**
@@ -1285,35 +1271,23 @@ public class Phrasal {
   public static Phrasal loadDecoder(Map<String, List<String>> config) {
     try {
       Phrasal.initStaticMembers(config);
-      final Phrasal phrasal = new Phrasal(config);
-      
+      Phrasal phrasal = new Phrasal(config);
+
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
         public void run() {
           phrasal.shutdown();
         }
       });
-      
       return phrasal;
-
-    } catch (IllegalArgumentException e) {
-      e.printStackTrace();
-    } catch (SecurityException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InstantiationException e) {
-      e.printStackTrace();
-    } catch (IllegalAccessException e) {
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      e.printStackTrace();
-    } catch (NoSuchMethodException e) {
-      e.printStackTrace();
-    } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+    
+    } catch (InstantiationException | IllegalAccessException
+        | IllegalArgumentException | SecurityException
+        | InvocationTargetException | NoSuchMethodException
+        | ClassNotFoundException | IOException e) {
+      System.err.println("ERROR: Could not load Phrasal!");
+      throw new RuntimeException(e);
     }
-    throw new RuntimeException("Could not load Phrasal from config file!");
   }
   
   /**
@@ -1334,8 +1308,8 @@ public class Phrasal {
 
     // by default, exit on uncaught exception
     Thread.setDefaultUncaughtExceptionHandler((t, ex) -> {
-          logger.error("Uncaught exception from thread: {}", t.getName());
-          logger.error("Exception: ", ex);
+          logger.fatal("Uncaught exception from thread: {}", t.getName());
+          logger.fatal("Exception: ", ex);
           System.exit(-1);
         });
 
