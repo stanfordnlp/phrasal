@@ -28,7 +28,6 @@
 package edu.stanford.nlp.mt;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -88,6 +87,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
+import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -430,7 +430,7 @@ public class Phrasal {
 
     numThreads = config.containsKey(NUM_THREADS) ? Integer.parseInt(config.get(NUM_THREADS).get(0)) : 1;
     if (numThreads < 1) throw new RuntimeException("Number of threads must be positive: " + numThreads);
-    System.err.printf("Number of threads: %d%n", numThreads);
+    logger.info("Number of threads: {}", numThreads);
 
     if (withGaps) {
       recombinationMode = RecombinationFilterFactory.DTU_RECOMBINATION;
@@ -456,7 +456,7 @@ public class Phrasal {
       String language = parameters.get(0);
       String[] options = parameters.size() > 1 ? parameters.get(1).split("\\s+") : (String[]) null;
       preprocessor = ProcessorFactory.getPreprocessor(language, options);
-      System.err.printf("Preprocessor filter: %s%n", preprocessor.getClass().getName());
+      logger.info("Preprocessor filter: {}", preprocessor.getClass().getName());
     }
     if (config.containsKey(POSTPROCESSOR_FILTER)) {
       List<String> parameters = config.get(POSTPROCESSOR_FILTER);
@@ -464,7 +464,7 @@ public class Phrasal {
       String language = parameters.get(0);
       String[] options = parameters.size() > 1 ? parameters.get(1).split("\\s+") : (String[]) null;
       postprocessor = ProcessorFactory.getPostprocessor(language, options);
-      System.err.printf("Postprocessor filter: %s%n", postprocessor.getClass().getName());
+      logger.info("Postprocessor filter: {}", postprocessor.getClass().getName());
     }
     
     // Word->class maps
@@ -474,7 +474,7 @@ public class Phrasal {
       SourceClassMap map = SourceClassMap.getInstance();
       for (String filename : parameters) {
         map.load(filename);
-        System.err.println("Loaded source class map: " + filename);
+        logger.info("Loaded source class map: {}", filename);
       }
     }
     if (config.containsKey(TARGET_CLASS_MAP)) {
@@ -483,7 +483,7 @@ public class Phrasal {
       TargetClassMap map = TargetClassMap.getInstance();
       for (String filename : parameters) {
         map.load(filename);
-        System.err.println("Loaded target class map: " + filename);
+        logger.info("Loaded target class map: {}", filename);
       }
     }
     
@@ -515,7 +515,7 @@ public class Phrasal {
         : ((gapOpts.size() > 1) ? FeaturizerFactory.GapType.both
             : FeaturizerFactory.GapType.source);
     String gapType = gapT.name();
-    System.err.println("Gap type: " + gapType);
+    logger.info("Gap type: {}", gapType);
 
     // Phrase table(s), which is a required parameter
     List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
@@ -523,7 +523,7 @@ public class Phrasal {
     int numPhraseFeatures = Integer.MAX_VALUE;
     if (ptOpts.size() == 2) {
       numPhraseFeatures = Integer.valueOf(ptOpts.get(1));
-      System.err.printf("Number of features for %s: %d%n", translationModelFile, numPhraseFeatures);
+      logger.info("Number of features for {}: {}", translationModelFile, numPhraseFeatures);
     }
 
     if (withGaps) {
@@ -536,7 +536,7 @@ public class Phrasal {
       int maxTargetPhraseSpan = (gapOpts.size() > 1) ? Integer.parseInt(gapOpts
           .get(1)) : -1;
       if (maxTargetPhraseSpan == -1) {
-        System.err.println("Phrases with target gaps not loaded into memory.");
+        logger.info("Phrases with target gaps not loaded into memory.");
         DTUTable.maxNumberTargetSegments = 1;
       }
       if (gapT == FeaturizerFactory.GapType.target
@@ -559,7 +559,7 @@ public class Phrasal {
     if (config.containsKey(OPTION_LIMIT_OPT)) { 
       ruleQueryLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
     }
-    System.err.printf("Phrase table option limit: %d%n", ruleQueryLimit);
+    logger.info("Phrase table option limit: {}", ruleQueryLimit);
 
     // Create the phrase table(s) 
     final String optionLimitString = String.valueOf(this.ruleQueryLimit);
@@ -590,7 +590,7 @@ public class Phrasal {
          } else {
            throw new RuntimeException("Invalid phrase table specification: " + filename);
          }
-         System.err.printf("Loading independent phrase table: %s %s%n", filename, Arrays.toString(generatorOptions));
+         logger.info("Loading independent phrase table: {} {}", filename, Arrays.toString(generatorOptions));
          Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> generatorPair =  
              TranslationModelFactory.<String>factory(filename, generatorOptions); 
          generators.add(generatorPair.first());
@@ -658,7 +658,7 @@ public class Phrasal {
               args = args.replaceAll("^\\s+", "");
               args = args.replaceAll("\\s+$", "");
               String[] argsList = args.split(",");
-              System.err.printf("Additional featurizer: %s.%nArgs: %s%n",
+              logger.info("Additional featurizer: {}. Args: {}",
                   featurizerName, Arrays.toString(argsList));
               Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                   .loadFeaturizer(featurizerName);
@@ -673,10 +673,8 @@ public class Phrasal {
               args = token.replaceFirst(".*\\(", "");
             }
           } else {
-            System.err.printf(
-                "Error: '(' expected immediately after feature name %s", token);
-            System.err
-                .printf("Note that no whitespace between '(' and the associated feature name is allowed%n");
+            logger.error("Error: '(' expected immediately after feature name {}", token);
+            logger.error("Note that no whitespace between '(' and the associated feature name is allowed");
             System.exit(-1);
           }
         } else {
@@ -686,7 +684,7 @@ public class Phrasal {
             args = args.replaceAll("^\\s+", "");
             args = args.replaceAll("\\s+$", "");
             String[] argsList = args.split(",");
-            System.err.printf("args: %s%n", Arrays.toString(argsList));
+            logger.info("args: {}", Arrays.toString(argsList));
             Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
                 .loadFeaturizer(featurizerName);
             featurizer = (Featurizer<IString, String>) featurizerClass
@@ -701,8 +699,7 @@ public class Phrasal {
         }
       }
       if (featurizerName != null) {
-        System.err.printf("Error: no ')' found for featurizer %s%n",
-            featurizerName);
+        logger.info("Error: no ')' found for featurizer {}", featurizerName);
         System.exit(-1);
       }
     }
@@ -718,7 +715,7 @@ public class Phrasal {
         : LinearFutureCostFeaturizer.class.getName();
     
     if (lgModel != null) {
-      System.err.printf("Language model: %s%n", lgModel);
+      logger.info("Language model: {}", lgModel);
       featurizer = FeaturizerFactory.factory(
         FeaturizerFactory.MOSES_DENSE_FEATURES,
         makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
@@ -749,7 +746,7 @@ public class Phrasal {
       if (featureAugmentationMode == null) {
         featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
       } else {
-        System.err.printf("Feature augmentation mode: %s%n", featureAugmentationMode);
+        logger.info("Feature augmentation mode: {}", featureAugmentationMode);
         featurizer = new FeatureExtractor<IString, String>(allFeaturizers, featureAugmentationMode);        
       }
     }
@@ -761,7 +758,7 @@ public class Phrasal {
     this.globalModel = new ClassicCounter<String>();
 
     if (config.containsKey(WEIGHTS_FILE)) {
-      System.err.printf("Weights file: %s%n", config.get(WEIGHTS_FILE).get(0));
+      logger.info("Weights file: {}", config.get(WEIGHTS_FILE).get(0));
       globalModel = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
     }
 
@@ -789,7 +786,8 @@ public class Phrasal {
       }
     }
 
-    System.err.printf("WeightConfig: '%s' %s%n", Counters.toBiggestValuesFirstString(globalModel, 100), (globalModel.size() > 100 ? "..." : ""));
+    logger.info("WeightConfig: '{}' {}", Counters.toBiggestValuesFirstString(globalModel, 20), 
+        (globalModel.size() > 20 ? "..." : ""));
 
 
     // Create Recombination Filter
@@ -807,7 +805,7 @@ public class Phrasal {
     if (config.containsKey(DROP_UNKNOWN_WORDS)) {
       dropUnknownWords = Boolean.parseBoolean(config.get(DROP_UNKNOWN_WORDS).get(0));
     }
-    System.err.printf("Unknown words policy: %s%n", dropUnknownWords ? "Drop" : "Keep");
+    logger.info("Unknown words policy: {}", dropUnknownWords ? "Drop" : "Keep");
     TranslationModel<IString,String> oovModel = 
         new UnknownWordPhraseGenerator<IString, String>(dropUnknownWords);
     
@@ -823,7 +821,7 @@ public class Phrasal {
     if (dtuDecoder) {
       searchAlgorithm = InfererBuilderFactory.DTU_DECODER;
     }
-    System.err.printf("Search algorithm: %s%n", searchAlgorithm);
+    logger.info("Search algorithm: {}", searchAlgorithm);
     // Configure InfererBuilder
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
@@ -870,7 +868,6 @@ public class Phrasal {
       }
       inferers.add(infererBuilder.newInferer());
     }
-    System.err.printf("Inferer Count: %d%n", inferers.size());
 
     // determine if we need to generate n-best lists
     List<String> nbestOpt = config.get(NBEST_LIST_OPT);
@@ -878,8 +875,7 @@ public class Phrasal {
       if (nbestOpt.size() == 1) {
         nbestListSize = Integer.parseInt(nbestOpt.get(0));
         assert nbestListSize >= 0;
-        System.err.printf("Generating n-best lists (size: %d)%n",
-            nbestListSize);
+        logger.info("Generating n-best lists (size: {})", nbestListSize);
 
       } else if (nbestOpt.size() >= 2 && nbestOpt.size() <= 4) {
         String nbestListFilename = nbestOpt.get(0);
@@ -898,7 +894,7 @@ public class Phrasal {
           nBestListFeaturePattern = Pattern.compile(nbestOpt.get(3));
         }
         
-        System.err.printf("Generating n-best lists to: %s (size: %d)%n",
+        logger.info("Generating n-best lists to: {} (size: {})",
             nbestListFilename, nbestListSize);
 
       } else {
@@ -1044,7 +1040,7 @@ public class Phrasal {
       }
       
       // log additional information to stderr
-      System.err.printf("input %d: 1-best model score: %.3f%n", sourceInputId, bestTranslationInfo.score);
+      logger.info("input {}: 1-best model score: {}", sourceInputId, bestTranslationInfo.score);
 
       // Output the n-best list if necessary
       if (nbestListWriter != null) {
@@ -1073,7 +1069,7 @@ public class Phrasal {
         alignmentWriter.printf("%n");
       }
       
-      System.err.printf("<<< decoder failure for id: %d >>>%n", sourceInputId);
+      logger.info("<<< decoder failure for id: {} >>>", sourceInputId);
     }
   }
 
@@ -1087,26 +1083,26 @@ public class Phrasal {
    * @throws IOException
    */
   public List<RichTranslation<IString,String>> decode(InputStream inputStream, boolean outputToConsole) throws IOException {
-    System.err.println("Entering main translation loop");
+    logger.info("Entering main translation loop");
     final MulticoreWrapper<DecoderInput,DecoderOutput> wrapper =
         new MulticoreWrapper<DecoderInput,DecoderOutput>(numThreads, new PhrasalProcessor(0));
     final LineNumberReader reader = new LineNumberReader(new InputStreamReader(
-        inputStream, "UTF-8"));
+        inputStream, IOTools.DEFAULT_ENCODING));
     final List<RichTranslation<IString,String>> bestTranslationList = outputToConsole ? null :
       new ArrayList<RichTranslation<IString,String>>();
     
     // Sanity check -- Set each thread's model to the current global model.
     this.scorers.stream().forEach(scorer -> scorer.updateWeights(globalModel));
     
-    final long startTime = System.nanoTime();
+    final long startTime = TimingUtils.startTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
       Sequence<IString> source = preprocessor == null ? IStrings.tokenize(line) :
         preprocessor.process(line.trim());
             
       if (source.size() > maxSentenceSize || source.size() < minSentenceSize) {
-        System.err.printf("Skipping: %s%n", line);
-        System.err.printf("Tokens: %d (min: %d max: %d)%n", source.size(), minSentenceSize,
+        logger.warn("Skipping: {}", line);
+        logger.warn("Tokens: {} (min: {} max: {})", source.size(), minSentenceSize,
             maxSentenceSize);
         continue;
       }
@@ -1140,9 +1136,9 @@ public class Phrasal {
       }
     }
 
-    double totalTime = ((double) System.nanoTime() - startTime) / 1e9;
+    double totalTime = TimingUtils.elapsedSeconds(startTime);
     double segmentsPerSec = (double) sourceInputId / totalTime;
-    System.err.printf("Decoding at %.2f segments/sec (total: %.2f sec)%n", segmentsPerSec, totalTime);
+    logger.info("Decoding at {} segments/sec (total: {} sec)", segmentsPerSec, totalTime);
     return bestTranslationList;
   }
 
@@ -1223,7 +1219,7 @@ public class Phrasal {
       tm.setFeaturizer(featurizer);
 
       DecoderLocalTranslationModel.set(tm);
-      System.err.printf("Loaded decoder-local translation model from %s%n", tm.getName());
+      logger.info("Loaded decoder-local translation model from %s%n", tm.getName());
 
     } else {
       // Sanity check
@@ -1265,12 +1261,12 @@ public class Phrasal {
    */
   private void shutdown() {
     if (nbestListWriter != null) {
-      System.err.println("Closing n-best writer");
+      logger.info("Closing n-best writer");
       nbestListWriter.close();
     }
     
     if (alignmentWriter != null) {
-      System.err.println("Closing alignment writer");
+      logger.info("Closing alignment writer");
       alignmentWriter.close();
     }
   }
@@ -1364,10 +1360,9 @@ public class Phrasal {
     }
 
     // by default, exit on uncaught exception
-    Thread
-        .setDefaultUncaughtExceptionHandler((t, ex) -> {
-          System.err.println("Uncaught exception from thread: " + t.getName());
-          ex.printStackTrace();
+    Thread.setDefaultUncaughtExceptionHandler((t, ex) -> {
+          logger.error("Uncaught exception from thread: {}", t.getName());
+          logger.error("Exception: ", ex);
           System.exit(-1);
         });
 
