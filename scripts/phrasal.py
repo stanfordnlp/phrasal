@@ -12,6 +12,10 @@
 # NOTE: This script is written for Python 2.7. Py3k support
 #       is untested.
 #
+# Dependencies:
+#    pip install pyaml
+#    pip install doit
+#
 # Author: Spence Green
 #
 import doit
