@@ -38,6 +38,7 @@ import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
+import edu.stanford.nlp.stats.Counters;
 
 /**
  * A dynamic translation model backed by a suffix array.
@@ -416,43 +417,35 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private List<Rule<IString>> samplesToRules(List<QueryResult> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
     
-//    if (sourceSpan.toString().equals("على الاعتراف ب#")) {
-//      int c = 10;
-//    }
-//    
     // Organize rules by candidate translation and compute lexical scores
+    // Choose the alignment template that occurs most often for each span.
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order).stream())
         .collect(Collectors.toList());
-    Map<TargetSpan,SampledRule> tgtToTemplate = new HashMap<>(rules.size());
-    Counter<TargetSpan> spanCounter = new ClassicCounter<>(rules.size());
+    Map<TargetSpan,Counter<SampledAlignment>> tgtToTemplate = new HashMap<>(rules.size());
     for (SampledRule rule : rules) {
-      scoreLex(rule);
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
-      spanCounter.incrementCount(tgtSpan);
-      SampledRule maxTemplate = tgtToTemplate.get(tgtSpan);
-      if (maxTemplate == null) {
-        tgtToTemplate.put(tgtSpan, rule);
-        
-      } else {
-        if (rule.lex_e_f > maxTemplate.lex_e_f && rule.lex_f_e > maxTemplate.lex_f_e) {
-          tgtToTemplate.put(tgtSpan, rule);
-        }
+      Counter<SampledAlignment> alTemps = tgtToTemplate.get(tgtSpan);
+      if (alTemps == null) {
+        alTemps = new ClassicCounter<>();
+        tgtToTemplate.put(tgtSpan, alTemps);
       }
+      alTemps.incrementCount(new SampledAlignment(rule));
     }
-    assert rules.size() == spanCounter.totalCount();
 
     // Collect phrase counts and choose the best alignment template
     // for each src => target rule.
-    List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.values());
-    int[] histogram = new int[ruleList.size()];
-    int ef_denom = 0;
-    for (int i = 0; i < histogram.length; ++i) {
-      SampledRule rule = ruleList.get(i);
-      TargetSpan tgt = new TargetSpan(rule.tgt);
-      histogram[i] = (int) spanCounter.getCount(tgt);
-      assert histogram[i] > 0;
-      ef_denom += histogram[i];
+    List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.size());
+    List<Integer> histoGram = new ArrayList<>(tgtToTemplate.size());
+    int ef_denom = rules.size();
+    for (TargetSpan tgtSpan : tgtToTemplate.keySet()) {
+      Counter<SampledAlignment> alTemps = tgtToTemplate.get(tgtSpan);
+      SampledAlignment maxAlignment = Counters.argmax(alTemps);
+      SampledRule maxRule = maxAlignment.rule;
+      scoreLex(maxRule);
+      ruleList.add(maxRule);
+      histoGram.add((int) alTemps.totalCount());
     }
+    int[] histogram = histoGram.stream().mapToInt(i -> i).toArray();
     
     // TODO(spenceg) Compute confidence intervals for phrase scores
     // MLE point estimates for now.
@@ -515,6 +508,38 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return scoredRules;
   }
   
+  private static class SampledAlignment {
+    public final SampledRule rule;
+    private final int hashCode;
+    public SampledAlignment(SampledRule rule) {
+      this.rule = rule;
+      this.hashCode = rule.getAlignmentKey();
+    }
+    @Override
+    public String toString() { return this.rule.toString(); }
+    @Override
+    public int hashCode() { return hashCode; }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      } else if ( ! (o instanceof SampledAlignment)) {
+        return false;
+      } else {
+        SampledAlignment other = (SampledAlignment) o;
+        int[][] f2e = rule.f2e();
+        int[][] f2eOther = other.rule.f2e();
+        if (f2e.length != f2eOther.length) return false;
+        for (int i = 0; i < f2e.length; ++i) {
+          if ( ! Arrays.equals(f2e[i], f2eOther[i])) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+  }
+  
   /**
    * Helper class for indexing rules.
    * 
@@ -561,57 +586,56 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final int[] source = rule.saEntry.sentence.source;
     final int[] target = rule.saEntry.sentence.target;
     
-    // Forward score p(e|f)
-    double lex_e_f = 1.0;
+    // Backward score p(f|e) -- Iterate over source
+    double lex_f_e = 1.0;
     for (int i = rule.srcStartInclusive; i < rule.srcEndExclusive; ++i) {
       final int srcId = source[i];
-      double c_f = coocTable.getSrcMarginal(srcId);
-      assert c_f > 0 : String.format("%d", srcId);
-      double efSum = 0.0;
+      double feSum = 0.0;
       if (rule.saEntry.sentence.isSourceUnaligned(i)) {
-        int c_e_f = coocTable.getJointCount(srcId, LexCoocTable.NULL_ID);
-        assert c_f > 0;
-        efSum = c_e_f / c_f;
+        int c_f_e = coocTable.getJointCount(srcId, LexCoocTable.NULL_ID);
+        int c_e = coocTable.getTgtMarginal(LexCoocTable.NULL_ID);
+        feSum = c_f_e / (double) c_e;
         
       } else {
         int[] tgtAlign = rule.saEntry.sentence.f2e(i);
         for (int j : tgtAlign) {
           int tgtId = target[j];
-          int c_e_f = coocTable.getJointCount(srcId, tgtId);
-          efSum += (c_e_f / c_f);
+          int c_f_e = coocTable.getJointCount(srcId, tgtId);
+          int c_e = coocTable.getTgtMarginal(tgtId);
+          feSum += (c_f_e / (double) c_e);
         }
-        efSum /= (double) tgtAlign.length;
+        feSum /= (double) tgtAlign.length;
       }
-      if (efSum == 0.0) efSum = MIN_LEX_PROB;
-      lex_e_f *= efSum;
+      if (feSum == 0.0) feSum = MIN_LEX_PROB;
+      lex_f_e *= feSum;
     }
-    assert lex_e_f >= 0 && lex_e_f <= 1.0;
+    assert lex_f_e >= 0 && lex_f_e <= 1.0;
     
-    // Backward score p(f|e)
-    double lex_f_e = 1.0;
+    // Backward score p(e|f) -- Iterate over target
+    double lex_e_f = 1.0;
     for (int i = rule.tgtStartInclusive; i < rule.tgtEndExclusive; ++i) {
       final int tgtId = target[i];
-      double c_e = coocTable.getTgtMarginal(tgtId);
-      assert c_e > 0 : String.format("%d", tgtId);
-      double feSum = 0.0;
+      double efSum = 0.0;
       if (rule.saEntry.sentence.isTargetUnaligned(i)) {
-        int c_f_e = coocTable.getJointCount(LexCoocTable.NULL_ID, tgtId);
-        feSum = c_f_e / c_e;
+        int c_e_f = coocTable.getJointCount(LexCoocTable.NULL_ID, tgtId);
+        int c_f = coocTable.getSrcMarginal(LexCoocTable.NULL_ID);
+        efSum = c_e_f / (double) c_f;
         
       } else {
         int[] srcAlign = rule.saEntry.sentence.e2f(i);
         for (int j : srcAlign) {
           final int srcId = source[j];
-          int c_f_e = coocTable.getJointCount(srcId, tgtId);
-          feSum += (c_f_e / c_e);
+          int c_e_f = coocTable.getJointCount(srcId, tgtId);
+          int c_f = coocTable.getSrcMarginal(srcId);
+          efSum += (c_e_f / (double) c_f);
         }
-        feSum /= (double) srcAlign.length;
+        efSum /= (double) srcAlign.length;
         
       }
-      if (feSum == 0.0) feSum = MIN_LEX_PROB;
-      lex_f_e *= feSum;
+      if (efSum == 0.0) efSum = MIN_LEX_PROB;
+      lex_e_f *= efSum;
     }
-    assert lex_f_e >= 0.0 && lex_f_e <= 1.0;
+    assert lex_e_f >= 0.0 && lex_e_f <= 1.0;
 
     rule.lex_e_f = lex_e_f;
     rule.lex_f_e = lex_f_e;
@@ -765,7 +789,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
     @Override
     public int hashCode() {
-      return (((srcId << 16) | tgtId) * srcId) + tgtId*32; 
+      return (((srcId << 16) | tgtId) * srcId) + tgtId*17; 
     }
   }
   
@@ -783,6 +807,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       tm.createQueryCache(FeatureTemplate.DENSE_EXT);
       System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
       System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
+      
+      // TODO(spenceg) Requires classmexer in the local directory.
+//      long numBytes = MemoryUtil.deepMemoryUsageOf(tm);
+//      System.out.printf("In-memory size: %d bytes%n", numBytes);
       
       // Read the source at once for accurate timing of queries
       List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
