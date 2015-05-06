@@ -10,11 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.tm.CombinedTranslationModel;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.tm.TranslationModelFactory;
-import edu.stanford.nlp.mt.tm.PhraseTable;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;
@@ -22,7 +21,6 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -44,10 +42,10 @@ public class FilterOOVByPhraseTable {
    * @throws IOException
    */
   public static TranslationModel<IString,String> load(String filename) throws IOException {
-    Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseGeneratorPair =  
+    TranslationModel<IString,String> translationModel =  
         TranslationModelFactory.<String>factory(filename);
-    TranslationModel<IString,String> phraseGenerator = new CombinedPhraseGenerator<IString,String>(
-        Arrays.asList(phraseGeneratorPair.first(), new UnknownWordPhraseGenerator<IString, String>(true)),
+    TranslationModel<IString,String> phraseGenerator = new CombinedTranslationModel<IString,String>(
+        Arrays.asList(translationModel, new UnknownWordPhraseGenerator<IString, String>(true)),
         QUERY_LIMIT);
     return phraseGenerator;
   }

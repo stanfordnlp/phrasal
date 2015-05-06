@@ -23,33 +23,45 @@ import edu.stanford.nlp.mt.util.Sequence;
  * 
  * @param <TK>
  */
-public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
+public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> {
   
   static public final boolean DEBUG = false;
 
-  static public final int DEFAULT_PHRASE_LIMIT = 50;
+  // Moses default
+  static public final int DEFAULT_PHRASE_LIMIT = 20;
 
-  private final List<TranslationModel<TK,FV>> phraseGenerators;
+  private final List<TranslationModel<TK,FV>> models;
   private final int ruleQueryLimit;
 
   /**
    * Constructor.
    * 
-   * @param phraseGenerators
+   * @param model
    */
-  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators) {
-    this(phraseGenerators, DEFAULT_PHRASE_LIMIT);
+  public CombinedTranslationModel(TranslationModel<TK,FV> model) {
+    this.models = new ArrayList<>(1);
+    this.models.add(model);
+    this.ruleQueryLimit = DEFAULT_PHRASE_LIMIT;
+  }
+  
+  /**
+   * Constructor.
+   * 
+   * @param models
+   */
+  public CombinedTranslationModel(List<TranslationModel<TK,FV>> models) {
+    this(models, DEFAULT_PHRASE_LIMIT);
   }
 
   /**
    * Constructor.
    * 
-   * @param phraseGenerators
+   * @param models
    * @param phraseLimit
    */
-  public CombinedPhraseGenerator(List<TranslationModel<TK,FV>> phraseGenerators,
+  public CombinedTranslationModel(List<TranslationModel<TK,FV>> models,
       int phraseLimit) {
-    this.phraseGenerators = phraseGenerators;
+    this.models = models;
     this.ruleQueryLimit = phraseLimit;
   }
 
@@ -81,7 +93,7 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   @Override
   public List<String> getFeatureNames() {
     List<String> featureNames = new ArrayList<>();
-    for (TranslationModel<TK,FV> generator : phraseGenerators) {
+    for (TranslationModel<TK,FV> generator : models) {
       featureNames.addAll(generator.getFeatureNames());
     }
     return featureNames;
@@ -94,9 +106,9 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
     final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = new HashMap<>(source.size() * source.size());
 
     // Support for decoder-local translation models
-    List<TranslationModel<TK,FV>> translationModels = phraseGenerators;
+    List<TranslationModel<TK,FV>> translationModels = models;
     if (DecoderLocalTranslationModel.get() != null) {
-      translationModels = new ArrayList<>(phraseGenerators);
+      translationModels = new ArrayList<>(models);
       translationModels.add(DecoderLocalTranslationModel.get());
     }
     
@@ -182,7 +194,7 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   @Override
   public int maxLengthSource() {
     int longest = -1;
-    for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseGenerator : models) {
       if (longest < phraseGenerator.maxLengthSource())
         longest = phraseGenerator.maxLengthSource();
     }
@@ -191,7 +203,7 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
 
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
-    for (TranslationModel<TK,FV> phraseTable : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseTable : models) {
       phraseTable.setFeaturizer(featurizer);
     }
   }
@@ -199,7 +211,7 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   @Override
   public int maxLengthTarget() {
     int longest = -1;
-    for (TranslationModel<TK,FV> phraseGenerator : phraseGenerators) {
+    for (TranslationModel<TK,FV> phraseGenerator : models) {
       if (longest < phraseGenerator.maxLengthTarget())
         longest = phraseGenerator.maxLengthTarget();
     }
@@ -215,6 +227,6 @@ public class CombinedPhraseGenerator<TK,FV> implements TranslationModel<TK,FV> {
   public List<ConcreteRule<TK, FV>> getRules(Sequence<TK> source,
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
-    throw new UnsupportedOperationException("Not yet implemented. Call getRuleGrid()");
+    return getRuleGrid(source, sourceInputProperties, targets, sourceInputId, scorer).asList();
   }
 }

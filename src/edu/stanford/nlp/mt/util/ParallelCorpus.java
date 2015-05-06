@@ -6,10 +6,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,10 +80,10 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     return Arrays.asList(string.trim().split("\\s+")).stream().mapToInt(i -> index.add(i)).toArray();
   }
   
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings("unchecked")
   public static Alignment extractAlignment(String alignStr, int sourceLen, int targetLen) {
-    Set[] f2e = new HashSet[sourceLen];
-    Set[] e2f = new HashSet[targetLen];
+    Set<Integer>[] f2e = new TreeSet[sourceLen];
+    Set<Integer>[] e2f = new TreeSet[targetLen];
     String[] alignmentPoints = alignStr.split("\\s+");
     for (String point : alignmentPoints) {
       final int splitIdx = point.indexOf("-");
@@ -91,33 +91,18 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
       if (srcPos < 0 || srcPos >= sourceLen) {
         throw new ArrayIndexOutOfBoundsException(String.format("Source length: %d  source index: %d", sourceLen, srcPos));
       }
-      if (f2e[srcPos] == null) f2e[srcPos] = new HashSet<>();
-      int numLinks = 0;
-      for (String tgtStr : point.substring(splitIdx+1, point.length()).split(",")) {
-        int tgtPos = Integer.parseInt(tgtStr);
+      if (f2e[srcPos] == null) f2e[srcPos] = new TreeSet<>();
+      Arrays.stream(point.substring(splitIdx+1, point.length()).split(",")).sorted()
+      .mapToInt(tgtStr -> Integer.parseInt(tgtStr)).forEach(tgtPos -> {
         if (tgtPos < 0 || tgtPos >= targetLen) {
-          throw new ArrayIndexOutOfBoundsException(String.format("Target length: %d  target index: %d", targetLen, tgtPos));          
-        }
-        if (numLinks >= AlignedSentence.MAX_FERTILITY) {
-          logger.info("Max fertility exceeded: " + alignStr);
-          break;
+          logger.error("Target length: {}  target index: {} alignmentStr: {}", targetLen, tgtPos, alignStr);
+          throw new ArrayIndexOutOfBoundsException();
         }
         f2e[srcPos].add(tgtPos);
-        if (e2f[tgtPos] == null) e2f[tgtPos] = new HashSet<>();
+        if (e2f[tgtPos] == null) e2f[tgtPos] = new TreeSet<>();
         e2f[tgtPos].add(srcPos);
-        ++numLinks;
-      }
+      });
     }
-    
-    // WSGDEBUG
-//    int numUnalignedTarget = 0;
-//    for (int i = 0; i < e2f.length; ++i) {
-//      if (e2f[i] == null) ++numUnalignedTarget;
-//    }
-//    if (numUnalignedTarget > 5) {
-//      System.err.println();
-//    }
-    
     return new Alignment(f2e, e2f);
   }
 
@@ -127,21 +112,12 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @author Spence Green
    *
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static class Alignment {
-    public int[][] f2e;
-    public int[][] e2f;
-    public Alignment(Set[] f2e, Set[] e2f) {
-      this.f2e = toArray(f2e);
-      this.e2f = toArray(e2f);
-    }
-    private static int[][] toArray(Set[] objectArr) {
-      int[][] arr = new int[objectArr.length][];
-      for (int i = 0; i < objectArr.length; ++i) {
-        arr[i] = objectArr[i] == null ? new int[0] :
-          objectArr[i].stream().mapToInt(x -> (int) x).sorted().toArray();
-      }
-      return arr;
+    public Set<Integer>[] f2e;
+    public Set<Integer>[] e2f;
+    public Alignment(Set<Integer>[] f2e, Set<Integer>[] e2f) {
+      this.f2e = f2e;
+      this.e2f = e2f;
     }
   }
   

@@ -39,7 +39,7 @@ import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
 import edu.stanford.nlp.mt.process.ProcessorFactory;
-import edu.stanford.nlp.mt.tm.CombinedPhraseGenerator;
+import edu.stanford.nlp.mt.tm.CombinedTranslationModel;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.tm.DecoderLocalTranslationModel;
@@ -76,7 +76,6 @@ import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
-import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
@@ -256,7 +255,7 @@ public class Phrasal {
   /**
    * Phrase table / translation model
    */
-  private TranslationModel<IString,String> phraseGenerator;
+  private TranslationModel<IString,String> translationModel;
   
   /**
    * Whether to filter unknown words in the output
@@ -347,7 +346,7 @@ public class Phrasal {
    * 
    * @return
    */
-  public TranslationModel<IString,String> getTranslationModel() { return phraseGenerator; }
+  public TranslationModel<IString,String> getTranslationModel() { return translationModel; }
  
   /**
    * Return the input properties loaded with the ini file.
@@ -489,26 +488,13 @@ public class Phrasal {
       distortionLimit = Integer.parseInt(strDistortionLimit.get(0));
     }
     
-    // DTU decoding
+    // DTU decoding (Galley and Manning, 2010)
     FeaturizerFactory.GapType gapT = !withGaps ? FeaturizerFactory.GapType.none
         : ((gapOpts.size() > 1) ? FeaturizerFactory.GapType.both
             : FeaturizerFactory.GapType.source);
     String gapType = gapT.name();
-    logger.info("Gap type: {}", gapType);
-
-    // Phrase table(s), which is a required parameter
-    List<String> ptOpts = config.get(TRANSLATION_TABLE_OPT);
-    String translationModelFile = ptOpts.get(0);
-    int numPhraseFeatures = Integer.MAX_VALUE;
-    if (ptOpts.size() == 2) {
-      numPhraseFeatures = Integer.valueOf(ptOpts.get(1));
-      logger.info("Number of features for {}: {}", translationModelFile, numPhraseFeatures);
-    }
-
     if (withGaps) {
-      // Support for gaps:
-      if (gapOpts.size() < 1 || gapOpts.size() > 2)
-        throw new UnsupportedOperationException();
+      logger.info("Gap type: {}", gapType);
       int maxSourcePhraseSpan = Integer.parseInt(gapOpts.get(0));
       DTUTable.setMaxPhraseSpan(maxSourcePhraseSpan);
 
@@ -533,90 +519,82 @@ public class Phrasal {
         DTUHypothesis.setMaxPendingPhrases(maxPendingPhrases);
       }
     }
-
+    
     // Phrase table query size limit
-    if (config.containsKey(OPTION_LIMIT_OPT)) { 
-      ruleQueryLimit = Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
-    }
+    if (config.containsKey(OPTION_LIMIT_OPT)) ruleQueryLimit = 
+        Integer.valueOf(config.get(OPTION_LIMIT_OPT).get(0));
     logger.info("Phrase table option limit: {}", ruleQueryLimit);
 
-    // Create the phrase table(s) 
-    final String optionLimitString = String.valueOf(this.ruleQueryLimit);
-    Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        TranslationModelFactory.<String>factory(translationModelFile,
-            makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString),
-            makePair(TranslationModelFactory.DYNAMIC_INDEX, "true"));
-    // TODO(spenceg) Add dynamic TM sample size
-    phraseGenerator = phraseTablePair.first();
+    // Translation model setup
+    List<String> tmOptions = config.get(TRANSLATION_TABLE_OPT);
+    String translationModelFile = tmOptions.get(0);
+    int numPhraseFeatures = Integer.MAX_VALUE;
+    String[] factoryOptions;
+    List<TranslationModel<IString,String>> translationModels = new ArrayList<>();
+    if (translationModelFile.startsWith(TranslationModelFactory.DYNAMIC_TAG)) {
+      factoryOptions = tmOptions.size() > 1 ? tmOptions.get(1).split(",") : new String[0];
+      
+    } else {
+      factoryOptions = new String[0];
+      if (tmOptions.size() == 2) {
+        numPhraseFeatures = Integer.valueOf(tmOptions.get(1));
+        logger.info("Number of features for {}: {}", translationModelFile, numPhraseFeatures);
+      }
+    }
+    TranslationModel<IString,String> primaryModel = TranslationModelFactory.
+        <String>factory(translationModelFile, factoryOptions);
+    translationModels.add(primaryModel);
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
     if (config.get(INDEPENDENT_PHRASE_TABLES) != null) {
-       List<TranslationModel<IString,String>> generators = new LinkedList<>();
-       generators.add(phraseGenerator);
        for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
+         logger.info("Loading independent phrase table: {}", filename);
          String[] fields = filename.split(":");
-         String[] generatorOptions;
-         if (fields.length == 1) {
+         String[] generatorOptions = new String[0];
+         if (fields.length == 2) {
            generatorOptions = new String[1];
-           generatorOptions[0] = makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString);
-         
-         } else if (fields.length == 2) {
-           generatorOptions = new String[2];
-           generatorOptions[0] = makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, optionLimitString);
+           filename = fields[0];
            generatorOptions[1] = makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]);
-           filename = fields[1];
-         
-         } else {
-           logger.fatal("Invalid phrase table specification: {}", filename);
-           throw new RuntimeException();
          }
-         logger.info("Loading independent phrase table: {} {}", filename, Arrays.toString(generatorOptions));
-         Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> generatorPair =  
+         TranslationModel<IString,String> model =  
              TranslationModelFactory.<String>factory(filename, generatorOptions); 
-         generators.add(generatorPair.first());
+         translationModels.add(model);
        }
-       phraseGenerator = new CombinedPhraseGenerator<IString,String>(generators, ruleQueryLimit);
     }
+    translationModel = new CombinedTranslationModel<>(translationModels, ruleQueryLimit);
 
-    // Load the lexicalized reordering model(s) and associated featurizers
+    // Load a lexicalized reordering model for a static phrase table
+    // TODO(spenceg) Add support for dynamic phrase tables.
     List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (config.containsKey(REORDERING_MODEL)) {
-      List<PhraseTable<IString>> phraseTables = phraseTablePair.second();
+      PhraseTable<IString> phraseTable = (PhraseTable<IString>) translationModels.get(0);
       
       List<String> parameters = config.get(REORDERING_MODEL);
       if (parameters.size() < 3) {
         logger.fatal(REORDERING_MODEL + " parameter requires at least three arguments");
         throw new RuntimeException();
       }
-      String modelType = parameters.get(0);
-      String[] modelFilenames = parameters.get(1).split(TranslationModelFactory.SEPARATOR);
-      String modelSpecification = parameters.get(2);
-      parameters = parameters.subList(3, parameters.size());
-      if (modelFilenames.length != phraseTables.size()) {
-        // Constraint: each phrase table must have an associated lexicalized reordering model
-        logger.fatal("Each phrase table must have an associated reordering model: {} ||| {}", translationModelFile, 
-            parameters.get(1));
-        throw new RuntimeException();
-      }
+      final String modelType = parameters.get(0);
+      final String modelFilename = parameters.get(1);
+      final String modelSpecification = parameters.get(2);
       
-      for (int i = 0, sz = modelFilenames.length; i < sz; ++i) {
-        String modelFilename = modelFilenames[i];
-        
-        if (modelType.equals("classic")) {
-          LexicalReorderingTable lrt = new LexicalReorderingTable(modelFilename, phraseTables.get(i), modelSpecification);
-          lexReorderFeaturizers.add(new LexicalReorderingFeaturizer(lrt));
+      if (modelType.equals("classic")) {
+        LexicalReorderingTable lrt = new LexicalReorderingTable(modelFilename, phraseTable, modelSpecification);
+        lexReorderFeaturizers.add(new LexicalReorderingFeaturizer(lrt));
 
-        } else if (modelType.equals("hierarchical")) {
-          ExtendedLexicalReorderingTable mlrt = new ExtendedLexicalReorderingTable(modelFilename, phraseTables.get(i), modelSpecification);
-          lexReorderFeaturizers.add(new HierarchicalReorderingFeaturizer(mlrt, parameters));
+      } else if (modelType.equals("hierarchical")) {
+        parameters = parameters.subList(3, parameters.size());
+        ExtendedLexicalReorderingTable mlrt = new ExtendedLexicalReorderingTable(modelFilename, phraseTable, 
+            modelSpecification);
+        lexReorderFeaturizers.add(new HierarchicalReorderingFeaturizer(mlrt, parameters));
 
-        } else {
-          logger.fatal("Unsupported reordering model type: " + modelType);
-          throw new RuntimeException();
-        }
+      } else {
+        logger.fatal("Unsupported reordering model type: " + modelType);
+        throw new RuntimeException();
       }
     }
 
+    // Featurizers
     List<Featurizer<IString, String>> additionalFeaturizers = new ArrayList<>();
     if (config.containsKey(ADDITIONAL_FEATURIZERS)) {
       List<String> tokens = config.get(ADDITIONAL_FEATURIZERS);
@@ -735,7 +713,7 @@ public class Phrasal {
     }
     
     // Link the final featurizer and the phrase table
-    phraseGenerator.setFeaturizer(featurizer);
+    translationModel.setFeaturizer(featurizer);
 
     // Create Scorer / weight vector
     this.globalModel = new ClassicCounter<String>();
@@ -781,16 +759,13 @@ public class Phrasal {
     inferers = new ArrayList<>(numThreads);
     scorers = new ArrayList<>(numThreads);
 
-    boolean dtuDecoder = (gapT != FeaturizerFactory.GapType.none);
-
     String searchAlgorithm = config.containsKey(SEARCH_ALGORITHM) ?
       config.get(SEARCH_ALGORITHM).get(0).trim() : InfererBuilderFactory.DEFAULT_INFERER;
-     
-    if (dtuDecoder) {
+    if (withGaps) {
       searchAlgorithm = InfererBuilderFactory.DTU_DECODER;
     }
     logger.info("Search algorithm: {}", searchAlgorithm);
-    // Configure InfererBuilder
+    
     AbstractBeamInfererBuilder<IString, String> infererBuilder = (AbstractBeamInfererBuilder<IString, String>) 
         InfererBuilderFactory.factory(searchAlgorithm);
 
@@ -799,7 +774,7 @@ public class Phrasal {
       try {
         infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
         infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
-        infererBuilder.setPhraseGenerator((TranslationModel<IString,String>) phraseGenerator.clone());
+        infererBuilder.setPhraseGenerator((TranslationModel<IString,String>) translationModel.clone());
         Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, globalModel, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
@@ -1026,7 +1001,7 @@ public class Phrasal {
       
       // Output the alignments if necessary
       if (alignmentWriter != null) {
-        alignmentWriter.printf("%n");
+        alignmentWriter.println();
       }
       
       logger.info("<<< decoder failure for id: {} >>>", sourceInputId);
@@ -1169,17 +1144,16 @@ public class Phrasal {
     final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix) ? 
         Boolean.parseBoolean( (String) inputProperties.get(InputProperty.TargetPrefix)) : false;
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, 
-        targets, targetsArePrefixes, phraseGenerator.maxLengthSource(), phraseGenerator.maxLengthTarget(),
+        targets, targetsArePrefixes, translationModel.maxLengthSource(), translationModel.maxLengthTarget(),
         wrapBoundary);
 
     // Configure the translation model
     if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
-      final String optionLimitString = String.valueOf(this.ruleQueryLimit);
       TranslationModel<IString,String> tm = (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
       tm.setFeaturizer(featurizer);
 
       DecoderLocalTranslationModel.set(tm);
-      logger.info("Loaded decoder-local translation model from %s%n", tm.getName());
+      logger.info("Loaded decoder-local translation model from {}", tm.getName());
 
     } else {
       // Sanity check
@@ -1243,7 +1217,7 @@ public class Phrasal {
   private static Map<String, List<String>> getConfigurationFrom(String configFile, Properties options) throws IOException {
     Map<String, List<String>> config = configFile == null ? new HashMap<String,List<String>>() :
       IOTools.readConfigFile(configFile);
-    // Command-line options supercede config file options
+    // Command-line options supersede config file options
     for (Map.Entry<Object, Object> e : options.entrySet()) {
       String key = e.getKey().toString();
       String value = e.getValue().toString();
