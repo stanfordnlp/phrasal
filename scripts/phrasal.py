@@ -136,7 +136,7 @@ def get_log_file_path(name):
     return os.path.join(LOGS_DIR, '%s.%s.log' % (EXPERIMENT_NAME, name))
         
 def execute_shell_cmd(cmd, stdin=None, stdout=subprocess.PIPE,
-                      stderr=subprocess.STDOUT):
+                      stderr=subprocess.STDOUT, cwd=SYSTEM_DIR):
     """
     Executes a command as a sub-process. Requires an underlying
     shell from the OS, but this should work on most platforms.
@@ -145,8 +145,10 @@ def execute_shell_cmd(cmd, stdin=None, stdout=subprocess.PIPE,
       The process handle.
     """
     print 'Executing:', cmd
-    return subprocess.Popen(cmd, shell=True,
-                            cwd=SYSTEM_DIR, env=os.environ,
+    return subprocess.Popen(cmd,
+                            shell=True,
+                            cwd=cwd,
+                            env=os.environ,
                             universal_newlines=True,
                             stdin=stdin,
                             stdout=stdout,
@@ -175,6 +177,7 @@ def task_mksystemdir():
             os.makedirs(CHECKPOINT_DIR)
         if not os.path.exists(LOGS_DIR):
             os.makedirs(LOGS_DIR)
+        checkpoint(CHECKPOINT_SYSTEM_DIR, 'done')
             
     return { 'actions' : [make_dirs],
              'targets' : [CHECKPOINT_SYSTEM_DIR]
@@ -182,39 +185,38 @@ def task_mksystemdir():
         
 def task_build():
     """
-    Build the Phrasal (git) repository.
+    Build the repository. Always execute this task.
     """
     def build_git_repo():
         if not k.TASK_BUILD in CONFIG:
-            checkpoint(CHECKPOINT_BUILD, 'done')
             return
         d = CONFIG[k.TASK_BUILD]
-        cwd = os.getcwd()
         for repo_path in d:
-            os.chdir(repo_path)
+            print 'Build repo:',repo_path
             for action,value in d[repo_path].iteritems():
                 if action == k.BUILD_BRANCH:
                     # Get the current branch
                     branch = value
-                    p = execute_shell_cmd('git symbolic-ref --short -q HEAD')
+                    p = execute_shell_cmd('git symbolic-ref --short -q HEAD',
+                                          cwd=repo_path)
                     current_branch = p.stdout.read()
                     retval = p.wait()
                     if current_branch != branch:
-                        retval = execute_shell_cmd('git checkout ' + branch).wait()
+                        retval = execute_shell_cmd('git checkout ' + branch,
+                                                   cwd=repo_path).wait()
                         if retval != 0:
                             return
                 elif action == k.BUILD_CMD:
                     repo_name = basename(repo_path)
                     log_name = 'build-' + repo_name
                     with open(get_log_file_path(log_name), 'w') as log_file:
-                        retval = execute_shell_cmd(value, stdout=log_file).wait()
+                        retval = execute_shell_cmd(value,
+                                                   stdout=log_file,
+                                                   cwd=repo_path).wait()
                     if retval != 0:
                         return
-            os.chdir(cwd)
-        checkpoint(CHECKPOINT_BUILD, 'done')
             
-    return { 'actions' : [build_git_repo],
-             'targets' : [CHECKPOINT_BUILD]
+    return { 'actions' : [build_git_repo]
          }
         
 def task_copy_data():
@@ -222,7 +224,20 @@ def task_copy_data():
     Copy data from other places on the filesystem to the
     system directory.
     """
-    def copy_remote_data():
+    def parse(entry):
+        fields = entry.strip().split()
+        if len(fields) == 1:
+            filename = basename(fields[0])
+            dest_path = os.path.join(COPY_DATA_DIR, filename)
+            return fields[0], dest_path
+        elif len(fields) == 2:
+            dest_path = os.path.join(COPY_DATA_DIR, fields[1])
+            return fields[0], dest_path
+        else:
+            err('Invalid path specification: ' + entry)
+            raise RuntimeError
+            
+    def copy_data():
         if not k.TASK_COPY_DATA in CONFIG:
             # Nothing to copy. Skip.
             checkpoint(CHECKPOINT_COPY_DATA, 'done')
@@ -230,18 +245,18 @@ def task_copy_data():
         if not os.path.exists(COPY_DATA_DIR):
             os.makedirs(COPY_DATA_DIR)
         d = CONFIG[k.TASK_COPY_DATA]
-        if isinstance(d, list):
-            for file_path in d:
-                dest_path = os.path.join(COPY_DATA_DIR, basename(file_path))
-                if not os.path.exists(dest_path):
-                    shutil.copy2(file_path, COPY_DATA_DIR)
-        else:
-            dest_path = os.path.join(COPY_DATA_DIR, basename(d))
+        if not isinstance(d, list):
+            d = [d]
+        for entry in d:
+            (source_path,dest_path) = parse(entry)
+            if not os.path.exists(source_path):
+                err('File does not exist: ' + source_path)
+                raise RuntimeError
             if not os.path.exists(dest_path):
-                shutil.copy2(d, COPY_DATA_DIR)
+                shutil.copy2(source_path, dest_path)
         checkpoint(CHECKPOINT_COPY_DATA, 'done')
     
-    return { 'actions' : [copy_remote_data],
+    return { 'actions' : [copy_data],
              'targets' : [CHECKPOINT_COPY_DATA]
          }
 
@@ -250,8 +265,8 @@ def task_compile_lm():
     Calls KenLM to compile a language model.
     """
     def make_lm():
-        sys.stderr.write('Looking for LM file ' + LM_FILE + '\n')
         if os.path.exists(LM_FILE):
+            print 'LM file exists:', LM_FILE
             # Don't run KenLM if the LM already exists on disk
             # Otherwise, doit will always run this task at least
             # once.
@@ -303,19 +318,19 @@ def task_compile_lm():
                 return
     
     return { 'actions' : [make_lm],
-             'file_dep' : [CHECKPOINT_COPY_DATA],
+             'file_dep' : [CHECKPOINT_SYSTEM_DIR,CHECKPOINT_COPY_DATA],
              'targets' : [LM_FILE]
          }
 
 def task_extract_tm():
     """
-    Extract a translation model.
-    TODO(spenceg) Assumes the new unfiltered TM builder,
-    whatever that is.
+    Extract a translation model. Only supports the dynamic translation
+    model. For pre-compiled TMs, see edu.stanford.nlp.mt.train.PhraseExtract,
+    or the old phrasal.sh.
     """
     def make_tm():
-        sys.stderr.write('Looking for TM file ' + TM_FILE + '\n')
         if os.path.exists(TM_FILE):
+            print 'TM file exists:', TM_FILE
             # Don't build the TM if it already exists on disk
             # Otherwise doit will run this task at least once
             return
@@ -336,7 +351,7 @@ def task_extract_tm():
             return
             
     return { 'actions' : [make_tm],
-             'file_dep' : [CHECKPOINT_COPY_DATA],
+             'file_dep' : [CHECKPOINT_SYSTEM_DIR,CHECKPOINT_COPY_DATA],
              'targets' : [TM_FILE]
          }
 
@@ -417,7 +432,7 @@ def task_tune():
             # Single ref as the argument to the tuning command
             ref = ref[0]
         options += ' -n ' + EXPERIMENT_NAME
-        wts = d[k.TUNE_WTS]
+        wts = qualify_path(d[k.TUNE_WTS])
         
         if not os.path.exists(qualify_path(wts)):
             execute_shell_cmd('touch %s' % wts)

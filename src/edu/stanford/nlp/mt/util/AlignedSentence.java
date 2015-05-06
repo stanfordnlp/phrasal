@@ -1,9 +1,12 @@
 package edu.stanford.nlp.mt.util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
- * Lightweight implementation of a training example.
+ * Compact representation of a training example.
  * 
  * @author Spence Green
  *
@@ -34,9 +37,10 @@ public class AlignedSentence implements Serializable {
    * @param source
    * @param target
    * @param f2e
+   * @param e2f
    */
   public AlignedSentence(int[] source, int[] target, 
-      int[][] f2e, int[][] e2f) throws IllegalArgumentException {
+      Set<Integer>[] f2e, Set<Integer>[] e2f) throws IllegalArgumentException {
     if (source.length > MAX_SENTENCE_LENGTH) throw new IllegalArgumentException();
     if (target.length > MAX_SENTENCE_LENGTH) throw new IllegalArgumentException();
     this.source = source;
@@ -45,13 +49,21 @@ public class AlignedSentence implements Serializable {
     this.e2f = flatten(e2f);
   }
 
-  public static int[] flatten(int[][] algn) {
+  /**
+   * Compress a set of alignment links into an integer array.
+   * 
+   * @param algn
+   * @return
+   */
+  private static int[] flatten(Set<Integer>[] algn) {
     int[] flatArr = new int[algn.length];
     for (int i = 0; i < flatArr.length; ++i) {
-      int numLinks = Math.min(MAX_FERTILITY, algn[i].length);
+      if (algn[i] == null) continue;
+      List<Integer> points = new ArrayList<>(algn[i]);
       int al = 0;
-      for (int j = 0; j < numLinks; ++j) {
-        int pos = (algn[i][j]+1) << (j*8);
+      for (int j = 0, sz = Math.min(MAX_FERTILITY, points.size()); 
+          j < sz; ++j) {
+        int pos = (points.get(j)+1) << (j*8);
         al |= pos;
       }
       flatArr[i] = al;

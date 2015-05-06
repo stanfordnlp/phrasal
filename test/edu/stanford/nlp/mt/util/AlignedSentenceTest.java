@@ -38,7 +38,7 @@ public class AlignedSentenceTest {
     assertEquals(3, f2Links[0]);
     assertEquals(4, f2Links[1]);
     assertEquals(5, f2Links[2]);
-    assertEquals(7, f2Links[3]);
+    assertEquals(6, f2Links[3]);
     
     int[] f3Links = sentence.f2e(3);
     assertEquals(0, f3Links.length);

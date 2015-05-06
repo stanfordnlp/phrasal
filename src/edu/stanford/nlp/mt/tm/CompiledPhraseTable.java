@@ -22,7 +22,8 @@ import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.util.Pair;
+import edu.stanford.nlp.mt.util.TimingUtils;
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -286,30 +287,25 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     }
     String model = args[0];
     String inputFile = args[1];
-    final int queryLimit = 100;
     
     // Load
-    long startTime = System.nanoTime();
-    Pair<TranslationModel<IString,String>,List<PhraseTable<IString>>> phraseTablePair = 
-        TranslationModelFactory.<String>factory(model,
-            String.format("%s:%d", TranslationModelFactory.QUERY_LIMIT_OPTION, queryLimit));
-    long elapsedTime = System.nanoTime() - startTime;
-    double numSecs = elapsedTime / 1e9;
-    System.out.printf("Load time: %.3fs%n", numSecs);
-    TranslationModel<IString,String> tm = phraseTablePair.first();
-
+    TimeKeeper timer = TimingUtils.start();
+    TranslationModel<IString,String> tm = 
+        TranslationModelFactory.<String>factory(model);
+    tm = new CombinedTranslationModel<>(tm);
+    timer.mark("Load");
+    
     List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
     System.out.printf("#source segments: %d%n", sourceFile.size());
     
     // Query
-    startTime = System.nanoTime();
+    long startTime = TimingUtils.startTime();
     for (Sequence<IString> source : sourceFile) {
       tm.getRuleGrid(source, null, null, 0, null);
     }
-    elapsedTime = System.nanoTime() - startTime;
-    numSecs = (double) elapsedTime / 1e9;
-    double timePerSegment = numSecs / (double) sourceFile.size();
-    System.out.printf("Elapsed time:\t%.3fs%n", numSecs);
+    timer.mark("Decode");
+    double timePerSegment = TimingUtils.elapsedSeconds(startTime) / (double) sourceFile.size();
+    System.out.println(timer);
     System.out.printf("Time/segment:\t%.3fs%n", timePerSegment);
   }
 }
