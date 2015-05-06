@@ -34,7 +34,7 @@ DECODER_LM_LOADER = 'lm-loader'
 TASK_TUNE = 'tune'
 TUNE_SRC = 'source'
 TUNE_REFS = 'refs'
-TUNE_WTS = 'initial-wts'
+TUNE_INITIAL_WTS = 'initial-wts'
 TUNE_OPTIONS = 'options'
 
 # TASK: evaluate

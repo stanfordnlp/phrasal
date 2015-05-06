@@ -408,6 +408,13 @@ def task_tune():
     """
     Run tuning. Only supports online tuning right now.
     """
+    def touch(path):
+        """
+        Emulates the behavior of the UNIX touch command
+        """
+        with open(path, 'a'):
+            os.utime(path, None)
+        
     def tune():
         # Check to see if decoder config contains a weights file
         # Or if the tuning task has been specified
@@ -432,10 +439,10 @@ def task_tune():
             # Single ref as the argument to the tuning command
             ref = ref[0]
         options += ' -n ' + EXPERIMENT_NAME
-        wts = qualify_path(d[k.TUNE_WTS])
-        
-        if not os.path.exists(qualify_path(wts)):
-            execute_shell_cmd('touch %s' % wts)
+        wts = qualify_path(d[k.TUNE_INITIAL_WTS])
+
+        # The initial weights file must exist.
+        touch(wts)
         
         java_cmd = get_java_cmd('edu.stanford.nlp.mt.tune.OnlineTuner')
         cmd = '%s %s %s %s %s %s' % (java_cmd, options, source, ref, DECODER_TUNE_INI, wts)
