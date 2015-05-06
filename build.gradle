@@ -50,6 +50,8 @@ sourceSets {
 //
 task compileKenLM(type: Exec) {
   commandLine 'src-cc/compile_JNI.sh'
+  workingDir 'src-cc/kenlm'
+  commandLine './bjam'
 }
 
 tasks.withType(Test) {
