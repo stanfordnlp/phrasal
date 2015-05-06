@@ -14,6 +14,8 @@ import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.ParallelCorpus;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
+import edu.stanford.nlp.mt.util.TimingUtils;
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -180,21 +182,20 @@ public class DynamicTMBuilder {
     logger.info("Alignment file (f2e): {}", alignFEfile);
     if (alignEFfile != null) logger.info("Alignment file (e2f): {}", alignEFfile);
     
-    long startTime = System.nanoTime();
+    TimeKeeper timer = TimingUtils.start();
     DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity) :
       new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type);
+    timer.mark("Loading and symmetrization");
+    
     DynamicTranslationModel<String> tm = tmBuilder.getModel();
-    long elapsedTime = System.nanoTime() - startTime;
-    double numSecs = ((double) elapsedTime) / 1e9;
-    logger.info("Construction time: {}s", numSecs);
-    
-    // WSGDEBUG
-//    long numBytes = MemoryUtil.deepMemoryUsageOf(tm);
-//    System.out.println("#bytes: " + String.valueOf(numBytes));
-    
+    timer.mark("Suffix array construction");
+        
     try {
       logger.info("Serializing to: " + outputFileName);
       IOTools.serialize(outputFileName, tm);
+      timer.mark("Serialization");
+      logger.info("Timing summary: {}", timer);
+      logger.info("Success! Shutting down...");
     } catch (IOException e) {
       logger.error("Unable to serialize to: " + outputFileName, e);
     }

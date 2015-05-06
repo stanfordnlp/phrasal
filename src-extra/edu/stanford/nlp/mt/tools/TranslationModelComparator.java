@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.SparseScorer;
+import edu.stanford.nlp.mt.tm.CombinedTranslationModel;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.TranslationModelFactory;
 import edu.stanford.nlp.mt.tm.TranslationModel;
@@ -40,16 +41,15 @@ public final class TranslationModelComparator {
           TranslationModelComparator.class.getName());
       System.exit(-1);
     }
-    
     String sourceFile = args[0];
     String dynTMFile = args[1];
-    TranslationModel<IString,String> dynTM = TranslationModelFactory.<String>factory(dynTMFile,
-            makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, "20"),
-            makePair(TranslationModelFactory.DYNAMIC_INDEX, "true")).first();
+    String[] dynTMOptions = new String[]{makePair(TranslationModelFactory.DYNAMIC_INDEX, "true")};
+    TranslationModel<IString,String> dynTM = TranslationModelFactory.<String>factory(dynTMFile,dynTMOptions);
+    dynTM = new CombinedTranslationModel<>(dynTM);
     
     String comTMFile = args[2];
-    TranslationModel<IString,String> compiledTM = TranslationModelFactory.<String>factory(comTMFile,
-        makePair(TranslationModelFactory.QUERY_LIMIT_OPTION, "20")).first();
+    TranslationModel<IString,String> compiledTM = TranslationModelFactory.<String>factory(comTMFile);
+    compiledTM = new CombinedTranslationModel<>(compiledTM);
     Counter<String> weightsDyn = args.length > 3 ? IOTools.readWeights(args[3]) : null;
     Counter<String> weightsComp = args.length > 3 ? IOTools.readWeights(args[4]) : null;
     Scorer<String> scorer = weightsDyn == null ? null : new SparseScorer(weightsDyn);
