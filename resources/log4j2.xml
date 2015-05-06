@@ -5,20 +5,19 @@
   </Properties>
 
   <Appenders>
-    <RollingFile name="file-log" fileName="${log-path}/phrasal.log"
-filePattern="${log-path}/phrasal-%d{yyyy-MM-dd}.log">
+    <RollingFile name="logfile" fileName="${log-path}/phrasal-${date:MM-dd-yyyy-HH:mm:ss}.log"
+filePattern="${log-path}/phrasal-%d{yyyy-MM-dd-HH:mm:ss}.%i.log.gz">
       <PatternLayout>
-	<pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
+	       <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
       </PatternLayout>
       <Policies>
-	<OnStartupTriggeringPolicy />
-	<SizeBasedTriggeringPolicy size="250 MB" />
-	<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+	       <OnStartupTriggeringPolicy />
+	       <SizeBasedTriggeringPolicy size="250 MB" />
       </Policies>
     </RollingFile>
 
     <Async name="Async">
-      <AppenderRef ref="file-log"/>
+      <AppenderRef ref="logfile"/>
     </Async>
 
     <Console name="console" target="SYSTEM_OUT">
@@ -28,11 +27,11 @@ filePattern="${log-path}/phrasal-%d{yyyy-MM-dd}.log">
 
   <Loggers>
     <Logger name="edu.stanford.nlp.mt" level="info" additivity="false">
-      <appender-ref ref="file-log" level="info"/>
+      <AppenderRef ref="Async" level="info"/>
     </Logger>
 
-    <Root level="warn" additivity="false">
-      <appender-ref ref="console"/>
+    <Root level="error" additivity="false">
+      <AppenderRef ref="console"/>
     </Root>
   </Loggers>
 </Configuration>
