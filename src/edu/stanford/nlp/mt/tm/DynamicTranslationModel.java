@@ -146,7 +146,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
-   * Create a query cache of frequent rules.
+   * Create a query cache of frequent rules. Extract rules from
+   * the cache in parallel.
    * 
    * @param t
    */
@@ -156,7 +157,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Now that we have a lexical co-occurence table, build the rule cache.
     Map<Span,SuffixArraySample> queryCache = sa.lookupFrequentSourceNgrams(sampleSize, RULE_CACHE_THRESHOLD);
     ruleCache = new ConcurrentHashMap<>(queryCache.size());
-    for (Entry<Span,SuffixArraySample> entry : queryCache.entrySet()) {
+    logger.info("Extracting rules from query cache of size {}", queryCache.size());
+    queryCache.entrySet().parallelStream().forEach(entry -> {
       Span span = entry.getKey();
       SuffixArraySample sample = entry.getValue();
       Sequence<IString> sourceSpan = SampledRule.toSystemSequence(span.tokens, tm2Sys);
@@ -164,7 +166,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       double sampleRate = sample.samples.size() / (double) numHits;
       List<Rule<IString>> rules = samplesToRules(sample.samples, span.tokens.length, sampleRate, sourceSpan);
       ruleCache.put(sourceSpan, rules);
-    }
+    });
   }
   
   /**
