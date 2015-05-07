@@ -97,6 +97,8 @@ public class DynamicTMBuilder {
     
     try {
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
+        if (fReader.getLineNumber() % 10000 == 0) 
+          logger.info("Reading corpus line {}...", fReader.getLineNumber());
         String eLine = eReader.readLine();
         String ef1 = efReader.readLine();
         String ef2 = efReader.readLine();
