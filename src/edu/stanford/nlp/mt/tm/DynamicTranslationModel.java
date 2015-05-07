@@ -141,7 +141,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     tm.createLexCoocTable(tm.sa.getVocabulary().size());
     timer.mark("Lexical cooc table");
     
-    logger.info("Dynamic TM loading stats: {}", timer);
+    logger.info("Timing: {}", timer);
     return tm;
   }
   
@@ -191,6 +191,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param vocabSize 
    */
   private void createLexCoocTable(int vocabSize) {
+    logger.info("Creating lexical cooc table");
     // Constant chosen empirically
     coocTable = new LexCoocTable(7*vocabSize);
     // Iterate over every (symmetric) alignment point in parallel
@@ -216,6 +217,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         }
       }
     });
+    logger.info("");
   }
 
   /**
@@ -782,9 +784,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     /**
      * Number of entries in the table.
      * 
+     * NOTE: This method is extremely slow. 
+     * 
      * @return
      */
-    public int size() { return counts.keySet().size(); }
+    public int size() { return counts.size(); }
     
     /**
      * Merge two interger ids into an unsigned long value. This is two unwrapped calls

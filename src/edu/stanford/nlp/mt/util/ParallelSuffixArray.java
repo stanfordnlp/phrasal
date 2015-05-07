@@ -198,7 +198,7 @@ public class ParallelSuffixArray implements Serializable {
    * Find all source spans up to dimension == 3.
    * 
    * TODO(spenceg) Lopez reports finding a few order=5 n-grams of high frequency
-   * so maybe generalize this lookup.
+   * so maybe generalize this looku
    * 
    * @param sampleSize
    * @param minOccurrences
@@ -217,15 +217,15 @@ public class ParallelSuffixArray implements Serializable {
       Span nSpanThis = Span.getSpan(suffix.tokens, suffix.start, 1, i);
       Span nnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 2, i);
       Span nnnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 3, i);
-      nCnt = checkSpan(nSpan, nSpanThis, nCnt, minOccurrences, sampleSize, queryCache);
+      nCnt = checkSpan(nSpan, nSpanThis, i, nCnt, minOccurrences, sampleSize, queryCache);
       if (nCnt == 1) {
         nSpan = nSpanThis;
       }
-      nnCnt = checkSpan(nnSpan, nnSpanThis, nnCnt, minOccurrences, sampleSize, queryCache);
+      nnCnt = checkSpan(nnSpan, nnSpanThis, i, nnCnt, minOccurrences, sampleSize, queryCache);
       if (nnCnt == 1) {
         nnSpan = nnSpanThis;
       }
-      nnnCnt = checkSpan(nnnSpan, nnnSpanThis, nnnCnt, minOccurrences, sampleSize, queryCache);
+      nnnCnt = checkSpan(nnnSpan, nnnSpanThis, i, nnnCnt, minOccurrences, sampleSize, queryCache);
       if (nnnCnt == 1) {
         nnnSpan = nnnSpanThis;
       }
@@ -234,32 +234,30 @@ public class ParallelSuffixArray implements Serializable {
     return queryCache;
   }
     
-  private int checkSpan(Span currentSpan, Span nextSpan, int cnt, 
+  private int checkSpan(Span currentSpan, Span nextSpan, int saPosition, int cnt, 
       int ruleCacheThreshold, int sampleSize, Map<Span, SuffixArraySample> queryCache) {
     if (currentSpan != null && currentSpan.equals(nextSpan)) {
       return cnt + 1;
       
-    } else {
-      if (cnt > ruleCacheThreshold) {
-        int maxHits = 10*sampleSize;
-        int start = currentSpan.saIndex;
-        int end = nextSpan.saIndex;
-        int numHits = end - start;
-        int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
-        assert stepSize > 0;
-        List<QueryResult> hits = new ArrayList<>(maxHits);
-        for (int i = start; i < end && hits.size() < maxHits; i += stepSize) {
-          int corpusPosition = srcSuffixArray[i];
-          int sentenceId = positionToSentence(corpusPosition, true);
-          int offset = sentenceId == 0 ? 0 : srcPosToSentenceId[sentenceId - 1];
-          int startIndex = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-          AlignedSentence sample = this.corpus.get(sentenceId);
-          hits.add(new QueryResult(sample, startIndex, sentenceId));
-        }
-        queryCache.put(currentSpan, new SuffixArraySample(hits, start, end-1));
+    } else if (cnt > ruleCacheThreshold) {
+      int maxHits = 10*sampleSize;
+      int start = currentSpan.saIndex;
+      int end = saPosition;
+      int numHits = end - start;
+      int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
+      assert stepSize > 0;
+      List<QueryResult> hits = new ArrayList<>(maxHits);
+      for (int i = start; i < end && hits.size() < maxHits; i += stepSize) {
+        int corpusPosition = srcSuffixArray[i];
+        int sentenceId = positionToSentence(corpusPosition, true);
+        int offset = sentenceId == 0 ? 0 : srcPosToSentenceId[sentenceId - 1];
+        int startIndex = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
+        AlignedSentence sample = this.corpus.get(sentenceId);
+        hits.add(new QueryResult(sample, startIndex, sentenceId));
       }
-      return 1;
+      queryCache.put(currentSpan, new SuffixArraySample(hits, start, end-1));
     }
+    return 1;
   }
 
   /**
