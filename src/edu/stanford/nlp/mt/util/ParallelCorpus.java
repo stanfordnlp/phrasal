@@ -190,6 +190,8 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
     LineNumberReader tgtReader = IOTools.getReaderFromFile(targetFile);
     LineNumberReader algnReader = IOTools.getReaderFromFile(alignmentFile);
     for (String srcLine; (srcLine = srcReader.readLine()) != null;) {
+      if (srcReader.getLineNumber() % 10000 == 0) 
+        logger.info("Reading corpus line {}...", srcReader.getLineNumber());
       String tgtLine = tgtReader.readLine();
       String algnLine = algnReader.readLine();
       corpus.add(srcLine, tgtLine, algnLine);
