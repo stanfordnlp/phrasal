@@ -14,6 +14,8 @@ import java.util.stream.IntStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
+
 /**
  * An implementation of a parallel suffix array.
  * 
@@ -114,7 +116,7 @@ public class ParallelSuffixArray implements Serializable {
 
     // Iterate over suffixes to build the tree
     logger.info("Enumerating {} corpus...", isSource ? "source" : "target");
-    long startTime = System.nanoTime();
+    TimeKeeper timer = TimingUtils.start();
     int corpusPosition = 0;
     int i = 0;
     List<CorpusPosition> positions = new ArrayList<>(isSource ? corpus.numSourcePositions() : corpus.numTargetPositions());
@@ -125,13 +127,10 @@ public class ParallelSuffixArray implements Serializable {
       }
       posToSentenceId[i++] = corpusPosition - 1;
     }
-
-    long enumTime = System.nanoTime() - startTime;
-    double enumSecs = (double) enumTime / 1e9;
-    logger.info("Done enumerating {} corpus: {}s", isSource ? "source" : "target", enumSecs);
+    timer.mark("Enumerate corpus positions");
+    logger.info("Done enumerating {} corpus", isSource ? "source" : "target");
 
     // Create the suffix array (in parallel)
-    startTime = System.nanoTime();
     logger.info("Creating {} suffix array...", isSource ? "source" : "target");
     final int[] sa = positions.parallelStream().sorted((x,y) ->
     {
@@ -158,11 +157,10 @@ public class ParallelSuffixArray implements Serializable {
       int yLength = ySeq.length - y.sentPos;
       return xLength - yLength;
     }).mapToInt(a -> a.corpusPos).toArray();
-
-    long saTime = System.nanoTime() - startTime;
-    double saSecs = (double) saTime / 1e9;
-    logger.info("Done creating {} suffix array: {}s", isSource ? "source" : "target", saSecs);
-
+    timer.mark("Suffix array creation");
+    logger.info("Done creating {} suffix array", isSource ? "source" : "target");
+    logger.info("Timing: {}", timer);
+    
     // Setup the arrays
     if (isSource) {
       srcPosToSentenceId = posToSentenceId;
