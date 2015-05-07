@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -199,6 +197,9 @@ public class ParallelSuffixArray implements Serializable {
   /**
    * Find all source spans up to dimension == 3.
    * 
+   * TODO(spenceg) Lopez reports finding a few order=5 n-grams of high frequency
+   * so maybe generalize this lookup.
+   * 
    * @param sampleSize
    * @param minOccurrences
    */
@@ -207,8 +208,11 @@ public class ParallelSuffixArray implements Serializable {
     logger.info("Building query cache with threshold {}", minOccurrences);
     Map<Span,SuffixArraySample> queryCache = new HashMap<>(1000);
     int nCnt = 1, nnCnt = 1, nnnCnt = 1;
-    Span nSpan = null, nnSpan = null, nnnSpan = null;
-    for (int i = 0; i < srcSuffixArray.length; ++i) {
+    Suffix firstSuffix = this.getSuffix(srcSuffixArray[0], true);
+    Span nSpan = Span.getSpan(firstSuffix.tokens, firstSuffix.start, 1, 0), 
+        nnSpan = Span.getSpan(firstSuffix.tokens, firstSuffix.start, 2, 0), 
+        nnnSpan = Span.getSpan(firstSuffix.tokens, firstSuffix.start, 3, 0);
+    for (int i = 1; i < srcSuffixArray.length; ++i) {
       Suffix suffix = this.getSuffix(srcSuffixArray[i], true);
       Span nSpanThis = Span.getSpan(suffix.tokens, suffix.start, 1, i);
       Span nnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 2, i);
