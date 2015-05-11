@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.util;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,21 +143,10 @@ public class ParallelSuffixArray implements Serializable {
   public void build() {
     logger.info("Building suffix arrays...");
     TimeKeeper timer = TimingUtils.start();
-//    System.out.println("WSGDEBUG");
     srcSuffixArray = build(srcBitext, numSourcePositions);
     if (srcSuffixArray.length != numSourcePositions) throw new RuntimeException();
     timer.mark("Source array");
-//    System.out.println("WSGDEBUG2");
     tgtSuffixArray = build(tgtBitext, numTargetPositions);
-//    System.out.printf("Num target positions: %d %d %d%n", numTargetPositions, numSentences,
-//        tgtBitext.length);
-//    for (int i = 0; i < numTargetPositions; ++i) System.out.printf("%d\t%d\t%d\t%s%n", 
-//        tgtBitext[i], tgtSuffixArray[i], tgtBitext[tgtSuffixArray[i]], vocabulary.get(tgtBitext[tgtSuffixArray[i]]));
-//    System.exit(-1);
-//    System.out.printf("%d\t%d%n", tgtSuffixArray.length, numTargetPositions);
-//    print(false, new PrintWriter(System.out));
-//    System.out.flush();
-//    System.exit(-1);
     if (tgtSuffixArray.length != numTargetPositions) throw new RuntimeException();
     timer.mark("Target array");
     logger.info("Done constructing suffix arrays: {}", timer);
@@ -239,15 +227,6 @@ public class ParallelSuffixArray implements Serializable {
     Map<Span,SuffixArraySample> queryCache = new HashMap<>(1000);
     int nCnt = 1, nnCnt = 1, nnnCnt = 1;
     int nStart = 0, nnStart = 0, nnnStart = 0;
-    
-//    // WSGDEBUG
-//    for (int i = 0; i < srcSuffixArray.length; ++i) {
-//      if (srcBitext[srcSuffixArray[i]] < 0) {
-//        System.err.printf("%d\t%d\t%d%n", i, srcSuffixArray[i], srcBitext[srcSuffixArray[i]]);
-//      }
-//    }
-//    System.exit(-1);
-//    
     Suffix firstSuffix = new Suffix(srcSuffixArray[0], true);
     Span nSpan = new Span(firstSuffix, 1), 
         nnSpan = new Span(firstSuffix, 2), 
@@ -378,11 +357,6 @@ public class ParallelSuffixArray implements Serializable {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int low = lo;
     int high = hi;
-    // WSGDEBUG
-//    StringBuilder sb = new StringBuilder();
-//    for (int i = 0; i < query.length; ++i) {
-//      sb.append(vocabulary.get(query[i]) + " ");
-//    }
     while(low <= high) {
       final int mid = (low + high) >>> 1;
       assert mid < sa.length;
@@ -544,7 +518,9 @@ public class ParallelSuffixArray implements Serializable {
   public class SentencePair {
     public final int wordPosition;
     
-    // TODO(spenceg) Not sure if we can find this right now.
+    // TODO(spenceg) Would need to encode this directly into the bitext as well
+    // as a second negative number after the pointer into the other side of the
+    // bitext.
 //    public final int sentenceId;
     
     public final int srcStartInclusive;

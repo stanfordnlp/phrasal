@@ -471,9 +471,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       if (featureTemplate == FeatureTemplate.DENSE) {
         scores = new float[4];        
         int eCnt = sa.count(rule.tgt, false);
-        assert eCnt > 0;
+        assert eCnt > 0 : Arrays.toString(rule.tgt);
         int adjustedCount = (int) (histogram[r] / sampleRate);
-        
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
         // bitext.
         adjustedCount = Math.min(adjustedCount, eCnt);
@@ -487,13 +486,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
         int eCnt = sa.count(rule.tgt, false);
-//        if (eCnt <= 0) {
-//          eCnt = sa.count(rule.tgt, false);
-//          for (int i = 0; i < rule.tgt.length; ++i) {
-//            System.out.print(sa.getVocabulary().get(rule.tgt[i]) + " ");
-//          }
-//          System.out.println();
-//        }
         assert eCnt > 0 : Arrays.toString(rule.tgt);
         int adjustedCount = (int) (histogram[r] / sampleRate);
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
@@ -501,10 +493,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         adjustedCount = Math.min(adjustedCount, eCnt);
         
         scores[0] = (float) (Math.log(adjustedCount) - Math.log(eCnt));
-        // U. Germann's approximation
-//        double num = eCnt - histogram[r] * sampleRate;
-//        scores[0] = (float) (Math.log(histogram[r]) - Math.log(histogram[r] + num));
-        
         scores[1] = (float) Math.log(rule.lex_f_e);
         scores[2] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
         scores[3] = (float) Math.log(rule.lex_e_f);
@@ -849,8 +837,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       long startTime = TimingUtils.startTime();
       int sourceId = 0;
       for (Sequence<IString> source : sourceFile) {
-        List<ConcreteRule<IString,String>> rules = tm.getRules(source, null, null, sourceId++, null);
-        int c = 0;
+        tm.getRules(source, null, null, sourceId++, null);
       }
       double numSecs = TimingUtils.elapsedSeconds(startTime);
       System.out.printf("Sample time:\t%.3fs%n", numSecs);
