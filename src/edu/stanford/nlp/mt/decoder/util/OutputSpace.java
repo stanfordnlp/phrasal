@@ -57,4 +57,12 @@ public interface OutputSpace<TK, FV> {
    * @return
    */
   public List<Sequence<TK>> getAllowableSequences();
+  
+  /**
+   * Return the length of the prefix for constrained decoding
+   * returns 0 if prefix-constrained decoding is disabled
+   * 
+   * @return
+   */
+  public int getPrefixLength();
 }

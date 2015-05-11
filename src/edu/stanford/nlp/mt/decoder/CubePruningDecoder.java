@@ -124,7 +124,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>(1);
     allOptions.add(ruleGrid.asList());
     Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
-        heuristic, scorer, allOptions);
+        heuristic, scorer, allOptions, outputSpace);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
 
@@ -234,7 +234,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
       // Derivation construction: this is the expensive part
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
-          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic) :
+          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic, outputSpace) :
             null;
       consequents.add(new Item<TK,FV>(derivation, successor));
     }

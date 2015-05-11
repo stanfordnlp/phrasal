@@ -189,4 +189,9 @@ public class ConstrainedOutputSpace<TK, FV> implements
 
   @Override
   public void setSourceSequence(Sequence<TK> sourceSequence) {}
+  
+  @Override 
+  public int getPrefixLength() {
+    return 0;
+  }
 }

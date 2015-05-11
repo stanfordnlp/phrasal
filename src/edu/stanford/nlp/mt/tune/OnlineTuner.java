@@ -355,6 +355,7 @@ public final class OnlineTuner {
         inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(i), sourceId, 
             threadId, inputProperties);
+        
         nbestLists.add(nbestList);
       }
 

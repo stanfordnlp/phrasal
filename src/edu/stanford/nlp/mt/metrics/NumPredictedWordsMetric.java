@@ -162,6 +162,8 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
     if(prefix.size() != 0 && 
         !tran.startsWith(prefix) && 
         !prefix.startsWith(tran)) {
+      System.err.println("Prefix: " + prefix);
+      System.err.println("Hypothesis: " + tran);
       throw new RuntimeException(
           "NumPredictedWordsMetric: hypothesis in line " + (id + 1) + " does not conform to prefix.");
     }

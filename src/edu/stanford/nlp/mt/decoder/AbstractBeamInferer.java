@@ -188,10 +188,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         if (withDTUs) {
           goalHyp = new DTUHypothesis<TK, FV>(sourceInputId,
               node.rule, goalHyp.length, goalHyp, node, featurizer,
-              scorer, heuristic, seenOptions);
+              scorer, heuristic, seenOptions, outputSpace);
         } else {
           goalHyp = new Derivation<TK, FV>(sourceInputId, node.rule,
-              goalHyp.length, goalHyp, featurizer, scorer, heuristic);
+              goalHyp.length, goalHyp, featurizer, scorer, heuristic, outputSpace);
         }
       }
 

@@ -33,7 +33,22 @@ public final class RecombinationFilterFactory {
    */
   public static RecombinationFilter<Derivation<IString, String>> factory(
       String recombinationMode, List<Featurizer<IString, String>> featurizers) {
+    return factory(recombinationMode, featurizers, false);
+  }
 
+
+  /**
+   * Create a recombination filter.
+   * 
+   * @param recombinationMode one of the modes specified in <code>RecombinationFilterFactory</code>.
+   * @param featurizers the list of featurizers to consider
+   * @param forceDecode do we run forcedDecoding?
+   * @return
+   */
+  public static RecombinationFilter<Derivation<IString, String>> factory(
+      String recombinationMode, List<Featurizer<IString, String>> featurizers,
+      boolean forceDecode) {
+    
     boolean msdRecombination = false;
     for (Featurizer<IString, String> featurizer : featurizers) {
       if (featurizer instanceof HierarchicalReorderingFeaturizer ||
@@ -41,9 +56,15 @@ public final class RecombinationFilterFactory {
         msdRecombination = true;
     }
 
+    List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
+    
+    // todo: this only takes care of soft prefix-constrained decoding
+    // -- Joern W
+    if(forceDecode)
+      filters.add(new SoftConstrainedDecodingRecombinationFilter<IString, String>());
+    
     switch (recombinationMode) {
       case PHAROAH_RECOMBINATION: {
-        List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
         // maintain uniqueness of hypotheses that will result in different linear
         // distortion scores when extended
         // with future translation options.
@@ -65,7 +86,6 @@ public final class RecombinationFilterFactory {
 
       }
       case DTU_RECOMBINATION: {
-        List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
         filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
         filters.add(new TranslationNgramRecombinationFilter(featurizers));
         filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
@@ -75,10 +95,16 @@ public final class RecombinationFilterFactory {
         }
         return new CombinedRecombinationFilter<Derivation<IString, String>>(
             filters);
-
       }
-      case EXACT_RECOMBINATION:
-        return new ExactRecombinationFilter<Derivation<IString, String>>(featurizers);
+      case EXACT_RECOMBINATION: {
+        if(filters.isEmpty())
+          return new ExactRecombinationFilter<Derivation<IString, String>>(featurizers);
+        else {
+          filters.add(new ExactRecombinationFilter<Derivation<IString, String>>(featurizers));
+          return new CombinedRecombinationFilter<Derivation<IString, String>>(
+              filters);
+        }
+      }
     }
     
     throw new RuntimeException("Unrecognized recombination filter: " + recombinationMode);

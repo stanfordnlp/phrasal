@@ -159,7 +159,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>();
     allOptions.add(ruleGrid.asList());
     Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties,
-        heuristic, scorer, allOptions);
+        heuristic, scorer, allOptions, outputSpace);
     beams[0].put(nullHyp);
     int totalHypothesesGenerated = 1;
     if (DEBUG) {
@@ -372,7 +372,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             }
 
             Derivation<TK, FV> newHyp = new Derivation<TK, FV>(sourceInputId,
-                option, hyp.length, hyp, featurizer, scorer, heuristic);
+                option, hyp.length, hyp, featurizer, scorer, heuristic, outputSpace);
 
             if (DETAILED_DEBUG) {
               System.err.printf("creating hypothesis %d from %d\n",

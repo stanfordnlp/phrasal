@@ -473,7 +473,8 @@ public class Phrasal {
       }
     }
     
-    if (config.containsKey(FORCE_DECODE)) {
+    boolean forceDecode = config.containsKey(FORCE_DECODE);
+    if (forceDecode) {
       forceDecodeReferences = MetricUtils.readReferences(config.get(FORCE_DECODE)
           .toArray(new String[config.get(FORCE_DECODE).size()]));
     }
@@ -738,7 +739,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(recombinationMode, featurizer.getFeaturizers());
+        .factory(recombinationMode, featurizer.getFeaturizers(), forceDecode);
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;

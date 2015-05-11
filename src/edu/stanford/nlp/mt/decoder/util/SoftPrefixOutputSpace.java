@@ -150,4 +150,10 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     // at the point of the phrase table query.
     return null;
   }
+  
+  @Override 
+  public int getPrefixLength() {
+    return allowablePrefixLength;
+  }
+  
 }

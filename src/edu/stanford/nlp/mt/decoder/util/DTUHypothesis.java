@@ -298,7 +298,8 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
    */
   public List<DTUHypothesis<TK, FV>> mergeHypothesisAndPendingPhrase(
       int sourceInputId, FeatureExtractor<TK, FV> featurizer,
-      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
+      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
+      OutputSpace<TK, FV> outputSpace) {
 
     if (hasExpired)
       return new LinkedList<DTUHypothesis<TK, FV>>();
@@ -324,7 +325,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
           nextHyps.add(new DTUHypothesis<TK, FV>(sourceInputId,
               currentPhrase.concreteOpt, length, this, featurizer, scorer,
               heuristic, currentPhrase, currentSegmentIdx,
-              currentPhrase.concreteOpt.abstractRule));
+              currentPhrase.concreteOpt.abstractRule, outputSpace));
         }
       }
     }
@@ -338,7 +339,8 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
   public DTUHypothesis(int sourceInputId,
       ConcreteRule<TK,FV> translationOpt, int insertionPosition,
       Derivation<TK, FV> baseHyp, FeatureExtractor<TK, FV> featurizer,
-      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
+      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
+      OutputSpace<TK, FV> outputSpace) {
 
     super(sourceInputId, translationOpt, translationOpt.abstractRule,
         insertionPosition, baseHyp, featurizer, scorer, heuristic, /*
@@ -346,7 +348,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
                                                                     */
         getSegment(translationOpt.abstractRule, 0),
         /* hasPendingPhrases= */hasPendingPhrases(translationOpt, baseHyp,
-            true, false), /* segmentIdx= */0);
+            true, false), /* segmentIdx= */0, outputSpace);
 
     // Copy old pending phrases from parent hypothesis:
     this.pendingPhrases = new TreeSet<PendingPhrase<TK, FV>>();
@@ -391,7 +393,8 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       Derivation<TK, FV> baseHyp, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
       PendingPhrase<TK, FV> currentPhrase, int currentSegmentIdx,
-      Rule<TK> actualTranslationOption) {
+      Rule<TK> actualTranslationOption,
+      OutputSpace<TK, FV> outputSpace) {
 
     super(
         sourceInputId,
@@ -408,7 +411,8 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
             baseHyp,
             false,
             currentSegmentIdx + 1 == getNumberSegments(translationOpt.abstractRule)),
-        currentSegmentIdx);
+        currentSegmentIdx,
+        outputSpace);
     assert (actualTranslationOption == translationOpt.abstractRule);
 
     // Copy pending phrases from parent hypothesis, and move current pending
@@ -451,12 +455,13 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       ConcreteRule<TK,FV> translationOpt, int insertionPosition,
       Derivation<TK, FV> baseHyp, Derivation<TK, FV> nextHyp,
       FeatureExtractor<TK, FV> featurizer, Scorer<FV> scorer,
-      SearchHeuristic<TK, FV> heuristic, Set<Rule<TK>> seenOptions) {
+      SearchHeuristic<TK, FV> heuristic, Set<Rule<TK>> seenOptions,
+      OutputSpace<TK, FV> outputSpace) {
 
     super(sourceInputId, translationOpt,
         getAbstractOption(nextHyp.featurizable), insertionPosition, baseHyp,
         featurizer, scorer, heuristic, getTranslation(nextHyp),
-        !nextHyp.featurizable.done, nextHyp.featurizable.getSegmentIdx());
+        !nextHyp.featurizable.done, nextHyp.featurizable.getSegmentIdx(), outputSpace);
 
     if (nextHyp instanceof DTUHypothesis) {
       DTUHypothesis<TK, FV> dtuNextHyp = (DTUHypothesis<TK, FV>) nextHyp;

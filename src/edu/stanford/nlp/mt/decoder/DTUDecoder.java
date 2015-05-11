@@ -193,7 +193,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // insert initial hypothesis
     Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties,
-        heuristic, scorer, allOptions);
+        heuristic, scorer, allOptions, outputSpace);
     beams[0].put(nullHyp);
     if (DEBUG) {
       System.err.printf("Estimated Future Cost: %e%n", nullHyp.h);
@@ -415,7 +415,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
             }
             for (DTUHypothesis<TK, FV> nextHyp : currentHyp
                 .mergeHypothesisAndPendingPhrase(sourceInputId, featurizer,
-                    scorer, heuristic)) {
+                    scorer, heuristic, outputSpace)) {
               if (!nextHyp.hasExpired()) {
                 currentHyps.add(nextHyp);
               }
@@ -475,8 +475,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
               Derivation<TK, FV> newHyp = (option.abstractRule instanceof DTURule || hyp instanceof DTUHypothesis) ? new DTUHypothesis<TK, FV>(
                   sourceInputId, option, hyp.length, hyp, featurizer, scorer,
-                  heuristic) : new Derivation<TK, FV>(sourceInputId, option,
-                  hyp.length, hyp, featurizer, scorer, heuristic);
+                  heuristic, outputSpace) : new Derivation<TK, FV>(sourceInputId, option,
+                  hyp.length, hyp, featurizer, scorer, heuristic, outputSpace);
               {
                 // Discard hypothesis if ill-formed:
                 if (newHyp.hasExpired())

@@ -114,4 +114,9 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
   @Override
   public void filter(RuleGrid<TK, FV> ruleGrid) {
   }
+  
+  @Override 
+  public int getPrefixLength() {
+    return 0;
+  }
 }

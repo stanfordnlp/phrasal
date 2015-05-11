@@ -41,4 +41,10 @@ public class UnconstrainedOutputSpace<TK, FV> implements
   @Override
   public void filter(RuleGrid<IString, String> ruleGrid) {
   }
+  
+  @Override 
+  public int getPrefixLength() {
+    return 0;
+  }
 }
+

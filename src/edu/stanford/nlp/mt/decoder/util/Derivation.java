@@ -39,6 +39,9 @@ State<Derivation<TK, FV>> {
   public final int linearDistortion;
   public final int length;
   
+  // In prefix-constrained decoding, we need to know whether the prefix has been completed for recombination
+  public final boolean prefixCompleted;
+  
   // Thang Apr14: remove the final modifier so we can update during NPLM reranking.
   public double score;
   
@@ -94,11 +97,13 @@ State<Derivation<TK, FV>> {
    * @param heuristic
    * @param scorer
    * @param ruleList
+   * @param outputSpace
    */
   public Derivation(int sourceInputId, Sequence<TK> sourceSequence,
       InputProperties sourceInputProperties, SearchHeuristic<TK, FV> heuristic,
       Scorer<FV> scorer,
-      List<List<ConcreteRule<TK,FV>>> ruleList) {
+      List<List<ConcreteRule<TK,FV>>> ruleList,
+      OutputSpace<TK, FV> outputSpace) {
     this.id = nextId.incrementAndGet();
     score = 0;
     h = heuristic.getInitialHeuristic(sourceSequence, sourceInputProperties, ruleList, scorer, sourceInputId);
@@ -115,6 +120,8 @@ State<Derivation<TK, FV>> {
     depth = 0;
     linearDistortion = 0;
     targetSequence = new EmptySequence<TK>();
+    
+    prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
   }
 
   /**
@@ -127,11 +134,13 @@ State<Derivation<TK, FV>> {
    * @param featurizer
    * @param scorer
    * @param heuristic
+   * @param outputSpace
    */
   public Derivation(int sourceInputId,
       ConcreteRule<TK,FV> rule, int insertionPosition,
       Derivation<TK, FV> base, FeatureExtractor<TK, FV> featurizer,
-      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic) {
+      Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
+      OutputSpace<TK, FV> outputSpace) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.rule = rule;
@@ -163,6 +172,8 @@ State<Derivation<TK, FV>> {
     // untranslatedTokens, foreignCoverage);
     assert (!Double.isNaN(h));
     depth = base.depth + 1;
+    
+    prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
   }
 
   /**
@@ -179,13 +190,15 @@ State<Derivation<TK, FV>> {
    * @param targetPhrase
    * @param hasPendingPhrases
    * @param segmentIdx
+   * @param outputSpace
    */
   protected Derivation(int sourceInputId,
       ConcreteRule<TK,FV> rule,
       Rule<TK> abstractRule, int insertionPosition,
       Derivation<TK, FV> base, FeatureExtractor<TK, FV> featurizer,
       Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic,
-      Sequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx) {
+      Sequence<TK> targetPhrase, boolean hasPendingPhrases, int segmentIdx,
+      OutputSpace<TK, FV> outputSpace) {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.rule = rule;
@@ -213,6 +226,8 @@ State<Derivation<TK, FV>> {
     h = (Double.isInfinite(base.h)) ? base.h : base.h
         + heuristic.getHeuristicDelta(this, rule.sourceCoverage);
     assert (!Double.isNaN(h));
+    
+    prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
   }
 
   @Override
