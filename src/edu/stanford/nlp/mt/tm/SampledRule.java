@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.MurmurHash;
-import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
+import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -22,7 +22,7 @@ public class SampledRule {
   public final int tgtEndExclusive;
   public final int[] src;
   public final int[] tgt;
-  public final QueryResult saEntry;
+  public final SentencePair saEntry;
   public double lex_e_f = 0.0;
   public double lex_f_e = 0.0;
   private final int hashCode;
@@ -37,7 +37,7 @@ public class SampledRule {
    * @param s
    */
   public SampledRule(int srcStartInclusive, int srcEndExclusive, int tgtStartInclusive, int tgtEndExclusive, 
-      QueryResult s) {
+      SentencePair s) {
     assert srcEndExclusive - srcStartInclusive > 0;
     assert tgtEndExclusive - tgtStartInclusive > 0;
     this.srcStartInclusive = srcStartInclusive;
@@ -45,11 +45,17 @@ public class SampledRule {
     this.tgtStartInclusive = tgtStartInclusive;
     this.tgtEndExclusive = tgtEndExclusive;
     this.saEntry = s;
-    this.src = Arrays.copyOfRange(s.sentence.source, srcStartInclusive, srcEndExclusive);
-    this.tgt = Arrays.copyOfRange(s.sentence.target, tgtStartInclusive, tgtEndExclusive);
+    this.src = new int[srcEndExclusive - srcStartInclusive];
+    for (int i = 0; i < src.length; ++i) {
+      src[i] = s.source(srcStartInclusive + i);
+    }
+    this.tgt = new int[tgtEndExclusive - tgtStartInclusive];
+    for (int i = 0; i < tgt.length; ++i) {
+      tgt[i] = s.target(tgtStartInclusive + i);
+    }
     
     // Tie the SampledRule to a sentence so that we don't double count.
-    int[] hashArr = new int[] {s.sentenceId, srcStartInclusive, srcEndExclusive, tgtStartInclusive, 
+    int[] hashArr = new int[] {s.srcStartInclusive, srcStartInclusive, srcEndExclusive, tgtStartInclusive, 
         tgtEndExclusive};
     this.hashCode = MurmurHash.hash32(hashArr, hashArr.length, 1);
   }
@@ -119,7 +125,7 @@ public class SampledRule {
     int[][] e2f = new int[eDim][];
     for (int i = tgtStartInclusive; i < tgtEndExclusive; ++i) {
       int localIdx = i - tgtStartInclusive;
-      int[] e2fI = saEntry.sentence.e2f(i);
+      int[] e2fI = saEntry.e2f(i);
       int srcAlignDim = e2fI.length;
       e2f[localIdx] = new int[srcAlignDim];
       if (srcAlignDim > 0) {
@@ -142,7 +148,7 @@ public class SampledRule {
     int[][] f2e = new int[fDim][];
     for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
       int localIdx = i - srcStartInclusive;
-      int[] f2eI = saEntry.sentence.f2e(i);
+      int[] f2eI = saEntry.f2e(i);
       int tgtAlignDim = f2eI.length;
       f2e[localIdx] = new int[tgtAlignDim];
       if (tgtAlignDim > 0) {
@@ -163,10 +169,10 @@ public class SampledRule {
   public int getAlignmentKey() {
     int key = srcStartInclusive + tgtEndExclusive;
     for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
-      if (saEntry.sentence.isSourceUnaligned(i)) {
+      if (saEntry.isSourceUnaligned(i)) {
         key = i % 2 == 0 ? key << (i % 16) : key >> (i % 8);
       } else {
-        int[] f2eI = saEntry.sentence.f2e(i);
+        int[] f2eI = saEntry.f2e(i);
         key *= MurmurHash.hash32(f2eI, f2eI.length, 1);
       }
     }

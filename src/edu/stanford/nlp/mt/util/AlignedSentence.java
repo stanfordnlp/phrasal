@@ -91,7 +91,7 @@ public class AlignedSentence implements Serializable {
     return e2f[i] == 0;
   }
   
-  private static int[] expand(int al) {
+  public static int[] expand(int al) {
     if (al == 0) return new int[0];
     int numLinks = ((31 - Integer.numberOfLeadingZeros(al)) / 8) + 1;
     int[] links = new int[numLinks];

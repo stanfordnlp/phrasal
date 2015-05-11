@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tm;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
-import edu.stanford.nlp.mt.util.ParallelSuffixArray.QueryResult;
+import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -53,9 +54,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private static final String NAME = "dynamic-tm";
   public static final int DEFAULT_MAX_PHRASE_LEN = 7;
   public static final int DEFAULT_SAMPLE_SIZE = 100;
-  private static final int RULE_CACHE_THRESHOLD = 1000;
+  private static final int RULE_CACHE_THRESHOLD = 10000;
   public static final double MIN_LEX_PROB = 1e-5;
-  private static final int MAX_RULE_FERTILITY = 5;
   
   /**
    * Feature specification:
@@ -196,24 +196,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Constant chosen empirically
     coocTable = new LexCoocTable(7*vocabSize);
     // Iterate over every (symmetric) alignment point in parallel
-    sa.getCorpus().getSegments().parallelStream().forEach(s -> {
-      for(int i = 0; i < s.source.length; ++i) {
-        final int srcId = s.source[i];
+    sa.parallelStream().forEach(s -> {
+      for(int i = 0, sz = s.sourceLength(); i < sz; ++i) {
+        final int srcId = s.source(i);
         if (s.isSourceUnaligned(i)) {
           coocTable.addCooc(srcId, LexCoocTable.NULL_ID);
         } else {
           int[] tgtAlign = s.f2e(i);
           for (int j : tgtAlign) {
-            int tgtId = s.target[j];
+            int tgtId = s.target(j);
             coocTable.addCooc(srcId, tgtId);
           }
         }
       }
       // Look for unaligned target words that were skipped in the loop
       // above.
-      for(int i = 0; i < s.target.length; ++i) {
+      for(int i = 0, sz = s.targetLength(); i < sz; ++i) {
         if (s.isTargetUnaligned(i)) {
-          int tgtId = s.target[i];
+          int tgtId = s.target(i);
           coocTable.addCooc(LexCoocTable.NULL_ID, tgtId);
         }
       }
@@ -221,6 +221,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     logger.info("");
   }
 
+  /**
+   * Print out the bitext.
+   * 
+   * @param writer
+   */
+  public void printBitext(PrintWriter writer) {
+    sa.stream().forEach(s -> {
+      writer.println(s.toString());
+    });
+  }
+  
   /**
    * Set the type of dense rule features.
    * 
@@ -260,8 +271,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private void populateSystemVocabulary() {
     final Vocabulary tmVocab = sa.getVocabulary();
-    int tmSize = tmVocab.size();
-    IntStream.range(0, tmSize).parallel().forEach(i -> {
+    IntStream.range(0, tmVocab.size()).parallel().forEach(i -> {
       String wordType = tmVocab.get(i);
       Vocabulary.systemAdd(wordType);
     });
@@ -354,8 +364,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             // Sample from the suffix array
             final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
             int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-            SuffixArraySample s = prefixBounds == null ? sa.sample(sourcePhrase, true, sampleSize)
-                : sa.sample(sourcePhrase, true, sampleSize, prefixBounds[0], prefixBounds[1]);
+            SuffixArraySample s = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+                : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
             if (s.samples.size() == 0) {
               // This span is not present in the training data.
               misses[i][j] = true;
@@ -416,7 +426,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param sourceSpan
    * @return
    */
-  private List<Rule<IString>> samplesToRules(List<QueryResult> samples, final int order, 
+  private List<Rule<IString>> samplesToRules(List<SentencePair> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
     
     // Organize rules by candidate translation and compute lexical scores
@@ -459,8 +469,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       
       float[] scores;
       if (featureTemplate == FeatureTemplate.DENSE) {
-        scores = new float[4];
+        scores = new float[4];        
         int eCnt = sa.count(rule.tgt, false);
+        assert eCnt > 0;
         int adjustedCount = (int) (histogram[r] / sampleRate);
         
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
@@ -476,6 +487,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
         int eCnt = sa.count(rule.tgt, false);
+        if (eCnt == 0) {
+          eCnt = sa.count(rule.tgt, false);
+          for (int i = 0; i < rule.tgt.length; ++i) {
+            System.out.print(sa.getVocabulary().get(rule.tgt[i]) + " ");
+          }
+          System.out.println();
+        }
+        assert eCnt > 0 : Arrays.toString(rule.tgt);
         int adjustedCount = (int) (histogram[r] / sampleRate);
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
         // bitext.
@@ -489,15 +508,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[1] = (float) Math.log(rule.lex_f_e);
         scores[2] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
         scores[3] = (float) Math.log(rule.lex_e_f);
-        
-        // See train.CountFeatureExtractor -- the sampled count seems to work
-        // better than the adjustedCount, which is an approximation of the global count.
-        // In the offline extractor, this feature is tied to the filter corpus, so it
-        // isn't really a global count either. Maybe tying the counts with the
-        // specific sentence in question is what really matters. Almost like
-        // segment-level domain adaptation.
-//        scores[4] = histogram[r] > 1 ? (float) Math.log(histogram[r]) : 0.0f;
-//        scores[5] = histogram[r] == 1 ? -1.0f : 0.0f;
         scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
         scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
         
@@ -529,6 +539,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         return false;
       } else {
         SampledAlignment other = (SampledAlignment) o;
+        // TODO(spenceg) This is slow! Don't copy here.
         int[][] f2e = rule.f2e();
         int[][] f2eOther = other.rule.f2e();
         if (f2e.length != f2eOther.length) return false;
@@ -585,23 +596,21 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param rule
    */
   private void scoreLex(SampledRule rule) {
-    final int[] source = rule.saEntry.sentence.source;
-    final int[] target = rule.saEntry.sentence.target;
     
     // Backward score p(f|e) -- Iterate over source
     double lex_f_e = 1.0;
     for (int i = rule.srcStartInclusive; i < rule.srcEndExclusive; ++i) {
-      final int srcId = source[i];
+      final int srcId = rule.saEntry.source(i);
       double feSum = 0.0;
-      if (rule.saEntry.sentence.isSourceUnaligned(i)) {
+      if (rule.saEntry.isSourceUnaligned(i)) {
         int c_f_e = coocTable.getJointCount(srcId, LexCoocTable.NULL_ID);
         int c_e = coocTable.getTgtMarginal(LexCoocTable.NULL_ID);
         feSum = c_f_e / (double) c_e;
         
       } else {
-        int[] tgtAlign = rule.saEntry.sentence.f2e(i);
+        int[] tgtAlign = rule.saEntry.f2e(i);
         for (int j : tgtAlign) {
-          int tgtId = target[j];
+          int tgtId = rule.saEntry.target(j);
           int c_f_e = coocTable.getJointCount(srcId, tgtId);
           int c_e = coocTable.getTgtMarginal(tgtId);
           feSum += (c_f_e / (double) c_e);
@@ -616,17 +625,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Backward score p(e|f) -- Iterate over target
     double lex_e_f = 1.0;
     for (int i = rule.tgtStartInclusive; i < rule.tgtEndExclusive; ++i) {
-      final int tgtId = target[i];
+      final int tgtId = rule.saEntry.target(i);
       double efSum = 0.0;
-      if (rule.saEntry.sentence.isTargetUnaligned(i)) {
+      if (rule.saEntry.isTargetUnaligned(i)) {
         int c_e_f = coocTable.getJointCount(LexCoocTable.NULL_ID, tgtId);
         int c_f = coocTable.getSrcMarginal(LexCoocTable.NULL_ID);
         efSum = c_e_f / (double) c_f;
         
       } else {
-        int[] srcAlign = rule.saEntry.sentence.e2f(i);
+        int[] srcAlign = rule.saEntry.e2f(i);
         for (int j : srcAlign) {
-          final int srcId = source[j];
+          final int srcId = rule.saEntry.source(j);
           int c_e_f = coocTable.getJointCount(srcId, tgtId);
           int c_f = coocTable.getSrcMarginal(srcId);
           efSum += (c_e_f / (double) c_f);
@@ -650,55 +659,59 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param s
    * @return
    */
-  private List<SampledRule> extractRules(QueryResult s, int length) {    
+  private List<SampledRule> extractRules(SentencePair s, int length) {    
     // Find the target span
     int minTarget = Integer.MAX_VALUE;
     int maxTarget = -1;
     final int startSource = s.wordPosition;
     final int endSource = startSource + length;
     for(int sourcePos = startSource; sourcePos < endSource; sourcePos++) {
-      assert sourcePos < s.sentence.source.length : String.format("[%d,%d) %d %d ", startSource, endSource, sourcePos, s.sentence.source.length);
-      int[] alignedList = s.sentence.f2e(sourcePos);
-      for(int targetPos : alignedList) {
-        if (targetPos < minTarget) {
-          minTarget = targetPos;
-        }
-        if (targetPos > maxTarget) {
-          maxTarget = targetPos;
+      assert sourcePos < s.sourceLength() : String.format("[%d,%d) %d %d ", startSource, endSource, sourcePos, s.sourceLength());
+      if ( ! s.isSourceUnaligned(sourcePos)) {
+        int[] targetPositions = s.f2e(sourcePos);
+        for(int targetPos : targetPositions) {
+          if (targetPos < minTarget) {
+            minTarget = targetPos;
+          }
+          if (targetPos > maxTarget) {
+            maxTarget = targetPos;
+          }
         }
       }
     }
     
-    List<SampledRule> ruleList = new ArrayList<>();
-    if (maxTarget < 0 || maxTarget-minTarget >= maxTargetPhrase) return ruleList;
+    if (maxTarget < 0 || maxTarget-minTarget >= maxTargetPhrase) return new ArrayList<>(0);
     
     // Admissibility check
     for (int i = minTarget; i <= maxTarget; ++i) {
-      int[] srcAligned = s.sentence.e2f(i);
-      for (int j : srcAligned) {
-        if (j < startSource || j >= endSource) {
-          // Failed check
-          return ruleList;
+      if ( ! s.isTargetUnaligned(i)) {
+        int[] srcPositions = s.e2f(i);
+        for (int sourcePos : srcPositions) {
+          if (sourcePos < startSource || sourcePos >= endSource) {
+            // Failed check
+            return new ArrayList<>(0);
+          }
         }
       }
     }
     
     // "Loose" heuristic to grow the target
     // Try to grow the left bound of the target
+    List<SampledRule> ruleList = new ArrayList<>();
     for(int startTarget = minTarget; (startTarget >= 0 &&
         startTarget > maxTarget-maxTargetPhrase &&
-        (startTarget == minTarget || s.sentence.isTargetUnaligned(startTarget))); startTarget--) {
+        (startTarget == minTarget || s.isTargetUnaligned(startTarget))); startTarget--) {
 
       // Try to grow the right bound of the target
-      for (int endTarget=maxTarget; (endTarget < s.sentence.target.length &&
+      for (int endTarget=maxTarget; (endTarget < s.targetLength() &&
           endTarget < startTarget+maxTargetPhrase && 
-          (endTarget==maxTarget || s.sentence.isTargetUnaligned(endTarget))); endTarget++) {
+          (endTarget==maxTarget || s.isTargetUnaligned(endTarget))); endTarget++) {
 
         // Filter out messed up alignments
-        if (Math.abs((endSource-startSource) - (endTarget-startTarget+1)) <= MAX_RULE_FERTILITY) {
+//        if (Math.abs((endSource-startSource) - (endTarget-startTarget+1)) <= MAX_RULE_FERTILITY) {
           SampledRule r = new SampledRule(startSource, endSource, startTarget, endTarget + 1, s);
           ruleList.add(r);
-        }
+//        }
       }
     }
     return ruleList;
@@ -819,7 +832,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
       System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
       System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
-      
+            
       // TODO(spenceg) Requires classmexer in the local directory.
 //      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
 //      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
@@ -834,7 +847,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       long startTime = TimingUtils.startTime();
       int sourceId = 0;
       for (Sequence<IString> source : sourceFile) {
-        tm.getRules(source, null, null, sourceId++, null);
+        List<ConcreteRule<IString,String>> rules = tm.getRules(source, null, null, sourceId++, null);
+        int c = 0;
       }
       double numSecs = TimingUtils.elapsedSeconds(startTime);
       System.out.printf("Sample time:\t%.3fs%n", numSecs);

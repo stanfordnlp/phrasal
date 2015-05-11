@@ -34,15 +34,6 @@ public class DynamicTMBuilder {
   /**
    * Constructor.
    * 
-   * @param corpus
-   */
-  public DynamicTMBuilder(ParallelCorpus corpus) {
-    sa = new ParallelSuffixArray(corpus);
-  }
-  
-  /**
-   * Constructor.
-   * 
    * @param sourceFile
    * @param targetFile
    * @param align
@@ -50,9 +41,15 @@ public class DynamicTMBuilder {
    */
   public DynamicTMBuilder(String sourceFile, String targetFile, String align, int expectedSize) {
     try {
-      sa = new ParallelSuffixArray(sourceFile, targetFile, align, expectedSize);
+      ParallelCorpus corpus = ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, align, expectedSize);
+      sa = new ParallelSuffixArray();
+      sa.loadCorpus(corpus);
+      // Free memory
+      corpus = null;
+      sa.build();
     } catch (IOException e) {
-      logger.error("Unable to load corpus from file.", e);
+      // TODO Auto-generated catch block
+      e.printStackTrace();
     }
   }
   
@@ -68,7 +65,12 @@ public class DynamicTMBuilder {
    */
   public DynamicTMBuilder(String sourceFile, String targetFile, String feAlign, String efAlign, 
       int expectedSize, SymmetrizationType type) {
-    sa = symmetrizeAndCreateSuffixArray(sourceFile, targetFile, feAlign, efAlign, type, expectedSize);
+    ParallelCorpus corpus = loadAndSymmetrize(sourceFile, targetFile, feAlign, efAlign, type, expectedSize);
+    sa = new ParallelSuffixArray();
+    sa.loadCorpus(corpus);
+    // Free memory
+    corpus = null;
+    sa.build();
   }
   
   public DynamicTranslationModel<String> getModel() {
@@ -76,7 +78,7 @@ public class DynamicTMBuilder {
   }
   
   /**
-   * Symmetrize the alignments and create a suffix array.
+   * Symmetrize the alignments and create a corpus.
    * 
    * @param sourceFile
    * @param targetFile
@@ -85,7 +87,7 @@ public class DynamicTMBuilder {
    * @param initialCapacity
    * @return
    */
-  private ParallelSuffixArray symmetrizeAndCreateSuffixArray(String sourceFile,
+  private static ParallelCorpus loadAndSymmetrize(String sourceFile,
       String targetFile, String feAlign, String efAlign, SymmetrizationType type, 
       int initialCapacity) {
     ParallelCorpus corpus = new ParallelCorpus(initialCapacity);
@@ -131,7 +133,7 @@ public class DynamicTMBuilder {
       logger.error("Exception: ", e);
     }
     
-    return new ParallelSuffixArray(corpus);
+    return corpus;
   }
 
   private static Map<String, Integer> optionDefs() {
@@ -187,10 +189,9 @@ public class DynamicTMBuilder {
     TimeKeeper timer = TimingUtils.start();
     DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity) :
       new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type);
-    timer.mark("Loading and symmetrization");
+    timer.mark("Model construction");
     
     DynamicTranslationModel<String> tm = tmBuilder.getModel();
-    timer.mark("Suffix array construction");
         
     try {
       logger.info("Serializing to: " + outputFileName);

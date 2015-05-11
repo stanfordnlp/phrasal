@@ -1,13 +1,13 @@
 package edu.stanford.nlp.mt.util;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,10 +17,7 @@ import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 /**
  * An implementation of a parallel suffix array.
  * 
- * NOTE: The fields are public, non-final for fast serialization/deserialization.
- * 
- * TODO(spenceg) Implement IStrings methods for processing IStrings with
- * a different underlying vocabulary.
+ * NOTE: The fields are protected, non-final for fast serialization/deserialization.
  * 
  * @author Spence Green
  *
@@ -31,143 +28,161 @@ public class ParallelSuffixArray implements Serializable {
 
   private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
   
-  protected ParallelCorpus corpus;
+  protected Vocabulary vocabulary;
+  protected int[] srcBitext;
+  protected int numSourcePositions;
+  protected int[] f2e;
+  protected int[] tgtBitext;
+  protected int numTargetPositions;
+  protected int[] e2f;
+  protected int numSentences;
+
   protected int[] srcSuffixArray; 
   protected int[] tgtSuffixArray;
-  protected int[] srcPosToSentenceId;
-  protected int[] tgtPosToSentenceId;
   
   // Sources of slowdown
-  // String comparisons in startsWith (use LCP arrays)
-  // No initialization of upper and lower bounds
-  // The unnecessary sort in the sample procedure. Stratify instead.
+  // No initialization of upper and lower bounds (with unigram positions)
   
-  // TODO(caches)
+  // Ideas
   // Left and right source LCP arrays (He et al. 2013 p.326) using the algorithm of Kasai (2001)
   // Left and right target LCP arrays
-  // Unigram caches -- source and target with associated functions
-  // Source postings lists (target postings lists don't seem to help)
-  
-  // TODO(spenceg) Add option to pre-compute and serialize these caches (for the foreground arrays)
-  // Otherwise compute them dynamically
   
   /**
    * No-arg constructor for deserialization.
    */
   public ParallelSuffixArray() {}
   
-  /**
-   * Constructor.
-   * 
-   * @param corpus
-   */
-  public ParallelSuffixArray(ParallelCorpus corpus) {
-    this.corpus = corpus;
-
-    if (corpus.numSourcePositions() > Integer.MAX_VALUE - 5 ||
-        corpus.numTargetPositions() > Integer.MAX_VALUE - 5) {
-      throw new RuntimeException("Number of corpus positions exceeds maximum suffix array size.");
-    }
-    logger.info("Corpus size: {}", corpus.size());
-    logger.info("# corpus positions src: {} tgt: {}", corpus.numSourcePositions(), corpus.numTargetPositions());
-
-    createArray(true);
-    createArray(false);
-  }
-
-  /**
-   * Constructor.
-   * 
-   * @param sourceFile
-   * @param targetFile
-   * @param alignmentFile
-   * @param expectedSize
-   * @param isDecoderLocal 
-   * @throws IOException 
-   */
-  public ParallelSuffixArray(String sourceFile, String targetFile, String alignmentFile, int expectedSize) throws IOException {
-    this(ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignmentFile, expectedSize));
-  }
 
   /**
    * Get the index associated with this suffix array.
    * 
    * @return
    */
-  public Vocabulary getVocabulary() { return corpus.index; }
-
+  public Vocabulary getVocabulary() { return vocabulary; }
+  
   /**
-   * Get the underlying corpus.
+   * Return a stream of the sentence pairs in this bitext.
    * 
    * @return
    */
-  public ParallelCorpus getCorpus() { return corpus; }
+  public Stream<SentencePair> stream() {
+    return IntStream.range(0, srcBitext.length).mapToObj(i -> {
+      if (srcBitext[i] < 0) {
+        return new SentencePair(i-1);
+      } else {
+        return null;
+      }
+    }).filter(o -> o != null);
+  }
   
   /**
-   * Create the underlying suffix array from the parallel corpus in O(nlogn) time (naive algorithm...
-   * but easy to parallelize).
+   * Return a stream of the sentence pairs in this bitext.
    * 
-   * @param isSource
+   * @return
    */
-  private void createArray(boolean isSource) {
-    int[] posToSentenceId = new int[corpus.size()];
-
-    // Iterate over suffixes to build the tree
-    logger.info("Enumerating {} corpus...", isSource ? "source" : "target");
-    TimeKeeper timer = TimingUtils.start();
-    int corpusPosition = 0;
-    int i = 0;
-    List<CorpusPosition> positions = new ArrayList<>(isSource ? corpus.numSourcePositions() : corpus.numTargetPositions());
-    for (AlignedSentence example : corpus) {
-      int len = isSource ? example.sourceLength() : example.targetLength();
-      for (int j = 0; j < len; ++j) {
-        positions.add(new CorpusPosition(corpusPosition++, i, j));
+  public Stream<SentencePair> parallelStream() {
+    return IntStream.range(0, srcBitext.length).parallel().mapToObj(i -> {
+      if (srcBitext[i] < 0) {
+        return new SentencePair(i-1);
+      } else {
+        return null;
       }
-      posToSentenceId[i++] = corpusPosition - 1;
+    }).filter(o -> o != null);
+  }
+  
+  /**
+   * Load the parallel corpus into a contiguous block of memory.
+   * Set the corpus reference to null after this call to free memory.
+   * 
+   * @param corpus
+   */
+  public void loadCorpus(ParallelCorpus corpus) {
+    logger.info("Flattening parallel corpus");
+    TimeKeeper timer = TimingUtils.start();
+    numSentences = corpus.size();
+    numSourcePositions = corpus.numSourcePositions();
+    numTargetPositions = corpus.numTargetPositions();
+    int srcLength = numSourcePositions + numSentences;
+    srcBitext = new int[srcLength];
+    f2e = new int[srcLength];
+    int tgtLength = numTargetPositions + numSentences;
+    tgtBitext = new int[tgtLength];
+    e2f = new int[tgtLength];
+    int srcOffset = 0;
+    int tgtOffset = 0;
+    for (AlignedSentence sentence : corpus) {
+      System.arraycopy(sentence.source, 0, srcBitext, srcOffset, sentence.sourceLength());
+      System.arraycopy(sentence.f2e, 0, f2e, srcOffset, sentence.f2e.length);
+      System.arraycopy(sentence.target, 0, tgtBitext, tgtOffset, sentence.targetLength());
+      System.arraycopy(sentence.e2f, 0, e2f, tgtOffset, sentence.e2f.length);
+      srcOffset += sentence.sourceLength();
+      tgtOffset += sentence.targetLength();
+      // Source points to target
+      srcBitext[srcOffset] = toSentenceOffset(tgtOffset);
+      // Target points to source
+      tgtBitext[tgtOffset] = toSentenceOffset(srcOffset);
+      ++srcOffset;
+      ++tgtOffset;
     }
-    timer.mark("Enumerate corpus positions");
-    logger.info("Done enumerating {} corpus", isSource ? "source" : "target");
+    vocabulary = corpus.index;
+    timer.mark("Corpus loading");
+    logger.info("Done loading corpus: {}", timer);
+  }
 
-    // Create the suffix array (in parallel)
-    logger.info("Creating {} suffix array...", isSource ? "source" : "target");
-    final int[] sa = positions.parallelStream().sorted((x,y) ->
-    {
-      AlignedSentence exX = corpus.get(x.sentenceId);
-      int[] xSeq = isSource ? exX.source : exX.target;
-      AlignedSentence exY = corpus.get(y.sentenceId);
-      int[] ySeq = isSource ? exY.source : exY.target;
-
-      for (int yPos = y.sentPos, xPos = x.sentPos; 
-          xPos < xSeq.length && yPos < ySeq.length; 
-          xPos++, yPos++) {
-        int xId = xSeq[xPos];
-        int yId = ySeq[yPos];
+  private static int toSentenceOffset(int corpusPosition) {
+    return -1 * (corpusPosition + 1);
+  }
+  
+  private static int fromSentenceOffset(int offset) {
+    return (-1 * offset) - 1;
+  }
+  
+  /**
+   * Create suffix arrays for the parallel corpus.
+   */
+  public void build() {
+    logger.info("Building suffix arrays...");
+    TimeKeeper timer = TimingUtils.start();
+    srcSuffixArray = build(srcBitext, numSourcePositions);
+    if (srcSuffixArray.length != numSourcePositions) throw new RuntimeException();
+    timer.mark("Source array");
+    tgtSuffixArray = build(tgtBitext, numTargetPositions);
+    if (tgtSuffixArray.length != numTargetPositions) throw new RuntimeException();
+    timer.mark("Target array");
+    logger.info("Done constructing suffix arrays: {}", timer);
+  }
+  
+  /**
+   * Sort the bitext in parallel.
+   * 
+   * @param bitext
+   * @param numPositions
+   * @return
+   */
+  private int[] build(final int[] bitext, int numPositions) {
+    return IntStream.range(0, bitext.length).parallel().boxed().sorted((x,y) -> {
+      // Compare suffixes
+      int xPos = x, yPos = y, xId = bitext[x], yId = bitext[y];
+      while(xId >= 0 && yId >= 0) {
         if (xId == yId) {
-          continue;
+          xId = bitext[++xPos];
+          yId = bitext[++yPos];
         } else {
           // Lexicographic sort
-          int cmp = corpus.index.get(xId).compareTo(corpus.index.get(yId));
-          if (cmp != 0) return cmp;
+          return vocabulary.get(xId).compareTo(vocabulary.get(yId));
         }
       }
-      // Check the lengths
-      int xLength = xSeq.length - x.sentPos;
-      int yLength = ySeq.length - y.sentPos;
-      return xLength - yLength;
-    }).mapToInt(a -> a.corpusPos).toArray();
-    timer.mark("Suffix array creation");
-    logger.info("Done creating {} suffix array", isSource ? "source" : "target");
-    logger.info("Timing: {}", timer);
-    
-    // Setup the arrays
-    if (isSource) {
-      srcPosToSentenceId = posToSentenceId;
-      this.srcSuffixArray = sa;
-
-    } else {
-      tgtPosToSentenceId = posToSentenceId;
-      this.tgtSuffixArray = sa;
-    }
+      
+      // Check the lengths of the suffixes
+      if (xId < 0 && yId < 0) {
+        return 0;
+      } else {
+        // Either xId < 0 or yId < 0
+        // Push negative indices to the end of the array,
+        // where they will be truncated by the limit() function.
+        return xId < 0 ? 1 : -1;
+      }
+    }).limit(numPositions).mapToInt(i -> i).toArray();
   }
 
   /**
@@ -178,17 +193,12 @@ public class ParallelSuffixArray implements Serializable {
    */
   public void print(boolean isSource, PrintWriter out) {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
+    int[] bitext = isSource ? this.srcBitext : this.tgtBitext;
     for (int i = 0; i < sa.length; ++i) {
-      int corpusPos = sa[i];
-      if (corpusPos == 322) {
-        System.err.println();
-      }
-      Suffix suffix = getSuffix(corpusPos, isSource);
-      int[] intArray = Arrays.copyOfRange(suffix.tokens, suffix.start, suffix.tokens.length);
       StringBuilder sb = new StringBuilder();
-      for (int id : intArray) {
+      for (int corpusPos = sa[i]; bitext[corpusPos] >= 0; ++corpusPos) {
         if (sb.length() > 0) sb.append(" ");
-        sb.append(corpus.index.get(id));
+        sb.append(vocabulary.get(bitext[corpusPos]));
       }
       out.println(sb.toString());
     }
@@ -208,25 +218,29 @@ public class ParallelSuffixArray implements Serializable {
     logger.info("Building query cache with threshold {}", minOccurrences);
     Map<Span,SuffixArraySample> queryCache = new HashMap<>(1000);
     int nCnt = 1, nnCnt = 1, nnnCnt = 1;
-    Suffix firstSuffix = this.getSuffix(srcSuffixArray[0], true);
-    Span nSpan = Span.getSpan(firstSuffix.tokens, firstSuffix.start, 1, 0), 
-        nnSpan = Span.getSpan(firstSuffix.tokens, firstSuffix.start, 2, 0), 
-        nnnSpan = Span.getSpan(firstSuffix.tokens, firstSuffix.start, 3, 0);
+    int nStart = 0, nnStart = 0, nnnStart = 0;
+    Suffix firstSuffix = new Suffix(srcSuffixArray[0], true);
+    Span nSpan = Span.getSpan(firstSuffix, 1), 
+        nnSpan = Span.getSpan(firstSuffix, 2), 
+        nnnSpan = Span.getSpan(firstSuffix, 3);
     for (int i = 1; i < srcSuffixArray.length; ++i) {
-      Suffix suffix = this.getSuffix(srcSuffixArray[i], true);
-      Span nSpanThis = Span.getSpan(suffix.tokens, suffix.start, 1, i);
-      Span nnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 2, i);
-      Span nnnSpanThis = Span.getSpan(suffix.tokens, suffix.start, 3, i);
-      nCnt = checkSpan(nSpan, nSpanThis, i, nCnt, minOccurrences, sampleSize, queryCache);
+      Suffix suffix = new Suffix(srcSuffixArray[i], true);
+      Span nSpanThis = Span.getSpan(suffix, 1);
+      Span nnSpanThis = Span.getSpan(suffix, 2);
+      Span nnnSpanThis = Span.getSpan(suffix, 3);
+      nCnt = checkSpan(nSpan, nSpanThis, nStart, i, nCnt, minOccurrences, sampleSize, queryCache);
       if (nCnt == 1) {
+        nStart = i;
         nSpan = nSpanThis;
       }
-      nnCnt = checkSpan(nnSpan, nnSpanThis, i, nnCnt, minOccurrences, sampleSize, queryCache);
+      nnCnt = checkSpan(nnSpan, nnSpanThis, nnStart, i, nnCnt, minOccurrences, sampleSize, queryCache);
       if (nnCnt == 1) {
+        nnStart = i;
         nnSpan = nnSpanThis;
       }
-      nnnCnt = checkSpan(nnnSpan, nnnSpanThis, i, nnnCnt, minOccurrences, sampleSize, queryCache);
+      nnnCnt = checkSpan(nnnSpan, nnnSpanThis, nnnStart, i, nnnCnt, minOccurrences, sampleSize, queryCache);
       if (nnnCnt == 1) {
+        nnnStart = i;
         nnnSpan = nnnSpanThis;
       }
     };
@@ -234,28 +248,22 @@ public class ParallelSuffixArray implements Serializable {
     return queryCache;
   }
     
-  private int checkSpan(Span currentSpan, Span nextSpan, int saPosition, int cnt, 
+  private int checkSpan(Span currentSpan, Span nextSpan, int startSa, int endSa, int cnt, 
       int ruleCacheThreshold, int sampleSize, Map<Span, SuffixArraySample> queryCache) {
     if (currentSpan != null && currentSpan.equals(nextSpan)) {
       return cnt + 1;
       
     } else if (cnt > ruleCacheThreshold) {
       int maxHits = 10*sampleSize;
-      int start = currentSpan.saIndex;
-      int end = saPosition;
-      int numHits = end - start;
+      int numHits = endSa - startSa;
       int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
       assert stepSize > 0;
-      List<QueryResult> hits = new ArrayList<>(maxHits);
-      for (int i = start; i < end && hits.size() < maxHits; i += stepSize) {
+      List<SentencePair> hits = new ArrayList<>(maxHits);
+      for (int i = startSa; i < endSa && hits.size() < maxHits; i += stepSize) {
         int corpusPosition = srcSuffixArray[i];
-        int sentenceId = positionToSentence(corpusPosition, true);
-        int offset = sentenceId == 0 ? 0 : srcPosToSentenceId[sentenceId - 1];
-        int startIndex = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-        AlignedSentence sample = this.corpus.get(sentenceId);
-        hits.add(new QueryResult(sample, startIndex, sentenceId));
+        hits.add(new SentencePair(corpusPosition));
       }
-      queryCache.put(currentSpan, new SuffixArraySample(hits, start, end-1));
+      queryCache.put(currentSpan, new SuffixArraySample(hits, startSa, endSa-1));
     }
     return 1;
   }
@@ -267,24 +275,23 @@ public class ParallelSuffixArray implements Serializable {
    *
    */
   public static class Span {
-    public int[] tokens;
-    public int saIndex;
-    public int hashCode;
-    private Span(int[] suffix, int start, int end, int saIndex) {
-      this.saIndex = saIndex;
-      this.tokens = Arrays.copyOfRange(suffix, start, end);
+    public final int[] tokens;
+    private final int hashCode;
+    private Span(int[] tokens) {
+      this.tokens = tokens;
       this.hashCode = MurmurHash.hash32(tokens, tokens.length, 1);
     }
-    public static Span getSpan(int[] suffix, int start, int order, int saIndex) {
-      int end = start+order;
-      if (end > suffix.length) {
-        return null;
-      } else {
-        return new Span(suffix, start, end, saIndex);
+    public static Span getSpan(Suffix suffix, int order) {
+      int[] tokens = new int[order];
+      for (int i = 0; i < order; ++i) {
+        try {
+          tokens[i] = suffix.get(i);
+        } catch(Exception e) {
+          return null;
+        }
       }
+      return new Span(tokens);
     }
-    @Override
-    public String toString() { return Arrays.toString(tokens); }
     @Override
     public int hashCode() {
       return hashCode;
@@ -297,28 +304,16 @@ public class ParallelSuffixArray implements Serializable {
         return false;
       } else {
         Span otherSpan = (Span) o;
-        if (tokens.length == otherSpan.tokens.length) {
-          return Arrays.equals(tokens, otherSpan.tokens);
+        if (this.tokens.length == otherSpan.tokens.length) {
+          for (int i = 0; i < tokens.length; ++i) {
+            if (tokens[i] != otherSpan.tokens[i]) {
+              return false;
+            }
+          }
+          return true;
         }
         return false;
       }
-    }
-  }
-  
-  /**
-   * Marks a corpus position for fast sorting.
-   * 
-   * @author Spence Green
-   *
-   */
-  private static class CorpusPosition {
-    public final int corpusPos;
-    public final int sentenceId;
-    public final int sentPos;
-    public CorpusPosition(int c, int s, int sentPos) {
-      this.corpusPos = c;
-      this.sentenceId = s;
-      this.sentPos = sentPos;
     }
   }
 
@@ -327,45 +322,10 @@ public class ParallelSuffixArray implements Serializable {
    * 
    * @return
    */
-  public int numSentences() {
-    return corpus.size();
-  }
-
-  /**
-   * Determine if a suffix starts with the query sequence.
-   * 
-   * TODO(spenceg) This should be an LCP comparison?
-   * 
-   * @param suffix
-   * @param query
-   * @param suffixStart
-   * @return
-   */
-  private int startsWith(final int[] suffix, final int[] query, int suffixStart) {
-    boolean consumedQuery = false;
-    for (int i = 0, j = suffixStart; 
-        i < query.length && j < suffix.length; 
-        i++, j++) {
-      consumedQuery = (i == query.length-1);
-      int xId = query[i];
-      int yId = suffix[j];
-      if (xId == yId) {
-        continue;
-      } else {
-        int cmp = corpus.index.get(xId).compareTo(corpus.index.get(yId));
-        if (cmp != 0) return cmp;
-      }
-    }
-    // Check the lengths
-    int yLength = suffix.length - suffixStart;
-    return consumedQuery ? 0 : query.length - yLength;
-  }
+  public int numSentences() { return numSentences; }
 
   /**
    * Find a lower or upper bound in the suffix array.
-   * 
-   * TODO(spenceg) Runtime is dominated by the calls to getSuffix(), which in turn
-   * call positionToSentence.
    * 
    * @param query
    * @param isSource
@@ -382,12 +342,18 @@ public class ParallelSuffixArray implements Serializable {
     int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
     int low = lo;
     int high = hi;
+    for (int i = 0; i < query.length; ++i) {
+      System.err.print(vocabulary.get(query[i]) + " ");
+    }
+    System.err.println();
+    System.err.flush();
     while(low <= high) {
       final int mid = (low + high) >>> 1;
       assert mid < sa.length;
       final int corpusPos = sa[mid];
-      final Suffix suffix = getSuffix(corpusPos, isSource);
-      final int cmp = startsWith(suffix.tokens, query, suffix.start);
+      assert corpusPos > 0;
+      final Suffix midSuffix = new Suffix(corpusPos, isSource);
+      final int cmp = midSuffix.compare(query);
 
       if (cmp < 0) {
         // Search left
@@ -401,8 +367,8 @@ public class ParallelSuffixArray implements Serializable {
         // Check to see if this is the bound, then search
         if (lowerBound) {
           if (mid == 0) return 0;
-          Suffix leftSuffix = getSuffix(sa[mid-1], isSource);
-          int cmp2 = startsWith(leftSuffix.tokens, query, leftSuffix.start);
+          Suffix leftSuffix = new Suffix(sa[mid-1], isSource);
+          int cmp2 = leftSuffix.compare(query);
           if (cmp2 > 0) return mid;
           // Search left
           assert cmp2 == 0;
@@ -410,8 +376,8 @@ public class ParallelSuffixArray implements Serializable {
 
         } else {
           if (mid == sa.length - 1) return mid;
-          Suffix rightSuffix = getSuffix(sa[mid+1], isSource);
-          int cmp2 = startsWith(rightSuffix.tokens, query, rightSuffix.start);
+          Suffix rightSuffix = new Suffix(sa[mid+1], isSource);
+          int cmp2 = rightSuffix.compare(query);
           if (cmp2 < 0) return mid;
           // Search right
           assert cmp2 == 0;
@@ -424,44 +390,61 @@ public class ParallelSuffixArray implements Serializable {
   }
 
   /**
-   * Get a suffix from the suffix array.
-   * 
-   * @param corpusPos
-   * @param isSource
-   * @return
-   */
-  private Suffix getSuffix(final int corpusPos, boolean isSource) {
-    int sentenceId = positionToSentence(corpusPos, isSource);
-    AlignedSentence example = this.corpus.get(sentenceId);
-    int[] suffix = isSource ? example.source : example.target;
-    int offset;
-    if (isSource) {
-      offset = sentenceId == 0 ? 0 : this.srcPosToSentenceId[sentenceId-1];
-    } else {
-      offset = sentenceId == 0 ? 0 : this.tgtPosToSentenceId[sentenceId-1];
-    }
-    int start = sentenceId == 0 ? corpusPos : corpusPos - offset - 1;
-    assert start >= 0;
-    return new Suffix(suffix, start);
-  }
-
-  /**
    * Wrapper object for suffix queries.
    * 
    * @author Spence Green
    *
    */
-  private static class Suffix {
-    public final int[] tokens;
-    public final int start;
-    public Suffix(int[] tokens, int start) {
-      this.tokens = tokens;
-      this.start = start;
+  private class Suffix {
+    private final int pos;
+    private final boolean isSource;
+    public Suffix(int corpusPosition, boolean isSource) {
+      this.pos = corpusPosition;
+      this.isSource = isSource;
+    }
+    
+    public int get(int i) {
+      int[] bitext = isSource ? srcBitext : tgtBitext;
+      int bitextPos = this.pos + i;
+      if (bitextPos < 0 || bitextPos >= bitext.length || bitext[bitextPos] < 0) throw new ArrayIndexOutOfBoundsException();
+      return bitext[bitextPos];
+    }
+
+    public int compare(int[] query) {
+      int[] bitext = isSource ? srcBitext : tgtBitext;
+      int j = pos;
+      boolean consumedQuery = false;
+      for (int i = 0; 
+          i < query.length && bitext[j] >= 0; 
+          i++, j++) {
+        consumedQuery = (i == query.length-1);
+        int xId = query[i];
+        int yId = bitext[j];
+        if (xId != yId) {
+          return vocabulary.get(xId).compareTo(vocabulary.get(yId));
+        }
+      }
+
+      // Check the lengths
+      return consumedQuery ? 0 : 1;
+    }
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      int i = 0;
+      try {
+        while(true) {
+          if (i > 0) sb.append(" ");
+          sb.append(vocabulary.get(get(i)));
+          ++i;
+        }
+      } catch(Exception e) {}
+      return sb.toString();
     }
   }
 
   /**
-   * Count of this sequence in the suffix array.
+   * Count of this sequence in either the source or target bitext.
    * 
    * @param tokens
    * @param isSource
@@ -475,111 +458,43 @@ public class ParallelSuffixArray implements Serializable {
     }
     return 0;
   }
-
-  /**
-   * Get all results for this query.
-   * 
-   * @param query
-   * @param isSource
-   * @return
-   */
-  public List<QueryResult> query(final int[] query, boolean isSource) {
-    int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
-    int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
-    int lb = findBound(query, isSource, true, 0);
-    if (lb < 0) return new ArrayList<>(0);
-    List<QueryResult> hits = new ArrayList<>();
-    for (int i = lb, limit = sa.length; i < limit; ++i) {
-      int corpusPosition = sa[i];
-      int sentenceId = positionToSentence(corpusPosition, isSource);
-      int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-      int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-      AlignedSentence sample = this.corpus.get(sentenceId);
-      int[] suffix = isSource ? sample.source : sample.target;
-      if (this.startsWith(suffix, query, start) == 0) {
-        hits.add(new QueryResult(sample, start, sentenceId));
-      } else {
-        break;
-      }
-    }
-    return hits;
-  }
   
   /**
    * Return a sample of sentences from this suffix array.
    * 
-   * @param tokens
-   * @param isSource
-   * @param sampleSize
+   * @param sourceQuery
+   * @param maxSamples
    * @return
    */
-  public SuffixArraySample sample(final int[] query, boolean isSource, int maxHits) {
-    return sample(query, isSource, maxHits, 0, -1);
+  public SuffixArraySample sample(final int[] sourceQuery, int maxSamples) {
+    return sample(sourceQuery, maxSamples, 0, -1);
   }
   
-  public SuffixArraySample sample(final int[] query, boolean isSource, int maxHits, int minBound, int maxBound) {
-    int[] sa = isSource ? this.srcSuffixArray : this.tgtSuffixArray;
-    int[] posToSentence = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
-    int lb = maxBound > minBound ? findBound(query, isSource, true, minBound, maxBound) :
-      findBound(query, isSource, true, minBound);
-    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
-    int ub = maxBound > lb ? findBound(query, isSource, false, lb, maxBound) :
-      findBound(query, isSource, false, lb);
-    assert ub > 0;
-    int numHits = ub - lb + 1;
-    int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
-    assert stepSize > 0;
-    // Stratified sample through the list of positions
-    List<QueryResult> samples = new ArrayList<>(maxHits);
-    for (int i = lb; i <= ub && samples.size() < maxHits; i += stepSize) {
-      int corpusPosition = sa[i];
-      int sentenceId = positionToSentence(corpusPosition, isSource);
-      int offset = sentenceId == 0 ? 0 : posToSentence[sentenceId - 1];
-      int start = sentenceId == 0 ? corpusPosition : corpusPosition - offset - 1;
-      AlignedSentence sample = this.corpus.get(sentenceId);
-      assert query[0] == sample.source[start];
-      assert start + query.length <= sample.sourceLength();
-      samples.add(new QueryResult(sample, start, sentenceId));
-    }
-    return new SuffixArraySample(samples, lb, ub);
-  }
-
   /**
-   * Return the sentence index for a given corpus position.
+   * Return a sample of sentences from the suffix array.
    * 
-   * @param corpusPosition
-   * @param isSource
+   * @param sourceQuery
+   * @param maxSamples
+   * @param minBound
+   * @param maxBound
    * @return
    */
-  private int positionToSentence(final int corpusPosition, boolean isSource) {
-    if (corpusPosition < 0) throw new IllegalArgumentException();
-    int[] posToSentenceId = isSource ? this.srcPosToSentenceId : this.tgtPosToSentenceId;
-    int low = 0;
-    int high = posToSentenceId.length - 1;
-    while(low <= high) {
-      final int mid = (low + high) >>> 1;
-      final int lastPosition = posToSentenceId[mid];
-      final int cmp = corpusPosition - lastPosition;
-      if (cmp < 0) {
-        if (mid == 0) return mid;
-        int left = posToSentenceId[mid-1];
-        int cmp2 = corpusPosition - left;
-        if (cmp2 > 0) return mid;
-        high = mid - 1;
-
-      } else if (cmp > 0) {
-        if (mid == posToSentenceId.length - 1) return mid;
-        int right = posToSentenceId[mid+1];
-        int cmp2 = corpusPosition - right;
-        if (cmp2 < 0) return mid + 1;
-        low = mid + 1;
-
-      } else {
-        return mid;
-      }
+  public SuffixArraySample sample(final int[] sourceQuery, int maxSamples, int minBound, int maxBound) {
+    int lb = maxBound > minBound ? findBound(sourceQuery, true, true, minBound, maxBound) :
+      findBound(sourceQuery, true, true, minBound);
+    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    int ub = maxBound > lb ? findBound(sourceQuery, true, false, lb, maxBound) :
+      findBound(sourceQuery, true, false, lb);
+    assert ub > 0;
+    int numHits = ub - lb + 1;
+    int stepSize = (numHits < maxSamples) ? 1 : numHits / maxSamples;
+    assert stepSize > 0;
+    // Stratified sample through the list of positions
+    List<SentencePair> samples = new ArrayList<>(maxSamples);
+    for (int i = lb; i <= ub && samples.size() < maxSamples; i += stepSize) {
+      samples.add(new SentencePair(srcSuffixArray[i]));
     }
-    // Corpus position not found? 
-    throw new IllegalArgumentException();
+    return new SuffixArraySample(samples, lb, ub);
   }
 
   /**
@@ -589,14 +504,97 @@ public class ParallelSuffixArray implements Serializable {
    * @author Spence Green
    *
    */
-  public static class QueryResult {
-    public final AlignedSentence sentence;
+  public class SentencePair {
     public final int wordPosition;
-    public final int sentenceId;
-    public QueryResult(AlignedSentence sentence, int wordPosition, int sentenceId) {
-      this.sentence = sentence;
-      this.wordPosition = wordPosition;
-      this.sentenceId = sentenceId;
+    
+    // TODO(spenceg) Not sure if we can find this right now.
+//    public final int sentenceId;
+    
+    public final int srcStartInclusive;
+    private final int srcEndExclusive;
+    private final int tgtStartInclusive;
+    private final int tgtEndExclusive;
+    
+    private SentencePair(int corpusPosition) {
+      // Find source span
+      int j = corpusPosition;
+      assert srcBitext[j] > 0; 
+      while (srcBitext[j] >= 0) j++;
+      srcEndExclusive = j;
+      j = corpusPosition - 1;
+      while (j >= 0 && srcBitext[j] >= 0) j--;
+      srcStartInclusive = j + 1;
+      
+      // Find the target span
+      tgtEndExclusive = fromSentenceOffset(srcBitext[srcEndExclusive]);
+      assert tgtEndExclusive > 0 : String.valueOf(tgtEndExclusive);
+      assert fromSentenceOffset(tgtBitext[tgtEndExclusive]) == srcEndExclusive : String.format("%d %d", 
+          fromSentenceOffset(tgtBitext[tgtEndExclusive]), srcEndExclusive);
+      int a = tgtEndExclusive - 1;
+      while (a >= 0 && tgtBitext[a] >= 0) a--;
+      tgtStartInclusive = a + 1;
+      
+      // Set the start of the query
+      wordPosition = corpusPosition - srcStartInclusive;
+    }
+    
+    public int sourceLength() {
+      return srcEndExclusive - srcStartInclusive;
+    }
+    
+    public int targetLength() {
+      return tgtEndExclusive - tgtStartInclusive;
+    }
+    
+    public int source(int i) {
+      int bitextPos = srcStartInclusive + i;
+      if (bitextPos < 0 || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return srcBitext[bitextPos];
+    }
+    
+    public int target(int i) {
+      int bitextPos = tgtStartInclusive + i;
+      if (bitextPos < 0 || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return tgtBitext[bitextPos];
+    }
+    
+    public int[] f2e(int i) {
+      int bitextPos = srcStartInclusive + i;
+      if (bitextPos < 0 || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return AlignedSentence.expand(f2e[bitextPos]);
+    }
+    
+    public int[] e2f(int i) {
+      int bitextPos = tgtStartInclusive + i;
+      if (bitextPos < 0 || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return AlignedSentence.expand(e2f[bitextPos]);
+    }
+    
+    public boolean isSourceUnaligned(int i) {
+      int bitextPos = srcStartInclusive + i;
+      if (bitextPos < 0 || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return f2e[bitextPos] == 0;
+    }
+    
+    public boolean isTargetUnaligned(int i) {
+      int bitextPos = tgtStartInclusive + i;
+      if (bitextPos < 0 || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return e2f[bitextPos] == 0;
+    }
+    
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0, sz = sourceLength(); i < sz; ++i) {
+        if (i > 0) sb.append(" ");
+        sb.append(vocabulary.get(source(i)));
+      }
+      sb.append(" ||| ");
+      for (int i = 0, sz = targetLength(); i < sz; ++i) {
+        if (i > 0) sb.append(" ");
+        sb.append(vocabulary.get(target(i)));
+      }
+      return sb.toString();
     }
   }
   
@@ -607,10 +605,10 @@ public class ParallelSuffixArray implements Serializable {
    *
    */
   public static class SuffixArraySample {
-    public final List<QueryResult> samples;
+    public final List<SentencePair> samples;
     public final int lb;
     public final int ub;
-    public SuffixArraySample(List<QueryResult> q, int lb, int ub) {
+    public SuffixArraySample(List<SentencePair> q, int lb, int ub) {
       this.samples = q;
       this.lb = lb;
       this.ub = ub;
