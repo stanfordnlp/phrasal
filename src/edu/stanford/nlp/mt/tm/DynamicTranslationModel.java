@@ -487,13 +487,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
         int eCnt = sa.count(rule.tgt, false);
-        if (eCnt == 0) {
-          eCnt = sa.count(rule.tgt, false);
-          for (int i = 0; i < rule.tgt.length; ++i) {
-            System.out.print(sa.getVocabulary().get(rule.tgt[i]) + " ");
-          }
-          System.out.println();
-        }
+//        if (eCnt <= 0) {
+//          eCnt = sa.count(rule.tgt, false);
+//          for (int i = 0; i < rule.tgt.length; ++i) {
+//            System.out.print(sa.getVocabulary().get(rule.tgt[i]) + " ");
+//          }
+//          System.out.println();
+//        }
         assert eCnt > 0 : Arrays.toString(rule.tgt);
         int adjustedCount = (int) (histogram[r] / sampleRate);
         // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
@@ -832,7 +832,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
       System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
       System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
-            
+          
+//      tm.sa.print(true, new PrintWriter(System.out));
+      
       // TODO(spenceg) Requires classmexer in the local directory.
 //      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
 //      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
