@@ -60,6 +60,10 @@ public class SampledRule {
     this.hashCode = MurmurHash.hash32(hashArr, hashArr.length, 1);
   }
   
+  public int sourceLength() { return src.length; }
+  
+  public int targetLength() { return tgt.length; }
+  
   /**
    * Convert the sampled rule to a Phrasal translation rule.
    * 
@@ -159,6 +163,12 @@ public class SampledRule {
       }
     }
     return f2e;
+  }
+  
+  public int[] f2e(int i) {
+    int srcIndex = srcStartInclusive + i;
+    if (srcIndex < 0 || srcIndex >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+    return saEntry.isSourceUnaligned(srcIndex) ? new int[0] : saEntry.f2e(srcIndex);
   }
   
   /**

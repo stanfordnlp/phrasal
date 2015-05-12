@@ -527,12 +527,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         return false;
       } else {
         SampledAlignment other = (SampledAlignment) o;
-        // TODO(spenceg) This is slow! Don't copy here.
-        int[][] f2e = rule.f2e();
-        int[][] f2eOther = other.rule.f2e();
-        if (f2e.length != f2eOther.length) return false;
-        for (int i = 0; i < f2e.length; ++i) {
-          if ( ! Arrays.equals(f2e[i], f2eOther[i])) {
+        if (rule.sourceLength() != other.rule.sourceLength() ||
+            rule.targetLength() != other.rule.targetLength())
+          return false;
+        
+        for (int i = 0; i < rule.src.length; ++i) {
+          if ( ! Arrays.equals(rule.f2e(i), other.rule.f2e(i))) {
             return false;
           }
         }
