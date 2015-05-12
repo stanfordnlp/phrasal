@@ -421,7 +421,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     // Organize rules by candidate translation and compute lexical scores
     // Choose the alignment template that occurs most often for each span.
-    List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order).stream())
+    List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order, maxTargetPhrase).stream())
         .collect(Collectors.toList());
     Map<TargetSpan,Counter<SampledAlignment>> tgtToTemplate = new HashMap<>(rules.size());
     for (SampledRule rule : rules) {
@@ -650,7 +650,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param s
    * @return
    */
-  private List<SampledRule> extractRules(QueryResult s, int length) {    
+  public static List<SampledRule> extractRules(QueryResult s, int length, int maxTargetPhrase) {
     // Find the target span
     int minTarget = Integer.MAX_VALUE;
     int maxTarget = -1;
