@@ -172,7 +172,8 @@ public class SampledRule {
   }
   
   /**
-   * Generate an integer key from the alignment template.
+   * Generate an integer key from the alignment template. Look at the alignments
+   * in both directions.
    * 
    * @return
    */
@@ -186,6 +187,20 @@ public class SampledRule {
         key *= MurmurHash.hash32(f2eI, f2eI.length, 1);
       }
     }
+    for (int i = tgtStartInclusive; i < tgtEndExclusive; ++i) {
+      if (saEntry.isTargetUnaligned(i)) {
+        key = i % 2 == 1 ? key << (i % 16) : key >> (i % 8);
+      } else {
+        int[] e2fI = saEntry.e2f(i);
+        key += MurmurHash.hash32(e2fI, e2fI.length, 1);
+      }
+    }
     return key;
+  }
+
+  public int[] e2f(int i) {
+    int tgtIndex = tgtStartInclusive + i;
+    if (tgtIndex < 0 || tgtIndex >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+    return saEntry.isTargetUnaligned(tgtIndex) ? new int[0] : saEntry.e2f(tgtIndex);
   }
 }

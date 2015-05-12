@@ -527,15 +527,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         return false;
       } else {
         SampledAlignment other = (SampledAlignment) o;
-        if (rule.sourceLength() != other.rule.sourceLength() ||
-            rule.targetLength() != other.rule.targetLength())
+        if (rule.targetLength() != other.rule.targetLength())
           return false;
         
+        // Source-target alignments
         for (int i = 0; i < rule.src.length; ++i) {
           if ( ! Arrays.equals(rule.f2e(i), other.rule.f2e(i))) {
             return false;
           }
         }
+        
+        // Target-source alignments
+        for (int i = 0; i < rule.tgt.length; ++i) {
+          if ( ! Arrays.equals(rule.e2f(i), other.rule.e2f(i))) {
+            return false;
+          }
+        }
+        
         return true;
       }
     }

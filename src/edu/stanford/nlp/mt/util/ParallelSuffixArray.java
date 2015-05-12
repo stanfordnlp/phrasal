@@ -531,21 +531,24 @@ public class ParallelSuffixArray implements Serializable {
     private SentencePair(int corpusPosition) {
       // Find source span
       int j = corpusPosition;
-      assert srcBitext[j] >= 0; 
+      assert srcBitext[j] >= 0;
+      // Walk forward
       while (srcBitext[j] >= 0) j++;
       srcEndExclusive = j;
+      // Walk backward
       j = corpusPosition - 1;
       while (j >= 0 && srcBitext[j] >= 0) j--;
       srcStartInclusive = j + 1;
+      assert corpusPosition >= srcStartInclusive : String.format("%d %d", corpusPosition, srcStartInclusive);
       
       // Find the target span
+      tgtStartInclusive = j == -1 ? 0 : fromSentenceOffset(srcBitext[j]) + 1;
       tgtEndExclusive = fromSentenceOffset(srcBitext[srcEndExclusive]);
+      assert tgtStartInclusive < tgtEndExclusive : String.format("tgt: %d %d", tgtStartInclusive, 
+          tgtEndExclusive);
       assert tgtEndExclusive > 0 : String.valueOf(tgtEndExclusive);
       assert fromSentenceOffset(tgtBitext[tgtEndExclusive]) == srcEndExclusive : String.format("%d %d", 
           fromSentenceOffset(tgtBitext[tgtEndExclusive]), srcEndExclusive);
-      int a = tgtEndExclusive - 1;
-      while (a >= 0 && tgtBitext[a] >= 0) a--;
-      tgtStartInclusive = a + 1;
       
       // Set the start of the query
       wordPosition = corpusPosition - srcStartInclusive;
