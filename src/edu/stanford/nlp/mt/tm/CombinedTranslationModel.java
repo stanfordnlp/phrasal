@@ -39,9 +39,19 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    * @param model
    */
   public CombinedTranslationModel(TranslationModel<TK,FV> model) {
+    this(model, DEFAULT_PHRASE_LIMIT);
+  }
+
+  /**
+   * Constructor
+   * 
+   * @param model
+   * @param queryLimit
+   */
+  public CombinedTranslationModel(TranslationModel<TK,FV> model, int queryLimit) {
     this.models = new ArrayList<>(1);
     this.models.add(model);
-    this.ruleQueryLimit = DEFAULT_PHRASE_LIMIT;
+    this.ruleQueryLimit = queryLimit;
   }
   
   /**
@@ -57,12 +67,12 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    * Constructor.
    * 
    * @param models
-   * @param phraseLimit
+   * @param queryLimit
    */
   public CombinedTranslationModel(List<TranslationModel<TK,FV>> models,
-      int phraseLimit) {
+      int queryLimit) {
     this.models = models;
-    this.ruleQueryLimit = phraseLimit;
+    this.ruleQueryLimit = queryLimit;
   }
 
   @Override

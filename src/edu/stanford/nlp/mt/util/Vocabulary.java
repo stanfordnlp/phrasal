@@ -1,6 +1,14 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
@@ -13,23 +21,22 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
  * mappings are negative integers. The polarity of the mappings are transparent
  * to the user via the IString.toString() method.
  * 
- * TODO(spenceg) Serialize with kryo.
- * 
  * @author Spence Green
  *
  */
-public class Vocabulary implements Serializable {
+public class Vocabulary implements Serializable,KryoSerializable {
 
   private static final long serialVersionUID = 5124110481914822964L;
   
   // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
-  private static transient Index<String> systemIndex = new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
+  private static transient Index<String> systemIndex = 
+      new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
   // Decoder-local translation model index
   private static final int INITIAL_CAPACITY = 10000;
-  private final Index<String> index;
+  private Index<String> index;
 
   /**
    * Constructor. Creates a decoder-local index.
@@ -44,9 +51,65 @@ public class Vocabulary implements Serializable {
    * @param initialCapacity
    */
   public Vocabulary(int initialCapacity) {
-    index = new ConcurrentHashIndex<String>(initialCapacity);
+    index = new ConcurrentHashIndex<>(initialCapacity);
   }
 
+  /**
+   * Custom serializer. This is possible since the Index is guaranteed
+   * to assign contiguous values.
+   * 
+   * @param oos
+   */
+  private void writeObject(ObjectOutputStream oos) throws IOException {
+    oos.defaultWriteObject();
+    oos.writeInt(index.size());
+    for (int i = 0, sz = index.size(); i < sz; ++i) {
+      oos.writeUTF(index.get(i));
+    }
+  }
+
+  /**
+   * Custom deserializer. This is possible since the Index is guaranteed
+   * to assign contiguous values.
+   * 
+   * @param ois
+   * @throws ClassNotFoundException
+   * @throws IOException
+   */
+  private void readObject(ObjectInputStream ois)
+      throws ClassNotFoundException, IOException {
+    ois.defaultReadObject();
+    int size = ois.readInt();
+    index = new ConcurrentHashIndex<>(size);
+    for (int i = 0; i < size; ++i) {
+      index.add(ois.readUTF());
+    }
+  }
+  
+  /**
+   * Custom serializer.
+   */
+  @Override
+  public void write(Kryo kryo, Output output) {
+    int size = index.size();
+    output.writeInt(size);
+    for (int i = 0; i < size; ++i) {
+      output.writeString(index.get(i));
+    }
+  }
+
+  /**
+   * Custom deserializer.
+   */
+  @Override
+  public void read(Kryo kryo, Input input) {
+    int size = input.readInt();
+    index = new ConcurrentHashIndex<>(size);
+    for (int i = 0; i < size; ++i) {
+      index.add(input.readString());
+    }
+  }
+  
   /**
    * System index size.
    * 
@@ -159,5 +222,16 @@ public class Vocabulary implements Serializable {
    */
   public static Vocabulary getThreadLocalVocabulary() {
     return threadLocalCache.get();
+  }
+  
+  public static void main(String[] args) throws IOException {
+    Vocabulary v = new Vocabulary();
+    v.add("foo");
+    v.add("bar");
+    v.add("baz");
+    v.add("foo baz");
+    IOTools.serialize("vocab.bin", v);
+    Vocabulary deserV = IOTools.deserialize("vocab.bin", Vocabulary.class);
+    for (int i = 0, sz = deserV.size(); i < sz; ++i) System.out.println(deserV.get(i));
   }
 }

@@ -1152,9 +1152,11 @@ public class Phrasal {
     if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
       TranslationModel<IString,String> tm = (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
       tm.setFeaturizer(featurizer);
+      // Wrap the model so that queries can be limited.
+      if ( ! (tm instanceof CombinedTranslationModel)) tm = new CombinedTranslationModel<>(tm, ruleQueryLimit);
 
       DecoderLocalTranslationModel.set(tm);
-      logger.info("Loaded decoder-local translation model from {}", tm.getName());
+      logger.info("Loaded decoder-local translation model for thread {}: {}", threadId, tm.getName());
 
     } else {
       // Sanity check
