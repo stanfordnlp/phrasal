@@ -50,12 +50,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
   private static final long serialVersionUID = 5876435802959430120L;
   
-  private static final String FEATURE_PREFIX = "DYN";
-  private static final String NAME = "dynamic-tm";
-  public static final int DEFAULT_MAX_PHRASE_LEN = 7;
+  public static final String FEATURE_PREFIX = "DYN";
+  public static final String DEFAULT_NAME = "dynamic-tm";
   public static final int DEFAULT_SAMPLE_SIZE = 100;
+  private static final int DEFAULT_MAX_PHRASE_LEN = 7;
   private static final int RULE_CACHE_THRESHOLD = 10000;
-  public static final double MIN_LEX_PROB = 1e-5;
+  private static final double MIN_LEX_PROB = 1e-5;
   
   /**
    * Feature specification:
@@ -84,6 +84,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient RuleFeaturizer<IString, FV> featurizer;
   protected transient int sampleSize;
   protected transient String[] featureNames;
+  protected transient String name;
   
   // Caches
   protected transient LexCoocTable coocTable;
@@ -106,28 +107,54 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param suffixArray
    */
   public DynamicTranslationModel(ParallelSuffixArray suffixArray) {
+    this(suffixArray, DEFAULT_NAME);
+  }
+  
+  /**
+   * Constructor.
+   * 
+   * @param suffixArray
+   * @param name
+   */
+  public DynamicTranslationModel(ParallelSuffixArray suffixArray, String name) {
     this.sa = suffixArray;
     this.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     this.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     this.sampleSize = DEFAULT_SAMPLE_SIZE;
+    this.name = name;
     setFeatureTemplate(FeatureTemplate.DENSE);
   }
-  
-  
+
   /**
-   * Load a model from file. This is the only supported method for loading the dynamic TM.
+   * Load a translation model from a serialized file.
    * 
    * @param filename
+   * @param initializeSystemVocabulary
+   * @return
+   * @throws IOException
+   */
+  public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary) throws IOException {
+    return load(filename, initializeSystemVocabulary, filename);
+  }
+
+  /**
+   * Load a translation model from a serialized file.
+   * 
+   * @param filename
+   * @param initializeSystemVocabulary
+   * @param name
    * @return
    * @throws IOException
    */
   @SuppressWarnings("unchecked")
-  public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary) throws IOException {
+  public static <FV> DynamicTranslationModel<FV> load(String filename, boolean initializeSystemVocabulary,
+      String name) throws IOException {
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
+    tm.name = name;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
     timer.mark("Deserialization");
     
@@ -222,7 +249,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
-   * Print out the bitext.
+   * Print out the full bitext.
    * 
    * @param writer
    */
@@ -254,14 +281,29 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
   }
   
+  /**
+   * Set the maximum source phrase length.
+   * 
+   * @param dim
+   */
   public void setMaxSourcePhrase(int dim) {
     maxSourcePhrase = dim;
   }
   
+  /**
+   * Set the maximum target phrase length.
+   * 
+   * @param dim
+   */
   public void setMaxTargetPhrase(int dim) {
     maxTargetPhrase = dim;
   }
   
+  /**
+   * Set the sample size.
+   * 
+   * @param sz
+   */
   public void setSampleSize(int sz) {
     this.sampleSize = sz;
   }
@@ -293,14 +335,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return Arrays.asList(featureNames);
   }
 
+  /**
+   * Get the name of this translation model.
+   */
   @Override
   public String getName() {
-    return NAME;
+    return name;
   }
   
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("coocsize: %d  cachesize: %d  bitextsize: %d  phraselen: %d/%d",
+        coocTable.size(), ruleCache.size(), sa.numSentences(), maxSourcePhrase, maxTargetPhrase);
   }
   
   @Override
@@ -357,7 +408,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
             // Get from the rule cache
             return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+                r, sourceCoverage, featurizer, scorer, source, DEFAULT_NAME, sourceInputId, sourceInputProperties))
                 .collect(Collectors.toList());
 
           } else {
@@ -375,7 +426,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             int numHits = s.ub - s.lb + 1;
             double sampleRate = s.samples.size() / (double) numHits;
             return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, NAME, sourceInputId, sourceInputProperties))
+                r, sourceCoverage, featurizer, scorer, source, DEFAULT_NAME, sourceInputId, sourceInputProperties))
                 .collect(Collectors.toList());
           }
         }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
@@ -592,7 +643,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param rule
    */
   private void scoreLex(SampledRule rule) {
-    
     // Backward score p(f|e) -- Iterate over source
     double lex_f_e = 1.0;
     for (int i = rule.srcStartInclusive; i < rule.srcEndExclusive; ++i) {
@@ -733,6 +783,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     private final ConcurrentHashMap<Long,AtomicInteger> counts;
     
+    // ConcurrentHashMap's size() method is extremely slow.
+    // Keep the count here.
+    private final AtomicInteger size;
+    
     /**
      * Constructor.
      * 
@@ -740,6 +794,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      */
     public LexCoocTable(int initialCapacity) {
       counts = new ConcurrentHashMap<>(initialCapacity);
+      size = new AtomicInteger();
     }
     
     /**
@@ -761,6 +816,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         counter = counts.get(key);
       }
       counter.incrementAndGet();
+      size.incrementAndGet();
     }
 
     /**
@@ -794,11 +850,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     /**
      * Number of entries in the table.
      * 
-     * NOTE: This method is extremely slow. 
-     * 
      * @return
      */
-    public int size() { return counts.size(); }
+    public int size() { return size.get(); }
     
     /**
      * Merge two interger ids into an unsigned long value. This is two unwrapped calls
@@ -822,7 +876,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     String fileName = args[0];
     String inputFile = args[1];
     try {
-      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true);
+      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
       tm.createQueryCache(FeatureTemplate.DENSE_EXT);
       System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
       System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());

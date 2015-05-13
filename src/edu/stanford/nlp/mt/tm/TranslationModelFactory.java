@@ -60,7 +60,7 @@ public class TranslationModelFactory {
     
     } else if (filename.startsWith(DYNAMIC_TAG)) {
       String file = filename.substring(DYNAMIC_TAG.length());
-      translationModel = DynamicTranslationModel.load(file, setSystemIndex);
+      translationModel = DynamicTranslationModel.load(file, setSystemIndex, DynamicTranslationModel.DEFAULT_NAME);
       ((DynamicTranslationModel) translationModel).setSampleSize(dynamicSampleSize);
       ((DynamicTranslationModel) translationModel).createQueryCache(dynamicTemplate);
       

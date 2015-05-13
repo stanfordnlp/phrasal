@@ -36,21 +36,11 @@ public class DynamicTMBuilder {
    * 
    * @param sourceFile
    * @param targetFile
-   * @param align
+   * @param alignFile
    * @param expectedSize
    */
-  public DynamicTMBuilder(String sourceFile, String targetFile, String align, int expectedSize) {
-    try {
-      ParallelCorpus corpus = ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, align, expectedSize);
-      sa = new ParallelSuffixArray();
-      sa.loadCorpus(corpus);
-      // Free memory
-      corpus = null;
-      sa.build();
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+  public DynamicTMBuilder(String sourceFile, String targetFile, String alignFile, int expectedSize) {
+    sa = new ParallelSuffixArray(sourceFile, targetFile, alignFile, expectedSize);
   }
   
   /**
@@ -68,11 +58,16 @@ public class DynamicTMBuilder {
     ParallelCorpus corpus = loadAndSymmetrize(sourceFile, targetFile, feAlign, efAlign, type, expectedSize);
     sa = new ParallelSuffixArray();
     sa.loadCorpus(corpus);
-    // Free memory
+    // A hacky way to free memory
     corpus = null;
     sa.build();
   }
   
+  /**
+   * Wrap the underlying data structure in a Phrasal TranslationModel.
+   * 
+   * @return
+   */
   public DynamicTranslationModel<String> getModel() {
     return new DynamicTranslationModel<>(sa);
   }

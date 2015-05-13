@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -52,7 +53,27 @@ public class ParallelSuffixArray implements Serializable {
    */
   public ParallelSuffixArray() {}
   
-
+  /**
+   * Constructor.
+   * 
+   * @param sourceFile
+   * @param targetFile
+   * @param alignFile
+   * @param expectedSize
+   */
+  public ParallelSuffixArray(String sourceFile, String targetFile, String alignFile, int expectedSize) {
+    try {
+      ParallelCorpus corpus = ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignFile, 
+          expectedSize);
+      loadCorpus(corpus);
+      // Free memory
+      corpus = null;
+      build();
+    } catch (IOException e) {
+      logger.error("Could not load parallel data from disk", e);
+    }
+  }
+  
   /**
    * Get the index associated with this suffix array.
    * 
