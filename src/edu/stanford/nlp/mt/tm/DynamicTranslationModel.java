@@ -78,6 +78,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private static transient final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
   
   // Parameters
+  protected transient boolean initialized;
   protected transient int maxSourcePhrase;
   protected transient int maxTargetPhrase;
   protected transient FeatureTemplate featureTemplate;
@@ -97,7 +98,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * No-arg constructor for deserialization. Creates caches
    */
-  public DynamicTranslationModel() {}
+  public DynamicTranslationModel() {
+    initialized = false;
+  }
   
   /**
    * Constructor.
@@ -118,6 +121,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public DynamicTranslationModel(ParallelSuffixArray suffixArray, String name) {
     this.sa = suffixArray;
+    this.initialized = false;
     this.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     this.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     this.sampleSize = DEFAULT_SAMPLE_SIZE;
@@ -154,21 +158,33 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
-    tm.name = name;
-    tm.setFeatureTemplate(FeatureTemplate.DENSE);
     timer.mark("Deserialization");
-    
-    if (initializeSystemVocabulary) tm.populateSystemVocabulary();
-    // Id arrays must be created after any modification of the system vocabulary.
-    tm.createIdArrays();
-    timer.mark("Vocabulary setup");
-    
-    // Lex cache must be created before any rules can be scored.
-    tm.createLexCoocTable(tm.sa.getVocabulary().size());
-    timer.mark("Lexical cooc table");
-    
+    tm.intialize(name, FeatureTemplate.DENSE, initializeSystemVocabulary);
+    timer.mark("Initialization");
     logger.info("Timing: {}", timer);
     return tm;
+  }
+  
+  /**
+   * Initialize the TM by building caches and populating the system vocabulary.
+   * 
+   * @param name
+   * @param template
+   * @param initializeSystemVocabulary
+   */
+  public void intialize(String name, FeatureTemplate template, boolean initializeSystemVocabulary) {
+    if (initialized) return;
+    this.name = name;
+    this.setFeatureTemplate(FeatureTemplate.DENSE);
+    
+    if (initializeSystemVocabulary) populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    createIdArrays();
+    
+    // Lex cache must be created before any rules can be scored.
+    createLexCoocTable(sa.getVocabulary().size());
+    
+    this.initialized = true;
   }
   
   /**
