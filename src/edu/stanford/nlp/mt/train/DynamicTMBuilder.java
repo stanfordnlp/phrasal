@@ -68,7 +68,7 @@ public class DynamicTMBuilder {
    * 
    * @return
    */
-  public DynamicTranslationModel<String> getModel() {
+  public DynamicTranslationModel<String> build() {
     return new DynamicTranslationModel<>(sa);
   }
   
@@ -186,7 +186,7 @@ public class DynamicTMBuilder {
       new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type);
     timer.mark("Model construction");
     
-    DynamicTranslationModel<String> tm = tmBuilder.getModel();
+    DynamicTranslationModel<String> tm = tmBuilder.build();
         
     try {
       logger.info("Serializing to: " + outputFileName);
