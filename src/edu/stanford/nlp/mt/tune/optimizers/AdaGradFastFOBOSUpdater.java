@@ -67,7 +67,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     if (endOfEpoch) {
       featuresToUpdate = new HashSet<>(weights.keySet());
       featuresToUpdate.addAll(gradient.keySet());
-      logger.info(String.format("Full regularization step for %d features", featuresToUpdate.size()));
+      logger.info("Full regularization step for {} features", featuresToUpdate.size());
     }
         
     // w_{t+1} := w_t - nu*g_t
@@ -118,7 +118,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     }
     
     // Filter features that have been nullified
-    logger.info("Nullified features: " + String.valueOf(featuresToRemove.size()));
+    logger.info("Nullified features: {}", String.valueOf(featuresToRemove.size()));
     for (String feature : featuresToRemove) {
       weights.remove(feature);
     }

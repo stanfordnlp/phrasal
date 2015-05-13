@@ -53,6 +53,7 @@ import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -145,7 +146,7 @@ public final class OnlineTuner {
       e.printStackTrace();
       System.exit(-1);
     }
-    logger.info("Loaded Phrasal from: " + phrasalIniFile);
+    logger.info("Loaded Phrasal from: {}", phrasalIniFile);
 
     // Configure the initial weights
     this.expectedNumFeatures = expectedNumFeatures;
@@ -153,18 +154,19 @@ public final class OnlineTuner {
     this.discardInitialWeightState = uniformStartWeights || randomizeStartWeights;
     wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights, 
         decoder.getTranslationModel());
-    logger.info("Initial weights: " + wtsAccumulator.toString());
+    logger.info("Initial weights: '{}' {}", Counters.toBiggestValuesFirstString(wtsAccumulator, 20), 
+        (wtsAccumulator.size() > 20 ? "..." : ""));
 
     // Load the tuning set
     tuneSource = IStrings.tokenizeFile(srcFile);
     assert tuneSource.size() > 0;
     loadReferences(tgtFile, wrapBoundary);
-    logger.info(String.format("Intrinsic loss corpus contains %d examples", tuneSource.size()));
+    logger.info("Intrinsic loss corpus contains {} examples", tuneSource.size());
         
     // Load the optimizer last since some optimizers depend on fields initialized
     // by OnlineTuner.
     optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
-    logger.info("Loaded optimizer: " + optimizer.toString());
+    logger.info("Loaded optimizer: {}", optimizer);
   }
 
   /**
@@ -186,8 +188,8 @@ public final class OnlineTuner {
       pseudoReferences.add(new LinkedList<Sequence<IString>>());
     }
     
-    logger.info(String.format("Creating %d pseudoreferences", numPseudoReferences));
-    logger.info("Pseudoreference temp directory: " + tempDirectory);
+    logger.info("Creating {} pseudoreferences", numPseudoReferences);
+    logger.info("Pseudoreference temp directory: {}", tempDirectory);
   }
   
   /**
@@ -405,16 +407,16 @@ public final class OnlineTuner {
       final ProcessorOutput result = threadpool.poll();
       boolean isEndOfEpoch = endOfEpoch && ! threadpool.peek();
 
-      logger.info(String.format("Update %d gradient cardinality: %d", updateStep, result.gradient.keySet().size()));
+      logger.info("Update {} gradient cardinality: {}", updateStep, result.gradient.keySet().size());
       
       // Update rule. 
       updater.update(currentWts, result.gradient, updateStep, isEndOfEpoch);
 
       // Debug info
-      logger.info(String.format("Update %d with gradient from input step %d (diff: %d)", 
-          updateStep, result.inputId, result.inputId - updateStep));
-      logger.info(String.format("Update %d approximate L2 ||w'-w|| %.4f", updateStep, Counters.L2Norm(result.gradient)));
-      logger.info(String.format("Update %d cardinality: %d", updateStep, currentWts.keySet().size()));
+      logger.info("Update {} with gradient from input step {} (diff: {})", 
+          updateStep, result.inputId, result.inputId - updateStep);
+      logger.info("Update {} approximate L2 ||w'-w|| {}", updateStep, Counters.L2Norm(result.gradient));
+      logger.info("Update {} cardinality: {}", updateStep, currentWts.keySet().size());
       ++updateStep;
 
       // Accumulate intermediate weights for parameter averaging
@@ -473,7 +475,7 @@ public final class OnlineTuner {
     final UpdaterState initialState = OnlineTuner.loadUpdaterState(initialWtsFileName);
     if (initialState != null && ! discardInitialWeightState) {
       updater.setState(initialState);
-      logger.info("Warm restart: loaded updater state for weights file: " + initialWtsFileName);
+      logger.info("Warm restart: loaded updater state for weights file: {}", initialWtsFileName);
     }
     final Runtime runtime = Runtime.getRuntime();
 
@@ -485,15 +487,15 @@ public final class OnlineTuner {
             new GradientProcessor(optimizer,scoreMetric,0), orderResults);
     
     logger.info("Start of online tuning");
-    logger.info("Number of epochs: " + numEpochs);
-    logger.info("Number of threads: " + numThreads);
-    logger.info("Number of references: " + numReferences);
+    logger.info("Number of epochs: {}", numEpochs);
+    logger.info("Number of threads: {}", numThreads);
+    logger.info("Number of references: {}", numReferences);
     int updateId = 0;
     double maxObjectiveValue = Double.NEGATIVE_INFINITY;
     int maxObjectiveEpoch = -1;
     for (int epoch = 0; epoch < numEpochs; ++epoch) {
-      final long startTime = System.nanoTime();
-      logger.info("Start of epoch: " + epoch);
+      final long startTime = TimingUtils.startTime();
+      logger.info("Start of epoch: {}", epoch);
       
       // n-best lists. Purge for each epoch
       Map<Integer,Sequence<IString>> nbestLists = new HashMap<>(tuneSetSize);
@@ -503,15 +505,15 @@ public final class OnlineTuner {
       if(shuffleDev)
         ArrayMath.shuffle(indices);
       
-      logger.info(String.format("Number of batches for epoch %d: %d", epoch, numBatches));
+      logger.info("Number of batches for epoch {}: {}", epoch, numBatches);
       for (int t = 0; t < numBatches; ++t) {
-        logger.info(String.format("Epoch %d batch %d memory free: %d  max: %d", epoch, t, runtime.freeMemory(), 
-            runtime.maxMemory()));
+        logger.info("Epoch {} batch {} memory free: {}  max: {}", epoch, t, runtime.freeMemory(), 
+            runtime.maxMemory());
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
-        logger.info("Threadpool.status: " + wrapper.toString());
+        logger.info("Threadpool.status: {}" + wrapper);
         updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false);
         
         if((t+1) % weightWriteOutInterval == 0) {
@@ -546,8 +548,8 @@ public final class OnlineTuner {
       }
       
       // Debug info for this epoch
-      long elapsedTime = System.nanoTime() - startTime;
-      logger.info(String.format("Epoch %d elapsed time: %.2f seconds", epoch, (double) elapsedTime / 1e9));
+      double elapsedTime = TimingUtils.elapsedSeconds(startTime);
+      logger.info("Epoch {} elapsed time: {} seconds", epoch, elapsedTime);
       double approxObjectiveValue = approximateObjective(nbestLists, epoch, corpusLevelMetricStr);
       if (approxObjectiveValue > maxObjectiveValue) maxObjectiveEpoch = epoch;
     }
@@ -586,7 +588,7 @@ public final class OnlineTuner {
         if(pseudoReferences.get(i).size() >= numPseudoReferences) pseudoReferences.get(i).remove(0);
         pseudoReferences.get(i).add(translation);
       }
-      logger.info("Number of pseudo references: " + String.valueOf(pseudoReferences.get(0).size()));
+      logger.info("Number of pseudo references: {}", String.valueOf(pseudoReferences.get(0).size()));
       // Cleanup...these n-best files can get huge.
       File file = new File(nbestFilename);
       file.delete();
@@ -602,7 +604,7 @@ public final class OnlineTuner {
     if (epoch >= pseudoReferenceBurnIn) {
       nbestFilename = String.format("%s/online-nbest.%d.nbest", tempDirectory,
           epoch);
-      logger.info("Writing nbest lists to: " + nbestFilename);
+      logger.info("Writing nbest lists to: {}", nbestFilename);
       nbestListWriter = IOTools.getWriterFromFile(nbestFilename);
     }
   }
@@ -623,7 +625,7 @@ public final class OnlineTuner {
       incMetric.add(new ScoredFeaturizedTranslation<IString,String>(entry.getValue(), null, 0.0));
     }
     double objectiveValue = incMetric.score() * 100.0;
-    logger.info(String.format("Epoch %d expected %s: %.2f", epoch, scoreMetricStr.toUpperCase(), objectiveValue));
+    logger.info("Epoch {} expected {}: {}", epoch, scoreMetricStr.toUpperCase(), objectiveValue);
     return objectiveValue;
   }
 
@@ -687,7 +689,7 @@ public final class OnlineTuner {
       throw new RuntimeException(e);
     }
     assert references.size() == tuneSource.size();
-    logger.info("Number of references for objective function calculation: " + numReferences);
+    logger.info("Number of references for objective function calculation: {}", numReferences);
   }
   
   /**
@@ -805,9 +807,9 @@ public final class OnlineTuner {
     } 
     String finalFilename = String.format("%s.final%s", outputWeightPrefix, IOTools.WEIGHTS_FILE_EXTENSION);
     IOTools.writeWeights(finalFilename, finalWeights);
-    logger.info(String.format("Final weights from epoch %d to: %s", returnBestDev ? maxObjectiveEpoch : numEpochs-1,
-        finalFilename));
-    logger.info(String.format("Non-zero final weights: %d", finalWeights.keySet().size()));
+    logger.info("Final weights from epoch {} to: {}", returnBestDev ? maxObjectiveEpoch : numEpochs-1,
+        finalFilename);
+    logger.info("Non-zero final weights: {}", finalWeights.keySet().size());
   }
 
   /********************************************

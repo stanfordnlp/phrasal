@@ -44,6 +44,17 @@ public class DynamicTMBuilder {
   }
   
   /**
+   * Constructor. Build a dynamic translation model from a ParallelCorpus.
+   * 
+   * @param corpus
+   */
+  public DynamicTMBuilder(ParallelCorpus corpus) {
+    sa = new ParallelSuffixArray();
+    sa.loadCorpus(corpus);
+    sa.build();
+  }
+  
+  /**
    * Constructor.
    * 
    * @param sourceFile

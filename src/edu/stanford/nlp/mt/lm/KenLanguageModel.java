@@ -3,6 +3,9 @@ package edu.stanford.nlp.mt.lm;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
@@ -18,16 +21,19 @@ import edu.stanford.nlp.mt.util.Vocabulary;
  */
 public class KenLanguageModel implements LanguageModel<IString> {
 
+  private static final Logger logger = LogManager.getLogger(KenLanguageModel.class.getName());
+
+  
   private static final int[] EMPTY_INT_ARRAY = new int[0];
   public static final String KENLM_LIBRARY_NAME = "PhrasalKenLM";
   
   static {
     try {
       System.loadLibrary(KENLM_LIBRARY_NAME);
+      logger.info("Loaded KenLM JNI library.");
     
     } catch (java.lang.UnsatisfiedLinkError e) {
-      System.err.println("KenLM has not been compiled!");
-      e.printStackTrace();
+      logger.fatal("KenLM has not been compiled!", e);
       System.exit(-1);
     }
   }
@@ -57,8 +63,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private void initializeIdTable() {
     // Don't remove this line!! Sanity check to make sure that start and end load before
     // building the index.
-    System.err.printf("Special tokens: start: %s  end: %s%n", TokenUtils.START_TOKEN.toString(),
-        TokenUtils.END_TOKEN.toString());
+    logger.info("Special tokens: start: {}  end: {}", TokenUtils.START_TOKEN,
+        TokenUtils.END_TOKEN);
     int[] table = new int[Vocabulary.systemSize()];
     for (int i = 0; i < table.length; ++i) {
       table[i] = model.index(Vocabulary.systemGet(i));
