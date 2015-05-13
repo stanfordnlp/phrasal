@@ -21,6 +21,7 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
   @Override
   public void initialize() {}
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
