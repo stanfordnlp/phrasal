@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +42,11 @@ public class ParallelSuffixArray implements Serializable {
   protected int[] srcSuffixArray; 
   protected int[] tgtSuffixArray;
   
-  // Sources of slowdown
-  // No initialization of upper and lower bounds (with unigram positions)
-  
-  // Ideas
-  // Left and right source LCP arrays (He et al. 2013 p.326) using the algorithm of Kasai (2001)
-  // Left and right target LCP arrays
+  // Cache unigram positions in the target for the count() function.
+  // The sample function already supports initialization with bounds, which
+  // the calling method should maintain.
+  protected transient int[] tgtCountLBCache;
+  protected transient int[] tgtCountUBCache;
   
   /**
    * No-arg constructor for deserialization.
@@ -150,10 +150,22 @@ public class ParallelSuffixArray implements Serializable {
     logger.info("Done loading corpus: {}", timer);
   }
 
+  /**
+   * Encoding of bitext pointers.
+   * 
+   * @param corpusPosition
+   * @return
+   */
   private static int toSentenceOffset(int corpusPosition) {
     return -1 * (corpusPosition + 1);
   }
   
+  /**
+   * Decoding of bitext pointers.
+   * 
+   * @param offset
+   * @return
+   */
   private static int fromSentenceOffset(int offset) {
     return (-1 * offset) - 1;
   }
@@ -274,6 +286,27 @@ public class ParallelSuffixArray implements Serializable {
       }
     };
     logger.info("Query cache size: {}", queryCache.size());
+    
+    logger.info("Creating target unigram caches for the count() function...");
+    this.tgtCountLBCache = new int[vocabulary.size()];
+    Arrays.fill(tgtCountLBCache, -1);
+    this.tgtCountUBCache = new int[vocabulary.size()];
+    Arrays.fill(tgtCountUBCache, -1);
+    int lastId = tgtBitext[tgtSuffixArray[0]];
+    for (int i = 1; i < tgtSuffixArray.length; ++i) {
+      int tgtId = tgtBitext[tgtSuffixArray[i]];
+      assert tgtId >= 0;
+      if (tgtCountLBCache[tgtId] < 0) {
+        tgtCountLBCache[tgtId] = i;
+      }
+      if (lastId != tgtId) {
+        tgtCountUBCache[lastId] = i-1;
+        assert tgtCountUBCache[lastId] >= tgtCountLBCache[lastId] : String.format("%d %d %d", i, lastId, tgtId);
+      }
+      lastId = tgtId;
+    }
+    logger.info("Finished building count() cache.");
+    
     return queryCache;
   }
     
@@ -482,11 +515,34 @@ public class ParallelSuffixArray implements Serializable {
    * @return
    */
   public int count(final int[] query, boolean isSource) {
-    int lb = findBound(query, isSource, true, 0);
-    if (lb >= 0) {
-      int ub = findBound(query, isSource, false, lb);
-      assert ub > 0;
-      return ub - lb + 1;
+    if (query.length == 0) return 0;
+    if (!isSource && this.tgtCountLBCache != null && this.tgtCountUBCache != null) {
+      // Use caches for fast target lookup
+      final int tgtId = query[0];
+      final int lo = tgtCountLBCache[tgtId];
+      final int hi = tgtCountUBCache[tgtId];
+      if (query.length == 1) {
+        int count = hi - lo + 1;
+        assert count > 0;
+        return count;
+        
+      } else {
+        int lb = findBound(query, isSource, true, lo);
+        if (lb >= 0) {
+          int ub = findBound(query, isSource, false, lb, hi);
+          assert ub > 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
+          return ub - lb + 1;
+        }
+      }
+      
+    } else {
+      // Standard case
+      int lb = findBound(query, isSource, true, 0);
+      if (lb >= 0) {
+        int ub = findBound(query, isSource, false, lb);
+        assert ub > 0;
+        return ub - lb + 1;
+      }
     }
     return 0;
   }
@@ -512,6 +568,7 @@ public class ParallelSuffixArray implements Serializable {
    * @return
    */
   public SuffixArraySample sample(final int[] sourceQuery, int maxSamples, int minBound, int maxBound) {
+    if (sourceQuery.length == 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
     int lb = maxBound > minBound ? findBound(sourceQuery, true, true, minBound, maxBound) :
       findBound(sourceQuery, true, true, minBound);
     if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
