@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -22,7 +23,6 @@ import edu.stanford.nlp.mt.util.Vocabulary;
 public class KenLanguageModel implements LanguageModel<IString> {
 
   private static final Logger logger = LogManager.getLogger(KenLanguageModel.class.getName());
-
   
   private static final int[] EMPTY_INT_ARRAY = new int[0];
   public static final String KENLM_LIBRARY_NAME = "PhrasalKenLM";
@@ -140,8 +140,21 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // Reverse the start index for KenLM
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
 
+    // Local direct-mapped cache
+    KenLMCache cache = threadLocalCache.get();
+    if (cache == null) {
+      cache = new KenLMCache(DEFAULT_CACHE_SIZE);
+      threadLocalCache.set(cache);
+    } else {
+      Long got = cache.get(ngramIds, kenLMStartIndex);
+      if (got != null) {
+        return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
+      }
+    }
+    
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
+    cache.insert(ngramIds, kenLMStartIndex, got);
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
 
@@ -163,5 +176,35 @@ public class KenLanguageModel implements LanguageModel<IString> {
       ngramIds[sequenceSize-1-i] = toKenLMId(sequence.get(i));
     }
     return ngramIds;
+  }
+  
+  private static final int DEFAULT_CACHE_SIZE = 10000;
+  private static final ThreadLocal<KenLMCache> threadLocalCache =
+      new ThreadLocal<KenLMCache>();
+  
+  private static class KenLMCache {
+    private final long[] keys;
+    private final long[] values;
+    private final int mask;
+    public KenLMCache(int size) {
+      this.keys = new long[size];
+      this.values = new long[size];
+      this.mask = size - 1;
+    }
+    
+    public Long get(int[] kenLMInput, int startIndex) {
+      long hashValue = MurmurHash.hash64(kenLMInput, kenLMInput.length, startIndex);
+      int k = ideal(hashValue);
+      return keys[k] == hashValue ? values[k] : null;
+    }
+    private int ideal(long hashed) {
+      return ((int)hashed) & mask;
+    }
+    public void insert(int[] kenLMInput, int startIndex, long value) {
+      long hashValue = MurmurHash.hash64(kenLMInput, kenLMInput.length, startIndex);
+      int k = ideal(hashValue);
+      keys[k] = hashValue;
+      values[k] = value;
+    }
   }
 }

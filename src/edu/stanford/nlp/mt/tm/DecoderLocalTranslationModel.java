@@ -12,6 +12,7 @@ public final class DecoderLocalTranslationModel {
   
 
   // Thread local copies of translation model indices
+  @SuppressWarnings("rawtypes")
   private static final ThreadLocal<TranslationModel> threadLocalCache =
       new ThreadLocal<TranslationModel>();
 
@@ -20,6 +21,7 @@ public final class DecoderLocalTranslationModel {
    * 
    * @param index
    */
+  @SuppressWarnings("rawtypes")
   public static void set(TranslationModel translationModel) {
     threadLocalCache.set(translationModel);
   }
@@ -29,6 +31,7 @@ public final class DecoderLocalTranslationModel {
    * 
    * @return
    */
+  @SuppressWarnings("rawtypes")
   public static TranslationModel get() {
     return threadLocalCache.get();
   }

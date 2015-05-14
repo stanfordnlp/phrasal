@@ -2,6 +2,9 @@ package edu.stanford.nlp.mt.lm;
 
 import java.util.Arrays;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * Result of a KenLM query.
  * 
@@ -10,8 +13,9 @@ import java.util.Arrays;
  */
 public class KenLMState extends LMState {
 
+  private static final Logger logger = LogManager.getLogger(KenLMState.class.getName());
+  
   private final int[] state;
-  private final int stateLength;
   private final int hashCode;
 
   /**
@@ -26,11 +30,14 @@ public class KenLMState extends LMState {
     if (stateLength < state.length) {
       this.state = new int[stateLength];
       System.arraycopy(state, 0, this.state, 0, stateLength);
-    } else {
+    } else if (stateLength == state.length) {
       this.state = state;
+    } else {
+      logger.error("State length mis-match: {} vs. {}", state.length, stateLength);
+      throw new RuntimeException();
     }
-    this.stateLength = stateLength;
     
+    // TODO(spenceg) Replace with MurmurHash
     // Unwrapped call to Arrays.hashCode
     int result = 1;
     for (int i = 0; i < stateLength; ++i) {
@@ -54,10 +61,10 @@ public class KenLMState extends LMState {
       return false;
     } else {
       KenLMState otherState = (KenLMState) other;
-      if (this.stateLength != otherState.stateLength) {
+      if (this.state.length != otherState.state.length) {
         return false;
       }
-      for (int i = 0; i < stateLength; ++i) {
+      for (int i = 0; i < this.state.length; ++i) {
         if (state[i] != otherState.state[i]) {
           return false;
         }
@@ -73,7 +80,7 @@ public class KenLMState extends LMState {
 
   @Override
   public int length() {
-    return stateLength;
+    return state.length;
   }
   
   @Override
