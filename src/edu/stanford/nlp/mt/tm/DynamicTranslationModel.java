@@ -799,10 +799,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     private final ConcurrentHashMap<Long,AtomicInteger> counts;
     
-    // ConcurrentHashMap's size() method is extremely slow.
-    // Keep the count here.
-    private final AtomicInteger size;
-    
     /**
      * Constructor.
      * 
@@ -810,7 +806,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      */
     public LexCoocTable(int initialCapacity) {
       counts = new ConcurrentHashMap<>(initialCapacity);
-      size = new AtomicInteger();
     }
     
     /**
@@ -832,7 +827,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         counter = counts.get(key);
       }
       counter.incrementAndGet();
-      size.incrementAndGet();
     }
 
     /**
@@ -868,7 +862,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * 
      * @return
      */
-    public int size() { return size.get(); }
+    public int size() { return counts.size(); }
     
     /**
      * Merge two interger ids into an unsigned long value. This is two unwrapped calls
