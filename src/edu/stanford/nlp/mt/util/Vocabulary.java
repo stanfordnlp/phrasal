@@ -224,13 +224,17 @@ public class Vocabulary implements Serializable,KryoSerializable {
     return threadLocalCache.get();
   }
   
-  public static void main(String[] args) throws IOException {
+  /**
+   * 
+   * @param args
+   */
+  public static void main(String[] args) {
     Vocabulary v = new Vocabulary();
     v.add("foo");
     v.add("bar");
     v.add("baz");
     v.add("foo baz");
-    IOTools.serialize("vocab.bin", v);
+    IOTools.serialize("vocab" + IOTools.BIN_EXTENSION, v);
     Vocabulary deserV = IOTools.deserialize("vocab.bin", Vocabulary.class);
     for (int i = 0, sz = deserV.size(); i < sz; ++i) System.out.println(deserV.get(i));
   }

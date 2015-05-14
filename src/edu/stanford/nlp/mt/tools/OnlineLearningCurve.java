@@ -66,6 +66,7 @@ public class OnlineLearningCurve {
     String[] wts = Arrays.copyOfRange(args, 4, args.length);
     for (String wtsFile : wts) {
       Counter<String> w = IOTools.readWeights(wtsFile);
+      if (w == null) continue;
       p.setModel(w);
       
       System.err.printf("Decoding with %s%n", wtsFile);

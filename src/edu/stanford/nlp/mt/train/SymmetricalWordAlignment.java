@@ -1,10 +1,12 @@
 package edu.stanford.nlp.mt.train;
 
+import java.util.List;
+import java.util.Properties;
+import java.util.SortedSet;
 import java.util.TreeSet;
-import java.io.*;
-import java.util.*;
-
-import edu.stanford.nlp.io.IOUtils;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -176,9 +178,15 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     return toString(e2f, false);
   }
 
+  /**
+   * 
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
-    List<String> fLines = IOUtils.linesFromFile(args[0]), eLines = IOUtils
-        .linesFromFile(args[1]), aLines = IOUtils.linesFromFile(args[2]);
+    List<String> fLines = Files.readAllLines(Paths.get(args[0])), 
+        eLines = Files.readAllLines(Paths.get(args[1])), 
+        aLines = Files.readAllLines(Paths.get(args[2]));
     for (int i = 0; i < eLines.size(); ++i) {
       System.err.printf("Line %d\n", i);
       System.out.printf("f-sent: %s\n", fLines.get(i));
