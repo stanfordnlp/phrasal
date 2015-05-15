@@ -28,7 +28,7 @@ public class ParallelSuffixArray implements Serializable {
 
   private static final long serialVersionUID = -5403502473957235135L;
 
-  private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
+  private static final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
   
   protected Vocabulary vocabulary;
   protected int[] srcBitext;

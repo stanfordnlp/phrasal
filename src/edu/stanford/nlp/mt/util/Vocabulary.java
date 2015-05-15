@@ -30,7 +30,7 @@ public class Vocabulary implements Serializable,KryoSerializable {
   
   // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
-  private static transient Index<String> systemIndex = 
+  private static Index<String> systemIndex = 
       new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
@@ -200,28 +200,6 @@ public class Vocabulary implements Serializable,KryoSerializable {
   @Override
   public String toString() {
     return index.toString();
-  }
-
-  // Thread local copies of translation model indices
-  private static transient final ThreadLocal<Vocabulary> threadLocalCache =
-      new ThreadLocal<Vocabulary>();
-
-  /**
-   * Set the thread-local vocabulary.
-   * 
-   * @param index
-   */
-  public static void setThreadLocalVocabulary(Vocabulary index) {
-    threadLocalCache.set(index);
-  }
-
-  /**
-   * Get the thread-local vocabulary.
-   * 
-   * @return
-   */
-  public static Vocabulary getThreadLocalVocabulary() {
-    return threadLocalCache.get();
   }
   
   /**

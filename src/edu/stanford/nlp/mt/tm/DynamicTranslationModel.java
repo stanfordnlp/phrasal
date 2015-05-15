@@ -53,7 +53,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static final String FEATURE_PREFIX = "DYN";
   public static final String DEFAULT_NAME = "dynamic-tm";
   public static final int DEFAULT_SAMPLE_SIZE = 100;
-  private static final int DEFAULT_MAX_PHRASE_LEN = 7;
+  public static final int DEFAULT_MAX_PHRASE_LEN = 12;
   private static final int RULE_CACHE_THRESHOLD = 10000;
   private static final double MIN_LEX_PROB = 1e-5;
   
@@ -75,7 +75,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   protected ParallelSuffixArray sa;
   
-  private static transient final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
+  private static final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
   
   // Parameters
   protected transient boolean initialized;
@@ -882,41 +882,45 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param args
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     String fileName = args[0];
     String inputFile = args[1];
-    try {
-      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
-      tm.createQueryCache(FeatureTemplate.DENSE_EXT);
-      System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
-      System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
-      System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
-      System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
-          
-//      tm.sa.print(true, new PrintWriter(System.out));
-      
-      // TODO(spenceg) Requires classmexer in the local directory.
-//      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
-//      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
-//      System.out.printf("In-memory size cooc: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.coocTable));
-//      System.out.printf("In-memory size rule cache: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.ruleCache));
-      
-      // Read the source at once for accurate timing of queries
-      List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
-      
-      System.out.printf("#source segments: %d%n", sourceFile.size());
-      
-      long startTime = TimingUtils.startTime();
-      int sourceId = 0;
-      for (Sequence<IString> source : sourceFile) {
-        tm.getRules(source, null, null, sourceId++, null);
-      }
-      double numSecs = TimingUtils.elapsedSeconds(startTime);
-      System.out.printf("Sample time:\t%.3fs%n", numSecs);
-      System.out.printf("Time/segment:\t%.3fs%n", numSecs / (double) sourceFile.size());
-      
-    } catch (IOException e) {
-      e.printStackTrace();
+    TimeKeeper timer = TimingUtils.start();
+    DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
+    tm.setMaxSourcePhrase(100);
+    tm.setMaxTargetPhrase(100);
+    timer.mark("Load");
+    tm.createQueryCache(FeatureTemplate.DENSE_EXT);
+    timer.mark("Cache creation");
+    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
+    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
+    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
+    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
+
+    //      tm.sa.print(true, new PrintWriter(System.out));
+
+    // TODO(spenceg) Requires classmexer in the local directory.
+    //      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
+    //      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
+    //      System.out.printf("In-memory size cooc: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.coocTable));
+    //      System.out.printf("In-memory size rule cache: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.ruleCache));
+
+    // Read the source at once for accurate timing of queries
+    List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
+    System.out.printf("#source segments:   %d%n", sourceFile.size());
+    timer.mark("Source file loading");
+
+    long startTime = TimingUtils.startTime();
+    int sourceId = 0;
+    int numRules = 0;
+    for (Sequence<IString> source : sourceFile) {
+      numRules += tm.getRules(source, null, null, sourceId++, null).size();
     }
+    double numSecs = TimingUtils.elapsedSeconds(startTime);
+    timer.mark("Query");
+    System.out.println();
+    System.out.printf("Timing: %s%n", timer);
+    System.out.printf("Time/segment: %.5fs%n", numSecs / (double) sourceFile.size());
+    System.out.printf("# rules: %d%n", numRules);
   }
 }

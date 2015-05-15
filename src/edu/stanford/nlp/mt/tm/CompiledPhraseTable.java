@@ -297,15 +297,17 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     
     List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
     System.out.printf("#source segments: %d%n", sourceFile.size());
-    
+    timer.mark("Source file loading");
     // Query
     long startTime = TimingUtils.startTime();
+    int numRules = 0;
     for (Sequence<IString> source : sourceFile) {
-      tm.getRuleGrid(source, null, null, 0, null);
+      numRules += tm.getRules(source, null, null, 0, null).size();
     }
-    timer.mark("Decode");
     double timePerSegment = TimingUtils.elapsedSeconds(startTime) / (double) sourceFile.size();
-    System.out.println(timer);
-    System.out.printf("Time/segment:\t%.3fs%n", timePerSegment);
+    timer.mark("Query");
+    System.out.printf("Timing: %s%n", timer);
+    System.out.printf("Time/segment: %.5fs%n", timePerSegment);
+    System.out.printf("# rules: %d%n", numRules);
   }
 }
