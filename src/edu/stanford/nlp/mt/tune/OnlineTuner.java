@@ -33,7 +33,10 @@ import edu.stanford.nlp.mt.metrics.IncrementalEvaluationMetric;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetric;
 import edu.stanford.nlp.mt.metrics.SentenceLevelMetricFactory;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.tm.TranslationModel;
+import edu.stanford.nlp.mt.train.DynamicTMBuilder;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
 import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
@@ -62,6 +65,7 @@ import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 import edu.stanford.nlp.util.concurrent.MulticoreWrapper;
 import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
+import edu.stanford.nlp.mt.util.ParallelCorpus;
 
 /**
  * Online model tuning for machine translation as described in
@@ -83,6 +87,9 @@ public final class OnlineTuner {
   private boolean returnBestDev = false;
   private boolean doParameterAveraging = false;
   private boolean shuffleDev = true;
+  
+  // training data for local TM
+  private ParallelCorpus localTmTrainingData = null;
   
   private final boolean discardInitialWeightState;
   private final String initialWtsFileName;
@@ -224,6 +231,14 @@ public final class OnlineTuner {
    * @param b
    */
   private void shuffleDev(boolean b) { this.shuffleDev = b; }
+ 
+  /**
+   * 
+   * Incrementally train a local translation model from the dev set.
+   * 
+   * @param b
+   */
+  private void trainLocalTM() { this.localTmTrainingData = new ParallelCorpus(); }
   
   /**
    * Output single best translation?
@@ -282,9 +297,12 @@ public final class OnlineTuner {
     public final int[] translationIds;
     public final Counter<String> weights;
     public final int inputId;
+    public final TranslationModel<IString,String> localTM;
+    public final boolean createForcedAlignment;
     public ProcessorInput(List<Sequence<IString>> input, 
         List<List<Sequence<IString>>> references, 
-        Counter<String> weights, int[] translationIds, int inputId) {
+        Counter<String> weights, int[] translationIds, int inputId, 
+        TranslationModel<IString,String> localTM, boolean createForcedAlignment) {
       this.source = input;
       this.translationIds = translationIds;
       this.references = references;
@@ -292,6 +310,8 @@ public final class OnlineTuner {
       // Copy here for thread safety. DO NOT change this unless you know
       // what you're doing....
       this.weights = new ClassicCounter<String>(weights);
+      this.localTM = localTM;
+      this.createForcedAlignment = createForcedAlignment;
     }
   }
 
@@ -306,13 +326,15 @@ public final class OnlineTuner {
     public final int inputId;
     public final List<List<RichTranslation<IString, String>>> nbestLists;
     public final int[] translationIds;
+    List<RichTranslation<IString, String>> forcedAlignment;
     public ProcessorOutput(Counter<String> gradient, 
         int inputId, 
-        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds) {
+        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds, List<RichTranslation<IString, String>> forcedAlignment) {
       this.gradient = gradient;
       this.inputId = inputId;
       this.nbestLists = nbestLists;
       this.translationIds = translationIds;
+      this.forcedAlignment = forcedAlignment;
     }
   }
 
@@ -344,7 +366,10 @@ public final class OnlineTuner {
             
       final int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = new ArrayList<>(input.translationIds.length);
-
+      List<RichTranslation<IString,String>> forcedAlignments = input.createForcedAlignment ? 
+                                                               null : new ArrayList<>(input.translationIds.length);
+      
+      new ArrayList<>(input.translationIds.length);
       // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
@@ -355,9 +380,23 @@ public final class OnlineTuner {
         else
             inputProperties = new InputProperties();
         inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
-        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(i), sourceId, 
-            threadId, inputProperties);
+        List<RichTranslation<IString,String>> nbestList;
+        if(input.createForcedAlignment) {
+          // no forced decoding for optimization
+          nbestList = decoder.decode(input.source.get(i), sourceId, 
+              threadId, inputProperties, false, input.localTM);
+          
+          // now compute forced alignment
+          forcedAlignments.add(
+              decoder.decode(input.source.get(i), sourceId, 
+                  threadId, inputProperties, true, input.localTM).get(0));
+        }
+        else 
+          nbestList = decoder.decode(input.source.get(i), sourceId, 
+              threadId, inputProperties, input.localTM);
+          
         nbestLists.add(nbestList);
+
       }
 
       // Compute gradient
@@ -382,7 +421,7 @@ public final class OnlineTuner {
         } 
       }
 
-      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds);
+      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds, forcedAlignments);
     }
 
     @Override
@@ -397,7 +436,7 @@ public final class OnlineTuner {
   private int update(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
-      boolean endOfEpoch) {
+      boolean endOfEpoch, ParallelCorpus localTmTrainingData) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
@@ -423,9 +462,9 @@ public final class OnlineTuner {
       if (doParameterAveraging) {
         wtsAccumulator.addAll(currentWts);
       }
-
+      
       // Do something with the n-best lists before dumping them?
-      if (nbestLists != null || createPseudoReferences) {
+      if (nbestLists != null || createPseudoReferences || localTmTrainingData != null) {
         for (int i = 0; i < result.translationIds.length; ++i) {
           int sourceId = result.translationIds[i];
           if (createPseudoReferences && nbestListWriter != null) {
@@ -442,6 +481,17 @@ public final class OnlineTuner {
               nbestLists.put(sourceId, new EmptySequence<IString>());
             }
           }
+          if(localTmTrainingData != null && result.forcedAlignment != null) {
+            RichTranslation<IString, String> fa = result.forcedAlignment.get(i);
+            if (fa != null) {
+              localTmTrainingData.add(fa.alignmentGrid().f().toString(), fa.translation.toString(), fa.alignmentString());
+              logger.info("added the sentence pair to localTmTrainingData: \n "
+                  + "SOURCE: " + fa.alignmentGrid().f().toString() + " \n"
+                  + "TARGET: " +  fa.translation.toString() + "\n"
+                  + "ALIGNMENT: " + fa.alignmentString());
+            }
+          }
+         
         }
       }
     }
@@ -511,20 +561,23 @@ public final class OnlineTuner {
             runtime.maxMemory());
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
-        ProcessorInput input = makeInput(batch, inputId, currentWts);
+        
+        TranslationModel<IString,String> localTM  = getLocalTM(t);
+        
+        ProcessorInput input = makeInput(batch, inputId, currentWts, localTM);
         wrapper.put(input);
         logger.info("Threadpool.status: {}" + wrapper);
-        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false);
+        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false, localTmTrainingData);
         
         if((t+1) % weightWriteOutInterval == 0) {
         	IOTools.writeWeights(String.format("%s.%d.%d.binwts", outputWeightPrefix, epoch, t), currentWts);
         }
       }
-
+      
       // Wait for threadpool shutdown for this epoch and get final gradients
       boolean isLastEpoch = epoch+1 == numEpochs;
       wrapper.join(isLastEpoch);
-      updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true);
+      updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true, null);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
@@ -555,6 +608,17 @@ public final class OnlineTuner {
     }
     
     saveFinalWeights(currentWts, maxObjectiveEpoch, numEpochs);
+  }
+  
+  private TranslationModel<IString,String> getLocalTM(int batchNum) {
+    if (localTmTrainingData != null && batchNum > 0) {
+      DynamicTMBuilder tmBuilder = new DynamicTMBuilder(localTmTrainingData);
+      TranslationModel<IString,String> localTM = tmBuilder.build();
+      ((DynamicTranslationModel<String>) localTM).createQueryCache(FeatureTemplate.DENSE_EXT);
+      ((DynamicTranslationModel<String>) localTM).setName("localTM");
+      return localTM;
+    }
+    return null;
   }
 
   /**
@@ -641,10 +705,11 @@ public final class OnlineTuner {
     return batch;
   }
 
+  
   /**
    * Make a ProcessorInput object for the thread pool from this mini batch.
    */
-  private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights) {
+  private ProcessorInput makeInput(int[] batch, int inputId, Counter<String> weights, TranslationModel<IString,String> localTM) {
     List<Sequence<IString>> sourceList = new ArrayList<Sequence<IString>>(batch.length);
     List<List<Sequence<IString>>> referenceList = new ArrayList<List<Sequence<IString>>>(batch.length);
     for (int sourceId : batch) {
@@ -657,7 +722,7 @@ public final class OnlineTuner {
         referenceList.add(references.get(sourceId));
       }
     }
-    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId);
+    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId, localTM, localTmTrainingData != null);
   }
 
   /**
@@ -870,6 +935,7 @@ public final class OnlineTuner {
       .append("   -p str     : Compute pseudo references with parameters <#refs,burn-in> (format: CSV list)").append(nl)
       .append("   -s         : Wrap references and source inputs in boundary tokens").append(nl)
       .append("   -rand      : Randomize dev set before tuning (default: true)").append(nl)
+      .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ");
     
     return sb.toString();
@@ -903,6 +969,7 @@ public final class OnlineTuner {
     boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
     boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);
     boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
+    boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -942,6 +1009,8 @@ public final class OnlineTuner {
     tuner.minFeatureCount(minFeatureCount);
     tuner.shuffleDev(shuffleDev);
     tuner.outputSingleBest(outputSingleBest);
+    if(trainLocalTM)
+      tuner.trainLocalTM();
     tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
 
     final long elapsedTime = System.nanoTime() - startTime;

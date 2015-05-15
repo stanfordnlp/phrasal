@@ -1096,7 +1096,7 @@ public class Phrasal {
         forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
     return decode(source, sourceInputId, threadId, nbestListSize, targets, inputProps);
   }
-  
+
   /**
    * Decode a tokenized input string with associated {@link InputProperties}.
    * 
@@ -1108,10 +1108,53 @@ public class Phrasal {
    */
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, InputProperties inputProperties) {
+    return decode(source, sourceInputId, threadId, inputProperties, null);
+  }
+  
+  /**
+   * Decode a tokenized input string with associated {@link InputProperties}.
+   * Parameter localTM overrides local translation models specified in inputProperties.
+   * 
+   * @param source
+   * @param sourceInputId
+   * @param threadId
+   * @param inputProperties
+   * @param localTM
+   * @return
+   */
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
+      int sourceInputId, int threadId, InputProperties inputProperties, TranslationModel<IString,String> localTM) {
     List<Sequence<IString>> targets = 
         forceDecodeReferences == null ? null : forceDecodeReferences.get(sourceInputId);
-    return decode(source, sourceInputId, threadId, nbestListSize, targets, inputProperties);
+    return decode(source, sourceInputId, threadId, nbestListSize, targets, inputProperties, localTM);
   }
+  
+  
+  /**
+   * Decode a tokenized input string with associated {@link InputProperties}.
+   * Parameter localTM overrides local translation models specified in inputProperties.
+   * 
+   * @param source
+   * @param sourceInputId
+   * @param threadId
+   * @param inputProperties
+   * @param doForcedDecoding
+   * @param localTM
+   * @return
+   */
+  public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
+      int sourceInputId, int threadId, InputProperties inputProperties, boolean doForcedDecoding, TranslationModel<IString,String> localTM) {
+    if(doForcedDecoding) {
+      if(forceDecodeReferences == null) {
+        logger.fatal("You forgot to specify references for forced decoding! Exiting.");
+        System.exit(-1);
+      }
+      return decode(source, sourceInputId, threadId, inputProperties, localTM);
+    }
+    else
+      return decode(source, sourceInputId, threadId, nbestListSize, null, inputProperties, localTM);
+  }
+  
   
   /**
    * Decode a tokenized input string. Returns an n-best list of translations
@@ -1129,6 +1172,28 @@ public class Phrasal {
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
       int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
       InputProperties inputProperties) {
+    return decode(source, sourceInputId, threadId, numTranslations, targets, inputProperties, null); 
+  }
+    
+ 
+    /**
+     * Decode a tokenized input string. Returns an n-best list of translations
+     * specified by the parameter.
+     *
+     * NOTE: This call is threadsafe.
+     *
+     * @param source
+     * @param sourceInputId
+     * @param threadId -- Inferer object to use (one per thread)
+     * @param numTranslations number of translations to generate
+     * @param inputProperties
+     * @param localTM overrides local translation models specified in inputProperties
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    public List<RichTranslation<IString, String>> decode(Sequence<IString> source,
+        int sourceInputId, int threadId, int numTranslations, List<Sequence<IString>> targets, 
+        InputProperties inputProperties, TranslationModel<IString,String> localTM) {
     if (threadId < 0 || threadId >= numThreads) {
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
     }
@@ -1149,15 +1214,19 @@ public class Phrasal {
         wrapBoundary);
 
     // Configure the translation model
-    if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
-      TranslationModel<IString,String> tm = (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
+    if (localTM != null || inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
+      TranslationModel<IString,String> tm = localTM != null ? 
+                                            localTM : (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
       tm.setFeaturizer(featurizer);
       // Wrap the model so that queries can be limited.
       if ( ! (tm instanceof CombinedTranslationModel)) tm = new CombinedTranslationModel<>(tm, ruleQueryLimit);
 
       DecoderLocalTranslationModel.set(tm);
+      if(localTM != null && inputProperties.containsKey(InputProperty.DecoderLocalTM))
+        logger.warn("Local translation model specified in input properties is overridden!");
       logger.info("Loaded decoder-local translation model for thread {}: {}", threadId, tm.getName());
-
+      if(localTM != null && inputProperties.containsKey(InputProperty.DecoderLocalTM))
+        logger.warn("Local", threadId, tm.getName());
     } else {
       // Sanity check
       DecoderLocalTranslationModel.set(null);

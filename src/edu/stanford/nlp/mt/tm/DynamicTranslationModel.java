@@ -282,6 +282,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
+   * Set the name for this TM.
+   * 
+   * @param n
+   */
+  public void setName(String n) {
+    this.name = n;
+  }
+  
+  /**
    * Set the maximum source phrase length.
    * 
    * @param dim
