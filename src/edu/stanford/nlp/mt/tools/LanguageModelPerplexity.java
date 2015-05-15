@@ -57,8 +57,8 @@ public final class LanguageModelPerplexity {
     }
     final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
 
-    System.out.printf("Log sum score: %e%n", logSum);
-    System.out.printf("Log2 Perplexity: %e%n", Math.pow(2.0, -logSum / Math.log(2.0) / numQueries));
+    System.out.printf("Log sum score: %.3f%n", logSum);
+    System.out.printf("Log2 Perplexity: %.3f%n", Math.pow(2.0, -logSum / Math.log(2.0) / numQueries));
     System.out.printf("# segments: %d%n", lines.size());
     System.out.printf("# queries: %d%n", numQueries);
     System.out.printf("queries / sec: %.2f%n", numQueries / elapsedTime);
