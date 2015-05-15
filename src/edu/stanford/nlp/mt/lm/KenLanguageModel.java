@@ -141,20 +141,20 @@ public class KenLanguageModel implements LanguageModel<IString> {
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
 
     // Local direct-mapped cache
-    KenLMCache cache = threadLocalCache.get();
-    if (cache == null) {
-      cache = new KenLMCache(DEFAULT_CACHE_SIZE);
-      threadLocalCache.set(cache);
-    } else {
-      Long got = cache.get(ngramIds, kenLMStartIndex);
-      if (got != null) {
-        return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
-      }
-    }
+//    KenLMCache cache = threadLocalCache.get();
+//    if (cache == null) {
+//      cache = new KenLMCache(DEFAULT_CACHE_SIZE);
+//      threadLocalCache.set(cache);
+//    } else {
+//      Long got = cache.get(ngramIds, kenLMStartIndex);
+//      if (got != null) {
+//        return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
+//      }
+//    }
     
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
-    cache.insert(ngramIds, kenLMStartIndex, got);
+//    cache.insert(ngramIds, kenLMStartIndex, got);
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
 
