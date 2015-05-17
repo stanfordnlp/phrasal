@@ -107,6 +107,9 @@ public final class OnlineTuner {
   // output single best translation?
   private boolean outputSingleBest = false;
   
+  // sequetial optimization? i.e. no stale gradient!
+  private boolean enforceStrictlySequential = false;
+  
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
   private int minFeatureCount;
@@ -241,6 +244,13 @@ public final class OnlineTuner {
   private void trainLocalTM() { this.localTmTrainingData = new ParallelCorpus(); }
   
   /**
+   * Enforce strictly sequential optimization. No stale gradient!
+   * 
+   * @param b
+   */
+  private void enforceStrictlySequential(boolean b) { this.enforceStrictlySequential = b; }
+  
+  /**
    * Output single best translation?
    * 
    * @param b
@@ -367,7 +377,7 @@ public final class OnlineTuner {
       final int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = new ArrayList<>(input.translationIds.length);
       List<RichTranslation<IString,String>> forcedAlignments = input.createForcedAlignment ? 
-                                                               null : new ArrayList<>(input.translationIds.length);
+                                                               new ArrayList<>(input.translationIds.length) : null;
       
       new ArrayList<>(input.translationIds.length);
       // Decode
@@ -387,9 +397,11 @@ public final class OnlineTuner {
               threadId, inputProperties, false, input.localTM);
           
           // now compute forced alignment
-          forcedAlignments.add(
-              decoder.decode(input.source.get(i), sourceId, 
-                  threadId, inputProperties, true, input.localTM).get(0));
+          
+          List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
+              threadId, inputProperties, true, input.localTM);
+          
+          forcedAlignments.add(faNbestList.get(0));
         }
         else 
           nbestList = decoder.decode(input.source.get(i), sourceId, 
@@ -420,7 +432,6 @@ public final class OnlineTuner {
            }
         } 
       }
-
       return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds, forcedAlignments);
     }
 
@@ -440,6 +451,16 @@ public final class OnlineTuner {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
+    
+    if(enforceStrictlySequential && !endOfEpoch) {
+      while(!threadpool.peek())
+        try {
+          //randomly select 500 miliseconds
+          Thread.sleep(500);
+         } catch ( java.lang.InterruptedException ie) {
+           System.out.println(ie);
+         }
+    }
     
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
@@ -561,7 +582,6 @@ public final class OnlineTuner {
             runtime.maxMemory());
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
-        
         TranslationModel<IString,String> localTM  = getLocalTM(t);
         
         ProcessorInput input = makeInput(batch, inputId, currentWts, localTM);
@@ -614,8 +634,7 @@ public final class OnlineTuner {
     if (localTmTrainingData != null && batchNum > 0) {
       DynamicTMBuilder tmBuilder = new DynamicTMBuilder(localTmTrainingData);
       TranslationModel<IString,String> localTM = tmBuilder.build();
-      ((DynamicTranslationModel<String>) localTM).createQueryCache(FeatureTemplate.DENSE_EXT);
-      ((DynamicTranslationModel<String>) localTM).setName("localTM");
+      ((DynamicTranslationModel<String>) localTM).initialize("localTM", FeatureTemplate.DENSE_EXT);
       return localTM;
     }
     return null;
@@ -936,6 +955,7 @@ public final class OnlineTuner {
       .append("   -s         : Wrap references and source inputs in boundary tokens").append(nl)
       .append("   -rand      : Randomize dev set before tuning (default: true)").append(nl)
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
+      .append("   -seq       : Enforce a strictly optimization - this will make multi-threading pointless. (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ");
     
     return sb.toString();
@@ -970,6 +990,7 @@ public final class OnlineTuner {
     boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);
     boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
+    boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -1009,6 +1030,7 @@ public final class OnlineTuner {
     tuner.minFeatureCount(minFeatureCount);
     tuner.shuffleDev(shuffleDev);
     tuner.outputSingleBest(outputSingleBest);
+    tuner.enforceStrictlySequential(enforceStrictlySequential);
     if(trainLocalTM)
       tuner.trainLocalTM();
     tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);

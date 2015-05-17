@@ -172,6 +172,29 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
+   * Initialize the translation model.
+   * 
+   * @param name
+   */
+  @SuppressWarnings("unchecked")
+  public void initialize(String name, FeatureTemplate t) {
+    TimeKeeper timer = TimingUtils.start();
+    maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
+    maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
+    sampleSize = DEFAULT_SAMPLE_SIZE;
+    this.name = name;
+    setFeatureTemplate(t);
+    
+    // Id arrays must be created after any modification of the system vocabulary.
+    createIdArrays();
+    
+    // Lex cache must be created before any rules can be scored.
+    createLexCoocTable(sa.getVocabulary().size());
+    
+    createQueryCache(t);
+  }
+  
+  /**
    * Create a query cache of frequent rules. Extract rules from
    * the cache in parallel.
    * 
