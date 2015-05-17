@@ -181,8 +181,9 @@ public class ConstrainedOutputSpace<TK, FV> implements
           filteredIndices.add(j);
         }
       }
-      for (int ruleId : filteredIndices) {
-        ruleGrid.remove(i, ruleId);
+      // careful: this only works if filteredIndices is sorted in ascending order!
+      for (int j = filteredIndices.size() - 1; j >= 0; j--){
+        ruleGrid.remove(i, filteredIndices.get(j));
       }
     }
   }
