@@ -453,13 +453,17 @@ public final class OnlineTuner {
     assert updater != null;
     
     if(enforceStrictlySequential && !endOfEpoch) {
+      int cnt = 0;
       while(!threadpool.peek())
         try {
           //randomly select 500 miliseconds
           Thread.sleep(500);
+          cnt++;
          } catch ( java.lang.InterruptedException ie) {
            System.out.println(ie);
          }
+      if(cnt %600 == 0)
+        logger.info("WARNING: have been waiting for 5min to enforce strictly sequential optimization.");
     }
     
     // There may be more than one gradient available, so loop
@@ -498,6 +502,10 @@ public final class OnlineTuner {
             if (result.nbestLists.get(i).size() > 0) {
               Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
               nbestLists.put(sourceId, bestHypothesis);
+              logger.info("single-best hyp: \n "
+                  + "SOURCE: " +  result.nbestLists.get(i).get(0).alignmentGrid().f().toString() + " \n"
+                  + "TARGET: " +   result.nbestLists.get(i).get(0).translation.toString() + "\n"
+                  + "ALIGNMENT: " +  result.nbestLists.get(i).get(0).alignmentString());
             } else {
               nbestLists.put(sourceId, new EmptySequence<IString>());
             }
@@ -635,6 +643,12 @@ public final class OnlineTuner {
       DynamicTMBuilder tmBuilder = new DynamicTMBuilder(localTmTrainingData);
       TranslationModel<IString,String> localTM = tmBuilder.build();
       ((DynamicTranslationModel<String>) localTM).initialize("localTM", FeatureTemplate.DENSE_EXT);
+      /*try {
+        IOTools.serialize("localTM." + batchNum, localTM);
+      }
+      catch (IOException e) {
+        logger.error("Unable to serialize to: " + "localTM." + batchNum, e);
+      }*/
       return localTM;
     }
     return null;
