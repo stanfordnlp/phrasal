@@ -513,7 +513,7 @@ public final class OnlineTuner {
         int inputId = (epoch*numBatches) + t;
         ProcessorInput input = makeInput(batch, inputId, currentWts);
         wrapper.put(input);
-        logger.info("Threadpool.status: {}" + wrapper);
+        logger.info("Threadpool.status: {}", wrapper);
         updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false);
         
         if((t+1) % weightWriteOutInterval == 0) {
