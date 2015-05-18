@@ -535,7 +535,7 @@ public class ParallelSuffixArray implements Serializable {
         int lb = findBound(query, isSource, true, lo);
         if (lb >= 0) {
           int ub = findBound(query, isSource, false, lb, hi);
-          assert ub > 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
+          assert ub >= 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
           return ub - lb + 1;
         }
       }
@@ -545,7 +545,7 @@ public class ParallelSuffixArray implements Serializable {
       int lb = findBound(query, isSource, true, 0);
       if (lb >= 0) {
         int ub = findBound(query, isSource, false, lb);
-        assert ub > 0;
+        assert ub >= 0;
         return ub - lb + 1;
       }
     }
