@@ -30,7 +30,7 @@ public class Vocabulary implements Serializable,KryoSerializable {
   
   // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
-  private static transient Index<String> systemIndex = 
+  private static Index<String> systemIndex = 
       new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
@@ -201,36 +201,18 @@ public class Vocabulary implements Serializable,KryoSerializable {
   public String toString() {
     return index.toString();
   }
-
-  // Thread local copies of translation model indices
-  private static transient final ThreadLocal<Vocabulary> threadLocalCache =
-      new ThreadLocal<Vocabulary>();
-
-  /**
-   * Set the thread-local vocabulary.
-   * 
-   * @param index
-   */
-  public static void setThreadLocalVocabulary(Vocabulary index) {
-    threadLocalCache.set(index);
-  }
-
-  /**
-   * Get the thread-local vocabulary.
-   * 
-   * @return
-   */
-  public static Vocabulary getThreadLocalVocabulary() {
-    return threadLocalCache.get();
-  }
   
-  public static void main(String[] args) throws IOException {
+  /**
+   * 
+   * @param args
+   */
+  public static void main(String[] args) {
     Vocabulary v = new Vocabulary();
     v.add("foo");
     v.add("bar");
     v.add("baz");
     v.add("foo baz");
-    IOTools.serialize("vocab.bin", v);
+    IOTools.serialize("vocab" + IOTools.BIN_EXTENSION, v);
     Vocabulary deserV = IOTools.deserialize("vocab.bin", Vocabulary.class);
     for (int i = 0, sz = deserV.size(); i < sz; ++i) System.out.println(deserV.get(i));
   }

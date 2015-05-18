@@ -177,7 +177,7 @@ public class DynamicTMBuilder {
       System.exit(-1);      
     }
     
-    String outputFileName = options.getProperty("o", "tm.bin");
+    String outputFileName = options.getProperty("o", "tm" + IOTools.BIN_EXTENSION);
     SymmetrizationType type = options.containsKey("s") ? SymmetrizationType.valueOf(options.getProperty("s"))
         : SymmetrizationType.valueOf("grow_diag_final_and");
     int initialCapacity = PropertiesUtils.getInt(options, "e", 10000);
@@ -199,14 +199,10 @@ public class DynamicTMBuilder {
     
     DynamicTranslationModel<String> tm = tmBuilder.build();
         
-    try {
-      logger.info("Serializing to: " + outputFileName);
-      IOTools.serialize(outputFileName, tm);
-      timer.mark("Serialization");
-      logger.info("Timing summary: {}", timer);
-      logger.info("Success! Shutting down...");
-    } catch (IOException e) {
-      logger.error("Unable to serialize to: " + outputFileName, e);
-    }
+    logger.info("Serializing to: " + outputFileName);
+    IOTools.serialize(outputFileName, tm);
+    timer.mark("Serialization");
+    logger.info("Timing summary: {}", timer);
+    logger.info("Success! Shutting down...");
   }
 }

@@ -20,7 +20,6 @@ import java.util.TreeSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
@@ -47,6 +46,7 @@ import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.FlatNBestList;
 import edu.stanford.nlp.mt.util.IOTools;
+import edu.stanford.nlp.mt.util.IOTools.SerializationMode;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -598,7 +598,8 @@ public final class OnlineTuner {
         updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false, localTmTrainingData);
         
         if((t+1) % weightWriteOutInterval == 0) {
-        	IOTools.writeWeights(String.format("%s.%d.%d.binwts", outputWeightPrefix, epoch, t), currentWts);
+          String filename = String.format("%s.%d.%d%s", outputWeightPrefix, epoch, t, IOTools.WEIGHTS_FILE_EXTENSION);
+          IOTools.writeWeights(filename, currentWts);
         }
       }
       
@@ -616,11 +617,7 @@ public final class OnlineTuner {
       // Write the intermediate state for this epoch
       String epochFilePrefix = String.format("%s.%d", outputWeightPrefix, epoch);
       IOTools.writeWeights(epochFilePrefix + IOTools.WEIGHTS_FILE_EXTENSION, currentWts);
-      try {
-        IOUtils.writeObjectToFile(updater.getState(), epochFilePrefix + STATE_FILE_EXTENSION);
-      } catch (IOException e) {
-        logger.warn("Could not write online updater state to: {}{}", epochFilePrefix, STATE_FILE_EXTENSION);
-      }
+      IOTools.serialize( epochFilePrefix + STATE_FILE_EXTENSION, updater.getState(), SerializationMode.BIN_GZ);
       
       if(outputSingleBest) {
         PrintStream ps = IOTools.getWriterFromFile(epochFilePrefix + ".trans");
@@ -809,6 +806,7 @@ public final class OnlineTuner {
       boolean uniformStartWeights, boolean randomizeStartWeights, TranslationModel<IString, String> translationModel) {
 
     Counter<String> weights = IOTools.readWeights(wtsInitialFile);
+    if (weights == null) weights = new ClassicCounter<>();
     if (uniformStartWeights) {
       // Initialize according to Moses heuristic
       Set<String> featureNames = new HashSet<>(weights.keySet());
@@ -841,19 +839,7 @@ public final class OnlineTuner {
     int delim = wtsInitialFile.lastIndexOf('.');
     if (delim < 0) return null;
     String fileName = wtsInitialFile.substring(0, delim) + STATE_FILE_EXTENSION;
-    File file = new File(fileName);
-    if (file.exists()) {
-      try {
-        UpdaterState state = (UpdaterState) IOUtils.readObjectFromFile(file);
-        return state;
-        
-      } catch (ClassNotFoundException e) {
-        throw new RuntimeException(e);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    } 
-    return null;
+    return IOTools.deserialize(fileName, UpdaterState.class, SerializationMode.BIN_GZ);
   }
 
   /**

@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Logger;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
@@ -53,7 +54,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static final String FEATURE_PREFIX = "DYN";
   public static final String DEFAULT_NAME = "dynamic-tm";
   public static final int DEFAULT_SAMPLE_SIZE = 100;
-  private static final int DEFAULT_MAX_PHRASE_LEN = 7;
+  public static final int DEFAULT_MAX_PHRASE_LEN = 12;
   private static final int RULE_CACHE_THRESHOLD = 10000;
   private static final double MIN_LEX_PROB = 1e-5;
   
@@ -75,9 +76,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   protected ParallelSuffixArray sa;
   
-  private static transient final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
+  private static final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
   
   // Parameters
+  protected transient boolean initialized;
   protected transient int maxSourcePhrase;
   protected transient int maxTargetPhrase;
   protected transient FeatureTemplate featureTemplate;
@@ -85,6 +87,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient int sampleSize;
   protected transient String[] featureNames;
   protected transient String name;
+  protected transient boolean reorderingEnabled;
   
   // Caches
   protected transient LexCoocTable coocTable;
@@ -97,7 +100,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * No-arg constructor for deserialization. Creates caches
    */
-  public DynamicTranslationModel() {}
+  public DynamicTranslationModel() {
+    initialized = false;
+  }
   
   /**
    * Constructor.
@@ -118,10 +123,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public DynamicTranslationModel(ParallelSuffixArray suffixArray, String name) {
     this.sa = suffixArray;
+    this.initialized = false;
     this.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     this.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     this.sampleSize = DEFAULT_SAMPLE_SIZE;
     this.name = name;
+    this.reorderingEnabled = false;
     setFeatureTemplate(FeatureTemplate.DENSE);
   }
 
@@ -154,21 +161,33 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
-    tm.name = name;
-    tm.setFeatureTemplate(FeatureTemplate.DENSE);
     timer.mark("Deserialization");
-    
-    if (initializeSystemVocabulary) tm.populateSystemVocabulary();
-    // Id arrays must be created after any modification of the system vocabulary.
-    tm.createIdArrays();
-    timer.mark("Vocabulary setup");
-    
-    // Lex cache must be created before any rules can be scored.
-    tm.createLexCoocTable(tm.sa.getVocabulary().size());
-    timer.mark("Lexical cooc table");
-    
+    tm.intialize(name, FeatureTemplate.DENSE, initializeSystemVocabulary);
+    timer.mark("Initialization");
     logger.info("Timing: {}", timer);
     return tm;
+  }
+  
+  /**
+   * Initialize the TM by building caches and populating the system vocabulary.
+   * 
+   * @param name
+   * @param template
+   * @param initializeSystemVocabulary
+   */
+  public void intialize(String name, FeatureTemplate template, boolean initializeSystemVocabulary) {
+    if (initialized) return;
+    this.name = name;
+    this.setFeatureTemplate(FeatureTemplate.DENSE);
+    
+    if (initializeSystemVocabulary) populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    createIdArrays();
+    
+    // Lex cache must be created before any rules can be scored.
+    createLexCoocTable(sa.getVocabulary().size());
+    
+    this.initialized = true;
   }
   
   /**
@@ -311,6 +330,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public void setName(String n) {
     this.name = n;
+  }
+  
+  /**
+   * Turn on the reordering features.
+   */
+  public void setReorderingScores() {
+    this.reorderingEnabled = true;
   }
   
   /**
@@ -516,15 +542,26 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Choose the alignment template that occurs most often for each span.
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order, maxTargetPhrase).stream())
         .collect(Collectors.toList());
-    Map<TargetSpan,Counter<SampledAlignment>> tgtToTemplate = new HashMap<>(rules.size());
+    Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rules.size());
+    Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rules.size()) : null;
     for (SampledRule rule : rules) {
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
-      Counter<SampledAlignment> alTemps = tgtToTemplate.get(tgtSpan);
+      Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       if (alTemps == null) {
         alTemps = new ClassicCounter<>();
         tgtToTemplate.put(tgtSpan, alTemps);
       }
-      alTemps.incrementCount(new SampledAlignment(rule));
+      alTemps.incrementCount(new AlignmentTemplate(rule));
+      
+      if (reorderingCounts != null) {
+        ReorderingCounts counts = reorderingCounts.get(rule);
+        if (counts == null) {
+          counts = new ReorderingCounts();
+          reorderingCounts.put(rule, counts);
+        }
+        counts.incrementForward(rule.forwardOrientation());
+        counts.incrementBackward(rule.backwardOrientation());
+      }
     }
 
     // Collect phrase counts and choose the best alignment template
@@ -533,8 +570,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     List<Integer> histoGram = new ArrayList<>(tgtToTemplate.size());
     int ef_denom = rules.size();
     for (TargetSpan tgtSpan : tgtToTemplate.keySet()) {
-      Counter<SampledAlignment> alTemps = tgtToTemplate.get(tgtSpan);
-      SampledAlignment maxAlignment = Counters.argmax(alTemps);
+      Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
+      AlignmentTemplate maxAlignment = Counters.argmax(alTemps);
       SampledRule maxRule = maxAlignment.rule;
       scoreLex(maxRule);
       ruleList.add(maxRule);
@@ -565,7 +602,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[2] = (float) (Math.log(histogram[r]) -  Math.log(ef_denom));
         scores[3] = (float) Math.log(rule.lex_e_f);
         
-      
       } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores = new float[6];
         int eCnt = sa.count(rule.tgt, false);
@@ -581,53 +617,82 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[3] = (float) Math.log(rule.lex_e_f);
         scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
         scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
-        
+                
       } else {
         throw new UnsupportedOperationException("Not yet implemented.");
       }
+
       Rule<IString> scoredRule = rule.getRule(scores, featureNames, sourceSpan, this.tm2Sys);
+      if (this.reorderingEnabled) {
+        scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
+      }
       scoredRules.add(scoredRule);
     }
     return scoredRules;
   }
   
-  private static class SampledAlignment {
+  private static class ReorderingCounts {
+    // TODO(spenceg) For now, replicating LexicalReorderingFeatureExtractor, which uses add-alpha
+    // smoothing.
+    private static float ALPHA = 0.5f;
+    private static final int MODEL_SIZE = 3;
+    private final int[] forwardCounts = new int[MODEL_SIZE];
+    private final int[] backwardCounts = new int[MODEL_SIZE];
+    int forwardDenom = 0;
+    int backwardDenom = 0;
+    
+    public void incrementForward(ReorderingTypes type) {
+      assert type.ordinal() < forwardCounts.length;
+      forwardCounts[type.ordinal()]++;
+      ++forwardDenom;
+    }
+    
+    public void incrementBackward(ReorderingTypes type) {
+      assert type.ordinal() < backwardCounts.length;
+      backwardCounts[type.ordinal()]++;
+      ++backwardDenom;
+    }
+    
+    public float[] getFeatureVector() {
+      float[] values = new float[6];
+      for (int i = 0; i < forwardCounts.length; ++i)
+        values[i] = (float) Math.log((forwardCounts[i]+ALPHA) / ((float) forwardDenom + (MODEL_SIZE * ALPHA)));
+      for (int i = 0; i < backwardCounts.length; ++i)
+        values[forwardCounts.length + i] = (float) Math.log((backwardCounts[i]+ALPHA) / ((float) backwardDenom + (MODEL_SIZE * ALPHA)));
+      return values;
+    }
+  }
+  
+  /**
+   * A wrapper around a rule to indicate its alignment template.
+   * 
+   * @author Spence Green
+   *
+   */
+  private static class AlignmentTemplate {
     public final SampledRule rule;
     private final int hashCode;
-    public SampledAlignment(SampledRule rule) {
+    public AlignmentTemplate(SampledRule rule) {
       this.rule = rule;
-      this.hashCode = rule.getAlignmentKey();
+      this.hashCode = MurmurHash.hash32(rule.f2eAll(), rule.sourceLength(), 1) ^ 
+          MurmurHash.hash32(rule.e2fAll(), rule.targetLength(), 1);
     }
     @Override
-    public String toString() { return this.rule.toString(); }
+    public String toString() { return rule.toString(); }
     @Override
     public int hashCode() { return hashCode; }
     @Override
     public boolean equals(Object o) {
       if (this == o) {
         return true;
-      } else if ( ! (o instanceof SampledAlignment)) {
+      } else if ( ! (o instanceof AlignmentTemplate)) {
         return false;
       } else {
-        SampledAlignment other = (SampledAlignment) o;
+        AlignmentTemplate other = (AlignmentTemplate) o;
         if (rule.targetLength() != other.rule.targetLength())
           return false;
-        
-        // Source-target alignments
-        for (int i = 0; i < rule.src.length; ++i) {
-          if ( ! Arrays.equals(rule.f2e(i), other.rule.f2e(i))) {
-            return false;
-          }
-        }
-        
-        // Target-source alignments
-        for (int i = 0; i < rule.tgt.length; ++i) {
-          if ( ! Arrays.equals(rule.e2f(i), other.rule.e2f(i))) {
-            return false;
-          }
-        }
-        
-        return true;
+        return Arrays.equals(rule.e2fAll(), other.rule.e2fAll()) &&
+            Arrays.equals(rule.f2eAll(), other.rule.f2eAll());
       }
     }
   }
@@ -678,17 +743,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Backward score p(f|e) -- Iterate over source
     double lex_f_e = 1.0;
     for (int i = rule.srcStartInclusive; i < rule.srcEndExclusive; ++i) {
-      final int srcId = rule.saEntry.source(i);
+      final int srcId = rule.sentencePair.source(i);
       double feSum = 0.0;
-      if (rule.saEntry.isSourceUnaligned(i)) {
+      if (rule.sentencePair.isSourceUnaligned(i)) {
         int c_f_e = coocTable.getJointCount(srcId, LexCoocTable.NULL_ID);
         int c_e = coocTable.getTgtMarginal(LexCoocTable.NULL_ID);
         feSum = c_f_e / (double) c_e;
         
       } else {
-        int[] tgtAlign = rule.saEntry.f2e(i);
+        int[] tgtAlign = rule.sentencePair.f2e(i);
         for (int j : tgtAlign) {
-          int tgtId = rule.saEntry.target(j);
+          int tgtId = rule.sentencePair.target(j);
           int c_f_e = coocTable.getJointCount(srcId, tgtId);
           int c_e = coocTable.getTgtMarginal(tgtId);
           feSum += (c_f_e / (double) c_e);
@@ -703,17 +768,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Backward score p(e|f) -- Iterate over target
     double lex_e_f = 1.0;
     for (int i = rule.tgtStartInclusive; i < rule.tgtEndExclusive; ++i) {
-      final int tgtId = rule.saEntry.target(i);
+      final int tgtId = rule.sentencePair.target(i);
       double efSum = 0.0;
-      if (rule.saEntry.isTargetUnaligned(i)) {
+      if (rule.sentencePair.isTargetUnaligned(i)) {
         int c_e_f = coocTable.getJointCount(LexCoocTable.NULL_ID, tgtId);
         int c_f = coocTable.getSrcMarginal(LexCoocTable.NULL_ID);
         efSum = c_e_f / (double) c_f;
         
       } else {
-        int[] srcAlign = rule.saEntry.e2f(i);
+        int[] srcAlign = rule.sentencePair.e2f(i);
         for (int j : srcAlign) {
-          final int srcId = rule.saEntry.source(j);
+          final int srcId = rule.sentencePair.source(j);
           int c_e_f = coocTable.getJointCount(srcId, tgtId);
           int c_f = coocTable.getSrcMarginal(srcId);
           efSum += (c_e_f / (double) c_f);
@@ -734,19 +799,21 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * Extract admissible phrase pairs from the sampled sentence.
    * This is the "pattern matching" algorithm of Lopez (2008).
    * 
-   * @param s
+   * @param sentencePair
+   * @param length
+   * @param maxTargetPhrase
    * @return
    */
-  public static List<SampledRule> extractRules(SentencePair s, int length, int maxTargetPhrase) {
+  public static List<SampledRule> extractRules(SentencePair sentencePair, int length, int maxTargetPhrase) {
     // Find the target span
     int minTarget = Integer.MAX_VALUE;
     int maxTarget = -1;
-    final int startSource = s.wordPosition;
+    final int startSource = sentencePair.wordPosition;
     final int endSource = startSource + length;
     for(int sourcePos = startSource; sourcePos < endSource; sourcePos++) {
-      assert sourcePos < s.sourceLength() : String.format("[%d,%d) %d %d ", startSource, endSource, sourcePos, s.sourceLength());
-      if ( ! s.isSourceUnaligned(sourcePos)) {
-        int[] targetPositions = s.f2e(sourcePos);
+      assert sourcePos < sentencePair.sourceLength() : String.format("[%d,%d) %d %d ", startSource, endSource, sourcePos, sentencePair.sourceLength());
+      if ( ! sentencePair.isSourceUnaligned(sourcePos)) {
+        int[] targetPositions = sentencePair.f2e(sourcePos);
         for(int targetPos : targetPositions) {
           if (targetPos < minTarget) {
             minTarget = targetPos;
@@ -762,8 +829,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     // Admissibility check
     for (int i = minTarget; i <= maxTarget; ++i) {
-      if ( ! s.isTargetUnaligned(i)) {
-        int[] srcPositions = s.e2f(i);
+      if ( ! sentencePair.isTargetUnaligned(i)) {
+        int[] srcPositions = sentencePair.e2f(i);
         for (int sourcePos : srcPositions) {
           if (sourcePos < startSource || sourcePos >= endSource) {
             // Failed check
@@ -778,16 +845,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     List<SampledRule> ruleList = new ArrayList<>();
     for(int startTarget = minTarget; (startTarget >= 0 &&
         startTarget > maxTarget-maxTargetPhrase &&
-        (startTarget == minTarget || s.isTargetUnaligned(startTarget))); startTarget--) {
+        (startTarget == minTarget || sentencePair.isTargetUnaligned(startTarget))); startTarget--) {
 
       // Try to grow the right bound of the target
-      for (int endTarget=maxTarget; (endTarget < s.targetLength() &&
+      for (int endTarget=maxTarget; (endTarget < sentencePair.targetLength() &&
           endTarget < startTarget+maxTargetPhrase && 
-          (endTarget==maxTarget || s.isTargetUnaligned(endTarget))); endTarget++) {
+          (endTarget==maxTarget || sentencePair.isTargetUnaligned(endTarget))); endTarget++) {
 
         // Filter out messed up alignments
 //        if (Math.abs((endSource-startSource) - (endTarget-startTarget+1)) <= MAX_RULE_FERTILITY) {
-          SampledRule r = new SampledRule(startSource, endSource, startTarget, endTarget + 1, s);
+          SampledRule r = new SampledRule(startSource, endSource, startTarget, endTarget + 1, sentencePair);
           ruleList.add(r);
 //        }
       }
@@ -815,10 +882,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     private final ConcurrentHashMap<Long,AtomicInteger> counts;
     
-    // ConcurrentHashMap's size() method is extremely slow.
-    // Keep the count here.
-    private final AtomicInteger size;
-    
     /**
      * Constructor.
      * 
@@ -826,7 +889,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      */
     public LexCoocTable(int initialCapacity) {
       counts = new ConcurrentHashMap<>(initialCapacity);
-      size = new AtomicInteger();
     }
     
     /**
@@ -848,7 +910,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         counter = counts.get(key);
       }
       counter.incrementAndGet();
-      size.incrementAndGet();
     }
 
     /**
@@ -884,7 +945,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * 
      * @return
      */
-    public int size() { return size.get(); }
+    public int size() { return counts.size(); }
     
     /**
      * Merge two interger ids into an unsigned long value. This is two unwrapped calls
@@ -904,41 +965,44 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param args
    */
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     String fileName = args[0];
     String inputFile = args[1];
-    try {
-      DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
-      tm.createQueryCache(FeatureTemplate.DENSE_EXT);
-      System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
-      System.out.printf("Source cardinality: %d%n", tm.maxLengthTarget());
-      System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
-      System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
-          
-//      tm.sa.print(true, new PrintWriter(System.out));
-      
-      // TODO(spenceg) Requires classmexer in the local directory.
-//      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
-//      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
-//      System.out.printf("In-memory size cooc: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.coocTable));
-//      System.out.printf("In-memory size rule cache: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.ruleCache));
-      
-      // Read the source at once for accurate timing of queries
-      List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
-      
-      System.out.printf("#source segments: %d%n", sourceFile.size());
-      
-      long startTime = TimingUtils.startTime();
-      int sourceId = 0;
-      for (Sequence<IString> source : sourceFile) {
-        tm.getRules(source, null, null, sourceId++, null);
-      }
-      double numSecs = TimingUtils.elapsedSeconds(startTime);
-      System.out.printf("Sample time:\t%.3fs%n", numSecs);
-      System.out.printf("Time/segment:\t%.3fs%n", numSecs / (double) sourceFile.size());
-      
-    } catch (IOException e) {
-      e.printStackTrace();
+    TimeKeeper timer = TimingUtils.start();
+    DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
+    tm.setReorderingScores();
+    timer.mark("Load");
+    tm.createQueryCache(FeatureTemplate.DENSE_EXT);
+    timer.mark("Cache creation");
+    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
+    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
+    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
+    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
+
+    //      tm.sa.print(true, new PrintWriter(System.out));
+
+    // TODO(spenceg) Requires classmexer in the local directory.
+    //      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
+    //      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
+    //      System.out.printf("In-memory size cooc: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.coocTable));
+    //      System.out.printf("In-memory size rule cache: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.ruleCache));
+
+    // Read the source at once for accurate timing of queries
+    List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
+    System.out.printf("#source segments:   %d%n", sourceFile.size());
+    timer.mark("Source file loading");
+
+    long startTime = TimingUtils.startTime();
+    int sourceId = 0;
+    int numRules = 0;
+    for (Sequence<IString> source : sourceFile) {
+      numRules += tm.getRules(source, null, null, sourceId++, null).size();
     }
+    double numSecs = TimingUtils.elapsedSeconds(startTime);
+    timer.mark("Query");
+    System.out.println();
+    System.out.printf("Timing: %s%n", timer);
+    System.out.printf("Time/segment: %.5fs%n", numSecs / (double) sourceFile.size());
+    System.out.printf("# rules: %d%n", numRules);
   }
 }

@@ -26,7 +26,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   
   private static final long serialVersionUID = 5837610708369154242L;
 
-  private static transient final Logger logger = LogManager.getLogger(ParallelCorpus.class);
+  private static final Logger logger = LogManager.getLogger(ParallelCorpus.class);
 
   public static final int MAX_SENTENCE_LENGTH = AlignedSentence.MAX_SENTENCE_LENGTH;
   private static final int DEFAULT_CAPACITY = 10000;

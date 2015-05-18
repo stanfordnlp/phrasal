@@ -27,6 +27,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
 public final class FeatureUtils {
 
   private static final String TRUE = String.valueOf(true);
+  private static final String SEPARATOR = "=";
   
   private FeatureUtils() {}
 
@@ -80,7 +81,7 @@ public final class FeatureUtils {
   public static Properties argsToProperties(String[] args) {
     Properties props = new Properties();
     for (String arg : args) {
-      String[] fields = arg.split("=");
+      String[] fields = arg.split(SEPARATOR);
       if (fields.length == 1) {
         props.put(fields[0], TRUE);
       } else if (fields.length == 2) {

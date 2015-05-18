@@ -66,21 +66,21 @@ public class LexicalReorderingTable {
     f, e, fe
   }
 
-  static final ReorderingTypes[] msdPositionMapping = {
+  public static final ReorderingTypes[] msdPositionMapping = {
       ReorderingTypes.monotoneWithPrevious, ReorderingTypes.swapWithPrevious,
       ReorderingTypes.discontinuousWithPrevious };
 
-  static final ReorderingTypes[] msdBidirectionalPositionMapping = {
+  public static final ReorderingTypes[] msdBidirectionalPositionMapping = {
       ReorderingTypes.monotoneWithPrevious, ReorderingTypes.swapWithPrevious,
       ReorderingTypes.discontinuousWithPrevious,
       ReorderingTypes.monotoneWithNext, ReorderingTypes.swapWithNext,
       ReorderingTypes.discontinuousWithNext };
 
-  static final ReorderingTypes[] monotonicityPositionalMapping = {
+  public static final ReorderingTypes[] monotonicityPositionalMapping = {
       ReorderingTypes.monotoneWithPrevious,
       ReorderingTypes.nonMonotoneWithPrevious };
 
-  static final ReorderingTypes[] monotonicityBidirectionalMapping = {
+  public static final ReorderingTypes[] monotonicityBidirectionalMapping = {
       ReorderingTypes.monotoneWithPrevious,
       ReorderingTypes.nonMonotoneWithPrevious,
       ReorderingTypes.monotoneWithNext, ReorderingTypes.nonMonotoneWithNext };

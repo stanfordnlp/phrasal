@@ -1,16 +1,16 @@
 package edu.stanford.nlp.mt.tools;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
-import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.TimingUtils;
 
 /**
  * Evaluate the perplexity of an input file under a language model.
@@ -28,9 +28,9 @@ public final class LanguageModelPerplexity {
    * @param args
    */
   public static void main(String[] args) throws IOException {
-    if (args.length == 0) {
+    if (args.length != 2) {
       System.err
-          .printf("Usage: java %s type:path [input_file] < input_file%n", LanguageModelPerplexity.class.getName());
+          .printf("Usage: java %s type:path input_file%n", LanguageModelPerplexity.class.getName());
       System.exit(-1);
     }
 
@@ -38,40 +38,30 @@ public final class LanguageModelPerplexity {
     System.out.printf("Loading lm: %s...%n", model);
     LanguageModel<IString> lm = LanguageModelFactory.load(model);
 
-    LineNumberReader reader = (args.length == 1) ? 
-        new LineNumberReader(new InputStreamReader(System.in)) :
-          IOTools.getReaderFromFile(args[1]);
+    String infile = args[1];
+    List<Sequence<IString>> lines = IStrings.tokenizeFile(infile).stream()
+        .map(s -> Sequences.wrapStartEnd(s, lm.getStartToken(),
+        lm.getEndToken())).collect(Collectors.toList());
     
-        
-    int wordCount = 0;
+    int numQueries = 0;
     double logSum = 0.0;
-    final long startTimeMillis = System.nanoTime();
-    for (String sent; (sent = reader.readLine()) != null;) {
-      Sequence<IString> seq = IStrings.tokenize(sent);
-      Sequence<IString> paddedSequence = Sequences.wrapStartEnd(seq, lm.getStartToken(),
-          lm.getEndToken());
-      final double score = lm.score(paddedSequence, 1, null).getScore();
-      wordCount += paddedSequence.size() - 1;
+    final long startTime = TimingUtils.startTime();
+    for (Sequence<IString> seq : lines) {
+      final double score = lm.score(seq, 1, null).getScore();
+      numQueries += seq.size() - 1;
       assert score != 0.0;
       assert ! Double.isNaN(score);
       assert ! Double.isInfinite(score);
-      
+
       logSum += score;
-      
-      System.out.println("Sentence: " + sent);
-      System.out.printf("Sequence score: %f score_log10: %f%n", score, score / Math.log(10.0));
     }
-    reader.close();
-    
-    
-    System.out.printf("Word count: %d%n", wordCount);
-    System.out.printf("Log sum score: %e%n", logSum);
-    System.out.printf("Log10 sum score: %e%n", logSum / Math.log(10.0));
-    System.out.printf("Log2 sum score: %e%n", logSum / Math.log(2.0));
-    System.out.printf("Log2 Perplexity: %e%n", Math.pow(2.0, -logSum / Math.log(2.0) / wordCount));
-    System.out.printf("Log10 Perplexity: %e%n", Math.pow(10.0, -logSum / Math.log(10.0) / wordCount));
-        
-    double elapsed = (System.nanoTime() - startTimeMillis) / 1e9;
-    System.err.printf("Elapsed time: %.3fs%n", elapsed);
+    final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
+
+    System.out.printf("Log sum score: %.3f%n", logSum);
+    System.out.printf("Log2 Perplexity: %.3f%n", Math.pow(2.0, -logSum / Math.log(2.0) / numQueries));
+    System.out.printf("# segments: %d%n", lines.size());
+    System.out.printf("# queries: %d%n", numQueries);
+    System.out.printf("queries / sec: %.2f%n", numQueries / elapsedTime);
+    System.err.printf("Elapsed time: %.5fs%n", elapsedTime);
   }
 }

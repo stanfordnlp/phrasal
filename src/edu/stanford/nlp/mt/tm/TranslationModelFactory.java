@@ -2,6 +2,9 @@ package edu.stanford.nlp.mt.tm;
 
 import java.io.IOException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.util.IString;
 
@@ -17,10 +20,15 @@ public class TranslationModelFactory {
   public static final String DYNAMIC_INDEX = "dyn-index";
   public static final String DYNAMIC_SAMPLE_SIZE = "dyn-sample";
   public static final String DYNAMIC_FEATURE_TEMPLATE = "dyn-feat";
+  public static final String DYNAMIC_PHRASE_LENGTH = "dyn-plen";
+  public static final String DYNAMIC_REORDERING = "dyn-reorder";
   public static final String SEPARATOR = ":";
   
   public static final String DYNAMIC_TAG = "dyn:";
   public static final String DTU_TAG = "dtu:";
+  
+  private static final Logger logger = LogManager.getLogger(TranslationModelFactory.class);
+
   
   /**
    * Factory method for translation model loading.
@@ -38,6 +46,8 @@ public class TranslationModelFactory {
     boolean setSystemIndex = true;
     int dynamicSampleSize = DynamicTranslationModel.DEFAULT_SAMPLE_SIZE;
     FeatureTemplate dynamicTemplate = FeatureTemplate.DENSE_EXT;
+    int dynamicPhraseLength = DynamicTranslationModel.DEFAULT_MAX_PHRASE_LEN;
+    boolean doReordering = false;
     for (String option : options) {
       String[] fields = option.split(SEPARATOR);
       String key = fields[0];
@@ -50,6 +60,12 @@ public class TranslationModelFactory {
         dynamicSampleSize = Integer.valueOf(value);
       } else if (key.equals(DYNAMIC_FEATURE_TEMPLATE)) {
         dynamicTemplate = FeatureTemplate.valueOf(value);
+      } else if (key.equals(DYNAMIC_PHRASE_LENGTH)) {
+        dynamicPhraseLength = Integer.valueOf(value);
+      } else if (key.equalsIgnoreCase(DYNAMIC_REORDERING)) {
+        doReordering = true;
+      } else {
+        logger.warn("Unknown key/value pair: {}", option);
       }
     }
     
@@ -62,7 +78,10 @@ public class TranslationModelFactory {
       String file = filename.substring(DYNAMIC_TAG.length());
       translationModel = DynamicTranslationModel.load(file, setSystemIndex, DynamicTranslationModel.DEFAULT_NAME);
       ((DynamicTranslationModel) translationModel).setSampleSize(dynamicSampleSize);
+      ((DynamicTranslationModel) translationModel).setMaxSourcePhrase(dynamicPhraseLength);
+      ((DynamicTranslationModel) translationModel).setMaxTargetPhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).createQueryCache(dynamicTemplate);
+      if (doReordering) ((DynamicTranslationModel) translationModel).setReorderingScores();
       
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename) :
