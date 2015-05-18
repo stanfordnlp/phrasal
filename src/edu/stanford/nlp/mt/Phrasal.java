@@ -1218,16 +1218,9 @@ public class Phrasal {
       TranslationModel<IString,String> tm = localTM != null ? 
                                             localTM : (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
       tm.setFeaturizer(featurizer);
-      // Wrap the model so that queries can be limited.
-      // This leads to an infinite loop: CombinedTranslationModel.getRules() -> CombinedTranslationModel.getRuleGrid() -> CombinedTranslationModel.getRules() ->...
-      // TODO: find a way to fix this -- Joern
-      //if ( ! (tm instanceof CombinedTranslationModel)) tm = new CombinedTranslationModel<>(tm, ruleQueryLimit);
-
       DecoderLocalTranslationModel.set(tm);
-
-      if(localTM != null && inputProperties.containsKey(InputProperty.DecoderLocalTM))
-        logger.warn("Local translation model specified in input properties is overridden!");
       logger.info("Loaded decoder-local translation model for thread {}: {}", threadId, tm.getName());
+
     } else {
       // Sanity check
       DecoderLocalTranslationModel.set(null);
