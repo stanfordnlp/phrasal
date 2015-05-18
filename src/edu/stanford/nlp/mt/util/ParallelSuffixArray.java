@@ -530,7 +530,7 @@ public class ParallelSuffixArray implements Serializable {
         int lb = findBound(query, isSource, true, lo);
         if (lb >= 0) {
           int ub = findBound(query, isSource, false, lb, hi);
-          assert ub > 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
+          assert ub >= 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
           return ub - lb + 1;
         }
       }
@@ -540,7 +540,7 @@ public class ParallelSuffixArray implements Serializable {
       int lb = findBound(query, isSource, true, 0);
       if (lb >= 0) {
         int ub = findBound(query, isSource, false, lb);
-        assert ub > 0;
+        assert ub >= 0;
         return ub - lb + 1;
       }
     }
@@ -574,7 +574,7 @@ public class ParallelSuffixArray implements Serializable {
     if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
     int ub = maxBound > lb ? findBound(sourceQuery, true, false, lb, maxBound) :
       findBound(sourceQuery, true, false, lb);
-    assert ub > 0;
+    assert ub >= 0;
     int numHits = ub - lb + 1;
     int stepSize = (numHits < maxSamples) ? 1 : numHits / maxSamples;
     assert stepSize > 0;
