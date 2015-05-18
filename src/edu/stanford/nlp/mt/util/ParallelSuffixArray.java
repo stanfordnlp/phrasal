@@ -305,6 +305,11 @@ public class ParallelSuffixArray implements Serializable {
       }
       lastId = tgtId;
     }
+    
+    // final update
+    tgtCountUBCache[lastId] = tgtSuffixArray.length;
+    assert tgtCountUBCache[lastId] >= tgtCountLBCache[lastId] : String.format("%d %d final", tgtSuffixArray.length, lastId);
+    
     logger.info("Finished building count() cache.");
     
     return queryCache;
@@ -523,7 +528,7 @@ public class ParallelSuffixArray implements Serializable {
       final int hi = tgtCountUBCache[tgtId];
       if (query.length == 1) {
         int count = hi - lo + 1;
-        assert count > 0;
+        assert count > 0 : String.format("%d %d %d %d", tgtId, count, lo, hi);
         return count;
         
       } else {
