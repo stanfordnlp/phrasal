@@ -379,17 +379,13 @@ public final class OnlineTuner {
       List<RichTranslation<IString,String>> forcedAlignments = input.createForcedAlignment ? 
                                                                new ArrayList<>(input.translationIds.length) : null;
       
-      new ArrayList<>(input.translationIds.length);
       // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
-        InputProperties inputProperties;
-        
-        if(decoder.getInputProperties().size() > sourceId)
-            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
-        else
-            inputProperties = new InputProperties();
+        InputProperties inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
         inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
+        if (input.localTM != null) inputProperties.put(InputProperty.DecoderLocalTM, input.localTM);
+        
         List<RichTranslation<IString,String>> nbestList;
         if(input.createForcedAlignment) {
           // no forced decoding for optimization
