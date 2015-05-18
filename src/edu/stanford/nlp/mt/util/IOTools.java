@@ -354,6 +354,7 @@ public final class IOTools {
   public static Counter<String> readWeights(String filename,
       Index<String> featureIndex) {
     Counter<String> wts = (Counter<String>) deserialize(filename, ClassicCounter.class, SerializationMode.BIN_GZ);
+    if (wts == null) wts = new ClassicCounter<>();
     if (featureIndex != null) {
       for (String key : wts.keySet()) {
         featureIndex.addToIndex(key);

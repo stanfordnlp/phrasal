@@ -21,6 +21,7 @@ public class TranslationModelFactory {
   public static final String DYNAMIC_SAMPLE_SIZE = "dyn-sample";
   public static final String DYNAMIC_FEATURE_TEMPLATE = "dyn-feat";
   public static final String DYNAMIC_PHRASE_LENGTH = "dyn-plen";
+  public static final String DYNAMIC_REORDERING = "dyn-reorder";
   public static final String SEPARATOR = ":";
   
   public static final String DYNAMIC_TAG = "dyn:";
@@ -46,6 +47,7 @@ public class TranslationModelFactory {
     int dynamicSampleSize = DynamicTranslationModel.DEFAULT_SAMPLE_SIZE;
     FeatureTemplate dynamicTemplate = FeatureTemplate.DENSE_EXT;
     int dynamicPhraseLength = DynamicTranslationModel.DEFAULT_MAX_PHRASE_LEN;
+    boolean doReordering = false;
     for (String option : options) {
       String[] fields = option.split(SEPARATOR);
       String key = fields[0];
@@ -60,6 +62,8 @@ public class TranslationModelFactory {
         dynamicTemplate = FeatureTemplate.valueOf(value);
       } else if (key.equals(DYNAMIC_PHRASE_LENGTH)) {
         dynamicPhraseLength = Integer.valueOf(value);
+      } else if (key.equalsIgnoreCase(DYNAMIC_REORDERING)) {
+        doReordering = true;
       } else {
         logger.warn("Unknown key/value pair: {}", option);
       }
@@ -77,6 +81,7 @@ public class TranslationModelFactory {
       ((DynamicTranslationModel) translationModel).setMaxSourcePhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).setMaxTargetPhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).createQueryCache(dynamicTemplate);
+      if (doReordering) ((DynamicTranslationModel) translationModel).setReorderingScores();
       
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename) :
