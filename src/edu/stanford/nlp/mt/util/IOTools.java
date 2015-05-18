@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,6 +12,9 @@ import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,15 +26,19 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.io.UnsafeInput;
 import com.esotericsoftware.kryo.io.UnsafeOutput;
 
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
+import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
-import edu.stanford.nlp.stats.Counters;
 import edu.stanford.nlp.util.Index;
 
 /**
@@ -50,11 +56,38 @@ public final class IOTools {
   // OnlineTuner, PhraseExtract, etc.)
   public static final String DEFAULT_ENCODING = "UTF-8";
 
-  public static final String WEIGHTS_FILE_EXTENSION = ".binwts";
   public static final String GZ_EXTENSION = ".gz";
   public static final String BIN_EXTENSION = ".bin";
+  // .ser is used everywhere in Stanford CoreNLP
+  public static final String DEFAULT_EXTENSION = ".ser";
   public static final String GZ_BIN_EXTENSION = BIN_EXTENSION + GZ_EXTENSION;
+  public static final String DEFAULT_GZ_EXTENSION = DEFAULT_EXTENSION + GZ_EXTENSION;
 
+  public static enum SerializationMode {
+    DEFAULT, 
+    DEFAULT_GZ, 
+    BIN, 
+    BIN_GZ;
+  
+    public static SerializationMode fromFileName(String filename) {
+      if (filename.endsWith(GZ_BIN_EXTENSION)) {
+        return BIN_GZ;
+      } else if (filename.endsWith(DEFAULT_GZ_EXTENSION)) {
+        return DEFAULT_GZ;
+      } else if (filename.endsWith(BIN_EXTENSION)) {
+        return BIN;
+      } else if (filename.endsWith(DEFAULT_EXTENSION)) {
+        return DEFAULT;
+      } else {
+        throw new IllegalArgumentException();
+      }
+    }
+  }
+  
+  private static final Logger logger = LogManager.getLogger(IOTools.class.getName());
+  
+  public static final String WEIGHTS_FILE_EXTENSION = ".binwts";
+  
   private IOTools() {}
 
   /**
@@ -195,43 +228,83 @@ public final class IOTools {
     reader.close();
     return config;
   }
-
+  
   /**
    * Deserialize an object.
+   * 
+   * @param filename
+   * @param type
+   * @return
+   */
+  public static <T> T deserialize(String filename, Class<T> type) {
+    SerializationMode mode;
+    try {
+      mode = SerializationMode.fromFileName(filename);
+    } catch(Exception e) {
+      logger.warn("Serialization mode could not be inferred from {}. Guessing {}", filename, GZ_BIN_EXTENSION);
+      mode = SerializationMode.BIN_GZ;
+    }
+    return deserialize(filename, type, mode);
+  }
+  
+  /**
+   * Deserialize an object. The serialization mode is selected automatically.
+   * 
+   * If the specified file does not exist or is empty, then this call returns null.
    * 
    * @param filename
    * @return
    * @throws IOException
    * @throws ClassNotFoundException
    */
-  public static <T> T deserialize(String filename, Class<T> type) throws IOException {
+  public static <T> T deserialize(String filename, Class<T> type, SerializationMode mode) {
     try {
       T object;
-      if (filename.endsWith(GZ_BIN_EXTENSION) || filename.endsWith(BIN_EXTENSION)) {
+      final Path filePath = Paths.get(filename);
+      if (! Files.exists(filePath) || Files.size(filePath) == 0L) {
+        object = null;
+      
+      } else if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
         Kryo kryo = new Kryo();
-        Input input = new UnsafeInput(filename.endsWith(GZ_EXTENSION) ? 
+        Input input = new UnsafeInput(mode == SerializationMode.BIN_GZ ? 
             new GZIPInputStream(new FileInputStream(filename)) : new FileInputStream(filename));
         object = kryo.readObject(input, type);
         input.close();
         
-      } else if (filename.endsWith(GZ_EXTENSION)) {
+      } else if (mode == SerializationMode.DEFAULT || mode == SerializationMode.DEFAULT_GZ) {
         FileInputStream input = new FileInputStream(new File(filename));
-        ObjectInputStream inStream = new ObjectInputStream(new GZIPInputStream(input));
+        ObjectInputStream inStream = mode == SerializationMode.DEFAULT_GZ ? 
+            new ObjectInputStream(new GZIPInputStream(input)) : new ObjectInputStream(input);
         object = type.cast(inStream.readObject());
         inStream.close();
-
       } else {
-        FileInputStream input = new FileInputStream(new File(filename));
-        ObjectInputStream inStream = new ObjectInputStream(input);
-        object = type.cast(inStream.readObject());
-        inStream.close();
+        throw new UnsupportedOperationException();
       }
 
       return object;
       
-    } catch (FileNotFoundException | ClassNotFoundException e) {
+    } catch (KryoException | ClassNotFoundException | IOException e) {
+      logger.error("Unable to deserialize {} (mode: {})", filename, mode);
+      logger.error("Deserialization exception", e);
       throw new RuntimeException(e);
     }
+  }
+  
+  /**
+   * Serialize an object. The serialization mode is selected automatically.
+   * 
+   * @param filename
+   * @param o
+   */
+  public static void serialize(String filename, Object o) {
+    SerializationMode mode;
+    try {
+      mode = SerializationMode.fromFileName(filename);
+    } catch(Exception e) {
+      logger.warn("Serialization mode could not be inferred from {}. Choosing {}", filename, GZ_BIN_EXTENSION);
+      mode = SerializationMode.BIN_GZ;
+    }
+    serialize(filename, o, mode);
   }
   
   /**
@@ -241,53 +314,47 @@ public final class IOTools {
    * @param o
    * @throws IOException
    */
-  public static void serialize(String filename, Object o) throws IOException {
-    if (filename.endsWith(GZ_BIN_EXTENSION) || filename.endsWith(BIN_EXTENSION)) {
-      Kryo kryo = new Kryo();
-      Output output = new UnsafeOutput(filename.endsWith(GZ_EXTENSION) ? 
-          new GZIPOutputStream(new FileOutputStream(filename)) : new FileOutputStream(filename));
-      kryo.writeObject(output, o);
-      output.close();
-      
-    } else if (filename.endsWith(GZ_EXTENSION)) {
-      FileOutputStream out = new FileOutputStream(new File(filename));
-      ObjectOutputStream output = new ObjectOutputStream(new GZIPOutputStream(out));
-      output.writeObject(o);
-      output.close();
-      
-    } else {
-      FileOutputStream out = new FileOutputStream(new File(filename));
-      ObjectOutputStream output = new ObjectOutputStream(out);
-      output.writeObject(o);
-      output.close();
+  public static void serialize(String filename, Object o, SerializationMode mode) {
+    try {
+      if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
+        Kryo kryo = new Kryo();
+        Output output = mode == SerializationMode.BIN_GZ ? new UnsafeOutput(new GZIPOutputStream(
+            new FileOutputStream(filename))) : new UnsafeOutput(new FileOutputStream(filename));
+        kryo.writeObject(output, o);
+        output.close();
+        
+      } else if (mode == SerializationMode.DEFAULT || mode == SerializationMode.DEFAULT_GZ) {
+        FileOutputStream out = new FileOutputStream(new File(filename));
+        ObjectOutputStream output = mode == SerializationMode.DEFAULT_GZ ? 
+            new ObjectOutputStream(new GZIPOutputStream(out)) : new ObjectOutputStream(out);
+        output.writeObject(o);
+        output.close();
+      } else {
+        logger.warn("Unsupported serialization mode: {} file: {}", mode, filename);
+      }
+    
+    } catch (KryoException | IOException e) {
+      logger.error("Unable to serialize {} (mode: {})", filename, mode);
+      logger.error("Serialization exception", e);
+      throw new RuntimeException(e);
     }
   }
   
   /**
    * Read weights from a file. Supports both binary and text formats.
-   *
+   * 
+   * TODO(spenceg) Replace ClassicCounter with our own SparseVector implementation.
+   * 
    * @param filename
    * @param featureIndex
    * @return a counter of weights
-   * @throws IOException
-   * @throws ClassNotFoundException
+   * @throws IOException 
    */
   @SuppressWarnings("unchecked")
   public static Counter<String> readWeights(String filename,
       Index<String> featureIndex) {
-    Counter<String> wts;
-    try {
-      ObjectInputStream ois = new ObjectInputStream(new FileInputStream(
-          filename));
-      wts = (Counter<String>) ois.readObject();
-      ois.close();
-    
-    } catch (IOException e) {
-       wts = Counters.loadCounter(filename, String.class);
-    } catch (ClassNotFoundException e) {
-       wts = Counters.loadCounter(filename, String.class);
-    }
-
+    Counter<String> wts = (Counter<String>) deserialize(filename, ClassicCounter.class, SerializationMode.BIN_GZ);
+    if (wts == null) wts = new ClassicCounter<>();
     if (featureIndex != null) {
       for (String key : wts.keySet()) {
         featureIndex.addToIndex(key);
@@ -296,7 +363,13 @@ public final class IOTools {
     return wts;
   }
 
-
+  /**
+   * Read weights from a file.
+   * 
+   * @param filename
+   * @return
+   * @throws IOException
+   */
   public static Counter<String> readWeights(String filename) {
     return readWeights(filename, null);
   }
@@ -306,22 +379,10 @@ public final class IOTools {
    *
    * @param filename
    * @param wts
+   * @throws IOException 
    */
   public static void writeWeights(String filename, Counter<String> wts) {
-    try {
-      if (filename.endsWith(WEIGHTS_FILE_EXTENSION)) {
-        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
-            filename));
-        oos.writeObject(wts);
-        oos.close();
-      } else {
-        Counters.saveCounter(wts, filename);
-      }
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    serialize(filename, wts, SerializationMode.BIN_GZ);
   }
 
   /**

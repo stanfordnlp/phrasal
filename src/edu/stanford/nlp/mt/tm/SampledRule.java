@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
+import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
+import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
@@ -11,6 +13,9 @@ import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * A rule sampled from the bitext.
+ * 
+ * Lexicalized reordering support. Presently we support word-based orientation
+ * and the "msd-bidirectional-fe" mode.
  * 
  * @author Spence Green
  *
@@ -22,7 +27,7 @@ public class SampledRule {
   public final int tgtEndExclusive;
   public final int[] src;
   public final int[] tgt;
-  public final SentencePair saEntry;
+  public final SentencePair sentencePair;
   public double lex_e_f = 0.0;
   public double lex_f_e = 0.0;
   private final int hashCode;
@@ -34,35 +39,118 @@ public class SampledRule {
    * @param srcEndExclusive
    * @param tgtStartInclusive
    * @param tgtEndExclusive
-   * @param s
+   * @param sentencePair
    */
   public SampledRule(int srcStartInclusive, int srcEndExclusive, int tgtStartInclusive, int tgtEndExclusive, 
-      SentencePair s) {
+      SentencePair sentencePair) {
     assert srcEndExclusive - srcStartInclusive > 0;
     assert tgtEndExclusive - tgtStartInclusive > 0;
     this.srcStartInclusive = srcStartInclusive;
     this.srcEndExclusive = srcEndExclusive;
     this.tgtStartInclusive = tgtStartInclusive;
     this.tgtEndExclusive = tgtEndExclusive;
-    this.saEntry = s;
+    this.sentencePair = sentencePair;
     this.src = new int[srcEndExclusive - srcStartInclusive];
     for (int i = 0; i < src.length; ++i) {
-      src[i] = s.source(srcStartInclusive + i);
+      src[i] = sentencePair.source(srcStartInclusive + i);
     }
     this.tgt = new int[tgtEndExclusive - tgtStartInclusive];
     for (int i = 0; i < tgt.length; ++i) {
-      tgt[i] = s.target(tgtStartInclusive + i);
+      tgt[i] = sentencePair.target(tgtStartInclusive + i);
     }
-    
-    // Tie the SampledRule to a sentence so that we don't double count.
-    int[] hashArr = new int[] {s.srcStartInclusive, srcStartInclusive, srcEndExclusive, tgtStartInclusive, 
-        tgtEndExclusive};
-    this.hashCode = MurmurHash.hash32(hashArr, hashArr.length, 1);
+    this.hashCode = MurmurHash.hash32(src, src.length, 1) ^ MurmurHash.hash32(tgt, tgt.length, 1);
   }
   
+  /**
+   * Source dimension of the rule.
+   * 
+   * @return
+   */
   public int sourceLength() { return src.length; }
   
+  /**
+   * Target dimension of the rule.
+   * 
+   * @return
+   */
   public int targetLength() { return tgt.length; }
+  
+  /**
+   * Word-based lexicalized reordering classes. Forward orientation.
+   * 
+   * @return
+   */
+  public ReorderingTypes forwardOrientation() {
+    final int f1 = srcStartInclusive - 1, 
+        f2 = srcEndExclusive, 
+        e1 = tgtStartInclusive - 1, 
+        e2 = tgtEndExclusive;
+    
+    boolean connectedMonotone = isPhraseAligned(e1, f1, RelativePos.NW);
+    boolean connectedSwap = isPhraseAligned(e1, f2, RelativePos.NE);
+
+    // Determine if Monotone or Swap:
+    if (connectedMonotone && !connectedSwap)
+      return ReorderingTypes.monotone;
+    if (!connectedMonotone && connectedSwap)
+      return ReorderingTypes.swap;
+
+    return ReorderingTypes.discont1;
+  }
+  
+  /**
+   * Word-based lexicalized reordering classes. Backward orientation.
+   * 
+   * @return
+   */
+  public ReorderingTypes backwardOrientation() {
+    final int f1 = srcStartInclusive - 1, 
+        f2 = srcEndExclusive, 
+        e1 = tgtStartInclusive - 1, 
+        e2 = tgtEndExclusive;
+    
+    boolean connectedMonotone = isPhraseAligned(e2, f2, RelativePos.SE);
+    boolean connectedSwap = isPhraseAligned(e2, f1, RelativePos.SW);
+    
+    // Determine if Monotone or Swap:
+    if (connectedMonotone && !connectedSwap)
+      return ReorderingTypes.monotone;
+    if (!connectedMonotone && connectedSwap)
+      return ReorderingTypes.swap;
+    
+    return ReorderingTypes.discont1;
+  }
+  
+  /**
+   * Determine if position (ei,fi) is aligned (at the phrase level).
+   * 
+   * @param ei
+   * @param fi
+   * @param pos
+   * @return
+   */
+  private boolean isPhraseAligned(int ei, int fi,
+      RelativePos pos) {
+    assert (fi >= -1 && ei >= -1);
+    assert (fi <= sentencePair.sourceLength() && ei <= sentencePair.targetLength()) : String.format("%d %d %d %d", fi, sentencePair.sourceLength(),
+        ei, sentencePair.targetLength());
+    if (fi == -1 && ei == -1)
+      return true;
+    if (fi == -1 || ei == -1)
+      return false;
+    if (fi == sentencePair.sourceLength() && ei == sentencePair.targetLength())
+      return true;
+    if (fi == sentencePair.sourceLength() || ei == sentencePair.targetLength())
+      return false;
+    if (sentencePair.isSourceUnaligned(fi)) 
+      return false;
+
+    // Word-phrase reordering as in Moses:
+    for (int eIndex : sentencePair.f2e(fi))
+      if (eIndex == ei)
+        return true;
+    return false;
+  }  
   
   /**
    * Convert the sampled rule to a Phrasal translation rule.
@@ -110,7 +198,11 @@ public class SampledRule {
     } else if ( ! (o instanceof SampledRule)) {
       return false;
     } else {
-      return hashCode == ((SampledRule) o).hashCode;
+      SampledRule other = (SampledRule) o;
+      if (src.length != other.src.length ||
+          tgt.length != other.tgt.length)
+        return false;
+      return Arrays.equals(src, other.src) && Arrays.equals(tgt, other.tgt);
     }
   }
   
@@ -119,6 +211,15 @@ public class SampledRule {
     return hashCode;
   }
 
+  /**
+   * Return the compressed representation of the e2f alignments.
+   * 
+   * @return
+   */
+  public int[] e2fAll() {
+    return sentencePair.e2f(tgtStartInclusive, tgtEndExclusive);
+  }
+  
   /**
    * Return the rule-internal target-source alignment grid.
    * 
@@ -129,7 +230,7 @@ public class SampledRule {
     int[][] e2f = new int[eDim][];
     for (int i = tgtStartInclusive; i < tgtEndExclusive; ++i) {
       int localIdx = i - tgtStartInclusive;
-      int[] e2fI = saEntry.e2f(i);
+      int[] e2fI = sentencePair.e2f(i);
       int srcAlignDim = e2fI.length;
       e2f[localIdx] = new int[srcAlignDim];
       if (srcAlignDim > 0) {
@@ -143,6 +244,15 @@ public class SampledRule {
   }
   
   /**
+   * Return the compressed representation of the f2e alignments.
+   * 
+   * @return
+   */
+  public int[] f2eAll() {
+    return sentencePair.f2e(srcStartInclusive, srcEndExclusive);
+  }
+  
+  /**
    * Return the rule-internal source-target alignment grid.
    * 
    * @return
@@ -152,7 +262,7 @@ public class SampledRule {
     int[][] f2e = new int[fDim][];
     for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
       int localIdx = i - srcStartInclusive;
-      int[] f2eI = saEntry.f2e(i);
+      int[] f2eI = sentencePair.f2e(i);
       int tgtAlignDim = f2eI.length;
       f2e[localIdx] = new int[tgtAlignDim];
       if (tgtAlignDim > 0) {
@@ -165,42 +275,27 @@ public class SampledRule {
     return f2e;
   }
   
+  /**
+   * Index into the f2e alignments.
+   * 
+   * @param i
+   * @return
+   */
   public int[] f2e(int i) {
     int srcIndex = srcStartInclusive + i;
     if (srcIndex < 0 || srcIndex >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
-    return saEntry.isSourceUnaligned(srcIndex) ? new int[0] : saEntry.f2e(srcIndex);
-  }
-  
-  /**
-   * Generate an integer key from the alignment template. Look at the alignments
-   * in both directions.
-   * 
-   * @return
-   */
-  public int getAlignmentKey() {
-    int key = srcStartInclusive + tgtEndExclusive;
-    for (int i = srcStartInclusive; i < srcEndExclusive; ++i) {
-      if (saEntry.isSourceUnaligned(i)) {
-        key = i % 2 == 0 ? key << (i % 16) : key >> (i % 8);
-      } else {
-        int[] f2eI = saEntry.f2e(i);
-        key *= MurmurHash.hash32(f2eI, f2eI.length, 1);
-      }
-    }
-    for (int i = tgtStartInclusive; i < tgtEndExclusive; ++i) {
-      if (saEntry.isTargetUnaligned(i)) {
-        key = i % 2 == 1 ? key << (i % 16) : key >> (i % 8);
-      } else {
-        int[] e2fI = saEntry.e2f(i);
-        key += MurmurHash.hash32(e2fI, e2fI.length, 1);
-      }
-    }
-    return key;
+    return sentencePair.isSourceUnaligned(srcIndex) ? new int[0] : sentencePair.f2e(srcIndex);
   }
 
+  /**
+   * Index into the e2f alignments.
+   * 
+   * @param i
+   * @return
+   */
   public int[] e2f(int i) {
     int tgtIndex = tgtStartInclusive + i;
     if (tgtIndex < 0 || tgtIndex >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
-    return saEntry.isTargetUnaligned(tgtIndex) ? new int[0] : saEntry.e2f(tgtIndex);
+    return sentencePair.isTargetUnaligned(tgtIndex) ? new int[0] : sentencePair.e2f(tgtIndex);
   }
 }

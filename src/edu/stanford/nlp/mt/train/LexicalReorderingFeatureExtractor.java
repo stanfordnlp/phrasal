@@ -40,7 +40,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
     forward, backward, bidirectional, joint
   }
 
-  enum ReorderingTypes {
+  public static enum ReorderingTypes {
     monotone, swap, discont1, discont2, containment
   }
 

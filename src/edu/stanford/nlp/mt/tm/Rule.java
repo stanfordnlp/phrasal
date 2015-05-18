@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
-import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -48,6 +47,11 @@ public class Rule<T> implements Comparable<Rule<T>>{
    */
   public final PhraseAlignment alignment;
     
+  /**
+   * Typically only used for the dynamic reordering model.
+   */
+  public float[] reoderingScores;
+
   private int hashCode = -1;
 
   /**
@@ -104,10 +108,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   @Override
   public int hashCode() {
     if (hashCode == -1) {
-      int[] codes = new int[2];
-      codes[0] = source.hashCode();
-      codes[1] = source.hashCode();
-      hashCode = MurmurHash.hash32(codes, codes.length, 1);
+      hashCode = source.hashCode() ^ target.hashCode();
     }
     return hashCode;
   }

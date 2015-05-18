@@ -28,7 +28,7 @@ public class ParallelSuffixArray implements Serializable {
 
   private static final long serialVersionUID = -5403502473957235135L;
 
-  private static transient final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
+  private static final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
   
   protected Vocabulary vocabulary;
   protected int[] srcBitext;
@@ -530,7 +530,7 @@ public class ParallelSuffixArray implements Serializable {
         int lb = findBound(query, isSource, true, lo);
         if (lb >= 0) {
           int ub = findBound(query, isSource, false, lb, hi);
-          assert ub > 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
+          assert ub >= 0 : String.format("%d %d %d %d %d", tgtId, lo, hi, lb, ub);
           return ub - lb + 1;
         }
       }
@@ -540,7 +540,7 @@ public class ParallelSuffixArray implements Serializable {
       int lb = findBound(query, isSource, true, 0);
       if (lb >= 0) {
         int ub = findBound(query, isSource, false, lb);
-        assert ub > 0;
+        assert ub >= 0;
         return ub - lb + 1;
       }
     }
@@ -574,7 +574,7 @@ public class ParallelSuffixArray implements Serializable {
     if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
     int ub = maxBound > lb ? findBound(sourceQuery, true, false, lb, maxBound) :
       findBound(sourceQuery, true, false, lb);
-    assert ub > 0;
+    assert ub >= 0;
     int numHits = ub - lb + 1;
     int stepSize = (numHits < maxSamples) ? 1 : numHits / maxSamples;
     assert stepSize > 0;
@@ -648,31 +648,47 @@ public class ParallelSuffixArray implements Serializable {
     
     public int target(int i) {
       int bitextPos = tgtStartInclusive + i;
-      if (bitextPos < 0 || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      if (bitextPos < tgtStartInclusive || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
       return tgtBitext[bitextPos];
+    }
+    
+    public int[] f2e(int startInclusive, int endExclusive) {
+      if (startInclusive >= endExclusive) throw new IllegalArgumentException();
+      int bitextStartInclusive = srcStartInclusive + startInclusive;
+      int bitextEndExclusive = srcStartInclusive + endExclusive;
+      if (bitextStartInclusive < srcStartInclusive || bitextEndExclusive > srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return Arrays.copyOfRange(f2e, bitextStartInclusive, bitextEndExclusive);
     }
     
     public int[] f2e(int i) {
       int bitextPos = srcStartInclusive + i;
-      if (bitextPos < 0 || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      if (bitextPos < srcStartInclusive || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
       return AlignedSentence.expand(f2e[bitextPos]);
+    }
+    
+    public int[] e2f(int startInclusive, int endExclusive) {
+      if (startInclusive >= endExclusive) throw new IllegalArgumentException();
+      int bitextStartInclusive = tgtStartInclusive + startInclusive;
+      int bitextEndExclusive = tgtStartInclusive + endExclusive;
+      if (bitextStartInclusive < tgtStartInclusive || bitextEndExclusive > tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      return Arrays.copyOfRange(e2f, bitextStartInclusive, bitextEndExclusive);
     }
     
     public int[] e2f(int i) {
       int bitextPos = tgtStartInclusive + i;
-      if (bitextPos < 0 || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      if (bitextPos < tgtStartInclusive || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
       return AlignedSentence.expand(e2f[bitextPos]);
     }
     
     public boolean isSourceUnaligned(int i) {
       int bitextPos = srcStartInclusive + i;
-      if (bitextPos < 0 || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      if (bitextPos < srcStartInclusive || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
       return f2e[bitextPos] == 0;
     }
     
     public boolean isTargetUnaligned(int i) {
       int bitextPos = tgtStartInclusive + i;
-      if (bitextPos < 0 || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
+      if (bitextPos < tgtStartInclusive || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
       return e2f[bitextPos] == 0;
     }
     

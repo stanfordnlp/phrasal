@@ -721,6 +721,7 @@ public class Phrasal {
     if (config.containsKey(WEIGHTS_FILE)) {
       logger.info("Weights file: {}", config.get(WEIGHTS_FILE).get(0));
       globalModel = IOTools.readWeights(config.get(WEIGHTS_FILE).get(0));
+      if (globalModel == null) globalModel = new ClassicCounter<>();
     }
 
     if (config.containsKey(MAX_SENTENCE_LENGTH)) {

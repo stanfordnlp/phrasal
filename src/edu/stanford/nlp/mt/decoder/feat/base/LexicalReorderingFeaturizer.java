@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
+import edu.stanford.nlp.mt.tm.LexicalReorderingTable.ReorderingTypes;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -40,6 +41,7 @@ public class LexicalReorderingFeaturizer extends
   public final LexicalReorderingTable mlrt;
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
   private final boolean useAlignmentConstellations;
+  private final boolean dynamic;
   private boolean useClasses;
   private final int countFeatureIndex;
   private final int lexicalCutoff;
@@ -51,43 +53,56 @@ public class LexicalReorderingFeaturizer extends
    */
   public LexicalReorderingFeaturizer() {
     // by default include everything
-    discriminativeSet = new ArrayList<>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
-    mlrt = null;
-    featureTags = null;
-    useAlignmentConstellations = false;
-    useClasses = false;
-    countFeatureIndex = -1;
-    lexicalCutoff = 0;
+    this.discriminativeSet = new ArrayList<>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
+    this.mlrt = null;
+    this.featureTags = null;
+    this.useAlignmentConstellations = false;
+    this.useClasses = false;
+    this.countFeatureIndex = -1;
+    this.lexicalCutoff = 0;
+    this.dynamic = false;
   }
 
   /**
-   * Constructor for discriminative lexicalized reordering.
+   * Constructor for reflection loading discriminative lexicalized reordering.
    * 
    * @param args
    */
   public LexicalReorderingFeaturizer(String...args) {
-    discriminativeSet = new ArrayList<>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
     Properties options = FeatureUtils.argsToProperties(args);
-    
-    this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
-    this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
-    // Which reordering classes to extract
-    if (options.containsKey("classes")) {
-      String[] typeStrings = options.getProperty("classes").split("-");
-      discriminativeSet = new ArrayList<>();
-      for (String type : typeStrings) {
-        discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
+    this.dynamic = PropertiesUtils.getBool(options, "dynamic", false);
+    if (dynamic) {
+      this.discriminativeSet = null;
+      this.mlrt = null;
+      this.featureTags = Arrays.stream(LexicalReorderingTable.msdBidirectionalPositionMapping).map(m -> 
+      String.format("%s:%s", FEATURE_PREFIX, m)).toArray(String[]::new);
+      this.useAlignmentConstellations = false;
+      this.useClasses = false;
+      this.countFeatureIndex = -1;
+      this.lexicalCutoff = 0;
+
+    } else {
+      this.discriminativeSet = new ArrayList<>(Arrays.asList(LexicalReorderingTable.ReorderingTypes.values()));
+      this.useAlignmentConstellations = options.containsKey("conditionOnConstellations");
+      this.countFeatureIndex = PropertiesUtils.getInt(options, "countFeatureIndex", -1);
+      // Which reordering classes to extract
+      if (options.containsKey("classes")) {
+        String[] typeStrings = options.getProperty("classes").split("-");
+        discriminativeSet = new ArrayList<>();
+        for (String type : typeStrings) {
+          discriminativeSet.add(LexicalReorderingTable.ReorderingTypes.valueOf(type));
+        }
       }
+      // Use class-based feature representations
+      this.useClasses = options.containsKey("useClasses");
+      if (useClasses) {
+        sourceMap = SourceClassMap.getInstance();
+        targetMap = TargetClassMap.getInstance();
+      }
+      this.mlrt = null;
+      this.featureTags = null;
+      this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", 0);
     }
-    // Use class-based feature representations
-    this.useClasses = options.containsKey("useClasses");
-    if (useClasses) {
-      sourceMap = SourceClassMap.getInstance();
-      targetMap = TargetClassMap.getInstance();
-    }
-    mlrt = null;
-    featureTags = null;
-    this.lexicalCutoff = PropertiesUtils.getInt(options, "lexicalCutoff", 0);
   }
 
   /**
@@ -97,17 +112,18 @@ public class LexicalReorderingFeaturizer extends
    */
   public LexicalReorderingFeaturizer(LexicalReorderingTable mlrt) {
     this.mlrt = mlrt;
-    useAlignmentConstellations = false;
-    featureTags = new String[mlrt.positionalMapping.length];
+    this.dynamic = false;
+    this.useAlignmentConstellations = false;
+    this.featureTags = new String[mlrt.positionalMapping.length];
     for (int i = 0; i < mlrt.positionalMapping.length; i++) {
       featureTags[i] = String.format("%s:%s", FEATURE_PREFIX,
           mlrt.positionalMapping[i]);
     }
-    discriminativeSet = null;
-    countFeatureIndex = -1;
-    lexicalCutoff = 0;
+    this.discriminativeSet = null;
+    this.countFeatureIndex = -1;
+    this.lexicalCutoff = 0;
   }
-  
+   
   @Override
   public void initialize(int sourceInputId,
       Sequence<IString> foreign) {
@@ -184,6 +200,23 @@ public class LexicalReorderingFeaturizer extends
         }
       }
     }
+    
+    if (dynamic) {
+      float[] scores = f.rule.abstractRule.reoderingScores;
+      float[] priorScores = f.prior == null ? null : f.prior.rule.abstractRule.reoderingScores;
+      for (int i = 0; i < LexicalReorderingTable.msdBidirectionalPositionMapping.length; ++i) {
+        ReorderingTypes type = LexicalReorderingTable.msdBidirectionalPositionMapping[i];
+        boolean ff = featureFunction(monotone, swap, type);
+        if ( ! usePrior(type)) {
+          if (scores != null && ff)
+            features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
+        } else {
+          if (priorScores != null && ff)
+            features.add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
+        }
+      }
+    }
+    
     if (DETAILED_DEBUG) {
       System.err.printf("Feature values:\n");
       for (FeatureValue<String> value : features)

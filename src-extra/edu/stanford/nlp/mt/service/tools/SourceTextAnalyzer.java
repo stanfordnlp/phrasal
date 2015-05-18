@@ -1,15 +1,14 @@
 package edu.stanford.nlp.mt.service.tools;
 
-import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
@@ -17,6 +16,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.TextAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.Label;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -96,39 +96,40 @@ public final class SourceTextAnalyzer {
 
     int lineId = 0;
     try {
-      BufferedReader br = IOUtils.getBufferedFileReader(sourceFile);
       PrintWriter pwTokens = new PrintWriter(new PrintStream(new FileOutputStream(tokOutFile),false,"UTF-8"));
       PrintWriter pwSentences = new PrintWriter(new PrintStream(new FileOutputStream(sentOutFile),false,"UTF-8"));
-      for (String sentence; (sentence = br.readLine()) != null; ++lineId) {
-        CoreMap annotatedSentence = annotate(sentence);
+      try (LineNumberReader br = IOTools.getReaderFromFile(sourceFile)) {
+        for (String sentence; (sentence = br.readLine()) != null;) {
+          CoreMap annotatedSentence = annotate(sentence);
+          // Zero-indexing
+          lineId = br.getLineNumber() - 1;
+          
+          // Per token features
+          int tokenId = 0;
+          int numNETokens = 0;
+          Counter<String> posCounter = new ClassicCounter<String>();
+          for (CoreLabel token : annotatedSentence.get(TokensAnnotation.class)) {
+            String word = token.get(TextAnnotation.class);
+            String pos = token.get(PartOfSpeechAnnotation.class);
+            posCounter.incrementCount(pos);
+            String ne = token.get(NamedEntityTagAnnotation.class);
+            if (! ne.equals("O")) ++numNETokens;
+            pwTokens.printf("%d,%d,%s,%s%n", lineId, tokenId, word, pos);
+            ++tokenId;
+          }
 
-        // Per token features
-        int tokenId = 0;
-        int numNETokens = 0;
-        Counter<String> posCounter = new ClassicCounter<String>();
-        for (CoreLabel token : annotatedSentence.get(TokensAnnotation.class)) {
-          String word = token.get(TextAnnotation.class);
-          String pos = token.get(PartOfSpeechAnnotation.class);
-          posCounter.incrementCount(pos);
-          String ne = token.get(NamedEntityTagAnnotation.class);
-          if (! ne.equals("O")) ++numNETokens;
-          pwTokens.printf("%d,%d,%s,%s%n", lineId, tokenId, word, pos);
-          ++tokenId;
+          // Per sentence features
+          Tree tree = annotatedSentence.get(TreeAnnotation.class);
+          int score = complexityOf(tree);
+
+          StringBuilder sb = new StringBuilder();
+          for (String pos : posCounter.keySet()) {
+            sb.append(String.format("%s:%d ", pos, (int) posCounter.getCount(pos)));
+          }
+
+          pwSentences.printf("%d,%d,%d,%s%n", lineId, score, numNETokens, sb.toString().trim());
         }
-
-        // Per sentence features
-        Tree tree = annotatedSentence.get(TreeAnnotation.class);
-        int score = complexityOf(tree);
-
-        StringBuilder sb = new StringBuilder();
-        for (String pos : posCounter.keySet()) {
-          sb.append(String.format("%s:%d ", pos, (int) posCounter.getCount(pos)));
-        }
-        
-        pwSentences.printf("%d,%d,%d,%s%n", lineId, score, numNETokens, sb.toString().trim());
       }
-
-      br.close();
       pwTokens.close();
       pwSentences.close();
 
