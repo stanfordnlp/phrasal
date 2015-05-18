@@ -52,7 +52,7 @@ public class ParallelSuffixArray implements Serializable {
    * No-arg constructor for deserialization.
    */
   public ParallelSuffixArray() {}
-  
+
   /**
    * Constructor.
    * 
@@ -707,5 +707,25 @@ public class ParallelSuffixArray implements Serializable {
       this.lb = lb;
       this.ub = ub;
     }
+  }
+
+
+  /**
+   * Swap source and target languages, but share data structures.
+   */
+  public ParallelSuffixArray swapLanguages() {
+    ParallelSuffixArray swapped = new ParallelSuffixArray();
+    swapped.vocabulary = vocabulary;
+    swapped.srcBitext = tgtBitext;
+    swapped.numSourcePositions = numTargetPositions;
+    swapped.f2e = e2f;
+    swapped.tgtBitext = srcBitext;
+    swapped.numTargetPositions = numSourcePositions;
+    swapped.e2f = f2e;
+    swapped.numSentences = numSentences();
+    swapped.srcSuffixArray = tgtSuffixArray;
+    swapped.tgtSuffixArray = srcSuffixArray;
+    // TODO(denero) Rebuild LB/UB caches?
+    return swapped;
   }
 }
