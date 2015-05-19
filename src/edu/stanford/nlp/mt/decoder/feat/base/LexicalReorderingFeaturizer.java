@@ -41,12 +41,17 @@ public class LexicalReorderingFeaturizer extends
   public final LexicalReorderingTable mlrt;
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
   private final boolean useAlignmentConstellations;
-  private final boolean dynamic;
   private boolean useClasses;
   private final int countFeatureIndex;
   private final int lexicalCutoff;
   private SourceClassMap sourceMap;
   private TargetClassMap targetMap;
+
+  /**
+   * Dynamic translation model reordering features.
+   */
+  private final boolean dynamic;
+  private final boolean dynamicDiscrim;
   
   /**
    * Constructor for discriminative lexicalized reordering.
@@ -61,6 +66,7 @@ public class LexicalReorderingFeaturizer extends
     this.countFeatureIndex = -1;
     this.lexicalCutoff = 0;
     this.dynamic = false;
+    this.dynamicDiscrim = false;
   }
 
   /**
@@ -71,6 +77,7 @@ public class LexicalReorderingFeaturizer extends
   public LexicalReorderingFeaturizer(String...args) {
     Properties options = FeatureUtils.argsToProperties(args);
     this.dynamic = PropertiesUtils.getBool(options, "dynamic", false);
+    this.dynamicDiscrim = PropertiesUtils.getBool(options, "dynamicDiscrim", false);
     if (dynamic) {
       this.discriminativeSet = null;
       this.mlrt = null;
@@ -113,6 +120,7 @@ public class LexicalReorderingFeaturizer extends
   public LexicalReorderingFeaturizer(LexicalReorderingTable mlrt) {
     this.mlrt = mlrt;
     this.dynamic = false;
+    this.dynamicDiscrim = false;
     this.useAlignmentConstellations = false;
     this.featureTags = new String[mlrt.positionalMapping.length];
     for (int i = 0; i < mlrt.positionalMapping.length; i++) {
@@ -207,12 +215,37 @@ public class LexicalReorderingFeaturizer extends
       for (int i = 0; i < LexicalReorderingTable.msdBidirectionalPositionMapping.length; ++i) {
         ReorderingTypes type = LexicalReorderingTable.msdBidirectionalPositionMapping[i];
         boolean ff = featureFunction(monotone, swap, type);
-        if ( ! usePrior(type)) {
-          if (scores != null && ff)
-            features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
-        } else {
-          if (priorScores != null && ff)
+        if (usePrior(type)) {
+          // Forward scores
+          assert i >= 3;
+          if (priorScores != null && ff) {
             features.add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
+            if (dynamicDiscrim) {
+              if (( 3 + f.prior.rule.abstractRule.forwardOrientation.ordinal()) == i) {
+                features.add(new FeatureValue<String>(String.format("%s%smatch",
+                    DISCRIMINATIVE_PREFIX, featureTags[i]), 1.0));
+              } else {
+                features.add(new FeatureValue<String>(String.format("%s%snomatch",
+                    DISCRIMINATIVE_PREFIX,  featureTags[i]), 1.0));                
+              }
+            }
+          }
+        
+        } else {
+          // Backward scores
+          assert i < 3;
+          if (scores != null && ff) {
+            features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
+            if (dynamicDiscrim) {
+              if (f.rule.abstractRule.backwardOrientation.ordinal() == i) {
+                features.add(new FeatureValue<String>(String.format("%s%smatch",
+                    DISCRIMINATIVE_PREFIX, featureTags[i]), 1.0));
+              } else {
+                features.add(new FeatureValue<String>(String.format("%s%snomatch",
+                    DISCRIMINATIVE_PREFIX, featureTags[i]), 1.0));                                
+              }
+            }
+          }
         }
       }
     }

@@ -42,8 +42,6 @@ import edu.stanford.nlp.stats.Counters;
 /**
  * A dynamic translation model backed by a suffix array.
  * 
- * See here for lex re-ordering: https://github.com/moses-smt/mosesdecoder/commit/51824355f9f469c186d5376218e3396b92652617
- * 
  * @author Spence Green
  *
  */
@@ -597,6 +595,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Rule<IString> scoredRule = rule.getRule(scores, featureNames, sourceSpan, this.tm2Sys);
       if (this.reorderingEnabled) {
         scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
+        scoredRule.forwardOrientation = rule.forwardOrientation();
+        scoredRule.backwardOrientation = rule.backwardOrientation();
       }
       scoredRules.add(scoredRule);
     }
@@ -631,12 +631,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       ++backwardDenom;
     }
     
+    /**
+     * The order of these feature values must correspond to {@link LexicalReorderingTable#msdBidirectionalPositionMapping}.
+     * 
+     * @return
+     */
     public float[] getFeatureVector() {
       float[] values = new float[6];
-      for (int i = 0; i < forwardCounts.length; ++i)
-        values[i] = (float) Math.log((forwardCounts[i]+ALPHA) / ((float) forwardDenom + (MODEL_SIZE * ALPHA)));
       for (int i = 0; i < backwardCounts.length; ++i)
-        values[forwardCounts.length + i] = (float) Math.log((backwardCounts[i]+ALPHA) / ((float) backwardDenom + (MODEL_SIZE * ALPHA)));
+        values[i] = (float) Math.log((backwardCounts[i]+ALPHA) / ((float) backwardDenom + (MODEL_SIZE * ALPHA)));
+      for (int i = 0; i < forwardCounts.length; ++i)
+        values[MODEL_SIZE + i] = (float) Math.log((forwardCounts[i]+ALPHA) / ((float) forwardDenom + (MODEL_SIZE * ALPHA)));
       return values;
     }
   }
