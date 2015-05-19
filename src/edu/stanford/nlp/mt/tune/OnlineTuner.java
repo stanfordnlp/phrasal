@@ -377,7 +377,12 @@ public final class OnlineTuner {
       // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
-        InputProperties inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
+        InputProperties inputProperties;
+        if(decoder.getInputProperties().size() > sourceId)
+            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
+        else
+            inputProperties = new InputProperties();
+        
         inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
         if (input.localTM != null) inputProperties.put(InputProperty.DecoderLocalTM, input.localTM);
         
@@ -441,6 +446,20 @@ public final class OnlineTuner {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
+    
+    if(enforceStrictlySequential && !endOfEpoch) {
+      int cnt = 0;
+      while(!threadpool.peek())
+        try {
+          //randomly select 500 miliseconds
+          Thread.sleep(500);
+          cnt++;
+         } catch ( java.lang.InterruptedException ie) {
+           System.out.println(ie);
+         }
+      if(cnt %600 == 0)
+        logger.info("WARNING: have been waiting for 5min to enforce strictly sequential optimization.");
+    }
     
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
@@ -568,7 +587,7 @@ public final class OnlineTuner {
             runtime.maxMemory());
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
-        TranslationModel<IString,String> localTM  = t > 0 ? getLocalTM(corpus) : null;
+        TranslationModel<IString,String> localTM  = localTMTraining && t > 0 ? getLocalTM(corpus) : null;
         
         ProcessorInput input = makeInput(batch, inputId, currentWts, localTM);
         wrapper.put(input);
@@ -617,6 +636,8 @@ public final class OnlineTuner {
     DynamicTMBuilder tmBuilder = new DynamicTMBuilder(corpus);
     TranslationModel<IString,String> localTM = tmBuilder.build();
     ((DynamicTranslationModel<String>) localTM).initialize("localTM", FeatureTemplate.DENSE_EXT);
+    
+    //IOTools.serialize("localTM.bin", localTM);
     return localTM;
   }
 
