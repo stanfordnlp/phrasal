@@ -640,12 +640,8 @@ public final class OnlineTuner {
       DynamicTMBuilder tmBuilder = new DynamicTMBuilder(localTmTrainingData);
       TranslationModel<IString,String> localTM = tmBuilder.build();
       ((DynamicTranslationModel<String>) localTM).initialize("localTM", FeatureTemplate.DENSE_EXT);
-      /*try {
-        IOTools.serialize("localTM." + batchNum, localTM);
-      }
-      catch (IOException e) {
-        logger.error("Unable to serialize to: " + "localTM." + batchNum, e);
-      }*/
+      
+      //IOTools.serialize("localTM." + batchNum, localTM);
       return localTM;
     }
     return null;
