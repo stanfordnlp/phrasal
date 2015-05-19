@@ -466,7 +466,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
             // Get from the rule cache
             return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, DEFAULT_NAME, sourceInputId, sourceInputProperties))
+                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties))
                 .collect(Collectors.toList());
 
           } else {
@@ -484,13 +484,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             int numHits = s.ub - s.lb + 1;
             double sampleRate = s.samples.size() / (double) numHits;
             return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, DEFAULT_NAME, sourceInputId, sourceInputProperties))
+                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties))
                 .collect(Collectors.toList());
           }
         }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
 
-//        System.out.printf("%d\t%d %d%n", sourceInputId, len, ruleList.size());
-        
         concreteRules.addAll(ruleList);
       }
     }

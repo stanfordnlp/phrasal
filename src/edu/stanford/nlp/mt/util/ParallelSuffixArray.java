@@ -293,7 +293,8 @@ public class ParallelSuffixArray implements Serializable {
     this.tgtCountUBCache = new int[vocabulary.size()];
     Arrays.fill(tgtCountUBCache, -1);
     int lastId = tgtBitext[tgtSuffixArray[0]];
-    for (int i = 1; i < tgtSuffixArray.length; ++i) {
+    
+    for (int i = 0; i < tgtSuffixArray.length; ++i) {
       int tgtId = tgtBitext[tgtSuffixArray[i]];
       assert tgtId >= 0;
       if (tgtCountLBCache[tgtId] < 0) {
