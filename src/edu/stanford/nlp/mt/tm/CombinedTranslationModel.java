@@ -239,4 +239,7 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
       int sourceInputId, Scorer<FV> scorer) {
     return getRuleGrid(source, sourceInputProperties, targets, sourceInputId, scorer).asList();
   }
+
+  @Override
+  public void setName(String name) {}
 }

@@ -26,6 +26,13 @@ import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
 import edu.stanford.nlp.util.StringUtils;
 
+/**
+ * Phrase table with gaps.
+ * 
+ * @author Michel Galley
+ *
+ * @param <FV>
+ */
 public class DTUTable<FV> extends AbstractPhraseGenerator<IString, FV>
 implements PhraseTable<IString> {
 
@@ -518,4 +525,7 @@ implements PhraseTable<IString> {
       int sourceInputId, Scorer<FV> scorer) {
     throw new UnsupportedOperationException("Not yet implemented.");
   }
+
+  @Override
+  public void setName(String name) { this.name = name; }
 }

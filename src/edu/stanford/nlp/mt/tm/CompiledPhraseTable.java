@@ -49,7 +49,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
   protected final IntegerArrayIndex targetIndex;
   protected final int minRuleIndex;
   protected final String[] scoreNames;
-  protected final String name;
+  protected String name;
   protected final List<List<PhraseTableEntry>> ruleLists;
 
   protected int longestSourcePhrase = -1;
@@ -273,6 +273,9 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
       int sourceInputId, Scorer<FV> scorer) {
     throw new UnsupportedOperationException("Not yet implemented");
   }
+  
+  @Override
+  public void setName(String name) { this.name = name; }
   
   /**
    *

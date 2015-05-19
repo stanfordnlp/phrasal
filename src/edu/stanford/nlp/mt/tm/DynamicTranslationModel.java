@@ -369,6 +369,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return name;
   }
   
+
+  @Override
+  public void setName(String name) { this.name = name; }
+  
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
@@ -599,6 +603,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return scoredRules;
   }
   
+  /**
+   * Counter for reordering orientations.
+   * 
+   * @author Spence Green
+   *
+   */
   private static class ReorderingCounts {
     // TODO(spenceg) For now, replicating LexicalReorderingFeatureExtractor, which uses add-alpha
     // smoothing.

@@ -183,6 +183,9 @@ public class LanguageModelTrueCaser {
         int sourceInputId, Scorer<String> scorer) {
       throw new UnsupportedOperationException("Not yet implemented.");
     }
+
+    @Override
+    public void setName(String name) {}
   }
 
   /**
