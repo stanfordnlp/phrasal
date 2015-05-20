@@ -95,14 +95,14 @@ function tune-setup {
 # Batch tuning (e.g., MERT, PRO)
 #
 function tune-batch {
-    tune-setup    
+    tune-setup
 
     execute "phrasal-mert.pl \
-	--opt-flags="$OPT_FLAGS" \
-	--working-dir="$TUNEDIR" \
-	--phrasal-flags="" \
-	--java-flags="$JAVA_OPTS $DECODER_OPTS" \
-	--mert-java-flags="$JAVA_OPTS $MERT_OPTS" \
+	--opt-flags=\"$OPT_FLAGS\" \
+	--working-dir=\"$TUNEDIR\" \
+	--phrasal-flags=\"\" \
+	--java-flags=\"$JAVA_OPTS $DECODER_OPTS\" \
+	--mert-java-flags=\"$JAVA_OPTS $MERT_OPTS\" \
 	--nbest=$TUNE_NBEST $TUNE_FILE $TUNE_REF \
 	$OBJECTIVE $TUNE_INI_FILE \
 	>& logs/$TUNERUNNAME.mert.log"

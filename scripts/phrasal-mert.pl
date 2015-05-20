@@ -406,7 +406,7 @@ for ($iter = 0; $iter < $DEFAULT_MAX_ITERS; $iter++) {
    print stderr
    "------------------------------------------------------------------------\n\n";
    if (!$ENV{"SDI$iter"} && $iter >= $first_active_iter) { 
-     my $cmd = "java $java_flags edu.stanford.nlp.mt.Phrasal $phrasal_flags -config-file $iter_decoder_ini < $input_text 2>$iter_dlog > $iter_trans";
+     my $cmd = "java $java_flags edu.stanford.nlp.mt.Phrasal $phrasal_flags $iter_decoder_ini < $input_text 2>$iter_dlog > $iter_trans";
        print "CMD:\n$cmd\n\n";
      my $now = localtime time;
      print "Start time: ",$now,"\n";
