@@ -110,4 +110,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
       int sourceInputId, Scorer<FV> scorer) {
     throw new UnsupportedOperationException("Not yet implemented.");
   }
+
+  @Override
+  public void setName(String name) {}
 }

@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
+import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -48,10 +49,15 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public final PhraseAlignment alignment;
     
   /**
-   * Typically only used for the dynamic reordering model.
+   * Dynamic translation model lexicalized reordering information.
    */
   public float[] reoderingScores;
+  public ReorderingTypes forwardOrientation;
+  public ReorderingTypes backwardOrientation;
 
+  /**
+   * Memoize the hash code.
+   */
   private int hashCode = -1;
 
   /**

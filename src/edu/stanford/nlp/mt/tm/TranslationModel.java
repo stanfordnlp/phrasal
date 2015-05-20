@@ -57,4 +57,6 @@ public interface TranslationModel<TK,FV> extends Cloneable {
   public List<String> getFeatureNames();
   
   public String getName();
+  
+  public void setName(String name);
 }

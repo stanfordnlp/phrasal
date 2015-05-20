@@ -20,6 +20,8 @@ Phrasal depends on [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.s
 
 4. (Optional, requires [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
 
+5. (Options, requires Boost) Build the KenLM language model estimation tools: `gradle compileKenLMtools`.
+
 ### Windows
 
 Installation of Gradle is required. Follow the Linux instructions above. Then be sure to run `gradle startupScripts` to generate a .bat file for running Phrasal.

@@ -208,6 +208,12 @@ public class Phrasal {
   }
 
   /**
+   * Translation model names for the two types of TMs that can be loaded.
+   */
+  public static final String TM_BACKGROUND_NAME = "background-tm";
+  public static final String TM_FOREGROUND_NAME = "foreground-tm";
+  
+  /**
    * Number of decoding threads. Setting this parameter to 0 enables
    * multithreading inside the main decoding loop. Generally, it is better
    * to set the desired number of threads here (i.e., set this parameter >= 1).
@@ -551,28 +557,29 @@ public class Phrasal {
     }
     TranslationModel<IString,String> primaryModel = TranslationModelFactory.
         <String>factory(translationModelFile, factoryOptions);
+    primaryModel.setName(TM_BACKGROUND_NAME);
     translationModels.add(primaryModel);
     
     // Load independent phrase tables that do not have associated lexicalized reordering models
     if (config.get(INDEPENDENT_PHRASE_TABLES) != null) {
-       for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
-         logger.info("Loading independent phrase table: {}", filename);
-         String[] fields = filename.split(":");
-         String[] generatorOptions = new String[0];
-         if (fields.length == 2) {
-           generatorOptions = new String[1];
-           filename = fields[0];
-           generatorOptions[1] = makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]);
-         }
-         TranslationModel<IString,String> model =  
-             TranslationModelFactory.<String>factory(filename, generatorOptions); 
-         translationModels.add(model);
-       }
+      int i = 0;
+      for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
+        logger.info("Loading independent phrase table: {}", filename);
+        String[] fields = filename.split(":");
+        String[] modelOptions = new String[0];
+        if (fields.length == 2) {
+          filename = fields[0];
+          modelOptions = new String[]{ makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]) };
+        }
+        TranslationModel<IString,String> model =  
+            TranslationModelFactory.<String>factory(filename, modelOptions);
+        model.setName(String.format("%s-%d", TM_BACKGROUND_NAME, i++));
+        translationModels.add(model);
+      }
     }
     translationModel = new CombinedTranslationModel<>(translationModels, ruleQueryLimit);
 
     // Load a lexicalized reordering model for a static phrase table
-    // TODO(spenceg) Add support for dynamic phrase tables.
     List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (config.containsKey(REORDERING_MODEL)) {
       PhraseTable<IString> phraseTable = (PhraseTable<IString>) translationModels.get(0);
@@ -1162,8 +1169,9 @@ public class Phrasal {
     if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
       TranslationModel<IString,String> tm = (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
       tm.setFeaturizer(featurizer);
+      tm.setName(TM_FOREGROUND_NAME);
       DecoderLocalTranslationModel.set(tm);
-      logger.info("Loaded decoder-local translation model for thread {}: {}", threadId, tm.getName());
+      logger.info("Loaded foreground translation model for thread {}: {}", threadId, tm.getName());
 
     } else {
       // Sanity check
@@ -1172,7 +1180,8 @@ public class Phrasal {
     if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
       Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.DecoderLocalWeights);
       this.scorers.get(threadId).updateWeights(weights);
-    
+      logger.info("Loaded decoder-local weights for thread {}", threadId);
+      
     } else {
       this.scorers.get(threadId).updateWeights(this.globalModel);      
     }
