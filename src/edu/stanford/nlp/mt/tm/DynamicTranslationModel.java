@@ -320,16 +320,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       throw new UnsupportedOperationException("Not yet implemented.");
     }
   }
-  
-  /**
-   * Set the name for this TM.
-   * 
-   * @param n
-   */
-  public void setName(String n) {
-    this.name = n;
-  }
-  
+
   /**
    * Turn on the reordering features.
    */
