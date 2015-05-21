@@ -719,12 +719,12 @@ public class Phrasal {
       List<Featurizer<IString, String>> allFeaturizers = new ArrayList<>();
       allFeaturizers.addAll(featurizer.getFeaturizers());
       allFeaturizers.addAll(additionalFeaturizers);
-      if (featureAugmentationMode == null) {
-        featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
-      } else {
-        logger.info("Feature augmentation mode: {}", featureAugmentationMode);
-        featurizer = new FeatureExtractor<IString, String>(allFeaturizers, featureAugmentationMode);        
-      }
+      featurizer = new FeatureExtractor<IString, String>(allFeaturizers);
+    }
+    
+    if (featureAugmentationMode != null) {
+      logger.info("Feature augmentation mode: {}", featureAugmentationMode);
+      featurizer.setFeatureAugmentationMode(featureAugmentationMode);       
     }
     
     // Link the final featurizer and the phrase table

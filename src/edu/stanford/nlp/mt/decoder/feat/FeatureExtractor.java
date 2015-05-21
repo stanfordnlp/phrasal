@@ -56,6 +56,14 @@ public class FeatureExtractor<TK, FV> extends
     }
     this.numDerivationFeaturizers = id + 1;
     
+    setFeatureAugmentationMode(featureAugmentationMode);
+    
+    // Initialize rule featurizers
+    initialize();
+  }
+
+  
+  public boolean setFeatureAugmentationMode(String featureAugmentationMode) {
     if (featureAugmentationMode != null) {
       if (featureAugmentationMode.equals("all")) {
         this.featureAugmentationMode = 0;
@@ -64,12 +72,11 @@ public class FeatureExtractor<TK, FV> extends
       } else if (featureAugmentationMode.equals("extended")) {
         this.featureAugmentationMode = 2;
       }
+      return true;
     }
-    
-    // Initialize rule featurizers
-    initialize();
+    return false;
   }
-
+  
   /**
    * Remove feature templates give a <code>Set</code> of class names.
    * 
