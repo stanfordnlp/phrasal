@@ -3,11 +3,13 @@ package edu.stanford.nlp.mt.tm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
@@ -149,18 +151,18 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
         // Effectively cube pruning!
         Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
         for (List<ConcreteRule<TK,FV>> list : ruleList) {
-          Collections.sort(list);
           if (list.size() > 0) {
+            Collections.sort(list);
             pq.add(new Item<TK,FV>(list.remove(0), list));
           }
         }
         int numPoppedItems = 0;
+        Set<Rule<TK>> uniqSet = new HashSet<>();
         while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
           Item<TK, FV> item = pq.poll();
-          if (item == null) {
-            break;
-          } else {
+          if ( ! uniqSet.contains(item.rule.abstractRule)) {
             ruleGrid.addEntry(item.rule);
+            uniqSet.add(item.rule.abstractRule);
             if (item.list.size() > 0) {
               pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
             }
