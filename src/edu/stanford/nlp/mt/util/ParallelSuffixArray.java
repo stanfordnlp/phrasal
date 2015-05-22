@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -30,17 +31,15 @@ public class ParallelSuffixArray implements Serializable {
 
   private static final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
   
-  protected Vocabulary vocabulary;
   protected int[] srcBitext;
-  protected int numSourcePositions;
   protected int[] f2e;
   protected int[] tgtBitext;
-  protected int numTargetPositions;
   protected int[] e2f;
-  protected int numSentences;
-
   protected int[] srcSuffixArray; 
   protected int[] tgtSuffixArray;
+  
+  protected int numSentences;
+  protected Vocabulary vocabulary;
   
   // Cache unigram positions in the target for the count() function.
   // The sample function already supports initialization with bounds, which
@@ -54,24 +53,25 @@ public class ParallelSuffixArray implements Serializable {
   public ParallelSuffixArray() {}
 
   /**
-   * Constructor.
+   * Constructor. Careful. This constructor doubles peak memory.
+   * 
+   * @param corpus
+   */
+  public ParallelSuffixArray(ParallelCorpus corpus) {
+    loadCorpus(corpus);
+  }
+  
+  /**
+   * Constructor. Memory-efficient for large files.
    * 
    * @param sourceFile
    * @param targetFile
    * @param alignFile
    * @param expectedSize
+   * @throws IOException 
    */
-  public ParallelSuffixArray(String sourceFile, String targetFile, String alignFile, int expectedSize) {
-    try {
-      ParallelCorpus corpus = ParallelCorpus.loadCorpusFromFiles(sourceFile, targetFile, alignFile, 
-          expectedSize);
-      loadCorpus(corpus);
-      // Free memory
-      corpus = null;
-      build();
-    } catch (IOException e) {
-      logger.error("Could not load parallel data from disk", e);
-    }
+  public ParallelSuffixArray(String sourceFile, String targetFile, String alignFile) throws IOException {
+    loadCorpus(sourceFile, targetFile, alignFile);
   }
   
   /**
@@ -112,17 +112,93 @@ public class ParallelSuffixArray implements Serializable {
   }
   
   /**
+   * Streaming loader, which does not double peak memory like the loader
+   * that creates a suffix array from a parallel corpus.
+   * 
+   * @param source
+   * @param target
+   * @param align
+   * @throws IOException 
+   */
+  private void loadCorpus(String source, String target, String align) throws IOException {
+    logger.info("Counting the number of corpus positions");
+    TimeKeeper timer = TimingUtils.start();
+    // Read in the files once to count the sentences and corpus positions
+    int numSourcePositions = 0;
+    int numTargetPositions = 0;
+    numSentences = 0;
+    ParallelCorpus corpus = new ParallelCorpus(1);
+    try (LineNumberReader fReader = IOTools.getReaderFromFile(source)) {
+      LineNumberReader eReader = IOTools.getReaderFromFile(target);
+      LineNumberReader aReader = IOTools.getReaderFromFile(align);
+      for (String fLine; (fLine = fReader.readLine()) != null; ) {
+        String eLine = eReader.readLine();
+        String aLine = aReader.readLine();
+        AlignedSentence example = corpus.getSentence(fLine, eLine, aLine);
+        if (example != null) {
+          numSourcePositions += example.sourceLength();
+          numTargetPositions += example.targetLength();
+          ++numSentences;
+        }
+      }
+    }
+    final int initialVocabularySize = corpus.getVocabulary().size();
+    timer.mark("Counting corpus positions");
+    
+    // Create the arrays
+    int srcLength = numSourcePositions + numSentences;
+    srcBitext = new int[srcLength];
+    f2e = new int[srcLength];
+    int tgtLength = numTargetPositions + numSentences;
+    tgtBitext = new int[tgtLength];
+    e2f = new int[tgtLength];
+    
+    // Create the arrays and read the files again
+    try (LineNumberReader fReader = IOTools.getReaderFromFile(source)) {
+      LineNumberReader eReader = IOTools.getReaderFromFile(target);
+      LineNumberReader aReader = IOTools.getReaderFromFile(align);
+      int srcOffset = 0;
+      int tgtOffset = 0;
+      for (String fLine; (fLine = fReader.readLine()) != null; ) {
+        String eLine = eReader.readLine();
+        String aLine = aReader.readLine();
+        AlignedSentence sentence = corpus.getSentence(fLine, eLine, aLine);
+        if (sentence == null) {
+          logger.info("Discarding parallel example {}", fReader.getLineNumber());
+        } else {
+          System.arraycopy(sentence.source, 0, srcBitext, srcOffset, sentence.sourceLength());
+          System.arraycopy(sentence.f2e, 0, f2e, srcOffset, sentence.f2e.length);
+          System.arraycopy(sentence.target, 0, tgtBitext, tgtOffset, sentence.targetLength());
+          System.arraycopy(sentence.e2f, 0, e2f, tgtOffset, sentence.e2f.length);
+          srcOffset += sentence.sourceLength();
+          tgtOffset += sentence.targetLength();
+          // Source points to target
+          srcBitext[srcOffset] = toSentenceOffset(tgtOffset);
+          // Target points to source
+          tgtBitext[tgtOffset] = toSentenceOffset(srcOffset);
+          ++srcOffset;
+          ++tgtOffset;
+        }        
+      }
+    }
+    this.vocabulary = corpus.getVocabulary();
+    assert initialVocabularySize == vocabulary.size();
+    timer.mark("Loading corpus");
+    logger.info("Done loading corpus: {}", timer);
+  }
+  
+  /**
    * Load the parallel corpus into a contiguous block of memory.
    * Set the corpus reference to null after this call to free memory.
    * 
    * @param corpus
    */
-  public void loadCorpus(ParallelCorpus corpus) {
+  private void loadCorpus(ParallelCorpus corpus) {
     logger.info("Flattening parallel corpus");
     TimeKeeper timer = TimingUtils.start();
     numSentences = corpus.size();
-    numSourcePositions = corpus.numSourcePositions();
-    numTargetPositions = corpus.numTargetPositions();
+    int numSourcePositions = corpus.numSourcePositions();
+    int numTargetPositions = corpus.numTargetPositions();
     int srcLength = numSourcePositions + numSentences;
     srcBitext = new int[srcLength];
     f2e = new int[srcLength];
@@ -145,7 +221,7 @@ public class ParallelSuffixArray implements Serializable {
       ++srcOffset;
       ++tgtOffset;
     }
-    vocabulary = corpus.index;
+    vocabulary = corpus.getVocabulary();
     timer.mark("Corpus loading");
     logger.info("Done loading corpus: {}", timer);
   }
@@ -176,9 +252,11 @@ public class ParallelSuffixArray implements Serializable {
   public void build() {
     logger.info("Building suffix arrays...");
     TimeKeeper timer = TimingUtils.start();
+    int numSourcePositions = srcBitext.length - numSentences;
     srcSuffixArray = build(srcBitext, numSourcePositions);
     if (srcSuffixArray.length != numSourcePositions) throw new RuntimeException();
     timer.mark("Source array");
+    int numTargetPositions = tgtBitext.length - numSentences;
     tgtSuffixArray = build(tgtBitext, numTargetPositions);
     if (tgtSuffixArray.length != numTargetPositions) throw new RuntimeException();
     timer.mark("Target array");
@@ -733,10 +811,8 @@ public class ParallelSuffixArray implements Serializable {
     ParallelSuffixArray swapped = new ParallelSuffixArray();
     swapped.vocabulary = vocabulary;
     swapped.srcBitext = tgtBitext;
-    swapped.numSourcePositions = numTargetPositions;
     swapped.f2e = e2f;
     swapped.tgtBitext = srcBitext;
-    swapped.numTargetPositions = numSourcePositions;
     swapped.e2f = f2e;
     swapped.numSentences = numSentences();
     swapped.srcSuffixArray = tgtSuffixArray;

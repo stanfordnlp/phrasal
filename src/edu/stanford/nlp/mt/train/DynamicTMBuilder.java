@@ -2,9 +2,13 @@ package edu.stanford.nlp.mt.train;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.PrintStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +20,6 @@ import edu.stanford.nlp.mt.util.ParallelCorpus;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
-import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -32,26 +35,12 @@ public class DynamicTMBuilder {
   private ParallelSuffixArray sa;
   
   /**
-   * Constructor.
-   * 
-   * @param sourceFile
-   * @param targetFile
-   * @param alignFile
-   * @param expectedSize
-   */
-  public DynamicTMBuilder(String sourceFile, String targetFile, String alignFile, int expectedSize) {
-    sa = new ParallelSuffixArray(sourceFile, targetFile, alignFile, expectedSize);
-  }
-  
-  /**
    * Constructor. Build a dynamic translation model from a ParallelCorpus.
    * 
    * @param corpus
    */
   public DynamicTMBuilder(ParallelCorpus corpus) {
-    sa = new ParallelSuffixArray();
-    sa.loadCorpus(corpus);
-    sa.build();
+    sa = new ParallelSuffixArray(corpus);
   }
   
   /**
@@ -61,25 +50,35 @@ public class DynamicTMBuilder {
    * @param targetFile
    * @param feAlign
    * @param efAlign
-   * @param expectedSize
    * @param type
+   * @throws IOException 
    */
   public DynamicTMBuilder(String sourceFile, String targetFile, String feAlign, String efAlign, 
-      int expectedSize, SymmetrizationType type) {
-    ParallelCorpus corpus = loadAndSymmetrize(sourceFile, targetFile, feAlign, efAlign, type, expectedSize);
-    sa = new ParallelSuffixArray();
-    sa.loadCorpus(corpus);
-    // A hacky way to free memory
-    corpus = null;
-    sa.build();
+      SymmetrizationType type) throws IOException {
+    this(sourceFile, targetFile, 
+        symmetrize(sourceFile, targetFile, feAlign, efAlign, type));
   }
-  
+
+  /**
+   * Constructor.
+   * 
+   * @param sourceFile
+   * @param targetFile
+   * @param alignFile
+   * @param expectedSize
+   * @throws IOException 
+   */
+  public DynamicTMBuilder(String sourceFile, String targetFile, String alignFile) throws IOException {
+    sa = new ParallelSuffixArray(sourceFile, targetFile, alignFile);
+  }
+    
   /**
    * Wrap the underlying data structure in a Phrasal TranslationModel.
    * 
    * @return
    */
   public DynamicTranslationModel<String> build() {
+    sa.build();
     return new DynamicTranslationModel<>(sa);
   }
   
@@ -90,20 +89,18 @@ public class DynamicTMBuilder {
    * @param targetFile
    * @param feAlign
    * @param efAlign
-   * @param initialCapacity
    * @return
+   * @throws IOException 
    */
-  private static ParallelCorpus loadAndSymmetrize(String sourceFile,
-      String targetFile, String feAlign, String efAlign, SymmetrizationType type, 
-      int initialCapacity) {
-    ParallelCorpus corpus = new ParallelCorpus(initialCapacity);
-    
-    LineNumberReader fReader = IOTools.getReaderFromFile(sourceFile);
-    LineNumberReader eReader = IOTools.getReaderFromFile(targetFile);
-    LineNumberReader feReader = IOTools.getReaderFromFile(feAlign);
-    LineNumberReader efReader = IOTools.getReaderFromFile(efAlign);
-    
-    try {
+  private static String symmetrize(String sourceFile,
+      String targetFile, String feAlign, String efAlign, SymmetrizationType type) throws IOException {    
+    try (LineNumberReader fReader = IOTools.getReaderFromFile(sourceFile)) {
+      LineNumberReader eReader = IOTools.getReaderFromFile(targetFile);
+      LineNumberReader feReader = IOTools.getReaderFromFile(feAlign);
+      LineNumberReader efReader = IOTools.getReaderFromFile(efAlign);
+      String outFileName = getSymmetrizationFilename(Paths.get(sourceFile).getParent());
+      PrintStream alignFile = IOTools.getWriterFromFile(outFileName);
+      
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
         if (fReader.getLineNumber() % 10000 == 0) 
           logger.info("Reading corpus line {}...", fReader.getLineNumber());
@@ -117,35 +114,63 @@ public class DynamicTMBuilder {
 
         GIZAWordAlignment gizaAlign = new GIZAWordAlignment(fe1, fe2,
             fe3, ef1, ef2, ef3);
-        if (gizaAlign.e().size() > ParallelCorpus.MAX_SENTENCE_LENGTH ||
-            gizaAlign.f().size() > ParallelCorpus.MAX_SENTENCE_LENGTH) {
-          continue;
+        int sourceLength = fLine.trim().split("\\s+").length;
+        int targetLength = eLine.trim().split("\\s+").length;
+        // Recall that source and target are swapped in this data structure.
+        if (gizaAlign.e().size() != sourceLength) {
+          logger.error("Source length mismatch at line {}", fReader.getLineNumber());
+          throw new RuntimeException();
+        }
+        if (gizaAlign.f().size() != targetLength) {
+          logger.error("Target length mismatch at line {}", eReader.getLineNumber());
+          throw new RuntimeException();
         }
         SymmetricalWordAlignment symAlign = AlignmentSymmetrizer
             .symmetrize(gizaAlign, type);
         symAlign.reverse();
         String aLine = symAlign.toString().trim();
-        // Sometimes there are no consistent alignments.
-        if ( ! aLine.isEmpty()) corpus.add(fLine, eLine, aLine);
+        alignFile.println(aLine);
       }
-
-      fReader.close();
+      
+      // Ensure that input files are exhausted.
+      if (eReader.readLine() != null) {
+        logger.error("Target file is not exhausted!");
+        throw new RuntimeException();
+      }
+      if(feReader.readLine() != null) {
+        logger.error("fe alignment file is not exhausted!");
+        throw new RuntimeException();
+      }
+      if (efReader.readLine() != null) {
+        logger.error("ef alignment file is not exhausted!");
+        throw new RuntimeException();
+      }
+      
+      alignFile.close();
       eReader.close();
       feReader.close();
       efReader.close();
-      
-    } catch (IOException e) {
-      logger.error("Error at line {}", fReader.getLineNumber());
-      logger.error("Exception: ", e);
+      logger.info("Symmetrized {} lines.", fReader.getLineNumber());
+      return outFileName;
     }
-    
-    return corpus;
+  }
+  
+  /**
+   * Create a temporary file for the symmetrized alignments.
+   * 
+   * @param basepath
+   * @return
+   */
+  private static String getSymmetrizationFilename(Path basepath) {
+    String path = basepath == null ? "" : basepath.toString();
+    Random random = new Random();
+    String fileName = String.format("align.sym.%d%s", random.nextInt(10000), IOTools.GZ_EXTENSION);
+    return Paths.get(path, fileName).toString();
   }
 
   private static Map<String, Integer> optionDefs() {
     Map<String,Integer> optionDefs = new HashMap<>();
     optionDefs.put("o", 1);
-    optionDefs.put("e", 1);
     optionDefs.put("s", 1);
     return optionDefs;
   }  
@@ -156,7 +181,6 @@ public class DynamicTMBuilder {
     sb.append("Usage: java ").append(DynamicTMBuilder.class.getName()).append(" OPTS src target alignf2e [aligne2f]").append(nl);
     sb.append(nl).append(" Options:").append(nl)
     .append("   -o file-name   : Output file name.").append(nl)
-    .append("   -e num         : Estimated size of corpus (num. lines)").append(nl)
     .append("   -s type        : Symmetrization type.").append(nl);
     return sb.toString();
   }
@@ -180,7 +204,6 @@ public class DynamicTMBuilder {
     String outputFileName = options.getProperty("o", "tm" + IOTools.BIN_EXTENSION);
     SymmetrizationType type = options.containsKey("s") ? SymmetrizationType.valueOf(options.getProperty("s"))
         : SymmetrizationType.valueOf("grow_diag_final_and");
-    int initialCapacity = PropertiesUtils.getInt(options, "e", 10000);
     
     String sourceFile = positionalArgs[0];
     String targetFile = positionalArgs[1];
@@ -192,17 +215,21 @@ public class DynamicTMBuilder {
     logger.info("Alignment file (f2e): {}", alignFEfile);
     if (alignEFfile != null) logger.info("Alignment file (e2f): {}", alignEFfile);
     
-    TimeKeeper timer = TimingUtils.start();
-    DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, initialCapacity) :
-      new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, initialCapacity, type);
-    timer.mark("Model construction");
-    
-    DynamicTranslationModel<String> tm = tmBuilder.build();
-        
-    logger.info("Serializing to: " + outputFileName);
-    IOTools.serialize(outputFileName, tm);
-    timer.mark("Serialization");
-    logger.info("Timing summary: {}", timer);
-    logger.info("Success! Shutting down...");
+    try {
+      TimeKeeper timer = TimingUtils.start();
+      DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile) :
+        new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, type);
+      timer.mark("Model construction");
+      
+      DynamicTranslationModel<String> tm = tmBuilder.build();
+          
+      logger.info("Serializing to: " + outputFileName);
+      IOTools.serialize(outputFileName, tm);
+      timer.mark("Serialization");
+      logger.info("Timing summary: {}", timer);
+      logger.info("Success! Shutting down...");
+    } catch (Exception e) {
+      logger.fatal("Translation model build error!", e);
+    }
   }
 }
