@@ -28,7 +28,7 @@ Installation of Gradle is required. Follow the Linux instructions above. Then be
 
 ### Stanford NLP cluster
 
-We used to commit some third-party dependencies to the repository, and for others we had a bash script that would try to wget the rest. The script would fail when URLs for archived versions of libraries would change (this was especially true for jetty). Now we use Gradle/Maven to fetch the dependencies. Once you've fetched them, you can then compile with ant as before.
+We used to commit some third-party dependencies to the repository, and for others we had a bash script that would try to wget the rest. The script would fail when URLs for archived versions of libraries would change (this was especially true for jetty). Now we use Gradle to fetch the dependencies and build the system.
 
 1. Download and unpack [Gradle](http://gradle.org) into your home directory, or into /u/nlp/packages.
 
