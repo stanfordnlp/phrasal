@@ -32,7 +32,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   private static final int DEFAULT_CAPACITY = 10000;
   
   protected List<AlignedSentence> segments;
-  protected Vocabulary index;
+  protected Vocabulary vocabulary;
   protected int numSourcePos = 0;
   protected int numTargetPos = 0;
   
@@ -50,9 +50,16 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    */
   public ParallelCorpus(int initialCapacity) {
     segments = new ArrayList<>(initialCapacity);
-    index = new Vocabulary(initialCapacity);
+    vocabulary = new Vocabulary(initialCapacity);
   }
 
+  /**
+   * Get the vocabulary.
+   * 
+   * @return
+   */
+  public Vocabulary getVocabulary() { return vocabulary; }
+  
   /**
    * Add an aligned sentence to the corpus.
    * 
@@ -62,22 +69,48 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @return
    */
   public boolean add(String source, String target, String align) {
+    AlignedSentence s = getSentence(source, target, align);
+    if (s == null) {
+      logger.warn("Sentence exceeds length constraints: {} ||| {} ||| {}", 
+          source, target, align);
+      return false;
+    } else {
+      segments.add(s);
+      return true;
+    }
+  }
+  
+  /**
+   * Create an {@link AlignedSentence} from a parallel input.
+   * 
+   * @param source
+   * @param target
+   * @param align
+   * @return The sentence object, or null if the input exceeds the length constraints.
+   */
+  public AlignedSentence getSentence(String source, String target, String align) {
+    if (align.trim().length() == 0) return null;
     int[] f = stringToArray(source);
     int[] e = stringToArray(target);
     if (f.length > MAX_SENTENCE_LENGTH || 
         e.length > MAX_SENTENCE_LENGTH) {
-      return false;
+      return null;
     }
     numSourcePos += f.length;
     numTargetPos += e.length;
     Alignment a = extractAlignment(align, f.length, e.length);
     AlignedSentence s = new AlignedSentence(f, e, a.f2e, a.e2f);
-    segments.add(s);
-    return true;
+    return s;
   }
   
+  /**
+   * Convert a string to its integer representation.
+   * 
+   * @param string
+   * @return
+   */
   private int[] stringToArray(String string) {
-    return Arrays.asList(string.trim().split("\\s+")).stream().mapToInt(i -> index.add(i)).toArray();
+    return Arrays.asList(string.trim().split("\\s+")).stream().mapToInt(i -> vocabulary.add(i)).toArray();
   }
   
   @SuppressWarnings("unchecked")

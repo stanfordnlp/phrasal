@@ -673,7 +673,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  private static class AlignmentTemplate {
+  private class AlignmentTemplate {
     public final SampledRule rule;
     private final int hashCode;
     public AlignmentTemplate(SampledRule rule) {
@@ -685,17 +685,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     public String toString() { return rule.toString(); }
     @Override
     public int hashCode() { return hashCode; }
+    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
         return true;
-      } else if ( ! (o instanceof AlignmentTemplate)) {
-        return false;
       } else {
         AlignmentTemplate other = (AlignmentTemplate) o;
-        if (rule.targetLength() != other.rule.targetLength())
-          return false;
-        return Arrays.equals(rule.e2fAll(), other.rule.e2fAll()) &&
+        return rule.targetLength() == other.rule.targetLength() &&
+            Arrays.equals(rule.e2fAll(), other.rule.e2fAll()) &&
             Arrays.equals(rule.f2eAll(), other.rule.f2eAll());
       }
     }
