@@ -23,6 +23,8 @@ public class InputProperties extends HashMap<InputProperty, Object> {
   public static final String KEY_VALUE_DELIMITER = "=";
 
   public static final String PAIR_DELIMITER = " ";
+  
+  public static final String LIST_DELIMITER = ",";
 
   /**
    * Constructor.
@@ -51,7 +53,11 @@ public class InputProperties extends HashMap<InputProperty, Object> {
         if (fields.length != 2) {
           throw new RuntimeException("File format error: " + keyValue + " " + String.valueOf(fields.length));
         }
-        inputProperties.put(InputProperty.valueOf(fields[0]), fields[1]);
+        //we want to support a list of domains
+        if(InputProperty.valueOf(fields[0]) == InputProperty.Domain)
+          inputProperties.put(InputProperty.valueOf(fields[0]), fields[1].split(LIST_DELIMITER));
+        else
+          inputProperties.put(InputProperty.valueOf(fields[0]), fields[1]);
       }
     }
     return inputProperties;

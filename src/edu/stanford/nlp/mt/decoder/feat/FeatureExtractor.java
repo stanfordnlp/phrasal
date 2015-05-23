@@ -204,14 +204,16 @@ public class FeatureExtractor<TK, FV> extends
   @SuppressWarnings("unchecked")
   private void augmentFeatureValue(FeatureValue<FV> fv,
       InputProperties sourceInputProperties, List<FeatureValue<FV>> featureValues) {
-    final String genre = sourceInputProperties.containsKey(InputProperty.Domain)
-        ? (String) sourceInputProperties.get(InputProperty.Domain) : null;
-    if (genre != null) {
+    final String[] genres = sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String[]) sourceInputProperties.get(InputProperty.Domain) : null;
+    if (genres != null) {
       if (featureAugmentationMode == 0 ||
           (featureAugmentationMode == 1 && fv.isDenseFeature) ||
           (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
-        String featureValue = String.format("aug-%s-%s", genre, fv.name.toString());
-        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+        for(int i = 0; i < genres.length; ++i) {
+          String featureValue = String.format("aug-%s-%s", genres[i], fv.name.toString());
+          featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+        }
       }
     }
   }
