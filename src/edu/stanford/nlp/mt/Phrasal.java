@@ -429,8 +429,12 @@ public class Phrasal {
       printModelScores = Boolean.valueOf(config.get(PRINT_MODEL_SCORES).get(0));
     }
     
-    inputPropertiesList = config.containsKey(INPUT_PROPERTIES) ? 
-        InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0))) : new ArrayList<InputProperties>(1);
+    if(config.containsKey(INPUT_PROPERTIES)) {
+      inputPropertiesList = InputProperties.parse(new File(config.get(INPUT_PROPERTIES).get(0)));
+      logger.info("loaded input properties from file " + config.get(INPUT_PROPERTIES).get(0));
+    }
+    else
+      inputPropertiesList = new ArrayList<InputProperties>(1);
      
     wrapBoundary  = config.containsKey(WRAP_BOUNDARY) ? 
         Boolean.valueOf(config.get(WRAP_BOUNDARY).get(0)) : false;
