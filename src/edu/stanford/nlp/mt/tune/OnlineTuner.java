@@ -147,7 +147,7 @@ public final class OnlineTuner {
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
       boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, 
-      boolean wrapBoundary, String experimentName) {
+      boolean wrapBoundary, String experimentName, boolean normalizeInitialWeights) {
     this.outputWeightPrefix = experimentName + ".online";
 
     // Load Phrasal
@@ -176,7 +176,7 @@ public final class OnlineTuner {
         
     // Load the optimizer last since some optimizers depend on fields initialized
     // by OnlineTuner.
-    optimizer = configureOptimizer(optimizerAlg, optimizerFlags);
+    optimizer = configureOptimizer(optimizerAlg, optimizerFlags, normalizeInitialWeights);
     logger.info("Loaded optimizer: {}", optimizer);
   }
 
@@ -841,7 +841,7 @@ public final class OnlineTuner {
   /**
    * Configure the tuner for the specific tuning algorithm. Return the optimizer object.
    */
-  private OnlineOptimizer<IString, String> configureOptimizer(String optimizerAlg, String[] optimizerFlags) {
+  private OnlineOptimizer<IString, String> configureOptimizer(String optimizerAlg, String[] optimizerFlags, boolean normalizeInitialWeights) {
     assert optimizerAlg != null;
 
     switch (optimizerAlg) {
@@ -851,19 +851,22 @@ public final class OnlineTuner {
       case "pro-sgd":
         assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
         assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
-        Counters.normalize(wtsAccumulator);
+        if(normalizeInitialWeights)
+          Counters.normalize(wtsAccumulator);
         return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
       case "expectedBLEU":
         assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
         assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
-        Counters.normalize(wtsAccumulator);
+        if(normalizeInitialWeights)
+          Counters.normalize(wtsAccumulator);
         return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
       case "crossentropy":
         assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
         assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
-        Counters.normalize(wtsAccumulator);
+        if(normalizeInitialWeights)
+          Counters.normalize(wtsAccumulator);
         return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
 
       default:
@@ -923,6 +926,7 @@ public final class OnlineTuner {
     optionMap.put("localTM", 0);
     optionMap.put("seq", 0);
     optionMap.put("faDistLimit", 1);    
+    optionMap.put("niw", 1);    
     optionMap.put("sb", 0);
     return optionMap;
   }
@@ -958,6 +962,7 @@ public final class OnlineTuner {
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
       .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
       .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
+      .append("   -niw       : normalize the initial weights file (default: true)").append(nl)
       .append("   -sb        : Specify for single best output. ");
     
     return sb.toString();
@@ -994,6 +999,7 @@ public final class OnlineTuner {
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
     int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
+    boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", true);
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -1021,7 +1027,7 @@ public final class OnlineTuner {
     final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
     OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
         optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-        expectedNumFeatures, wrapBoundary, experimentName);
+        expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights);
     if (refStr != null) {
       tuner.loadReferences(refStr, wrapBoundary);
     }
