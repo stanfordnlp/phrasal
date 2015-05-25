@@ -144,7 +144,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       System.err.printf("Translation options: %d\n", ruleGrid.numRules());
     }
 
-    outputSpace.filter(ruleGrid);
+    outputSpace.filter(ruleGrid, null);
     System.err
     .printf(
         "Translation options after reduction by output space constraint: %d\n",

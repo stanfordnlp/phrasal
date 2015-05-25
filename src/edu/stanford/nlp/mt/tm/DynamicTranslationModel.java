@@ -88,7 +88,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient boolean reorderingEnabled;
   
   // Caches
-  protected transient LexCoocTable coocTable;
+  public transient LexCoocTable coocTable;
   protected transient Map<Sequence<IString>,List<Rule<IString>>> ruleCache;
   
   // Vocabulary translation arrays
@@ -252,6 +252,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     });
   }
 
+  /**
+   * Returns the TM vocabulary id of the item if it is in the TM vocabulary
+   * and -1 otherwise.
+   * 
+   * @param word
+   * @return
+   */
+  public int inVocabulary(IString word) {
+    return (word.id >= 0 && word.id < sys2TM.length) ? sys2TM[word.id] : -1;
+  }
+  
   /**
    * Setup cache for lexical translations by iterating over every alignment point
    * in the underlying corpus.

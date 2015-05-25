@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -39,8 +40,7 @@ public class UnconstrainedOutputSpace<TK, FV> implements
   public void setSourceSequence(Sequence<IString> sourceSequence) {}
 
   @Override
-  public void filter(RuleGrid<IString, String> ruleGrid) {
-  }
+  public void filter(RuleGrid<IString, String> ruleGrid, AbstractInferer<IString, String> inferer) {}
   
   @Override 
   public int getPrefixLength() {

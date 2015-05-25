@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -112,7 +113,7 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
   }
 
   @Override
-  public void filter(RuleGrid<TK, FV> ruleGrid) {
+  public void filter(RuleGrid<TK, FV> ruleGrid, AbstractInferer<TK, FV> inferer) {
   }
   
   @Override 

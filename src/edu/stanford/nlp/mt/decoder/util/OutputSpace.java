@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -28,8 +29,9 @@ public interface OutputSpace<TK, FV> {
    * Filter a grid of translation rules.
    * 
    * @param ruleGrid
+   * @param inferer TODO
    */
-  public void filter(RuleGrid<TK,FV> ruleGrid);
+  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer);
 
   /**
    * Returns true if the derivation created by the concatenation of

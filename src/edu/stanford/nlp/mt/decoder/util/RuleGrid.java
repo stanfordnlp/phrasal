@@ -29,7 +29,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
-  private final boolean doLazySorting;
+  private boolean doLazySorting;
   private boolean completeCoverage;
   private BitSet incrementalCoverage;
   private int size = 0;
@@ -79,6 +79,16 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     incrementalCoverage = new BitSet();
   }
 
+  /**
+   * Toggle lazy sorting of rules.
+   * 
+   * @param b
+   */
+  public void setLazySorting(boolean b) { 
+    this.doLazySorting = b; 
+    if (doLazySorting) isSorted.clear();
+  }
+  
   /**
    * Add a new entry to the rule table.
    * 
@@ -142,18 +152,6 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
       throw new IllegalArgumentException();
     }
     return grid[coverageId].remove(ruleIndex);
-  }
-  
-  /**
-   * True if this list of rules has been sorted, false otherwise.
-   * 
-   * @param startPos
-   * @param endPos
-   * @return
-   */
-  public boolean isSorted(int startPos, int endPos) {
-    int offset = getIndex(startPos, endPos);
-    return isSorted.get(offset);
   }
   
   /**

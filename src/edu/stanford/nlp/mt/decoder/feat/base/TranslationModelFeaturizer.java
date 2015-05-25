@@ -28,6 +28,17 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
   private final int numFeatures;
 
   /**
+   * Constructor.
+   * 
+   * @param numFeatures Set to <code>Integer.MAX_VALUE</code> to specify
+   * all features defined in the phrase table.
+   */
+  public TranslationModelFeaturizer(int numFeatures) {
+    this.featureNamesHash = new ConcurrentHashMap<>();
+    this.numFeatures = numFeatures;
+  }
+  
+  /**
    * Convert the feature name to a format that is easily greppable in the weight vector.
    * 
    * @param featureName
@@ -49,17 +60,6 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
         .map(s -> toTMFeature(s)).toArray(String[]::new);
     featureNamesHash.putIfAbsent(phraseTableName, featureNames);
     return featureNames;
-  }
-
-  /**
-   * Constructor.
-   * 
-   * @param numFeatures Set to <code>Integer.MAX_VALUE</code> to specify
-   * all features defined in the phrase table.
-   */
-  public TranslationModelFeaturizer(int numFeatures) {
-    this.featureNamesHash = new ConcurrentHashMap<String,String[]>();
-    this.numFeatures = numFeatures;
   }
 
   @Override

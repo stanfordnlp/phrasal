@@ -183,7 +183,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
       }
     }
 
-    outputSpace.filter(ruleGrid);
+    outputSpace.filter(ruleGrid, null);
     System.err
     .printf(
         "Translation options after reduction by output space constraint: %d%n",

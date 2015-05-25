@@ -21,9 +21,9 @@ import edu.stanford.nlp.mt.util.FeatureValueCollection;
  * @param <FV>
  */
 abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
-  protected final FeatureExtractor<TK, FV> featurizer;
-  protected final TranslationModel<TK,FV> phraseGenerator;
-  protected final Scorer<FV> scorer;
+  public final FeatureExtractor<TK, FV> featurizer;
+  public final TranslationModel<TK,FV> phraseGenerator;
+  public final Scorer<FV> scorer;
   protected final SearchHeuristic<TK, FV> heuristic;
   protected final RecombinationFilter<Derivation<TK, FV>> filter;
   protected final boolean filterUnknownWords;

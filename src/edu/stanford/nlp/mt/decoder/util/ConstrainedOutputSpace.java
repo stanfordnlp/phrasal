@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -158,7 +159,7 @@ public class ConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public void filter(RuleGrid<TK,FV> ruleGrid) {
+  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer) {
     for (int i = 0, sz = ruleGrid.numberOfCoverages(); i < sz; ++i) {
       List<Integer> filteredIndices = new ArrayList<>();
       for (int j = 0, numRules = ruleGrid.getRulesForCoverageId(i).size(); j < numRules; ++j) {

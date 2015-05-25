@@ -93,10 +93,10 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     
     // Extract rule features
-    Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, this,
+    Featurizable<TK, FV> f = new Featurizable<>(sourceSequence, sourceInputProperties, this,
         sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer == null ? 
-        new ArrayList<FeatureValue<FV>>() : phraseFeaturizer.ruleFeaturize(f);
+        new ArrayList<>() : phraseFeaturizer.ruleFeaturize(f);
     
     // Cache selected features
     cachedFeatureList = new LinkedList<>();
@@ -105,7 +105,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
         cachedFeatureList.add(feature);
       }
     }
-    this.isolationScore = scorer == null ? Double.MIN_VALUE : scorer.getIncrementalScore(features);
+    this.isolationScore = scorer == null ? -199.0 : scorer.getIncrementalScore(features);
   }
 
   /**

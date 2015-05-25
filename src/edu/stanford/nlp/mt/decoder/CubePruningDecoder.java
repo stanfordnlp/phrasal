@@ -22,6 +22,7 @@ import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.util.Pair;
@@ -43,8 +44,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
-  protected final int maxDistortion;
-
+  protected int maxDistortion;
+  protected final int defaultDistortion;
+  
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
     return new CubePruningDecoderBuilder<TK, FV>();
   }
@@ -52,6 +54,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected CubePruningDecoder(CubePruningDecoderBuilder<TK, FV> builder) {
     super(builder);
     maxDistortion = builder.maxDistortion;
+    defaultDistortion = builder.maxDistortion;
 
     if (maxDistortion != -1) {
       logger.info("Cube pruning decoder {}. Distortion limit: {}", builder.decoderId, 
@@ -95,8 +98,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
 
-    //this.maxDistortion = Integer.parseInt((String) sourceInputProperties.get(InputProperty.DistortionLimit));
-        
+    // Set the distortion limit
+    if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
+      this.maxDistortion = (int) sourceInputProperties.get(InputProperty.DistortionLimit);
+      logger.info("Changing distortion limit from {} to {}", this.defaultDistortion, this.maxDistortion);
+    } else {
+      this.maxDistortion = defaultDistortion;
+    }
+    
     // Create beams. We don't need to store all of them, since the translation
     // lattice is implicitly defined by the hypotheses
     final List<BundleBeam<TK,FV>> beams = new LinkedList<>();
@@ -111,7 +120,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
-    outputSpace.filter(ruleGrid);
+    outputSpace.filter(ruleGrid, this);
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }

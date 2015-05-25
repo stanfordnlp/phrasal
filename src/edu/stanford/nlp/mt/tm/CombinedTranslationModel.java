@@ -75,6 +75,15 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
     this.ruleQueryLimit = queryLimit;
   }
 
+  /**
+   * Get the underlying list of translation models.
+   * 
+   * @return
+   */
+  public List<TranslationModel<TK,FV>> getModels() {
+    return Collections.unmodifiableList(models);
+  }
+  
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
