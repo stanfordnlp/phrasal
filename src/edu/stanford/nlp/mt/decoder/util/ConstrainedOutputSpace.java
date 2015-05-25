@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.InputProperties;
 
 /**
  * Constrains the output (translation) space for conventional
@@ -158,6 +159,11 @@ public class ConstrainedOutputSpace<TK, FV> implements
     return false;
   }
 
+  @Override
+  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
+    filter(ruleGrid, inferer);
+  }
+  
   @Override
   public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer) {
     for (int i = 0, sz = ruleGrid.numberOfCoverages(); i < sz; ++i) {

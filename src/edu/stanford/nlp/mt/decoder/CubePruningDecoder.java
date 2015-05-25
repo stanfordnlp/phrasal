@@ -120,7 +120,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
-    outputSpace.filter(ruleGrid, this);
+    outputSpace.filter(ruleGrid, this, sourceInputProperties);
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }

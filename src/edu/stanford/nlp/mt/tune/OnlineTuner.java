@@ -109,6 +109,7 @@ public final class OnlineTuner {
 
   // Train a local translation model.
   private boolean localTMTraining;
+  private int faDistortionLimit = 15;
   
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
@@ -180,7 +181,10 @@ public final class OnlineTuner {
   }
 
 
-  private void trainLocalTM(boolean trainLocalTM) { this.localTMTraining = trainLocalTM; }
+  private void trainLocalTM(boolean trainLocalTM, int faDistortionLimit) { 
+    this.localTMTraining = trainLocalTM;
+    this.faDistortionLimit = faDistortionLimit; 
+  }
   
   /**
    * Configure selection of pseudo-references for the gold scoring metrics.
@@ -394,6 +398,7 @@ public final class OnlineTuner {
           
           // now compute forced alignment
           inputProperties.put(InputProperty.TargetPrefix, Boolean.toString(true));
+          inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
           List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
               threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
           
@@ -917,6 +922,7 @@ public final class OnlineTuner {
     optionMap.put("rand", 1);
     optionMap.put("localTM", 0);
     optionMap.put("seq", 0);
+    optionMap.put("faDistLimit", 1);    
     optionMap.put("sb", 0);
     return optionMap;
   }
@@ -950,7 +956,8 @@ public final class OnlineTuner {
       .append("   -s         : Wrap references and source inputs in boundary tokens").append(nl)
       .append("   -rand      : Randomize dev set before tuning (default: true)").append(nl)
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
-      .append("   -seq       : Enforce a strictly optimization - this will make multi-threading pointless. (default: false)").append(nl)
+      .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
+      .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
       .append("   -sb        : Specify for single best output. ");
     
     return sb.toString();
@@ -985,6 +992,7 @@ public final class OnlineTuner {
     boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);
     boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
+    int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
     
     // Parse arguments
@@ -1026,7 +1034,7 @@ public final class OnlineTuner {
     tuner.shuffleDev(shuffleDev);
     tuner.outputSingleBest(outputSingleBest);
     tuner.enforceStrictlySequential(enforceStrictlySequential);
-    tuner.trainLocalTM(trainLocalTM);
+    tuner.trainLocalTM(trainLocalTM, faDistortionLimit);
     tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
 
     final long elapsedTime = System.nanoTime() - startTime;

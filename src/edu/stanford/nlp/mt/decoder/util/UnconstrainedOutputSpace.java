@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.InputProperties;
 
 /**
  * Default decoder output space with no constraints.
@@ -41,6 +42,10 @@ public class UnconstrainedOutputSpace<TK, FV> implements
 
   @Override
   public void filter(RuleGrid<IString, String> ruleGrid, AbstractInferer<IString, String> inferer) {}
+  
+  @Override
+  public void filter(RuleGrid<IString, String> ruleGrid, AbstractInferer<IString, String> inferer, InputProperties inputProperties) {
+  }
   
   @Override 
   public int getPrefixLength() {

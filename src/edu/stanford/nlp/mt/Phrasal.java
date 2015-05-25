@@ -1143,7 +1143,6 @@ public class Phrasal {
      * @param threadId -- Inferer object to use (one per thread)
      * @param numTranslations number of translations to generate
      * @param inputProperties
-     * @param localTM overrides local translation models specified in inputProperties
      * 
      */
     @SuppressWarnings("unchecked")

@@ -8,6 +8,7 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.InputProperties;
 
 /**
  * 
@@ -114,6 +115,10 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
 
   @Override
   public void filter(RuleGrid<TK, FV> ruleGrid, AbstractInferer<TK, FV> inferer) {
+  }
+  
+  @Override
+  public void filter(RuleGrid<TK, FV> ruleGrid, AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
   }
   
   @Override 
