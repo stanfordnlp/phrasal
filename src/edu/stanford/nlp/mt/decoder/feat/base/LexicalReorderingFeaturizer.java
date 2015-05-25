@@ -221,13 +221,10 @@ public class LexicalReorderingFeaturizer extends
           if (priorScores != null && ff) {
             features.add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
             if (dynamicDiscrim) {
-              if (( 3 + f.prior.rule.abstractRule.forwardOrientation.ordinal()) == i) {
-                features.add(new FeatureValue<String>(String.format("%s%s-match",
-                    DISCRIMINATIVE_PREFIX, featureTags[i]), 1.0));
-              } else {
-                features.add(new FeatureValue<String>(String.format("%s%s-nomatch",
-                    DISCRIMINATIVE_PREFIX,  featureTags[i]), 1.0));                
-              }
+              features.add(new FeatureValue<String>(
+                  String.format("%s%s:%s-%s", DISCRIMINATIVE_PREFIX, FEATURE_PREFIX,
+                      f.prior.rule.abstractRule.forwardOrientation.toString(),
+                      type.toString()), 1.0));
             }
           }
         
@@ -237,13 +234,10 @@ public class LexicalReorderingFeaturizer extends
           if (scores != null && ff) {
             features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
             if (dynamicDiscrim) {
-              if (f.rule.abstractRule.backwardOrientation.ordinal() == i) {
-                features.add(new FeatureValue<String>(String.format("%s%s-match",
-                    DISCRIMINATIVE_PREFIX, featureTags[i]), 1.0));
-              } else {
-                features.add(new FeatureValue<String>(String.format("%s%s-nomatch",
-                    DISCRIMINATIVE_PREFIX, featureTags[i]), 1.0));                                
-              }
+              features.add(new FeatureValue<String>(
+                  String.format("%s%s:%s-%s", DISCRIMINATIVE_PREFIX, FEATURE_PREFIX,
+                      f.rule.abstractRule.forwardOrientation.toString(),
+                      type.toString()), 1.0));
             }
           }
         }
