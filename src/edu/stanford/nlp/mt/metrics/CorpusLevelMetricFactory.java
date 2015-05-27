@@ -35,6 +35,7 @@ public final class CorpusLevelMetricFactory {
     if (evalMetric.equals("smoothbleu")) {
       emetric = new BLEUMetric<IString,String>(references, true);
 
+
     } else if (evalMetric.equals("bleu:3-2ter")) {
       int BLEUOrder = 3;
       emetric = new LinearCombinationMetric<IString, String>(new double[] {
@@ -90,9 +91,12 @@ public final class CorpusLevelMetricFactory {
       
     } else if (evalMetric.equals("numPredictedWords")) {
       emetric = new NumPredictedWordsMetric<IString, String>(references);
+    } else if (evalMetric.equals("maxPredictedWords")) {
+      emetric = new MaxPredictedWordsMetric<IString, String>(references);
+    } else if (evalMetric.equals("bleuAfterPrefix")) {
+        emetric = new BLEUAfterPrefixMetric<String>(references);
     } else {
-			throw new UnsupportedOperationException(String.format(
-																								"Unrecognized metric: %s%n", evalMetric));
+			throw new UnsupportedOperationException(String.format( "Unrecognized metric: %s%n", evalMetric));
 
 			// String[] s = matchLinearCombMetricPattern(evalMetric);
 			// if(s != null) {

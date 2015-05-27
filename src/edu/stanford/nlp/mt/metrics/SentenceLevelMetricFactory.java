@@ -136,14 +136,17 @@ public final class SentenceLevelMetricFactory {
       
     } else if (scoreMetricStr.equals("numPredictedWords")) {
       return new LocalNumPredictedWordsMetric<IString,String>();
-     
+
+    } else if (scoreMetricStr.equals("maxPredictedWords")) {
+      return new MaxPredictedWordsMetric.Local<IString,String>();
+
     } else if (scoreMetricStr.equals("2bleun-ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
       metrics.add(new SLTERMetric<IString,String>());
       return new SLLinearCombinationMetric<IString,String>(
         new double[]{2.0, 1.0}, metrics);
-    
+
     } else if (scoreMetricStr.equals("bleun-ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<IString,String>(true));
