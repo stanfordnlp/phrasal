@@ -27,6 +27,9 @@ src-cc/kenlm/query
 .metadata
 .classpath
 .settings/**
+phrasal.iml
+phrasal.ipr
+phrasal.iws
 
 # Misc. stuff
 .DS_Store
@@ -38,3 +41,4 @@ logs/
 build/
 bin/
 libs/
+
