@@ -19,6 +19,8 @@ import edu.stanford.nlp.util.Pair;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  *
  * @author danielcer
@@ -687,7 +689,8 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
     @Override
     public String scoreDetails() {
-      return "None";
+      String precisions = Arrays.stream(ngramPrecisions()).boxed().collect(toList()).toString();
+      return String.format("Brevity: %f ; Precisions %s", brevityPenalty(), precisions);
     }
   }
 
