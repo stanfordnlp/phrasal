@@ -158,7 +158,7 @@ public class MaxPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
     boolean foundRef = false;
     int maxPredictedWords = 0;
 
-    for (int i = 1; i < references.size(); ++i) {
+    for (int i = 1; i < references.size(); i++) {
       Sequence<TK> ref = references.get(i);
       if (!ref.startsWith(prefix))
         continue;
@@ -168,7 +168,7 @@ public class MaxPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
       int predictedWords = 0;
       for (int end = start + 1; end <= ref.size(); end++) {
         Sequence<TK> extension = ref.subsequence(start, end);
-        if (!ref.contains(extension)) {
+        if (!tran.contains(extension)) {
           break;
         }
         predictedWords++;
@@ -176,9 +176,10 @@ public class MaxPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
       maxPredictedWords = Math.max(maxPredictedWords, predictedWords);
     }
 
-    if (!foundRef)
+    if (!foundRef) {
       throw new RuntimeException(
               "MaxPredictedWordsMetric: No reference found with correct prefix in line " + (id + 1));
+    }
 
     return maxPredictedWords;
   }

@@ -73,4 +73,16 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
               ).collect(toList());
     }).collect(toList());
   }
+
+  @Override
+  public BLEUIncrementalMetric getIncrementalMetric() {
+    return new Incremental();
+  }
+
+  private class Incremental extends BLEUIncrementalMetric {
+    @Override
+    public double score() {
+      return 2.0 * super.score();
+    }
+  }
 }

@@ -4,4 +4,4 @@
 
 // CoreNLP
 include "CoreNLP"
-project(":CoreNLP").projectDir = new File("$System.env.CORENLP_HOME")
+project(":CoreNLP").projectDir = new File("/Users/denero/Documents/workspace/oscii/lex/deps/CoreNLP")
