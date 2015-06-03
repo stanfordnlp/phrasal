@@ -5,11 +5,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoSerializable;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-
 import edu.stanford.nlp.util.Index;
 import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 
@@ -24,7 +19,7 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
  * @author Spence Green
  *
  */
-public class Vocabulary implements Serializable,KryoSerializable {
+public class Vocabulary implements Serializable {
 
   private static final long serialVersionUID = 5124110481914822964L;
   
@@ -83,30 +78,6 @@ public class Vocabulary implements Serializable,KryoSerializable {
     index = new ConcurrentHashIndex<>(size);
     for (int i = 0; i < size; ++i) {
       index.add(ois.readUTF());
-    }
-  }
-  
-  /**
-   * Custom serializer.
-   */
-  @Override
-  public void write(Kryo kryo, Output output) {
-    int size = index.size();
-    output.writeInt(size);
-    for (int i = 0; i < size; ++i) {
-      output.writeString(index.get(i));
-    }
-  }
-
-  /**
-   * Custom deserializer.
-   */
-  @Override
-  public void read(Kryo kryo, Input input) {
-    int size = input.readInt();
-    index = new ConcurrentHashIndex<>(size);
-    for (int i = 0; i < size; ++i) {
-      index.add(input.readString());
     }
   }
   
