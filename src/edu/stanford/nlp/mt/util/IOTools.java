@@ -266,6 +266,7 @@ public final class IOTools {
       
       } else if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
         Kryo kryo = new Kryo();
+        kryo.setReferences(false);
         Input input = new UnsafeInput(mode == SerializationMode.BIN_GZ ? 
             new GZIPInputStream(new FileInputStream(filename)) : new FileInputStream(filename));
         object = kryo.readObject(input, type);
@@ -318,6 +319,7 @@ public final class IOTools {
     try {
       if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
         Kryo kryo = new Kryo();
+        kryo.setReferences(false);
         Output output = mode == SerializationMode.BIN_GZ ? new UnsafeOutput(new GZIPOutputStream(
             new FileOutputStream(filename))) : new UnsafeOutput(new FileOutputStream(filename));
         kryo.writeObject(output, o);
