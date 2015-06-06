@@ -184,12 +184,16 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     }
     final int initialVocabularySize = corpus.getVocabulary().size();
     timer.mark("Counting corpus positions");
+    logger.info("Source positions: {}  Target positions: {}  Sentences: {}", numSourcePositions, 
+        numTargetPositions, numSentences);
     
     // Create the arrays
-    int srcLength = numSourcePositions + numSentences;
+    final int srcLength = numSourcePositions + numSentences;
+    if (srcLength < 0) throw new RuntimeException("Maximum source bitext size exceeded");
     srcBitext = new int[srcLength];
     f2e = new int[srcLength];
-    int tgtLength = numTargetPositions + numSentences;
+    final int tgtLength = numTargetPositions + numSentences;
+    if (tgtLength < 0) throw new RuntimeException("Maximum target bitext size exceeded");
     tgtBitext = new int[tgtLength];
     e2f = new int[tgtLength];
     
