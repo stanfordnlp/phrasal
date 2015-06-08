@@ -33,8 +33,6 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.kryo.io.UnsafeInput;
-import com.esotericsoftware.kryo.io.UnsafeOutput;
 
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -267,7 +265,7 @@ public final class IOTools {
       } else if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
         Kryo kryo = new Kryo();
         kryo.setReferences(false);
-        Input input = new UnsafeInput(mode == SerializationMode.BIN_GZ ? 
+        Input input = new Input(mode == SerializationMode.BIN_GZ ? 
             new GZIPInputStream(new FileInputStream(filename)) : new FileInputStream(filename));
         object = kryo.readObject(input, type);
         input.close();
@@ -320,8 +318,8 @@ public final class IOTools {
       if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
         Kryo kryo = new Kryo();
         kryo.setReferences(false);
-        Output output = mode == SerializationMode.BIN_GZ ? new UnsafeOutput(new GZIPOutputStream(
-            new FileOutputStream(filename))) : new UnsafeOutput(new FileOutputStream(filename));
+        Output output = mode == SerializationMode.BIN_GZ ? new Output(new GZIPOutputStream(
+            new FileOutputStream(filename))) : new Output(new FileOutputStream(filename));
         kryo.writeObject(output, o);
         output.close();
         
