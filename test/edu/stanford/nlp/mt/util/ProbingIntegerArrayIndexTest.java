@@ -2,8 +2,6 @@ package edu.stanford.nlp.mt.util;
 
 import static org.junit.Assert.*;
 
-import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
@@ -19,14 +17,17 @@ import org.junit.Test;
 public class ProbingIntegerArrayIndexTest {
 
   private int[][] values;
-  
+  private int expectedIndexSize;
   @Before
   public void setUp() throws Exception {
-    values = new int[1000][];
+    int length = 1000;
+    expectedIndexSize = 100;
+    values = new int[length][];
     for (int i = 0; i < values.length; ++i) {
-      values[i] = new int[(i % 5)+1];
+      values[i] = new int[(i % expectedIndexSize)+1];
       for (int j = 0; j < values[i].length; ++j) {
-        values[i][j] = i + j;
+        // Lots of duplicates in the array
+        values[i][j] = j;
       }
     }
   }
@@ -41,8 +42,8 @@ public class ProbingIntegerArrayIndexTest {
       Integer oldValue = keyMap.putIfAbsent(i, key);
       assertEquals(null, oldValue);
     });
-    assertEquals(values.length, index.size());
-    for(int i = 0; i < values.length; ++i)
+    assertEquals(expectedIndexSize, index.size());
+    for(int i = 0; i < expectedIndexSize; ++i)
       assertTrue(index.get(i) != null);
   }
 }

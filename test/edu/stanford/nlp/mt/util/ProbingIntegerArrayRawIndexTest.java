@@ -6,7 +6,14 @@ import org.junit.Test;
 
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayRawIndex;
 
+/**
+ * Unit test.
+ * 
+ * @author Kenneth Heafield
+ *
+ */
 public class ProbingIntegerArrayRawIndexTest {
+  
   @Test
   public void testInserts() {
     ProbingIntegerArrayRawIndex test = new ProbingIntegerArrayRawIndex();
@@ -14,13 +21,13 @@ public class ProbingIntegerArrayRawIndexTest {
     final int testTo = 1048576;
     for (int i = 0; i < testTo; ++i) {
       foo[0] = i;
-      assertTrue(test.find(foo) == -1);
-      assertTrue(test.findOrInsert(foo) == i);
-      assertTrue(test.find(foo) == i);
+      assertEquals(-1, test.find(foo));
+      assertEquals(i, test.findOrInsert(foo));
+      assertEquals(i, test.find(foo));
     }
     for (int i = 0; i < testTo; ++i) {
       foo[0] = i;
-      assertTrue(test.find(foo) == i);
+      assertEquals(i, test.find(foo));
     }
   }
 };
