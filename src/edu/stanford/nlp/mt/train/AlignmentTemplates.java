@@ -8,8 +8,8 @@ import java.util.Properties;
 
 import com.google.common.collect.ConcurrentHashMultiset;
 
+import edu.stanford.nlp.mt.util.DynamicIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
-import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.Vocabulary;
 
@@ -35,10 +35,10 @@ public class AlignmentTemplates extends AbstractCollection<AlignmentTemplate> {
 
   private final SourceFilter sourceFilter;
 
-  private final IntegerArrayIndex fIndex = new ProbingIntegerArrayIndex(),
-      index = new ProbingIntegerArrayIndex(),
-      aIndex = new ProbingIntegerArrayIndex(),
-      eIndex = new ProbingIntegerArrayIndex();
+  private final IntegerArrayIndex fIndex = new DynamicIntegerArrayIndex(),
+      index = new DynamicIntegerArrayIndex(),
+      aIndex = new DynamicIntegerArrayIndex(),
+      eIndex = new DynamicIntegerArrayIndex();
 
   private final List<ConcurrentHashMultiset<Integer>> aCounter = new ArrayList<>();
 
