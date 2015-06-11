@@ -34,9 +34,9 @@ public class Vocabulary implements Serializable,KryoSerializable {
       new ConcurrentHashIndex<String>(INITIAL_SYSTEM_CAPACITY);
   public static final int UNKNOWN_ID = ConcurrentHashIndex.UNKNOWN_ID;
   
-  // Decoder-local translation model index
   private static final int INITIAL_CAPACITY = 10000;
-  private Index<String> index;
+  
+  protected Index<String> index;
 
   /**
    * Constructor. Creates a decoder-local index.
@@ -87,14 +87,18 @@ public class Vocabulary implements Serializable,KryoSerializable {
   }
   
   /**
-   * Custom serializer.
+   * Custom serializer. Follows kryo's StringArraySerializer example.
    */
   @Override
   public void write(Kryo kryo, Output output) {
     int size = index.size();
-    output.writeInt(size);
+    output.writeInt(size + 1, true);
     for (int i = 0; i < size; ++i) {
-      output.writeString(index.get(i));
+      String s = index.get(i);
+      if (s == null) {
+        throw new RuntimeException("Cannot serialize null string at index " + Integer.toString(i));
+      }
+      output.writeString(s);
     }
   }
 
@@ -103,7 +107,8 @@ public class Vocabulary implements Serializable,KryoSerializable {
    */
   @Override
   public void read(Kryo kryo, Input input) {
-    int size = input.readInt();
+    int size = input.readInt(true);
+    --size;
     index = new ConcurrentHashIndex<>(size);
     for (int i = 0; i < size; ++i) {
       index.add(input.readString());

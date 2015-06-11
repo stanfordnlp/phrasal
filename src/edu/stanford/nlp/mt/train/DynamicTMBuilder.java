@@ -217,15 +217,20 @@ public class DynamicTMBuilder {
     
     try {
       TimeKeeper timer = TimingUtils.start();
+      // Load corpus
       DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile) :
         new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, type);
-      timer.mark("Model construction");
+      timer.mark("Loading and symmetrization");
       
+      // Build TM
       DynamicTranslationModel<String> tm = tmBuilder.build();
+      timer.mark("Model construction");
           
+      // Serialize
       logger.info("Serializing to: " + outputFileName);
       IOTools.serialize(outputFileName, tm);
       timer.mark("Serialization");
+      
       logger.info("Timing summary: {}", timer);
       logger.info("Success! Shutting down...");
     } catch (Exception e) {
