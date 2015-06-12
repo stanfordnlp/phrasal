@@ -9,6 +9,7 @@ package edu.stanford.nlp.mt.util;
  */
 public enum InputProperty {
   //List of targets are prefixes
+  // Type: Boolean
   TargetPrefix,
   
   // Domain of the input
