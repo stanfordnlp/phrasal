@@ -17,6 +17,11 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -45,7 +50,7 @@ import edu.stanford.nlp.stats.Counters;
  * @author Spence Green
  *
  */
-public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>,Serializable {
+public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>,Serializable,KryoSerializable {
 
   private static final long serialVersionUID = 5876435802959430120L;
   
@@ -164,6 +169,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     timer.mark("Initialization");
     logger.info("Timing: {}", timer);
     return tm;
+  }
+  
+
+  @Override
+  public void write(Kryo kryo, Output output) {
+    kryo.writeObject(output, sa);
+  }
+
+  @Override
+  public void read(Kryo kryo, Input input) {
+    sa = kryo.readObject(input, ParallelSuffixArray.class);
   }
   
   /**
@@ -412,8 +428,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   @Override
   public String toString() {
-    return String.format("coocsize: %d  cachesize: %d  bitextsize: %d  phraselen: %d/%d",
-        coocTable.size(), ruleCache.size(), sa.numSentences(), maxSourcePhrase, maxTargetPhrase);
+    return String.format("cbitextsize: %d  phraselen: %d/%d",
+        sa.numSentences(), maxSourcePhrase, maxTargetPhrase);
   }
   
   @Override

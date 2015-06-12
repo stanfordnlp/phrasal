@@ -15,6 +15,11 @@ import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoSerializable;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 
 /**
@@ -25,7 +30,7 @@ import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
  * @author Spence Green
  *
  */
-public class ParallelSuffixArray implements Serializable {
+public class ParallelSuffixArray implements Serializable,KryoSerializable {
 
   private static final long serialVersionUID = -5403502473957235135L;
 
@@ -74,6 +79,41 @@ public class ParallelSuffixArray implements Serializable {
     loadCorpus(sourceFile, targetFile, alignFile);
   }
   
+
+  @Override
+  public void write(Kryo kryo, Output output) {
+    writeArray(srcBitext, output);
+    writeArray(tgtBitext, output);
+    writeArray(e2f, output);
+    writeArray(f2e, output);
+    writeArray(srcSuffixArray, output);
+    writeArray(tgtSuffixArray, output);
+    output.writeInt(numSentences, true);
+    kryo.writeObject(output, vocabulary);
+  }
+
+  private static void writeArray(int[] arr, Output output) {
+    output.writeInt(arr.length, true);
+    output.writeInts(arr, true);
+  }
+
+  @Override
+  public void read(Kryo kryo, Input input) {
+    srcBitext = readArray(input);
+    tgtBitext = readArray(input);
+    e2f = readArray(input);
+    f2e = readArray(input);
+    srcSuffixArray = readArray(input);
+    tgtSuffixArray = readArray(input);
+    numSentences = input.readInt(true);
+    vocabulary = kryo.readObject(input, Vocabulary.class);
+  }
+  
+  private static int[] readArray(Input input) {
+    int len = input.readInt(true);
+    return input.readInts(len, true);
+  }
+
   /**
    * Get the index associated with this suffix array.
    * 
@@ -144,12 +184,16 @@ public class ParallelSuffixArray implements Serializable {
     }
     final int initialVocabularySize = corpus.getVocabulary().size();
     timer.mark("Counting corpus positions");
+    logger.info("Source positions: {}  Target positions: {}  Sentences: {}", numSourcePositions, 
+        numTargetPositions, numSentences);
     
     // Create the arrays
-    int srcLength = numSourcePositions + numSentences;
+    final int srcLength = numSourcePositions + numSentences;
+    if (srcLength < 0) throw new RuntimeException("Maximum source bitext size exceeded");
     srcBitext = new int[srcLength];
     f2e = new int[srcLength];
-    int tgtLength = numTargetPositions + numSentences;
+    final int tgtLength = numTargetPositions + numSentences;
+    if (tgtLength < 0) throw new RuntimeException("Maximum target bitext size exceeded");
     tgtBitext = new int[tgtLength];
     e2f = new int[tgtLength];
     

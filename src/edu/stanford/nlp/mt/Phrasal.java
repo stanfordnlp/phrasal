@@ -1163,7 +1163,7 @@ public class Phrasal {
 
     // Output space of the decoder
     final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix) ? 
-        Boolean.parseBoolean( (String) inputProperties.get(InputProperty.TargetPrefix)) : false;
+        (Boolean) inputProperties.get(InputProperty.TargetPrefix) : false;
     OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, 
         targets, targetsArePrefixes, translationModel.maxLengthSource(), translationModel.maxLengthTarget(),
         wrapBoundary);
