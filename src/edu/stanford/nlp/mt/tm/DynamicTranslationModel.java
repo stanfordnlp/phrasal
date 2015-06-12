@@ -205,12 +205,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
-   * Initialize the translation model.
+   * Initialize the translation model for local TM training.
    * 
    * @param name
    */
   @SuppressWarnings("unchecked")
-  public void initialize(String name, FeatureTemplate t) {
+  public void initializeLocalTM(String name, FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
