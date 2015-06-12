@@ -65,6 +65,8 @@ public final class TimingUtils {
         double elapsed = elapsedSeconds(marks.get(i-1), marks.get(i));
         sb.append(labels.get(i)).append(" ").append(nf.format(elapsed));
       }
+      double totalTime = elapsedSeconds(marks.get(0), marks.get(marks.size()-1));
+      sb.append(" || Total ").append(" ").append(nf.format(totalTime));
       return sb.toString();
     }
   }
