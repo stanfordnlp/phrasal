@@ -68,7 +68,8 @@ public class BLEUGenreEvaluator {
     Set<String> genreList = new HashSet<>();
     Map<String,List<List<Sequence<IString>>>> refsByGenre = new HashMap<>();
     for (int sourceId = 0; sourceId < referencesList.size(); ++sourceId) {
-      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? (String) inputProperties.get(sourceId).get(InputProperty.Domain)
+      // we use the first domain in the list given by InputProperty.Domain
+      String genre = inputProperties.get(sourceId).containsKey(InputProperty.Domain) ? ((String[]) inputProperties.get(sourceId).get(InputProperty.Domain))[0]
           : DEFAULT_GENRE;
       genreList.add(genre);
       if ( ! refsByGenre.containsKey(genre)) {
