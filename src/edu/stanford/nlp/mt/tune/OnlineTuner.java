@@ -452,20 +452,6 @@ public final class OnlineTuner {
     assert currentWts != null;
     assert updater != null;
     
-    if(enforceStrictlySequential && !endOfEpoch) {
-      int cnt = 0;
-      while(!threadpool.peek())
-        try {
-          //randomly select 500 miliseconds
-          Thread.sleep(500);
-          cnt++;
-         } catch ( java.lang.InterruptedException ie) {
-           System.out.println(ie);
-         }
-      if(cnt %600 == 0)
-        logger.info("WARNING: have been waiting for 5min to enforce strictly sequential optimization.");
-    }
-    
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
       final ProcessorOutput result = threadpool.poll();
@@ -597,6 +583,8 @@ public final class OnlineTuner {
         ProcessorInput input = makeInput(batch, inputId, currentWts, localTM);
         wrapper.put(input);
         logger.info("Threadpool.status: {}", wrapper);
+        if(enforceStrictlySequential)
+          wrapper.join(false);
         updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false, corpus);
         
         if((t+1) % weightWriteOutInterval == 0) {
