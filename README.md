@@ -10,21 +10,21 @@ Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior Univ
 
 Phrasal depends on [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml). We recommend that you clone and build [the latest repository from Github](https://github.com/stanfordnlp/CoreNLP).
 
-### Linux
+### Linux / MacOS
 
-1. Set the CORENLP_HOME environment variable to the root of the CoreNLP repository, which contains a Gradle script. Phrasal's Gradle script will execute the CoreNLP script for you..
+1. Set the CORENLP_HOME environment variable to the root of the CoreNLP repository, which contains a Gradle script. Phrasal's Gradle script will execute the CoreNLP script for you.
 
 2. `gradle installDist`
 
 3. (Optional) Build Eclipse project files by typing: `gradle eclipse`.
 
-4. (Optional, requires [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
+4. (Optional, requires g++, [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
 
 5. (Optional, requires g++, JDK, and Boost) Build the KenLM language model estimation tools: `gradle compileKenLMtools`.
 
 ### Windows
 
-Installation of Gradle is required. Follow the Linux instructions above. Then be sure to run `gradle startupScripts` to generate a .bat file for running Phrasal.
+Follow the Linux instructions above. Then be sure to run `gradle startupScripts` to generate a .bat file for running Phrasal.
 
 ### Stanford NLP cluster
 
@@ -38,14 +38,20 @@ We used to commit some third-party dependencies to the repository, and for other
 
 4. `gradle installDist`
 
-6. Update CLASSPATH: `export CLASSPATH=/u/username/NLP-HOME/phrasal/build/install/phrasal/lib`
+6. Update CLASSPATH: `export CLASSPATH=/u/username/NLP-HOME/phrasal/build/install/phrasal/lib/*`
 
-## Contributors
+## Citation
 
-* Daniel Cer (original author)
-* Michel Galley
-* Spence Green
-* Chris Manning
+If you use Phrasal for research, then please cite the following paper:
+
+```
+@inproceedings{Green2014,
+ author = {Spence Green and Daniel Cer and Christopher D. Manning},
+ title = {Phrasal: A Toolkit for New Directions in Statistical Machine Translation},
+ booktitle = {In Proceddings of the Ninth Workshop on Statistical Machine Translation},
+ year = {2014}
+}
+```
 
 ## Documentation / User Guide
 
@@ -75,4 +81,3 @@ body empty.)
 address for licensing questions, etc. For general use and support questions, 
 please join and use java-nlp-user. You cannot join java-nlp-support, but you 
 can mail questions to java-nlp-support@lists.stanford.edu.
-
