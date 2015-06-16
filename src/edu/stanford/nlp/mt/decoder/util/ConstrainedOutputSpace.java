@@ -161,8 +161,7 @@ public class ConstrainedOutputSpace<TK, FV> implements
   public void filter(RuleGrid<TK,FV> ruleGrid) {
     for (int i = 0, sz = ruleGrid.numberOfCoverages(); i < sz; ++i) {
       List<Integer> filteredIndices = new ArrayList<>();
-      int numRules = ruleGrid.getRulesForCoverageId(i).size();
-      for (int j = 0; j < numRules; ++j) {
+      for (int j = 0, numRules = ruleGrid.getRulesForCoverageId(i).size(); j < numRules; ++j) {
         final ConcreteRule<TK,FV> rule = ruleGrid.getRulesForCoverageId(i).get(j);
         if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
           System.err.printf("Examining: %s %s\n",
