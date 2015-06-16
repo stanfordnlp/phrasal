@@ -220,7 +220,7 @@ public class DynamicTMBuilder {
       // Load corpus
       DynamicTMBuilder tmBuilder = alignEFfile == null ? new DynamicTMBuilder(sourceFile, targetFile, alignFEfile) :
         new DynamicTMBuilder(sourceFile, targetFile, alignFEfile, alignEFfile, type);
-      timer.mark("Loading and symmetrization");
+      timer.mark("Corpus Loading");
       
       // Build TM
       DynamicTranslationModel<String> tm = tmBuilder.build();

@@ -53,11 +53,27 @@ public class InputProperties extends HashMap<InputProperty, Object> {
         if (fields.length != 2) {
           throw new RuntimeException("File format error: " + keyValue + " " + String.valueOf(fields.length));
         }
-        //we want to support a list of domains
-        if(InputProperty.valueOf(fields[0]) == InputProperty.Domain)
-          inputProperties.put(InputProperty.valueOf(fields[0]), fields[1].split(LIST_DELIMITER));
-        else
-          inputProperties.put(InputProperty.valueOf(fields[0]), fields[1]);
+        // Type conversions on InputProperty objects
+        InputProperty inputProperty = InputProperty.valueOf(fields[0]);
+        String value = fields[1];
+        if(inputProperty == InputProperty.Domain)
+          inputProperties.put(inputProperty, value.split(LIST_DELIMITER));
+        else if (inputProperty == InputProperty.TargetPrefix) {
+          inputProperties.put(inputProperty, Boolean.valueOf(value));
+          
+        } else if (inputProperty == InputProperty.DistortionLimit) {
+          inputProperties.put(inputProperty, Integer.valueOf(value));
+        
+        } else if (inputProperty == InputProperty.IsValid) {
+          inputProperties.put(inputProperty, Boolean.valueOf(value));
+          
+        } else if (inputProperty == InputProperty.RuleFeatureIndex) {
+          inputProperties.put(inputProperty, Integer.valueOf(value));
+          
+        } else {
+          // Leave as a string
+          inputProperties.put(inputProperty, value);
+        }
       }
     }
     return inputProperties;

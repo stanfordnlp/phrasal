@@ -121,7 +121,7 @@ public class SplitByInterfaceCondition {
         if (hypList.get(j).toString().trim().length() == 0) continue;
         InputProperties hypProperties = inProps.get(j);
         String domain = (String) hypProperties.get(InputProperty.Domain);
-        boolean isValid = Boolean.valueOf((String) hypProperties.get(InputProperty.IsValid));
+        boolean isValid = (Boolean) hypProperties.get(InputProperty.IsValid);
         if ( ! isValid) continue;
         if ( ! domainToSentencePairs.containsKey(domain)) {
           domainToSentencePairs.put(domain, new ArrayList<SentencePair>());
