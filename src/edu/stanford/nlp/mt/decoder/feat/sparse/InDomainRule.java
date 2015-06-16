@@ -53,7 +53,7 @@ public class InDomainRule extends DerivationFeaturizer<IString, String> {
 
     List<FeatureValue<String>> features = new LinkedList<>();
     final int featureIndex = f.sourceInputProperties.containsKey(InputProperty.RuleFeatureIndex) ?
-        Integer.valueOf((String) f.sourceInputProperties.get(InputProperty.RuleFeatureIndex)) : -1;
+        (int) f.sourceInputProperties.get(InputProperty.RuleFeatureIndex) : -1;
     
     if (featureIndex < 0) {
       throw new RuntimeException("RuleFeatureIndex property not specified for input: " + String.valueOf(f.sourceInputId));
