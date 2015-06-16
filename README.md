@@ -14,9 +14,9 @@ Phrasal depends on [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.s
 
 1. Set the CORENLP_HOME environment variable to the root of the CoreNLP repository, which contains a Gradle script. Phrasal's Gradle script will execute the CoreNLP script for you.
 
-2. `gradle installDist`
+2. Switch to the root of the Phrasal repository and execute: `gradle installDist`
 
-3. (Optional) Build Eclipse project files by typing: `gradle eclipse`.
+3. (Optional) Build Eclipse project files by executing: `gradle eclipse`.
 
 4. (Optional, requires g++, [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
 
@@ -24,7 +24,7 @@ Phrasal depends on [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.s
 
 ### Windows
 
-Follow the Linux instructions above. Then be sure to run `gradle startupScripts` to generate a .bat file for running Phrasal.
+Follow the Linux instructions above. Then be sure to execute `gradle startupScripts` to generate a .bat file for running Phrasal.
 
 ### Stanford NLP cluster
 
