@@ -488,10 +488,6 @@ public final class OnlineTuner {
             if (result.nbestLists.get(i).size() > 0) {
               Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
               nbestLists.put(sourceId, bestHypothesis);
-              logger.info("single-best hyp: \n "
-                  + "SOURCE: " +  result.nbestLists.get(i).get(0).alignmentGrid().f().toString() + " \n"
-                  + "TARGET: " +   result.nbestLists.get(i).get(0).translation.toString() + "\n"
-                  + "ALIGNMENT: " +  result.nbestLists.get(i).get(0).alignmentString());
             } else {
               nbestLists.put(sourceId, new EmptySequence<IString>());
             }
@@ -500,10 +496,6 @@ public final class OnlineTuner {
             RichTranslation<IString, String> fa = result.forcedAlignment.get(i);
             if (fa != null) {
               localTmTrainingData.add(fa.alignmentGrid().f().toString(), fa.translation.toString(), fa.alignmentString());
-              logger.info("added the sentence pair to localTmTrainingData: \n "
-                  + "SOURCE: " + fa.alignmentGrid().f().toString() + " \n"
-                  + "TARGET: " +  fa.translation.toString() + "\n"
-                  + "ALIGNMENT: " + fa.alignmentString());
             } else {
               logger.error("No forced alignment for input {}", result.inputId);
             }
