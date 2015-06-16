@@ -26,6 +26,7 @@ src-cc/kenlm/query
 .idea
 .metadata
 .classpath
+.project
 .settings/**
 phrasal.iml
 phrasal.ipr

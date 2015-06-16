@@ -8,37 +8,21 @@ Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior Univ
 
 [Gradle](http://gradle.org) installation build scripts are provided. Gradle will fetch dependencies and build a jar for you.
 
-Phrasal depends on [Stanford CoreNLP](http://nlp.stanford.edu/software/corenlp.shtml). We recommend that you clone and build [the latest repository from Github](https://github.com/stanfordnlp/CoreNLP).
-
 ### Linux / MacOS
 
-1. Set the CORENLP_HOME environment variable to the root of the CoreNLP repository, which contains a Gradle script. Phrasal's Gradle script will execute the CoreNLP script for you.
+1. Switch to the root of the Phrasal repository and execute: `gradle installDist`
 
-2. Switch to the root of the Phrasal repository and execute: `gradle installDist`
+1. Set CLASSPATH: `export CLASSPATH=$PHRASAL_HOME/build/install/phrasal/lib/*`
 
-3. (Optional) Build Eclipse project files by executing: `gradle eclipse`.
+1. (Optional) Build Eclipse project files by executing: `gradle eclipse`.
 
-4. (Optional, requires g++, [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
+1. (Optional, requires g++, [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)) Build the KenLM loader: `gradle compileKenLM`.
 
-5. (Optional, requires g++, JDK, and Boost) Build the KenLM language model estimation tools: `gradle compileKenLMtools`.
+1. (Optional, requires g++, JDK, and Boost) Build the KenLM language model estimation tools: `gradle compileKenLMtools`.
 
 ### Windows
 
 Follow the Linux instructions above. Then be sure to execute `gradle startupScripts` to generate a .bat file for running Phrasal.
-
-### Stanford NLP cluster
-
-We used to commit some third-party dependencies to the repository, and for others we had a bash script that would try to wget the rest. The script would fail when URLs for archived versions of libraries would change (this was especially true for jetty). Now we use Gradle to fetch the dependencies and build the system.
-
-1. Download and unpack [Gradle](http://gradle.org) into your home directory, or into /u/nlp/packages.
-
-2. Add Gradle to PATH: `export PATH="$PATH":/path/to/gradle/bin`
-
-3. Set reference to JavaNLP: `export CORENLP_HOME=/u/username/NLP-HOME/javanlp/projects/core`
-
-4. `gradle installDist`
-
-6. Update CLASSPATH: `export CLASSPATH=/u/username/NLP-HOME/phrasal/build/install/phrasal/lib/*`
 
 ## Citation
 

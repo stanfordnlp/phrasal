@@ -12,7 +12,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 compileJava.options.encoding = 'UTF-8'
 
-version = '3.4.1'
+version = '3.5.2'
 
 // Gradle application plugin
 mainClassName = "edu.stanford.nlp.mt.Phrasal"
@@ -76,20 +76,14 @@ task listDeps << {
 task copyDeps(type: Copy) {
   from configurations.runtime
   into 'lib'
-
-  // Remove conflicting versions from CoreNLP dependencies
-  exclude 'log4j-1.2.16.jar'
-  exclude 'CoreNLP*.jar'
 }
 
 dependencies {
   // TERp jars that are no longer available on the web.
   compile fileTree(dir: 'lib', include: '*.jar')
   
-  // CoreNLP dependencies
-  compile project(":CoreNLP")
-
   // lilt/core Maven dependencies
+  compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.5.2'
   compile group: 'com.esotericsoftware', name: 'kryo', version: '3.0.1'
   compile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
   compile group: 'com.google.guava', name: 'guava', version: '18.0'

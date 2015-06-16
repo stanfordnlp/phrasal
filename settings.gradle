@@ -1,7 +1,0 @@
-//
-// Phrasal / Gradle settings
-//
-
-// CoreNLP
-include "CoreNLP"
-project(":CoreNLP").projectDir = new File("$System.env.CORENLP_HOME")
