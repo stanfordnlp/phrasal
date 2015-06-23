@@ -16,7 +16,7 @@ public class GermanPreprocessor extends CoreNLPPreprocessor {
   private final boolean cased;
   
   public GermanPreprocessor() {
-    this(false);
+    this(true);
   }
   public GermanPreprocessor(boolean cased) {
     super(PTBTokenizer.coreLabelFactory());
