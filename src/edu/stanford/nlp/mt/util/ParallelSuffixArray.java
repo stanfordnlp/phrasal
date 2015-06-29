@@ -907,22 +907,4 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       this.ub = ub;
     }
   }
-
-
-  /**
-   * Swap source and target languages, but share data structures.
-   */
-  public ParallelSuffixArray swapLanguages() {
-    ParallelSuffixArray swapped = new ParallelSuffixArray();
-    swapped.vocabulary = vocabulary;
-    swapped.srcBitext = tgtBitext;
-    swapped.f2e = e2f;
-    swapped.tgtBitext = srcBitext;
-    swapped.e2f = f2e;
-    swapped.numSentences = numSentences();
-    swapped.srcSuffixArray = tgtSuffixArray;
-    swapped.tgtSuffixArray = srcSuffixArray;
-    // TODO(denero) Rebuild LB/UB caches?
-    return swapped;
-  }
 }
