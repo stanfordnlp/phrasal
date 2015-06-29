@@ -33,6 +33,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
+import edu.stanford.nlp.mt.util.ParallelSuffixArray.ParallelEntry;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
@@ -209,7 +210,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param name
    */
-  @SuppressWarnings("unchecked")
   public void initializeLocalTM(String name, FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
@@ -220,11 +220,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     // Id arrays must be created after any modification of the system vocabulary.
     createIdArrays();
+    timer.mark("Id arrays");
     
     // Lex cache must be created before any rules can be scored.
     createLexCoocTable(sa.getVocabulary().size());
+    timer.mark("Cooc cache");
     
     createQueryCache(t);
+    timer.mark("query cache");
+    logger.info("Timing results: {}", timer);
   }
   
   /**
@@ -525,6 +529,34 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
   }
 
+  /**
+   * Perform a source lookup into the underlying suffix array. Performs whitespace tokenization
+   * of the input.
+   * 
+   * @param sourceQuery
+   * @param numResults
+   * @return
+   */
+  public List<ParallelEntry> lookupSource(String sourceQuery, int numResults) {
+    final int[] sourcePhrase = toTMArray(IStrings.tokenize(sourceQuery));
+    SuffixArraySample sample = sa.sample(sourcePhrase, numResults);
+    return sample.samples.stream().map(s -> s.getParallelSequence()).collect(Collectors.toList());
+  }
+  
+  /**
+   * Perform a target lookup into the underlying suffix array. Performs whitespace tokenization
+   * of the input.
+   * 
+   * @param targetQuery
+   * @param numResults
+   * @return
+   */
+  public List<ParallelEntry> lookupTarget(String targetQuery, int numResults) {
+    final int[] targetPhrase = toTMArray(IStrings.tokenize(targetQuery));
+    SuffixArraySample sample = sa.sampleTarget(targetPhrase, numResults);
+    return sample.samples.stream().map(s -> s.getParallelSequence()).collect(Collectors.toList());
+  }
+  
   /**
    * Convert the source span to translation model indices.
    * 

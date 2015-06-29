@@ -713,6 +713,33 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     }
     return new SuffixArraySample(samples, lb, ub);
   }
+  
+  /**
+   * Return a sample from the target-side. Optimizations for pre-initializing the search
+   * are not supported.
+   * 
+   * @param targetQuery
+   * @param maxSamples
+   * @param minBound
+   * @param maxBound
+   * @return
+   */
+  public SuffixArraySample sampleTarget(final int[] targetQuery, int maxSamples) {
+    if (targetQuery.length == 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    int lb = findBound(targetQuery, false, true, 0);
+    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    int ub = findBound(targetQuery, false, false, lb);
+    assert ub >= 0;
+    int numHits = ub - lb + 1;
+    int stepSize = (numHits < maxSamples) ? 1 : numHits / maxSamples;
+    assert stepSize > 0;
+    // Stratified sample through the list of positions
+    List<SentencePair> samples = new ArrayList<>(maxSamples);
+    for (int i = lb; i <= ub && samples.size() < maxSamples; i += stepSize) {
+      samples.add(new SentencePair(srcSuffixArray[i]));
+    }
+    return new SuffixArraySample(samples, lb, ub);
+  }
 
   /**
    * A sampled sentence with an associated pointer to the left edge of
@@ -820,6 +847,10 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       return e2f[bitextPos] == 0;
     }
     
+    public ParallelEntry getParallelSequence() {
+      return new ParallelEntry(this, vocabulary);
+    }
+    
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
@@ -833,6 +864,30 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
         sb.append(vocabulary.get(target(i)));
       }
       return sb.toString();
+    }
+  }
+  
+  /**
+   * A bitext entry for usage outside of Phrasal.
+   * 
+   * @author Spence Green
+   *
+   */
+  public static class ParallelEntry {
+    public final String[] source;
+    public final String[] target;
+    public final int[][] f2e;
+    // If the query was a target, then this is the left edge in the target array.
+    // Otherwise, it is the left edge in the source array.
+    public final int queryLeftEdge;
+    public ParallelEntry(SentencePair s, Vocabulary v) {
+      this.queryLeftEdge = s.wordPosition;
+      source = IntStream.range(0, s.sourceLength()).mapToObj(i -> v.get(s.source(i))).toArray(String[]::new);
+      target = IntStream.range(0, s.targetLength()).mapToObj(i -> v.get(s.target(i))).toArray(String[]::new);
+      f2e = new int[source.length][];
+      for (int i = 0; i < source.length; ++i) {
+        f2e[i] = s.f2e(i);
+      }
     }
   }
   
