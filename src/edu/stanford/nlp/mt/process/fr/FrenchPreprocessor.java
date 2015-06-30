@@ -16,7 +16,7 @@ public class FrenchPreprocessor extends CoreNLPPreprocessor {
   private final boolean cased;
   
   public FrenchPreprocessor() {
-    this(false);
+    this(true);
   }
   
   public FrenchPreprocessor(boolean cased) {

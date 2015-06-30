@@ -16,7 +16,7 @@ public class EnglishPreprocessor extends CoreNLPPreprocessor {
   private final boolean cased;
   
   public EnglishPreprocessor() {
-    this(false);
+    this(true);
   }
   
   public EnglishPreprocessor(boolean cased) {

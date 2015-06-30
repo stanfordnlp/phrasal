@@ -17,7 +17,7 @@ public class SpanishPreprocessor extends CoreNLPPreprocessor {
   private final boolean cased;
   
   public SpanishPreprocessor() {
-    this(false);
+    this(true);
   }
   
   public SpanishPreprocessor(boolean cased) {
