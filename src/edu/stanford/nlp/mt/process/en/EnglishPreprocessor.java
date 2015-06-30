@@ -21,7 +21,7 @@ public class EnglishPreprocessor extends CoreNLPPreprocessor {
   
   public EnglishPreprocessor(boolean cased) {
     super(PTBTokenizer.coreLabelFactory());
-    tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false");
+    tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false,untokenizable=allKeep");
     this.cased = cased;
   }
 

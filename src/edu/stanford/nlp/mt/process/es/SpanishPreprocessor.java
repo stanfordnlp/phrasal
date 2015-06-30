@@ -22,7 +22,7 @@ public class SpanishPreprocessor extends CoreNLPPreprocessor {
   
   public SpanishPreprocessor(boolean cased) {
     super(SpanishTokenizer.factory());
-    tf.setOptions("invertible=true,ptb3Escaping=false");
+    tf.setOptions("invertible=true,ptb3Escaping=false,untokenizable=allKeep\"");
     this.cased = cased;
   }
 
