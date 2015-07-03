@@ -20,7 +20,7 @@ public class GermanPreprocessor extends CoreNLPPreprocessor {
   }
   public GermanPreprocessor(boolean cased) {
     super(PTBTokenizer.coreLabelFactory());
-    tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true,splitAssimilations=false");
+    tf.setOptions("invertible=true,ptb3Escaping=false,asciiQuotes=true,untokenizable=allKeep");
     this.cased = cased;
   }
 
