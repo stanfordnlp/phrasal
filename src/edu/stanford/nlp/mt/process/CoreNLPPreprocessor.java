@@ -25,12 +25,12 @@ import edu.stanford.nlp.process.TokenizerFactory;
  */
 public abstract class CoreNLPPreprocessor implements Preprocessor {
 
- protected final TokenizerFactory<CoreLabel> tf;
-  
+  protected final TokenizerFactory<CoreLabel> tf;
+
   public CoreNLPPreprocessor(TokenizerFactory<CoreLabel> tf) {
     this.tf = tf;
   }
-  
+
   /**
    * Pass options to the underlying tokenizer.
    * 
@@ -39,7 +39,14 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
   public void setOptions(String options) {
     tf.setOptions(options);
   }
-  
+
+  /**
+   * Get the underlying tokenizer factory.
+   * 
+   * @return
+   */
+  public TokenizerFactory<CoreLabel> getTokenizerFactory() { return tf; }
+
   @Override
   public Sequence<IString> process(String input) {
     String tokenizerInput = toUncased(input.trim());
@@ -51,7 +58,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     }
     return IStrings.toIStringSequence(outputStrings);
   }
-  
+
   @Override
   public SymmetricalWordAlignment processAndAlign(String input) {
     input = input.trim();
@@ -66,13 +73,13 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
       String outputToken = outputTokens.get(i).get(TextAnnotation.class);
       outputSequence[i] = new IString(outputToken);
     }
-    
+
     // Whitespace tokenization of input, create alignment
     Sequence<IString> inputSequence = IStrings.tokenize(input);
     assert inputSequence.size() == uncasedInputTokens.length;
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, 
         new SimpleSequence<IString>(true, outputSequence));
-    
+
     // Generate the alignments
     StringBuilder inputToken = new StringBuilder();
     for (int i = 0, j = 0, limit = outputTokens.size(); j < limit; ++j) {
