@@ -86,9 +86,13 @@ OnlineOptimizer<IString, String> {
 
   @Override
   public OnlineUpdateRule<String> newUpdater() {
-    if (this.updaterType.equalsIgnoreCase("adagrad"))
+    // TODO(spenceg) This function need to be reconciled with PairwiseRankingSGDUpdater
+    
+    if (this.updaterType.equalsIgnoreCase("adagrad")) {
       return new AdaGradUpdater(learningRate, expectedNumFeatures);
-    Counter<String> customl1 = new ClassicCounter<String>();
+    }
+    
+    Counter<String> customl1 = new ClassicCounter<>();
     try {
       Scanner scanner = new Scanner(new FileReader(regconfig));
       while (scanner.hasNextLine()) {

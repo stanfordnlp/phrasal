@@ -37,11 +37,7 @@ import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.train.DynamicTMBuilder;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
-import edu.stanford.nlp.mt.tune.optimizers.CrossEntropyOptimizer;
-import edu.stanford.nlp.mt.tune.optimizers.MIRA1BestHopeFearOptimizer;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
-import edu.stanford.nlp.mt.tune.optimizers.PairwiseRankingOptimizerSGD;
-import edu.stanford.nlp.mt.tune.optimizers.ExpectedBLEUOptimizer;
 import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.FlatNBestList;
@@ -91,7 +87,6 @@ public final class OnlineTuner {
   private final boolean discardInitialWeightState;
   private final String initialWtsFileName;
   private Counter<String> wtsAccumulator;
-  private final int expectedNumFeatures;
 
   // The optimization algorithm
   private OnlineOptimizer<IString,String> optimizer;
@@ -160,7 +155,6 @@ public final class OnlineTuner {
     logger.info("Loaded Phrasal from: {}", phrasalIniFile);
 
     // Configure the initial weights
-    this.expectedNumFeatures = expectedNumFeatures;
     this.initialWtsFileName = initialWtsFile;
     this.discardInitialWeightState = uniformStartWeights || randomizeStartWeights;
     wtsAccumulator = OnlineTuner.loadWeights(initialWtsFile, uniformStartWeights, randomizeStartWeights, 
@@ -176,7 +170,9 @@ public final class OnlineTuner {
         
     // Load the optimizer last since some optimizers depend on fields initialized
     // by OnlineTuner.
-    optimizer = configureOptimizer(optimizerAlg, optimizerFlags, normalizeInitialWeights);
+    optimizer = OnlineOptimizerFactory.configureOptimizer(optimizerAlg, optimizerFlags, tuneSource.size(), expectedNumFeatures);
+    if(normalizeInitialWeights)
+      Counters.normalize(wtsAccumulator);
     logger.info("Loaded optimizer: {}", optimizer);
   }
 
@@ -816,42 +812,6 @@ public final class OnlineTuner {
     if (delim < 0) return null;
     String fileName = wtsInitialFile.substring(0, delim) + STATE_FILE_EXTENSION;
     return IOTools.deserialize(fileName, UpdaterState.class, SerializationMode.BIN_GZ);
-  }
-
-  /**
-   * Configure the tuner for the specific tuning algorithm. Return the optimizer object.
-   */
-  private OnlineOptimizer<IString, String> configureOptimizer(String optimizerAlg, String[] optimizerFlags, boolean normalizeInitialWeights) {
-    assert optimizerAlg != null;
-
-    switch (optimizerAlg) {
-      case "mira-1best":
-        return new MIRA1BestHopeFearOptimizer(optimizerFlags);
-
-      case "pro-sgd":
-        assert wtsAccumulator != null : "You must load the initial weights before loading PairwiseRankingOptimizerSGD";
-        assert tuneSource != null : "You must load the tuning set before loading PairwiseRankingOptimizerSGD";
-        if(normalizeInitialWeights)
-          Counters.normalize(wtsAccumulator);
-        return new PairwiseRankingOptimizerSGD(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-
-      case "expectedBLEU":
-        assert wtsAccumulator != null : "You must load the initial weights before loading expected BLEU";
-        assert tuneSource != null : "You must load the tuning set before loading expected BLEU";
-        if(normalizeInitialWeights)
-          Counters.normalize(wtsAccumulator);
-        return new ExpectedBLEUOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-
-      case "crossentropy":
-        assert wtsAccumulator != null : "You must load the initial weights before loading cross entropy optimizer";
-        assert tuneSource != null : "You must load the tuning set before loading cross entropy optimizer";
-        if(normalizeInitialWeights)
-          Counters.normalize(wtsAccumulator);
-        return new CrossEntropyOptimizer(tuneSource.size(), expectedNumFeatures, optimizerFlags);
-
-      default:
-        throw new IllegalArgumentException("Unsupported optimizer: " + optimizerAlg);
-    }
   }
 
   /**

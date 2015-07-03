@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.Counter;
 
 /**
- * Training algorithms that update the model weights with each training example.
+ * Loss functions with online update rules.
  * 
  * @author Spence Green
  *
@@ -43,7 +43,7 @@ public interface OnlineOptimizer<TK,FV> {
    * @param sourceIds
    * @param translations
    * @param references
-   * @param referenceWeights TODO
+   * @param referenceWeights
    * @param scoreMetric
    * @return
    */
