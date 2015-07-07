@@ -20,8 +20,7 @@ import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
 
 /**
- * TODO(spenceg): Many methods in this class could be replaced with equivalent calls in
- * ArrayMath.
+ * Utility functions for optimization.
  * 
  * @author daniel cer
  *
@@ -102,12 +101,6 @@ public class OptimizerUtils {
       }
     }
     return indices;
-  }
-
-  public static String[] getWeightNamesFromCounter(Counter<String> wts) {
-     List<String> names = new ArrayList<String>(wts.keySet());
-     Collections.sort(names);
-     return names.toArray(new String[0]);
   }
   
   public static Counter<String> getWeightCounterFromArray(String[] weightNames,

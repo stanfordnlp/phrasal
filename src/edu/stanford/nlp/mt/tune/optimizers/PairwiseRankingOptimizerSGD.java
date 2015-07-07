@@ -79,7 +79,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    */
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures) {
     this(tuneSetSize, expectedNumFeatures, DEFAULT_MIN_FEATURE_SEGMENT_COUNT,
-        DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, DEFAULT_UPDATER, DEFAULT_L1, null, null);
+        DEFAULT_GAMMA, DEFAULT_XI, DEFAULT_N_THRESHOLD, DEFAULT_SIGMA, DEFAULT_RATE, 
+        DEFAULT_UPDATER, DEFAULT_L1, null, null);
   }
 
   /**
@@ -120,7 +121,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
    * @param fixedFeaturesFile
    */
   public PairwiseRankingOptimizerSGD(int tuneSetSize, int expectedNumFeatures,
-      int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, String updaterType, double L1lambda, String regconfig, String fixedFeaturesFile) {
+      int minFeatureSegmentCount, int gamma, int xi, double nThreshold, double sigma, double rate, 
+      String updaterType, double L1lambda, String regconfig, String fixedFeaturesFile) {
     if (minFeatureSegmentCount < 1) throw new RuntimeException("Feature segment count must be >= 1: " + minFeatureSegmentCount);
     if (gamma <= 0) throw new RuntimeException("Gamma must be > 0: " + gamma);
     if (xi <= 0) throw new RuntimeException("Xi must be > 0: " + xi);
@@ -390,47 +392,50 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
   @Override
   public OnlineUpdateRule<String> newUpdater() {
-	if(this.updaterType.equalsIgnoreCase("adagrad"))
-	  return new AdaGradUpdater(learningRate, expectedNumFeatures);
-	Counter<String> customl1 = new ClassicCounter<String>();
-	HashSet<String> fixedFeatures = new HashSet<String>();
-	if (regconfig != null) {
-	  try{
-	    LineNumberReader reader = IOTools.getReaderFromFile(regconfig);
-	    for (String line; (line = reader.readLine()) != null;) {
-	      String[] fields = line.trim().split("\\s+");
-	      assert fields.length == 2 : "Malformed regularization specification: " + line;
-	      customl1.incrementCount(fields[0], Double.parseDouble(fields[1]));
-	    }
-	    reader.close();
-	    System.out.println("Using custom L1: "+customl1);
-	  } catch (IOException e) {
-	    throw new RuntimeException(e);
-	  }
-	}
-	 if (fixedFeaturesFile != null) {
-	    try{
-	      LineNumberReader reader = IOTools.getReaderFromFile(fixedFeaturesFile);
-	      for (String line; (line = reader.readLine()) != null;) {
-	        String[] fields = line.trim().split("\\s+");
-	        assert fields.length == 1 : "Malformed specification for fixed features: " + line;
-	        fixedFeatures.add(fields[0]);
-	      }
-	      reader.close();
-	      System.out.println("Keeping the following features fixed: " + fixedFeatures);
-	    } catch (IOException e) {
-	      throw new RuntimeException(e);
-	    }
-	  }
-	if(this.updaterType.equalsIgnoreCase("adagradl1"))
-	    return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO, customl1, fixedFeatures);
-        if(this.updaterType.equalsIgnoreCase("adagradElitistLasso"))
-	  return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.aeLASSO, customl1, fixedFeatures);
-	if(this.updaterType.equalsIgnoreCase("adagradl1f"))
-        {
-	  return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, customl1, fixedFeatures);
-	}
-	return new SGDUpdater(learningRate);
+    if(this.updaterType.equalsIgnoreCase("adagrad")) {
+      return new AdaGradUpdater(learningRate, expectedNumFeatures);
+    }
+
+    Counter<String> customl1 = new ClassicCounter<String>();
+    if (regconfig != null) {
+      try{
+        LineNumberReader reader = IOTools.getReaderFromFile(regconfig);
+        for (String line; (line = reader.readLine()) != null;) {
+          String[] fields = line.trim().split("\\s+");
+          assert fields.length == 2 : "Malformed regularization specification: " + line;
+          customl1.incrementCount(fields[0], Double.parseDouble(fields[1]));
+        }
+        reader.close();
+        System.out.println("Using custom L1: "+customl1);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    
+    HashSet<String> fixedFeatures = new HashSet<String>();
+    if (fixedFeaturesFile != null) {
+      try{
+        LineNumberReader reader = IOTools.getReaderFromFile(fixedFeaturesFile);
+        for (String line; (line = reader.readLine()) != null;) {
+          String[] fields = line.trim().split("\\s+");
+          assert fields.length == 1 : "Malformed specification for fixed features: " + line;
+          fixedFeatures.add(fields[0]);
+        }
+        reader.close();
+        System.out.println("Keeping the following features fixed: " + fixedFeatures);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    
+    if(this.updaterType.equalsIgnoreCase("adagradl1")) {
+      return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.LASSO, customl1, fixedFeatures);
+    } else if(this.updaterType.equalsIgnoreCase("adagradElitistLasso")) {
+      return new AdaGradFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, AdaGradFOBOSUpdater.Norm.aeLASSO, customl1, fixedFeatures);
+    } else if(this.updaterType.equalsIgnoreCase("adagradl1f")) {
+      return new AdaGradFastFOBOSUpdater(learningRate, expectedNumFeatures, L1lambda, customl1, fixedFeatures);
+    }
+    return new SGDUpdater(learningRate);
   }
 
   @Override
