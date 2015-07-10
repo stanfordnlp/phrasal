@@ -95,6 +95,8 @@ public final class CorpusLevelMetricFactory {
       emetric = new MaxPredictedWordsMetric<IString, String>(references);
     } else if (evalMetric.equals("bleuAfterPrefix")) {
         emetric = new BLEUAfterPrefixMetric<String>(references);
+    } else if (evalMetric.equals("repetitionRate")) {
+      emetric = new RepetitionRate<IString, String>();
     } else {
 			throw new UnsupportedOperationException(String.format( "Unrecognized metric: %s%n", evalMetric));
 
