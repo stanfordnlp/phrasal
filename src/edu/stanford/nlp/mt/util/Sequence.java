@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.Serializable;
+
 /**
  * Immutable sequence.
  *
@@ -15,7 +17,7 @@ package edu.stanford.nlp.mt.util;
  *
  * @param <T>
  */
-public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>> {
+public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>, Serializable {
 
   /**
    *

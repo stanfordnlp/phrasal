@@ -13,6 +13,8 @@ import java.util.Arrays;
 public class SparseFeatureValueCollection<E> implements
     FeatureValueCollection<E> {
 
+  private static final long serialVersionUID = -5894813118279073689L;
+  
   Index<E> featureIndex;
   double[] featureValues;
   int[] featureIndices;

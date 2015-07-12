@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.Serializable;
+
 /**
  * A feature key/value pair.
  * 
@@ -8,7 +10,9 @@ package edu.stanford.nlp.mt.util;
  * 
  * @param <T>
  */
-public class FeatureValue<T> {
+public class FeatureValue<T> implements Serializable {
+  private static final long serialVersionUID = -1016755714694934570L;
+  
   public final double value;
   public final T name;
   

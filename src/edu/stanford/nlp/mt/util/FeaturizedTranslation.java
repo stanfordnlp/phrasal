@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.Serializable;
+
 /**
  * 
  * @author danielcer
@@ -7,9 +9,11 @@ package edu.stanford.nlp.mt.util;
  * @param <TK>
  * @param <FV>
  */
-public class FeaturizedTranslation<TK, FV> {
-  public final Sequence<TK> translation;
-  public final FeatureValueCollection<FV> features;
+public class FeaturizedTranslation<TK, FV> implements Serializable {
+  private static final long serialVersionUID = -8828328579437113340L;
+  
+  public Sequence<TK> translation;
+  public FeatureValueCollection<FV> features;
 
   /**
 	 * 

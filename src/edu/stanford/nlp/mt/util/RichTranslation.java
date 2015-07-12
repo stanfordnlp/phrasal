@@ -1,5 +1,8 @@
 package edu.stanford.nlp.mt.util;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 import java.util.Stack;
 import java.util.regex.Pattern;
@@ -20,8 +23,11 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  * @param <FV>
  */
 public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV> {
-  public final Sequence<TK> source;
-  private final Featurizable<TK, FV> featurizable;
+  private static final long serialVersionUID = 6683028704195476157L;
+  
+  public Sequence<TK> source;
+  private final transient Featurizable<TK, FV> featurizable;
+  private String f2eAlignment;
 
   /**
    * Constructor.
@@ -38,7 +44,40 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     this.source = featurizable == null ? new EmptySequence<TK>() : featurizable.sourceSentence;
   }
   
- 
+  /**
+   * Custom serializer.
+   * 
+   * @param oos
+   */
+  private void writeObject(ObjectOutputStream oos) throws IOException {
+    oos.defaultWriteObject();
+    oos.writeLong(latticeSourceId);
+    oos.writeDouble(score);
+    oos.writeUTF(source.toString());
+    oos.writeUTF(translation.toString());
+    oos.writeUTF(f2eAlignment == null ? alignmentString() : f2eAlignment);
+    oos.writeObject(this.features);
+  }
+
+  /**
+   * Custom deserializer.
+   * 
+   * @param ois
+   * @throws ClassNotFoundException
+   * @throws IOException
+   */
+  @SuppressWarnings("unchecked")
+  private void readObject(ObjectInputStream ois)
+      throws ClassNotFoundException, IOException {
+    ois.defaultReadObject();
+    this.latticeSourceId = ois.readLong();
+    this.score = ois.readDouble();
+    this.source = (Sequence<TK>) IStrings.tokenize(ois.readUTF());
+    this.translation = (Sequence<TK>) IStrings.tokenize(ois.readUTF());
+    this.f2eAlignment = ois.readUTF();
+    this.features = (FeatureValueCollection<FV>) ois.readObject();
+  }
+  
   /**
    * Access the underlying featurizable.
    * 
@@ -119,9 +158,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
       String historyString = historyString();
       sbuf.append(historyString);
     }
-    
     sbuf.append(" ").append(delim).append(" ").append(this.featurizable.debugStates());
-    
   }
   
   Stack<Featurizable<TK,FV>> featurizables() {
@@ -131,9 +168,6 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     }
     return featurizablesStack;
   }
-
- 
-
   
   // Thang May14: copy toString, to debug CubePrunningDecoder/CubePrunningNNLMDecoder
   public String toStringNoLatticeId() {
@@ -161,7 +195,6 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
   public String ruleInfo(ConcreteRule<TK,FV> rule){
     return String.format("%s <r> %s <r> %d <r> %s", rule.abstractRule.source,
         rule.abstractRule.target, rule.sourcePosition, rule.abstractRule.alignment);
-    
   }
   /**
    * Print out list of rules participating in building up this translation
@@ -194,7 +227,8 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
    * @return
    */
   public String alignmentString() {
-    return alignmentGrid().toString();
+    if (f2eAlignment == null) f2eAlignment = alignmentGrid().toString();
+    return f2eAlignment;
   }
   
   /**

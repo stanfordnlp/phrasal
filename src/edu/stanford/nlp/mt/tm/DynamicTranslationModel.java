@@ -256,7 +256,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
-   * Create mappings between the system vocabulary and the translation model vocabulary.
+   * Create mappings between the system vocabulary and the translation model vocabulary. 
+   * This method must fill in OOVs in the system vocabulary.
    */
   private void createIdArrays() {
     final int sysSize = Vocabulary.systemSize();
@@ -268,7 +269,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     int tmSize = tmVocab.size();
     tm2Sys = new int[tmSize];
     IntStream.range(0, tmSize).parallel().forEach(i -> {
-      tm2Sys[i] = Vocabulary.systemIndexOf(tmVocab.get(i));
+      String word = tmVocab.get(i);
+      int wordIndex = Vocabulary.systemIndexOf(word);
+      if (wordIndex < 0) wordIndex = Vocabulary.systemAdd(word);
+      tm2Sys[i] = wordIndex;
     });
   }
 

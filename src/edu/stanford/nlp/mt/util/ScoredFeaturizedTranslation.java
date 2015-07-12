@@ -16,7 +16,10 @@ import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 public class ScoredFeaturizedTranslation<TK, FV> extends
     FeaturizedTranslation<TK, FV> implements
     Comparable<ScoredFeaturizedTranslation<TK, FV>> {
-  public final long latticeSourceId;
+
+  private static final long serialVersionUID = -3929110711626564332L;
+
+  public long latticeSourceId;
   
   /**
    * Hypothesis score

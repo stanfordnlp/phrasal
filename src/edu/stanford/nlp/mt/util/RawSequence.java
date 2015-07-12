@@ -7,6 +7,8 @@ package edu.stanford.nlp.mt.util;
  * @param <TK>
  */
 public class RawSequence<TK> extends AbstractSequence<TK> {
+  private static final long serialVersionUID = 3707809226147400460L;
+  
   public final Object[] elements;
 
   public RawSequence() {

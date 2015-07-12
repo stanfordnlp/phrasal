@@ -12,6 +12,8 @@ import edu.stanford.nlp.util.Index;
  * @param <T>
  */
 public class SimpleSequence<T> extends AbstractSequence<T> {
+  private static final long serialVersionUID = 8446551497177484601L;
+  
   private final Object[] elements;
   private final int start, end;
 

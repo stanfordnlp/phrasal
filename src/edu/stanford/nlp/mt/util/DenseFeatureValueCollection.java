@@ -13,6 +13,8 @@ import java.util.Iterator;
 public class DenseFeatureValueCollection<E> implements
     FeatureValueCollection<E> {
 
+  private static final long serialVersionUID = 1841531878278552466L;
+  
   Index<E> featureIndex;
   double[] w;
   BitSet isDefined;

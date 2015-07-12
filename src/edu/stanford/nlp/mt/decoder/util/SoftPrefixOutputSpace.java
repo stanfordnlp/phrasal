@@ -82,6 +82,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     filter(ruleGrid, inferer, null);
   }
   
+  // TODO(spenceg) This won't work with the CompiledPhraseTable anymore!!
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public void filter(RuleGrid<IString, String> ruleGrid, 
