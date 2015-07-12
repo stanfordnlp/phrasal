@@ -20,7 +20,7 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  * @param <FV>
  */
 public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV> {
-  private final Sequence<TK> source;
+  public final Sequence<TK> source;
   private final Featurizable<TK, FV> featurizable;
 
   /**
