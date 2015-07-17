@@ -5,8 +5,7 @@
   </Properties>
 
   <Appenders>
-    <RollingFile name="logfile" fileName="${log-path}/phrasal-${date:MM-dd-yyyy-HH:mm:ss}.log"
-filePattern="${log-path}/phrasal-%d{yyyy-MM-dd-HH:mm:ss}.%i.log.gz">
+    <RollingFile append="true" name="logfile" fileName="${log-path}/phrasal.log" filePattern="${log-path}/phrasal.%i.log">
       <PatternLayout>
 	       <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
       </PatternLayout>
