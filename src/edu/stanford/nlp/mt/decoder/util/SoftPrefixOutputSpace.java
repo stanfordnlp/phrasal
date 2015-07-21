@@ -88,7 +88,9 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   public void filter(RuleGrid<IString, String> ruleGrid, 
       AbstractInferer<IString, String> inferer, InputProperties inputProperties) {
     List<TranslationModel<IString,String>> models = ((CombinedTranslationModel) inferer.phraseGenerator).getModels();
-    if (models.get(0) instanceof DynamicTranslationModel) {
+    final boolean isDynamicTM = models.get(0) instanceof DynamicTranslationModel;
+    if (isDynamicTM) {
+      // We're going to add rules here, so enable sorting on lookup
       ruleGrid.setLazySorting(true);
       
       // New strategy with the dynamic TM
@@ -101,16 +103,16 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       final String[] featureNames = backgroundModel.getFeatureNames().stream().toArray(String[]::new);
       
       // Target OOVs, Target insertions, target unigrams
-      for (int j = 0, size = allowablePrefix.size(); j < size; ++j) {
+      for (int j = 0, tgtLength = allowablePrefix.size(); j < tgtLength; ++j) {
         IString targetQuery = allowablePrefix.get(j);
-        int tgtIdBack = backgroundModel.inVocabulary(targetQuery);
-        int tgtIdFore = foregroundModel == null ? -1 : foregroundModel.inVocabulary(targetQuery);
-        final int cnt_e = backgroundModel.coocTable.getTgtMarginal(tgtIdBack)
-            + (foregroundModel == null ? 0 : foregroundModel.coocTable.getTgtMarginal(tgtIdFore));
+        int tgtIdBackground = backgroundModel.inVocabulary(targetQuery);
+        int tgtIdForeground = foregroundModel == null ? -1 : foregroundModel.inVocabulary(targetQuery);
+        final int cnt_e = backgroundModel.coocTable.getTgtMarginal(tgtIdBackground)
+            + (foregroundModel == null ? 0 : foregroundModel.coocTable.getTgtMarginal(tgtIdForeground));
         boolean isTargetOOV = cnt_e == 0;
         final Sequence<IString> target = allowablePrefix.subsequence(j, j+1);
         
-        for (int i = 0, limit = sourceSequence.size(); i < limit; ++i) {
+        for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
           // if (isTargetOOV) break;
           IString sourceQuery = sourceSequence.get(i);
           int srcIdBack = backgroundModel.inVocabulary(sourceQuery);
@@ -119,46 +121,32 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
               (foregroundModel == null ? 0 : foregroundModel.coocTable.getSrcMarginal(srcIdFore));
           final boolean isSourceOOV = cnt_f == 0;
           final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
-          if (isTargetOOV || isSourceOOV) {
+          
+          if (isTargetOOV) {
             // EMNLP14 algorithm. Should be replaced with insertion or deletion logic below.
             ConcreteRule<IString,String> syntheticRule = makeDummyRule(source, 
                 target, i, inputProperties);
             ruleGrid.addEntry(syntheticRule);
           
-          } else {
-            int cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBack)
-                + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdFore));
+          } else if (! isSourceOOV) {
+            int cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
+                + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
             // TODO(spenceg) Smooth for now. This should encourage infrequent words to align with infrequent words.
             // Use the rule insertion logic below when the interaction with
             // CubePruningDecoder is better understood.
             if (cnt_joint == 0) cnt_joint += 1;
-            CoverageSet sourceCoverage = new CoverageSet(limit);
+            CoverageSet sourceCoverage = new CoverageSet(srcLength);
             sourceCoverage.set(i);
             ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, target, 
                 sourceCoverage, phraseTableName, featureNames, inferer.scorer, inferer.featurizer, 
                 cnt_joint, cnt_e, cnt_f, inputProperties);
             ruleGrid.addEntry(syntheticRule);
-          }          
+          } // else handled by the System OOV model       
         }
-        // TODO(spenceg) Add an insertion rule. This will interact in a funny way with the 
-        // hyperedge bundles in cube pruning. Hypotheses will end up in the wrong beams. Hmm...
-//        int cnt_null = backgroundModel.coocTable.getJointCount(LexCoocTable.NULL_ID, tgtIdBack)
-//            + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(LexCoocTable.NULL_ID, tgtIdFore));
-//        final int cnt_f_null = backgroundModel.coocTable.getSrcMarginal(LexCoocTable.NULL_ID)
-//            + (foregroundModel == null ? 0 : foregroundModel.coocTable.getSrcMarginal(LexCoocTable.NULL_ID));
-//        if (cnt_null > 0) {
-//          ConcreteRule<IString,String> rule = makeSyntheticRule()
-//        } else {
-//          // Includes OOV case
-//          cnt_null = 1;
-//        }
-        
       }
       
-      // TODO(spenceg) Add source deletions
-      
     } else {
-      // EMNLP14 strategy
+      // EMNLP14 strategy for compiled TMs
       // Allow any target word to map anywhere into the source, but with high
       // cost so that only OOVs and words outside the distortion limit will
       // be used.

@@ -758,7 +758,7 @@ public class Phrasal {
 
     // Create Recombination Filter
     RecombinationFilter<Derivation<IString, String>> filter = RecombinationFilterFactory
-        .factory(recombinationMode, featurizer.getFeaturizers(), forceDecode);
+        .factory(recombinationMode, featurizer.getFeaturizers());
 
     // Create Search Heuristic
     RuleFeaturizer<IString, String> isolatedPhraseFeaturizer = featurizer;

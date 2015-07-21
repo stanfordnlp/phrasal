@@ -304,6 +304,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         if (s.isSourceUnaligned(i)) {
           coocTable.addCooc(srcId, LexCoocTable.NULL_ID);
         } else {
+          // Don't discriminate among alignment links.
+          // See {@link edu.stanford.nlp.mt.train.MosesPharoahFeatureExtractor#FeaturizeSentence}
+          // TODO(spenceg) Maybe we should discriminate? Will greatly increase the size of the
+          // of the cooc table.
           int[] tgtAlign = s.f2e(i);
           for (int j : tgtAlign) {
             int tgtId = s.target(j);

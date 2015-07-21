@@ -42,6 +42,8 @@ State<Derivation<TK, FV>> {
   // In prefix-constrained decoding, we need to know whether the prefix has been completed for recombination
   public final boolean prefixCompleted;
   
+  public final int prefixLength;
+  
   // Thang Apr14: remove the final modifier so we can update during NPLM reranking.
   public double score;
   
@@ -122,6 +124,7 @@ State<Derivation<TK, FV>> {
     targetSequence = new EmptySequence<TK>();
     
     prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
+    prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
   }
 
   /**
@@ -174,6 +177,7 @@ State<Derivation<TK, FV>> {
     depth = base.depth + 1;
     
     prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
+    prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
   }
 
   /**
@@ -228,6 +232,7 @@ State<Derivation<TK, FV>> {
     assert (!Double.isNaN(h));
     
     prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
+    prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
   }
 
   @Override

@@ -8,7 +8,6 @@ import java.util.Set;
 
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
-import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -71,6 +70,8 @@ public class FeatureExtractor<TK, FV> extends
         this.featureAugmentationMode = 1;
       } else if (featureAugmentationMode.equals("extended")) {
         this.featureAugmentationMode = 2;
+      } else if (featureAugmentationMode.equals("prefix")) {
+        this.featureAugmentationMode = 3;
       }
       return true;
     }
@@ -159,7 +160,7 @@ public class FeatureExtractor<TK, FV> extends
           for (FeatureValue<FV> fv : listFeatureValues) {
             featureValues.add(fv);
             if (featureAugmentationMode >= 0) {
-              augmentFeatureValue(fv, f.derivation.sourceInputProperties, featureValues);
+              augmentFeatureValue(fv, f, featureValues);
             }
           }
         }
@@ -185,7 +186,7 @@ public class FeatureExtractor<TK, FV> extends
             fv.doNotCache = doNotCache;
             featureValues.add(fv);
             if (featureAugmentationMode >= 0) {
-              augmentFeatureValue(fv, f.sourceInputProperties, featureValues);
+              augmentFeatureValue(fv, f, featureValues);
             }
           }
         }
@@ -198,14 +199,14 @@ public class FeatureExtractor<TK, FV> extends
    * Feature space augmentation a la Daume III (2007).
    * 
    * @param fv
-   * @param sourceInputProperties
+   * @param f
    * @param featureValues
    */
   @SuppressWarnings("unchecked")
   private void augmentFeatureValue(FeatureValue<FV> fv,
-      InputProperties sourceInputProperties, List<FeatureValue<FV>> featureValues) {
-    final String[] genres = sourceInputProperties.containsKey(InputProperty.Domain)
-        ? (String[]) sourceInputProperties.get(InputProperty.Domain) : null;
+      Featurizable<TK, FV> f, List<FeatureValue<FV>> featureValues) {
+    final String[] genres = f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String[]) f.sourceInputProperties.get(InputProperty.Domain) : null;
     if (genres != null) {
       if (featureAugmentationMode == 0 ||
           (featureAugmentationMode == 1 && fv.isDenseFeature) ||
@@ -214,6 +215,13 @@ public class FeatureExtractor<TK, FV> extends
           String featureValue = String.format("aug-%s-%s", genres[i], fv.name.toString());
           featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
+      }
+    } else if (featureAugmentationMode == 3) {
+      // Prefix mode
+      boolean inPrefix = f.targetPrefix.size() < f.derivation.prefixLength;
+      if (inPrefix) {
+        String featureValue = String.format("aug-%s", fv.name.toString());
+        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
       }
     }
   }

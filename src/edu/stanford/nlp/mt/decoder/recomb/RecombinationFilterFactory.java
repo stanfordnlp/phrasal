@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.IString;
 
-
 /**
  * Configure and return a recombination filter.
  * 
@@ -33,22 +32,6 @@ public final class RecombinationFilterFactory {
    */
   public static RecombinationFilter<Derivation<IString, String>> factory(
       String recombinationMode, List<Featurizer<IString, String>> featurizers) {
-    return factory(recombinationMode, featurizers, false);
-  }
-
-
-  /**
-   * Create a recombination filter.
-   * 
-   * @param recombinationMode one of the modes specified in <code>RecombinationFilterFactory</code>.
-   * @param featurizers the list of featurizers to consider
-   * @param forceDecode do we run forcedDecoding?
-   * @return
-   */
-  public static RecombinationFilter<Derivation<IString, String>> factory(
-      String recombinationMode, List<Featurizer<IString, String>> featurizers,
-      boolean forceDecode) {
-    
     boolean msdRecombination = false;
     for (Featurizer<IString, String> featurizer : featurizers) {
       if (featurizer instanceof HierarchicalReorderingFeaturizer ||
@@ -58,10 +41,9 @@ public final class RecombinationFilterFactory {
 
     List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
     
-    // todo: this only takes care of soft prefix-constrained decoding
-    // -- Joern W
-    if(forceDecode)
-      filters.add(new SoftConstrainedDecodingRecombinationFilter<IString, String>());
+    // Always consider prefixes during recombination. Sort of like source coverage...a
+    // hard constraint.
+    filters.add(new SoftConstrainedDecodingRecombinationFilter<IString, String>());
     
     switch (recombinationMode) {
       case PHAROAH_RECOMBINATION: {
