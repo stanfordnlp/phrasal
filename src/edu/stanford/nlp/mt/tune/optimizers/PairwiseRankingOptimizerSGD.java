@@ -41,7 +41,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   //  static public final double DEFAULT_N_THRESHOLD = 0.05;
   public static final int DEFAULT_GAMMA = 500;
   public static final int DEFAULT_XI = 15;
-  public static final double DEFAULT_N_THRESHOLD = 5.0;
+  public static final double DEFAULT_N_THRESHOLD = 0.05;
   public static final int DEFAULT_MIN_FEATURE_SEGMENT_COUNT = 3;
   public static final double DEFAULT_SIGMA = 0.1;
   public static final double DEFAULT_RATE = 0.1;
