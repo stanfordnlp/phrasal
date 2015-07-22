@@ -57,6 +57,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("numPredictedWords")) {
       return scoreMetricStr;
       
+    } else if (scoreMetricStr.equals("bleu-prefix")) {
+      return scoreMetricStr;
+      
     } else if (scoreMetricStr.equals("2bleu-ter") || scoreMetricStr.equals("2bleun-ter")) {
       return scoreMetricStr;
     
@@ -128,6 +131,9 @@ public final class SentenceLevelMetricFactory {
       // Cherry and Foster (2012)
       return new BLEUOracleCost<IString,String>(DEFAULT_ORDER, true);
     
+    } else if (scoreMetricStr.equals("bleu-prefix")) {
+      return new SLBLEUAfterPrefix<IString,String>(DEFAULT_ORDER, true);
+      
     } else if (scoreMetricStr.equals("tergain")) {
       return new SLTERGain<IString,String>();
       

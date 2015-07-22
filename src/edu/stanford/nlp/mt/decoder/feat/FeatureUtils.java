@@ -1,14 +1,11 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.tm.TranslationModel;
-import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
@@ -57,18 +54,6 @@ public final class FeatureUtils {
     // Dense translation model features
     features.addAll(tm.getFeatureNames().stream().map(s -> TranslationModelFeaturizer.toTMFeature(s))
         .collect(Collectors.toList()));
-    return features;
-  }
-  
-  /**
-   * Wrap a single feature value for return from a feature template.
-   * 
-   * @param feature
-   * @return
-   */
-  public static <FV> List<FeatureValue<FV>> wrapFeature(FeatureValue<FV> feature) {
-    List<FeatureValue<FV>> features = new ArrayList<>(1);
-    features.add(feature);
     return features;
   }
   

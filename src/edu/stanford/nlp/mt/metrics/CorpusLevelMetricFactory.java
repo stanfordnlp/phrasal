@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.metrics;
 
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
@@ -93,8 +91,8 @@ public final class CorpusLevelMetricFactory {
       emetric = new NumPredictedWordsMetric<IString, String>(references);
     } else if (evalMetric.equals("maxPredictedWords")) {
       emetric = new MaxPredictedWordsMetric<IString, String>(references);
-    } else if (evalMetric.equals("bleuAfterPrefix")) {
-        emetric = new BLEUAfterPrefixMetric<String>(references);
+    } else if (evalMetric.equals("bleu-prefix")) {
+      emetric = new BLEUAfterPrefixMetric<String>(references);
     } else if (evalMetric.equals("repetitionRate")) {
       emetric = new RepetitionRate<IString, String>();
     } else {

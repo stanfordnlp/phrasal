@@ -1281,9 +1281,9 @@ public class Phrasal {
         | IllegalArgumentException | SecurityException
         | InvocationTargetException | NoSuchMethodException
         | ClassNotFoundException | IOException e) {
-      System.err.println("ERROR: Could not load Phrasal!");
-      throw new RuntimeException(e);
+      logger.error(e);
     }
+    return null;
   }
   
   /**

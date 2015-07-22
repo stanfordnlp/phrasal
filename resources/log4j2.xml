@@ -25,11 +25,11 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="edu.stanford.nlp.mt" level="info" additivity="false">
+    <Logger name="com.lilt" level="info" additivity="false">
       <AppenderRef ref="Async" level="info"/>
     </Logger>
 
-    <Root level="error" additivity="false">
+    <Root level="warn" additivity="false">
       <AppenderRef ref="console"/>
     </Root>
   </Loggers>

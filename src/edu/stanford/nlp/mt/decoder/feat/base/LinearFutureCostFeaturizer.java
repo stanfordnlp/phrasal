@@ -1,9 +1,9 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -73,7 +73,7 @@ public class LinearFutureCostFeaturizer extends
     int edge = lastOptionForeignEdge(f.derivation);
     f.setState(this, new FutureCostState(edge, futureCost));
     float deltaCost = futureCost - oldFutureCost;
-    return FeatureUtils.wrapFeature(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost), true));
+    return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, -1.0 * (cost(f) + deltaCost), true));
   }
 
   @Override

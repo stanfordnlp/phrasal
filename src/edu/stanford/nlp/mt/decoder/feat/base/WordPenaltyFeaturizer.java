@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
+import java.util.Collections;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
@@ -25,7 +25,7 @@ public class WordPenaltyFeaturizer<TK> implements
     if (f.targetPhrase == null || f.targetPhrase.size() == 0) {
       return null;
     } else {
-      return FeatureUtils.wrapFeature(new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
+      return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
           * f.targetPhrase.size(), true));
     }
   }

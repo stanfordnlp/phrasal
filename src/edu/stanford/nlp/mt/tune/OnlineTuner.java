@@ -3,19 +3,22 @@ package edu.stanford.nlp.mt.tune;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -74,6 +77,8 @@ public final class OnlineTuner {
   
   private static final String STATE_FILE_EXTENSION = ".ostate";
   
+  private static final Logger logger = LogManager.getLogger(OnlineTuner.class);
+  
   // Tuning set
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
@@ -121,9 +126,9 @@ public final class OnlineTuner {
   private int pseudoReferenceBurnIn = -1;
   private List<List<Sequence<IString>>> pseudoReferences;
   private double[] referenceWeights;
-  
-  private static final Logger logger = LogManager.getLogger(OnlineTuner.class.getName());
-  
+
+  private List<Sequence<IString>> prefixes;
+    
   /**
    * Constructor.
    * 
@@ -138,20 +143,16 @@ public final class OnlineTuner {
    * @param expectedNumFeatures
    * @param wrapBoundary 
    * @param experimentName 
+   * @throws IOException 
    */
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
       boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, 
-      boolean wrapBoundary, String experimentName, boolean normalizeInitialWeights) {
+      boolean wrapBoundary, String experimentName, boolean normalizeInitialWeights) throws IOException {
     this.outputWeightPrefix = experimentName + ".online";
 
     // Load Phrasal
-    try {
-      decoder = Phrasal.loadDecoder(phrasalIniFile);
-    } catch (IOException e) {
-      e.printStackTrace();
-      System.exit(-1);
-    }
+    decoder = Phrasal.loadDecoder(phrasalIniFile);
     logger.info("Loaded Phrasal from: {}", phrasalIniFile);
 
     // Configure the initial weights
@@ -377,23 +378,30 @@ public final class OnlineTuner {
       // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
-        InputProperties inputProperties;
-        if(decoder.getInputProperties().size() > sourceId)
-            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
-        else
-            inputProperties = new InputProperties();
         
+        // Setup the parameters for decoding this segment
+        InputProperties inputProperties;
+        if(decoder.getInputProperties().size() > sourceId) {
+            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
+        } else {
+            inputProperties = new InputProperties();
+        }
         inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
         if (input.localTM != null) inputProperties.put(InputProperty.DecoderLocalTM, input.localTM);
+        List<Sequence<IString>> targets = null;
+        if (prefixes != null && sourceId < prefixes.size()) {
+          inputProperties.put(InputProperty.TargetPrefix, true);
+          targets = Collections.singletonList(prefixes.get(sourceId));
+        }
         
         List<RichTranslation<IString,String>> nbestList;
         if(input.createForcedAlignment) {
           // no forced decoding for optimization
           nbestList = decoder.decode(input.source.get(i), sourceId, 
-              threadId, decoder.getNbestListSize(), null, inputProperties);
+              threadId, decoder.getNbestListSize(), targets, inputProperties);
           
           // now compute forced alignment
-          inputProperties.put(InputProperty.TargetPrefix, Boolean.toString(true));
+          inputProperties.put(InputProperty.TargetPrefix, true);
           inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
           List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
               threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
@@ -402,7 +410,7 @@ public final class OnlineTuner {
         }
         else {
           nbestList = decoder.decode(input.source.get(i), sourceId, 
-              threadId, inputProperties);
+              threadId, decoder.getNbestListSize(), targets, inputProperties);
         }
         nbestLists.add(nbestList);
       }
@@ -735,28 +743,35 @@ public final class OnlineTuner {
    * 
    * @param refStr a comma-separated list of reference filenames
    * @param wrapBoundary 
+   * @throws IOException 
    */
-  public void loadReferences(String refStr, boolean wrapBoundary) {
+  public void loadReferences(String refStr, boolean wrapBoundary) throws IOException {
     if (refStr == null || refStr.length() == 0) {
       throw new IllegalArgumentException("Invalid reference list");
     }
     
-    try {
-      String[] filenames = refStr.split(",");
-      System.err.println("reading references: " + refStr);
-      references = MetricUtils.readReferences(filenames);
-      assert references.get(0).size() == filenames.length;
-      numReferences = filenames.length;
-      if (wrapBoundary) {
-        for (List<Sequence<IString>> refList : references) {
-          wrap(refList);
-        }
+    String[] filenames = refStr.split(",");
+    System.err.println("reading references: " + refStr);
+    references = MetricUtils.readReferences(filenames);
+    assert references.get(0).size() == filenames.length;
+    numReferences = filenames.length;
+    if (wrapBoundary) {
+      for (List<Sequence<IString>> refList : references) {
+        wrap(refList);
       }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
     assert references.size() == tuneSource.size();
     logger.info("Number of references for objective function calculation: {}", numReferences);
+  }
+  
+  /**
+   * Load a prefix file.
+   * 
+   * @param prefixFile
+   * @throws IOException
+   */
+  private void loadPrefixes(String prefixFile) throws IOException {
+    prefixes = Files.lines(Paths.get(prefixFile)).map(s -> IStrings.tokenize(s)).collect(Collectors.toList());
   }
   
   /**
@@ -868,6 +883,7 @@ public final class OnlineTuner {
     optionMap.put("faDistLimit", 1);    
     optionMap.put("niw", 1);    
     optionMap.put("sb", 0);
+    optionMap.put("prf", 1);
     return optionMap;
   }
 
@@ -903,7 +919,8 @@ public final class OnlineTuner {
       .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
       .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
       .append("   -niw       : normalize the initial weights file (default: true)").append(nl)
-      .append("   -sb        : Specify for single best output. ");
+      .append("   -sb        : Specify for single best output. ").append(nl)
+      .append("   -prf file  : Prefix file for tuning. Length must match the length of the tuning set.");
     
     return sb.toString();
   }
@@ -940,6 +957,7 @@ public final class OnlineTuner {
     int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
     boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", true);
+    String prefixFile = opts.getProperty("prf", null);
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -952,39 +970,38 @@ public final class OnlineTuner {
     String phrasalIniFile = parsedArgs[2];
     String wtsInitialFile = parsedArgs[3];
 
-    final long startTime = System.nanoTime();
-    System.out.println("Phrasal Online Tuner");
-    System.out.printf("Startup: %s%n", new Date());
-    System.out.println("====================");
-    for (Entry<String, String> option : PropertiesUtils.getSortedEntries(opts)) {
-      System.out.printf(" %s\t%s%n", option.getKey(), option.getValue());
-    }
-    System.out.println("====================");
-    System.out.println();
-      
-    // Run optimization
-    final SentenceLevelMetric<IString,String> slScoreMetric = SentenceLevelMetricFactory.getMetric(scoreMetricStr, scoreMetricOpts);
-    final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
-    OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
-        optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-        expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights);
-    if (refStr != null) {
-      tuner.loadReferences(refStr, wrapBoundary);
-    }
-    if (pseudoRefOptions != null) {
-      tuner.computePseudoReferences(pseudoRefOptions, tmpPath);
-    }
-    tuner.doParameterAveraging(doParameterAveraging);
-    tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
-    tuner.minFeatureCount(minFeatureCount);
-    tuner.shuffleDev(shuffleDev);
-    tuner.outputSingleBest(outputSingleBest);
-    tuner.enforceStrictlySequential(enforceStrictlySequential);
-    tuner.trainLocalTM(trainLocalTM, faDistortionLimit);
-    tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
+    final long startTime = TimingUtils.startTime();
+    logger.info("Phrasal Online Tuner");
+    logger.info("Startup: {}", new Date());
+    logger.info("Options: {}", 
+        PropertiesUtils.getSortedEntries(opts).stream()
+        .map(e -> String.format("%s %s", e.getKey(), e.getValue()))
+        .collect(Collectors.joining(" ")));
 
-    final long elapsedTime = System.nanoTime() - startTime;
-    System.out.printf("Elapsed time: %.2f seconds%n", elapsedTime / 1e9);
-    System.out.printf("Finished at: %s%n", new Date());
+    try {
+      final SentenceLevelMetric<IString,String> slScoreMetric = SentenceLevelMetricFactory.getMetric(scoreMetricStr, scoreMetricOpts);
+      final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
+      OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
+          optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
+          expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights);
+      if (refStr != null) tuner.loadReferences(refStr, wrapBoundary);
+      if (pseudoRefOptions != null) tuner.computePseudoReferences(pseudoRefOptions, tmpPath);
+      if (prefixFile != null) tuner.loadPrefixes(prefixFile);
+      tuner.doParameterAveraging(doParameterAveraging);
+      tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
+      tuner.minFeatureCount(minFeatureCount);
+      tuner.shuffleDev(shuffleDev);
+      tuner.outputSingleBest(outputSingleBest);
+      tuner.enforceStrictlySequential(enforceStrictlySequential);
+      tuner.trainLocalTM(trainLocalTM, faDistortionLimit);
+      tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
+
+      final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
+      logger.info("Elapsed time: {} seconds", elapsedTime);
+      logger.info("Finished at: {}", new Date());
+    
+    } catch (IOException e) {
+      logger.fatal(e);
+    }
   }
 }

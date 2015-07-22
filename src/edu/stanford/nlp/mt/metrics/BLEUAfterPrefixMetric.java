@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.metrics;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.TokenUtils;
 
 import java.util.List;
 
@@ -22,7 +23,6 @@ import static java.util.stream.Collectors.toList;
  * @author John DeNero
  */
 public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
-  private static IString NON_MATCH = new IString("123456789097654321");
 
   /**
    * The implementation just doctors the references to block everything not in
@@ -66,7 +66,7 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
               .map(ref -> {
                         RawSequence<IString> masked = new RawSequence<>(ref);
                         for (int i = 0; i < prefix.size(); i++) {
-                          masked.elements[i] = NON_MATCH;
+                          masked.elements[i] = TokenUtils.NULL_TOKEN;
                         }
                         return (Sequence<IString>) masked;
                       }

@@ -218,7 +218,8 @@ public class FeatureExtractor<TK, FV> extends
       }
     } else if (featureAugmentationMode == 3) {
       // Prefix mode
-      boolean inPrefix = f.targetPrefix.size() < f.derivation.prefixLength;
+      final boolean inPrefix = f.targetPrefix != null && f.derivation != null && 
+          f.targetPrefix.size() < f.derivation.prefixLength;
       if (inPrefix) {
         String featureValue = String.format("aug-%s", fv.name.toString());
         featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));

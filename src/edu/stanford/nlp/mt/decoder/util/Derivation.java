@@ -112,6 +112,8 @@ State<Derivation<TK, FV>> {
     insertionPosition = 0;
     length = 0;
     rule = null;
+    this.prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
+    this.prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
     this.sourceSequence = sourceSequence;
     this.sourceInputProperties = sourceInputProperties;
     preceedingDerivation = null;
@@ -121,10 +123,7 @@ State<Derivation<TK, FV>> {
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
-    targetSequence = new EmptySequence<TK>();
-    
-    prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
-    prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
+    targetSequence = new EmptySequence<TK>();    
   }
 
   /**
@@ -151,10 +150,10 @@ State<Derivation<TK, FV>> {
     this.sourceInputProperties = base.sourceInputProperties;
     this.sourceCoverage = base.sourceCoverage.clone();
     this.sourceCoverage.or(rule.sourceCoverage);
-    this.length = (insertionPosition < base.length ? base.length : // internal
-      // insertion
-      insertionPosition + rule.abstractRule.target.size()); // edge
-    // insertion
+    this.prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
+    this.prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
+    this.length = (insertionPosition < base.length ? base.length : // internal insertion
+      insertionPosition + rule.abstractRule.target.size()); // edge insertion
     sourceSequence = base.sourceSequence;
     targetSequence = Sequences.concatenate(base.targetSequence, rule.abstractRule.target);
     untranslatedTokens = this.sourceSequence.size()
@@ -174,10 +173,7 @@ State<Derivation<TK, FV>> {
     // heuristic.getHeuristicDelta(this, translationOpt.foreignCoverage),
     // untranslatedTokens, foreignCoverage);
     assert (!Double.isNaN(h));
-    depth = base.depth + 1;
-    
-    prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
-    prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
+    depth = base.depth + 1;    
   }
 
   /**
