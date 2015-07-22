@@ -393,7 +393,7 @@ public final class OnlineTuner {
               threadId, decoder.getNbestListSize(), null, inputProperties);
           
           // now compute forced alignment
-          inputProperties.put(InputProperty.TargetPrefix, Boolean.toString(true));
+          inputProperties.put(InputProperty.TargetPrefix, true);
           inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
           List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
               threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
