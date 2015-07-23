@@ -1,22 +1,42 @@
 package edu.stanford.nlp.mt.util;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
+ * Utilities for factories.
  * 
  * @author danielcer
  * 
  */
-public class FactoryUtil {
+public final class FactoryUtil {
+
+  private static final String DELIMITER = ":";
+  
+  // Static class
+  private FactoryUtil() {}
 
   /**
-	 * 
-	 */
-  public static Map<String, String> getParamPairs(String[] specs) {
-    Map<String, String> paramPairs = new HashMap<String, String>();
+   * Make key/value pairs.
+   * 
+   * @param label
+   * @param value
+   * @return
+   */
+  public static String makePair(String label, String value) {
+    return String.format("%s%s%s", label, DELIMITER, value);
+  }
 
-    for (int i = 1; i < specs.length; i++) {
-      String[] fields = specs[i].split(":", 2);
+  /**
+   * Extract key/value pairs.
+   * 
+   * @param specs
+   * @return
+   */
+  public static Map<String, String> getParamPairs(String[] specs) {
+    Map<String, String> paramPairs = new HashMap<>();
+    for (String spec : specs) {
+      String[] fields = spec.split(DELIMITER, 2);
       String key = null, value = null;
       if (fields.length == 1) {
         key = fields[0];
@@ -27,7 +47,6 @@ public class FactoryUtil {
       }
       paramPairs.put(key, value);
     }
-
     return paramPairs;
   }
 }

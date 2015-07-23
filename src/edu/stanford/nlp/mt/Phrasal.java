@@ -50,6 +50,7 @@ import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.tm.TranslationModelFactory;
 import edu.stanford.nlp.mt.tm.PhraseTable;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.util.FactoryUtil;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
@@ -67,10 +68,8 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.DTULinearDistortionFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.LinearFutureCostFeaturizer;
 import edu.stanford.nlp.mt.decoder.h.HeuristicFactory;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.stats.ClassicCounter;
@@ -96,7 +95,6 @@ import edu.stanford.nlp.util.concurrent.ThreadsafeProcessor;
  */
 public class Phrasal {
 
-  // TODO(spenceg): Add future cost delay as a parameter. Currently it must be set as a JVM parameter.
   // TODO(spenceg): Add input encoding option. Replace all instances of "UTF-8" in the codebase. 
   private static String usage() {
     StringBuilder sb = new StringBuilder();
@@ -116,7 +114,7 @@ public class Phrasal {
       .append("  -").append(WEIGHTS_FILE).append(" filename : Load all model weights from file.").append(nl)
       .append("  -").append(MAX_SENTENCE_LENGTH).append(" num : Maximum input sentence length.").append(nl)
       .append("  -").append(MIN_SENTENCE_LENGTH).append(" num : Minimum input sentence length.").append(nl)
-      .append("  -").append(DISTORTION_LIMIT).append(" num : Hard distortion limit.").append(nl)
+      .append("  -").append(DISTORTION_LIMIT).append(" num [cost] : Hard distortion limit and delay cost (default cost: 0.0).").append(nl)
       .append("  -").append(ADDITIONAL_FEATURIZERS).append(" class [class] : List of additional feature functions.").append(nl)
       .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
       .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)").append(nl)
@@ -132,10 +130,8 @@ public class Phrasal {
       .append("  -").append(GAPS_OPT).append(" options : DTU: Enable Galley and Manning (2010) gappy decoding.").append(nl)
       .append("  -").append(MAX_PENDING_PHRASES_OPT).append(" num : DTU: Max number of pending phrases for decoding.").append(nl)
       .append("  -").append(GAPS_IN_FUTURE_COST_OPT).append(" boolean : DTU: Allow gaps in future cost estimate (default: true)").append(nl)
-      .append("  -").append(LINEAR_DISTORTION_TYPE).append(" type : DTU: See ConcreteRule.LinearDistortionType (default: standard)").append(nl)
+      .append("  -").append(LINEAR_DISTORTION_OPT).append(" type : DTU: linear distortion type (default: standard)").append(nl)
       .append("  -").append(PRINT_MODEL_SCORES).append(" boolean : Output model scores with translations (default: false)").append(nl)
-      .append("  -").append(LOG_PREFIX).append(" string : Log file prefix").append(nl)
-      .append("  -").append(LOG_LEVEL).append(" level : Case-sensitive java.logging log level (default: WARNING)").append(nl)
       .append("  -").append(INPUT_PROPERTIES).append(" file : File specifying properties of each source input.").append(nl)
       .append("  -").append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
       .append("  -").append(WRAP_BOUNDARY).append(" boolean : Add boundary tokens around each input sentence (default: false).").append(nl)
@@ -166,7 +162,7 @@ public class Phrasal {
   public static final String GAPS_OPT = "gaps";
   public static final String MAX_PENDING_PHRASES_OPT = "max-pending-phrases";
   public static final String GAPS_IN_FUTURE_COST_OPT = "gaps-in-future-cost";
-  public static final String LINEAR_DISTORTION_TYPE = "linear-distortion-type";
+  public static final String LINEAR_DISTORTION_OPT = "linear-distortion-options";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String INDEPENDENT_PHRASE_TABLES = "independent-phrase-tables";
   public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
@@ -175,8 +171,6 @@ public class Phrasal {
   public static final String SOURCE_CLASS_MAP = "source-class-map";
   public static final String TARGET_CLASS_MAP = "target-class-map";
   public static final String PRINT_MODEL_SCORES = "print-model-scores";
-  public static final String LOG_PREFIX = "log-prefix";
-  public static final String LOG_LEVEL = "log-level";
   public static final String INPUT_PROPERTIES = "input-properties";
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
   public static final String WRAP_BOUNDARY = "wrap-boundary";
@@ -195,12 +189,12 @@ public class Phrasal {
         BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH,
         MIN_SENTENCE_LENGTH, USE_ITG_CONSTRAINTS,
         NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT,
-        LINEAR_DISTORTION_TYPE, MAX_PENDING_PHRASES_OPT,
+        LINEAR_DISTORTION_OPT, MAX_PENDING_PHRASES_OPT,
         DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES,
         LANGUAGE_MODEL_OPT, 
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER,
         SOURCE_CLASS_MAP,TARGET_CLASS_MAP, PRINT_MODEL_SCORES,
-        LOG_PREFIX, LOG_LEVEL, INPUT_PROPERTIES, FEATURE_AUGMENTATION,
+        INPUT_PROPERTIES, FEATURE_AUGMENTATION,
         WRAP_BOUNDARY
         ));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -384,9 +378,9 @@ public class Phrasal {
     if (config.containsKey(GAPS_IN_FUTURE_COST_OPT))
       DTUDecoder.gapsInFutureCost = Boolean.parseBoolean(config.get(
           GAPS_IN_FUTURE_COST_OPT).get(0));
-    if (config.containsKey(LINEAR_DISTORTION_TYPE))
+    if (config.containsKey(LINEAR_DISTORTION_OPT))
       ConcreteRule.setLinearDistortionType(config.get(
-          LINEAR_DISTORTION_TYPE).get(0));
+          LINEAR_DISTORTION_OPT).get(0));
     else if (withGaps)
       ConcreteRule
           .setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment
@@ -497,13 +491,11 @@ public class Phrasal {
     }
 
     // int distortionLimit = -1;
+    float distortionCost = 0.0f;
     if (config.containsKey(DISTORTION_LIMIT)) {
-      List<String> strDistortionLimit = config.get(DISTORTION_LIMIT);
-      if (strDistortionLimit.size() != 1) {
-        logger.fatal("Parameter '{}' takes one and only one argument", DISTORTION_LIMIT);
-        throw new RuntimeException();
-      }
-      distortionLimit = Integer.parseInt(strDistortionLimit.get(0));
+      List<String> opts = config.get(DISTORTION_LIMIT);
+      if (opts.size() > 0) distortionLimit = Integer.parseInt(opts.get(0));
+      if (opts.size() > 1) distortionCost = Float.parseFloat(opts.get(1));
     }
     
     // DTU decoding (Galley and Manning, 2010)
@@ -573,7 +565,7 @@ public class Phrasal {
         String[] modelOptions = new String[0];
         if (fields.length == 2) {
           filename = fields[0];
-          modelOptions = new String[]{ makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]) };
+          modelOptions = new String[]{ FactoryUtil.makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]) };
         }
         TranslationModel<IString,String> model =  
             TranslationModelFactory.<String>factory(filename, modelOptions);
@@ -690,26 +682,21 @@ public class Phrasal {
     
     String featureAugmentationMode = config.containsKey(FEATURE_AUGMENTATION) ?
         config.get(FEATURE_AUGMENTATION).get(0) : null;
-
-    final String linearDistortion = withGaps ? DTULinearDistortionFeaturizer.class.getName() 
-        : LinearFutureCostFeaturizer.class.getName();
     
     if (lgModel != null) {
       logger.info("Language model: {}", lgModel);
       featurizer = FeaturizerFactory.factory(
-        FeaturizerFactory.MOSES_DENSE_FEATURES,
-        makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
-            linearDistortion),
-        makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
-        makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
-        makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
+          FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
+          FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
+          FactoryUtil.makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
+          FactoryUtil.makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)),
+          FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
     } else {
       featurizer = FeaturizerFactory.factory(
-          FeaturizerFactory.MOSES_DENSE_FEATURES,
-          makePair(FeaturizerFactory.LINEAR_DISTORTION_PARAMETER,
-              linearDistortion),
-          makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
-          makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)));
+          FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
+          FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
+          FactoryUtil.makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)),
+          FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
     }
 
     if (config.containsKey(DISABLED_FEATURIZERS)) {
@@ -872,10 +859,6 @@ public class Phrasal {
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
       alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
     }
-  }
-
-  private static String makePair(String label, String value) {
-    return String.format("%s:%s", label, value);
   }
 
   /**

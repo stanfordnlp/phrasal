@@ -88,7 +88,7 @@ public class MakeWordClasses {
     this.vocabThreshold = PropertiesUtils.getInt(properties, "vclip", 5);
     assert this.vocabThreshold >=0;
     
-    this.inputEncoding = properties.getProperty("encoding", "UTF-8");
+    this.inputEncoding = properties.getProperty("encoding", IOTools.DEFAULT_ENCODING);
 
     this.normalizeDigits = PropertiesUtils.getBool(properties, "normdigits", true);
 

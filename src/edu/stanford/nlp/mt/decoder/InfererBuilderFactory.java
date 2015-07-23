@@ -13,20 +13,27 @@ import edu.stanford.nlp.mt.util.IString;
  * @author Spence Green
  *
  */
-public class InfererBuilderFactory {
+public final class InfererBuilderFactory {
+  
   public static final String MULTIBEAM_DECODER = "multibeam";
   public static final String DTU_DECODER = "dtu";
   public static final String CUBE_PRUNING_DECODER = "cube";
-  public static final String CUBE_PRUNING_NNLM_DECODER = "cube_nnlm"; // Thang Apr14
-//  public static final String DEFAULT_INFERER = MULTIBEAM_DECODER;
   public static final String DEFAULT_INFERER = CUBE_PRUNING_DECODER;
   public static final String BEAM_SIZE_OPT = "beamcapacity";
   public static final String BEAM_TYPE_OPT = "beamtype";
 
-
-  public static InfererBuilder<IString, String> factory(String...infererSpecs) {
-    String infererName = infererSpecs.length == 0 ? DEFAULT_INFERER : infererSpecs[0].toLowerCase();
-    Map<String, String> paramPairs = FactoryUtil.getParamPairs(infererSpecs);
+  // Static class
+  private InfererBuilderFactory() {}
+  
+  /**
+   * Get an instance of an inferer.
+   * 
+   * @param infererName
+   * @param infererSpecs
+   * @return
+   */
+  public static InfererBuilder<IString, String> factory(String infererName, String...infererSpecs) {
+    final Map<String, String> paramPairs = FactoryUtil.getParamPairs(infererSpecs);
 
     BeamFactory.BeamType beamType = null;
     String beamTypeStr = paramPairs.get(BEAM_TYPE_OPT);

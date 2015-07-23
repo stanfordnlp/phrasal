@@ -56,9 +56,10 @@ public class InputProperties extends HashMap<InputProperty, Object> {
         // Type conversions on InputProperty objects
         InputProperty inputProperty = InputProperty.valueOf(fields[0]);
         String value = fields[1];
-        if(inputProperty == InputProperty.Domain)
+        if(inputProperty == InputProperty.Domain) {
           inputProperties.put(inputProperty, value.split(LIST_DELIMITER));
-        else if (inputProperty == InputProperty.TargetPrefix) {
+        
+        } else if (inputProperty == InputProperty.TargetPrefix) {
           inputProperties.put(inputProperty, Boolean.valueOf(value));
           
         } else if (inputProperty == InputProperty.DistortionLimit) {

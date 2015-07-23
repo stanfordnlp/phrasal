@@ -17,27 +17,37 @@ import edu.stanford.nlp.mt.util.Sequence;
  * 
  * @author Michel Galley
  */
-public class LinearFutureCostFeaturizer extends
-    DerivationFeaturizer<IString, String> {
+public class LinearFutureCostFeaturizer extends DerivationFeaturizer<IString, String> {
 
-  public static final String DEBUG_PROPERTY = "DebugStatefulLinearDistortionFeaturizer";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "false"));
   public static final String FEATURE_NAME = "LinearDistortion";
 
   public static final boolean ADD_EOS = Boolean.parseBoolean(System
       .getProperty("addEOS", "false"));
-  public static final float DEFAULT_FUTURE_COST_DELAY = Float.parseFloat(System
-      .getProperty("futureCostDelay", "0f"));
+  public static final float DEFAULT_FUTURE_COST_DELAY = 0f;
 
   public final float futureCostDelay;
 
+  /**
+   * Constructor
+   */
   public LinearFutureCostFeaturizer() {
-    futureCostDelay = DEFAULT_FUTURE_COST_DELAY;
-    if (futureCostDelay != 0.0)
-      System.err.println("Future cost delay: " + futureCostDelay);
+    this(DEFAULT_FUTURE_COST_DELAY);
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param futureCostDelay
+   */
+  public LinearFutureCostFeaturizer(float futureCostDelay) {
+    this.futureCostDelay = futureCostDelay;
+  }
+  
+  /**
+   * Constructor for reflection loading.
+   * 
+   * @param args
+   */
   public LinearFutureCostFeaturizer(String... args) {
     // Argument determines how much future cost to pay upfront:
     // 1.0 => everything; 0.0 => nothing, as in Moses

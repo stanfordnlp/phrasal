@@ -3,9 +3,9 @@
   <Properties>
     <Property name="log-path">logs</Property>
   </Properties>
-
+  
   <Appenders>
-    <RollingFile append="true" name="logfile" fileName="${log-path}/phrasal.log" filePattern="${log-path}/phrasal.%i.log">
+    <RollingFile name="logfile" fileName="${log-path}/phrasal.log" filePattern="${log-path}/phrasal.%i.log">
       <PatternLayout>
 	       <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
       </PatternLayout>
@@ -19,18 +19,17 @@
       <AppenderRef ref="logfile"/>
     </Async>
 
-    <Console name="console" target="SYSTEM_OUT">
+    <Console name="console" target="SYSTEM_ERR">
       <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
     </Console>
   </Appenders>
 
   <Loggers>
-    <Logger name="com.lilt" level="info" additivity="false">
-      <AppenderRef ref="Async" level="info"/>
-    </Logger>
+    <Logger name="edu.stanford.nlp" level="info"/>
 
-    <Root level="warn" additivity="false">
-      <AppenderRef ref="console"/>
+    <Root level="info" additivity="false">
+      <AppenderRef ref="console" level="warn"/>
+      <AppenderRef ref="Async" level="info"/>
     </Root>
   </Loggers>
 </Configuration>
