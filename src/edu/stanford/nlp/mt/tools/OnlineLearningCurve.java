@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.tools;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -54,13 +53,6 @@ public class OnlineLearningCurve {
     Map<String, List<String>> config = IOTools.readConfigFile(iniFile);
     // Don't write an nbest list
     config.remove(Phrasal.NBEST_LIST_OPT);
-    if ( ! config.containsKey(Phrasal.LOG_PREFIX)) {
-      int delim = iniFile.lastIndexOf('.');
-      String logFilePrefix = iniFile.substring(0, delim) + ".learn";
-      List<String> params = new ArrayList<>(1);
-      params.add(logFilePrefix);
-      config.put(Phrasal.LOG_PREFIX, params);
-    }
     p = Phrasal.loadDecoder(config);
 
     String[] wts = Arrays.copyOfRange(args, 4, args.length);
