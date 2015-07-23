@@ -5,7 +5,7 @@
   </Properties>
   
   <Appenders>
-    <RollingFile name="logfile" fileName="${log-path}/phrasal.log" filePattern="${log-path}/phrasal.%i.log">
+    <RollingRandomAccessFile name="logfile" fileName="${log-path}/phrasal.log" filePattern="${log-path}/phrasal.%i.log">
       <PatternLayout>
 	       <pattern>[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</pattern>
       </PatternLayout>
@@ -13,11 +13,7 @@
 	       <OnStartupTriggeringPolicy />
 	       <SizeBasedTriggeringPolicy size="250 MB" />
       </Policies>
-    </RollingFile>
-
-    <Async name="Async">
-      <AppenderRef ref="logfile"/>
-    </Async>
+    </RollingRandomAccessFile>
 
     <Console name="console" target="SYSTEM_ERR">
       <PatternLayout pattern="[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
@@ -25,11 +21,12 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="edu.stanford.nlp" level="info"/>
-
+    <AsyncLogger name="edu.stanford.nlp" level="info" includeLocation="true">
+      <AppenderRef ref="logfile"/>
+    </AsyncLogger>
+    
     <Root level="info" additivity="false">
       <AppenderRef ref="console" level="warn"/>
-      <AppenderRef ref="Async" level="info"/>
     </Root>
   </Loggers>
 </Configuration>
