@@ -122,13 +122,14 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
           final boolean isSourceOOV = cnt_f == 0;
           final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
           
-          if (isTargetOOV) {
+          if (isTargetOOV 
+              || isSourceOOV) { // the system OOV model can not handle this unless the identical word is present in the target prefix    
             // EMNLP14 algorithm. Should be replaced with insertion or deletion logic below.
             ConcreteRule<IString,String> syntheticRule = makeDummyRule(source, 
                 target, i, inputProperties);
             ruleGrid.addEntry(syntheticRule);
           
-          } else if (! isSourceOOV) {
+          } else {
             int cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
                 + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
             // TODO(spenceg) Smooth for now. This should encourage infrequent words to align with infrequent words.
@@ -141,7 +142,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
                 sourceCoverage, phraseTableName, featureNames, inferer.scorer, inferer.featurizer, 
                 cnt_joint, cnt_e, cnt_f, inputProperties);
             ruleGrid.addEntry(syntheticRule);
-          } // else handled by the System OOV model       
+          } 
         }
       }
       
