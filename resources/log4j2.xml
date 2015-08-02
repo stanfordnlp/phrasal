@@ -13,6 +13,7 @@
 	       <OnStartupTriggeringPolicy />
 	       <SizeBasedTriggeringPolicy size="250 MB" />
       </Policies>
+      <DefaultRolloverStrategy max="10"/>
     </RollingRandomAccessFile>
 
     <Console name="console" target="SYSTEM_ERR">
