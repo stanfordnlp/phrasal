@@ -116,7 +116,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
           // if (isTargetOOV) break;
           IString sourceQuery = sourceSequence.get(i);
           int srcIdBack = backgroundModel.inVocabulary(sourceQuery);
-          int srcIdFore = foregroundModel == null ? 0 : foregroundModel.inVocabulary(sourceQuery);
+          int srcIdFore = foregroundModel == null ? -1 : foregroundModel.inVocabulary(sourceQuery);
           int cnt_f = backgroundModel.coocTable.getSrcMarginal(srcIdBack) +
               (foregroundModel == null ? 0 : foregroundModel.coocTable.getSrcMarginal(srcIdFore));
           final boolean isSourceOOV = cnt_f == 0;

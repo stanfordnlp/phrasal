@@ -946,7 +946,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public static class LexCoocTable {
 
-    public static final int NULL_ID = -1;
+    public static final int NULL_ID = Integer.MIN_VALUE + 1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;
     
     private final ConcurrentHashMap<Long,AtomicInteger> counts;
