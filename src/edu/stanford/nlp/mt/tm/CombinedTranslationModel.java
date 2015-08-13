@@ -16,6 +16,7 @@ import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 
 /**
@@ -120,7 +121,7 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
     return featureNames;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source, InputProperties sourceInputProperties, 
       List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
@@ -128,9 +129,10 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
 
     // Support for decoder-local translation models
     List<TranslationModel<TK,FV>> translationModels = models;
-    if (DecoderLocalTranslationModel.get() != null) {
+    if (sourceInputProperties.containsKey(InputProperty.DecoderLocalTM)) {
+      TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.DecoderLocalTM);
       translationModels = new ArrayList<>(models);
-      translationModels.add(DecoderLocalTranslationModel.get());
+      translationModels.add(tm);
     }
     
     int modelId = 0;

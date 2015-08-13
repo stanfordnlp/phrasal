@@ -42,7 +42,6 @@ import edu.stanford.nlp.mt.process.ProcessorFactory;
 import edu.stanford.nlp.mt.tm.CombinedTranslationModel;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
-import edu.stanford.nlp.mt.tm.DecoderLocalTranslationModel;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
@@ -1155,12 +1154,8 @@ public class Phrasal {
       TranslationModel<IString,String> tm = (TranslationModel<IString,String>) inputProperties.get(InputProperty.DecoderLocalTM);
       tm.setFeaturizer(featurizer);
       tm.setName(TM_FOREGROUND_NAME);
-      DecoderLocalTranslationModel.set(tm);
-      logger.info("Loaded foreground translation model for thread {}: {}", threadId, tm.getName());
+      logger.info("Configured foreground translation model for thread {}: {}", threadId, tm.getName());
 
-    } else {
-      // Sanity check
-      DecoderLocalTranslationModel.set(null);
     }
     if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
       Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.DecoderLocalWeights);
