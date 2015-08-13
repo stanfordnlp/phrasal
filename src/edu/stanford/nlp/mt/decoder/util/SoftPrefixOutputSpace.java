@@ -105,8 +105,8 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       // Target OOVs, Target insertions, target unigrams
       for (int j = 0, tgtLength = allowablePrefix.size(); j < tgtLength; ++j) {
         IString targetQuery = allowablePrefix.get(j);
-        int tgtIdBackground = backgroundModel.inVocabulary(targetQuery);
-        int tgtIdForeground = foregroundModel == null ? -1 : foregroundModel.inVocabulary(targetQuery);
+        int tgtIdBackground = backgroundModel.getTMVocabularyId(targetQuery);
+        int tgtIdForeground = foregroundModel == null ? -1 : foregroundModel.getTMVocabularyId(targetQuery);
         final int cnt_e = backgroundModel.coocTable.getTgtMarginal(tgtIdBackground)
             + (foregroundModel == null ? 0 : foregroundModel.coocTable.getTgtMarginal(tgtIdForeground));
         boolean isTargetOOV = cnt_e == 0;
@@ -115,8 +115,8 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
         for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
           // if (isTargetOOV) break;
           IString sourceQuery = sourceSequence.get(i);
-          int srcIdBack = backgroundModel.inVocabulary(sourceQuery);
-          int srcIdFore = foregroundModel == null ? -1 : foregroundModel.inVocabulary(sourceQuery);
+          int srcIdBack = backgroundModel.getTMVocabularyId(sourceQuery);
+          int srcIdFore = foregroundModel == null ? -1 : foregroundModel.getTMVocabularyId(sourceQuery);
           int cnt_f = backgroundModel.coocTable.getSrcMarginal(srcIdBack) +
               (foregroundModel == null ? 0 : foregroundModel.coocTable.getSrcMarginal(srcIdFore));
           final boolean isSourceOOV = cnt_f == 0;

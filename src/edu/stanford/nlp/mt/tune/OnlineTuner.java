@@ -624,7 +624,7 @@ public final class OnlineTuner {
   private TranslationModel<IString,String> getLocalTM(ParallelCorpus corpus) {
     DynamicTMBuilder tmBuilder = new DynamicTMBuilder(corpus);
     TranslationModel<IString,String> localTM = tmBuilder.build();
-    ((DynamicTranslationModel<String>) localTM).initializeLocalTM("localTM", FeatureTemplate.DENSE_EXT);
+    ((DynamicTranslationModel<String>) localTM).initializeForegroundTM(FeatureTemplate.DENSE_EXT);
     
     //IOTools.serialize("localTM.bin", localTM);
     return localTM;

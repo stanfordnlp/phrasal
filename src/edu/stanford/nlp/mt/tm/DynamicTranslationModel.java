@@ -22,6 +22,7 @@ import com.esotericsoftware.kryo.KryoSerializable;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -32,12 +33,14 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.ParallelSuffixArrayEntry;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
-import edu.stanford.nlp.mt.util.ParallelSuffixArray.ParallelEntry;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -210,15 +213,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param name
    */
-  public void initializeLocalTM(String name, FeatureTemplate t) {
+  public void initializeForegroundTM(FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     sampleSize = DEFAULT_SAMPLE_SIZE;
-    this.name = name;
+    this.name = Phrasal.TM_FOREGROUND_NAME;
     setFeatureTemplate(t);
     
-    // Id arrays must be created after any modification of the system vocabulary.
     createIdArrays();
     timer.mark("Id arrays");
     
@@ -247,7 +249,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     queryCache.entrySet().parallelStream().forEach(entry -> {
       Span span = entry.getKey();
       SuffixArraySample sample = entry.getValue();
-      Sequence<IString> sourceSpan = SampledRule.toSystemSequence(span.tokens, tm2Sys);
+      Sequence<IString> sourceSpan = toSequence(span.tokens);
       int numHits = sample.ub - sample.lb + 1;
       double sampleRate = sample.samples.size() / (double) numHits;
       List<Rule<IString>> rules = samplesToRules(sample.samples, span.tokens.length, sampleRate, sourceSpan);
@@ -257,15 +259,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   /**
    * Create mappings between the system vocabulary and the translation model vocabulary. 
-   * This method must fill in OOVs in the system vocabulary.
+   * 
+   * IMPORTANT: This method must add any new word types from the TM to the
+   * system vocabulary.
    */
   private void createIdArrays() {
-    final int sysSize = Vocabulary.systemSize();
     final Vocabulary tmVocab = sa.getVocabulary();
-    sys2TM = new int[sysSize];
-    IntStream.range(0, sysSize).parallel().forEach(i -> {
-      sys2TM[i] = tmVocab.indexOf(Vocabulary.systemGet(i));
-    });
+    // Augment the system vocabulary
     int tmSize = tmVocab.size();
     tm2Sys = new int[tmSize];
     IntStream.range(0, tmSize).parallel().forEach(i -> {
@@ -273,6 +273,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       int wordIndex = Vocabulary.systemIndexOf(word);
       if (wordIndex < 0) wordIndex = Vocabulary.systemAdd(word);
       tm2Sys[i] = wordIndex;
+    });
+    // Now create the mapping from the (augmented) system vocabulary
+    final int sysSize = Vocabulary.systemSize();
+    sys2TM = new int[sysSize];
+    IntStream.range(0, sysSize).parallel().forEach(i -> {
+      sys2TM[i] = tmVocab.indexOf(Vocabulary.systemGet(i));
     });
   }
 
@@ -290,8 +296,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param word
    * @return
    */
-  public int inVocabulary(IString word) {
-    return (word.id >= 0 && word.id < sys2TM.length) ? sys2TM[word.id] : -1;
+  public int getTMVocabularyId(IString word) {
+    return (word.id >= 0 && word.id < sys2TM.length) ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
   }
   
   /**
@@ -331,7 +337,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         }
       }
     });
-    logger.info("");
   }
 
   /**
@@ -436,7 +441,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return name;
   }
   
-
+  /**
+   * Set the name of the TM.
+   */
   @Override
   public void setName(String name) { this.name = name; }
   
@@ -458,7 +465,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     if (source == null || source.size() == 0) return new ArrayList<>(0);
     
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
-    final int[] sourceInts = toTMArray(source);
+    
+    final int[] sourceArray = toTMArray(source);
+    // TODO(spenceg) Account for local TM here
     
     // Zhang and Vogel (2005) trick -- prune higher-order queries using lower-order misses
     boolean[][] misses = new boolean[source.size()][source.size()+1];
@@ -474,7 +483,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       for (int i = 0, sz = source.size() - len; i <= sz; ++i) {
         final int j = i + len;
         // Check lower-order n-grams for misses
-        boolean miss = (len == 1 && sourceInts[i] < 0);
+        boolean miss = (len == 1 && sourceArray[i] < 0);
         for(int a = i, b = i + len - 1; len > 1 && b <= j && ! miss; ++a, ++b) {
           miss = misses[a][b];
         }
@@ -494,9 +503,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
           : ranges.stream()) {
         List<ConcreteRule<IString,FV>> ruleList = rangeStream.flatMap(range -> {
-          int i = range.i;
-          int j = range.j;
-          int order = j - i;
+          final int i = range.i;
+          final int j = range.j;
+          final int order = j - i;
 
           // Generate rules for this span
           final Sequence<IString> sourceSpan = source.subsequence(i, j);
@@ -509,10 +518,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
           } else {
             // Sample from the suffix array
-            final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
+            final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
             int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
             SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
                 : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
+            
+            // TODO(spenceg) Sample second array here
+            
+            // Convert sample from foreground representation to this representation
+            // Extend SuffixArraySample
+            
             if (corpusSample.size() == 0) {
               // This span is not present in the training data.
               misses[i][j] = true;
@@ -550,10 +565,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param numResults
    * @return
    */
-  public List<ParallelEntry> lookupSource(String sourceQuery, int numResults) {
+  public List<ParallelSuffixArrayEntry> lookupSource(String sourceQuery, int numResults) {
     final int[] sourcePhrase = toTMArray(IStrings.tokenize(sourceQuery));
     SuffixArraySample sample = sa.sample(sourcePhrase, numResults);
-    return sample.samples.stream().map(s -> s.getParallelSequence()).collect(Collectors.toList());
+    return sample.samples.stream().map(s -> s.getParallelEntry()).collect(Collectors.toList());
   }
   
   /**
@@ -564,27 +579,43 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param numResults
    * @return
    */
-  public List<ParallelEntry> lookupTarget(String targetQuery, int numResults) {
+  public List<ParallelSuffixArrayEntry> lookupTarget(String targetQuery, int numResults) {
     final int[] targetPhrase = toTMArray(IStrings.tokenize(targetQuery));
     SuffixArraySample sample = sa.sampleTarget(targetPhrase, numResults);
-    return sample.samples.stream().map(s -> s.getParallelSequence()).collect(Collectors.toList());
+    return sample.samples.stream().map(s -> s.getParallelEntry()).collect(Collectors.toList());
   }
   
   /**
-   * Convert the source span to translation model indices.
+   * Convert a sequence to translation model indices.
    * 
-   * @param source
+   * @param sequence
    * @return
    */
-  private int[] toTMArray(Sequence<IString> source) {
-    int sourceSize = source.size();
+  private int[] toTMArray(Sequence<IString> sequence) {
+    int sourceSize = sequence.size();
     int[] tmIds = new int[sourceSize];
     for (int i = 0; i < sourceSize; ++i) {
-      IString word = source.get(i);
-      // TODO(spenceg) The array must be grown if material is added to the phrase table
+      IString word = sequence.get(i);
+      // TODO(spenceg) The array must be grown if material is added to the underlying suffix array
       tmIds[i] = word.id < this.sys2TM.length ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
     }
     return tmIds;
+  }
+  
+  /**
+   * Convert translation model indices to a sequence.
+   * 
+   * @param tmTokens
+   * @return
+   */
+  private Sequence<IString> toSequence(int[] tmTokens) {
+    IString[] tokens = new IString[tmTokens.length];
+    for (int i = 0; i < tmTokens.length; ++i) {
+      assert tmTokens[i] < tm2Sys.length;
+      int systemId = tm2Sys[tmTokens[i]];
+      tokens[i] = new IString(systemId);
+    }
+    return new SimpleSequence<IString>(true, tokens);
   }
 
   /**
@@ -629,22 +660,19 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
     // Collect phrase counts and choose the best alignment template
     // for each src => target rule.
+    List<TargetSpan> keys = new ArrayList<>(tgtToTemplate.keySet());
     List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.size());
-    List<Integer> histoGram = new ArrayList<>(tgtToTemplate.size());
-    int ef_denom = rules.size();
-    for (TargetSpan tgtSpan : tgtToTemplate.keySet()) {
+    int[] histogram = new int[keys.size()];
+    final int ef_denom = rules.size();
+    for (int i = 0; i < histogram.length; ++i) {
+      TargetSpan tgtSpan = keys.get(i);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       AlignmentTemplate maxAlignment = Counters.argmax(alTemps);
       SampledRule maxRule = maxAlignment.rule;
       scoreLex(maxRule);
       ruleList.add(maxRule);
-      histoGram.add((int) alTemps.totalCount());
+      histogram[i] = (int) alTemps.totalCount();
     }
-    int[] histogram = histoGram.stream().mapToInt(i -> i).toArray();
-    
-    // TODO(spenceg) Compute confidence intervals for phrase scores
-    // MLE point estimates for now.
-//    double[][] ci = ConfidenceIntervals.multinomialSison(histogram);
     
     List<Rule<IString>> scoredRules = new ArrayList<>(histogram.length);
     for (int r = 0; r < histogram.length; ++r) {
@@ -685,7 +713,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         throw new UnsupportedOperationException("Not yet implemented.");
       }
 
-      Rule<IString> scoredRule = rule.getRule(scores, featureNames, sourceSpan, this.tm2Sys);
+      Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);
       if (this.reorderingEnabled) {
         scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
         scoredRule.forwardOrientation = rule.forwardOrientation();
@@ -694,6 +722,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       scoredRules.add(scoredRule);
     }
     return scoredRules;
+  }
+  
+  /**
+   * Convert a SampledRule to a Rule.
+   * 
+   * @param rule
+   * @param scores
+   * @param featureNames
+   * @param sourceSpan
+   * @param tm2Sys
+   * @return
+   */
+  private Rule<IString> convertRule(SampledRule rule, float[] scores, String[] featureNames,
+      Sequence<IString> sourceSpan, int[] tm2Sys) {
+    PhraseAlignment alignment = new PhraseAlignment(rule.e2f());
+    Sequence<IString> tgtSeq = toSequence(rule.tgt);
+    return new Rule<IString>(scores, featureNames, tgtSeq, sourceSpan, alignment);
   }
   
   /**
@@ -797,13 +842,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
     }
     @Override
-    public String toString() { 
-      StringBuilder sb = new StringBuilder();
-      for (int tgtId : tgt) {
-        if (sb.length() > 0) sb.append(" ");
-        sb.append(sa.getVocabulary().get(tgtId));
-      }
-      return sb.toString();
+    public String toString() {
+      return Arrays.stream(tgt).mapToObj(i -> sa.getVocabulary().get(i))
+          .collect(Collectors.joining(" "));
     }
   }
   
@@ -925,12 +966,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       for (int endTarget=maxTarget; (endTarget < sentencePair.targetLength() &&
           endTarget < startTarget+maxTargetPhrase && 
           (endTarget==maxTarget || sentencePair.isTargetUnaligned(endTarget))); endTarget++) {
-
-        // Filter out messed up alignments
-//        if (Math.abs((endSource-startSource) - (endTarget-startTarget+1)) <= MAX_RULE_FERTILITY) {
           SampledRule r = new SampledRule(startSource, endSource, startTarget, endTarget + 1, sentencePair);
           ruleList.add(r);
-//        }
       }
     }
     return ruleList;
@@ -1055,7 +1092,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
     //      tm.sa.print(true, new PrintWriter(System.out));
 
-    // TODO(spenceg) Requires classmexer in the local directory.
+    // NOTE: Requires classmexer in the local directory.
     //      System.out.printf("In-memory size: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm));
     //      System.out.printf("In-memory size sa: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.sa));
     //      System.out.printf("In-memory size cooc: %d bytes%n", MemoryUtil.deepMemoryUsageOf(tm.coocTable));

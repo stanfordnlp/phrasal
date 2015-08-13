@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.util.IString;
 
 /**
  * Load a phrase table from a filename
- * 
+ *
  * @author Daniel Cer
  * @author Spence Green
  */
@@ -23,24 +23,22 @@ public class TranslationModelFactory {
   public static final String DYNAMIC_PHRASE_LENGTH = "dyn-plen";
   public static final String DYNAMIC_REORDERING = "dyn-reorder";
   public static final String SEPARATOR = ":";
-  
+
   public static final String DYNAMIC_TAG = "dyn:";
   public static final String DTU_TAG = "dtu:";
-  
+
   private static final Logger logger = LogManager.getLogger(TranslationModelFactory.class);
 
-  
   /**
    * Factory method for translation model loading.
-   * 
+   *
    * @param options
    * @return
    * @throws IOException
    */
   @SuppressWarnings("rawtypes")
-  static public <FV> TranslationModel<IString,FV> factory(String filename, 
-      String...options) throws IOException {
-    
+  static public <FV> TranslationModel<IString, FV> factory(String filename, String... options) throws IOException {
+
     // Parse options
     String featurePrefix = null;
     boolean setSystemIndex = true;
@@ -48,10 +46,10 @@ public class TranslationModelFactory {
     FeatureTemplate dynamicTemplate = FeatureTemplate.DENSE_EXT;
     int dynamicPhraseLength = DynamicTranslationModel.DEFAULT_MAX_PHRASE_LEN;
     boolean doReordering = false;
-    for (String option : options) {
-      String[] fields = option.split(SEPARATOR);
-      String key = fields[0];
-      String value = fields[1];
+    for (final String option : options) {
+      final String[] fields = option.split(SEPARATOR);
+      final String key = fields[0];
+      final String value = fields[1];
       if (key.equals(FEATURE_PREFIX_OPTION)) {
         featurePrefix = value;
       } else if (key.equals(DYNAMIC_INDEX)) {
@@ -68,24 +66,25 @@ public class TranslationModelFactory {
         logger.warn("Unknown key/value pair: {}", option);
       }
     }
-    
-    TranslationModel<IString,FV> translationModel;
+
+    TranslationModel<IString, FV> translationModel;
     if (filename.startsWith(DTU_TAG)) {
-      String file = filename.substring(DTU_TAG.length());
+      final String file = filename.substring(DTU_TAG.length());
       translationModel = new DTUTable<FV>(file);
-    
+
     } else if (filename.startsWith(DYNAMIC_TAG)) {
-      String file = filename.substring(DYNAMIC_TAG.length());
+      final String file = filename.substring(DYNAMIC_TAG.length());
       translationModel = DynamicTranslationModel.load(file, setSystemIndex, DynamicTranslationModel.DEFAULT_NAME);
       ((DynamicTranslationModel) translationModel).setSampleSize(dynamicSampleSize);
       ((DynamicTranslationModel) translationModel).setMaxSourcePhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).setMaxTargetPhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).createQueryCache(dynamicTemplate);
-      if (doReordering) ((DynamicTranslationModel) translationModel).setReorderingScores();
-      
+      if (doReordering)
+        ((DynamicTranslationModel) translationModel).setReorderingScores();
+
     } else {
-      translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename) :
-        new CompiledPhraseTable<FV>(featurePrefix, filename);
+      translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename)
+          : new CompiledPhraseTable<FV>(featurePrefix, filename);
     }
     return translationModel;
   }

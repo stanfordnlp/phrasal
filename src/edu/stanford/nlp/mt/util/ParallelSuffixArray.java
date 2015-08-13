@@ -847,8 +847,8 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       return e2f[bitextPos] == 0;
     }
     
-    public ParallelEntry getParallelSequence() {
-      return new ParallelEntry(this, vocabulary);
+    public ParallelSuffixArrayEntry getParallelEntry() {
+      return new ParallelSuffixArrayEntry(this, vocabulary);
     }
     
     @Override
@@ -864,30 +864,6 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
         sb.append(vocabulary.get(target(i)));
       }
       return sb.toString();
-    }
-  }
-  
-  /**
-   * A bitext entry for usage outside of Phrasal.
-   * 
-   * @author Spence Green
-   *
-   */
-  public static class ParallelEntry {
-    public final String[] source;
-    public final String[] target;
-    public final int[][] f2e;
-    // If the query was a target, then this is the left edge in the target array.
-    // Otherwise, it is the left edge in the source array.
-    public final int queryLeftEdge;
-    public ParallelEntry(SentencePair s, Vocabulary v) {
-      this.queryLeftEdge = s.wordPosition;
-      source = IntStream.range(0, s.sourceLength()).mapToObj(i -> v.get(s.source(i))).toArray(String[]::new);
-      target = IntStream.range(0, s.targetLength()).mapToObj(i -> v.get(s.target(i))).toArray(String[]::new);
-      f2e = new int[source.length][];
-      for (int i = 0; i < source.length; ++i) {
-        f2e[i] = s.f2e(i);
-      }
     }
   }
   

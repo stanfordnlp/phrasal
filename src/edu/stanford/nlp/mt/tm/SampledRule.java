@@ -4,12 +4,8 @@ import java.util.Arrays;
 
 import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
-import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
-import edu.stanford.nlp.mt.util.PhraseAlignment;
-import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * A rule sampled from the bitext.
@@ -83,8 +79,8 @@ public class SampledRule {
   public ReorderingTypes forwardOrientation() {
     final int f1 = srcStartInclusive - 1, 
         f2 = srcEndExclusive, 
-        e1 = tgtStartInclusive - 1, 
-        e2 = tgtEndExclusive;
+        e1 = tgtStartInclusive - 1; 
+//        e2 = tgtEndExclusive;
     
     boolean connectedMonotone = isPhraseAligned(e1, f1, RelativePos.NW);
     boolean connectedSwap = isPhraseAligned(e1, f2, RelativePos.NE);
@@ -106,7 +102,7 @@ public class SampledRule {
   public ReorderingTypes backwardOrientation() {
     final int f1 = srcStartInclusive - 1, 
         f2 = srcEndExclusive, 
-        e1 = tgtStartInclusive - 1, 
+//        e1 = tgtStartInclusive - 1, 
         e2 = tgtEndExclusive;
     
     boolean connectedMonotone = isPhraseAligned(e2, f2, RelativePos.SE);
@@ -151,39 +147,6 @@ public class SampledRule {
         return true;
     return false;
   }  
-  
-  /**
-   * Convert the sampled rule to a Phrasal translation rule.
-   * 
-   * @param scores
-   * @param featureNames
-   * @param e2f
-   * @param index
-   * @return
-   */
-  public Rule<IString> getRule(float[] scores, String[] featureNames,
-      Sequence<IString> sourceSpan, int[] tm2Sys) {
-    PhraseAlignment alignment = new PhraseAlignment(e2f());
-    Sequence<IString> tgtSeq = toSystemSequence(tgt, tm2Sys);
-    return new Rule<IString>(scores, featureNames,
-        tgtSeq, sourceSpan, alignment);
-  }
-  
-  /**
-   * Convert the target span from translation model ids to system ids.
-   * 
-   * @param tmTokens
-   * @param tm2Sys
-   * @return
-   */
-  public static Sequence<IString> toSystemSequence(int[] tmTokens, int[] tm2Sys) {
-    IString[] tokens = new IString[tmTokens.length];
-    for (int i = 0; i < tmTokens.length; ++i) {
-      int systemId = tm2Sys[tmTokens[i]];
-      tokens[i] = new IString(systemId);
-    }
-    return new SimpleSequence<IString>(true, tokens);
-  }
 
   @Override
   public String toString() {

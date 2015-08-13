@@ -95,21 +95,21 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
   /**
    * Add to the rule list that is being constructed during a query
    * 
-   * @param opt
+   * @param rule
    * @param ruleLists
    * @param modelId 
    */
-  private void addToRuleList(ConcreteRule<TK,FV> opt,
+  private void addToRuleList(ConcreteRule<TK,FV> rule,
       Map<CoverageSet, List<List<ConcreteRule<TK, FV>>>> ruleLists, int modelId) {
-    if ( ! ruleLists.containsKey(opt.sourceCoverage)) {
-      ruleLists.put(opt.sourceCoverage, new LinkedList<>());
+    if ( ! ruleLists.containsKey(rule.sourceCoverage)) {
+      ruleLists.put(rule.sourceCoverage, new LinkedList<>());
     }
-    if ( modelId >= ruleLists.get(opt.sourceCoverage).size()) {
+    if ( modelId >= ruleLists.get(rule.sourceCoverage).size()) {
       for (int i = 0; i <= modelId; ++i) {
-        ruleLists.get(opt.sourceCoverage).add(new LinkedList<>());
+        ruleLists.get(rule.sourceCoverage).add(new LinkedList<>());
       }
     }
-    ruleLists.get(opt.sourceCoverage).get(modelId).add(opt);
+    ruleLists.get(rule.sourceCoverage).get(modelId).add(rule);
   }
   
   @Override
@@ -135,18 +135,18 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
       translationModels.add(tm);
     }
     
-    int modelId = 0;
-    for (TranslationModel<TK,FV> phraseGenerator : translationModels) {
-      for (ConcreteRule<TK,FV> opt : phraseGenerator.getRules(source, sourceInputProperties, targets, 
+    int modelNumber = 0;
+    for (TranslationModel<TK,FV> model : translationModels) {
+      for (ConcreteRule<TK,FV> rule : model.getRules(source, sourceInputProperties, targets, 
           sourceInputId, scorer)) {
-        addToRuleList(opt, ruleLists, modelId);
+        addToRuleList(rule, ruleLists, modelNumber);
       }
-      ++modelId;
+      ++modelNumber;
     }
     
     // Merge the lists of rules
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(source.size());
-    if (modelId == 1) {
+    if (translationModels.size() == 1) {
       for (CoverageSet coverage : ruleLists.keySet()) {
         List<ConcreteRule<TK,FV>> ruleList = ruleLists.get(coverage).get(0);
         Collections.sort(ruleList);
