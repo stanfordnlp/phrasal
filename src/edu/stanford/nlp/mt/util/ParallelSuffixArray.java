@@ -906,5 +906,10 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       this.lb = lb;
       this.ub = ub;
     }
+    public int size() { return samples.size(); }
+    @Override
+    public String toString() {
+      return String.format("bounds: %d/%d size: %d", lb, ub, samples.size());
+    }
   }
 }

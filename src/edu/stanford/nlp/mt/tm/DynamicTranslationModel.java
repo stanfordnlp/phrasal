@@ -447,7 +447,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   
   @Override
   public String toString() {
-    return String.format("cbitextsize: %d  phraselen: %d/%d",
+    return String.format("bitext_size: %d  phraselen: %d/%d",
         sa.numSentences(), maxSourcePhrase, maxTargetPhrase);
   }
   
@@ -493,7 +493,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Only use a parallel stream if the overhead is justified
       try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
           : ranges.stream()) {
-        List<ConcreteRule<IString,FV>> ruleList = rangeStream.map(range -> {
+        List<ConcreteRule<IString,FV>> ruleList = rangeStream.flatMap(range -> {
           int i = range.i;
           int j = range.j;
           int order = j - i;
@@ -505,28 +505,26 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
             // Get from the rule cache
             return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties))
-                .collect(Collectors.toList());
+                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties));
 
           } else {
             // Sample from the suffix array
             final int[] sourcePhrase = Arrays.copyOfRange(sourceInts, i, j);
             int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-            SuffixArraySample s = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+            SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
                 : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-            if (s.samples.size() == 0) {
+            if (corpusSample.size() == 0) {
               // This span is not present in the training data.
               misses[i][j] = true;
               return null;
             }
-            searchBounds[i][j] = new int[]{s.lb, s.ub};
-            int numHits = s.ub - s.lb + 1;
-            double sampleRate = s.samples.size() / (double) numHits;
-            return samplesToRules(s.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties))
-                .collect(Collectors.toList());
+            searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
+            int numHits = corpusSample.ub - corpusSample.lb + 1;
+            double sampleRate = corpusSample.size() / (double) numHits;
+            return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties));
           }
-        }).filter(l -> l != null).flatMap(l -> l.stream()).collect(Collectors.toList());
+        }).collect(Collectors.toList());
 
         concreteRules.addAll(ruleList);
       }
