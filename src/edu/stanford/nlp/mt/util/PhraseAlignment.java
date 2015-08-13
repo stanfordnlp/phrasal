@@ -1,5 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,6 +28,8 @@ public class PhraseAlignment {
   // pointer in memory.
 
   public static final String MONOTONE_ALIGNMENT = "I-I";
+  
+  private static final Map<String, PhraseAlignment> map = new ConcurrentHashMap<>(1000);
   
   private String str;
   private final int[][] t2s;
@@ -96,30 +100,28 @@ public class PhraseAlignment {
     return sb.toString();
   }
 
-//  private int[][] s2t() {
-//    if (t2s == null) return null;
-//    List<List<Integer>> f2eL = new LinkedList<List<Integer>>();
-//    for (int ei=0; ei<t2s.length; ++ei) {
-//      if (t2s[ei] != null) {
-//        for (int fi : t2s[ei]) {
-//          while (f2eL.size() <= fi)
-//            f2eL.add(new LinkedList<Integer>());
-//          f2eL.get(fi).add(ei);
-//        }
-//      }
-//    }
-//    int[][] s2t = new int[f2eL.size()][];
-//    for (int fi=0; fi<f2eL.size(); ++fi) {
-//      s2t[fi] = new int[f2eL.get(fi).size()];
-//      for (int ei=0; ei<f2eL.get(fi).size(); ++ei) {
-//        s2t[fi][ei] = f2eL.get(fi).get(ei);
-//      }
-//    }
-//    return s2t;
-//  }
-
-  private static final Map<String, PhraseAlignment> map = new ConcurrentHashMap<String, PhraseAlignment>(1000);
-
+  public int[][] s2t() {
+    if (t2s == null) return null;
+    List<List<Integer>> f2eL = new LinkedList<>();
+    for (int ei=0; ei<t2s.length; ++ei) {
+      if (t2s[ei] != null) {
+        for (int fi : t2s[ei]) {
+          while (f2eL.size() <= fi)
+            f2eL.add(new LinkedList<>());
+          f2eL.get(fi).add(ei);
+        }
+      }
+    }
+    int[][] s2t = new int[f2eL.size()][];
+    for (int fi=0; fi<f2eL.size(); ++fi) {
+      s2t[fi] = new int[f2eL.get(fi).size()];
+      for (int ei=0; ei<f2eL.get(fi).size(); ++ei) {
+        s2t[fi][ei] = f2eL.get(fi).get(ei);
+      }
+    }
+    return s2t;
+  }
+  
   public static PhraseAlignment getPhraseAlignment(String string) {
     PhraseAlignment holder = map.get(string);
     if (holder == null) {

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoSerializable;
@@ -113,6 +115,19 @@ public class Vocabulary implements Serializable,KryoSerializable {
     for (int i = 0; i < size; ++i) {
       index.add(input.readString());
     }
+  }
+  
+  /**
+   * Get the word types in the vocabulary.
+   * 
+   * @return
+   */
+  public List<String> getWordTypes() {
+    List<String> wordTypes = new ArrayList<>(index.size());
+    for (int i = 0, sz = index.size(); i < sz; ++i) {
+      wordTypes.add(index.get(i));
+    }
+    return wordTypes;
   }
   
   /**

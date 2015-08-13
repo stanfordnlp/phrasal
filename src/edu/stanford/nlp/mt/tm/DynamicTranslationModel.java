@@ -277,6 +277,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
+   * Get the underlying suffix array.
+   * 
+   * @return
+   */
+  public ParallelSuffixArray getSuffixArray() { return sa; }
+  
+  /**
    * Returns the TM vocabulary id of the item if it is in the TM vocabulary
    * and -1 otherwise.
    * 
