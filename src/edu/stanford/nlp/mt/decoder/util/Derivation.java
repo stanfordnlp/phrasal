@@ -45,7 +45,7 @@ State<Derivation<TK, FV>> {
   public final int prefixLength;
   
   // Thang Apr14: remove the final modifier so we can update during NPLM reranking.
-  public double score;
+  public final double score;
   
   public final InputProperties sourceInputProperties;
 
