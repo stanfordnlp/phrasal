@@ -1167,16 +1167,16 @@ public class Phrasal {
         targetsArePrefixes, translationModel.maxLengthSource(), translationModel.maxLengthTarget(), wrapBoundary);
 
     // Configure the translation model
-    if (inputProperties.containsKey(InputProperty.DecoderLocalTM)) {
+    if (inputProperties.containsKey(InputProperty.ForegroundTM)) {
       final TranslationModel<IString, String> tm = (TranslationModel<IString, String>) inputProperties
-          .get(InputProperty.DecoderLocalTM);
+          .get(InputProperty.ForegroundTM);
       tm.setFeaturizer(featurizer);
       tm.setName(TM_FOREGROUND_NAME);
       logger.info("Configured foreground translation model for thread {}: {}", threadId, tm.getName());
 
     }
-    if (inputProperties.containsKey(InputProperty.DecoderLocalWeights)) {
-      final Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.DecoderLocalWeights);
+    if (inputProperties.containsKey(InputProperty.ModelWeights)) {
+      final Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.ModelWeights);
       this.scorers.get(threadId).updateWeights(weights);
       logger.info("Loaded decoder-local weights for thread {}", threadId);
 

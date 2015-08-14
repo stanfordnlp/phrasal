@@ -38,11 +38,11 @@ public enum InputProperty {
   // Type: Boolean
   IsValid,
   
-  // A decoder-local translation model.
+  // A foreground translation model.
   // Type: TranslationModel
-  DecoderLocalTM,
+  ForegroundTM,
   
-  // A decoder-local weight vector
+  // A weight vector
   // Type: Counter<String>
-  DecoderLocalWeights,
+  ModelWeights,
 }

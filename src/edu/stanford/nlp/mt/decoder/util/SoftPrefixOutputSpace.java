@@ -91,8 +91,8 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
 
     // New strategy with the dynamic TM
     DynamicTranslationModel<String> backgroundModel = (DynamicTranslationModel<String>) inferer.phraseGenerator;
-    DynamicTranslationModel<String> foregroundModel = inputProperties.containsKey(InputProperty.DecoderLocalTM) ? 
-    	(DynamicTranslationModel) inputProperties.get(InputProperty.DecoderLocalTM) : null;
+    DynamicTranslationModel<String> foregroundModel = inputProperties.containsKey(InputProperty.ForegroundTM) ? 
+    	(DynamicTranslationModel) inputProperties.get(InputProperty.ForegroundTM) : null;
 
     // These settings shouldn't matter for scoring
     final String phraseTableName = backgroundModel.getName();

@@ -129,8 +129,8 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
 
     // Support for decoder-local translation models
     List<TranslationModel<TK,FV>> translationModels = models;
-    if (sourceInputProperties.containsKey(InputProperty.DecoderLocalTM)) {
-      TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.DecoderLocalTM);
+    if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
+      TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
       translationModels = new ArrayList<>(models);
       translationModels.add(tm);
     }

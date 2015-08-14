@@ -386,8 +386,8 @@ public final class OnlineTuner {
         } else {
             inputProperties = new InputProperties();
         }
-        inputProperties.put(InputProperty.DecoderLocalWeights, input.weights);
-        if (input.localTM != null) inputProperties.put(InputProperty.DecoderLocalTM, input.localTM);
+        inputProperties.put(InputProperty.ModelWeights, input.weights);
+        if (input.localTM != null) inputProperties.put(InputProperty.ForegroundTM, input.localTM);
         List<Sequence<IString>> targets = null;
         if (prefixes != null && sourceId < prefixes.size()) {
           inputProperties.put(InputProperty.TargetPrefix, true);

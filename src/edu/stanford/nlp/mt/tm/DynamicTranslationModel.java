@@ -32,6 +32,7 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.MurmurHash;
 import edu.stanford.nlp.mt.util.ParallelSuffixArrayEntry;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
@@ -458,6 +459,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         sa.numSentences(), maxSourcePhrase, maxTargetPhrase);
   }
   
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public List<ConcreteRule<IString, FV>> getRules(Sequence<IString> source,
       InputProperties sourceInputProperties, List<Sequence<IString>> targets,
@@ -536,6 +538,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
         concreteRules.addAll(ruleList);
       }
+    }
+    
+    // Concatenate foreground model rules
+    if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
+      DynamicTranslationModel<FV> foregroundTM = 
+          (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+      List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, sourceInputProperties, 
+          targets, sourceInputId, scorer);
+      logger.info("Source input {} adding {} rules from foreground model", sourceInputId, fgRules.size());
+      concreteRules.addAll(fgRules);
     }
 
     return concreteRules;
