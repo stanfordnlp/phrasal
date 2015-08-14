@@ -467,7 +467,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     
     final int[] sourceArray = toTMArray(source);
-    // TODO(spenceg) Account for local TM here
     
     // Zhang and Vogel (2005) trick -- prune higher-order queries using lower-order misses
     boolean[][] misses = new boolean[source.size()][source.size()+1];
@@ -522,12 +521,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
             SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
                 : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-            
-            // TODO(spenceg) Sample second array here
-            
-            // Convert sample from foreground representation to this representation
-            // Extend SuffixArraySample
-            
             if (corpusSample.size() == 0) {
               // This span is not present in the training data.
               misses[i][j] = true;
