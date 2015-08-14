@@ -155,7 +155,7 @@ public class LanguageModelTrueCaser {
       for (String casing : casings) {
         Sequence<IString> target = IStrings.tokenize(casing);
         list.add(new Rule<IString>(new float[0], new String[0], target,
-            sourceSequence, PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT)));
+            sourceSequence, PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT), this.getName()));
       }
       return list;
     }

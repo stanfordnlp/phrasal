@@ -22,8 +22,8 @@ public class DTURule<T> extends Rule<T> {
 
   @SuppressWarnings("unchecked")
   public DTURule(int id, float[] scores, String[] phraseScoreNames,
-      Sequence<T>[] dtus, Sequence<T> foreign, PhraseAlignment alignment) {
-    super(id, scores, phraseScoreNames, emptySeq, foreign, alignment);
+      Sequence<T>[] dtus, Sequence<T> foreign, PhraseAlignment alignment, String phraseTableName) {
+    super(id, scores, phraseScoreNames, emptySeq, foreign, alignment, phraseTableName);
     this.dtus = dtus;
   }
 

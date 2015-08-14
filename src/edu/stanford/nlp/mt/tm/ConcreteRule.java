@@ -34,12 +34,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
    * The source coverage of this rule.
    */
   public final CoverageSet sourceCoverage;
-  
-  /**
-   * The phrase table from which the rule was queried.
-   */
-  public final String phraseTableName;
-  
+    
   /**
    * The left edge in the source sequence of the source side
    * of this rule.
@@ -80,16 +75,13 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
    * @param phraseFeaturizer
    * @param scorer
    * @param sourceSequence
-   * @param phraseTableName
    * @param sourceInputId
    */
   public ConcreteRule(Rule<TK> abstractRule, CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
-      InputProperties sourceInputProperties) {
+      Sequence<TK> sourceSequence, int sourceInputId, InputProperties sourceInputProperties) {
     this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
-    this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
     
     // Extract rule features
@@ -117,20 +109,18 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
    * @param phraseFeaturizer
    * @param scorer
    * @param sourceSequence
-   * @param phraseTableName
    * @param sourceInputId
    * @param hasTargetGap
    */
   public ConcreteRule(Rule<TK> abstractRule,
       CoverageSet sourceCoverage,
       RuleFeaturizer<TK, FV> phraseFeaturizer, Scorer<FV> scorer,
-      Sequence<TK> sourceSequence, String phraseTableName, int sourceInputId,
-      boolean hasTargetGap, InputProperties sourceInputProperties) {
+      Sequence<TK> sourceSequence, int sourceInputId, boolean hasTargetGap,
+      InputProperties sourceInputProperties) {
     // System.err.printf("compute isolation score for: %s\n", abstractOption);
     assert (hasTargetGap);
     this.abstractRule = abstractRule;
     this.sourceCoverage = sourceCoverage;
-    this.phraseTableName = phraseTableName;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
 
     cachedFeatureList = new LinkedList<>();
@@ -173,8 +163,8 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
 
   @Override
   public String toString() {
-    return String.format("%s ==> %s %s %s", abstractRule.source,
-        abstractRule.target, sourceCoverage, phraseTableName);
+    return String.format("%s ==> %s (%s)", abstractRule.source,
+        abstractRule.target, sourceCoverage);
   }
 
   public int linearDistortion(ConcreteRule<TK,FV> rule) {

@@ -72,12 +72,12 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
     if (dropUnknownWords && !isTranslateable(word)) {
       // Deletion rule
       list.add(new Rule<TK>(featureValues, featureNames, EMPTY_SEQUENCE, sourceWord,
-          DEFAULT_ALIGNMENT));
+          DEFAULT_ALIGNMENT, PHRASE_TABLE_NAME));
 
     } else {
       // Identity translation rule
       list.add(new Rule<TK>(featureValues, featureNames, sourceWord, sourceWord,
-          DEFAULT_ALIGNMENT));
+          DEFAULT_ALIGNMENT, PHRASE_TABLE_NAME));
     }
     return list;
   }

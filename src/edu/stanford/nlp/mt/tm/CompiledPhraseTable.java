@@ -9,12 +9,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.stanford.nlp.mt.decoder.util.RuleGrid;
-import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
-import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
@@ -224,7 +221,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
           hit.targetArray);
       ruleList.add(new Rule<IString>(hit.id,
           hit.scores, scoreNames, targetSequence, sourceSequence,
-          hit.alignment));
+          hit.alignment, name));
     }
     return ruleList;
   }
@@ -265,13 +262,6 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
   @Override
   public int minRuleIndex() {
     return minRuleIndex;
-  }
-
-  @Override
-  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
-      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
-    throw new UnsupportedOperationException("Not yet implemented");
   }
   
   @Override

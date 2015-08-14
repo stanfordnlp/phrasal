@@ -170,10 +170,10 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       scores[i] = -99.0f;
 
     Rule<IString> abstractRule = new Rule<IString>(scores, phraseScoreNames,
-        target, source, ALIGNMENT);
+        target, source, ALIGNMENT, PHRASE_TABLE_NAME);
     ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
         sourceCoverage, featurizer, scorer, sourceSequence, 
-        phraseTableName, sourceInputId, inputProperties);
+        sourceInputId, inputProperties);
     return rule;
   }
 
@@ -190,13 +190,13 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       int sourceIndex, InputProperties inputProperties) {
     // Downweight the TM features
     Rule<IString> abstractRule = new Rule<IString>(PHRASE_SCORES, PHRASE_SCORE_NAMES,
-        target, source, ALIGNMENT);
+        target, source, ALIGNMENT, PHRASE_TABLE_NAME);
 
     CoverageSet sourceCoverage = new CoverageSet();
     sourceCoverage.set(sourceIndex);
     ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
         sourceCoverage, featurizer, null, sourceSequence, 
-        PHRASE_TABLE_NAME, sourceInputId, inputProperties);
+        sourceInputId, inputProperties);
 
     // Deterministically set the isolation score since we didn't provide a scorer to the
     // ConcreteRule constructor.

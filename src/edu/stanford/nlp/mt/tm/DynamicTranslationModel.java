@@ -514,7 +514,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
             // Get from the rule cache
             return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties));
+                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
 
           } else {
             // Sample from the suffix array
@@ -537,7 +537,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             int numHits = corpusSample.ub - corpusSample.lb + 1;
             double sampleRate = corpusSample.size() / (double) numHits;
             return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, name, sourceInputId, sourceInputProperties));
+                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
           }
         }).collect(Collectors.toList());
 
@@ -631,11 +631,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private List<Rule<IString>> samplesToRules(List<SentencePair> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
-    
-    // Organize rules by candidate translation and compute lexical scores
-    // Choose the alignment template that occurs most often for each span.
+    // Extract rules from sentence pairs
     List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order, maxTargetPhrase).stream())
         .collect(Collectors.toList());
+    
+    // Collect counts
     Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rules.size());
     Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rules.size()) : null;
     for (SampledRule rule : rules) {
@@ -658,7 +658,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
     }
 
-    // Collect phrase counts and choose the best alignment template
+    // Choose the best alignment template
     // for each src => target rule.
     List<TargetSpan> keys = new ArrayList<>(tgtToTemplate.keySet());
     List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.size());
@@ -667,6 +667,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     for (int i = 0; i < histogram.length; ++i) {
       TargetSpan tgtSpan = keys.get(i);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
+      // Note that the argmax alignment is chosen independent of the model.
       AlignmentTemplate maxAlignment = Counters.argmax(alTemps);
       SampledRule maxRule = maxAlignment.rule;
       scoreLex(maxRule);
@@ -674,9 +675,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       histogram[i] = (int) alTemps.totalCount();
     }
     
-    List<Rule<IString>> scoredRules = new ArrayList<>(histogram.length);
-    for (int r = 0; r < histogram.length; ++r) {
-      SampledRule rule = ruleList.get(r);
+    List<Rule<IString>> scoredRules = new ArrayList<>(ruleList.size());
+    for (int r = 0, sz = ruleList.size(); r < sz; ++r) {
+      final SampledRule rule = ruleList.get(r);
       
       float[] scores;
       if (featureTemplate == FeatureTemplate.DENSE) {
@@ -738,7 +739,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Sequence<IString> sourceSpan, int[] tm2Sys) {
     PhraseAlignment alignment = new PhraseAlignment(rule.e2f());
     Sequence<IString> tgtSeq = toSequence(rule.tgt);
-    return new Rule<IString>(scores, featureNames, tgtSeq, sourceSpan, alignment);
+    return new Rule<IString>(scores, featureNames, tgtSeq, sourceSpan, alignment, name);
   }
   
   /**
@@ -977,8 +978,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
       InputProperties sourceInputProperties, List<Sequence<IString>> targets,
       int sourceInputId, Scorer<FV> scorer) {
-    RuleGrid<IString,FV> ruleGrid = new RuleGrid<IString,FV>(source.size());
-    ruleGrid.setLazySorting(true);
     List<ConcreteRule<IString,FV>> ruleList = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     return new RuleGrid<IString,FV>(ruleList, source);

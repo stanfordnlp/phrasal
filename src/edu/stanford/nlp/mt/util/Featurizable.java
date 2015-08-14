@@ -133,7 +133,7 @@ public class Featurizable<TK, FV> {
     Rule<TK> abstractRule = derivation.rule.abstractRule;
     sourcePhrase = abstractRule.source;
     targetPhrase = abstractRule.target;
-    phraseTableName = rule.phraseTableName;
+    phraseTableName = rule.abstractRule.phraseTableName;
     translationScores = abstractRule.scores;
     phraseScoreNames = abstractRule.phraseScoreNames;
     targetPosition = derivation.insertionPosition;
@@ -169,7 +169,7 @@ public class Featurizable<TK, FV> {
     Rule<TK> abstractRule = derivation.rule.abstractRule;
     sourcePhrase = abstractRule.source;
     this.targetPhrase = targetPhrase;
-    phraseTableName = rule.phraseTableName;
+    phraseTableName = rule.abstractRule.phraseTableName;
     if (targetOnly) {
       translationScores = nullScores;
       phraseScoreNames = nullNames;
@@ -230,7 +230,7 @@ public class Featurizable<TK, FV> {
     Rule<TK> abstractRule = rule.abstractRule;
     sourcePhrase = abstractRule.source;
     targetPhrase = abstractRule.target;
-    phraseTableName = rule.phraseTableName;
+    phraseTableName = rule.abstractRule.phraseTableName;
     translationScores = abstractRule.scores;
     phraseScoreNames = abstractRule.phraseScoreNames;
     targetPosition = 0;
@@ -263,7 +263,7 @@ public class Featurizable<TK, FV> {
     Rule<TK> abstractRule = rule.abstractRule;
     sourcePhrase = abstractRule.source;
     this.targetPhrase = targetPhrase;
-    phraseTableName = rule.phraseTableName;
+    phraseTableName = rule.abstractRule.phraseTableName;
     translationScores = nullScores;
     // translationScores = transOpt.scores;
     phraseScoreNames = nullNames;

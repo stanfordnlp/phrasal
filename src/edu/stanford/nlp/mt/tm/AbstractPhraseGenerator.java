@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -58,8 +59,7 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
         if (rules != null) {
           for (Rule<TK> ruleOpt : rules) {
             concreteRules.add(new ConcreteRule<TK,FV>(ruleOpt, 
-                sourceCoverage, phraseFeaturizer, scorer, source, this
-                .getName(), sourceInputId, sourceInputProperties));
+                sourceCoverage, phraseFeaturizer, scorer, source, sourceInputId, sourceInputProperties));
           }
         }
       }
@@ -67,6 +67,15 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
     return concreteRules;
   }
 
+  @Override
+  public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source,
+      InputProperties sourceInputProperties, List<Sequence<TK>> targets,
+      int sourceInputId, Scorer<FV> scorer) {
+    List<ConcreteRule<TK,FV>> ruleList = 
+        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    return new RuleGrid<TK,FV>(ruleList, source);
+  }
+  
   /**
    * Return a list of rules for a source span.
    * 

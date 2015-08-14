@@ -25,9 +25,9 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
-    if (f.rule.phraseTableName.equals(Phrasal.TM_FOREGROUND_NAME)) {
+    if (f.phraseTableName.equals(Phrasal.TM_FOREGROUND_NAME)) {
       return Collections.singletonList(new FeatureValue<>(
-          String.format("%s:%s", FEATURE_NAME, f.rule.phraseTableName), 1.0));
+          String.format("%s:%s", FEATURE_NAME, f.phraseTableName), 1.0));
     }
     return null;
   }

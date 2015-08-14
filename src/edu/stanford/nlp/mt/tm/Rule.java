@@ -47,7 +47,12 @@ public class Rule<T> implements Comparable<Rule<T>>{
    * The source/target word-word alignments.
    */
   public final PhraseAlignment alignment;
-    
+  
+  /**
+   * The phrase table from which this rule was queried.
+   */
+  public final String phraseTableName;
+  
   /**
    * Dynamic translation model lexicalized reordering information.
    */
@@ -72,8 +77,8 @@ public class Rule<T> implements Comparable<Rule<T>>{
    */
   public Rule(float[] scores, String[] phraseScoreNames,
       Sequence<T> target, Sequence<T> source,
-      PhraseAlignment alignment) {
-    this(SYNTHETIC_RULE_ID, scores, phraseScoreNames, target, source, alignment);
+      PhraseAlignment alignment, String phraseTableName) {
+    this(SYNTHETIC_RULE_ID, scores, phraseScoreNames, target, source, alignment, phraseTableName);
   }
 
   /**
@@ -89,13 +94,14 @@ public class Rule<T> implements Comparable<Rule<T>>{
    */
   public Rule(int id, float[] scores, String[] phraseScoreNames,
       Sequence<T> target, Sequence<T> source,
-      PhraseAlignment alignment) {
+      PhraseAlignment alignment, String phraseTableName) {
     this.id = id;
     this.alignment = alignment;
     this.scores = Arrays.copyOf(scores, scores.length);
     this.target = target;
     this.source = source;
     this.phraseScoreNames = phraseScoreNames;
+    this.phraseTableName = phraseTableName;
   }
 
   /**

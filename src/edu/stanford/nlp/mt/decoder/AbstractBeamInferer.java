@@ -115,8 +115,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           for (ConcreteRule<TK,FV> rule : oovRules) {
             // Update the coverage set for the output of the OOV model
             ruleGrid.addEntry(new ConcreteRule<TK,FV>(rule.abstractRule, 
-                oovCoverage, featurizer, scorer, source, rule.phraseTableName, 
-                sourceInputId, sourceInputProperties));
+                oovCoverage, featurizer, scorer, source, sourceInputId, 
+                sourceInputProperties));
           }
         }
       }

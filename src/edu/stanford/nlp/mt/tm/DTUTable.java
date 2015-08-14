@@ -261,26 +261,24 @@ implements PhraseTable<IString> {
                 }
                 transOpts.add(new DTURule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
-                        s.foreign), intTransOpt.alignment));
+                        s.foreign), intTransOpt.alignment, name));
               } else {
                 // No gaps in target:
                 Sequence<IString> translation = IStrings.toIStringSequence(
                     intTransOpt.targetArray);
                 transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
-                    new RawSequence<IString>(s.foreign), intTransOpt.alignment));
+                    new RawSequence<IString>(s.foreign), intTransOpt.alignment, name));
               }
             }
 
             for (Rule<IString> abstractOpt : transOpts) {
               if (abstractOpt instanceof DTURule)
                 opts.add(new ConcreteRule<IString,FV>(abstractOpt,
-                    s.coverage, phraseFeaturizer, scorer, sequence, this
-                        .getName(), sourceInputId, true, sourceInputProperties));
+                    s.coverage, phraseFeaturizer, scorer, sequence, sourceInputId, true, sourceInputProperties));
               else
                 opts.add(new ConcreteRule<IString,FV>(abstractOpt,
-                    s.coverage, phraseFeaturizer, scorer, sequence, this
-                        .getName(), sourceInputId, sourceInputProperties));
+                    s.coverage, phraseFeaturizer, scorer, sequence, sourceInputId, sourceInputProperties));
             }
           }
         }

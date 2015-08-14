@@ -83,13 +83,13 @@ private ConcreteRule<IString, String> makeSyntheticRule(Sequence<IString> source
     int sourceIndex, Sequence<IString> sourceSequence) {
   // Downweight the TM features
   Rule<IString> abstractRule = new Rule<IString>(PHRASE_SCORES, PHRASE_SCORE_NAMES,
-      target, source, ALIGNMENT);
+      target, source, ALIGNMENT, PHRASE_TABLE_NAME);
 
   CoverageSet sourceCoverage = new CoverageSet();
   sourceCoverage.set(sourceIndex);
   ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
       sourceCoverage, featurizer, null, sourceSequence, 
-      PHRASE_TABLE_NAME, 0, null);
+      0, null);
   
   // Deterministically set the isolation score since we didn't provide a scorer to the
   // ConcreteRule constructor.
