@@ -531,7 +531,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             if (corpusSample.size() == 0) {
               // This span is not present in the training data.
               misses[i][j] = true;
-              return null;
+              return Stream.empty();
             }
             searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
             int numHits = corpusSample.ub - corpusSample.lb + 1;
