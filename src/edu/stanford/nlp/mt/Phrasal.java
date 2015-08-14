@@ -52,6 +52,7 @@ import edu.stanford.nlp.mt.tm.CombinedTranslationModel;
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTUTable;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.ExtendedLexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.LexicalReorderingTable;
 import edu.stanford.nlp.mt.tm.PhraseTable;
@@ -561,42 +562,49 @@ public class Phrasal {
     // Translation model setup
     final List<String> tmOptions = config.get(TRANSLATION_TABLE_OPT);
     final String translationModelFile = tmOptions.get(0);
-    final int numPhraseFeatures = Integer.MAX_VALUE;
     final String[] factoryOptions = tmOptions.size() > 1 ? tmOptions.get(1).split(",") : new String[0];
     logger.info("Translation model options {}", Arrays.toString(factoryOptions));
     final TranslationModel<IString, String> primaryModel = TranslationModelFactory
         .<String> factory(translationModelFile, factoryOptions);
     primaryModel.setName(TM_BACKGROUND_NAME);
     
-    final List<TranslationModel<IString, String>> translationModels = new ArrayList<>();
-    translationModels.add(primaryModel);
+    if (primaryModel instanceof DynamicTranslationModel) {
+      translationModel = primaryModel;
+      
+    } else {
+    
+      final List<TranslationModel<IString, String>> translationModels = new ArrayList<>();
+      translationModels.add(primaryModel);
 
-    // Load independent phrase tables that do not have associated lexicalized
-    // reordering models
-    if (config.get(INDEPENDENT_PHRASE_TABLES) != null) {
-      int i = 0;
-      for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
-        logger.info("Loading independent phrase table: {}", filename);
-        final String[] fields = filename.split(":");
-        String[] modelOptions = new String[0];
-        if (fields.length == 2) {
-          filename = fields[0];
-          modelOptions = new String[] {
-              FactoryUtil.makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]) };
+      // Load independent phrase tables that do not have associated lexicalized
+      // reordering models
+      if (config.get(INDEPENDENT_PHRASE_TABLES) != null) {
+        int i = 0;
+        for (String filename : config.get(INDEPENDENT_PHRASE_TABLES)) {
+          logger.info("Loading independent phrase table: {}", filename);
+          final String[] fields = filename.split(":");
+          String[] modelOptions = new String[0];
+          if (fields.length == 2) {
+            filename = fields[0];
+            modelOptions = new String[] {
+                FactoryUtil.makePair(TranslationModelFactory.FEATURE_PREFIX_OPTION, fields[0]) };
+          }
+          final TranslationModel<IString, String> model = TranslationModelFactory.<String> factory(filename,
+              modelOptions);
+          model.setName(String.format("%s-%d", TM_BACKGROUND_NAME, i++));
+          translationModels.add(model);
         }
-        final TranslationModel<IString, String> model = TranslationModelFactory.<String> factory(filename,
-            modelOptions);
-        model.setName(String.format("%s-%d", TM_BACKGROUND_NAME, i++));
-        translationModels.add(model);
       }
+
+      translationModel = new CombinedTranslationModel<>(translationModels, ruleQueryLimit);
     }
     
-    translationModel = new CombinedTranslationModel<>(translationModels, ruleQueryLimit);
-
-    // Load a lexicalized reordering model for a static phrase table
+    // Load a lexicalized reordering model for a compiled phrase table
     final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (config.containsKey(REORDERING_MODEL)) {
-      final PhraseTable<IString> phraseTable = (PhraseTable<IString>) translationModels.get(0);
+      if (! (primaryModel instanceof CompiledPhraseTable)) 
+        throw new RuntimeException(REORDERING_MODEL + " parameter only allowed for compiled phrase tables");
+      final PhraseTable<IString> phraseTable = (PhraseTable<IString>) primaryModel;
 
       List<String> parameters = config.get(REORDERING_MODEL);
       if (parameters.size() < 3) {
@@ -697,12 +705,10 @@ public class Phrasal {
       featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
           FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
           FactoryUtil.makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
-          FactoryUtil.makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)),
           FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
     } else {
       featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
           FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
-          FactoryUtil.makePair(FeaturizerFactory.NUM_PHRASE_FEATURES, String.valueOf(numPhraseFeatures)),
           FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
     }
 

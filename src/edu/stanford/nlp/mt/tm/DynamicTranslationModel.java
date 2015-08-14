@@ -977,7 +977,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
       InputProperties sourceInputProperties, List<Sequence<IString>> targets,
       int sourceInputId, Scorer<FV> scorer) {
-    throw new UnsupportedOperationException("Not yet implemented. Use getRules().");
+    RuleGrid<IString,FV> ruleGrid = new RuleGrid<IString,FV>(source.size());
+    ruleGrid.setLazySorting(true);
+    List<ConcreteRule<IString,FV>> ruleList = 
+        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+    return new RuleGrid<IString,FV>(ruleList, source);
   }
   
   /**

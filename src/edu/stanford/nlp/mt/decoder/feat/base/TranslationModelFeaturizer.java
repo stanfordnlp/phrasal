@@ -25,7 +25,6 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
 
   // Only construct the feature strings once for each phrase table
   private final ConcurrentHashMap<String, String[]> featureNamesHash;
-  private final int numFeatures;
 
   /**
    * Constructor.
@@ -33,9 +32,8 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
    * @param numFeatures Set to <code>Integer.MAX_VALUE</code> to specify
    * all features defined in the phrase table.
    */
-  public TranslationModelFeaturizer(int numFeatures) {
+  public TranslationModelFeaturizer() {
     this.featureNamesHash = new ConcurrentHashMap<>();
-    this.numFeatures = numFeatures;
   }
   
   /**
@@ -78,9 +76,7 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
           createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames);
 
     // construct array of FeatureValue objects
-    final int numEffectiveFeatures = Math.min(this.numFeatures, featureNames.length);
-    assert numEffectiveFeatures <= featurizable.translationScores.length;
-    return IntStream.range(0, numEffectiveFeatures).mapToObj(i -> new FeatureValue<String>(
+    return IntStream.range(0, featureNames.length).mapToObj(i -> new FeatureValue<String>(
         featureNames[i], featurizable.translationScores[i], true)).collect(Collectors.toList());
   }
 

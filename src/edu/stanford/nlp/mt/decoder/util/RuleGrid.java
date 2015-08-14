@@ -31,7 +31,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   private final BitSet isSorted;
   private boolean doLazySorting;
   private boolean completeCoverage;
-  private BitSet incrementalCoverage;
+  private CoverageSet incrementalCoverage;
   private int size = 0;
   
   /**
@@ -39,25 +39,18 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * 
    * @param source
    */
-  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
-    this(ruleList, source, false);
-  }
-
   @SuppressWarnings("unchecked")
-  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, 
-      Sequence<TK> source, boolean doLazySorting) {
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
     sourceLength = source.size();
     isSorted = new BitSet();
-    this.doLazySorting = doLazySorting;
+    this.doLazySorting = true;
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
-    CoverageSet coverage = new CoverageSet();
+    incrementalCoverage = new CoverageSet();
     for (ConcreteRule<TK,FV> rule : ruleList) {
-      coverage.or(rule.sourceCoverage);
       addEntry(rule);
     }
-    this.completeCoverage = (coverage.cardinality() == sourceLength);
   }
   
   /**
@@ -76,7 +69,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     doLazySorting = false;
     grid = new List[sourceLength * sourceLength];
     completeCoverage = false;
-    incrementalCoverage = new BitSet();
+    incrementalCoverage = new CoverageSet();
   }
 
   /**
@@ -176,6 +169,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     }
     if (grid[offset] != null && doLazySorting && ! isSorted.get(offset)) {
       Collections.sort(grid[offset]);
+      isSorted.set(offset);
     }
     return grid[offset] == null ? EMPTY_LIST : grid[offset];
   }

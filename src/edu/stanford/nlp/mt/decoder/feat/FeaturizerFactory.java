@@ -36,7 +36,6 @@ public final class FeaturizerFactory {
   public static final String DEFAULT_FEATURIZERS = MOSES_DENSE_FEATURES;
   public static final String ARPA_LM_PARAMETER = "arpalm";
   public static final String GAP_PARAMETER = "gap";
-  public static final String NUM_PHRASE_FEATURES = "numphrasefeatures";
 
   public static final String LINEAR_DISTORTION_COST = "lineardistortion-cost";
 
@@ -80,9 +79,6 @@ public final class FeaturizerFactory {
         gapFeaturizers.add(new TargetGapFeaturizer());
     }
     
-    final int numPhraseFeatures = paramPairs.containsKey(NUM_PHRASE_FEATURES) ? 
-        Integer.valueOf(paramPairs.get(NUM_PHRASE_FEATURES)) : Integer.MAX_VALUE;
-    
     // Model features
     try {
       if (featurizerName.equals(BASELINE_FEATURES)) {
@@ -101,7 +97,7 @@ public final class FeaturizerFactory {
         featurizers.add(arpaLmFeaturizer);
 
         // Precomputed phrase to phrase translation scores
-        featurizers.add(new TranslationModelFeaturizer(numPhraseFeatures));
+        featurizers.add(new TranslationModelFeaturizer());
 
         // Linear distortion
         featurizers.add(linearDistortionFeaturizer);
@@ -122,7 +118,7 @@ public final class FeaturizerFactory {
         }
 
         // Precomputed phrase to phrase translation scores
-        featurizers.add(new TranslationModelFeaturizer(numPhraseFeatures));
+        featurizers.add(new TranslationModelFeaturizer());
 
         // Linear distortion
         featurizers.add(linearDistortionFeaturizer);
