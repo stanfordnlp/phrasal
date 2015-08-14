@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
 
 /**
  * Sentence pair with symmetrical word alignment (i.e., if e_i aligns to f_j in
@@ -89,10 +88,8 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       fStr = new StringBuffer("<s> ").append(fStr).append(" </s>").toString();
       eStr = new StringBuffer("<s> ").append(eStr).append(" </s>").toString();
     }
-    f = new SimpleSequence<IString>(true,
-        IStrings.toIStringArray(escape(fStr.split("\\s+"))));
-    e = new SimpleSequence<IString>(true,
-        IStrings.toIStringArray(escape(eStr.split("\\s+"))));
+    f = IStrings.toIStringSequence(escape(fStr.split("\\s+")));
+    e = IStrings.toIStringSequence(escape(eStr.split("\\s+")));
   }
 
   public void init(String fStr, String eStr, String aStr, boolean reverse,

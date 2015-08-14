@@ -4,10 +4,7 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.base.TranslationModelFeaturizer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
@@ -30,24 +27,8 @@ import edu.stanford.nlp.mt.util.InputProperty;
  */
 public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
 
-  // Hyperparameters for constructing synthetic rules
-  private static final String PHRASE_TABLE_NAME = "SoftTargetGenerator";
-  private static final double SYNTHETIC_ISOLATION_SCORE = -199.0;
-  private static final PhraseAlignment ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
-  private static final int NUM_SYNTHETIC_SCORES = 4;
-  private static String[] PHRASE_SCORE_NAMES;
-  private static float[] PHRASE_SCORES;
-  static {
-    PHRASE_SCORE_NAMES = new String[NUM_SYNTHETIC_SCORES];
-    PHRASE_SCORES = new float[NUM_SYNTHETIC_SCORES];
-    for (int i = 0; i < NUM_SYNTHETIC_SCORES; ++i) {
-      // Emulate the FlatPhraseTable feature naming convention
-      PHRASE_SCORE_NAMES[i] = String.format("%s.%d", CompiledPhraseTable.DEFAULT_FEATURE_PREFIX, i);
-      PHRASE_SCORES[i] = -99.0f;
-    }
-  }
-  private static final RuleFeaturizer<IString,String> featurizer = 
-      new TranslationModelFeaturizer();
+  private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
+  public static final String PHRASE_TABLE_NAME = SoftPrefixOutputSpace.class.getName();
 
   private Sequence<IString> sourceSequence;
   private final Sequence<IString> allowablePrefix;
@@ -84,19 +65,17 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   public void filter(RuleGrid<IString, String> ruleGrid, 
       AbstractInferer<IString, String> inferer, InputProperties inputProperties) {
     if (! (inferer.phraseGenerator instanceof DynamicTranslationModel))
-    	throw new RuntimeException("SoftPrefixOutputSpace only compatible with DynamicTranslationModel");
-    
+      throw new RuntimeException("SoftPrefixOutputSpace only compatible with DynamicTranslationModel");
+
     // We're going to add rules here, so enable sorting on lookup
     ruleGrid.setLazySorting(true);
 
     // New strategy with the dynamic TM
     DynamicTranslationModel<String> backgroundModel = (DynamicTranslationModel<String>) inferer.phraseGenerator;
     DynamicTranslationModel<String> foregroundModel = inputProperties.containsKey(InputProperty.ForegroundTM) ? 
-    	(DynamicTranslationModel) inputProperties.get(InputProperty.ForegroundTM) : null;
+        (DynamicTranslationModel) inputProperties.get(InputProperty.ForegroundTM) : null;
 
-    // These settings shouldn't matter for scoring
-    final String phraseTableName = backgroundModel.getName();
-    final String[] featureNames = backgroundModel.getFeatureNames().stream().toArray(String[]::new);
+    final String[] featureNames = (String[]) backgroundModel.getFeatureNames().toArray();
 
     // Target OOVs, Target insertions, target unigrams
     for (int j = 0, tgtLength = allowablePrefix.size(); j < tgtLength; ++j) {
@@ -109,7 +88,6 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
       final Sequence<IString> target = allowablePrefix.subsequence(j, j+1);
 
       for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
-        // if (isTargetOOV) break;
         IString sourceQuery = sourceSequence.get(i);
         int srcIdBack = backgroundModel.getTMVocabularyId(sourceQuery);
         int srcIdFore = foregroundModel == null ? -1 : foregroundModel.getTMVocabularyId(sourceQuery);
@@ -118,27 +96,17 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
         final boolean isSourceOOV = cnt_f == 0;
         final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
 
-        if (isTargetOOV || isSourceOOV) { 
-          // NOTE: the system OOV model can not handle this unless the identical word is present in the target prefix    
-          // EMNLP14 algorithm. Should be replaced with insertion or deletion logic below.
-          ConcreteRule<IString,String> syntheticRule = makeDummyRule(source, 
-              target, i, inputProperties);
-          ruleGrid.addEntry(syntheticRule);
-
-        } else {
-          int cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
-              + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
-          // TODO(spenceg) Smooth for now. This should encourage infrequent words to align with infrequent words.
-          // Use the rule insertion logic below when the interaction with
-          // CubePruningDecoder is better understood.
-          if (cnt_joint == 0) cnt_joint += 1;
-          CoverageSet sourceCoverage = new CoverageSet(srcLength);
-          sourceCoverage.set(i);
-          ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, target, 
-              sourceCoverage, phraseTableName, featureNames, inferer.scorer, inferer.featurizer, 
-              cnt_joint, cnt_e, cnt_f, inputProperties);
-          ruleGrid.addEntry(syntheticRule);
-        } 
+        CoverageSet sourceCoverage = new CoverageSet(srcLength);
+        sourceCoverage.set(i);
+        int cntE = isTargetOOV ? 1 : cnt_e;
+        int cntF = isSourceOOV ? 1 : cnt_f;
+        int cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
+            + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
+        if (cnt_joint == 0) cnt_joint = 1;
+        ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, target, 
+            sourceCoverage, featureNames, inferer.scorer, inferer.featurizer, 
+            cnt_joint, cntE, cntF, inputProperties);
+        ruleGrid.addEntry(syntheticRule);
       }
     }
   }
@@ -153,54 +121,26 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
    * @return
    */
   private ConcreteRule<IString, String> makeSyntheticRule(Sequence<IString> source, Sequence<IString> target, 
-      CoverageSet sourceCoverage, String phraseTableName, String[] phraseScoreNames, Scorer<String> scorer,
+      CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<String> scorer,
       FeatureExtractor<IString,String> featurizer,
       int cnt_f_e, int cnt_e, int cnt_f, InputProperties inputProperties) {
-    //  [0] := phi_f_e
-    //  [1] := lex_f_e
-    //  [2] := phi_e_f
-    //  [3] := lex_e_f
+    // Baseline dense features
     float[] scores = new float[phraseScoreNames.length];
     scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e));
     scores[1] = scores[0];
     scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f));
     scores[3] = scores[2];
-
-    for(int i = 4; i < scores.length; ++i)
-      scores[i] = -99.0f;
+    if (scores.length == 6) {
+      // Extended features
+      scores[4] = cnt_f_e > 1 ? (float) Math.log(cnt_f_e) : 0.0f;
+      scores[5] = cnt_f_e == 1 ? -1.0f : 0.0f;
+    }
 
     Rule<IString> abstractRule = new Rule<IString>(scores, phraseScoreNames,
-        target, source, ALIGNMENT, PHRASE_TABLE_NAME);
+        target, source, UNIGRAM_ALIGNMENT, PHRASE_TABLE_NAME);
     ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
         sourceCoverage, featurizer, scorer, sourceSequence, 
         sourceInputId, inputProperties);
-    return rule;
-  }
-
-  /**
-   * Create a synthetic translation rule.
-   * 
-   * @param source
-   * @param target
-   * @param sourceIndex
-   * @param phraseScoreNames
-   * @return
-   */
-  private ConcreteRule<IString, String> makeDummyRule(Sequence<IString> source, Sequence<IString> target, 
-      int sourceIndex, InputProperties inputProperties) {
-    // Downweight the TM features
-    Rule<IString> abstractRule = new Rule<IString>(PHRASE_SCORES, PHRASE_SCORE_NAMES,
-        target, source, ALIGNMENT, PHRASE_TABLE_NAME);
-
-    CoverageSet sourceCoverage = new CoverageSet();
-    sourceCoverage.set(sourceIndex);
-    ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
-        sourceCoverage, featurizer, null, sourceSequence, 
-        sourceInputId, inputProperties);
-
-    // Deterministically set the isolation score since we didn't provide a scorer to the
-    // ConcreteRule constructor.
-    rule.isolationScore = SYNTHETIC_ISOLATION_SCORE;
     return rule;
   }
 

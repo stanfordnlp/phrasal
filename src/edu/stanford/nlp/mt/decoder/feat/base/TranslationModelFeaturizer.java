@@ -74,7 +74,8 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     String[] featureNames = featureNamesHash.containsKey(phraseTableName) ? 
         featureNamesHash.get(phraseTableName) : 
           createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames);
-
+    assert featureNames.length == featurizable.translationScores.length : String.format("%s %d %d ", 
+        phraseTableName, featureNames.length, featurizable.translationScores.length);
     // construct array of FeatureValue objects
     return IntStream.range(0, featureNames.length).mapToObj(i -> new FeatureValue<String>(
         featureNames[i], featurizable.translationScores[i], true)).collect(Collectors.toList());

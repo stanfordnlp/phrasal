@@ -76,6 +76,16 @@ public final class IStrings {
   }
   
   /**
+   * Convert an array of String to an IString sequence.
+   * 
+   * @param arr
+   * @return
+   */
+  public static Sequence<IString> toIStringSequence(String[] arr) {
+    return toIStringSequence(toIStringArray(arr));
+  }
+  
+  /**
    * Convert String to IString.
    */
   static public IString[] toIStringArray(String[] strings) {

@@ -532,7 +532,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
       DynamicTranslationModel<FV> foregroundTM = 
           (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
-      List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, sourceInputProperties, 
+      InputProperties fgProperties = new InputProperties(sourceInputProperties);
+      fgProperties.remove(InputProperty.ForegroundTM);
+      List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, fgProperties, 
           targets, sourceInputId, scorer);
       logger.info("Source input {} adding {} rules from foreground model", sourceInputId, fgRules.size());
       concreteRules.addAll(fgRules);
