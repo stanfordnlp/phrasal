@@ -568,11 +568,13 @@ public class Phrasal {
         .<String> factory(translationModelFile, factoryOptions);
     primaryModel.setName(TM_BACKGROUND_NAME);
     
+    final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (primaryModel instanceof DynamicTranslationModel) {
       translationModel = primaryModel;
+      logger.info("Translation model mode: dynamic");
       
     } else {
-    
+      logger.info("Translation model mode: static");
       final List<TranslationModel<IString, String>> translationModels = new ArrayList<>();
       translationModels.add(primaryModel);
 
@@ -597,37 +599,34 @@ public class Phrasal {
       }
 
       translationModel = new CombinedTranslationModel<>(translationModels, ruleQueryLimit);
-    }
-    
-    // Load a lexicalized reordering model for a compiled phrase table
-    final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
-    if (config.containsKey(REORDERING_MODEL)) {
-      if (! (primaryModel instanceof CompiledPhraseTable)) 
-        throw new RuntimeException(REORDERING_MODEL + " parameter only allowed for compiled phrase tables");
-      final PhraseTable<IString> phraseTable = (PhraseTable<IString>) primaryModel;
+      
+      // Load a lexicalized reordering model for a compiled phrase table
+      if (config.containsKey(REORDERING_MODEL)) {
+        final PhraseTable<IString> phraseTable = (PhraseTable<IString>) primaryModel;
 
-      List<String> parameters = config.get(REORDERING_MODEL);
-      if (parameters.size() < 3) {
-        logger.fatal(REORDERING_MODEL + " parameter requires at least three arguments");
-        throw new RuntimeException();
-      }
-      final String modelType = parameters.get(0);
-      final String modelFilename = parameters.get(1);
-      final String modelSpecification = parameters.get(2);
+        List<String> parameters = config.get(REORDERING_MODEL);
+        if (parameters.size() < 3) {
+          logger.fatal(REORDERING_MODEL + " parameter requires at least three arguments");
+          throw new RuntimeException();
+        }
+        final String modelType = parameters.get(0);
+        final String modelFilename = parameters.get(1);
+        final String modelSpecification = parameters.get(2);
 
-      if (modelType.equals("classic")) {
-        final LexicalReorderingTable lrt = new LexicalReorderingTable(modelFilename, phraseTable, modelSpecification);
-        lexReorderFeaturizers.add(new LexicalReorderingFeaturizer(lrt));
+        if (modelType.equals("classic")) {
+          final LexicalReorderingTable lrt = new LexicalReorderingTable(modelFilename, phraseTable, modelSpecification);
+          lexReorderFeaturizers.add(new LexicalReorderingFeaturizer(lrt));
 
-      } else if (modelType.equals("hierarchical")) {
-        parameters = parameters.subList(3, parameters.size());
-        final ExtendedLexicalReorderingTable mlrt = new ExtendedLexicalReorderingTable(modelFilename, phraseTable,
-            modelSpecification);
-        lexReorderFeaturizers.add(new HierarchicalReorderingFeaturizer(mlrt, parameters));
+        } else if (modelType.equals("hierarchical")) {
+          parameters = parameters.subList(3, parameters.size());
+          final ExtendedLexicalReorderingTable mlrt = new ExtendedLexicalReorderingTable(modelFilename, phraseTable,
+              modelSpecification);
+          lexReorderFeaturizers.add(new HierarchicalReorderingFeaturizer(mlrt, parameters));
 
-      } else {
-        logger.fatal("Unsupported reordering model type: " + modelType);
-        throw new RuntimeException();
+        } else {
+          logger.fatal("Unsupported reordering model type: " + modelType);
+          throw new RuntimeException();
+        }
       }
     }
 
