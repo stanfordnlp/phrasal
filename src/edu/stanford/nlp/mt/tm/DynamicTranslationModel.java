@@ -166,12 +166,22 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       String name) throws IOException {
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
+    timer.mark("Deserialization");
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
-    timer.mark("Deserialization");
-    tm.intialize(name, FeatureTemplate.DENSE, initializeSystemVocabulary);
-    timer.mark("Initialization");
+    tm.name = name;
+    tm.setFeatureTemplate(FeatureTemplate.DENSE);
+    
+    if (initializeSystemVocabulary) tm.populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    tm.createIdArrays();
+    timer.mark("Vocabulary setup");
+    
+    // Lex cache must be created before any rules can be scored.
+    tm.createLexCoocTable(tm.sa.getVocabulary().size());
+    timer.mark("Cooc table");
+
     logger.info("Timing: {}", timer);
     return tm;
   }
@@ -188,33 +198,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
-   * Initialize the TM by building caches and populating the system vocabulary.
-   * 
-   * @param name
-   * @param template
-   * @param initializeSystemVocabulary
-   */
-  public void intialize(String name, FeatureTemplate template, boolean initializeSystemVocabulary) {
-    if (initialized) return;
-    this.name = name;
-    this.setFeatureTemplate(FeatureTemplate.DENSE);
-    
-    if (initializeSystemVocabulary) populateSystemVocabulary();
-    // Id arrays must be created after any modification of the system vocabulary.
-    createIdArrays();
-    
-    // Lex cache must be created before any rules can be scored.
-    createLexCoocTable(sa.getVocabulary().size());
-    
-    this.initialized = true;
-  }
-  
-  /**
-   * Initialize the translation model for local TM training.
+   * Configure this TM as a foreground translation model.
    * 
    * @param name
    */
-  public void initializeForegroundTM(FeatureTemplate t) {
+  public void configureAsForegroundTM(FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
@@ -227,10 +215,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     
     // Lex cache must be created before any rules can be scored.
     createLexCoocTable(sa.getVocabulary().size());
-    timer.mark("Cooc cache");
+    timer.mark("Cooc table");
     
     createQueryCache(t);
-    timer.mark("query cache");
+    timer.mark("Query cache");
     logger.info("Timing results: {}", timer);
   }
   
