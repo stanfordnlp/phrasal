@@ -42,7 +42,7 @@ public class RuleGridTest {
     }
   }
   private static final RuleFeaturizer<IString,String> featurizer = 
-      new TranslationModelFeaturizer(NUM_SYNTHETIC_SCORES);
+      new TranslationModelFeaturizer();
 
   
   @Before
