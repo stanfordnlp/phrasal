@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
@@ -160,39 +160,22 @@ public class ConstrainedOutputSpace<TK, FV> implements
   }
 
   @Override
-  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
-    filter(ruleGrid, inferer);
+  public void filter(List<ConcreteRule<TK,FV>> ruleList, AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
+    filter(ruleList, inferer);
   }
   
   @Override
-  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer) {
-    for (int i = 0, sz = ruleGrid.numberOfCoverages(); i < sz; ++i) {
-      List<Integer> filteredIndices = new ArrayList<>();
-      for (int j = 0, numRules = ruleGrid.getRulesForCoverageId(i).size(); j < numRules; ++j) {
-        final ConcreteRule<TK,FV> rule = ruleGrid.getRulesForCoverageId(i).get(j);
-        if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
-          System.err.printf("Examining: %s %s\n",
-              rule.abstractRule.target, rule.sourceCoverage);
-        }
-        boolean notObserved = true;
-        for (Sequence<TK> allowableSequence : allowableSequences) {
-          if (allowableSequence.contains(rule.abstractRule.target)) {
-            notObserved = false;
-            if (DEBUG >= DEBUG_LEVEL_COMPUTATION) {
-              System.err.printf("\tAccepted!\n");
-            }
-            break;
-          }
-        }
-        if (notObserved) {
-          filteredIndices.add(j);
+  public void filter(List<ConcreteRule<TK,FV>> ruleGrid, AbstractInferer<TK, FV> inferer) {
+    List<ConcreteRule<TK,FV>> filteredList = ruleGrid.stream().filter(r -> {
+      for (Sequence<TK> allowableSequence : allowableSequences) {
+        if (allowableSequence.contains(r.abstractRule.target)) {
+          return true;
         }
       }
-      // Iterate through in reverse order
-      for (int j = filteredIndices.size() - 1; j >= 0; --j) {
-        ruleGrid.remove(i, filteredIndices.get(j));
-      }
-    }
+      return false;
+    }).collect(Collectors.toList());
+    ruleGrid.clear();
+    ruleGrid.addAll(filteredList);
   }
 
   @Override

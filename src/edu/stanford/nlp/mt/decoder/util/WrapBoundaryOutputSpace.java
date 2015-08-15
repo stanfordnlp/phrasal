@@ -113,16 +113,17 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
     return null;
   }
 
-  @Override
-  public void filter(RuleGrid<TK, FV> ruleGrid, AbstractInferer<TK, FV> inferer) {
-  }
-  
-  @Override
-  public void filter(RuleGrid<TK, FV> ruleGrid, AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
-  }
-  
   @Override 
   public int getPrefixLength() {
     return 0;
+  }
+
+  @Override
+  public void filter(List<ConcreteRule<TK, FV>> ruleList, AbstractInferer<TK, FV> inferer) {
+  }
+
+  @Override
+  public void filter(List<ConcreteRule<TK, FV>> ruleList, AbstractInferer<TK, FV> inferer,
+      InputProperties inputProperties) {
   }
 }

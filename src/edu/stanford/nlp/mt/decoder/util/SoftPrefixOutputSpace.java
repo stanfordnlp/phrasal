@@ -55,20 +55,17 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
   }
 
   @Override
-  public void filter(RuleGrid<IString, String> ruleGrid, 
+  public void filter(List<ConcreteRule<IString, String>> ruleList, 
       AbstractInferer<IString, String> inferer) {
-    filter(ruleGrid, inferer, null);
+    filter(ruleList, inferer, null);
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
-  public void filter(RuleGrid<IString, String> ruleGrid, 
+  public void filter(List<ConcreteRule<IString, String>> ruleList, 
       AbstractInferer<IString, String> inferer, InputProperties inputProperties) {
     if (! (inferer.phraseGenerator instanceof DynamicTranslationModel))
       throw new RuntimeException("SoftPrefixOutputSpace only compatible with DynamicTranslationModel");
-
-    // We're going to add rules here, so enable sorting on lookup
-    ruleGrid.setLazySorting(true);
 
     // New strategy with the dynamic TM
     DynamicTranslationModel<String> backgroundModel = (DynamicTranslationModel<String>) inferer.phraseGenerator;
@@ -106,7 +103,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
         ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, target, 
             sourceCoverage, featureNames, inferer.scorer, inferer.featurizer, 
             cnt_joint, cntE, cntF, inputProperties);
-        ruleGrid.addEntry(syntheticRule);
+        ruleList.add(syntheticRule);
       }
     }
   }

@@ -141,12 +141,12 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // retrieve translation options
     if (DEBUG)
       System.err.println("Generating Translation Options");
-    Pair<Sequence<TK>, RuleGrid<TK,FV>> sourceRulePair = 
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
     if (source == null || source.size() == 0) return null;
     final int sourceSz = source.size();
-    RuleGrid<TK,FV> ruleGrid = sourceRulePair.second();
+    List<ConcreteRule<TK,FV>> ruleGrid = sourceRulePair.second();
     
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:
@@ -160,7 +160,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         optionsWithGaps.add(opt);
     }
 
-    System.err.printf("Translation options: %d%n", ruleGrid.numRules());
+    System.err.printf("Translation options: %d%n", ruleGrid.size());
     System.err.printf("Translation options (no gaps): %d%n",
         optionsWithoutGaps.size());
     System.err.printf("Translation options (with gaps): %d%n",
@@ -187,7 +187,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     System.err
     .printf(
         "Translation options after reduction by output space constraint: %d%n",
-        ruleGrid.numRules());
+        ruleGrid.size());
 
     DTUOptionGrid optionGrid = new DTUOptionGrid(ruleGrid, source);
 
@@ -576,7 +576,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     private final int sourceSz;
 
     @SuppressWarnings("unchecked")
-    public DTUOptionGrid(RuleGrid<TK, FV> ruleGrid,
+    public DTUOptionGrid(List<ConcreteRule<TK, FV>> ruleGrid,
         Sequence<TK> source) {
       sourceSz = source.size();
       grid = new List[sourceSz * sourceSz];

@@ -39,17 +39,19 @@ public class UnconstrainedOutputSpace<TK, FV> implements
 
   @Override
   public void setSourceSequence(Sequence<IString> sourceSequence) {}
-
-  @Override
-  public void filter(RuleGrid<IString, String> ruleGrid, AbstractInferer<IString, String> inferer) {}
-  
-  @Override
-  public void filter(RuleGrid<IString, String> ruleGrid, AbstractInferer<IString, String> inferer, InputProperties inputProperties) {
-  }
   
   @Override 
   public int getPrefixLength() {
     return 0;
+  }
+
+  @Override
+  public void filter(List<ConcreteRule<IString, String>> ruleList, AbstractInferer<IString, String> inferer) {
+  }
+
+  @Override
+  public void filter(List<ConcreteRule<IString, String>> ruleList, AbstractInferer<IString, String> inferer,
+      InputProperties inputProperties) {
   }
 }
 

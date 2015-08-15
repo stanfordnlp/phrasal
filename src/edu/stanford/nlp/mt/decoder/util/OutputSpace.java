@@ -29,19 +29,20 @@ public interface OutputSpace<TK, FV> {
   /**
    * Filter a grid of translation rules.
    * 
-   * @param ruleGrid
-   * @param inferer TODO
+   * @param ruleList
+   * @param inferer
    */
-  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer);
+  public void filter(List<ConcreteRule<TK,FV>> ruleList, AbstractInferer<TK, FV> inferer);
   
   /**
    * Filter a grid of translation rules.
    * 
-   * @param ruleGrid
-   * @param inferer TODO
+   * @param ruleList
+   * @param inferer
    * @param inputProperties
    */
-  public void filter(RuleGrid<TK,FV> ruleGrid, AbstractInferer<TK, FV> inferer, InputProperties inputProperties);
+  public void filter(List<ConcreteRule<TK,FV>> ruleList, AbstractInferer<TK, FV> inferer, 
+      InputProperties inputProperties);
 
   /**
    * Returns true if the derivation created by the concatenation of

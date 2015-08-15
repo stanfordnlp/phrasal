@@ -111,16 +111,18 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<BundleBeam<TK,FV>> beams = new LinkedList<>();
 
     // TM (phrase table) query for applicable rules
-    Pair<Sequence<TK>, RuleGrid<TK,FV>> sourceRulePair = 
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
     if (source == null || source.size() == 0) return null;
     final int sourceLength = source.size();
-    RuleGrid<TK,FV> ruleGrid = sourceRulePair.second();
+    List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
-    outputSpace.filter(ruleGrid, this, sourceInputProperties);
+    outputSpace.filter(ruleList, this, sourceInputProperties);
+    
+    RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }
@@ -130,10 +132,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           recombinationHistory, maxDistortion, 0);
   
     // Has to be a list of lists for DTUDecoder
-    List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>(1);
-    allOptions.add(ruleGrid.asList());
-    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties, 
-        heuristic, scorer, allOptions, outputSpace);
+    List<List<ConcreteRule<TK,FV>>> ruleListList = new ArrayList<>(1);
+    ruleListList.add(ruleList);
+    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, 
+        sourceInputProperties, heuristic, scorer, ruleListList, outputSpace);
     nullBeam.put(nullHypothesis);
     beams.add(nullBeam);
 

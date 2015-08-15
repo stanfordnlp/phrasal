@@ -123,33 +123,34 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // TM (phrase table) query for applicable rules
     if (DEBUG) System.err.println("Generating Translation Options");
-    Pair<Sequence<TK>, RuleGrid<TK,FV>> sourceRulePair = 
+    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
     if (source == null || source.size() == 0) return null;
     final int sourceSz = source.size();
-    RuleGrid<TK,FV> ruleGrid = sourceRulePair.second();
+    final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = sourceInputId;
       synchronized (System.err) {
         System.err.print(">> Translation Options <<\n");
-        for (ConcreteRule<TK,FV> option : ruleGrid)
+        for (ConcreteRule<TK,FV> option : ruleList)
           System.err.printf("%s ||| %s ||| %s ||| %s ||| %s\n", sentId,
               option.abstractRule.source, option.abstractRule.target,
               option.isolationScore, option.sourceCoverage);
         System.err.println(">> End translation options <<");
       }
     } else {
-      System.err.printf("Translation options: %d\n", ruleGrid.numRules());
+      System.err.printf("Translation options: %d\n", ruleList.size());
     }
 
-    outputSpace.filter(ruleGrid, null);
+    outputSpace.filter(ruleList, null);
     System.err
     .printf(
         "Translation options after reduction by output space constraint: %d\n",
-        ruleGrid.numRules());
+        ruleList.size());
 
+    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
     // Create rule lookup chart. Rules can be fetched by span.
     if ( ! ruleGrid.isCoverageComplete()) {
       System.err.printf("Incomplete coverage for source input %d%n", sourceInputId);
@@ -157,7 +158,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     
     // Generate null/start hypothesis
     List<List<ConcreteRule<TK,FV>>> allOptions = new ArrayList<>();
-    allOptions.add(ruleGrid.asList());
+    allOptions.add(ruleList);
     Derivation<TK, FV> nullHyp = new Derivation<TK, FV>(sourceInputId, source, sourceInputProperties,
         heuristic, scorer, allOptions, outputSpace);
     beams[0].put(nullHyp);

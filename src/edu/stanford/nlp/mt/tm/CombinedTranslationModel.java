@@ -125,7 +125,8 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
   @Override
   public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source, InputProperties sourceInputProperties, 
       List<Sequence<TK>> targets, int sourceInputId, Scorer<FV> scorer) {
-    final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = new HashMap<>(source.size() * source.size());
+    final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
+        new HashMap<>(source.size() * source.size());
 
     // Support for decoder-local translation models
     List<TranslationModel<TK,FV>> translationModels = models;
@@ -246,11 +247,64 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
     return this.getClass().getSimpleName();
   }
   
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
   public List<ConcreteRule<TK, FV>> getRules(Sequence<TK> source,
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
-    return getRuleGrid(source, sourceInputProperties, targets, sourceInputId, scorer).asList();
+
+    // Support for decoder-local translation models
+    List<TranslationModel<TK,FV>> translationModels = models;
+    if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
+      TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+      translationModels = new ArrayList<>(models);
+      translationModels.add(tm);
+    }
+    
+    if (translationModels.size() == 1) {
+      return translationModels.get(0).getRules(source, sourceInputProperties, targets, 
+          sourceInputId, scorer);
+
+    } else {
+      final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
+          new HashMap<>(source.size() * source.size());
+      
+      int modelNumber = 0;
+      for (TranslationModel<TK,FV> model : translationModels) {
+        for (ConcreteRule<TK,FV> rule : model.getRules(source, sourceInputProperties, targets, 
+            sourceInputId, scorer)) {
+          addToRuleList(rule, ruleLists, modelNumber);
+        }
+        ++modelNumber;
+      }
+      
+      List<ConcreteRule<TK, FV>> mergedList = new ArrayList<>();
+      for (CoverageSet coverage : ruleLists.keySet()) {
+        List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
+        
+        // Effectively cube pruning!
+        Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
+        for (List<ConcreteRule<TK,FV>> list : ruleList) {
+          if (list.size() > 0) {
+            Collections.sort(list);
+            pq.add(new Item<TK,FV>(list.remove(0), list));
+          }
+        }
+        int numPoppedItems = 0;
+        Set<Rule<TK>> uniqSet = new HashSet<>();
+        while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
+          Item<TK, FV> item = pq.poll();
+          if ( ! uniqSet.contains(item.rule.abstractRule)) {
+            mergedList.add(item.rule);
+            uniqSet.add(item.rule.abstractRule);
+            if (item.list.size() > 0) {
+              pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
+            }
+          }
+        }
+      }
+      return mergedList;
+    }
   }
 
   @Override
