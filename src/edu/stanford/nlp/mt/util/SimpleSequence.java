@@ -56,9 +56,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
 	 * 
 	 */
   public SimpleSequence(T... elements) {
-    this.elements = Arrays.copyOf(elements, elements.length);
-    start = 0;
-    end = elements.length;
+    this(false, elements);
   }
 
   private SimpleSequence(SimpleSequence<T> sequence, int start, int end) {

@@ -805,6 +805,7 @@ public class Phrasal {
       }
 
       // Silently ignored by the cube pruning decoder
+      // TODO(spenceg) set this explicitly for each search procedure.
       infererBuilder.setBeamType(BeamFactory.BeamType.sloppybeam);
 
       if (distortionLimit != -1) {

@@ -10,6 +10,9 @@ import java.util.Iterator;
  * @param <T>
  */
 abstract public class AbstractSequence<T> implements Sequence<T> {
+
+  private static final long serialVersionUID = -6825653165092103480L;
+
   @Override
   public Iterator<T> iterator() {
     return new AbstractSequenceIterator();
@@ -102,6 +105,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
   }
 
   private class AbstractSequenceWrapper extends AbstractSequence<T> {
+    private static final long serialVersionUID = -2573414193728462369L;
     private final int size, start;
 
     public AbstractSequenceWrapper(int start, int end) {
@@ -182,7 +186,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
     }
     return false;
   }
-
+  
   @Override
   public boolean startsWith(Sequence<T> prefix) {
     final int prefixSize = prefix.size();

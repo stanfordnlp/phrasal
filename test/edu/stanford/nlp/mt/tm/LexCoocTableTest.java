@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import edu.stanford.nlp.mt.tm.DynamicTranslationModel.LexCoocTable;
-
 /**
  * Unit test.
  * 

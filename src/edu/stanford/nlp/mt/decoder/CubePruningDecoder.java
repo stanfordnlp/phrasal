@@ -142,6 +142,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Initialize feature extractors
     featurizer.initialize(sourceInputId, source);
 
+    // TODO(spenceg) Prepopulate the beams given the prefix if prefix decoding mode.
+    // In the loop below, decoding should start at the value returned by the prefix
+    // filling procedure.
+    
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
     int totalHypothesesGenerated = 1;

@@ -23,12 +23,11 @@ import edu.stanford.nlp.mt.util.Sequence;
  * Translation model query from multiple phrase tables.
  * 
  * @author Daniel Cer
+ * @author Spence Green
  * 
  * @param <TK>
  */
 public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> {
-  
-  static public final boolean DEBUG = false;
 
   // Moses default
   static public final int DEFAULT_PHRASE_LIMIT = 20;
@@ -72,19 +71,9 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    * @param models
    * @param queryLimit
    */
-  public CombinedTranslationModel(List<TranslationModel<TK,FV>> models,
-      int queryLimit) {
+  public CombinedTranslationModel(List<TranslationModel<TK,FV>> models, int queryLimit) {
     this.models = models;
     this.ruleQueryLimit = queryLimit;
-  }
-
-  /**
-   * Get the underlying list of translation models.
-   * 
-   * @return
-   */
-  public List<TranslationModel<TK,FV>> getModels() {
-    return Collections.unmodifiableList(models);
   }
   
   @Override
@@ -227,25 +216,29 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
 
   @Override
   public void setFeaturizer(RuleFeaturizer<TK, FV> featurizer) {
-    for (TranslationModel<TK,FV> phraseTable : models) {
-      phraseTable.setFeaturizer(featurizer);
+    for (TranslationModel<TK,FV> m : models) {
+      m.setFeaturizer(featurizer);
     }
   }
 
   @Override
   public int maxLengthTarget() {
     int longest = -1;
-    for (TranslationModel<TK,FV> phraseGenerator : models) {
-      if (longest < phraseGenerator.maxLengthTarget())
-        longest = phraseGenerator.maxLengthTarget();
+    for (TranslationModel<TK,FV> m : models) {
+      if (longest < m.maxLengthTarget())
+        longest = m.maxLengthTarget();
     }
     return longest;
   }
 
   @Override
   public String getName() {
-    return this.getClass().getSimpleName();
+    return this.getClass().getName();
   }
+  
+  @Override
+  public void setName(String name) {}
+
   
   @SuppressWarnings({ "rawtypes", "unchecked" })
   @Override
@@ -306,7 +299,4 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
       return mergedList;
     }
   }
-
-  @Override
-  public void setName(String name) {}
 }

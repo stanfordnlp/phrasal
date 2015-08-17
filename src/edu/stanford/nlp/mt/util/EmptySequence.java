@@ -9,6 +9,8 @@ package edu.stanford.nlp.mt.util;
  */
 public class EmptySequence<TK> extends AbstractSequence<TK> {
 
+  private static final long serialVersionUID = -7782096461898739067L;
+
   @Override
   public TK get(int i) {
     throw new IndexOutOfBoundsException(String.format(

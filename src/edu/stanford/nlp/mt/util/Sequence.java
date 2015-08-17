@@ -45,10 +45,13 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>, Seria
   public boolean startsWith(Sequence<T> prefix);
 
   /**
-   *
+   * True if this sequence contains the subsequence. Otherwise, false.
+   * 
+   * @param subsequence
+   * @return
    */
   public boolean contains(Sequence<T> subsequence);
-
+  
   public String toString(String delimiter);
 
   public String toString(String prefix, String delimiter);

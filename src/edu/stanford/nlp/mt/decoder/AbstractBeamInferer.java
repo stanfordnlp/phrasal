@@ -19,8 +19,10 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
+import edu.stanford.nlp.mt.decoder.util.PrefixRuleGrid;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTURule;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValues;
@@ -67,6 +69,66 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         outputSpace, targets, size, distinct);
   }
 
+  /**
+   * Populate the beams given the prefix.
+   * 
+   * @param source
+   * @param ruleList
+   * @param sourceInputProperties
+   * @param prefix
+   * @param scorer
+   * @param beams
+   * @return The beam at which standard decoding should begin.
+   */
+  @SuppressWarnings("rawtypes")
+  protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
+      InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
+      List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
+    
+    // Sort rule list by target
+    PrefixRuleGrid<TK,FV> ruleGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
+    
+    // Augment grid (if necessary)
+    if (phraseGenerator instanceof DynamicTranslationModel) {
+      ruleGrid.augmentGrid(((DynamicTranslationModel) phraseGenerator).coocTable);
+    }
+
+    // Generate initial hypotheses
+    if (beams.get(0).size() != 1) throw new RuntimeException("More than one root node");
+    
+    // Create the initial successors
+    Derivation<TK,FV> nullHyp = beams.get(0).iterator().next();
+    ruleGrid.get(0).stream().forEach(rule -> {
+      Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, 0, nullHyp, featurizer,
+          scorer, heuristic, outputSpace);
+      int cardinality = successor.sourceCoverage.cardinality();
+      beams.get(cardinality).put(successor);
+    });
+    
+    // Populate beams (indexed by source coverage)
+    int minSourceCoverage = Integer.MAX_VALUE;
+    for (int i = 1, sz = beams.size(); i < sz; ++i) {
+      for (Derivation<TK,FV> antecedent : beams.get(i)) {
+        int insertionPosition = antecedent.targetSequence.size();
+        List<ConcreteRule<TK,FV>> rulesForPosition = ruleGrid.get(insertionPosition);
+        for (ConcreteRule<TK,FV> rule : rulesForPosition) {
+          Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, 0, antecedent, featurizer,
+              scorer, heuristic, outputSpace);
+          int cardinality = successor.sourceCoverage.cardinality();
+          beams.get(cardinality).put(antecedent);
+          if (successor.targetSequence.size() >= prefix.size() && cardinality < minSourceCoverage) 
+            minSourceCoverage = cardinality;
+        }
+      }
+    }
+    
+    // Return beam number of the starting point (minimum source coverage)
+    return minSourceCoverage;
+  }
+  
+  
+  
+  
   /**
    * Query the phrase table and decide how to handle unknown words.
    * 

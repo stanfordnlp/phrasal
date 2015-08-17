@@ -61,7 +61,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter,
       RuleGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, int distortionLimit, 
       int coverageCardinality) {
-    recombinationHash = new RecombinationHash<Derivation<TK,FV>>(filter);
+    recombinationHash = new RecombinationHash<>(filter);
     this.capacity = capacity;
     this.recombinationHistory = recombinationHistory;
     this.optionGrid = optionGrid;
