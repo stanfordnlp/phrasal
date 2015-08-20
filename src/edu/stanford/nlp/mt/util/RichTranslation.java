@@ -38,10 +38,10 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
    */
   public RichTranslation(Featurizable<TK, FV> featurizable, double score,
       FeatureValueCollection<FV> features, long latticeSourceId) {
-    super((featurizable == null ? new EmptySequence<TK>() : featurizable.targetPrefix), 
+    super((featurizable == null ? Sequences.emptySequence() : featurizable.targetPrefix), 
         features, score, latticeSourceId);
     this.featurizable = featurizable;
-    this.source = featurizable == null ? new EmptySequence<TK>() : featurizable.sourceSentence;
+    this.source = featurizable == null ? Sequences.emptySequence() : featurizable.sourceSentence;
   }
   
   /**

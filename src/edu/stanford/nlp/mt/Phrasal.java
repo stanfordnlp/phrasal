@@ -1308,7 +1308,7 @@ public class Phrasal {
 
     final Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
     final Phrasal p = Phrasal.loadDecoder(configuration);
-    p.decode(System.in, true);
-//     p.decode(new FileInputStream(new File("copy-data/mt05.prep")), true);
+//    p.decode(System.in, true);
+     p.decode(new FileInputStream(new File("copy-data/debug.seq.ar")), true);
   }
 }

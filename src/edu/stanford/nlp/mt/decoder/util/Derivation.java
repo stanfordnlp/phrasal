@@ -9,7 +9,6 @@ import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.DTUFeaturizable;
-import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -122,7 +121,7 @@ State<Derivation<TK, FV>> {
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
-    targetSequence = new EmptySequence<TK>();    
+    targetSequence = Sequences.emptySequence();    
   }
 
   /**

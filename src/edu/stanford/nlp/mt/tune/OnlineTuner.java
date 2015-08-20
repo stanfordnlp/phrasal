@@ -41,7 +41,6 @@ import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.train.DynamicTMBuilder;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
-import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.FlatNBestList;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -493,7 +492,7 @@ public final class OnlineTuner {
               Sequence<IString> bestHypothesis = result.nbestLists.get(i).get(0).translation;
               nbestLists.put(sourceId, bestHypothesis);
             } else {
-              nbestLists.put(sourceId, new EmptySequence<IString>());
+              nbestLists.put(sourceId, Sequences.emptySequence());
             }
           }
           if(localTmTrainingData != null && result.forcedAlignment != null) {

@@ -2,9 +2,9 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
-import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 
 /**
  * A gappy rule.
@@ -17,13 +17,10 @@ public class DTURule<T> extends Rule<T> {
 
   public final Sequence<T>[] dtus;
 
-  @SuppressWarnings("rawtypes")
-  private final static Sequence emptySeq = new EmptySequence();
-
   @SuppressWarnings("unchecked")
   public DTURule(int id, float[] scores, String[] phraseScoreNames,
       Sequence<T>[] dtus, Sequence<T> foreign, PhraseAlignment alignment, String phraseTableName) {
-    super(id, scores, phraseScoreNames, emptySeq, foreign, alignment, phraseTableName);
+    super(id, scores, phraseScoreNames, Sequences.emptySequence(), foreign, alignment, phraseTableName);
     this.dtus = dtus;
   }
 

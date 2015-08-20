@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.StringTokenizer;
 
-import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IntegerArrayRawIndex;
@@ -28,8 +27,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   protected final String name;
   
-  private static final Sequence<IString> EMPTY_SEQUENCE = new EmptySequence<IString>();
-  private static final ARPALMState EMPTY_STATE = new ARPALMState(0.0, EMPTY_SEQUENCE);
+  private static final ARPALMState EMPTY_STATE = new ARPALMState(0.0, Sequences.emptySequence());
   private static final int[] UNK_QUERY = new int[]{TokenUtils.UNK_TOKEN.id};
   
   @Override
@@ -196,7 +194,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
       // but not necessarily for SRILM.
       index = tables[0].getIndex(UNK_QUERY);
       double p = index >= 0 ? probs[0][index] : UNKNOWN_WORD_SCORE;
-      return new ARPALMState(p, EMPTY_SEQUENCE);
+      return new ARPALMState(p, Sequences.emptySequence());
     }
     
     // Backoff recursively

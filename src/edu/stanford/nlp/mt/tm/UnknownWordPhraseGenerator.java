@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.stanford.nlp.mt.util.EmptySequence;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
@@ -26,8 +26,6 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
   private static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
       .getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
-
-  private final Sequence<TK> EMPTY_SEQUENCE = new EmptySequence<TK>();
 
   private final boolean dropUnknownWords;
   private final String[] featureNames = { UNK_FEATURE_NAME };
@@ -68,7 +66,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
     if (dropUnknownWords && !isTranslateable(word)) {
       // Deletion rule
-      list.add(new Rule<TK>(featureValues, featureNames, EMPTY_SEQUENCE, sourceWord,
+      list.add(new Rule<TK>(featureValues, featureNames, Sequences.emptySequence(), sourceWord,
           DEFAULT_ALIGNMENT, PHRASE_TABLE_NAME));
 
     } else {

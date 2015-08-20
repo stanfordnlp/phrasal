@@ -11,7 +11,10 @@ import java.util.List;
  *
  */
 public final class Sequences {
-
+  
+  @SuppressWarnings("rawtypes")
+  private static final Sequence EMPTY_SEQUENCE = new EmptySequence<>();
+  
   private Sequences() {}
 
   /**
@@ -20,8 +23,7 @@ public final class Sequences {
    * @param sequence
    * @return
    */
-  public static int[] toIntArray(
-      Sequence<IString> sequence) {
+  public static int[] toIntArray(Sequence<IString> sequence) {
     int sz = sequence.size();
     int[] intArray = new int[sequence.size()];
     for (int i = 0; i < sz; i++) {
@@ -168,6 +170,16 @@ public final class Sequences {
   }
 
   /**
+   * Return the empty sequence.
+   * 
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  public static <T> Sequence<T> emptySequence() {
+    return (Sequence<T>) EMPTY_SEQUENCE;
+  }
+  
+  /**
    * Efficient wrapper around a sequence.
    *
    * @author Spence Green
@@ -299,6 +311,34 @@ public final class Sequences {
       } else {
         return wrapped.subsequence(start - 1, end - 1);
       }
+    }
+  }
+  
+  /**
+   * A sequence of length 0.
+   * 
+   * @author danielcer
+   * 
+   * @param <TK>
+   */
+  private static class EmptySequence<TK> extends AbstractSequence<TK> {
+
+    private static final long serialVersionUID = -7782096461898739067L;
+
+    @Override
+    public TK get(int i) {
+      throw new IndexOutOfBoundsException(String.format(
+          "Index: %d Sequence size: 0", i));
+    }
+
+    @Override
+    public int size() {
+      return 0;
+    }
+
+    @Override
+    public String toString() {
+      return "";
     }
   }
 }
