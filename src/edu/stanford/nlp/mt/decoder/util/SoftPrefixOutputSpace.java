@@ -1,16 +1,14 @@
 package edu.stanford.nlp.mt.decoder.util;
 
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
-import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
-import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
@@ -26,9 +24,6 @@ import edu.stanford.nlp.mt.util.InputProperty;
  * @param <String>
  */
 public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
-
-  private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
-  public static final String PHRASE_TABLE_NAME = SoftPrefixOutputSpace.class.getName();
 
   private Sequence<IString> sourceSequence;
   private final Sequence<IString> allowablePrefix;
@@ -100,45 +95,12 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
         int cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
             + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
         if (cnt_joint == 0) cnt_joint = 1;
-        ConcreteRule<IString,String> syntheticRule = makeSyntheticRule(source, target, 
+        ConcreteRule<IString,String> syntheticRule = SyntheticRules.makeSyntheticRule(source, target, 
             sourceCoverage, featureNames, inferer.scorer, inferer.featurizer, 
-            cnt_joint, cntE, cntF, inputProperties);
+            cnt_joint, cntE, cntF, inputProperties, sourceSequence, sourceInputId);
         ruleList.add(syntheticRule);
       }
     }
-  }
-
-  /**
-   * Create a synthetic translation rule.
-   * 
-   * @param source
-   * @param target
-   * @param sourceIndex
-   * @param phraseScoreNames
-   * @return
-   */
-  private ConcreteRule<IString, String> makeSyntheticRule(Sequence<IString> source, Sequence<IString> target, 
-      CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<String> scorer,
-      FeatureExtractor<IString,String> featurizer,
-      int cnt_f_e, int cnt_e, int cnt_f, InputProperties inputProperties) {
-    // Baseline dense features
-    float[] scores = new float[phraseScoreNames.length];
-    scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e));
-    scores[1] = scores[0];
-    scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f));
-    scores[3] = scores[2];
-    if (scores.length == 6) {
-      // Extended features
-      scores[4] = cnt_f_e > 1 ? (float) Math.log(cnt_f_e) : 0.0f;
-      scores[5] = cnt_f_e == 1 ? -1.0f : 0.0f;
-    }
-
-    Rule<IString> abstractRule = new Rule<IString>(scores, phraseScoreNames,
-        target, source, UNIGRAM_ALIGNMENT, PHRASE_TABLE_NAME);
-    ConcreteRule<IString,String> rule = new ConcreteRule<IString,String>(abstractRule,
-        sourceCoverage, featurizer, scorer, sourceSequence, 
-        sourceInputId, inputProperties);
-    return rule;
   }
 
   @Override
@@ -174,15 +136,11 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
 
   @Override
   public List<Sequence<IString>> getAllowableSequences() {
-    // null has the semantics of the full (unconstrained) target output space.
-    // This is what we want for prefix decoding because we don't pruning to happen
-    // at the point of the phrase table query.
-    return null;
+    return Collections.singletonList(allowablePrefix);
   }
 
   @Override 
   public int getPrefixLength() {
     return allowablePrefixLength;
   }
-
 }

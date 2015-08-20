@@ -1,10 +1,9 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.State;
 
 
@@ -18,43 +17,16 @@ import edu.stanford.nlp.mt.decoder.util.State;
  * @param <S>
  */
 public class RecombinationHash<S extends State<S>> {
-  public static String DEBUG_OPT = "RecombinationHashDebug";
-  public static boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_OPT, "false"));
-  public static boolean DETAILED_DEBUG = false;
-  private static int expensiveComparisons = 0;
-  private static int equalityExpensiveComparisions = 0;
 
   private final HashMap<FilterWrappedHypothesis, FilterWrappedHypothesis> recombinationHash;
   // private
   final RecombinationFilter<S> filter;
 
-  static {
-    if (DEBUG) {
-      Runtime.getRuntime().addShutdownHook(new Thread() {
-        @Override
-        public void run() {
-          displayStats();
-        }
-      });
-    }
-  }
-
-  static private void displayStats() {
-    System.err.println("RecombinationHash stats:");
-    System.err.println("------------------------");
-    System.err
-        .printf(
-            "Filter Equality Expensive Comparisions: %d (%f %% expensive)\n",
-            equalityExpensiveComparisions,
-            (equalityExpensiveComparisions * 100.0 / expensiveComparisons));
-  }
-
   /**
 	 * 
 	 */
   public RecombinationHash(RecombinationFilter<S> filter) {
-    this.recombinationHash = new HashMap<FilterWrappedHypothesis, FilterWrappedHypothesis>();
+    this.recombinationHash = new HashMap<>();
     this.filter = filter;
   }
 
@@ -88,23 +60,12 @@ public class RecombinationHash<S extends State<S>> {
 	 * Query the status of hypothesis and update if necessary. Return
 	 * the re-combined hypothesis, if any.
 	 */
-  @SuppressWarnings("rawtypes")
   public Status update(S hypothesis) {
     FilterWrappedHypothesis wrappedHyp = new FilterWrappedHypothesis(
         hypothesis, filter);
     FilterWrappedHypothesis filterEquivWrappedHyp = recombinationHash
         .get(wrappedHyp);
 
-    if (DETAILED_DEBUG) {
-      if (filterEquivWrappedHyp != null) {
-        
-        Derivation h1 = (Derivation) hypothesis;
-        Derivation h2 = (Derivation) filterEquivWrappedHyp.hypothesis;
-        System.err.printf("Recombining: %d with %d scores %.3f %.3f\n",
-            Math.min(h1.id, h2.id), Math.max(h1.id, h2.id),
-            Math.min(h1.score(), h2.score()), Math.max(h1.score(), h2.score()));
-      }
-    }
     if (filterEquivWrappedHyp == null) {
       lastBestOnQuery = hypothesis;
       lastRedundantOnQuery = null;
@@ -195,17 +156,16 @@ public class RecombinationHash<S extends State<S>> {
         } else {
           boolean isCombinable = filter.combinable(this.hypothesis,
               wrappedHyp.hypothesis);
-          if (DEBUG) {
-            expensiveComparisons++;
-            if (isCombinable) {
-              equalityExpensiveComparisions++;
-            }
-          }
           return isCombinable;
         }
       }
     }
 
+    @Override
+    public String toString() {
+      return hypothesis.toString();
+    }
+    
     @Override
     public int hashCode() {
       return (int) (hashCode >> 32);
@@ -218,10 +178,11 @@ public class RecombinationHash<S extends State<S>> {
    * @return
    */
   public List<S> hypotheses() {
-    List<S> hypotheses = new ArrayList<>(recombinationHash.size());
-    for (FilterWrappedHypothesis fwh : recombinationHash.keySet()) {
-      hypotheses.add(fwh.hypothesis);
-    }
-    return hypotheses;
+    return recombinationHash.keySet().stream().map(fwh -> fwh.hypothesis).collect(Collectors.toList());
+  }
+  
+  @Override
+  public String toString() {
+    return hypotheses().stream().map(h -> h.toString()).collect(Collectors.joining(" ||| "));
   }
 }

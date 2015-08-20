@@ -295,7 +295,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     long startTime = TimingUtils.startTime();
     int numRules = 0;
     for (Sequence<IString> source : sourceFile) {
-      numRules += tm.getRules(source, null, null, 0, null).size();
+      numRules += tm.getRules(source, null, 0, null).size();
     }
     double timePerSegment = TimingUtils.elapsedSeconds(startTime) / (double) sourceFile.size();
     timer.mark("Query");

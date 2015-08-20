@@ -283,14 +283,9 @@ public class Featurizable<TK, FV> {
   private static final float[] nullScores = new float[0];
   private static final String[] nullNames = new String[0];
   
-  // Thang Feb14
   @Override
   public String toString() {
-    StringBuffer sb = new StringBuffer();
-    sb.append(sourcePhrase + " ||| ");
-    sb.append(targetPhrase + " ||| ");
-    sb.append(rule.abstractRule.alignment);
-    return sb.toString();
+    return String.format("%s (done: %b)", derivation, done);
   }
   
   public String debugStates() {

@@ -114,7 +114,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     }
 
     // Make hyperedge bundles
-    bundles = new HashMap<Integer,List<HyperedgeBundle<TK,FV>>>();
+    bundles = new HashMap<>();
     for (CoverageSet coverage : coverageGroups.keySet()) {
       List<Range> rangeList = this.ranges(coverage);
       List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
@@ -148,7 +148,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     }
     int rangeSize = n - coverageCardinality;
     return bundles.containsKey(rangeSize) ? bundles.get(rangeSize) : 
-      new ArrayList<HyperedgeBundle<TK,FV>>(1);
+      Collections.emptyList();
   }
 
   @Override
@@ -199,6 +199,12 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     return recombined;
   }
 
+  @Override
+  public String toString() {
+    return String.format("cardinality: %d  size: %d  #bundles: %d  #recombined", coverageCardinality,
+        size(), bundles == null ? 0 : bundles.size(), this.recombined);
+  }
+  
   @Override
   public double bestScore() {
     throw new UnsupportedOperationException();

@@ -5,10 +5,12 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -23,7 +25,6 @@ import com.esotericsoftware.kryo.io.Output;
 
 import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
 import edu.stanford.nlp.mt.util.CoverageSet;
@@ -449,9 +450,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public List<ConcreteRule<IString, FV>> getRules(Sequence<IString> source,
-      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
-    if (source == null || source.size() == 0) return new ArrayList<>(0);
+      InputProperties sourceInputProperties, int sourceInputId,
+      Scorer<FV> scorer) {
+    if (source == null || source.size() == 0) return Collections.emptyList();
     
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     
@@ -534,7 +535,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       InputProperties fgProperties = new InputProperties(sourceInputProperties);
       fgProperties.remove(InputProperty.ForegroundTM);
       List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, fgProperties, 
-          targets, sourceInputId, scorer);
+          sourceInputId, scorer);
       logger.info("Source input {} adding {} rules from foreground model", sourceInputId, fgRules.size());
       concreteRules.addAll(fgRules);
     }
@@ -906,6 +907,100 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
+   * A hash-based lexical co-occurrence table. This object is threadsafe.
+   * 
+   * NOTE: This class is not static because it depends on the vocabulary mapping
+   * of its containing DynamicTranslationModel.
+   * 
+   * @author Spence Green
+   *
+   */
+  public class LexCoocTable {
+
+    public static final int NULL_ID = Integer.MIN_VALUE + 1;
+    private static final int MARGINALIZE = Integer.MIN_VALUE;
+    
+    private final ConcurrentHashMap<Long,AtomicInteger> counts;
+    
+    /**
+     * Constructor.
+     * 
+     * @param initialCapacity
+     */
+    public LexCoocTable(int initialCapacity) {
+      counts = new ConcurrentHashMap<>(initialCapacity);
+    }
+    
+    /**
+     * Add a word-word cooccurrence.
+     * 
+     * @param srcId
+     * @param tgtId
+     */
+    public void addCooc(int srcId, int tgtId) {
+      increment(pack(srcId, tgtId));
+      increment(pack(MARGINALIZE, tgtId));
+      increment(pack(srcId, MARGINALIZE));
+    }
+    
+    private void increment(long key) {
+      AtomicInteger counter = counts.get(key);
+      if (counter == null) {
+        counts.putIfAbsent(key, new AtomicInteger());
+        counter = counts.get(key);
+      }
+      counter.incrementAndGet();
+    }
+
+    /**
+     * Source marginal count.
+     * 
+     * @param srcId
+     * @return
+     */
+    public int getSrcMarginal(int srcId) { return getJointCount(srcId, MARGINALIZE); }
+    
+    /**
+     * Target marginal count.
+     * 
+     * @param tgtId
+     * @return
+     */
+    public int getTgtMarginal(int tgtId) { return getJointCount(MARGINALIZE, tgtId); }
+    
+    /**
+     * Joint count.
+     * 
+     * @param srcId
+     * @param tgtId
+     * @return
+     */
+    public int getJointCount(int srcId, int tgtId) { 
+      AtomicInteger counter = counts.get(pack(srcId, tgtId));
+      return counter == null ? 0 : counter.get();
+    }
+    
+    /**
+     * Number of entries in the table.
+     * 
+     * @return
+     */
+    public int size() { return counts.size(); }
+    
+    /**
+     * Merge two interger ids into an unsigned long value. This is two unwrapped calls
+     * to Integer.toUnsignedLong().
+     * 
+     * @param srcId
+     * @param tgtId
+     * @return
+     */
+    public long pack(int srcId, int tgtId) {
+      return ((((long) srcId) & 0xffffffffL) << 32) | ((long) tgtId) & 0xffffffffL;
+    }
+  }
+  
+  /**
    * Extract admissible phrase pairs from the sampled sentence.
    * This is the "pattern matching" algorithm of Lopez (2008).
    * 
@@ -935,7 +1030,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
     }
     
-    if (maxTarget < 0 || maxTarget-minTarget >= maxTargetPhrase) return new ArrayList<>(0);
+    if (maxTarget < 0 || maxTarget-minTarget >= maxTargetPhrase) return Collections.emptyList();
     
     // Admissibility check
     for (int i = minTarget; i <= maxTarget; ++i) {
@@ -944,7 +1039,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         for (int sourcePos : srcPositions) {
           if (sourcePos < startSource || sourcePos >= endSource) {
             // Failed check
-            return new ArrayList<>(0);
+            return Collections.emptyList();
           }
         }
       }
@@ -966,15 +1061,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
     }
     return ruleList;
-  }
-
-  @Override
-  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
-      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
-    List<ConcreteRule<IString,FV>> ruleList = 
-        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-    return new RuleGrid<IString,FV>(ruleList, source);
   }
   
   /**
@@ -1013,7 +1099,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     int sourceId = 0;
     int numRules = 0;
     for (Sequence<IString> source : sourceFile) {
-      numRules += tm.getRules(source, null, null, sourceId++, null).size();
+      numRules += tm.getRules(source, null, sourceId++, null).size();
     }
     double numSecs = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");

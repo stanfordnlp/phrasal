@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -90,6 +89,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   protected Beam<Derivation<TK, FV>> decode(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
@@ -106,61 +106,70 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       this.maxDistortion = defaultDistortion;
     }
     
-    // Create beams. We don't need to store all of them, since the translation
-    // lattice is implicitly defined by the hypotheses
-    final List<BundleBeam<TK,FV>> beams = new LinkedList<>();
-
     // TM (phrase table) query for applicable rules
     Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
+    
+    // Check after potential filtering for OOVs
     if (source == null || source.size() == 0) return null;
     final int sourceLength = source.size();
-    List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     outputSpace.filter(ruleList, this, sourceInputProperties);
     
-    RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
+    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }
     
-    // Fill Beam 0...only has one cube
+    // Fill Beam 0 (root)...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
   
-    // Has to be a list of lists for DTUDecoder
-    List<List<ConcreteRule<TK,FV>>> ruleListList = new ArrayList<>(1);
-    ruleListList.add(ruleList);
-    Derivation<TK, FV> nullHypothesis = new Derivation<TK, FV>(sourceInputId, source, 
+    // Setup the beams
+    List<List<ConcreteRule<TK,FV>>> ruleListList = Collections.singletonList(ruleList);
+    Derivation<TK, FV> nullHypothesis = new Derivation<>(sourceInputId, source, 
         sourceInputProperties, heuristic, scorer, ruleListList, outputSpace);
     nullBeam.put(nullHypothesis);
+    final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
+    for(int i = 1; i <= sourceLength; ++i) beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, 
+        recombinationHistory, maxDistortion, i));
 
     // Initialize feature extractors
     featurizer.initialize(sourceInputId, source);
 
-    // TODO(spenceg) Prepopulate the beams given the prefix if prefix decoding mode.
-    // In the loop below, decoding should start at the value returned by the prefix
-    // filling procedure.
+    // Prefix decoding: pre-populate the beams.
+    int startOfDecoding = 1;
+    int minSourceCoverage = 0;
+    boolean prefilledBeams = false;
+    if (targets != null && targets.size() > 0 && sourceInputProperties.containsKey(InputProperty.TargetPrefix)) {
+      if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
+      minSourceCoverage = this.prefixFillBeams(source, ruleList, sourceInputProperties, targets.get(0), 
+          scorer, beams, sourceInputId, outputSpace);
+      startOfDecoding = minSourceCoverage + 1;
+      prefilledBeams = true;
+    }
     
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
-    int totalHypothesesGenerated = 1;
-    int numRecombined = 0;
-    int numPruned = 0;
+    int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
     final long startTime = TimingUtils.startTime();
-    for (int i = 1; i <= sourceLength; i++) {
+    for (int i = startOfDecoding; i <= sourceLength; i++) {
+      int rootBeam = prefilledBeams ? minSourceCoverage : 0;
+      int minCoverage = i - maxPhraseLength;
+      int startBeam = Math.max(rootBeam, minCoverage);
       // Prune old beams
-      int startBeam = Math.max(0, i-maxPhraseLength);
-      if (startBeam > 0) beams.remove(0);
+//      if (startBeam > 0) beams.remove(0);
 
       // Initialize the priority queue
-      Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(beamCapacity);
-      for (BundleBeam<TK,FV> beam : beams) {
-        for (HyperedgeBundle<TK,FV> bundle : beam.getBundlesForConsequentSize(i)) {
+      Queue<Item<TK,FV>> pq = new PriorityQueue<>(beamCapacity);
+      for (int j = startBeam; j < i; ++j) {
+        BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
+        for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
           List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, outputSpace);
           pq.addAll(consequents);
           totalHypothesesGenerated += consequents.size();
@@ -168,10 +177,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       }
 
       // Populate beam i by popping items and generating successors
-      BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
-          recombinationHistory, maxDistortion, i);
+//      BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+//          recombinationHistory, maxDistortion, i);
+      BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       boolean outputConstraintsEnabled = false;
-      int numPoppedItems = 0;
+      int numPoppedItems = newBeam.size();
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
 
@@ -198,7 +208,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
         }
       }
-      beams.add(newBeam);
+//      beams.add(newBeam);
       numRecombined += newBeam.recombined();
     }
     
@@ -211,8 +221,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     // Return the best beam, which should be the goal beam
     boolean isGoalBeam = true;
-    Collections.reverse(beams);
-    for (Beam<Derivation<TK,FV>> beam : beams) {
+//    Collections.reverse(beams);
+    for (int i = beams.size()-1; i >= 0; --i) {
+      Beam<Derivation<TK,FV>> beam = beams.get(i);
       if (beam.size() != 0) {
         Featurizable<TK,FV> bestHyp = beam.iterator().next().featurizable;
         if (outputSpace.allowableFinal(bestHyp)) {
@@ -248,10 +259,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
     
       // Derivation construction: this is the expensive part
-      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<TK, FV>(sourceInputId,
+      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic, outputSpace) :
             null;
-      consequents.add(new Item<TK,FV>(derivation, successor));
+      consequents.add(new Item<>(derivation, successor));
     }
     return consequents;
   }
@@ -278,11 +289,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       if (derivation == null && o.derivation == null) {
         return 0;
       } else if (derivation == null) {
-        return -1;
-      } else if (o.derivation == null) {
         return 1;
+      } else if (o.derivation == null) {
+        return -1;
       }
-      return this.derivation.compareTo(o.derivation);
+      return derivation.compareTo(o.derivation);
     }
     
     @Override

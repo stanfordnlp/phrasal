@@ -9,6 +9,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
@@ -27,6 +33,7 @@ import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValues;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
@@ -43,6 +50,8 @@ import edu.stanford.nlp.util.Pair;
 abstract public class AbstractBeamInferer<TK, FV> extends
     AbstractInferer<TK, FV> {
 
+  private static final Logger logger = LogManager.getLogger(AbstractBeamInferer.class.getName());
+  
   private static final boolean DEBUG = false;
   
   public final int beamCapacity;
@@ -70,7 +79,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   }
 
   /**
-   * Populate the beams given the prefix.
+   * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
    * 
    * @param source
    * @param ruleList
@@ -80,54 +89,81 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @param beams
    * @return The beam at which standard decoding should begin.
    */
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
       List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
+    if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
     
     // Sort rule list by target
     PrefixRuleGrid<TK,FV> ruleGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
     
     // Augment grid (if necessary)
     if (phraseGenerator instanceof DynamicTranslationModel) {
-      ruleGrid.augmentGrid(((DynamicTranslationModel) phraseGenerator).coocTable);
+      DynamicTranslationModel<FV> foregroundTM = null;
+      if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
+        foregroundTM = 
+            (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+      }
+      ruleGrid.augmentGrid(((DynamicTranslationModel<FV>) phraseGenerator), foregroundTM,
+          scorer, featurizer, sourceInputProperties, sourceInputId);
     }
 
-    // Generate initial hypotheses
-    if (beams.get(0).size() != 1) throw new RuntimeException("More than one root node");
-    
-    // Create the initial successors
-    Derivation<TK,FV> nullHyp = beams.get(0).iterator().next();
-    ruleGrid.get(0).stream().forEach(rule -> {
-      Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, 0, nullHyp, featurizer,
-          scorer, heuristic, outputSpace);
-      int cardinality = successor.sourceCoverage.cardinality();
-      beams.get(cardinality).put(successor);
-    });
-    
     // Populate beams (indexed by source coverage)
-    int minSourceCoverage = Integer.MAX_VALUE;
-    for (int i = 1, sz = beams.size(); i < sz; ++i) {
-      for (Derivation<TK,FV> antecedent : beams.get(i)) {
+    // If this is cube pruning, then there is no need to create hyperedge bundles
+    // because the LM score is constant. We can simply sort the derivations.
+    // TODO(spenceg) Only compute LM scores once.
+    int[] prefixCoverages = IntStream.range(0, prefix.size() + phraseGenerator.maxLengthTarget())
+        .map(i -> Integer.MAX_VALUE).toArray();
+    int maxPrefix = Integer.MIN_VALUE;
+    int[] hypsForBeam = new int[beams.size()];
+    int numHyps = 0;
+    for (int i = 0, sz = beams.size(); i < sz; ++i) {
+      final int beamCardinality = i;
+      Iterable<Derivation<TK,FV>> iterable = () -> beams.get(beamCardinality).iterator();
+      // yield from iterator is sorted
+      List<Derivation<TK,FV>> sortedAntecedents = StreamSupport.stream(iterable.spliterator(), false)
+          .collect(Collectors.toList());
+      for (Derivation<TK,FV> antecedent : sortedAntecedents) {
         int insertionPosition = antecedent.targetSequence.size();
+        if (insertionPosition >= prefix.size()) {
+//          System.err.printf("OVERLAP %d %d: %f %s %s%n", i, hypsForBeam, antecedent.score, 
+//              antecedent.sourceCoverage, antecedent.targetSequence.toString());
+          continue;
+        }
         List<ConcreteRule<TK,FV>> rulesForPosition = ruleGrid.get(insertionPosition);
         for (ConcreteRule<TK,FV> rule : rulesForPosition) {
+          if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
+          CoverageSet testCoverage = new CoverageSet();
+          testCoverage.or(antecedent.sourceCoverage);
+          testCoverage.or(rule.sourceCoverage);
+          int succCardinality = testCoverage.cardinality();
+          boolean capacityExceeded = hypsForBeam[succCardinality] >= beams.get(succCardinality).capacity();
+          if (capacityExceeded) break;
           Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, 0, antecedent, featurizer,
               scorer, heuristic, outputSpace);
-          int cardinality = successor.sourceCoverage.cardinality();
-          beams.get(cardinality).put(antecedent);
-          if (successor.targetSequence.size() >= prefix.size() && cardinality < minSourceCoverage) 
-            minSourceCoverage = cardinality;
+          assert succCardinality == successor.sourceCoverage.cardinality();
+          ++numHyps;
+          hypsForBeam[succCardinality]++;
+          // WSGDEBUG
+//          System.err.printf("%d %d: %f %s %s%n", i, hypsForBeam, successor.score, 
+//              successor.sourceCoverage, successor.targetSequence.toString());
+          beams.get(succCardinality).put(successor);
+          
+          // Book-keeping
+          maxPrefix = Math.max(maxPrefix, successor.targetSequence.size());
+          if (succCardinality < prefixCoverages[successor.targetSequence.size()]) {
+            prefixCoverages[successor.targetSequence.size()] = succCardinality;
+          }
         }
       }
     }
+    logger.info("Input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
     
-    // Return beam number of the starting point (minimum source coverage)
-    return minSourceCoverage;
+    // Return beam number of the starting point (longest prefix with the minimum source
+    // coverage)
+    return maxPrefix >= 0 ? prefixCoverages[maxPrefix] : 0;
   }
-  
-  
-  
   
   /**
    * Query the phrase table and decide how to handle unknown words.
@@ -144,7 +180,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       int sourceInputId, Scorer<FV> scorer) {
     // Initial query
     List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+        .getRules(source, sourceInputProperties, sourceInputId, scorer);
     
     // Compute coverage
     CoverageSet coverage = new CoverageSet();
@@ -164,7 +200,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
         ruleList = phraseGenerator
-            .getRules(sourceFiltered, sourceInputProperties, targets, sourceInputId, scorer);
+            .getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
         return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(sourceFiltered, ruleList);
         
       } else {
@@ -176,7 +212,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           int gapIndex = i;
           Sequence<TK> queryWord = source.subsequence(gapIndex, gapIndex + 1);
           List<ConcreteRule<TK,FV>> oovRules = 
-              unknownWordModel.getRules(queryWord, sourceInputProperties, targets, sourceInputId, scorer);
+              unknownWordModel.getRules(queryWord, sourceInputProperties, sourceInputId, scorer);
           CoverageSet oovCoverage = new CoverageSet();
           oovCoverage.set(gapIndex);
           for (ConcreteRule<TK,FV> rule : oovRules) {
@@ -329,7 +365,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
-    
+
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,

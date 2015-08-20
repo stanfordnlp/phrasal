@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -40,8 +39,8 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
 
   @Override
   public List<ConcreteRule<TK,FV>> getRules(
-      Sequence<TK> source, InputProperties sourceInputProperties, List<Sequence<TK>> targets, 
-      int sourceInputId, Scorer<FV> scorer) {
+      Sequence<TK> source, InputProperties sourceInputProperties, int sourceInputId, 
+      Scorer<FV> scorer) {
     if (source == null || source.size() == 0) return new ArrayList<>(0);
     List<ConcreteRule<TK,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     int longestSourcePhrase = this.maxLengthSource();
@@ -65,15 +64,6 @@ abstract public class AbstractPhraseGenerator<TK, FV> implements
       }
     }
     return concreteRules;
-  }
-
-  @Override
-  public RuleGrid<TK, FV> getRuleGrid(Sequence<TK> source,
-      InputProperties sourceInputProperties, List<Sequence<TK>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
-    List<ConcreteRule<TK,FV>> ruleList = 
-        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-    return new RuleGrid<TK,FV>(ruleList, source);
   }
   
   /**

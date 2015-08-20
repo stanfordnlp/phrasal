@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -510,7 +511,7 @@ public class Phrasal {
     final boolean forceDecode = config.containsKey(FORCE_DECODE);
     if (forceDecode) {
       forceDecodeReferences = MetricUtils
-          .readReferences(config.get(FORCE_DECODE).toArray(new String[config.get(FORCE_DECODE).size()]));
+          .readReferences(config.get(FORCE_DECODE).stream().toArray(String[]::new));
     }
 
     // int distortionLimit = -1;
@@ -1038,11 +1039,12 @@ public class Phrasal {
   public List<RichTranslation<IString, String>> decode(InputStream inputStream, boolean outputToConsole)
       throws IOException {
     logger.info("Entering main translation loop");
-    final MulticoreWrapper<DecoderInput, DecoderOutput> wrapper = new MulticoreWrapper<DecoderInput, DecoderOutput>(
-        numThreads, new PhrasalProcessor(0));
-    final LineNumberReader reader = new LineNumberReader(new InputStreamReader(inputStream, IOTools.DEFAULT_ENCODING));
+    final MulticoreWrapper<DecoderInput, DecoderOutput> wrapper = new MulticoreWrapper<>(numThreads, 
+        new PhrasalProcessor(0));
+    final LineNumberReader reader = new LineNumberReader(new InputStreamReader(inputStream, 
+        IOTools.DEFAULT_ENCODING));
     final List<RichTranslation<IString, String>> bestTranslationList = outputToConsole ? null
-        : new ArrayList<RichTranslation<IString, String>>();
+        : new ArrayList<>();
 
     // Sanity check -- Set each thread's model to the current global model.
     this.scorers.stream().forEach(scorer -> scorer.updateWeights(globalModel));
@@ -1069,8 +1071,8 @@ public class Phrasal {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
         } else {
-          final RichTranslation<IString, String> best = result.translations.size() > 0 ? result.translations.get(0)
-              : null;
+          final RichTranslation<IString, String> best = result.translations.size() > 0 ? 
+              result.translations.get(0) : null;
           bestTranslationList.add(best);
         }
       }
@@ -1307,6 +1309,6 @@ public class Phrasal {
     final Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
     final Phrasal p = Phrasal.loadDecoder(configuration);
     p.decode(System.in, true);
-    // p.decode(new FileInputStream(new File("mt05.prep")), true);
+//     p.decode(new FileInputStream(new File("copy-data/mt05.prep")), true);
   }
 }

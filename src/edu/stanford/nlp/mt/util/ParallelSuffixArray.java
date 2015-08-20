@@ -6,9 +6,11 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -322,7 +324,9 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       // Check to see if these points are sentence boundaries
       if (xId < 0 && yId < 0) {
         return 0;
-      } else if (xId < 0 ) {
+      } else if (xId < 0) {
+        // Say that sentence boundaries are longer than everything else.
+        // They will be pushed to the end of the stream so that limit() can filter them.
         return 1;
       } else if (yId < 0) {
         return -1;
@@ -339,8 +343,8 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       }
       
       // Compare lengths
-      int xLength = xPos - x + (xId >= 0 ? 1 : 0);
-      int yLength = yPos - y + (yId >= 0 ? 1 : 0);
+      int xLength = xPos - x + (xId < 0 ? 0 : 1);
+      int yLength = yPos - y + (yId < 0 ? 0 : 1);
       return xLength - yLength;
       
     }).limit(numPositions).mapToInt(i -> i).toArray();
@@ -378,6 +382,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    */
   public Map<Span,SuffixArraySample> lookupFrequentSourceNgrams(int sampleSize, int minOccurrences) {
     if (sampleSize >= minOccurrences) throw new IllegalArgumentException();
+    if (srcSuffixArray.length == 0) return Collections.emptyMap();
     logger.info("Building query cache with threshold {}", minOccurrences);
     Map<Span,SuffixArraySample> queryCache = new HashMap<>(1000);
     int nCnt = 1, nnCnt = 1, nnnCnt = 1;
@@ -505,12 +510,8 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     }
     @Override
     public String toString() {
-      StringBuilder sb = new StringBuilder();
-      for (int tokenId : tokens) {
-        if (sb.length() > 0) sb.append(" ");
-        sb.append(vocabulary.get(tokenId));
-      }
-      return sb.toString();
+      return Arrays.stream(tokens).mapToObj(tokenId -> vocabulary.get(tokenId))
+          .collect(Collectors.joining(" "));
     }
   }
 
@@ -617,20 +618,23 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
         }
       }
 
-      // Check the lengths
+      // If query has been consumed, then this query is a prefix of this suffix, and this is a 
+      // match. Otherwise, the query is longer than the suffix.
       return consumedQuery ? 0 : 1;
     }
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
-      int i = 0;
-      try {
-        while(true) {
+      boolean seenEnd = false;
+      for (int i = 0; ! seenEnd ; ++i) {
+        int vocabId = get(i);
+        if (vocabId >= 0) {
           if (i > 0) sb.append(" ");
-          sb.append(vocabulary.get(get(i)));
-          ++i;
+          sb.append(vocabulary.get(vocabId));
+        } else {
+          seenEnd = true;
         }
-      } catch(Exception e) {}
+      }
       return sb.toString();
     }
   }
@@ -696,10 +700,10 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    * @return
    */
   public SuffixArraySample sample(final int[] sourceQuery, int maxSamples, int minBound, int maxBound) {
-    if (sourceQuery.length == 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    if (sourceQuery.length == 0) return new SuffixArraySample(Collections.emptyList(), -1, -1);
     int lb = maxBound > minBound ? findBound(sourceQuery, true, true, minBound, maxBound) :
       findBound(sourceQuery, true, true, minBound);
-    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    if (lb < 0) return new SuffixArraySample(Collections.emptyList(), -1, -1);
     int ub = maxBound > lb ? findBound(sourceQuery, true, false, lb, maxBound) :
       findBound(sourceQuery, true, false, lb);
     assert ub >= 0;
@@ -725,9 +729,9 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    * @return
    */
   public SuffixArraySample sampleTarget(final int[] targetQuery, int maxSamples) {
-    if (targetQuery.length == 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    if (targetQuery.length == 0) return new SuffixArraySample(Collections.emptyList(), -1, -1);
     int lb = findBound(targetQuery, false, true, 0);
-    if (lb < 0) return new SuffixArraySample(new ArrayList<>(0), -1, -1);
+    if (lb < 0) return new SuffixArraySample(Collections.emptyList(), -1, -1);
     int ub = findBound(targetQuery, false, false, lb);
     assert ub >= 0;
     int numHits = ub - lb + 1;

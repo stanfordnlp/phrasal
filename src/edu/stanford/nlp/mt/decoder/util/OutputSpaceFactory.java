@@ -29,11 +29,13 @@ public class OutputSpaceFactory {
       boolean targetsArePrefixes, int longestSourcePhrase, int longestTargetPhrase, boolean wrapBoundary) {
     if (wrapBoundary) {
       return new WrapBoundaryOutputSpace<>();
+    
     } else if (targets == null || targets.size() == 0) {
       return new UnconstrainedOutputSpace<IString,String>();
     
     } else if (targetsArePrefixes) {
-      return new SoftPrefixOutputSpace(targets.get(0), sourceInputId);
+//      return new SoftPrefixOutputSpace(targets.get(0), sourceInputId);
+      return new PrefixOutputSpace(targets.get(0), sourceInputId);
     
     } else {
     //else if (targets != null && targets.size() > 0) {

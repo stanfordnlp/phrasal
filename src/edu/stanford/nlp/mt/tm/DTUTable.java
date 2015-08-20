@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.LineNumberReader;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IOTools;
@@ -221,11 +220,10 @@ implements PhraseTable<IString> {
   @Override
   @SuppressWarnings("unchecked")
   public List<ConcreteRule<IString,FV>> getRules(
-      Sequence<IString> sequence, InputProperties sourceInputProperties, List<Sequence<IString>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
+      Sequence<IString> sequence, InputProperties sourceInputProperties, int sourceInputId,
+      Scorer<FV> scorer) {
 
-    assert (targets == null);
-    List<ConcreteRule<IString,FV>> opts = new LinkedList<ConcreteRule<IString,FV>>();
+    List<ConcreteRule<IString,FV>> opts = new LinkedList<>();
     int sequenceSz = sequence.size();
     // System.err.println("Seq to match: "+sequence);
 
@@ -515,13 +513,6 @@ implements PhraseTable<IString> {
   @Override
   public int minRuleIndex() {
     return 0;
-  }
-
-  @Override
-  public RuleGrid<IString, FV> getRuleGrid(Sequence<IString> source,
-      InputProperties sourceInputProperties, List<Sequence<IString>> targets,
-      int sourceInputId, Scorer<FV> scorer) {
-    throw new UnsupportedOperationException("Not yet implemented.");
   }
 
   @Override

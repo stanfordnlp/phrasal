@@ -163,8 +163,8 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
 
   @Override
   public String toString() {
-    return String.format("%s ==> %s (%s)", abstractRule.source,
-        abstractRule.target, sourceCoverage);
+    return String.format("%s ==> %s (%s) %f", abstractRule.source,
+        abstractRule.target, sourceCoverage, isolationScore);
   }
 
   public int linearDistortion(ConcreteRule<TK,FV> rule) {
