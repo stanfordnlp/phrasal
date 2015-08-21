@@ -72,6 +72,7 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SourceClassMap;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TimingUtils;
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -1158,6 +1159,8 @@ public class Phrasal {
       throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
     }
 
+    TimeKeeper timer = TimingUtils.start();
+    
     // Wrapping input for TMs with boundary tokens
     if (wrapBoundary) {
       source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
@@ -1176,7 +1179,6 @@ public class Phrasal {
       tm.setFeaturizer(featurizer);
       tm.setName(TM_FOREGROUND_NAME);
       logger.info("Configured foreground translation model for thread {}: {}", threadId, tm.getName());
-
     }
     if (inputProperties.containsKey(InputProperty.ModelWeights)) {
       final Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.ModelWeights);
@@ -1186,6 +1188,7 @@ public class Phrasal {
     } else {
       this.scorers.get(threadId).updateWeights(this.globalModel);
     }
+    timer.mark("setup");
 
     // Decode
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
@@ -1195,7 +1198,7 @@ public class Phrasal {
 
       // Return an empty n-best list
       if (translations == null)
-        translations = new ArrayList<>(1);
+        translations = Collections.emptyList();
 
     } else {
       // The 1-best translation in this case is potentially different from
@@ -1208,6 +1211,8 @@ public class Phrasal {
         translations.add(translation);
       }
     }
+    timer.mark("decode");
+    logger.info("top-level timing: {}", timer);
     return translations;
   }
 

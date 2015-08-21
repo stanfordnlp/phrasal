@@ -20,7 +20,6 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
-import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
@@ -38,6 +37,8 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.TimingUtils;
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -52,8 +53,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     AbstractInferer<TK, FV> {
 
   private static final Logger logger = LogManager.getLogger(AbstractBeamInferer.class.getName());
-  
-  private static final boolean DEBUG = false;
   
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
@@ -251,11 +250,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     
+    TimeKeeper timer = TimingUtils.start();
+    
     // Decoding
-    RecombinationHistory<Derivation<TK, FV>> recombinationHistory = 
-        new RecombinationHistory<Derivation<TK, FV>>();
+    RecombinationHistory<Derivation<TK, FV>> recombinationHistory = new RecombinationHistory<>();
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         recombinationHistory, outputSpace, targets, size);
+    timer.mark("Decode");
+    
     if (beam == null) {
       // Decoder failure
       return null;
@@ -271,8 +273,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<>();
 
     // Extract
-    List<RichTranslation<TK, FV>> translations = new LinkedList<>();
-    final long nbestStartTime = System.nanoTime();
+    List<RichTranslation<TK, FV>> translations = new ArrayList<>(size);
     
     // Limit the number of popped items in the case of distinct nbest lists.
     // We want the algorithm to terminate eventually....
@@ -319,8 +320,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
       // Decoder failure in which the null hypothesis was returned.
       if (goalHyp == null || goalHyp.featurizable == null) {
-        System.err.printf("%s: WARNING: null hypothesis encountered for input %d; decoder failed%n", 
-            this.getClass().getName(), sourceInputId);
+        logger.warn("Input {}: null hypothesis encountered. Decoder failed", sourceInputId);
         return null;
       }
       
@@ -341,6 +341,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         break;
       }
     }
+    timer.mark("Extraction");
 
     // If a non-admissible recombination heuristic is used, the hypothesis
     // scores predicted by the lattice may not actually correspond to their real
@@ -348,11 +349,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // Since the n-best list should be sorted according to the true scores, we
     // re-sort things here just in case.
     Collections.sort(translations, translationComparator);
+    timer.mark("Sort");
 
-    if (DEBUG) {
-      System.err.printf("source id %d: #extracted: %d #final: %d time: %.3fsec%n", sourceInputId, numExtracted, translations.size(),
-          (System.nanoTime() - nbestStartTime) / 1e9);
-    }
+    logger.info("Input {}: nbest #extracted {}", sourceInputId, numExtracted);
+    logger.info("Input {}: nbest timing {}", sourceInputId, timer);
     
     return translations;
   }

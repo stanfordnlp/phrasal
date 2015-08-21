@@ -25,6 +25,7 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
+import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -99,6 +100,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest) {
 
+    TimeKeeper timer = TimingUtils.start();
+    
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
       this.maxDistortion = (int) sourceInputProperties.get(InputProperty.DistortionLimit);
@@ -111,6 +114,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = sourceRulePair.first();
+    timer.mark("TM query");
     
     // Check after potential filtering for OOVs
     if (source == null || source.size() == 0) return null;
@@ -125,6 +129,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("Incomplete coverage for source input {}", sourceInputId);
     }
+    timer.mark("Rulegrid");
     
     // Fill Beam 0 (root)...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<>(beamCapacity, filter, ruleGrid, 
@@ -153,7 +158,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           scorer, beams, sourceInputId, outputSpace);
       startOfDecoding = minSourceCoverage + 1;
       prefilledBeams = true;
-      
+      timer.mark("Prefill");
       // WSGDEBUG
 //      System.err.printf("PREFILLING: %d %d%n", minSourceCoverage, startOfDecoding);
     }
@@ -161,13 +166,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
-    final long startTime = TimingUtils.startTime();
     for (int i = startOfDecoding; i <= sourceLength; i++) {
       int rootBeam = prefilledBeams ? minSourceCoverage : 0;
       int minCoverage = i - maxPhraseLength;
       int startBeam = Math.max(rootBeam, minCoverage);
-      // Prune old beams
-//      if (startBeam > 0) beams.remove(0);
 
       // Initialize the priority queue
       Queue<Item<TK,FV>> pq = new PriorityQueue<>(beamCapacity);
@@ -180,63 +182,43 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
 
-      // Populate beam i by popping items and generating successors
-//      BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
-//          recombinationHistory, maxDistortion, i);
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
-//      boolean outputConstraintsEnabled = false;
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
-        
-        // WSGDEBUG
-//        System.err.printf("BEAM %d STATUS%n", i);
-//        System.err.println(newBeam.beamString());
-//        System.err.println("===========");
 
-        // Derivations can be null if the output space is constrained. This means that the derivation for this
-        // item was not allowable and thus was not built. However, we need to maintain the consequent
-        // so that we can generate successors.
-//        if (item.derivation == null) {
-//          ++numPruned;
-//        } else {
-          newBeam.put(item.derivation);
-//        }
-//        outputConstraintsEnabled = outputConstraintsEnabled || item.derivation == null;
-        
+        // WSGDEBUG
+        //        System.err.printf("BEAM %d STATUS%n", i);
+        //        System.err.println(newBeam.beamString());
+        //        System.err.println("===========");
+
+        newBeam.put(item.derivation);
+
         List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
-        
-//        if (outputConstraintsEnabled && numPoppedItems == beamCapacity-1 && newBeam.size() < sourceLength - i) {
-          // Search until we build at least one derivation or the priority queue
-          // is exhausted
-//          continue;
-//        } else {
-          ++numPoppedItems;
-//        }
+
+        ++numPoppedItems;
       }
-      
+
       // WSGDEBUG
-//    System.err.printf("BEAM %d STATUS%n", i);
-//    System.err.println(newBeam.beamString());
-//    System.err.println("===========");
-      
-//      beams.add(newBeam);
+      //    System.err.printf("BEAM %d STATUS%n", i);
+      //    System.err.println(newBeam.beamString());
+      //    System.err.println("===========");
+
       numRecombined += newBeam.recombined();
     }
+    timer.mark("Inference");
     
     // Debug statistics
-    final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
-    logger.info("input {}: Decoding time: {}sec", sourceInputId, elapsedTime);
+    logger.info("input {}: Decoding time: {}", sourceInputId, timer);
     logger.info("input {}: #derivations generated: {}", sourceInputId, totalHypothesesGenerated);
     logger.info("input {}: #recombined: {}", sourceInputId, numRecombined);
     logger.info("input {}: #pruned by output constraint: {}", sourceInputId, numPruned);
 
     // Return the best beam, which should be the goal beam
     boolean isGoalBeam = true;
-//    Collections.reverse(beams);
     for (int i = beams.size()-1; i >= 0; --i) {
       Beam<Derivation<TK,FV>> beam = beams.get(i);
       if (beam.size() != 0) {
