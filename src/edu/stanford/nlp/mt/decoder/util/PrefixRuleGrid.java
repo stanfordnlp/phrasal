@@ -112,8 +112,8 @@ public class PrefixRuleGrid<TK,FV> {
     final String[] featureNames = (String[]) backgroundModel.getFeatureNames().toArray();
 
     // Augment with synthetic singleton rules
-    for (int i = targetCoverage.nextClearBit(0); 
-        i >= 0 && i < prefix.size(); 
+    for (int i = targetCoverage.nextClearBit(0), pSz = prefix.size(); 
+        i >= 0 && i < pSz; 
         i = targetCoverage.nextClearBit(i+1)) {
 
       IString targetQuery = (IString) prefix.get(i);
@@ -124,26 +124,29 @@ public class PrefixRuleGrid<TK,FV> {
       boolean isTargetOOV = cnt_e == 0;
       final Sequence<IString> targetSpan = (Sequence<IString>) prefix.subsequence(i, i+1);
 
-      for (int j = 0; j < source.size(); ++j) {
+      for (int j = 0, sSz = source.size(); j < sSz; ++j) {
         IString sourceQuery = (IString) source.get(j);
         int srcIdBack = backgroundModel.getTMVocabularyId(sourceQuery);
         int srcIdFore = foregroundModel == null ? -1 : foregroundModel.getTMVocabularyId(sourceQuery);
         int cnt_f = backgroundModel.coocTable.getSrcMarginal(srcIdBack) +
             (foregroundModel == null ? 0 : foregroundModel.coocTable.getSrcMarginal(srcIdFore));
         final Sequence<IString> sourceSpan = (Sequence<IString>) source.subsequence(j,j+1);
-        double cnt_joint = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
+        double cnt_ef = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
             + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
 
         int cntE = isTargetOOV ? 1 : cnt_e;
         if (cnt_f == 0) cnt_f = 1;
-        if (cnt_joint == 0.0) cnt_joint = 1e-4;
+        if (cnt_ef == 0.0) cnt_ef = 1e-4;
         CoverageSet sourceSpanCoverage = new CoverageSet(source.size());
         sourceSpanCoverage.set(j);
         ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule(sourceSpan, 
             targetSpan, sourceSpanCoverage, featureNames, (Scorer<String>) scorer, 
-            (FeatureExtractor<IString,String>) featurizer, cnt_joint, cntE, cnt_f, inputProperties, 
+            (FeatureExtractor<IString,String>) featurizer, cnt_ef, cntE, cnt_f, inputProperties, 
             (Sequence<IString>) source, sourceInputId);
         index.get(i).add(syntheticRule);
+        
+        // WSGDEBUG
+//        System.err.printf("SYNTH: %s e %d f %d ef %f%n", syntheticRule.toString(), cntE, cnt_f, cnt_ef);
       }
     }
     

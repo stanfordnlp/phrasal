@@ -160,6 +160,15 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
     logger.info("Input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
     
+    // WSGDEBUG
+//    for (int i = 0; i < beams.size(); ++i) {
+//      System.err.printf("BEAM %d%n", i);
+//      BundleBeam<TK,FV> beam = (BundleBeam<TK, FV>) beams.get(i);
+//      System.err.println(beam.beamString());
+//      System.err.println("================");
+//    }
+    
+    
     // Return beam number of the starting point (longest prefix with the minimum source
     // coverage)
     return maxPrefix >= 0 ? prefixCoverages[maxPrefix] : 0;

@@ -265,6 +265,17 @@ State<Derivation<TK, FV>> {
     return (int) id;
   }
 
+  public String historyString() {
+    StringBuilder sb = new StringBuilder();
+    Derivation<TK,FV> d = this;
+    while (d != null) {
+      if (sb.length() > 0) sb.append("\n");
+      sb.append(d.rule == null ? "<GOAL>" : d.rule.toString());
+      d = d.preceedingDerivation;
+    }
+    return sb.toString();
+  }
+  
   public boolean hasExpired() {
     return false;
   }

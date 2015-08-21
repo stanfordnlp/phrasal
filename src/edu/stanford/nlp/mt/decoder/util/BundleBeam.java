@@ -193,7 +193,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   public int size() {
     return recombinationHash.size();
   }
-
+  
   @Override
   public int recombined() {
     return recombined;
@@ -203,6 +203,17 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   public String toString() {
     return String.format("cardinality: %d  size: %d  #bundles: %d  #recombined", coverageCardinality,
         size(), bundles == null ? 0 : bundles.size(), this.recombined);
+  }
+  
+  public String beamString() {
+    StringBuilder sb = new StringBuilder();
+    int i = 0;
+    for (Derivation<TK,FV> h : this) {
+      if (sb.length() > 0) sb.append("\n");
+      sb.append(i++).append(" ").append(h.toString());
+      if (i > 10) break;
+    }
+    return sb.toString();
   }
   
   @Override

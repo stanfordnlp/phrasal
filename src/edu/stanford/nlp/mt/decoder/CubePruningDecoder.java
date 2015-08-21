@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -27,7 +28,7 @@ import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.util.Pair;
 
 /**
- * Cube pruning as described by Chiang and Huang (2007)
+ * Cube pruning as described by Chiang and Huang (2007).
  * 
  * @author Spence Green
  *
@@ -126,7 +127,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // Fill Beam 0 (root)...only has one cube
-    BundleBeam<TK,FV> nullBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
+    BundleBeam<TK,FV> nullBeam = new BundleBeam<>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
   
     // Setup the beams
@@ -146,9 +147,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     int startOfDecoding = 1;
     int minSourceCoverage = 0;
     boolean prefilledBeams = false;
-    if (targets != null && targets.size() > 0 && sourceInputProperties.containsKey(InputProperty.TargetPrefix)) {
+    if (sourceInputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
       if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
-      minSourceCoverage = this.prefixFillBeams(source, ruleList, sourceInputProperties, targets.get(0), 
+      minSourceCoverage = prefixFillBeams(source, ruleList, sourceInputProperties, targets.get(0), 
           scorer, beams, sourceInputId, outputSpace);
       startOfDecoding = minSourceCoverage + 1;
       prefilledBeams = true;
@@ -180,33 +181,38 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 //      BundleBeam<TK,FV> newBeam = new BundleBeam<TK,FV>(beamCapacity, filter, ruleGrid, 
 //          recombinationHistory, maxDistortion, i);
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
-      boolean outputConstraintsEnabled = false;
-      int numPoppedItems = newBeam.size();
+//      boolean outputConstraintsEnabled = false;
+      int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item<TK,FV> item = pq.poll();
+        
+        // WSGDEBUG
+//        System.err.printf("BEAM %d STATUS%n", i);
+//        System.err.println(newBeam.beamString());
+//        System.err.println("===========");
 
         // Derivations can be null if the output space is constrained. This means that the derivation for this
         // item was not allowable and thus was not built. However, we need to maintain the consequent
         // so that we can generate successors.
-        if (item.derivation == null) {
-          ++numPruned;
-        } else {
+//        if (item.derivation == null) {
+//          ++numPruned;
+//        } else {
           newBeam.put(item.derivation);
-        }
-        outputConstraintsEnabled = outputConstraintsEnabled || item.derivation == null;
+//        }
+//        outputConstraintsEnabled = outputConstraintsEnabled || item.derivation == null;
         
         List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
         
-        if (outputConstraintsEnabled && numPoppedItems == beamCapacity-1 && newBeam.size() < sourceLength - i) {
+//        if (outputConstraintsEnabled && numPoppedItems == beamCapacity-1 && newBeam.size() < sourceLength - i) {
           // Search until we build at least one derivation or the priority queue
           // is exhausted
-          continue;
-        } else {
+//          continue;
+//        } else {
           ++numPoppedItems;
-        }
+//        }
       }
 //      beams.add(newBeam);
       numRecombined += newBeam.recombined();
@@ -226,6 +232,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Beam<Derivation<TK,FV>> beam = beams.get(i);
       if (beam.size() != 0) {
         Featurizable<TK,FV> bestHyp = beam.iterator().next().featurizable;
+        
+        // WSGDEBUG
+//        System.err.println(targets.get(0).toString());
+//        System.err.println(bestHyp.derivation.historyString());
+//        System.err.println();
+        
         if (outputSpace.allowableFinal(bestHyp)) {
           if ( ! isGoalBeam) {
             final int coveredTokens = sourceLength - bestHyp.numUntranslatedSourceTokens;
@@ -253,16 +265,23 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    List<Item<TK,FV>> consequents = new ArrayList<>(2);
-    List<Consequent<TK,FV>> successors = bundle.nextSuccessors(antecedent);
-    for (Consequent<TK,FV> successor : successors) {
-      boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule);
-    
-      // Derivation construction: this is the expensive part
-      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
-          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, heuristic, outputSpace) :
-            null;
-      consequents.add(new Item<>(derivation, successor));
+    List<Item<TK,FV>> consequents = new ArrayList<>();
+    List<Consequent<TK,FV>> successors = new LinkedList<>(bundle.nextSuccessors(antecedent));
+    while (successors.size() > 0) {
+      Consequent<TK,FV> successor = successors.remove(0);
+      boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
+          successor.rule);
+      if (buildDerivation) {
+        // Derivation construction: this is the expensive part
+        Derivation<TK, FV> derivation = new Derivation<>(sourceInputId,
+            successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
+            heuristic, outputSpace);
+        consequents.add(new Item<>(derivation, successor));
+        
+      } else {
+        // Pruned by output constraint. Keep searching in the bundle.
+        successors.addAll(bundle.nextSuccessors(successor));
+      }
     }
     return consequents;
   }
@@ -280,25 +299,19 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     public final Consequent<TK, FV> consequent;
 
     public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
+      assert derivation != null;
       this.derivation = derivation;
       this.consequent = consequent;
     }
 
     @Override
     public int compareTo(Item<TK,FV> o) {
-      if (derivation == null && o.derivation == null) {
-        return 0;
-      } else if (derivation == null) {
-        return 1;
-      } else if (o.derivation == null) {
-        return -1;
-      }
       return derivation.compareTo(o.derivation);
     }
     
     @Override
     public String toString() {
-      return derivation == null ? "<<NULL>>" : derivation.toString();
+      return derivation.toString();
     }
   }
 
