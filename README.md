@@ -6,7 +6,7 @@ Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior Univ
 
 ## Installation
 
-[Gradle](http://gradle.org) installation build scripts are provided. Gradle will fetch dependencies and build a jar for you.
+We use [Gradle](http://gradle.org) to build Phrasal. Gradle will install all dependencies.
 
 ### Linux / MacOS
 
@@ -22,7 +22,7 @@ Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior Univ
 
 ### Windows
 
-Follow the Linux instructions above. Then be sure to execute `gradle startupScripts` to generate a .bat file for running Phrasal.
+Follow the Linux instructions above. Then be sure to execute `gradle startupScripts` to generate a .bat file.
 
 ## Citation
 
@@ -39,12 +39,11 @@ If you use Phrasal for research, then please cite the following paper:
 
 ## Documentation / User Guide
 
-The [user guide](http://www-nlp.stanford.edu/wiki/Software/Phrasal) for complete installation and configuration instructions. The guide also
-contains a tutorial for building an MT system from raw text.
+See [the user guide](http://www-nlp.stanford.edu/wiki/Software/Phrasal) for complete installation and configuration instructions. The guide also contains a tutorial for building an MT system from raw text.
 
 ## Support
 
-We have 3 mailing lists for Phrasal, all of which are shared with other JavaNLP
+We have 3 mailing lists for Phrasal, all of which are shared with other Stanford JavaNLP
 tools (with the exclusion of the parser). 
 
 Each address is at @lists.stanford.edu:
