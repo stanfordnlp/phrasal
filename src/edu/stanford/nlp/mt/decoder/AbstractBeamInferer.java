@@ -67,7 +67,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     super(builder);
     this.beamCapacity = builder.beamSize;
     this.beamType = builder.beamType;
-    this.translationComparator = new RichTranslationComparator<TK,FV>();
+    this.translationComparator = new Comparator<RichTranslation<TK,FV>>() {
+      @Override
+      public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+        return (int) Math.signum(o2.score - o1.score);
+      }
+    };
   }
 
   @Override
@@ -356,20 +361,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     
     return translations;
   }
-  
-  private static class RichTranslationComparator<TK,FV> implements Comparator<RichTranslation<TK,FV>> {
-    @Override
-    public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
-      return (int) Math.signum(o2.score - o1.score);
-    }
-  }
 
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
     return translate(scorer, source, sourceInputId, sourceInputProperties,
-        constrainedOutputSpace, targets);
+        outputSpace, targets);
   }
 
   @Override
