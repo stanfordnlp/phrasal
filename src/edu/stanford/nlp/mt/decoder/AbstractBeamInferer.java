@@ -20,6 +20,7 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
@@ -168,6 +169,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 //      System.err.println("================");
 //    }
     
+    // Clamp the maxPrefix to the prefix length
+    maxPrefix = Math.min(maxPrefix, prefix.size());
     
     // Return beam number of the starting point (longest prefix with the minimum source
     // coverage)

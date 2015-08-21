@@ -153,6 +153,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           scorer, beams, sourceInputId, outputSpace);
       startOfDecoding = minSourceCoverage + 1;
       prefilledBeams = true;
+      
+      // WSGDEBUG
+//      System.err.printf("PREFILLING: %d %d%n", minSourceCoverage, startOfDecoding);
     }
     
     // main translation loop---beam expansion
@@ -214,6 +217,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
 //        }
       }
+      
+      // WSGDEBUG
+//    System.err.printf("BEAM %d STATUS%n", i);
+//    System.err.println(newBeam.beamString());
+//    System.err.println("===========");
+      
 //      beams.add(newBeam);
       numRecombined += newBeam.recombined();
     }
@@ -235,8 +244,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         
         // WSGDEBUG
 //        System.err.println(targets.get(0).toString());
+//        System.err.println(bestHyp.derivation.score);
 //        System.err.println(bestHyp.derivation.historyString());
-//        System.err.println();
+//        System.err.println("=========");
         
         if (outputSpace.allowableFinal(bestHyp)) {
           if ( ! isGoalBeam) {
