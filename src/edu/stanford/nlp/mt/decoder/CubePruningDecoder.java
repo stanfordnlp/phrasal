@@ -105,7 +105,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
       this.maxDistortion = (int) sourceInputProperties.get(InputProperty.DistortionLimit);
-      logger.info("Changing distortion limit from {} to {}", this.defaultDistortion, this.maxDistortion);
+      logger.info("input {}: Changing distortion limit from {} to {}", sourceInputId, 
+          this.defaultDistortion, this.maxDistortion);
     } else {
       this.maxDistortion = defaultDistortion;
     }
@@ -120,6 +121,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     if (source == null || source.size() == 0) return null;
     final int sourceLength = source.size();
     final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
@@ -127,7 +129,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
     if ( ! ruleGrid.isCoverageComplete()) {
-      logger.warn("Incomplete coverage for source input {}", sourceInputId);
+      logger.warn("input {}: Incomplete source coverage", sourceInputId);
     }
     timer.mark("Rulegrid");
     

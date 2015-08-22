@@ -491,7 +491,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Only use a parallel stream if the overhead is justified
       try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
           : ranges.stream()) {
-        List<ConcreteRule<IString,FV>> ruleList = rangeStream.flatMap(range -> {
+        rangeStream.flatMap(range -> {
           final int i = range.i;
           final int j = range.j;
           final int order = j - i;
@@ -522,9 +522,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
                 r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
           }
-        }).collect(Collectors.toList());
-
-        concreteRules.addAll(ruleList);
+        }).forEach(concreteRules::add);
       }
     }
     
@@ -536,7 +534,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       fgProperties.remove(InputProperty.ForegroundTM);
       List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, fgProperties, 
           sourceInputId, scorer);
-      logger.info("Source input {} adding {} rules from foreground model", sourceInputId, fgRules.size());
+      logger.info("input {}: adding {} rules from foreground model", sourceInputId, fgRules.size());
       concreteRules.addAll(fgRules);
     }
 
