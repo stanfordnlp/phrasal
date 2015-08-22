@@ -202,7 +202,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param name
    */
-  public void configureAsForegroundTM(FeatureTemplate t) {
+  public synchronized void configureAsForegroundTM(FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
@@ -491,7 +491,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Only use a parallel stream if the overhead is justified
       try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
           : ranges.stream()) {
-        rangeStream.flatMap(range -> {
+        List<ConcreteRule<IString,FV>> rules = rangeStream.flatMap(range -> {
           final int i = range.i;
           final int j = range.j;
           final int order = j - i;
@@ -522,7 +522,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
             return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
                 r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
           }
-        }).forEach(concreteRules::add);
+        }).collect(Collectors.toList());
+        concreteRules.addAll(rules);
       }
     }
     
