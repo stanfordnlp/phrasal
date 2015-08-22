@@ -1098,8 +1098,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     long startTime = TimingUtils.startTime();
     int sourceId = 0;
     int numRules = 0;
+    InputProperties inProps = new InputProperties();
     for (Sequence<IString> source : sourceFile) {
-      numRules += tm.getRules(source, null, sourceId++, null).size();
+      numRules += tm.getRules(source, inProps, sourceId++, null).size();
     }
     double numSecs = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");
