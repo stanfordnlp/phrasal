@@ -175,6 +175,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     
     // Clamp the maxPrefix to the prefix length
     maxPrefix = Math.min(maxPrefix, prefix.size());
+    if (prefixCoverages[maxPrefix] < 0) {
+      logger.warn("input {}: No prefix coverage.", sourceInputId);
+      return 0;
+    }
     
     // Return beam number of the starting point (longest prefix with the minimum source
     // coverage)
