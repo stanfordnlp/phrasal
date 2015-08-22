@@ -24,6 +24,8 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   
+  private static final int RULE_QUERY_LIMIT = 20;
+  
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
@@ -103,24 +105,6 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @return
    */
   public boolean isCoverageComplete() { return completeCoverage; }
-
-  /**
-   * Return the number of unique converages in this grid.
-   * 
-   * @return
-   */
-  public int numberOfCoverages() { return grid.length; }
-  
-  /**
-   * Return all rules associated with a coverage id.
-   * 
-   * @param i
-   * @return
-   */
-  public List<ConcreteRule<TK,FV>> getRulesForCoverageId(int i) {
-    if (i < 0 || i >= grid.length) throw new ArrayIndexOutOfBoundsException();
-    return grid[i] == null ? Collections.emptyList() : grid[i];
-  }
   
   /**
    * Return the number of rules in this grid.
@@ -167,7 +151,14 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
       Collections.sort(grid[offset]);
       isSorted.set(offset);
     }
-    return grid[offset] == null ? Collections.emptyList() : grid[offset];
+    
+    if (grid[offset] == null) {
+      return Collections.emptyList();
+    } else if (grid[offset].size() < RULE_QUERY_LIMIT) {
+      return grid[offset];
+    } else {
+      return grid[offset].subList(0, RULE_QUERY_LIMIT);
+    }
   }
 
   /**
