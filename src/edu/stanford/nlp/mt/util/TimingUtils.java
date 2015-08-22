@@ -56,6 +56,10 @@ public final class TimingUtils {
       marks.add(System.nanoTime());
       labels.add(label);
     }
+    public long elapsedNano() { return marks.get(marks.size()-1) - marks.get(0); }
+    public long elapsedMillis() { return (long) (elapsedNano() / 1e6); }
+    public double elapsedSecs() { return elapsedNano() / 1e9; }
+    
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
