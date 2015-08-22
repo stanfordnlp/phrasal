@@ -24,15 +24,24 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   
-  private static final int RULE_QUERY_LIMIT = 20;
+  private static final int DEFAULT_RULE_QUERY_LIMIT = Integer.MAX_VALUE;
   
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
-  private boolean doLazySorting;
   private boolean completeCoverage;
   private CoverageSet incrementalCoverage;
-  private int size = 0;
+  private final int size;
+  private final int ruleQueryLimit;
+  
+  /**
+   * Constructor.
+   * 
+   * @param source
+   */
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
+    this(ruleList, source, DEFAULT_RULE_QUERY_LIMIT);
+  }
   
   /**
    * Constructor.
@@ -40,10 +49,11 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @param source
    */
   @SuppressWarnings("unchecked")
-  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, int ruleQueryLimit) {
     sourceLength = source.size();
     isSorted = new BitSet();
-    this.doLazySorting = true;
+    this.ruleQueryLimit = ruleQueryLimit;
+    this.size = ruleList.size();
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
@@ -52,40 +62,11 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   }
   
   /**
-   * Constructor for creating a RuleGrid incrementally.
-   * 
-   * IMPORTANT: if a RuleGrid is constructed incrementally, then it is assumed
-   * that the calls to addEntry insert rules in sorted order.
-   * 
-   * @param source
-   */
-  @SuppressWarnings("unchecked")
-  public RuleGrid(int sourceLength) {
-    this.sourceLength = sourceLength;
-    isSorted = new BitSet();
-    isSorted.set(0, sourceLength);
-    doLazySorting = false;
-    grid = new List[sourceLength * sourceLength];
-    completeCoverage = false;
-    incrementalCoverage = new CoverageSet();
-  }
-
-  /**
-   * Toggle lazy sorting of rules.
-   * 
-   * @param b
-   */
-  public void setLazySorting(boolean b) { 
-    this.doLazySorting = b; 
-    if (doLazySorting) isSorted.clear();
-  }
-  
-  /**
    * Add a new entry to the rule table.
    * 
    * @param rule
    */
-  public void addEntry(ConcreteRule<TK,FV> rule) {
+  private void addEntry(ConcreteRule<TK,FV> rule) {
     int startPos = rule.sourcePosition;
     int endPos = startPos + rule.abstractRule.source.size() - 1;
     // Sanity checks
@@ -97,7 +78,6 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     grid[offset].add(rule);
     incrementalCoverage.or(rule.sourceCoverage);
     completeCoverage = (incrementalCoverage.cardinality() == sourceLength);
-    ++size;
   }
   
   /**
@@ -111,21 +91,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * 
    * @return
    */
-  public int numRules() { return size; }
-  
-  /**
-   * Remove a rule from the grid.
-   * 
-   * @param coverageId
-   * @param ruleIndex
-   * @return
-   */
-  public ConcreteRule<TK,FV> remove(int coverageId, int ruleIndex) {
-    if (coverageId >= grid.length || grid[coverageId] == null || ruleIndex >= grid[coverageId].size()) {
-      throw new IllegalArgumentException();
-    }
-    return grid[coverageId].remove(ruleIndex);
-  }
+  public int size() { return size; }
   
   /**
    * One dimension of the option grid. This corresponds to length of the source
@@ -145,20 +111,15 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   public List<ConcreteRule<TK,FV>> get(int startInclusive, int endInclusive) {
     final int offset = getIndex(startInclusive, endInclusive);
     if (offset < 0 || offset >= grid.length) {
-      throw new IllegalArgumentException("Span is out-of-bounds");
+      throw new ArrayIndexOutOfBoundsException("Span is out-of-bounds");
     }
-    if (grid[offset] != null && doLazySorting && ! isSorted.get(offset)) {
+    if (! isSorted.get(offset)) {
+      if (grid[offset] == null) grid[offset] = Collections.emptyList();
       Collections.sort(grid[offset]);
+      if (grid[offset].size() > ruleQueryLimit) grid[offset] = grid[offset].subList(0, ruleQueryLimit);
       isSorted.set(offset);
-    }
-    
-    if (grid[offset] == null) {
-      return Collections.emptyList();
-    } else if (grid[offset].size() < RULE_QUERY_LIMIT) {
-      return grid[offset];
-    } else {
-      return grid[offset].subList(0, RULE_QUERY_LIMIT);
-    }
+    } 
+    return grid[offset];
   }
 
   /**
