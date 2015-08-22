@@ -943,12 +943,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
     
     private void increment(long key) {
-      AtomicInteger counter = counts.get(key);
-      if (counter == null) {
-        counts.putIfAbsent(key, new AtomicInteger());
-        counter = counts.get(key);
-      }
-      counter.incrementAndGet();
+      counts.computeIfAbsent(key, k -> new AtomicInteger()).incrementAndGet();
     }
 
     /**
