@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -174,13 +175,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int startBeam = Math.max(rootBeam, minCoverage);
 
       // Initialize the priority queue
-      Queue<Item<TK,FV>> pq = new PriorityQueue<>(beamCapacity);
+      Queue<Item<TK,FV>> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
           List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, outputSpace);
           pq.addAll(consequents);
           totalHypothesesGenerated += consequents.size();
+          numPruned += consequents.stream().mapToInt(c -> c.derivation == null ? 1 : 0).sum();
         }
       }
 
@@ -193,15 +195,17 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         //        System.err.printf("BEAM %d STATUS%n", i);
         //        System.err.println(newBeam.beamString());
         //        System.err.println("===========");
+        if (item.derivation != null) {
+          newBeam.put(item.derivation);
+          ++numPoppedItems;
+        }
 
-        newBeam.put(item.derivation);
-
+        // Expand this consequent
         List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace);
         pq.addAll(consequents);
         totalHypothesesGenerated += consequents.size();
-
-        ++numPoppedItems;
+        numPruned += consequents.stream().mapToInt(c -> c.derivation == null ? 1 : 0).sum();
       }
 
       // WSGDEBUG
@@ -259,25 +263,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    List<Item<TK,FV>> consequents = new ArrayList<>();
-    List<Consequent<TK,FV>> successors = new LinkedList<>(bundle.nextSuccessors(antecedent));
-    while (successors.size() > 0) {
-      Consequent<TK,FV> successor = successors.remove(0);
+    return bundle.nextSuccessors(antecedent).stream().map(successor -> {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
           successor.rule);
-      if (buildDerivation) {
-        // Derivation construction: this is the expensive part
-        Derivation<TK, FV> derivation = new Derivation<>(sourceInputId,
-            successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
-            heuristic, outputSpace);
-        consequents.add(new Item<>(derivation, successor));
-        
-      } else {
-        // Pruned by output constraint. Keep searching in the bundle.
-        successors.addAll(bundle.nextSuccessors(successor));
-      }
-    }
-    return consequents;
+      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
+          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
+          heuristic, outputSpace) : null;
+      return new Item<>(derivation, successor);
+    }).collect(Collectors.toList());
   }
 
   /**
@@ -291,6 +284,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
     public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
+    public int id = -1;
 
     public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
       assert derivation != null;
@@ -300,7 +294,15 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     @Override
     public int compareTo(Item<TK,FV> o) {
-      return derivation.compareTo(o.derivation);
+      if (derivation == null && o.derivation == null) {
+        return id - o.id;
+      } else if (derivation == null) {
+        return 1;
+      } else if (o.derivation == null) {
+        return -1;
+      } else {
+        return derivation.compareTo(o.derivation);
+      }
     }
     
     @Override
