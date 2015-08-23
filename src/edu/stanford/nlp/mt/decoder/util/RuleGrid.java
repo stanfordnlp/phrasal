@@ -24,7 +24,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   
-  private static final int DEFAULT_RULE_QUERY_LIMIT = 20;// Integer.MAX_VALUE;
+  private static final int DEFAULT_RULE_QUERY_LIMIT = Integer.MAX_VALUE;
   
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;

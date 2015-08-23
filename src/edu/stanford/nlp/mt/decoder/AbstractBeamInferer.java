@@ -120,7 +120,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // TODO(spenceg) Only compute LM scores once.
     int[] prefixCoverages = IntStream.range(0, prefix.size() + phraseGenerator.maxLengthTarget())
         .map(i -> Integer.MAX_VALUE).toArray();
-    int maxPrefix = Integer.MIN_VALUE;
+    int maxPrefix = 0;
     int[] hypsForBeam = new int[beams.size()];
     int numHyps = 0;
     for (int i = 0, sz = beams.size(); i < sz; ++i) {
@@ -175,7 +175,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     
     // Clamp the maxPrefix to the prefix length
     maxPrefix = Math.min(maxPrefix, prefix.size());
-    if (prefixCoverages[maxPrefix] < 0) {
+    if (prefixCoverages[maxPrefix] == Integer.MAX_VALUE) {
       logger.warn("input {}: No prefix coverage.", sourceInputId);
       return 0;
     }
@@ -221,7 +221,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
         ruleList = phraseGenerator
             .getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
-        return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(sourceFiltered, ruleList);
+        return new Pair<>(sourceFiltered, ruleList);
         
       } else {
         // Add rules from the OOV model
@@ -233,7 +233,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           Sequence<TK> queryWord = source.subsequence(gapIndex, gapIndex + 1);
           List<ConcreteRule<TK,FV>> oovRules = 
               unknownWordModel.getRules(queryWord, sourceInputProperties, sourceInputId, scorer);
-          CoverageSet oovCoverage = new CoverageSet();
+          CoverageSet oovCoverage = new CoverageSet(source.size());
           oovCoverage.set(gapIndex);
           for (ConcreteRule<TK,FV> rule : oovRules) {
             // Update the coverage set for the output of the OOV model
@@ -244,7 +244,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
     }
-    return new Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>>(source, ruleList);
+    return new Pair<>(source, ruleList);
   }
   
   /**

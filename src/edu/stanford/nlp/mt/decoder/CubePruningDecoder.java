@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -186,6 +185,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
 
+      if (i < 0) {
+        System.out.println();
+      }
+      
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
@@ -287,7 +290,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     public int id = -1;
 
     public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
-      assert derivation != null;
       this.derivation = derivation;
       this.consequent = consequent;
     }
