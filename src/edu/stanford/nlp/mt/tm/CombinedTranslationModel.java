@@ -212,16 +212,13 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
           pq.add(new Item<TK,FV>(list.remove(0), list));
         }
       }
-      int numPoppedItems = 0;
-      Set<Rule<TK>> uniqSet = new HashSet<>();
-      while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
+      int numSelectedRules = 0;
+      while (numSelectedRules < ruleQueryLimit && ! pq.isEmpty()) {
         Item<TK, FV> item = pq.poll();
-        if ( ! uniqSet.contains(item.rule.abstractRule)) {
-          mergedList.add(item.rule);
-          uniqSet.add(item.rule.abstractRule);
-          if (item.list.size() > 0) {
-            pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
-          }
+        mergedList.add(item.rule);
+        ++numSelectedRules;
+        if (item.list.size() > 0) {
+          pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
         }
       }
     }
