@@ -50,8 +50,7 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    * @param queryLimit
    */
   public CombinedTranslationModel(TranslationModel<TK,FV> model, int queryLimit) {
-    this.models = new ArrayList<>(1);
-    this.models.add(model);
+    this.models = Collections.singletonList(model);
     this.ruleQueryLimit = queryLimit;
   }
   
@@ -189,49 +188,43 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
       translationModels.add(tm);
     }
     
-    if (translationModels.size() == 1) {
-      return translationModels.get(0).getRules(source, sourceInputProperties, sourceInputId, 
-          scorer);
+    final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
+        new HashMap<>(source.size() * source.size());
 
-    } else {
-      final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
-          new HashMap<>(source.size() * source.size());
-      
-      int modelNumber = 0;
-      for (TranslationModel<TK,FV> model : translationModels) {
-        for (ConcreteRule<TK,FV> rule : model.getRules(source, sourceInputProperties, sourceInputId, 
-            scorer)) {
-          addToRuleList(rule, ruleLists, modelNumber);
-        }
-        ++modelNumber;
+    int modelNumber = 0;
+    for (TranslationModel<TK,FV> model : translationModels) {
+      for (ConcreteRule<TK,FV> rule : model.getRules(source, sourceInputProperties, sourceInputId, 
+          scorer)) {
+        addToRuleList(rule, ruleLists, modelNumber);
       }
-      
-      List<ConcreteRule<TK, FV>> mergedList = new ArrayList<>();
-      for (CoverageSet coverage : ruleLists.keySet()) {
-        List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
-        
-        // Effectively cube pruning!
-        Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
-        for (List<ConcreteRule<TK,FV>> list : ruleList) {
-          if (list.size() > 0) {
-            Collections.sort(list);
-            pq.add(new Item<TK,FV>(list.remove(0), list));
-          }
-        }
-        int numPoppedItems = 0;
-        Set<Rule<TK>> uniqSet = new HashSet<>();
-        while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
-          Item<TK, FV> item = pq.poll();
-          if ( ! uniqSet.contains(item.rule.abstractRule)) {
-            mergedList.add(item.rule);
-            uniqSet.add(item.rule.abstractRule);
-            if (item.list.size() > 0) {
-              pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
-            }
-          }
-        }
-      }
-      return mergedList;
+      ++modelNumber;
     }
+
+    List<ConcreteRule<TK, FV>> mergedList = new ArrayList<>();
+    for (CoverageSet coverage : ruleLists.keySet()) {
+      List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
+
+      // Effectively cube pruning!
+      Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
+      for (List<ConcreteRule<TK,FV>> list : ruleList) {
+        if (list.size() > 0) {
+          Collections.sort(list);
+          pq.add(new Item<TK,FV>(list.remove(0), list));
+        }
+      }
+      int numPoppedItems = 0;
+      Set<Rule<TK>> uniqSet = new HashSet<>();
+      while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
+        Item<TK, FV> item = pq.poll();
+        if ( ! uniqSet.contains(item.rule.abstractRule)) {
+          mergedList.add(item.rule);
+          uniqSet.add(item.rule.abstractRule);
+          if (item.list.size() > 0) {
+            pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
+          }
+        }
+      }
+    }
+    return mergedList;
   }
 }
