@@ -142,7 +142,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     Derivation<TK, FV> nullHypothesis = new Derivation<>(sourceInputId, source, 
         sourceInputProperties, heuristic, scorer, ruleListList, outputSpace);
     nullBeam.put(nullHypothesis);
-    final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
+    final List<BundleBeam<TK,FV>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
     for(int i = 1; i <= sourceLength; ++i) beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, 
         recombinationHistory, maxDistortion, i));
@@ -183,10 +183,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           totalHypothesesGenerated += consequents.size();
           numPruned += consequents.stream().mapToInt(c -> c.derivation == null ? 1 : 0).sum();
         }
-      }
-
-      if (i < 0) {
-        System.out.println();
       }
       
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
