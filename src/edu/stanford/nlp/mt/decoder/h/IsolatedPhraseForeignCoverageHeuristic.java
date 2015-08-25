@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.h;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
@@ -25,8 +24,6 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  final RuleFeaturizer<TK, FV> phraseFeaturizer;
-
   protected SpanScores hSpanScores;
 
   @Override
@@ -34,10 +31,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
     return super.clone();
   }
 
-  public IsolatedPhraseForeignCoverageHeuristic(
-      RuleFeaturizer<TK, FV> phraseFeaturizer) {
-    this.phraseFeaturizer = phraseFeaturizer;
-  }
+  public IsolatedPhraseForeignCoverageHeuristic() {}
 
   @Override
   public double getHeuristicDelta(Derivation<TK, FV> newHypothesis,

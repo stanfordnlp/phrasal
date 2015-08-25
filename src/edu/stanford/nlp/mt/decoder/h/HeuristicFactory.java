@@ -30,8 +30,7 @@ public class HeuristicFactory {
       case NULL_HEURISTIC:
         return new NullHeuristic<IString, String>();
       case ISOLATED_PHRASE_SOURCE_COVERAGE:
-        return new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
-            featurizer);
+        return new IsolatedPhraseForeignCoverageHeuristic<IString, String>();
       case ISOLATED_DTU_SOURCE_COVERAGE:
         return new DTUIsolatedPhraseForeignCoverageHeuristic<IString, String>(
             featurizer);
