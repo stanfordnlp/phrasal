@@ -68,8 +68,7 @@ public class LanguageModelTrueCaser {
     infererBuilder.setPhraseGenerator(new AllCasePhraseGenerator(
         combinedFeaturizer));
     infererBuilder
-    .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>(
-        combinedFeaturizer));
+    .setSearchHeuristic(new IsolatedPhraseForeignCoverageHeuristic<IString, String>());
 
     // misc. decoder configuration
     RecombinationFilter<Derivation<IString, String>> recombinationFilter =
