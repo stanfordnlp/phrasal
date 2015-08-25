@@ -239,10 +239,7 @@ State<Derivation<TK, FV>> {
   public int compareTo(Derivation<TK, FV> competitor) {
     int cmp = (int) Math.signum(competitor.finalScoreEstimate()
         - finalScoreEstimate());
-    if (cmp != 0) {
-      return cmp;
-    }
-    return (int) (id - competitor.id);
+    return cmp == 0 ? (int) (id - competitor.id) : cmp;
   }
 
   @Override

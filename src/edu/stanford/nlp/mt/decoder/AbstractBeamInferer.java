@@ -36,6 +36,7 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
@@ -203,7 +204,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         .getRules(source, sourceInputProperties, sourceInputId, scorer);
     
     // Compute coverage
-    CoverageSet coverage = new CoverageSet();
+    CoverageSet coverage = new CoverageSet(source.size());
     for (ConcreteRule<TK,FV> rule : ruleList) {
       coverage.or(rule.sourceCoverage);
     }
@@ -218,9 +219,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
             filteredToks.add(source.get(i));
           }
         }
-        Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
-        ruleList = phraseGenerator
-            .getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
+        Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? 
+            new SimpleSequence<TK>(filteredToks) : Sequences.emptySequence();
+        ruleList = phraseGenerator.getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
         return new Pair<>(sourceFiltered, ruleList);
         
       } else {

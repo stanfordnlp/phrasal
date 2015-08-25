@@ -119,7 +119,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     timer.mark("TM query");
     
     // Check after potential filtering for OOVs
-    if (source == null || source.size() == 0) return null;
+    if (source.size() == 0) return null;
     final int sourceLength = source.size();
     final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
     logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
@@ -168,7 +168,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
-    int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0, submitId = 0;
+    int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
     for (int i = startOfDecoding; i <= sourceLength; i++) {
       int rootBeam = prefilledBeams ? minSourceCoverage : 0;
       int minCoverage = i - maxPhraseLength;
@@ -180,7 +180,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
           for(Item<TK,FV> consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace)) {
-            consequent.id = submitId++;
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
@@ -205,7 +204,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         // Expand this consequent
         for(Item<TK,FV> consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace)) {
-          consequent.id = submitId++;
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
@@ -286,9 +284,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <FV>
    */
   protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
+    // Not threadsafe...but Inferers run in a single thread.
+    private static int ID_COUNTER = 0;
+    
     public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
-    public int id = -1;
+    public int id = ID_COUNTER++;
 
     public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
       this.derivation = derivation;
@@ -310,7 +311,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     @Override
     public String toString() {
-      return derivation.toString();
+      return String.format("%d: %s", id, derivation);
     }
   }
 

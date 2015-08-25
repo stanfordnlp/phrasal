@@ -3,13 +3,10 @@ package edu.stanford.nlp.mt.tm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -88,15 +85,14 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    */
   private void addToRuleList(ConcreteRule<TK,FV> rule,
       Map<CoverageSet, List<List<ConcreteRule<TK, FV>>>> ruleLists, int modelId) {
-    if ( ! ruleLists.containsKey(rule.sourceCoverage)) {
-      ruleLists.put(rule.sourceCoverage, new LinkedList<>());
-    }
-    if ( modelId >= ruleLists.get(rule.sourceCoverage).size()) {
+    List<List<ConcreteRule<TK, FV>>> ruleList = ruleLists.computeIfAbsent(rule.sourceCoverage, 
+        k -> new ArrayList<>());
+    if (modelId >= ruleList.size()) {
       for (int i = 0; i <= modelId; ++i) {
-        ruleLists.get(rule.sourceCoverage).add(new LinkedList<>());
+        ruleList.add(new ArrayList<>());
       }
     }
-    ruleLists.get(rule.sourceCoverage).get(modelId).add(rule);
+    ruleList.get(modelId).add(rule);
   }
   
   @Override

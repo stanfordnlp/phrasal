@@ -104,13 +104,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
     Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(hypothesisList.size());
     for (Derivation<TK,FV> hypothesis : hypothesisList) {
-      if (coverageGroups.containsKey(hypothesis.sourceCoverage)) {
-        coverageGroups.get(hypothesis.sourceCoverage).add(hypothesis);
-      } else {
-        List<Derivation<TK,FV>> list = new ArrayList<>();
-        list.add(hypothesis);
-        coverageGroups.put(hypothesis.sourceCoverage, list);
-      }
+      coverageGroups.computeIfAbsent(hypothesis.sourceCoverage, k -> new ArrayList<>()).add(hypothesis);
     }
 
     // Make hyperedge bundles
@@ -123,14 +117,8 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
         assert range.start <= range.end : "Invalid range";
         List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
         if (ruleList.size() > 0) {
-          HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<TK,FV>(itemList, ruleList);
-          if (bundles.containsKey(range.size())) {
-            bundles.get(range.size()).add(bundle);
-          } else {
-            List<HyperedgeBundle<TK,FV>> list = new LinkedList<>();
-            list.add(bundle);
-            bundles.put(range.size(), list);
-          }
+          HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
+          bundles.computeIfAbsent(range.size(), k -> new ArrayList<>()).add(bundle);
         }
       }
     }
@@ -147,8 +135,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       groupBundles();
     }
     int rangeSize = n - coverageCardinality;
-    return bundles.containsKey(rangeSize) ? bundles.get(rangeSize) : 
-      Collections.emptyList();
+    return bundles.getOrDefault(rangeSize, Collections.emptyList());
   }
 
   @Override
