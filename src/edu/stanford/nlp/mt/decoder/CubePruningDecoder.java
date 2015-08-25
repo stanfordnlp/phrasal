@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -144,8 +145,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     nullBeam.put(nullHypothesis);
     final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
-    for(int i = 1; i <= sourceLength; ++i) beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, 
-        recombinationHistory, maxDistortion, i));
+    IntStream.rangeClosed(1, sourceLength).forEach(i -> beams.add(new BundleBeam<>(beamCapacity, 
+        filter, ruleGrid, recombinationHistory, maxDistortion, i)));
 
     // Initialize feature extractors
     featurizer.initialize(sourceInputId, source);
@@ -167,7 +168,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
-    int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
+    int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0, submitId = 0;
     for (int i = startOfDecoding; i <= sourceLength; i++) {
       int rootBeam = prefilledBeams ? minSourceCoverage : 0;
       int minCoverage = i - maxPhraseLength;
@@ -178,10 +179,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, outputSpace);
-          pq.addAll(consequents);
-          totalHypothesesGenerated += consequents.size();
-          numPruned += consequents.stream().mapToInt(c -> c.derivation == null ? 1 : 0).sum();
+          for(Item<TK,FV> consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace)) {
+            consequent.id = submitId++;
+            ++totalHypothesesGenerated;
+            if (consequent.derivation == null) ++numPruned;
+            pq.add(consequent);
+          }
         }
       }
       
@@ -200,11 +203,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
 
         // Expand this consequent
-        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace);
-        pq.addAll(consequents);
-        totalHypothesesGenerated += consequents.size();
-        numPruned += consequents.stream().mapToInt(c -> c.derivation == null ? 1 : 0).sum();
+        for(Item<TK,FV> consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
+            sourceInputId, outputSpace)) {
+          consequent.id = submitId++;
+          ++totalHypothesesGenerated;
+          if (consequent.derivation == null) ++numPruned;
+          pq.add(consequent);
+        }
       }
 
       // WSGDEBUG
