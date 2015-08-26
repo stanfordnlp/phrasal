@@ -489,42 +489,39 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
       
       // Only use a parallel stream if the overhead is justified
-      try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
-          : ranges.stream()) {
-        List<ConcreteRule<IString,FV>> rules = rangeStream.flatMap(range -> {
-          final int i = range.i;
-          final int j = range.j;
-          final int order = j - i;
+      List<ConcreteRule<IString,FV>> rules = ranges.parallelStream().flatMap(range -> {
+        final int i = range.i;
+        final int j = range.j;
+        final int order = j - i;
 
-          // Generate rules for this span
-          final Sequence<IString> sourceSpan = source.subsequence(i, j);
-          final CoverageSet sourceCoverage = new CoverageSet(source.size());
-          sourceCoverage.set(i, j);
-          if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
-            // Get from the rule cache
-            return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+        // Generate rules for this span
+        final Sequence<IString> sourceSpan = source.subsequence(i, j);
+        final CoverageSet sourceCoverage = new CoverageSet(source.size());
+        sourceCoverage.set(i, j);
+        if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
+          // Get from the rule cache
+          return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+              r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
 
-          } else {
-            // Sample from the suffix array
-            final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-            int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-            SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
-                : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-            if (corpusSample.size() == 0) {
-              // This span is not present in the training data.
-              misses[i][j] = true;
-              return Stream.empty();
-            }
-            searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
-            int numHits = corpusSample.ub - corpusSample.lb + 1;
-            double sampleRate = corpusSample.size() / (double) numHits;
-            return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+        } else {
+          // Sample from the suffix array
+          final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
+          int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
+          SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+              : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
+          if (corpusSample.size() == 0) {
+            // This span is not present in the training data.
+            misses[i][j] = true;
+            return Stream.empty();
           }
-        }).collect(Collectors.toList());
-        concreteRules.addAll(rules);
-      }
+          searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
+          int numHits = corpusSample.ub - corpusSample.lb + 1;
+          double sampleRate = corpusSample.size() / (double) numHits;
+          return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+              r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+        }
+      }).collect(Collectors.toList());
+      concreteRules.addAll(rules);
     }
     
     // Concatenate foreground model rules
