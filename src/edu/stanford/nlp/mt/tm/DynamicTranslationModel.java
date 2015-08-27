@@ -1082,6 +1082,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
     timer.mark("Source file loading");
 
+    long startTime = TimingUtils.startTime();
     int sourceId = 0, numRules = 0, numNgrams = 0;
     InputProperties inProps = new InputProperties();
     for (Sequence<IString> source : sourceFile) {
@@ -1090,6 +1091,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         ++numNgrams;
       }
     }
+    double queryTime = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");
     
     System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
@@ -1098,7 +1100,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
     System.out.printf("#source segments:   %d%n", sourceFile.size());
     System.out.printf("Timing: %s%n", timer);
-    System.out.printf("Time/ngram: %.5fs%n", timer.elapsedSecs() / (double) numNgrams);
+    System.out.printf("Time/ngram: %.5fs%n", queryTime / (double) numNgrams);
     System.out.printf("#rules: %d%n", numRules);
     System.out.printf("#ngrams: %d%n", numNgrams);
   }
