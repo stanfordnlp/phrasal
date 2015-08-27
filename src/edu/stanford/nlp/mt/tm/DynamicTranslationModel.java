@@ -1094,6 +1094,21 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     double queryTime = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");
     
+    startTime = TimingUtils.startTime();
+    int numSAQueries = 0;
+    for (Sequence<IString> source : sourceFile) {
+      for (Sequence<IString> ngram : Sequences.ngrams(source, 2)) {
+        int[] query = new int[ngram.size()];
+        query[0] = tm.getTMVocabularyId(ngram.get(0));
+        if (ngram.size() == 2) query[1] = tm.getTMVocabularyId(ngram.get(1));
+        boolean doQuery = Arrays.stream(query).allMatch(q -> q >= 0);
+        if (doQuery) tm.sa.count(query, true);
+        ++numSAQueries;
+      }
+    }
+    double saTime = TimingUtils.elapsedSeconds(startTime);
+    timer.mark("SA Query");
+    
     System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
     System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
     System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
@@ -1103,5 +1118,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     System.out.printf("Time/ngram: %.5fs%n", queryTime / (double) numNgrams);
     System.out.printf("#rules: %d%n", numRules);
     System.out.printf("#ngrams: %d%n", numNgrams);
+    System.out.printf("#sa queries: %d%n", numSAQueries);
+    System.out.printf("Time/sa query: %.5fs%n", saTime);
   }
 }
