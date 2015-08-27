@@ -573,7 +573,8 @@ public class Phrasal {
     
     final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (primaryModel instanceof DynamicTranslationModel) {
-      translationModel = new CombinedTranslationModel<>(primaryModel, ruleQueryLimit);
+      // we can NOT use a CombinedTranslationModel here due to "instanceof DynamicTranslationModel" used for ruleGrid augmentation
+      translationModel = primaryModel; //new CombinedTranslationModel<>(primaryModel, ruleQueryLimit);
       logger.info("Translation model mode: dynamic");
       
     } else {

@@ -126,11 +126,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     int numHyps = 0;
     for (int i = 0, sz = beams.size(); i < sz; ++i) {
       final int beamCardinality = i;
-      Iterable<Derivation<TK,FV>> iterable = () -> beams.get(beamCardinality).iterator();
-      // yield from iterator is sorted
-      List<Derivation<TK,FV>> sortedAntecedents = StreamSupport.stream(iterable.spliterator(), false)
-          .collect(Collectors.toList());
-      for (Derivation<TK,FV> antecedent : sortedAntecedents) {
+      for (Derivation<TK,FV> antecedent : beams.get(beamCardinality)) {
         int insertionPosition = antecedent.targetSequence.size();
         if (insertionPosition >= prefix.size()) {
 //          System.err.printf("OVERLAP %d %d: %f %s %s%n", i, hypsForBeam, antecedent.score, 
@@ -140,12 +136,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         List<ConcreteRule<TK,FV>> rulesForPosition = ruleGrid.get(insertionPosition);
         for (ConcreteRule<TK,FV> rule : rulesForPosition) {
           if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
-          CoverageSet testCoverage = new CoverageSet();
-          testCoverage.or(antecedent.sourceCoverage);
+          CoverageSet testCoverage = antecedent.sourceCoverage.clone();
           testCoverage.or(rule.sourceCoverage);
           int succCardinality = testCoverage.cardinality();
           boolean capacityExceeded = hypsForBeam[succCardinality] >= beams.get(succCardinality).capacity();
-          if (capacityExceeded) break;
+          if (capacityExceeded) continue; // Check beam capacity
           Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, 0, antecedent, featurizer,
               scorer, heuristic, outputSpace);
           assert succCardinality == successor.sourceCoverage.cardinality();
