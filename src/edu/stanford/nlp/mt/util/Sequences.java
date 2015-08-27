@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -96,14 +97,9 @@ public final class Sequences {
 
   @SuppressWarnings("unchecked")
   private static <T> Sequence<T> concatenateRaw(RawSequence<T> a, RawSequence<T> b) {
-    Object[] elements = new Object[a.size() + b.size()];
-    if (a.size() > 0) {
-      System.arraycopy(a.elements, 0, elements, 0, a.elements.length);
-    }
-    if (b.size() > 0) {
-      System.arraycopy(b.elements, 0, elements, a.elements.length, b.elements.length);
-    }
-    return new RawSequence<T>((T[]) elements);
+    T[] newArr = (T[]) Arrays.copyOf(a.elements, a.elements.length + b.elements.length);
+    System.arraycopy(b.elements, 0, newArr, a.elements.length, b.elements.length);
+    return new RawSequence<T>(newArr);
   }
 
   /**

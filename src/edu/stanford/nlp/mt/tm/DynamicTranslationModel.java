@@ -202,7 +202,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * 
    * @param name
    */
-  public void configureAsForegroundTM(FeatureTemplate t) {
+  public synchronized void configureAsForegroundTM(FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
@@ -489,43 +489,39 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
       
       // Only use a parallel stream if the overhead is justified
-      try (Stream<Range> rangeStream = ranges.size() > 4 ? ranges.parallelStream()
-          : ranges.stream()) {
-        List<ConcreteRule<IString,FV>> ruleList = rangeStream.flatMap(range -> {
-          final int i = range.i;
-          final int j = range.j;
-          final int order = j - i;
+      List<ConcreteRule<IString,FV>> rules = ranges.parallelStream().flatMap(range -> {
+        final int i = range.i;
+        final int j = range.j;
+        final int order = j - i;
 
-          // Generate rules for this span
-          final Sequence<IString> sourceSpan = source.subsequence(i, j);
-          final CoverageSet sourceCoverage = new CoverageSet(source.size());
-          sourceCoverage.set(i, j);
-          if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
-            // Get from the rule cache
-            return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+        // Generate rules for this span
+        final Sequence<IString> sourceSpan = source.subsequence(i, j);
+        final CoverageSet sourceCoverage = new CoverageSet(source.size());
+        sourceCoverage.set(i, j);
+        if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
+          // Get from the rule cache
+          return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+              r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
 
-          } else {
-            // Sample from the suffix array
-            final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-            int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-            SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
-                : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-            if (corpusSample.size() == 0) {
-              // This span is not present in the training data.
-              misses[i][j] = true;
-              return Stream.empty();
-            }
-            searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
-            int numHits = corpusSample.ub - corpusSample.lb + 1;
-            double sampleRate = corpusSample.size() / (double) numHits;
-            return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+        } else {
+          // Sample from the suffix array
+          final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
+          int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
+          SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+              : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
+          if (corpusSample.size() == 0) {
+            // This span is not present in the training data.
+            misses[i][j] = true;
+            return Stream.empty();
           }
-        }).collect(Collectors.toList());
-
-        concreteRules.addAll(ruleList);
-      }
+          searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
+          int numHits = corpusSample.ub - corpusSample.lb + 1;
+          double sampleRate = corpusSample.size() / (double) numHits;
+          return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+              r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+        }
+      }).collect(Collectors.toList());
+      concreteRules.addAll(rules);
     }
     
     // Concatenate foreground model rules
@@ -536,7 +532,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       fgProperties.remove(InputProperty.ForegroundTM);
       List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, fgProperties, 
           sourceInputId, scorer);
-      logger.info("Source input {} adding {} rules from foreground model", sourceInputId, fgRules.size());
+      logger.info("input {}: adding {} rules from foreground model", sourceInputId, fgRules.size());
       concreteRules.addAll(fgRules);
     }
 
@@ -915,7 +911,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  public class LexCoocTable {
+  public static class LexCoocTable {
 
     public static final int NULL_ID = Integer.MIN_VALUE + 1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;
@@ -944,12 +940,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
     
     private void increment(long key) {
-      AtomicInteger counter = counts.get(key);
-      if (counter == null) {
-        counts.putIfAbsent(key, new AtomicInteger());
-        counter = counts.get(key);
-      }
-      counter.incrementAndGet();
+      counts.computeIfAbsent(key, k -> new AtomicInteger()).incrementAndGet();
     }
 
     /**
@@ -1098,8 +1089,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     long startTime = TimingUtils.startTime();
     int sourceId = 0;
     int numRules = 0;
+    InputProperties inProps = new InputProperties();
     for (Sequence<IString> source : sourceFile) {
-      numRules += tm.getRules(source, null, sourceId++, null).size();
+      numRules += tm.getRules(source, inProps, sourceId++, null).size();
     }
     double numSecs = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");

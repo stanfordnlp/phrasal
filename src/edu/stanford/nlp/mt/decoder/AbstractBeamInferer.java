@@ -37,6 +37,7 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
@@ -88,7 +89,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     super(builder);
     this.beamCapacity = builder.beamSize;
     this.beamType = builder.beamType;
-    this.translationComparator = new RichTranslationComparator<TK,FV>();
+    this.translationComparator = new Comparator<RichTranslation<TK,FV>>() {
+      @Override
+      public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+        return (int) Math.signum(o2.score - o1.score);
+      }
+    };
   }
 
   @Override
@@ -136,7 +142,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // TODO(spenceg) Only compute LM scores once.
     int[] prefixCoverages = IntStream.range(0, prefix.size() + phraseGenerator.maxLengthTarget())
         .map(i -> Integer.MAX_VALUE).toArray();
-    int maxPrefix = Integer.MIN_VALUE;
+    int maxPrefix = 0;
     int[] hypsForBeam = new int[beams.size()];
     int numHyps = 0;
     for (int i = 0, sz = beams.size(); i < sz; ++i) {
@@ -191,6 +197,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     
     // Clamp the maxPrefix to the prefix length
     maxPrefix = Math.min(maxPrefix, prefix.size());
+    if (prefixCoverages[maxPrefix] == Integer.MAX_VALUE) {
+      logger.warn("input {}: No prefix coverage.", sourceInputId);
+      return 0;
+    }
     
     // Return beam number of the starting point (longest prefix with the minimum source
     // coverage)
@@ -215,7 +225,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         .getRules(source, sourceInputProperties, sourceInputId, scorer);
     
     // Compute coverage
-    CoverageSet coverage = new CoverageSet();
+    CoverageSet coverage = new CoverageSet(source.size());
     for (ConcreteRule<TK,FV> rule : ruleList) {
       coverage.or(rule.sourceCoverage);
     }
@@ -230,10 +240,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
             filteredToks.add(source.get(i));
           }
         }
-        Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? new SimpleSequence<TK>(filteredToks) : null;
-        ruleList = phraseGenerator
-            .getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
-        return new Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>>(sourceFiltered, ruleList);
+        Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? 
+            new SimpleSequence<TK>(filteredToks) : Sequences.emptySequence();
+        ruleList = phraseGenerator.getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
+        return new Pair<>(sourceFiltered, ruleList);
         
       } else {
         // Add rules from the OOV model
@@ -245,7 +255,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           Sequence<TK> queryWord = source.subsequence(gapIndex, gapIndex + 1);
           List<ConcreteRule<TK,FV>> oovRules = 
               unknownWordModel.getRules(queryWord, sourceInputProperties, sourceInputId, scorer);
-          CoverageSet oovCoverage = new CoverageSet();
+          CoverageSet oovCoverage = new CoverageSet(source.size());
           oovCoverage.set(gapIndex);
           for (ConcreteRule<TK,FV> rule : oovRules) {
             // Update the coverage set for the output of the OOV model
@@ -256,7 +266,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
     }
-    return new Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>>(source, ruleList);
+    return new Pair<>(source, ruleList);
   }
   
   /**
@@ -490,9 +500,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
     return translate(scorer, source, sourceInputId, sourceInputProperties,
-        constrainedOutputSpace, targets);
+        outputSpace, targets);
   }
 
   @Override

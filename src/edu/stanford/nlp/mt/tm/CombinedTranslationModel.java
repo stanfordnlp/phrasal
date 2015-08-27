@@ -3,13 +3,10 @@ package edu.stanford.nlp.mt.tm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -50,8 +47,7 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    * @param queryLimit
    */
   public CombinedTranslationModel(TranslationModel<TK,FV> model, int queryLimit) {
-    this.models = new ArrayList<>(1);
-    this.models.add(model);
+    this.models = Collections.singletonList(model);
     this.ruleQueryLimit = queryLimit;
   }
   
@@ -89,15 +85,14 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
    */
   private void addToRuleList(ConcreteRule<TK,FV> rule,
       Map<CoverageSet, List<List<ConcreteRule<TK, FV>>>> ruleLists, int modelId) {
-    if ( ! ruleLists.containsKey(rule.sourceCoverage)) {
-      ruleLists.put(rule.sourceCoverage, new LinkedList<>());
-    }
-    if ( modelId >= ruleLists.get(rule.sourceCoverage).size()) {
+    List<List<ConcreteRule<TK, FV>>> ruleList = ruleLists.computeIfAbsent(rule.sourceCoverage, 
+        k -> new ArrayList<>());
+    if (modelId >= ruleList.size()) {
       for (int i = 0; i <= modelId; ++i) {
-        ruleLists.get(rule.sourceCoverage).add(new LinkedList<>());
+        ruleList.add(new ArrayList<>());
       }
     }
-    ruleLists.get(rule.sourceCoverage).get(modelId).add(rule);
+    ruleList.get(modelId).add(rule);
   }
   
   @Override
@@ -189,49 +184,40 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
       translationModels.add(tm);
     }
     
-    if (translationModels.size() == 1) {
-      return translationModels.get(0).getRules(source, sourceInputProperties, sourceInputId, 
-          scorer);
+    final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
+        new HashMap<>(source.size() * source.size());
 
-    } else {
-      final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
-          new HashMap<>(source.size() * source.size());
-      
-      int modelNumber = 0;
-      for (TranslationModel<TK,FV> model : translationModels) {
-        for (ConcreteRule<TK,FV> rule : model.getRules(source, sourceInputProperties, sourceInputId, 
-            scorer)) {
-          addToRuleList(rule, ruleLists, modelNumber);
-        }
-        ++modelNumber;
+    int modelNumber = 0;
+    for (TranslationModel<TK,FV> model : translationModels) {
+      for (ConcreteRule<TK,FV> rule : model.getRules(source, sourceInputProperties, sourceInputId, 
+          scorer)) {
+        addToRuleList(rule, ruleLists, modelNumber);
       }
-      
-      List<ConcreteRule<TK, FV>> mergedList = new ArrayList<>();
-      for (CoverageSet coverage : ruleLists.keySet()) {
-        List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
-        
-        // Effectively cube pruning!
-        Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
-        for (List<ConcreteRule<TK,FV>> list : ruleList) {
-          if (list.size() > 0) {
-            Collections.sort(list);
-            pq.add(new Item<TK,FV>(list.remove(0), list));
-          }
-        }
-        int numPoppedItems = 0;
-        Set<Rule<TK>> uniqSet = new HashSet<>();
-        while (numPoppedItems < ruleQueryLimit && ! pq.isEmpty()) {
-          Item<TK, FV> item = pq.poll();
-          if ( ! uniqSet.contains(item.rule.abstractRule)) {
-            mergedList.add(item.rule);
-            uniqSet.add(item.rule.abstractRule);
-            if (item.list.size() > 0) {
-              pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
-            }
-          }
-        }
-      }
-      return mergedList;
+      ++modelNumber;
     }
+
+    List<ConcreteRule<TK, FV>> mergedList = new ArrayList<>();
+    for (CoverageSet coverage : ruleLists.keySet()) {
+      List<List<ConcreteRule<TK,FV>>> ruleList = ruleLists.get(coverage);
+
+      // Effectively cube pruning!
+      Queue<Item<TK,FV>> pq = new PriorityQueue<Item<TK,FV>>(3);
+      for (List<ConcreteRule<TK,FV>> list : ruleList) {
+        if (list.size() > 0) {
+          Collections.sort(list);
+          pq.add(new Item<TK,FV>(list.remove(0), list));
+        }
+      }
+      int numSelectedRules = 0;
+      while (numSelectedRules < ruleQueryLimit && ! pq.isEmpty()) {
+        Item<TK, FV> item = pq.poll();
+        mergedList.add(item.rule);
+        ++numSelectedRules;
+        if (item.list.size() > 0) {
+          pq.add(new Item<TK,FV>(item.list.remove(0), item.list));
+        }
+      }
+    }
+    return mergedList;
   }
 }

@@ -1,14 +1,12 @@
 package edu.stanford.nlp.mt.decoder.h;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
-import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.CoverageSet;
-import edu.stanford.nlp.mt.util.FeatureValue;
-import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 
@@ -26,8 +24,6 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
 
-  final RuleFeaturizer<TK, FV> phraseFeaturizer;
-
   protected SpanScores hSpanScores;
 
   @Override
@@ -35,10 +31,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
     return super.clone();
   }
 
-  public IsolatedPhraseForeignCoverageHeuristic(
-      RuleFeaturizer<TK, FV> phraseFeaturizer) {
-    this.phraseFeaturizer = phraseFeaturizer;
-  }
+  public IsolatedPhraseForeignCoverageHeuristic() {}
 
   @Override
   public double getHeuristicDelta(Derivation<TK, FV> newHypothesis,
@@ -71,7 +64,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
 
   @Override
   public double getInitialHeuristic(Sequence<TK> sourceSequence, InputProperties sourceInputProperties,
-      List<List<ConcreteRule<TK,FV>>> options, Scorer<FV> scorer, int sourceInputId) {
+      List<List<ConcreteRule<TK,FV>>> ruleList, Scorer<FV> scorer, int sourceInputId) {
 
     int foreignSequenceSize = sourceSequence.size();
 
@@ -86,23 +79,19 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
     }
 
     // initialize viterbiSpanScores
-    assert (options.size() == 1);
-    for (ConcreteRule<TK,FV> option : options.get(0)) {
-      Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, 
-          option, sourceInputId);
-      List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
-          .ruleFeaturize(f);
-      double score = scorer.getIncrementalScore(phraseFeatures);
-      int terminalPos = option.sourcePosition
-          + option.abstractRule.source.size() - 1;
-      if (score > viterbiSpanScores.getScore(option.sourcePosition, terminalPos)) {
-        viterbiSpanScores.setScore(option.sourcePosition, terminalPos, score);
-      }
-      if (DEBUG) {
-        System.err.printf("\t%d:%d %s->%s score: %.3f\n", option.sourcePosition,
-            terminalPos, option.abstractRule.source,
-            option.abstractRule.target, score);
-        System.err.printf("\t\tFeatures: %s\n", phraseFeatures);
+    assert (ruleList.size() == 1);
+    for (ConcreteRule<TK,FV> rule : ruleList.get(0)) {
+      // Don't run the featurizer again
+//      Featurizable<TK, FV> f = new Featurizable<TK, FV>(sourceSequence, sourceInputProperties, 
+//          option, sourceInputId);
+//      List<FeatureValue<FV>> phraseFeatures = phraseFeaturizer
+//          .ruleFeaturize(f);
+//      double score = scorer.getIncrementalScore(phraseFeatures);
+      double score = rule.isolationScore;
+      int terminalPos = rule.sourcePosition
+          + rule.abstractRule.source.size() - 1;
+      if (score > viterbiSpanScores.getScore(rule.sourcePosition, terminalPos)) {
+        viterbiSpanScores.setScore(rule.sourcePosition, terminalPos, score);
       }
     }
 

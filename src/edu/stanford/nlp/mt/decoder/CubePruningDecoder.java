@@ -2,10 +2,11 @@ package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -105,7 +106,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
       this.maxDistortion = (int) sourceInputProperties.get(InputProperty.DistortionLimit);
-      logger.info("Changing distortion limit from {} to {}", this.defaultDistortion, this.maxDistortion);
+      logger.info("input {}: Changing distortion limit from {} to {}", sourceInputId, 
+          this.defaultDistortion, this.maxDistortion);
     } else {
       this.maxDistortion = defaultDistortion;
     }
@@ -117,9 +119,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     timer.mark("TM query");
     
     // Check after potential filtering for OOVs
-    if (source == null || source.size() == 0) return null;
+    if (source.size() == 0) return null;
     final int sourceLength = source.size();
     final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
@@ -127,7 +130,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
     if ( ! ruleGrid.isCoverageComplete()) {
-      logger.warn("Incomplete coverage for source input {}", sourceInputId);
+      logger.warn("input {}: Incomplete source coverage", sourceInputId);
     }
     timer.mark("Rulegrid");
     
@@ -142,8 +145,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     nullBeam.put(nullHypothesis);
     final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
-    for(int i = 1; i <= sourceLength; ++i) beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, 
-        recombinationHistory, maxDistortion, i));
+    IntStream.rangeClosed(1, sourceLength).forEach(i -> beams.add(new BundleBeam<>(beamCapacity, 
+        filter, ruleGrid, recombinationHistory, maxDistortion, i)));
 
     // Initialize feature extractors
     featurizer.initialize(sourceInputId, source);
@@ -172,16 +175,18 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int startBeam = Math.max(rootBeam, minCoverage);
 
       // Initialize the priority queue
-      Queue<Item<TK,FV>> pq = new PriorityQueue<>(beamCapacity);
+      Queue<Item<TK,FV>> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          List<Item<TK,FV>> consequents = generateConsequentsFrom(null, bundle, sourceInputId, outputSpace);
-          pq.addAll(consequents);
-          totalHypothesesGenerated += consequents.size();
+          for(Item<TK,FV> consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace)) {
+            ++totalHypothesesGenerated;
+            if (consequent.derivation == null) ++numPruned;
+            pq.add(consequent);
+          }
         }
       }
-
+      
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
@@ -191,15 +196,18 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         //        System.err.printf("BEAM %d STATUS%n", i);
         //        System.err.println(newBeam.beamString());
         //        System.err.println("===========");
+        if (item.derivation != null) {
+          newBeam.put(item.derivation);
+          ++numPoppedItems;
+        }
 
-        newBeam.put(item.derivation);
-
-        List<Item<TK,FV>> consequents = generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace);
-        pq.addAll(consequents);
-        totalHypothesesGenerated += consequents.size();
-
-        ++numPoppedItems;
+        // Expand this consequent
+        for(Item<TK,FV> consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
+            sourceInputId, outputSpace)) {
+          ++totalHypothesesGenerated;
+          if (consequent.derivation == null) ++numPruned;
+          pq.add(consequent);
+        }
       }
 
       // WSGDEBUG
@@ -257,25 +265,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    List<Item<TK,FV>> consequents = new ArrayList<>();
-    List<Consequent<TK,FV>> successors = new LinkedList<>(bundle.nextSuccessors(antecedent));
-    while (successors.size() > 0) {
-      Consequent<TK,FV> successor = successors.remove(0);
+    return bundle.nextSuccessors(antecedent).stream().map(successor -> {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
           successor.rule);
-      if (buildDerivation) {
-        // Derivation construction: this is the expensive part
-        Derivation<TK, FV> derivation = new Derivation<>(sourceInputId,
-            successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
-            heuristic, outputSpace);
-        consequents.add(new Item<>(derivation, successor));
-        
-      } else {
-        // Pruned by output constraint. Keep searching in the bundle.
-        successors.addAll(bundle.nextSuccessors(successor));
-      }
-    }
-    return consequents;
+      Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
+          successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
+          heuristic, outputSpace) : null;
+      return new Item<>(derivation, successor);
+    }).collect(Collectors.toList());
   }
 
   /**
@@ -287,23 +284,34 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <FV>
    */
   protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
+    // Not threadsafe...but Inferers run in a single thread.
+    private static int ID_COUNTER = 0;
+    
     public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
+    public int id = ID_COUNTER++;
 
     public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
-      assert derivation != null;
       this.derivation = derivation;
       this.consequent = consequent;
     }
 
     @Override
     public int compareTo(Item<TK,FV> o) {
-      return derivation.compareTo(o.derivation);
+      if (derivation == null && o.derivation == null) {
+        return id - o.id;
+      } else if (derivation == null) {
+        return 1;
+      } else if (o.derivation == null) {
+        return -1;
+      } else {
+        return derivation.compareTo(o.derivation);
+      }
     }
     
     @Override
     public String toString() {
-      return derivation.toString();
+      return String.format("%d: %s", id, derivation);
     }
   }
 

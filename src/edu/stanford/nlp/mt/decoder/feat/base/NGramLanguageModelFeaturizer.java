@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -146,18 +146,13 @@ RuleFeaturizer<IString, String> {
     }
     
     LMState state = lm.score(partialTranslation, startIndex, priorState);
-   
-    List<FeatureValue<String>> features = new LinkedList<>();
-    
-    features.add(new FeatureValue<String>(featureName, state.getScore()));
-
     f.setState(this, state);
     
     if (DEBUG) {
       System.err.printf("Final score: %f%n", state.getScore());
       System.err.println("===================");
     }
-    return features;
+    return Collections.singletonList(new FeatureValue<String>(featureName, state.getScore()));
   }
 
   @Override
@@ -165,9 +160,7 @@ RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
-    List<FeatureValue<String>> features = new LinkedList<>();
-    features.add(new FeatureValue<String>(featureName, lmScore));
-    return features;
+    return Collections.singletonList(new FeatureValue<String>(featureName, lmScore));
   }
 
   @Override

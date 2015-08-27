@@ -45,6 +45,7 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
+import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
@@ -572,7 +573,7 @@ public class Phrasal {
     
     final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
     if (primaryModel instanceof DynamicTranslationModel) {
-      translationModel = primaryModel;
+      translationModel = new CombinedTranslationModel<>(primaryModel, ruleQueryLimit);
       logger.info("Translation model mode: dynamic");
       
     } else {

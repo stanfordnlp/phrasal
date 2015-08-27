@@ -24,15 +24,24 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   
-  private final List<ConcreteRule<TK,FV>> EMPTY_LIST = Collections.unmodifiableList(new ArrayList<>(1));
+  private static final int DEFAULT_RULE_QUERY_LIMIT = Integer.MAX_VALUE;
   
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
-  private boolean doLazySorting;
   private boolean completeCoverage;
   private CoverageSet incrementalCoverage;
-  private int size = 0;
+  private final int size;
+  private final int ruleQueryLimit;
+  
+  /**
+   * Constructor.
+   * 
+   * @param source
+   */
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
+    this(ruleList, source, DEFAULT_RULE_QUERY_LIMIT);
+  }
   
   /**
    * Constructor.
@@ -40,46 +49,16 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @param source
    */
   @SuppressWarnings("unchecked")
-  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, int ruleQueryLimit) {
     sourceLength = source.size();
     isSorted = new BitSet();
-    this.doLazySorting = true;
+    this.ruleQueryLimit = ruleQueryLimit;
+    this.size = ruleList.size();
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
     incrementalCoverage = new CoverageSet();
-    for (ConcreteRule<TK,FV> rule : ruleList) {
-      addEntry(rule);
-    }
-  }
-  
-  /**
-   * Constructor for creating a RuleGrid incrementally.
-   * 
-   * IMPORTANT: if a RuleGrid is constructed incrementally, then it is assumed
-   * that the calls to addEntry insert rules in sorted order.
-   * 
-   * @param source
-   */
-  @SuppressWarnings("unchecked")
-  public RuleGrid(int sourceLength) {
-    this.sourceLength = sourceLength;
-    isSorted = new BitSet();
-    isSorted.set(0, sourceLength);
-    doLazySorting = false;
-    grid = new List[sourceLength * sourceLength];
-    completeCoverage = false;
-    incrementalCoverage = new CoverageSet();
-  }
-
-  /**
-   * Toggle lazy sorting of rules.
-   * 
-   * @param b
-   */
-  public void setLazySorting(boolean b) { 
-    this.doLazySorting = b; 
-    if (doLazySorting) isSorted.clear();
+    ruleList.stream().forEach(rule -> addEntry(rule));
   }
   
   /**
@@ -87,7 +66,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * 
    * @param rule
    */
-  public void addEntry(ConcreteRule<TK,FV> rule) {
+  private void addEntry(ConcreteRule<TK,FV> rule) {
     int startPos = rule.sourcePosition;
     int endPos = startPos + rule.abstractRule.source.size() - 1;
     // Sanity checks
@@ -99,7 +78,6 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     grid[offset].add(rule);
     incrementalCoverage.or(rule.sourceCoverage);
     completeCoverage = (incrementalCoverage.cardinality() == sourceLength);
-    ++size;
   }
   
   /**
@@ -107,45 +85,13 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @return
    */
   public boolean isCoverageComplete() { return completeCoverage; }
-
-  /**
-   * Return the number of unique converages in this grid.
-   * 
-   * @return
-   */
-  public int numberOfCoverages() { return grid.length; }
-  
-  /**
-   * Return all rules associated with a coverage id.
-   * 
-   * @param i
-   * @return
-   */
-  public List<ConcreteRule<TK,FV>> getRulesForCoverageId(int i) {
-    if (i < 0 || i >= grid.length) throw new ArrayIndexOutOfBoundsException();
-    return grid[i] == null ? EMPTY_LIST : grid[i];
-  }
   
   /**
    * Return the number of rules in this grid.
    * 
    * @return
    */
-  public int numRules() { return size; }
-  
-  /**
-   * Remove a rule from the grid.
-   * 
-   * @param coverageId
-   * @param ruleIndex
-   * @return
-   */
-  public ConcreteRule<TK,FV> remove(int coverageId, int ruleIndex) {
-    if (coverageId >= grid.length || grid[coverageId] == null || ruleIndex >= grid[coverageId].size()) {
-      throw new IllegalArgumentException();
-    }
-    return grid[coverageId].remove(ruleIndex);
-  }
+  public int size() { return size; }
   
   /**
    * One dimension of the option grid. This corresponds to length of the source
@@ -165,13 +111,15 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   public List<ConcreteRule<TK,FV>> get(int startInclusive, int endInclusive) {
     final int offset = getIndex(startInclusive, endInclusive);
     if (offset < 0 || offset >= grid.length) {
-      throw new IllegalArgumentException("Span is out-of-bounds");
+      throw new ArrayIndexOutOfBoundsException("Span is out-of-bounds");
     }
-    if (grid[offset] != null && doLazySorting && ! isSorted.get(offset)) {
+    if (! isSorted.get(offset)) {
+      if (grid[offset] == null) grid[offset] = Collections.emptyList();
       Collections.sort(grid[offset]);
+      if (grid[offset].size() > ruleQueryLimit) grid[offset] = grid[offset].subList(0, ruleQueryLimit);
       isSorted.set(offset);
-    }
-    return grid[offset] == null ? EMPTY_LIST : grid[offset];
+    } 
+    return grid[offset];
   }
 
   /**
@@ -182,20 +130,6 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    */
   private int getIndex(int startPos, int endPos) {
     return startPos * sourceLength + endPos;
-  }
-
-  /**
-   * Return the RuleGrid as a flat list.
-   * 
-   * @return
-   */
-  public List<ConcreteRule<TK, FV>> asList() {
-    List<ConcreteRule<TK,FV>> ruleList = new ArrayList<>();
-    for (int i = 0; i < grid.length; ++i) {
-      if (grid[i] == null) continue;
-      ruleList.addAll(grid[i]);
-    }
-    return ruleList;
   }
 
   @Override
@@ -240,7 +174,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   public int hashCode() {
     int hashCode = 0;
     for (ConcreteRule<TK,FV> rule : this) {
-      hashCode += Double.hashCode(rule.isolationScore) + rule.abstractRule.source.hashCode() + rule.abstractRule.target.hashCode() + rule.sourceCoverage.hashCode();
+      hashCode += Double.hashCode(rule.isolationScore) ^ rule.abstractRule.source.hashCode() ^ rule.abstractRule.target.hashCode() ^ rule.sourceCoverage.hashCode();
     }
     return hashCode;
   }

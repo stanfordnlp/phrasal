@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.decoder.recomb;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.decoder.util.State;
@@ -18,7 +19,7 @@ import edu.stanford.nlp.mt.decoder.util.State;
  */
 public class RecombinationHash<S extends State<S>> {
 
-  private final HashMap<FilterWrappedHypothesis, FilterWrappedHypothesis> recombinationHash;
+  private final Map<FilterWrappedHypothesis, FilterWrappedHypothesis> recombinationHash;
   // private
   final RecombinationFilter<S> filter;
 
@@ -104,8 +105,7 @@ public class RecombinationHash<S extends State<S>> {
 	 * 
 	 */
   public void put(S hypothesis) {
-    FilterWrappedHypothesis wrappedHyp = new FilterWrappedHypothesis(
-        hypothesis, filter);
+    FilterWrappedHypothesis wrappedHyp = new FilterWrappedHypothesis(hypothesis, filter);
     recombinationHash.put(wrappedHyp, wrappedHyp);
   }
 
