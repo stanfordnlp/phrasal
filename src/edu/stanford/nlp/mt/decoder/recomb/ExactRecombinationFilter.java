@@ -8,7 +8,6 @@ import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.MurmurHash2;
 
 
 /**
@@ -89,13 +88,17 @@ RecombinationFilter<Derivation<IString, String>> {
     }
 
     // Generate a hash code from individual hash codes
-    int[] stateHashCodes = new int[featurizers.size()];
-    int i = 0;
-    for (DerivationFeaturizer<IString, String> featurizer : featurizers) {
-      FeaturizerState state = (FeaturizerState) hyp.featurizable.getState(featurizer);
-      stateHashCodes[i++] = state == null ? 0 : state.hashCode();
+    long code = (0x9747b28c&0xffffffffl)^(featurizers.size()*4);
+    for (int i = 0, sz = featurizers.size(); i < sz; ++i) {
+      DerivationFeaturizer<IString, String> featurizer = featurizers.get(i);
+      int h = hyp.featurizable.getState(featurizer).hashCode();
+      if (i % 2 == 0) {
+        code ^= (h << 32);
+      } else {
+        code ^= h;
+      }
     }
-    return MurmurHash2.hash64(stateHashCodes, stateHashCodes.length, 1);
+    return code;
   }
 
   @Override
