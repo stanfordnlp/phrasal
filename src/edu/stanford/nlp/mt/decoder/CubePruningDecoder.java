@@ -128,7 +128,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // to the references
     outputSpace.filter(ruleList, this, sourceInputProperties);
     
-    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
+    assert sourceInputProperties.containsKey(InputProperty.RuleQueryLimit);
+    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source, 
+        (int) sourceInputProperties.get(InputProperty.RuleQueryLimit));
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("input {}: Incomplete source coverage", sourceInputId);
     }
