@@ -41,6 +41,7 @@ import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
@@ -1068,10 +1069,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     timer.mark("Load");
     tm.createQueryCache(FeatureTemplate.DENSE_EXT);
     timer.mark("Cache creation");
-    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
-    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
-    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
-    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
 
     //      tm.sa.print(true, new PrintWriter(System.out));
 
@@ -1083,21 +1080,26 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
     // Read the source at once for accurate timing of queries
     List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
-    System.out.printf("#source segments:   %d%n", sourceFile.size());
     timer.mark("Source file loading");
 
-    long startTime = TimingUtils.startTime();
-    int sourceId = 0;
-    int numRules = 0;
+    int sourceId = 0, numRules = 0, numNgrams = 0;
     InputProperties inProps = new InputProperties();
     for (Sequence<IString> source : sourceFile) {
-      numRules += tm.getRules(source, inProps, sourceId++, null).size();
+      for (Sequence<IString> ngram : Sequences.ngrams(source, 4)) {
+        numRules += tm.getRules(ngram, inProps, sourceId++, null).size();
+        ++numNgrams;
+      }
     }
-    double numSecs = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");
-    System.out.println();
+    
+    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
+    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
+    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
+    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
+    System.out.printf("#source segments:   %d%n", sourceFile.size());
     System.out.printf("Timing: %s%n", timer);
-    System.out.printf("Time/segment: %.5fs%n", numSecs / (double) sourceFile.size());
-    System.out.printf("# rules: %d%n", numRules);
+    System.out.printf("Time/ngram: %.5fs%n", timer.elapsedSecs() / (double) numNgrams);
+    System.out.printf("#rules: %d%n", numRules);
+    System.out.printf("#ngrams: %d%n", numNgrams);
   }
 }

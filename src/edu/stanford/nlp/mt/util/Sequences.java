@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 /**
  * Helper functions for working with Sequences.
@@ -50,6 +51,23 @@ public final class Sequences {
     return intArray;
   }
   
+  /**
+   * Get all n-grams for a given order.
+   * 
+   * @param <TK>
+   */
+  public static <TK> List<Sequence<TK>> ngrams(Sequence<TK> sequence, int maxOrder) {
+    int numNgrams = IntStream.range(0, maxOrder).map(i -> maxOrder - i).reduce((x,y) -> x*y).getAsInt();
+    List<Sequence<TK>> ngrams = new ArrayList<>(numNgrams);
+    for (int i = 0, sz = sequence.size(); i < sz; i++) {
+      for (int j = i + 1, jMax = Math.min(sz, i + maxOrder); j <= jMax; j++) {
+        Sequence<TK> ngram = sequence.subsequence(i, j);
+        ngrams.add(ngram);
+      }
+    }
+    return ngrams;
+  }
+
   /**
    * Returns true if seq starts with prefix, and false otherwise.
    *
