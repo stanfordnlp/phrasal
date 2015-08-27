@@ -5,7 +5,7 @@ import java.nio.charset.Charset;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.MurmurHash3;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
@@ -39,7 +39,7 @@ public class TestHashSpeed {
       // change offset and len so internal conditionals aren't predictable
       int offset = ret & 0x03;
       int len = arr.length - offset - ((ret>>3)&0x03);
-      ret += MurmurHash.hash32(arr, len, i);
+      ret += MurmurHash2.hash32(arr, len, i);
     }
     timer.mark("MurmurHash2");
 
@@ -47,7 +47,7 @@ public class TestHashSpeed {
       // change offset and len so internal conditionals aren't predictable
       int offset = ret & 0x03;
       int len = arr.length - offset - ((ret>>3)&0x03);
-      ret += MurmurHash.hash32(s);
+      ret += MurmurHash2.hash32(s);
     }
     timer.mark("MurmurHash2 string");
     

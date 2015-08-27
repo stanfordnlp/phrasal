@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 
 
 /**
@@ -95,7 +95,7 @@ RecombinationFilter<Derivation<IString, String>> {
       FeaturizerState state = (FeaturizerState) hyp.featurizable.getState(featurizer);
       stateHashCodes[i++] = state == null ? 0 : state.hashCode();
     }
-    return MurmurHash.hash64(stateHashCodes, stateHashCodes.length, 1);
+    return MurmurHash2.hash64(stateHashCodes, stateHashCodes.length, 1);
   }
 
   @Override

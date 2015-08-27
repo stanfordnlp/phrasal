@@ -139,7 +139,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
       for (int i = 0; i < sz; ++i) {
         codes[i] = get(i).hashCode();
       }
-      hashCode = MurmurHash.hash32(codes, sz, 1);
+      hashCode = MurmurHash2.hash32(codes, sz, 1);
     }
     return hashCode;
   }

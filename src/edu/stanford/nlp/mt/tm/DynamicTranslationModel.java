@@ -33,7 +33,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.ParallelSuffixArrayEntry;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
@@ -787,8 +787,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     private final int hashCode;
     public AlignmentTemplate(SampledRule rule) {
       this.rule = rule;
-      this.hashCode = MurmurHash.hash32(rule.f2eAll(), rule.sourceLength(), 1) ^ 
-          MurmurHash.hash32(rule.e2fAll(), rule.targetLength(), 1);
+      this.hashCode = MurmurHash2.hash32(rule.f2eAll(), rule.sourceLength(), 1) ^ 
+          MurmurHash2.hash32(rule.e2fAll(), rule.targetLength(), 1);
     }
     @Override
     public String toString() { return rule.toString(); }
@@ -819,7 +819,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     private final int hashCode;
     public TargetSpan(int[] tgt) {
       this.tgt = tgt;
-      this.hashCode = MurmurHash.hash32(tgt, tgt.length, 1);
+      this.hashCode = MurmurHash2.hash32(tgt, tgt.length, 1);
     }
     @Override
     public int hashCode() { return hashCode; }

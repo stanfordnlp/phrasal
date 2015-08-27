@@ -483,7 +483,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
         }
       }
       this.tokens = tokens;
-      this.hashCode = MurmurHash.hash32(tokens, tokens.length, 1);
+      this.hashCode = MurmurHash2.hash32(tokens, tokens.length, 1);
     }
     @Override
     public int hashCode() {

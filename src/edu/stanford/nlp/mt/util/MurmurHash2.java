@@ -16,7 +16,7 @@ package edu.stanford.nlp.mt.util;
  * @version 1.0.2
  *
  */
-public final class MurmurHash {
+public final class MurmurHash2 {
 
 	/** Generates 32 bit hash from byte array of the given length and
 	 * seed.

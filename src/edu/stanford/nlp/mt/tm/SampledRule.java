@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 
 /**
@@ -54,7 +54,7 @@ public class SampledRule {
     for (int i = 0; i < tgt.length; ++i) {
       tgt[i] = sentencePair.target(tgtStartInclusive + i);
     }
-    this.hashCode = MurmurHash.hash32(src, src.length, 1) ^ MurmurHash.hash32(tgt, tgt.length, 1);
+    this.hashCode = MurmurHash2.hash32(src, src.length, 1) ^ MurmurHash2.hash32(tgt, tgt.length, 1);
   }
   
   /**
