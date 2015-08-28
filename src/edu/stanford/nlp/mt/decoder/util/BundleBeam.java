@@ -102,23 +102,22 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     // Group hypotheses by source source coverage
     List<Derivation<TK,FV>> hypothesisList = recombinationHash.hypotheses();
     assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
-    Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(hypothesisList.size());
+    Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(hypothesisList.size() / 2);
     for (Derivation<TK,FV> hypothesis : hypothesisList) {
       coverageGroups.computeIfAbsent(hypothesis.sourceCoverage, k -> new ArrayList<>()).add(hypothesis);
     }
 
     // Make hyperedge bundles
-    bundles = new HashMap<>();
+    bundles = new HashMap<>(2*coverageGroups.size());
     for (CoverageSet coverage : coverageGroups.keySet()) {
-      List<Range> rangeList = this.ranges(coverage);
       List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
       Collections.sort(itemList);
-      for (Range range : rangeList) {
+      for (Range range : ranges(coverage)) {
         assert range.start <= range.end : "Invalid range";
         List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
         if (ruleList.size() > 0) {
           HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
-          bundles.computeIfAbsent(range.size(), k -> new ArrayList<>()).add(bundle);
+          bundles.computeIfAbsent(range.size(), k -> new LinkedList<>()).add(bundle);
         }
       }
     }
