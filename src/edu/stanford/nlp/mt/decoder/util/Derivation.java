@@ -7,7 +7,6 @@ import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.Rule;
-import edu.stanford.nlp.mt.util.ConcatSequence;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -122,7 +121,7 @@ State<Derivation<TK, FV>> {
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
-    targetSequence = ConcatSequence.emptySequence();    
+    targetSequence = Sequences.emptySequence();    
   }
 
   /**

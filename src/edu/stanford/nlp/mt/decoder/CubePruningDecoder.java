@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -267,14 +266,16 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    return bundle.nextSuccessors(antecedent).stream().map(successor -> {
+    List<Item<TK,FV>> successors = new ArrayList<>(2);
+    for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
           successor.rule);
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
-      return new Item<>(derivation, successor);
-    }).collect(Collectors.toList());
+      successors.add(new Item<>(derivation, successor));
+    }
+    return successors;
   }
 
   /**

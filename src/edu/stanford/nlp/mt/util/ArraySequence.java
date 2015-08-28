@@ -15,7 +15,7 @@ public class ArraySequence<T> extends AbstractSequence<T> {
 
   private static final long serialVersionUID = 8446551497177484601L;
 
-  private Object[] elements;
+  private T[] elements;
   private int start, end;
 
   /**
@@ -35,8 +35,9 @@ public class ArraySequence<T> extends AbstractSequence<T> {
    * 
    * @param toks
    */
+  @SuppressWarnings("unchecked")
   public ArraySequence(List<T> toks) {
-    elements = toks.toArray();
+    elements = (T[]) toks.toArray();
     start = 0;
     end = elements.length;
   }
@@ -55,11 +56,11 @@ public class ArraySequence<T> extends AbstractSequence<T> {
    * 
    * @param sequence
    */
+  @SuppressWarnings("unchecked")
   public ArraySequence(Sequence<T> sequence) {
-    elements = new Object[sequence.size()];
-    for (int i = 0; i < elements.length; i++) {
-      elements[i] = sequence.get(i);
-    }
+    elements = (T[]) new Object[sequence.size()];
+    int i = 0;
+    for (T item : sequence) elements[i++] = item;
     start = 0;
     end = elements.length;
   }
@@ -75,24 +76,11 @@ public class ArraySequence<T> extends AbstractSequence<T> {
     this.elements = sequence.elements;
     int oldLen = sequence.size();
     if (start > end || end > oldLen) {
-      throw new IndexOutOfBoundsException(String.format(
-          "length: %d start index: %d end index: %d\n", oldLen, start, end));
+      throw new IndexOutOfBoundsException(String.format("length: %d start index: %d end index: %dn", 
+          oldLen, start, end));
     }
     this.start = sequence.start + start;
     this.end = sequence.start + end;
-  }
-
-  /**
-   * Constructor.
-   * 
-   * @param seq
-   * @param start
-   * @param end
-   */
-  public ArraySequence(Sequence<T> seq, int start, int end) {
-    this.elements = seq.elements();
-    this.start = start;
-    this.end = end;
   }
 
   @Override
@@ -101,12 +89,10 @@ public class ArraySequence<T> extends AbstractSequence<T> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public T get(int i) {
     int idx = i + start;
     if (idx >= end) {
-      throw new IndexOutOfBoundsException(String.format(
-          "length: %d index: %d\n", size(), i));
+      throw new IndexOutOfBoundsException(String.format("length: %d index: %dn", size(), i));
     }
     return (T) elements[idx];
   }
@@ -116,17 +102,18 @@ public class ArraySequence<T> extends AbstractSequence<T> {
     return end - start;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public T[] elements() {
-    return (T[]) elements;
+    return Arrays.copyOfRange(elements, start, end);
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Sequence<T> concat(Sequence<T> other) {
-    T[] newArr = (T[]) Arrays.copyOf(this.elements, this.elements.length + other.size());
-    System.arraycopy(other.elements(), 0, newArr, this.elements.length, other.size());
+    T[] newArr = (T[]) new Object[size() + other.size()];
+    System.arraycopy(this.elements, start, newArr, 0, size());
+    int i = size();
+    for(T item : other) newArr[i++] = item;
     return new ArraySequence<T>(true, newArr);
   }
 }

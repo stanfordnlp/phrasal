@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 
 /**
  * 
@@ -39,7 +37,12 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 
   @Override
   public String toString(String delimiter) {
-    return Arrays.stream(elements()).map(e -> e.toString()).collect(Collectors.joining(delimiter));
+    StringBuilder sb = new StringBuilder();
+    for (T token : this) {
+      if (sb.length() > 0) sb.append(" ");
+      sb.append(token);
+    }
+    return sb.toString();
   }
 
   @Override
