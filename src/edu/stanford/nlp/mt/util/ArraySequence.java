@@ -11,7 +11,7 @@ import java.util.List;
  * 
  * @param <T>
  */
-public class SimpleSequence<T> extends AbstractSequence<T> {
+public class ArraySequence<T> extends AbstractSequence<T> {
 
   private static final long serialVersionUID = 8446551497177484601L;
 
@@ -24,7 +24,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
    * @param wrapDontCopy
    * @param elements
    */
-  public SimpleSequence(boolean wrapDontCopy, T[] elements) {
+  public ArraySequence(boolean wrapDontCopy, T[] elements) {
     this.elements = wrapDontCopy ? elements : Arrays.copyOf(elements, elements.length);
     start = 0;
     end = elements.length;
@@ -35,7 +35,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
    * 
    * @param toks
    */
-  public SimpleSequence(List<T> toks) {
+  public ArraySequence(List<T> toks) {
     elements = toks.toArray();
     start = 0;
     end = elements.length;
@@ -46,7 +46,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
    * 
    * @param elements
    */
-  public SimpleSequence(T[] elements) {
+  public ArraySequence(T[] elements) {
     this(false, elements);
   }
 
@@ -55,7 +55,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
    * 
    * @param sequence
    */
-  public SimpleSequence(Sequence<T> sequence) {
+  public ArraySequence(Sequence<T> sequence) {
     elements = new Object[sequence.size()];
     for (int i = 0; i < elements.length; i++) {
       elements[i] = sequence.get(i);
@@ -71,7 +71,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
    * @param start
    * @param end
    */
-  private SimpleSequence(SimpleSequence<T> sequence, int start, int end) {
+  private ArraySequence(ArraySequence<T> sequence, int start, int end) {
     this.elements = sequence.elements;
     int oldLen = sequence.size();
     if (start > end || end > oldLen) {
@@ -89,7 +89,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
    * @param start
    * @param end
    */
-  public SimpleSequence(Sequence<T> seq, int start, int end) {
+  public ArraySequence(Sequence<T> seq, int start, int end) {
     this.elements = seq.elements();
     this.start = start;
     this.end = end;
@@ -97,7 +97,7 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
 
   @Override
   public Sequence<T> subsequence(int start, int end) {
-    return new SimpleSequence<T>(this, start, end);
+    return new ArraySequence<T>(this, start, end);
   }
 
   @Override
@@ -127,6 +127,6 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
   public Sequence<T> concat(Sequence<T> other) {
     T[] newArr = (T[]) Arrays.copyOf(this.elements, this.elements.length + other.size());
     System.arraycopy(other.elements(), 0, newArr, this.elements.length, other.size());
-    return new SimpleSequence<T>(true, newArr);
+    return new ArraySequence<T>(true, newArr);
   }
 }

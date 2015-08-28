@@ -35,7 +35,7 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.util.Pair;
@@ -213,7 +213,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           }
         }
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? 
-            new SimpleSequence<TK>(filteredToks) : Sequences.emptySequence();
+            new ArraySequence<TK>(filteredToks) : Sequences.emptySequence();
         ruleList = phraseGenerator.getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
         return new Pair<>(sourceFiltered, ruleList);
         

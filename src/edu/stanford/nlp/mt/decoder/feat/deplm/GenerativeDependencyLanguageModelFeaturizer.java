@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.util.PropertiesUtils;
 
@@ -98,7 +98,7 @@ public class GenerativeDependencyLanguageModelFeaturizer extends AbstractDepende
     tokens.add(direction);
     tokens.add(head);
     tokens.add(child);
-    Sequence<IString> seq = new SimpleSequence<IString>(tokens);
+    Sequence<IString> seq = new ArraySequence<IString>(tokens);
     double score = depLM.score(seq, 3, null).getScore();
     //double score = depLM.score(seq, 2, null).getScore();
 

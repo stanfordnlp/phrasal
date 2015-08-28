@@ -10,7 +10,7 @@ import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.PositionIndependentDistance;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
@@ -56,12 +56,12 @@ public class PERMetric<TK, FV> extends AbstractMetric<TK, FV> {
     
     private double[] minimumPositionIndependentDistance(int id, Sequence<TK> seq) {
 
-      Object[] outArr = (new SimpleSequence<TK>(seq)).elements();
+      Object[] outArr = (new ArraySequence<TK>(seq)).elements();
       double minEd = Double.POSITIVE_INFINITY;
       double refCount = 0;
       double minErr = Double.POSITIVE_INFINITY;
       for (Sequence<TK> ref : referencesList.get(id)) {
-        Object[] refArr = (new SimpleSequence<TK>(ref)).elements();
+        Object[] refArr = (new ArraySequence<TK>(ref)).elements();
         double ed = positionIndependentDistance.score(outArr, refArr);
         double err = ed / refArr.length;
         // System.err.printf("%s\n%s\n(%f/%d)=%f\n",

@@ -17,7 +17,7 @@ import java.util.TreeSet;
 
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.util.PropertiesUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -129,7 +129,7 @@ public class BuildDependencyLMData {
     while (true) {
       sourceSentence = sourceReader.readLine();
       if (sourceSentence == null || sourceSentence.equals("")) {
-        printLeftAndRightDependencies(dependencies, new SimpleSequence<String>(tokens));
+        printLeftAndRightDependencies(dependencies, new ArraySequence<String>(tokens));
         dependencies = new HashMap<>();
         tokens = new LinkedList<>();
         if (sourceSentence == null) {

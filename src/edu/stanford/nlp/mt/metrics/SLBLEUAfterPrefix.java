@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
@@ -48,10 +48,10 @@ public class SLBLEUAfterPrefix<TK,FV> implements SentenceLevelMetric<TK, FV> {
   public double score(int sourceId, Sequence<TK> source,
       List<Sequence<TK>> references, Sequence<TK> translation) {
 
-    Sequence<TK> prefix = new SimpleSequence<>(references.get(0));
+    Sequence<TK> prefix = new ArraySequence<>(references.get(0));
     
     List<Sequence<TK>> modifiedRefs = references.stream().skip(1).map(r -> {
-      Sequence<TK> masked = new SimpleSequence<>(r);
+      Sequence<TK> masked = new ArraySequence<>(r);
       TK[] elements = masked.elements();
       for (int i = 0, sz = prefix.size(); i < sz; i++) {
         elements[i] = (TK) TokenUtils.NULL_TOKEN;

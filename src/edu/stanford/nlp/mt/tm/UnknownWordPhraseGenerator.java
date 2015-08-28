@@ -7,7 +7,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
@@ -59,7 +59,7 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
       throw new RuntimeException("Only single-word queries accepted. Query size: " + String.valueOf(sequence.size()));
     }
     // Check to see if this word is unknown
-    Sequence<TK> sourceWord = new SimpleSequence<TK>(sequence);
+    Sequence<TK> sourceWord = new ArraySequence<TK>(sequence);
     final String word = sequence.get(0).toString();
 
     if (dropUnknownWords && !isTranslateable(word)) {

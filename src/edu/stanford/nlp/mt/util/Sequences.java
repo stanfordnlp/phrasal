@@ -126,7 +126,7 @@ public final class Sequences {
     Object[] arr = new Object[sequence.size() + 1];
     arr[0] = startToken;
     System.arraycopy(sequence.elements(), 0, arr, 1, sequence.size());
-    return new SimpleSequence<T>(true, (T[]) arr);
+    return new ArraySequence<T>(true, (T[]) arr);
   }
 
   /**
@@ -141,7 +141,7 @@ public final class Sequences {
     Object[] arr = new Object[sequence.size() + 1];
     System.arraycopy(sequence.elements(), 0, arr, 0, sequence.size());
     arr[sequence.size()] = endToken;
-    return new SimpleSequence<T>(true, (T[]) arr);
+    return new ArraySequence<T>(true, (T[]) arr);
   }
 
   /**
@@ -159,7 +159,7 @@ public final class Sequences {
     arr[0] = startToken;
     System.arraycopy(sequence.elements(), 0, arr, 1, sequence.size());
     arr[sequence.size() + 1] = endToken;
-    return new SimpleSequence<T>(true, (T[]) arr);
+    return new ArraySequence<T>(true, (T[]) arr);
   }
 
   /**

@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 /**
  * Sentence pair with GIZA word alignment, with GIZA alignment probability for
@@ -56,9 +56,9 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     p_f2e = Double.parseDouble(comment_f2e[comment_f2e.length - 1]);
     p_e2f = Double.parseDouble(comment_f2e[comment_e2f.length - 1]);
     // Read target strings:
-    f = new SimpleSequence<IString>(true,
+    f = new ArraySequence<IString>(true,
         IStrings.toIStringArray(escape(f2e_line2.split("\\s+"))));
-    e = new SimpleSequence<IString>(true,
+    e = new ArraySequence<IString>(true,
         IStrings.toIStringArray(escape(e2f_line2.split("\\s+"))));
     // Read alignments:
     f2e = new TreeSet[f.size()];
@@ -75,9 +75,9 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     assert (comment_f2e[0].equals("#"));
     p_f2e = Double.parseDouble(comment_f2e[comment_f2e.length - 1]);
     // Read target strings:
-    f = new SimpleSequence<IString>(true,
+    f = new ArraySequence<IString>(true,
         IStrings.toIStringArray(escape(f2e_line2.split("\\s+"))));
-    e = new SimpleSequence<IString>(true,
+    e = new ArraySequence<IString>(true,
         IStrings.toIStringArray(extractWordsFromAlignment(f2e_line3)));
     // Read alignments:
     f2e = new TreeSet[f.size()];

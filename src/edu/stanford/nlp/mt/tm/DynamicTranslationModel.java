@@ -42,7 +42,7 @@ import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -610,7 +610,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       int systemId = tm2Sys[tmTokens[i]];
       tokens[i] = new IString(systemId);
     }
-    return new SimpleSequence<IString>(true, tokens);
+    return new ArraySequence<IString>(true, tokens);
   }
 
   /**

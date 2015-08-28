@@ -7,7 +7,7 @@ import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 /**
  * An alignment template: a source-language phrase (f), a target-language phrase
@@ -59,8 +59,8 @@ public class AlignmentTemplate {
 
   void init(int[] fArray, int[] eArray, int[] align, boolean lazy) {
     reset();
-    f = new SimpleSequence<IString>(true, IStrings.toIStringArray(fArray));
-    e = new SimpleSequence<IString>(true, IStrings.toIStringArray(eArray));
+    f = new ArraySequence<IString>(true, IStrings.toIStringArray(fArray));
+    e = new ArraySequence<IString>(true, IStrings.toIStringArray(eArray));
     this.align = align;
     if (!lazy)
       initAlignmentArrays();

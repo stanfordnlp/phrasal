@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 public class PhrasalSourceFilter extends AbstractSourceFilter {
@@ -30,7 +30,7 @@ public class PhrasalSourceFilter extends AbstractSourceFilter {
     if (addBoundaryMarkers)
       fLine = new StringBuffer(TokenUtils.START_TOKEN).append(" ").append(fLine).append(" ").append(TokenUtils.END_TOKEN).toString();
 
-    Sequence<IString> f = new SimpleSequence<IString>(true,
+    Sequence<IString> f = new ArraySequence<IString>(true,
         IStrings.toIStringArray(fLine.split("\\s+")));
     for (int i = 0; i < f.size(); ++i) {
       for (int j = i; j < f.size() && j - i < maxPhraseLenF; ++j) {
