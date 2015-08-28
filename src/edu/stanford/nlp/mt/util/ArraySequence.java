@@ -56,11 +56,8 @@ public class ArraySequence<T> extends AbstractSequence<T> {
    * 
    * @param sequence
    */
-  @SuppressWarnings("unchecked")
   public ArraySequence(Sequence<T> sequence) {
-    elements = (T[]) new Object[sequence.size()];
-    int i = 0;
-    for (T item : sequence) elements[i++] = item;
+    elements = Arrays.copyOf(sequence.elements(), sequence.size());
     start = 0;
     end = elements.length;
   }
@@ -94,7 +91,7 @@ public class ArraySequence<T> extends AbstractSequence<T> {
     if (idx >= end) {
       throw new IndexOutOfBoundsException(String.format("length: %d index: %dn", size(), i));
     }
-    return (T) elements[idx];
+    return elements[idx];
   }
 
   @Override

@@ -26,7 +26,6 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Cube pruning as described by Chiang and Huang (2007).
@@ -112,15 +111,15 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // TM (phrase table) query for applicable rules
-    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+    PhraseQuery<TK,FV> phraseQuery = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-    source = sourceRulePair.first();
+    source = phraseQuery.filteredSource;
     timer.mark("TM query");
     
     // Check after potential filtering for OOVs
     if (source.size() == 0) return null;
     final int sourceLength = source.size();
-    final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    final List<ConcreteRule<TK,FV>> ruleList = phraseQuery.ruleList;
     logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
         
     // Force decoding---if it is enabled, then filter the rule set according

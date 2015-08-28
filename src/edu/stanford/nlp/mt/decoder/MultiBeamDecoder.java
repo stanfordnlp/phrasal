@@ -16,7 +16,6 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Stack-based, left-to-right phrase-based inference implemented as a beam search.
@@ -123,12 +122,12 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     // TM (phrase table) query for applicable rules
     if (DEBUG) System.err.println("Generating Translation Options");
-    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+    PhraseQuery<TK,FV> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-    source = sourceRulePair.first();
+    source = sourceRulePair.filteredSource;
     if (source == null || source.size() == 0) return null;
     final int sourceSz = source.size();
-    final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.ruleList;
 
     if (OPTIONS_DUMP && DETAILED_DEBUG) {
       int sentId = sourceInputId;

@@ -38,7 +38,6 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * An abstract interface for beam-based inference algorithms.
@@ -189,7 +188,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @param scorer
    * @return
    */
-  protected Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>> getRules(Sequence<TK> source,
+  protected PhraseQuery<TK,FV> getRules(Sequence<TK> source,
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
     // Initial query
@@ -215,7 +214,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? 
             new ArraySequence<TK>(filteredToks) : Sequences.emptySequence();
         ruleList = phraseGenerator.getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
-        return new Pair<>(sourceFiltered, ruleList);
+        return new PhraseQuery<>(sourceFiltered, ruleList);
         
       } else {
         // Add rules from the OOV model
@@ -238,7 +237,16 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
     }
-    return new Pair<>(source, ruleList);
+    return new PhraseQuery<>(source, ruleList);
+  }
+  
+  public static class PhraseQuery<TK,FV> {
+    public final List<ConcreteRule<TK,FV>> ruleList;
+    public final Sequence<TK> filteredSource;
+    public PhraseQuery(Sequence<TK> filteredSource, List<ConcreteRule<TK,FV>> ruleList) {
+      this.ruleList = ruleList;
+      this.filteredSource = filteredSource;
+    }
   }
   
   /**

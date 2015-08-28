@@ -7,7 +7,6 @@ import java.util.List;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
@@ -55,21 +54,20 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
 
   @Override
   public List<Rule<TK>> query(Sequence<TK> sequence) {
-    if (sequence.size() > maxLengthSource()) {
+    if (sequence.size() != maxLengthSource()) {
       throw new RuntimeException("Only single-word queries accepted. Query size: " + String.valueOf(sequence.size()));
     }
     // Check to see if this word is unknown
-    Sequence<TK> sourceWord = new ArraySequence<TK>(sequence);
     final String word = sequence.get(0).toString();
 
     if (dropUnknownWords && !isTranslateable(word)) {
       // Deletion rule
-      return Collections.singletonList(new Rule<TK>(featureValues, featureNames, Sequences.emptySequence(), sourceWord,
+      return Collections.singletonList(new Rule<TK>(featureValues, featureNames, Sequences.emptySequence(), sequence,
           DEFAULT_ALIGNMENT, PHRASE_TABLE_NAME));
 
     } else {
       // Identity translation rule
-      return Collections.singletonList(new Rule<TK>(featureValues, featureNames, sourceWord, sourceWord,
+      return Collections.singletonList(new Rule<TK>(featureValues, featureNames, sequence, sequence,
           DEFAULT_ALIGNMENT, PHRASE_TABLE_NAME));
     }
   }
