@@ -194,9 +194,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         Item<TK,FV> item = pq.poll();
 
         // WSGDEBUG
-        //        System.err.printf("BEAM %d STATUS%n", i);
-        //        System.err.println(newBeam.beamString());
-        //        System.err.println("===========");
+//                System.err.printf("BEAM %d STATUS%n", i);
+//                System.err.println(newBeam.beamString());
+//                System.err.println("===========");
         if (item.derivation != null) {
           newBeam.put(item.derivation);
           ++numPoppedItems;
@@ -212,9 +212,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       }
 
       // WSGDEBUG
-      //    System.err.printf("BEAM %d STATUS%n", i);
-      //    System.err.println(newBeam.beamString());
-      //    System.err.println("===========");
+//          System.err.printf("BEAM %d STATUS%n", i);
+//          System.err.println(newBeam.beamString());
+//          System.err.println("===========");
 
       numRecombined += newBeam.recombined();
     }

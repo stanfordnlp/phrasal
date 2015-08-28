@@ -21,11 +21,11 @@ public class ArraySequence<T> extends AbstractSequence<T> {
   /**
    * Constructor.
    * 
-   * @param wrapDontCopy
+   * @param dontCopy
    * @param elements
    */
-  public ArraySequence(boolean wrapDontCopy, T[] elements) {
-    this.elements = wrapDontCopy ? elements : Arrays.copyOf(elements, elements.length);
+  public ArraySequence(boolean dontCopy, T[] elements) {
+    this.elements = dontCopy ? elements : Arrays.copyOf(elements, elements.length);
     start = 0;
     end = elements.length;
   }
@@ -104,16 +104,14 @@ public class ArraySequence<T> extends AbstractSequence<T> {
 
   @Override
   public T[] elements() {
-    return Arrays.copyOfRange(elements, start, end);
+    return size() == elements.length ? elements : Arrays.copyOfRange(elements, start, end);
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public Sequence<T> concat(Sequence<T> other) {
-    T[] newArr = (T[]) new Object[size() + other.size()];
-    System.arraycopy(this.elements, start, newArr, 0, size());
-    int i = size();
-    for(T item : other) newArr[i++] = item;
+    int newSize = size() + other.size();
+    T[] newArr = Arrays.copyOf(elements, newSize);
+    System.arraycopy(other.elements(), 0, newArr, size(), other.size());
     return new ArraySequence<T>(true, newArr);
   }
 }
