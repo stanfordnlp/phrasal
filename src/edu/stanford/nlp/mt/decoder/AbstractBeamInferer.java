@@ -447,14 +447,17 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         parent = parent.preceedingDerivation;
       }
       // extract completion (target sequence suffix)
-      Sequence<TK> compl = gs.targetSequence.subsequence(prefixLength, gs.targetSequence.size());
-      double complScore = parent == null ? gs.score : gs.score - parent.score;
-      if ((localCompletions.containsKey(compl) &&
-              localCompletions.get(compl) < complScore) ||
-              !localCompletions.containsKey(compl)) {
-        // store best local completions
-        localCompletions.put(compl, complScore);
-        complPQ.add(new Completion<>(compl, complScore));
+      Sequence<TK> compl = null;
+      if (prefixLength < gs.targetSequence.size()) {
+        compl = gs.targetSequence.subsequence(prefixLength, gs.targetSequence.size());
+        double complScore = parent == null ? gs.score : gs.score - parent.score;
+        if ((localCompletions.containsKey(compl) &&
+             localCompletions.get(compl) < complScore) ||
+            !localCompletions.containsKey(compl)) {
+          // store best local completions
+          localCompletions.put(compl, complScore);
+          complPQ.add(new Completion<>(compl, complScore));
+        }
       }
     }
 
