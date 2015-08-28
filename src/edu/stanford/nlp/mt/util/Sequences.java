@@ -285,7 +285,7 @@ public final class Sequences {
       if (end == size()) {
         return super.subsequence(start, end);
       } else {
-        return wrapped.subsequence(start - 1, end - 1);
+        return wrapped.subsequence(start, end);
       }
     }
   }
