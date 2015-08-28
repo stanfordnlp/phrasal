@@ -17,26 +17,24 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
 
   @Override
   public Iterator<T> iterator() {
-    return new AbstractSequenceIterator();
-  }
+    return new Iterator<T>() {
+      int position = 0;
 
-  private class AbstractSequenceIterator implements Iterator<T> {
-    int position = 0;
+      @Override
+      public boolean hasNext() {
+        return position < AbstractSequence.this.size();
+      }
 
-    @Override
-    public boolean hasNext() {
-      return position < AbstractSequence.this.size();
-    }
+      @Override
+      public T next() {
+        return AbstractSequence.this.get(position++);
+      }
 
-    @Override
-    public T next() {
-      return AbstractSequence.this.get(position++);
-    }
-
-    @Override
-    public void remove() {
-      throw new UnsupportedOperationException();
-    }
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+    };
   }
 
   @Override
@@ -62,20 +60,26 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
     return sz - osz;
   }
 
-  private int hashCode = Integer.MAX_VALUE;
-
-  // TODO(spenceg) Change hashcode
   @Override
   public int hashCode() {
-    if (hashCode == Integer.MAX_VALUE) {
-      int sz = size();
-      int[] codes = new int[sz];
-      for (int i = 0; i < sz; ++i) {
-        codes[i] = get(i).hashCode();
-      }
-      hashCode = MurmurHash2.hash32(codes, sz, 1);
+    // Ripped off from MurmurHash3
+    final int c1 = 0xcc9e2d51;
+    final int c2 = 0x1b873593;
+
+    int sz = size();
+    int h1 = sz*4;
+
+    for (int i=0; i<sz; i++) {
+      int k1 = get(i).hashCode();
+      k1 *= c1;
+      k1 = (k1 << 15) | (k1 >>> 17);  // ROTL32(k1,15);
+      k1 *= c2;
+
+      h1 ^= k1;
+      h1 = (h1 << 13) | (h1 >>> 19);  // ROTL32(h1,13);
+      h1 = h1*5+0xe6546b64;
     }
-    return hashCode;
+    return h1;
   }
 
   @SuppressWarnings("unchecked")
@@ -120,7 +124,7 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
     }
     return false;
   }
-  
+
   @Override
   public boolean startsWith(Sequence<T> prefix) {
     final int prefixSize = prefix.size();
