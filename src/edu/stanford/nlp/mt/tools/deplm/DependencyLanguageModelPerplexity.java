@@ -56,7 +56,8 @@ public final class DependencyLanguageModelPerplexity {
           if (!DependencyUtils.isWord(word))
             continue;
           String suffix = gov == 0 ? ROOT_SUFFIX : FRAG_SUFFIX;
-          Sequence<IString> seq = new SimpleSequence<IString>(new IString(word + suffix));
+          IString[] arr = { new IString(word + suffix) };
+          Sequence<IString> seq = new SimpleSequence<IString>(arr);
           seq = Sequences.wrapStartEnd(seq, rootLm.getStartToken(), rootLm.getEndToken());
           score += rootLm.score(seq, 1, null).getScore();
           wordCount += seq.size() - 1;

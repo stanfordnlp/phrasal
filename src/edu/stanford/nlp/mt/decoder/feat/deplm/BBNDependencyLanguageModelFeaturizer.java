@@ -74,7 +74,8 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
   @Override
   public void scoreFrag(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, boolean scoreEmptyChildren) {
     String str = token.toString() + FRAG_SUFFIX;
-    Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
+    IString[] arr = { new IString(str) };
+    Sequence<IString> seq = new SimpleSequence<IString>(arr);
     seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
     double rootScore = rootLM.score(seq, 1, null).getScore();
     lmScores.add(rootScore);
@@ -84,7 +85,8 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
 
     if (scoreEmptyChildren) {
       String headStr = token.toString() + HEAD_SUFFIX;
-      Sequence<IString> childSeq = new SimpleSequence<IString>(new IString(headStr));
+      IString[] arr2 = { new IString(headStr) };
+      Sequence<IString> childSeq = new SimpleSequence<IString>(arr2);
       childSeq = Sequences.wrapStartEnd(childSeq, rootLM.getStartToken(), rootLM.getEndToken());
       double leftScore = leftLM.score(childSeq, 2, null).getScore();
       double rightScore = rightLM.score(childSeq, 2, null).getScore();
@@ -95,7 +97,8 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
 
   @Override
   public void scoreRight(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex, DepLMSubState subState) {
-    Sequence<IString> seq = new SimpleSequence<IString>(token);
+    IString[] arr = { token };
+    Sequence<IString> seq = new SimpleSequence<IString>(arr);
     int start = 0;
     if (subState.getRightLMState() == null) {
       seq = Sequences.wrapStart(seq, new IString(subState.getHeadToken().toString() + HEAD_SUFFIX));
@@ -113,7 +116,8 @@ public class BBNDependencyLanguageModelFeaturizer extends AbstractDependencyLang
   @Override
   public void scoreRoot(List<FeatureValue<String>> features, List<Double> lmScores, IString token, int tokenIndex) {
     String str = token.toString() + ROOT_SUFFIX;
-    Sequence<IString> seq = new SimpleSequence<IString>(new IString(str));
+    IString[] arr = { new IString(str) };
+    Sequence<IString> seq = new SimpleSequence<IString>(arr);
     seq = Sequences.wrapStartEnd(seq, rootLM.getStartToken(), rootLM.getEndToken());
     double rootScore = rootLM.score(seq, 1, null).getScore();
     lmScores.add(rootScore);    

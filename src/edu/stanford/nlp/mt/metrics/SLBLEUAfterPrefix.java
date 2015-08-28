@@ -3,8 +3,8 @@ package edu.stanford.nlp.mt.metrics;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
@@ -48,14 +48,15 @@ public class SLBLEUAfterPrefix<TK,FV> implements SentenceLevelMetric<TK, FV> {
   public double score(int sourceId, Sequence<TK> source,
       List<Sequence<TK>> references, Sequence<TK> translation) {
 
-    Sequence<TK> prefix = new RawSequence<>(references.get(0));
+    Sequence<TK> prefix = new SimpleSequence<>(references.get(0));
     
     List<Sequence<TK>> modifiedRefs = references.stream().skip(1).map(r -> {
-      RawSequence<TK> masked = new RawSequence<>(r);
+      Sequence<TK> masked = new SimpleSequence<>(r);
+      TK[] elements = masked.elements();
       for (int i = 0, sz = prefix.size(); i < sz; i++) {
-        masked.elements[i] = TokenUtils.NULL_TOKEN;
+        elements[i] = (TK) TokenUtils.NULL_TOKEN;
       }
-      return (Sequence<TK>) masked;
+      return masked;
     }).collect(Collectors.toList());
     
     double score = BLEUMetric.computeLocalSmoothScore(translation, modifiedRefs, order, false);

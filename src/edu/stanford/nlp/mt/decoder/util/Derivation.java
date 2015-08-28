@@ -7,6 +7,7 @@ import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.Rule;
+import edu.stanford.nlp.mt.util.ConcatSequence;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -121,7 +122,7 @@ State<Derivation<TK, FV>> {
     localFeatures = null;
     depth = 0;
     linearDistortion = 0;
-    targetSequence = Sequences.emptySequence();    
+    targetSequence = ConcatSequence.emptySequence();    
   }
 
   /**
@@ -153,7 +154,7 @@ State<Derivation<TK, FV>> {
     this.length = (insertionPosition < base.length ? base.length : // internal insertion
       insertionPosition + rule.abstractRule.target.size()); // edge insertion
     sourceSequence = base.sourceSequence;
-    targetSequence = Sequences.concatenate(base.targetSequence, rule.abstractRule.target);
+    targetSequence = base.targetSequence.concat(rule.abstractRule.target);
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
@@ -207,7 +208,7 @@ State<Derivation<TK, FV>> {
     this.length = (insertionPosition < base.length) ? base.length
         : insertionPosition + targetPhrase.size();
     sourceSequence = base.sourceSequence;
-    targetSequence = Sequences.concatenate(base.targetSequence, targetPhrase);
+    targetSequence = base.targetSequence.concat(targetPhrase);
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition

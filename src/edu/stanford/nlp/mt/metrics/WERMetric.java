@@ -11,9 +11,9 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.State;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.NBestListContainer;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.SimpleSequence;
 
 public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
   final List<List<Sequence<TK>>> referencesList;
@@ -86,13 +86,13 @@ public class WERMetric<TK, FV> extends AbstractMetric<TK, FV> {
        * }
        */
 
-      Object[] outArr = (new RawSequence<TK>(seq)).elements;
+      Object[] outArr = (new SimpleSequence<TK>(seq)).elements();
       collapseObjects(outArr);
       double minEd = Double.POSITIVE_INFINITY;
       double refCount = 0;
       double minErr = Double.POSITIVE_INFINITY;
       for (Sequence<TK> ref : referencesList.get(id)) {
-        Object[] refArr = (new RawSequence<TK>(ref)).elements;
+        Object[] refArr = (new SimpleSequence<TK>(ref)).elements();
         collapseObjects(refArr);
         double ed = editDistance.score(outArr, refArr);
         double err = ed / refArr.length;

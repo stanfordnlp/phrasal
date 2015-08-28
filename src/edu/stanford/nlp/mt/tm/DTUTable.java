@@ -19,7 +19,6 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.SimpleSequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
@@ -253,12 +252,12 @@ implements PhraseTable<IString> {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
-                Sequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
+                Sequence<IString>[] dtus = new SimpleSequence[multiIntTransOpt.dtus.length];
                 for (int i = 0; i < multiIntTransOpt.dtus.length; ++i) {
                   dtus[i] = IStrings.toIStringSequence(multiIntTransOpt.dtus[i]);
                 }
                 transOpts.add(new DTURule<IString>(intTransOpt.id,
-                    intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
+                    intTransOpt.scores, scoreNames, dtus, new SimpleSequence<IString>(
                         s.foreign), intTransOpt.alignment, name));
               } else {
                 // No gaps in target:
@@ -266,7 +265,7 @@ implements PhraseTable<IString> {
                     intTransOpt.targetArray);
                 transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
-                    new RawSequence<IString>(s.foreign), intTransOpt.alignment, name));
+                    new SimpleSequence<IString>(s.foreign), intTransOpt.alignment, name));
               }
             }
 

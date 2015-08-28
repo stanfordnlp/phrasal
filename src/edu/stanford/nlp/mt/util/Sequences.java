@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -88,39 +87,6 @@ public final class Sequences {
   }
 
   /**
-   * Concatenate two sequences.
-   *
-   * @param a
-   * @param b
-   * @return
-   */
-  @SuppressWarnings("unchecked")
-  public static <T> Sequence<T> concatenate(Sequence<T> a, Sequence<T> b) {
-    if (a instanceof RawSequence && b instanceof RawSequence) {
-      // Fast concatenate for raw sequence, which is exposes an array of
-      // elements
-      return concatenateRaw((RawSequence<T>) a, (RawSequence<T>) b);
-    }
-    // For general case
-    Object[] abArr = new Object[a.size() + b.size()];
-    for (int i = 0; i < a.size(); i++) {
-      abArr[i] = a.get(i);
-    }
-    for (int i = 0; i < b.size(); i++) {
-      abArr[i+a.size()] = b.get(i);
-    }
-    RawSequence<T> ab = new RawSequence<T>((T[])abArr);
-    return ab;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T> Sequence<T> concatenateRaw(RawSequence<T> a, RawSequence<T> b) {
-    T[] newArr = (T[]) Arrays.copyOf(a.elements, a.elements.length + b.elements.length);
-    System.arraycopy(b.elements, 0, newArr, a.elements.length, b.elements.length);
-    return new RawSequence<T>(newArr);
-  }
-
-  /**
    * Convert a sequence to an array of Strings.
    *
    * @param sequence
@@ -155,8 +121,12 @@ public final class Sequences {
    * @param startToken
    * @return
    */
+  @SuppressWarnings("unchecked")
   public static <T> Sequence<T> wrapStart(Sequence<T> sequence, T startToken) {
-    return new InsertedStartToken<T>(sequence, startToken);
+    Object[] arr = new Object[sequence.size() + 1];
+    arr[0] = startToken;
+    System.arraycopy(sequence.elements(), 0, arr, 1, sequence.size());
+    return new SimpleSequence<T>(true, (T[]) arr);
   }
 
   /**
@@ -166,8 +136,12 @@ public final class Sequences {
    * @param endToken
    * @return
    */
+  @SuppressWarnings("unchecked")
   public static <T> Sequence<T> wrapEnd(Sequence<T> sequence, T endToken) {
-    return new InsertedEndToken<T>(sequence, endToken);
+    Object[] arr = new Object[sequence.size() + 1];
+    System.arraycopy(sequence.elements(), 0, arr, 0, sequence.size());
+    arr[sequence.size()] = endToken;
+    return new SimpleSequence<T>(true, (T[]) arr);
   }
 
   /**
@@ -179,8 +153,13 @@ public final class Sequences {
    * @param endToken
    * @return
    */
+  @SuppressWarnings("unchecked")
   public static <T> Sequence<T> wrapStartEnd(Sequence<T> sequence, T startToken, T endToken) {
-    return new InsertedStartEndToken<T>(sequence, startToken, endToken);
+    Object[] arr = new Object[sequence.size() + 2];
+    arr[0] = startToken;
+    System.arraycopy(sequence.elements(), 0, arr, 1, sequence.size());
+    arr[sequence.size() + 1] = endToken;
+    return new SimpleSequence<T>(true, (T[]) arr);
   }
 
   /**
@@ -191,141 +170,6 @@ public final class Sequences {
   @SuppressWarnings("unchecked")
   public static <T> Sequence<T> emptySequence() {
     return (Sequence<T>) EMPTY_SEQUENCE;
-  }
-  
-  /**
-   * Efficient wrapper around a sequence.
-   *
-   * @author Spence Green
-   *
-   * @param <TK>
-   */
-  private static class InsertedStartEndToken<TK> extends AbstractSequence<TK> {
-    final Sequence<TK> wrapped;
-    final TK startToken;
-    final TK endToken;
-    final int wrappedSz;
-
-    public InsertedStartEndToken(Sequence<TK> wrapped, TK startToken, TK endToken) {
-      this.wrapped = wrapped;
-      this.startToken = startToken;
-      this.endToken = endToken;
-      this.wrappedSz = wrapped.size();
-    }
-
-    @Override
-    public TK get(int i) {
-      if (i == 0) {
-        return startToken;
-      }
-      if (i < wrappedSz + 1) {
-        return wrapped.get(i - 1);
-      }
-      if (i == wrappedSz + 1) {
-        return endToken;
-      }
-
-      throw new IndexOutOfBoundsException(String.format(
-          "Index: %d Sequence Length: %s\n", i, size()));
-    }
-
-    @Override
-    public int size() {
-      return wrapped.size() + 2;
-    }
-
-    @Override
-    public Sequence<TK> subsequence(int start, int end) {
-      if (start == 0 || end == size()) {
-        return super.subsequence(start, end);
-      } else {
-        return wrapped.subsequence(start - 1, end - 1);
-      }
-    }
-  }
-
-  /**
-   * Efficient wrapper around a sequence.
-   *
-   * @author Spence Green
-   *
-   * @param <TK>
-   */
-  private static class InsertedEndToken<TK> extends AbstractSequence<TK> {
-    final Sequence<TK> wrapped;
-    final TK endToken;
-    final int wrappedSz;
-
-    public InsertedEndToken(Sequence<TK> wrapped, TK endToken) {
-      this.wrapped = wrapped;
-      this.endToken = endToken;
-      this.wrappedSz = wrapped.size();
-    }
-
-    @Override
-    public TK get(int i) {
-      if (i < wrappedSz) {
-        return wrapped.get(i);
-      }
-      if (i == wrappedSz) {
-        return endToken;
-      }
-
-      throw new IndexOutOfBoundsException(String.format(
-          "Index: %d Sequence Length: %s\n", i, size()));
-    }
-
-    @Override
-    public int size() {
-      return wrapped.size() + 1;
-    }
-
-    @Override
-    public Sequence<TK> subsequence(int start, int end) {
-      if (end == size()) {
-        return super.subsequence(start, end);
-      } else {
-        return wrapped.subsequence(start, end);
-      }
-    }
-  }
-
-  /**
-   * Efficient wrapper around a sequence.
-   *
-   * @author Spence Green
-   *
-   * @param <TK>
-   */
-  private static class InsertedStartToken<TK> extends AbstractSequence<TK> {
-    Sequence<TK> wrapped;
-    TK startToken;
-
-    public InsertedStartToken(Sequence<TK> wrapped, TK startToken) {
-      this.wrapped = wrapped;
-      this.startToken = startToken;
-    }
-
-    @Override
-    public TK get(int i) {
-      if (i == 0)
-        return startToken;
-      return wrapped.get(i - 1);
-    }
-
-    @Override
-    public int size() {
-      return wrapped.size() + 1;
-    }
-
-    @Override
-    public Sequence<TK> subsequence(int start, int end) {
-      if (start == 0) {
-        return super.subsequence(start, end);
-      } else {
-        return wrapped.subsequence(start - 1, end - 1);
-      }
-    }
   }
   
   /**
@@ -353,6 +197,22 @@ public final class Sequences {
     @Override
     public String toString() {
       return "";
+    }
+
+    @Override
+    public Sequence<TK> subsequence(int start, int end) {
+      throw new ArrayIndexOutOfBoundsException();
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public TK[] elements() {
+      return (TK[]) new Object[0];
+    }
+
+    @Override
+    public Sequence<TK> concat(Sequence<TK> other) {
+      return other;
     }
   }
 }

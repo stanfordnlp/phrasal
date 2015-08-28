@@ -3,62 +3,74 @@ package edu.stanford.nlp.mt.util;
 import java.util.Arrays;
 import java.util.List;
 
-import edu.stanford.nlp.util.Index;
-
 /**
+ * A sequence of elements.
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <T>
  */
 public class SimpleSequence<T> extends AbstractSequence<T> {
+
   private static final long serialVersionUID = 8446551497177484601L;
-  
-  private final Object[] elements;
-  private final int start, end;
+
+  private Object[] elements;
+  private int start, end;
 
   /**
-	 * 
-	 */
-  public SimpleSequence(boolean wrapDontCopy, T... elements) {
-    if (wrapDontCopy) {
-      this.elements = elements;
-    } else {
-      this.elements = Arrays.copyOf(elements, elements.length);
+   * Constructor.
+   * 
+   * @param wrapDontCopy
+   * @param elements
+   */
+  public SimpleSequence(boolean wrapDontCopy, T[] elements) {
+    this.elements = wrapDontCopy ? elements : Arrays.copyOf(elements, elements.length);
+    start = 0;
+    end = elements.length;
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param toks
+   */
+  public SimpleSequence(List<T> toks) {
+    elements = toks.toArray();
+    start = 0;
+    end = elements.length;
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param elements
+   */
+  public SimpleSequence(T[] elements) {
+    this(false, elements);
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param sequence
+   */
+  public SimpleSequence(Sequence<T> sequence) {
+    elements = new Object[sequence.size()];
+    for (int i = 0; i < elements.length; i++) {
+      elements[i] = sequence.get(i);
     }
     start = 0;
     end = elements.length;
   }
 
   /**
-	 * 
-	 */
-  public SimpleSequence(int[] intElements, Index<T> index) {
-    elements = new Object[intElements.length];
-    for (int i = 0; i < intElements.length; i++) {
-      elements[i] = index.get(intElements[i]);
-    }
-    start = 0;
-    end = intElements.length;
-  }
-  
-  public SimpleSequence(List<T> toks) {
-     elements = new Object[toks.size()];
-     int idx = 0;
-     for (T tok : toks) {
-       elements[idx++] = tok;  
-     }
-     start = 0;
-     end = elements.length;
-  }
-
-  /**
-	 * 
-	 */
-  public SimpleSequence(T... elements) {
-    this(false, elements);
-  }
-
+   * Constructor.
+   * 
+   * @param sequence
+   * @param start
+   * @param end
+   */
   private SimpleSequence(SimpleSequence<T> sequence, int start, int end) {
     this.elements = sequence.elements;
     int oldLen = sequence.size();
@@ -70,15 +82,15 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
     this.end = sequence.start + end;
   }
 
-  SimpleSequence(RawSequence<T> sequence, int start, int end) {
-    this.elements = sequence.elements;
-    int oldLen = elements.length;
-
-    if (start > end || end > oldLen) {
-      throw new IndexOutOfBoundsException(String.format(
-          "length: %d start index: %d end index: %d\n", oldLen, start, end));
-    }
-
+  /**
+   * Constructor.
+   * 
+   * @param seq
+   * @param start
+   * @param end
+   */
+  public SimpleSequence(Sequence<T> seq, int start, int end) {
+    this.elements = seq.elements();
     this.start = start;
     this.end = end;
   }
@@ -96,11 +108,25 @@ public class SimpleSequence<T> extends AbstractSequence<T> {
       throw new IndexOutOfBoundsException(String.format(
           "length: %d index: %d\n", size(), i));
     }
-
     return (T) elements[idx];
   }
 
+  @Override
   public int size() {
     return end - start;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public T[] elements() {
+    return (T[]) elements;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public Sequence<T> concat(Sequence<T> other) {
+    T[] newArr = (T[]) Arrays.copyOf(this.elements, this.elements.length + other.size());
+    System.arraycopy(other.elements(), 0, newArr, this.elements.length, other.size());
+    return new SimpleSequence<T>(true, newArr);
   }
 }
