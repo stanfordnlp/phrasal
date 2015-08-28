@@ -72,7 +72,7 @@ public class ProbingIntegerArrayRawIndex implements IntegerArrayRawIndex {
   }
 
   private static long hash(int[] key) {
-    return MurmurHash.hash64(key, key.length, 1);
+    return MurmurHash2.hash64(key, key.length, 1);
   }
   private int ideal(long hashed) {
     return ((int)hashed) & mask;

@@ -12,7 +12,6 @@ import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Extension of MultiBeamDecoder that allows phrases with discontinuities in
@@ -141,12 +140,12 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     // retrieve translation options
     if (DEBUG)
       System.err.println("Generating Translation Options");
-    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+    PhraseQuery<TK,FV> sourceRulePair = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-    source = sourceRulePair.first();
+    source = sourceRulePair.filteredSource;
     if (source == null || source.size() == 0) return null;
     final int sourceSz = source.size();
-    List<ConcreteRule<TK,FV>> ruleGrid = sourceRulePair.second();
+    List<ConcreteRule<TK,FV>> ruleGrid = sourceRulePair.ruleList;
     
     // Remove all options with gaps in the source, since they cause problems
     // with future cost estimation:

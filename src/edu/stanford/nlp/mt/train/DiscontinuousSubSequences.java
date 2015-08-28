@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.train;
 import edu.stanford.nlp.mt.tm.DTUTable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 import java.util.Map;
 import java.util.List;
@@ -37,7 +37,7 @@ public class DiscontinuousSubSequences {
         align.put(pos, toks.size());
       toks.add(seq.get(pos));
     }
-    return new SimpleSequence<IString>(true, toks.toArray(new IString[toks
+    return new ArraySequence<IString>(true, toks.toArray(new IString[toks
         .size()]));
   }
 }

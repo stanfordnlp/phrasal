@@ -10,8 +10,8 @@ import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.util.MutableInteger;
 import edu.stanford.nlp.util.Pair;
 
@@ -521,7 +521,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       }
     }
 
-    return new RawSequence<TK>(hyp.rule.abstractRule.target);
+    return new ArraySequence<TK>(hyp.rule.abstractRule.target);
   }
 
   private static <TK, FV> Rule<TK> getAbstractOption(
@@ -534,7 +534,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       int idx) {
     if (option instanceof DTURule)
       return ((DTURule<TK>) option).dtus[idx];
-    return new RawSequence<TK>(option.target);
+    return new ArraySequence<TK>(option.target);
   }
 
   private static <TK> int getNumberSegments(Rule<TK> option) {

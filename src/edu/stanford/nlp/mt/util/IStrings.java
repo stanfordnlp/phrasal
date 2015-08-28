@@ -62,7 +62,7 @@ public final class IStrings {
     else
       strings = str.trim().split("\\s+");
     IString[] istrs = toIStringArray(strings);
-    return new SimpleSequence<IString>(true, istrs);
+    return new ArraySequence<IString>(true, istrs);
   }
   
   /**
@@ -72,7 +72,7 @@ public final class IStrings {
    * @return
    */
   static public Sequence<IString> toIStringSequence(IString[] arr) {
-    return new SimpleSequence<IString>(true, arr);
+    return new ArraySequence<IString>(true, arr);
   }
   
   /**
@@ -101,7 +101,7 @@ public final class IStrings {
    */
   public static Sequence<IString> toIStringSequence(List<String> seq) {
     IString[] istrs = toIStringArray(seq);
-    return new SimpleSequence<IString>(true, istrs);
+    return new ArraySequence<IString>(true, istrs);
   }
 
   /**
@@ -160,6 +160,6 @@ public final class IStrings {
     for (int i = 0; i < indices.length; ++i) {
       istringList[i] = new IString(indices[i], index);
     }
-    return new SimpleSequence<IString>(true, istringList);    
+    return new ArraySequence<IString>(true, istringList);    
   }
 }

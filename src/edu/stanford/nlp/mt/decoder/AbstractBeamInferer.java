@@ -9,9 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,10 +35,9 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * An abstract interface for beam-based inference algorithms.
@@ -191,7 +188,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @param scorer
    * @return
    */
-  protected Pair<Sequence<TK>,List<ConcreteRule<TK,FV>>> getRules(Sequence<TK> source,
+  protected PhraseQuery<TK,FV> getRules(Sequence<TK> source,
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
     // Initial query
@@ -208,16 +205,16 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     if (coverage.cardinality() != source.size()) {
       if (filterUnknownWords) {
         // Filter OOVs from the source and then query the phrase table again
-        List<TK> filteredToks = new LinkedList<>();
+        List<TK> filteredToks = new ArrayList<>(source.size());
         for (int i = 0, sz = source.size(); i  < sz; i++) {
           if (coverage.get(i)) {
             filteredToks.add(source.get(i));
           }
         }
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? 
-            new SimpleSequence<TK>(filteredToks) : Sequences.emptySequence();
+            new ArraySequence<TK>(filteredToks) : Sequences.emptySequence();
         ruleList = phraseGenerator.getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
-        return new Pair<>(sourceFiltered, ruleList);
+        return new PhraseQuery<>(sourceFiltered, ruleList);
         
       } else {
         // Add rules from the OOV model
@@ -240,7 +237,16 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
     }
-    return new Pair<>(source, ruleList);
+    return new PhraseQuery<>(source, ruleList);
+  }
+  
+  public static class PhraseQuery<TK,FV> {
+    public final List<ConcreteRule<TK,FV>> ruleList;
+    public final Sequence<TK> filteredSource;
+    public PhraseQuery(Sequence<TK> filteredSource, List<ConcreteRule<TK,FV>> ruleList) {
+      this.ruleList = ruleList;
+      this.filteredSource = filteredSource;
+    }
   }
   
   /**

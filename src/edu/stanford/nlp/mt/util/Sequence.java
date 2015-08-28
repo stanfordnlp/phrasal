@@ -37,13 +37,23 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>, Seria
   /**
    *
    */
-  public Sequence<T> subsequence(CoverageSet select);
-
-  /**
-   *
-   */
   public boolean startsWith(Sequence<T> prefix);
 
+  /**
+   * Return the array of underlying elements.
+   * 
+   * @return
+   */
+  public T[] elements();
+  
+  /**
+   * Concatenate two sequences and return a new sequence.
+   * 
+   * @param other
+   * @return
+   */
+  public Sequence<T> concat(Sequence<T> other);
+  
   /**
    * True if this sequence contains the subsequence. Otherwise, false.
    * 
@@ -52,9 +62,11 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>, Seria
    */
   public boolean contains(Sequence<T> subsequence);
   
+  /**
+   * Convert to String with the specified delimiter.
+   * 
+   * @param delimiter
+   * @return
+   */
   public String toString(String delimiter);
-
-  public String toString(String prefix, String delimiter);
-
-  public String toString(String prefix, String delimiter, String suffix);
 }

@@ -33,7 +33,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.ParallelSuffixArrayEntry;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray;
@@ -41,7 +41,8 @@ import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.Span;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SuffixArraySample;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.Sequences;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -489,39 +490,42 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
       
       // Only use a parallel stream if the overhead is justified
-      List<ConcreteRule<IString,FV>> rules = ranges.parallelStream().flatMap(range -> {
-        final int i = range.i;
-        final int j = range.j;
-        final int order = j - i;
+      try (Stream<Range> rangeStream = ranges.size() > 5 ? ranges.parallelStream()
+          : ranges.stream()) {
+        List<ConcreteRule<IString,FV>> rules = rangeStream.flatMap(range -> {
+          final int i = range.i;
+          final int j = range.j;
+          final int order = j - i;
 
-        // Generate rules for this span
-        final Sequence<IString> sourceSpan = source.subsequence(i, j);
-        final CoverageSet sourceCoverage = new CoverageSet(source.size());
-        sourceCoverage.set(i, j);
-        if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
-          // Get from the rule cache
-          return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-              r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+          // Generate rules for this span
+          final Sequence<IString> sourceSpan = source.subsequence(i, j);
+          final CoverageSet sourceCoverage = new CoverageSet(source.size());
+          sourceCoverage.set(i, j);
+          if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
+            // Get from the rule cache
+            return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
 
-        } else {
-          // Sample from the suffix array
-          final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-          int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-          SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
-              : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-          if (corpusSample.size() == 0) {
-            // This span is not present in the training data.
-            misses[i][j] = true;
-            return Stream.empty();
+          } else {
+            // Sample from the suffix array
+            final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
+            int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
+            SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+                : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
+            if (corpusSample.size() == 0) {
+              // This span is not present in the training data.
+              misses[i][j] = true;
+              return Stream.empty();
+            }
+            searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
+            int numHits = corpusSample.ub - corpusSample.lb + 1;
+            double sampleRate = corpusSample.size() / (double) numHits;
+            return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
+                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
           }
-          searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
-          int numHits = corpusSample.ub - corpusSample.lb + 1;
-          double sampleRate = corpusSample.size() / (double) numHits;
-          return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-              r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
-        }
-      }).collect(Collectors.toList());
-      concreteRules.addAll(rules);
+        }).collect(Collectors.toList());
+        concreteRules.addAll(rules);
+      }
     }
     
     // Concatenate foreground model rules
@@ -606,7 +610,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       int systemId = tm2Sys[tmTokens[i]];
       tokens[i] = new IString(systemId);
     }
-    return new SimpleSequence<IString>(true, tokens);
+    return new ArraySequence<IString>(true, tokens);
   }
 
   /**
@@ -787,8 +791,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     private final int hashCode;
     public AlignmentTemplate(SampledRule rule) {
       this.rule = rule;
-      this.hashCode = MurmurHash.hash32(rule.f2eAll(), rule.sourceLength(), 1) ^ 
-          MurmurHash.hash32(rule.e2fAll(), rule.targetLength(), 1);
+      this.hashCode = MurmurHash2.hash32(rule.f2eAll(), rule.sourceLength(), 1) ^ 
+          MurmurHash2.hash32(rule.e2fAll(), rule.targetLength(), 1);
     }
     @Override
     public String toString() { return rule.toString(); }
@@ -819,7 +823,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     private final int hashCode;
     public TargetSpan(int[] tgt) {
       this.tgt = tgt;
-      this.hashCode = MurmurHash.hash32(tgt, tgt.length, 1);
+      this.hashCode = MurmurHash2.hash32(tgt, tgt.length, 1);
     }
     @Override
     public int hashCode() { return hashCode; }
@@ -1068,10 +1072,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     timer.mark("Load");
     tm.createQueryCache(FeatureTemplate.DENSE_EXT);
     timer.mark("Cache creation");
-    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
-    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
-    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
-    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
 
     //      tm.sa.print(true, new PrintWriter(System.out));
 
@@ -1083,21 +1083,45 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
     // Read the source at once for accurate timing of queries
     List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
-    System.out.printf("#source segments:   %d%n", sourceFile.size());
     timer.mark("Source file loading");
 
     long startTime = TimingUtils.startTime();
-    int sourceId = 0;
-    int numRules = 0;
+    int sourceId = 0, numRules = 0, numNgrams = 0;
     InputProperties inProps = new InputProperties();
     for (Sequence<IString> source : sourceFile) {
-      numRules += tm.getRules(source, inProps, sourceId++, null).size();
+      for (Sequence<IString> ngram : Sequences.ngrams(source, 4)) {
+        numRules += tm.getRules(ngram, inProps, sourceId++, null).size();
+        ++numNgrams;
+      }
     }
-    double numSecs = TimingUtils.elapsedSeconds(startTime);
+    double queryTime = TimingUtils.elapsedSeconds(startTime);
     timer.mark("Query");
-    System.out.println();
+    
+    startTime = TimingUtils.startTime();
+    int numSAQueries = 0;
+    for (Sequence<IString> source : sourceFile) {
+      for (Sequence<IString> ngram : Sequences.ngrams(source, 2)) {
+        int[] query = new int[ngram.size()];
+        query[0] = tm.getTMVocabularyId(ngram.get(0));
+        if (ngram.size() == 2) query[1] = tm.getTMVocabularyId(ngram.get(1));
+        boolean doQuery = Arrays.stream(query).allMatch(q -> q >= 0);
+        if (doQuery) tm.sa.count(query, true);
+        ++numSAQueries;
+      }
+    }
+    double saTime = TimingUtils.elapsedSeconds(startTime);
+    timer.mark("SA Query");
+    
+    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
+    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
+    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
+    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
+    System.out.printf("#source segments:   %d%n", sourceFile.size());
     System.out.printf("Timing: %s%n", timer);
-    System.out.printf("Time/segment: %.5fs%n", numSecs / (double) sourceFile.size());
-    System.out.printf("# rules: %d%n", numRules);
+    System.out.printf("Time/ngram: %.5fs%n", queryTime / (double) numNgrams);
+    System.out.printf("#rules: %d%n", numRules);
+    System.out.printf("#ngrams: %d%n", numNgrams);
+    System.out.printf("#sa queries: %d%n", numSAQueries);
+    System.out.printf("Time/sa query: %.5fs%n", saTime);
   }
 }

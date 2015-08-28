@@ -222,7 +222,7 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     // Concatenate the state onto the sequence.
     if (priorState != null && priorState instanceof ARPALMState) {
       int seqLength = sequence.size();
-    	sequence = Sequences.concatenate(((ARPALMState) priorState).getState(), sequence);
+    	sequence = ((ARPALMState) priorState).getState().concat(sequence);
     	startOffsetIndex += (sequence.size() - seqLength);
     }
 

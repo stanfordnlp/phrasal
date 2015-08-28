@@ -8,7 +8,7 @@ import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 public class PosTaggedSourceFilter extends AbstractSourceFilter {
 
@@ -49,7 +49,7 @@ public class PosTaggedSourceFilter extends AbstractSourceFilter {
       posArr[i] = parts[1];
     }
 
-    Sequence<IString> f = new SimpleSequence<IString>(true,
+    Sequence<IString> f = new ArraySequence<IString>(true,
         IStrings.toIStringArray(wordArr));
     for (int i = 0; i < f.size(); ++i) {
       boolean contentPOSFound = isContentPOS(posArr[i], wordArr[i]);

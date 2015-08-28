@@ -291,9 +291,9 @@ public class IBMModel1 {
       String targetStr = reader.readLine();
       if (targetStr == null)
         break;
-      Sequence<IString> sourceSeq = new SimpleSequence<IString>(
+      Sequence<IString> sourceSeq = new ArraySequence<IString>(
           IStrings.toIStringArray(sourceStr.split("\\s+")));
-      Sequence<IString> targetSeq = new SimpleSequence<IString>(
+      Sequence<IString> targetSeq = new ArraySequence<IString>(
           IStrings.toIStringArray(targetStr.split("\\s+")));
       out.printf("p(%s=>%s)\n", sourceSeq, targetSeq);
       if (sourceSeq.size() == 1 && targetSeq.size() == 1) {

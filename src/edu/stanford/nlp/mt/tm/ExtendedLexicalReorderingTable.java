@@ -12,7 +12,7 @@ import edu.stanford.nlp.mt.train.AlignmentTemplate;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -279,8 +279,8 @@ public class ExtendedLexicalReorderingTable {
         int[] fIndexInts = withGaps ? DTUTable.toWordIndexArray(fTokens) : IStrings.toIntArray(fTokens);
         IString[] eTokens = IStrings.toIStringArray(tgtTokens);
         int[] eIndexInts = withGaps ? DTUTable.toWordIndexArray(eTokens) : IStrings.toIntArray(eTokens);
-        idx = phraseTable.getId(new SimpleSequence<IString>(true, IStrings.toIStringArray(fIndexInts)), 
-            new SimpleSequence<IString>(true, IStrings.toIStringArray(eIndexInts)));
+        idx = phraseTable.getId(new ArraySequence<IString>(true, IStrings.toIStringArray(fIndexInts)), 
+            new ArraySequence<IString>(true, IStrings.toIStringArray(eIndexInts)));
       }
 
       // Lookup this rule in the phrase table

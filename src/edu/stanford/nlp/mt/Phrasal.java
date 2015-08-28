@@ -1192,6 +1192,9 @@ public class Phrasal {
     }
     timer.mark("setup");
 
+    // Rule query limit
+    inputProperties.put(InputProperty.RuleQueryLimit, ruleQueryLimit);
+    
     // Decode
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {

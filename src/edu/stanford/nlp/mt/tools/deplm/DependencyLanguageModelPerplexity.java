@@ -14,7 +14,7 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -56,7 +56,8 @@ public final class DependencyLanguageModelPerplexity {
           if (!DependencyUtils.isWord(word))
             continue;
           String suffix = gov == 0 ? ROOT_SUFFIX : FRAG_SUFFIX;
-          Sequence<IString> seq = new SimpleSequence<IString>(new IString(word + suffix));
+          IString[] arr = { new IString(word + suffix) };
+          Sequence<IString> seq = new ArraySequence<IString>(arr);
           seq = Sequences.wrapStartEnd(seq, rootLm.getStartToken(), rootLm.getEndToken());
           score += rootLm.score(seq, 1, null).getScore();
           wordCount += seq.size() - 1;
@@ -88,9 +89,9 @@ public final class DependencyLanguageModelPerplexity {
         Collections.reverse(leftChildren);
         leftChildren.add(0, new IString(headWord.toLowerCase() + HEAD_SUFFIX));
         
-        Sequence<IString> leftSequence = new SimpleSequence<IString>(leftChildren);
+        Sequence<IString> leftSequence = new ArraySequence<IString>(leftChildren);
         leftSequence = Sequences.wrapStartEnd(leftSequence, leftLm.getStartToken(), leftLm.getEndToken());
-        Sequence<IString> rightSequence = new SimpleSequence<IString>(rightChildren);
+        Sequence<IString> rightSequence = new ArraySequence<IString>(rightChildren);
         rightSequence = Sequences.wrapStartEnd(rightSequence, rightLm.getStartToken(), rightLm.getEndToken());
 
         score += leftLm.score(leftSequence, 2, null).getScore();

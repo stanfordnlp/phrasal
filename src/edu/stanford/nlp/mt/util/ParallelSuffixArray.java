@@ -476,14 +476,16 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     private Span(Suffix suffix, int order) {
       int[] tokens = new int[order];
       for (int i = 0; i < order; ++i) {
-        try {
-          tokens[i] = suffix.get(i);
-        } catch(Exception e) {
+        int id = suffix.get(i);
+        if (id >= 0) {
+          tokens[i] = id;
+        } else {
           tokens = new int[0];
+          break;
         }
       }
       this.tokens = tokens;
-      this.hashCode = MurmurHash.hash32(tokens, tokens.length, 1);
+      this.hashCode = MurmurHash2.hash32(tokens, tokens.length, 1);
     }
     @Override
     public int hashCode() {
@@ -599,8 +601,11 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     public int get(int i) {
       int[] bitext = isSource ? srcBitext : tgtBitext;
       int bitextPos = this.pos + i;
-      if (bitextPos < 0 || bitextPos >= bitext.length || bitext[bitextPos] < 0) throw new ArrayIndexOutOfBoundsException();
-      return bitext[bitextPos];
+      if (bitextPos < 0 || bitextPos >= bitext.length || bitext[bitextPos] < 0) {
+        return -1;
+      } else {
+        return bitext[bitextPos];
+      }
     }
 
     public int compare(int[] query) {

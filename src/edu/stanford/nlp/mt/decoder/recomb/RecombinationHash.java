@@ -19,6 +19,8 @@ import edu.stanford.nlp.mt.decoder.util.State;
  */
 public class RecombinationHash<S extends State<S>> {
 
+  private static final int INITIAL_CAPACITY = 1024;
+  
   private final Map<FilterWrappedHypothesis, FilterWrappedHypothesis> recombinationHash;
   // private
   final RecombinationFilter<S> filter;
@@ -27,7 +29,7 @@ public class RecombinationHash<S extends State<S>> {
 	 * 
 	 */
   public RecombinationHash(RecombinationFilter<S> filter) {
-    this.recombinationHash = new HashMap<>();
+    this.recombinationHash = new HashMap<>(INITIAL_CAPACITY);
     this.filter = filter;
   }
 
@@ -154,8 +156,7 @@ public class RecombinationHash<S extends State<S>> {
         } else if (hashCode != wrappedHyp.hashCode) {
           return false;
         } else {
-          boolean isCombinable = filter.combinable(this.hypothesis,
-              wrappedHyp.hypothesis);
+          boolean isCombinable = filter.combinable(this.hypothesis, wrappedHyp.hypothesis);
           return isCombinable;
         }
       }
@@ -168,7 +169,7 @@ public class RecombinationHash<S extends State<S>> {
     
     @Override
     public int hashCode() {
-      return (int) (hashCode >> 32);
+      return (int) (hashCode & 0xffffffff);
     }
   }
 
