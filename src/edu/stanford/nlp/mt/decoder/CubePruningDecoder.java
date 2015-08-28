@@ -244,6 +244,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
             logger.warn("input {}: DECODER FAILURE, but backed off to coverage {}/{}: ", sourceInputId,
                 coveredTokens, sourceLength);
           }
+          /*
+          Featurizable<TK, FV> hyp = bestHyp;
+          logger.info("translation: " + hyp.derivation.targetSequence.toString());
+          logger.info("derivation: ");
+          while(hyp != null && hyp.derivation != null) {
+            logger.info(hyp.derivation.rule.toString());
+            hyp = hyp.prior;
+          } */
           return beam;
         }
       }
