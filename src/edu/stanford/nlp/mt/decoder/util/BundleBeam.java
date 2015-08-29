@@ -104,7 +104,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
     Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(hypothesisList.size() / 2);
     for (Derivation<TK,FV> hypothesis : hypothesisList) {
-      coverageGroups.computeIfAbsent(hypothesis.sourceCoverage, k -> new ArrayList<>()).add(hypothesis);
+      coverageGroups.computeIfAbsent(hypothesis.sourceCoverage, k -> new ArrayList<>(32)).add(hypothesis);
     }
 
     // Make hyperedge bundles

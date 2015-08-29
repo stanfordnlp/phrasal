@@ -88,7 +88,7 @@ RecombinationFilter<Derivation<IString, String>> {
     }
 
     // Generate a hash code from individual hash codes
-    long code = (0x9747b28c&0xffffffffl)^(featurizers.size()*4);
+    long code = 0x87c37b91114253d5L ^ (featurizers.size()*0x4cf5ad432745937fL);
     for (int i = 0, sz = featurizers.size(); i < sz; ++i) {
       DerivationFeaturizer<IString, String> featurizer = featurizers.get(i);
       int h = hyp.featurizable.getState(featurizer).hashCode();

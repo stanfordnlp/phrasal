@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.decoder.util.State;
  */
 public class RecombinationHash<S extends State<S>> {
 
-  private static final int INITIAL_CAPACITY = 1024;
+  private static final int INITIAL_CAPACITY = 1500;
   
   private final Map<FilterWrappedHypothesis, FilterWrappedHypothesis> recombinationHash;
   // private
@@ -169,7 +169,7 @@ public class RecombinationHash<S extends State<S>> {
     
     @Override
     public int hashCode() {
-      return (int) (hashCode & 0xffffffff);
+      return ((int) (hashCode >> 32)) ^ ((int) (hashCode & 0xffffffff));
     }
   }
 
