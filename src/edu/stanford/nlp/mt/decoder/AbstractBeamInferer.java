@@ -81,6 +81,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         outputSpace, targets, size, distinct);
   }
 
+  // TODO(spenceg) Relax this constraint once we consolidate LM scores
+  private static final int MAX_HYPS_PER_BEAM = 100;
+  
   /**
    * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
    * 
@@ -136,7 +139,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           CoverageSet testCoverage = antecedent.sourceCoverage.clone();
           testCoverage.or(rule.sourceCoverage);
           int succCardinality = testCoverage.cardinality();
-          boolean capacityExceeded = hypsForBeam[succCardinality] >= beams.get(succCardinality).capacity();
+          boolean capacityExceeded = hypsForBeam[succCardinality] > MAX_HYPS_PER_BEAM;
           if (capacityExceeded) continue; // Check beam capacity
           Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, insertionPosition, antecedent, featurizer,
               scorer, heuristic, outputSpace);
