@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.util.PropertiesUtils;
 
@@ -109,7 +109,7 @@ RuleFeaturizer<IString, String> {
       else
         array[i] = targetClassMap.get(targetSequence.get(i));
     }
-    return new SimpleSequence<IString>(true, array);
+    return new ArraySequence<IString>(true, array);
   }
 
   @Override

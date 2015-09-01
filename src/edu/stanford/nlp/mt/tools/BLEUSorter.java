@@ -4,15 +4,14 @@ import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.metrics.BLEUMetric;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.util.Pair;
 
 /**
@@ -119,7 +118,7 @@ public class BLEUSorter {
     LineNumberReader reader = new LineNumberReader(new FileReader(fileName));
     List<Sequence<IString>> info = new ArrayList<Sequence<IString>>();
     for (String line; (line = reader.readLine()) != null;) {
-      Sequence<IString> translation = new RawSequence<IString>(
+      Sequence<IString> translation = new ArraySequence<IString>(
           IStrings.toIStringArray(line.split("\\s+")));
       info.add(translation);
     }

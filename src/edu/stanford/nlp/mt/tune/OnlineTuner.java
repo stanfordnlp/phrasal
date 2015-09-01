@@ -406,6 +406,11 @@ public final class OnlineTuner {
               threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
           
           forcedAlignments.add(faNbestList.get(0));
+          
+          logger.info("Source: {}", faNbestList.get(0).source.toString());
+          logger.info("Target: {}", faNbestList.get(0).translation.toString());
+          logger.info("Alignment: {}", faNbestList.get(0).alignmentString());
+          
         }
         else {
           nbestList = decoder.decode(input.source.get(i), sourceId, 

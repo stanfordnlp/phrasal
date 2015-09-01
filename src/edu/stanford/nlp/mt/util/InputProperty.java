@@ -45,4 +45,8 @@ public enum InputProperty {
   // A weight vector
   // Type: Counter<String>
   ModelWeights,
+  
+  // The phrase query limit
+  // Type: Integer
+  RuleQueryLimit
 }

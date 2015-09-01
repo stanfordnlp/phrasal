@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.NBestListContainer;
 import edu.stanford.nlp.mt.util.ScoredFeaturizedTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
@@ -88,10 +88,10 @@ public class BLEUMetric<TK, FV> extends AbstractMetric<TK, FV> {
    * @return The smoothed BLEU score
    */
   public static double computeLocalSmoothScore(String strSeq, List<String> strRefs, int order) {
-    Sequence<String> seq = new SimpleSequence<String>(strSeq.split("\\s+"));
+    Sequence<String> seq = new ArraySequence<String>(strSeq.split("\\s+"));
     List<Sequence<String>> refs = new ArrayList<Sequence<String>>(strRefs.size());
     for (String strRef : strRefs) {
-      refs.add(new SimpleSequence<String>(strRef.split("\\s+")));
+      refs.add(new ArraySequence<String>(strRef.split("\\s+")));
     }
     return computeLocalSmoothScore(seq, refs, order, false);
   }

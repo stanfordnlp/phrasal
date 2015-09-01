@@ -7,7 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -193,7 +193,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
     
     public Long get(int[] kenLMInput, int startIndex) {
-      long hashValue = MurmurHash.hash64(kenLMInput, kenLMInput.length, startIndex);
+      long hashValue = MurmurHash2.hash64(kenLMInput, kenLMInput.length, startIndex);
       int k = ideal(hashValue);
       return keys[k] == hashValue ? values[k] : null;
     }
@@ -201,7 +201,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
       return ((int)hashed) & mask;
     }
     public void insert(int[] kenLMInput, int startIndex, long value) {
-      long hashValue = MurmurHash.hash64(kenLMInput, kenLMInput.length, startIndex);
+      long hashValue = MurmurHash2.hash64(kenLMInput, kenLMInput.length, startIndex);
       int k = ideal(hashValue);
       keys[k] = hashValue;
       values[k] = value;

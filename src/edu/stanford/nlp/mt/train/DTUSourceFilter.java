@@ -4,7 +4,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
 
 import java.util.Arrays;
@@ -98,7 +98,7 @@ public class DTUSourceFilter extends AbstractSourceFilter {
 
     // Enumerate all sub-sequences of fLine and add them to sourcePhraseTable:
     fLine = fLine.trim();
-    Sequence<IString> f = new SimpleSequence<IString>(true,
+    Sequence<IString> f = new ArraySequence<IString>(true,
         IStrings.toIStringArray(fLine.split("\\s+")));
     Deque<PartialBitSet> oq = new LinkedList<PartialBitSet>();
     Set<PartialBitSet> cq = new HashSet<PartialBitSet>();

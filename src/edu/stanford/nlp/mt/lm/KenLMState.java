@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import edu.stanford.nlp.mt.util.MurmurHash;
+import edu.stanford.nlp.mt.util.MurmurHash2;
 
 /**
  * Result of a KenLM query.
@@ -38,7 +38,7 @@ public class KenLMState extends LMState {
       logger.error("State length mis-match: {} vs. {}", state.length, stateLength);
       throw new RuntimeException();
     }
-    this.hashCode = MurmurHash.hash32(state, state.length, 1);
+    this.hashCode = MurmurHash2.hash32(state, state.length, 1);
   }
   
   /**

@@ -19,7 +19,7 @@ import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -84,7 +84,7 @@ public class FilterOOVByPhraseTable {
       for (int i = possibleCoverage.nextSetBit(0), j = 0; i >= 0; i = possibleCoverage.nextSetBit(i+1)) {
         filteredToks[j++] = source.get(i);
       }
-      return new SimpleSequence<IString>(true, filteredToks);
+      return new ArraySequence<IString>(true, filteredToks);
     }
     return null;
   }

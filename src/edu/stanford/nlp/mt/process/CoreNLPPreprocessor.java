@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.process.Tokenizer;
 import edu.stanford.nlp.process.TokenizerFactory;
 
@@ -78,7 +78,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
     Sequence<IString> inputSequence = IStrings.tokenize(input);
     assert inputSequence.size() == uncasedInputTokens.length;
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, 
-        new SimpleSequence<IString>(true, outputSequence));
+        new ArraySequence<IString>(true, outputSequence));
 
     // Generate the alignments
     StringBuilder inputToken = new StringBuilder();

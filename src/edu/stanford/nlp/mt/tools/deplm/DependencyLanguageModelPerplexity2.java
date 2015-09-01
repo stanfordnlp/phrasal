@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 import edu.stanford.nlp.util.Pair;
@@ -95,7 +95,7 @@ public final class DependencyLanguageModelPerplexity2 {
     tokens.add(head);
     tokens.add(child);
 
-    Sequence<IString> seq = new SimpleSequence<IString>(tokens);
+    Sequence<IString> seq = new ArraySequence<IString>(tokens);
 
     double score = lm.score(seq, 3, null).getScore();
     

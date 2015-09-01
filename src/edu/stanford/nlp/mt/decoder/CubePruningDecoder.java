@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,7 +26,6 @@ import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
-import edu.stanford.nlp.util.Pair;
 
 /**
  * Cube pruning as described by Chiang and Huang (2007).
@@ -113,22 +111,24 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // TM (phrase table) query for applicable rules
-    Pair<Sequence<TK>, List<ConcreteRule<TK,FV>>> sourceRulePair = 
+    PhraseQuery<TK,FV> phraseQuery = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
-    source = sourceRulePair.first();
+    source = phraseQuery.filteredSource;
     timer.mark("TM query");
     
     // Check after potential filtering for OOVs
     if (source.size() == 0) return null;
     final int sourceLength = source.size();
-    final List<ConcreteRule<TK,FV>> ruleList = sourceRulePair.second();
+    final List<ConcreteRule<TK,FV>> ruleList = phraseQuery.ruleList;
     logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
         
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     outputSpace.filter(ruleList, this, sourceInputProperties);
     
-    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source);
+    assert sourceInputProperties.containsKey(InputProperty.RuleQueryLimit);
+    final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source, 
+        (int) sourceInputProperties.get(InputProperty.RuleQueryLimit));
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("input {}: Incomplete source coverage", sourceInputId);
     }
@@ -193,9 +193,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         Item<TK,FV> item = pq.poll();
 
         // WSGDEBUG
-        //        System.err.printf("BEAM %d STATUS%n", i);
-        //        System.err.println(newBeam.beamString());
-        //        System.err.println("===========");
+//                System.err.printf("BEAM %d STATUS%n", i);
+//                System.err.println(newBeam.beamString());
+//                System.err.println("===========");
         if (item.derivation != null) {
           newBeam.put(item.derivation);
           ++numPoppedItems;
@@ -211,9 +211,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       }
 
       // WSGDEBUG
-      //    System.err.printf("BEAM %d STATUS%n", i);
-      //    System.err.println(newBeam.beamString());
-      //    System.err.println("===========");
+//          System.err.printf("BEAM %d STATUS%n", i);
+//          System.err.println(newBeam.beamString());
+//          System.err.println("===========");
 
       numRecombined += newBeam.recombined();
     }
@@ -244,6 +244,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
             logger.warn("input {}: DECODER FAILURE, but backed off to coverage {}/{}: ", sourceInputId,
                 coveredTokens, sourceLength);
           }
+          /*
+          Featurizable<TK, FV> hyp = bestHyp;
+          logger.info("translation: " + hyp.derivation.targetSequence.toString());
+          logger.info("derivation: ");
+          while(hyp != null && hyp.derivation != null) {
+            logger.info(hyp.derivation.rule.toString());
+            hyp = hyp.prior;
+          } */
           return beam;
         }
       }
@@ -265,14 +273,16 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    return bundle.nextSuccessors(antecedent).stream().map(successor -> {
+    List<Item<TK,FV>> successors = new ArrayList<>(2);
+    for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
           successor.rule);
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
-      return new Item<>(derivation, successor);
-    }).collect(Collectors.toList());
+      successors.add(new Item<>(derivation, successor));
+    }
+    return successors;
   }
 
   /**

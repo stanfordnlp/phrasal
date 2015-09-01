@@ -19,9 +19,8 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.IntegerArrayIndex;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.ProbingIntegerArrayIndex;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TrieIntegerArrayIndex;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -253,12 +252,12 @@ implements PhraseTable<IString> {
               if (intTransOpt instanceof DTUIntArrayTranslationOption) {
                 // Gaps in target:
                 DTUIntArrayTranslationOption multiIntTransOpt = (DTUIntArrayTranslationOption) intTransOpt;
-                Sequence<IString>[] dtus = new RawSequence[multiIntTransOpt.dtus.length];
+                Sequence<IString>[] dtus = new ArraySequence[multiIntTransOpt.dtus.length];
                 for (int i = 0; i < multiIntTransOpt.dtus.length; ++i) {
                   dtus[i] = IStrings.toIStringSequence(multiIntTransOpt.dtus[i]);
                 }
                 transOpts.add(new DTURule<IString>(intTransOpt.id,
-                    intTransOpt.scores, scoreNames, dtus, new RawSequence<IString>(
+                    intTransOpt.scores, scoreNames, dtus, new ArraySequence<IString>(
                         s.foreign), intTransOpt.alignment, name));
               } else {
                 // No gaps in target:
@@ -266,7 +265,7 @@ implements PhraseTable<IString> {
                     intTransOpt.targetArray);
                 transOpts.add(new Rule<IString>(intTransOpt.id,
                     intTransOpt.scores, scoreNames, translation,
-                    new RawSequence<IString>(s.foreign), intTransOpt.alignment, name));
+                    new ArraySequence<IString>(s.foreign), intTransOpt.alignment, name));
               }
             }
 
@@ -358,7 +357,7 @@ implements PhraseTable<IString> {
   }
 
   static int[] toWordIndexArray(IString[] seq) {
-    return toWordIndexArray(new SimpleSequence<IString>(true, seq));
+    return toWordIndexArray(new ArraySequence<IString>(true, seq));
   }
 
   private final static Pattern pattern = Pattern.compile("[,X\\[\\]]+");

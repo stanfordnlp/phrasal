@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.metrics;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.RawSequence;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 import java.util.List;
@@ -64,9 +64,10 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
       return refs.stream().skip(1)  // Skip the prefix
               .filter(ref -> ref.startsWith(prefix)) // Discard non-matches
               .map(ref -> {
-                        RawSequence<IString> masked = new RawSequence<>(ref);
+                        Sequence<IString> masked = new ArraySequence<>(ref);
+                        IString[] elements = masked.elements();
                         for (int i = 0; i < prefix.size(); i++) {
-                          masked.elements[i] = TokenUtils.NULL_TOKEN;
+                          elements[i] = TokenUtils.NULL_TOKEN;
                         }
                         return (Sequence<IString>) masked;
                       }

@@ -153,7 +153,7 @@ State<Derivation<TK, FV>> {
     this.length = (insertionPosition < base.length ? base.length : // internal insertion
       insertionPosition + rule.abstractRule.target.size()); // edge insertion
     sourceSequence = base.sourceSequence;
-    targetSequence = Sequences.concatenate(base.targetSequence, rule.abstractRule.target);
+    targetSequence = base.targetSequence.concat(rule.abstractRule.target);
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
@@ -207,7 +207,7 @@ State<Derivation<TK, FV>> {
     this.length = (insertionPosition < base.length) ? base.length
         : insertionPosition + targetPhrase.size();
     sourceSequence = base.sourceSequence;
-    targetSequence = Sequences.concatenate(base.targetSequence, targetPhrase);
+    targetSequence = base.targetSequence.concat(targetPhrase);
     untranslatedTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
