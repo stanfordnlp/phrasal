@@ -1,7 +1,9 @@
 package edu.stanford.nlp.mt.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -93,11 +95,7 @@ public final class Sequences {
    * @return
    */
   public static <T> String[] toStringArray(Sequence<T> sequence) {
-    String[] strArr = new String[sequence.size()];
-    for (int i = 0; i < strArr.length; ++i) {
-      strArr[i] = sequence.get(i).toString();
-    }
-    return strArr;
+    return Arrays.stream(sequence.elements()).map(t -> t.toString()).toArray(String[]::new);
   }
 
   /**
@@ -107,11 +105,7 @@ public final class Sequences {
    * @return
    */
   public static <T> List<String> toStringList(Sequence<T> sequence) {
-    List<String> stringList = new ArrayList<>(sequence.size());
-    for (T token : sequence) {
-      stringList.add(token.toString());
-    }
-    return stringList;
+    return Arrays.stream(sequence.elements()).map(t -> t.toString()).collect(Collectors.toList());
   }
 
   /**
