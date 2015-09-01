@@ -469,13 +469,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       // we store the first word of the completion for diversity constraint reasons (see below)
       TK complWord = prefixLength < trans.translation.size() ? trans.translation.get(prefixLength)
               : trans.translation.get(trans.translation.size()-1);
-      if (nExtracted >= size/2 && !seenCompl.contains(complWord)) {
+      if (nExtracted > size/2 && !seenCompl.contains(complWord)) {
         // enforce more diversity for half of the n-best list
         // TODO(sasa): make this more parameterizable
         finalTranslations.add(trans);
         ++nExtracted;
         seenCompl.add(complWord);
-      } else {
+      } else if (nExtracted <= size/2) {
         finalTranslations.add(trans);
         ++nExtracted;
       }
