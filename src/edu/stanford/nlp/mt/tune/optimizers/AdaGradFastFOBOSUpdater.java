@@ -75,9 +75,15 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     for (String feature : featuresToUpdate) {
       
       if(fixedFeatures != null && 
-              fixedFeatures.size() > 0 &&
-              fixedFeatures.contains(feature)) {
-        continue;
+              fixedFeatures.size() > 0) {
+        boolean fixed = false;
+        for (String prefix : fixedFeatures) {
+          if(feature.startsWith(prefix)) {
+            fixed = true;
+            break;
+          }
+        }
+        if(fixed) continue;
       }
       
       double gradf = gradient.getCount(feature);
