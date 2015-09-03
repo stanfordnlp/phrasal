@@ -155,9 +155,15 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
       for (String feature: fGroup) {
         
         if(fixedFeatures != null && 
-            fixedFeatures.size() > 0 &&
-            fixedFeatures.contains(feature)) {
-          continue;
+            fixedFeatures.size() > 0) {
+          boolean fixed = false;
+          for (String prefix : fixedFeatures) {
+            if(feature.startsWith(prefix)) {
+              fixed = true;
+              break;
+            }
+          }
+          if(fixed) continue;
         }
 
         gValue = gradient.getCount(feature);
