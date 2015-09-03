@@ -97,9 +97,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct, boolean diverse) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size, distinct);
+        outputSpace, targets, size, distinct, diverse);
   }
 
   // TODO(spenceg) Relax this constraint once we consolidate LM scores
@@ -277,12 +277,22 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * TODO(spenceg): This routine is *extremely* inefficient. Rewrite with e.g., Huang and Chiang's
    * k-best extraction or something.
    */
-  //@Override
-  public List<RichTranslation<TK, FV>> nbestLegacy(Scorer<FV> scorer,
+  @Override
+  public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
+      Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct, boolean diverse) {
+    if (diverse) {
+      return nbestDiversity(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets, size, distinct);
+    } else {
+      return nbestDefault(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets, size, distinct);
+    }
+  }
+
+  public List<RichTranslation<TK, FV>> nbestDefault(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
-
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     TimeKeeper timer = TimingUtils.start();
@@ -395,8 +405,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   /**
    * Faster and more diverse n-best extraction directly from beam given a target prefix.
    */
-  @Override
-  public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
+  public List<RichTranslation<TK, FV>> nbestDiversity(Scorer<FV> scorer,
                                              Sequence<TK> source, int sourceInputId,
                                              InputProperties sourceInputProperties,
                                              OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets,

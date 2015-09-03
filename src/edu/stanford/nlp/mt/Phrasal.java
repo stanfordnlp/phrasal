@@ -114,7 +114,8 @@ public class Phrasal {
         .append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl).append("  -")
         .append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl).append("  -")
         .append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl).append("  -")
-        .append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl)
+        .append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl).append("  -")
+        .append(DIVERSE_NBEST_LIST_OPT).append(" boolean : Generate diverse n-best lists (default: false)").append(nl)
         .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).")
         .append(nl).append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl).append("  -")
         .append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
@@ -168,6 +169,7 @@ public class Phrasal {
   public static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
+  public static final String DIVERSE_NBEST_LIST_OPT = "diverse-n-best-list";
   public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
   public static final String SEARCH_ALGORITHM = "search-algorithm";
@@ -204,7 +206,7 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT));
     OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
+        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, DIVERSE_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
@@ -292,6 +294,7 @@ public class Phrasal {
   private PrintStream nbestListWriter;
   private int nbestListSize;
   private boolean distinctNbest = false;
+  private boolean diverseNbest = false;
 
   /**
    * Internal alignment options
@@ -400,6 +403,15 @@ public class Phrasal {
    */
   public boolean getWrapBoundary() {
     return wrapBoundary;
+  }
+
+  /**
+   * Activates n-best algorithm with more diverse candidates.
+   *
+   * @param bDiversity
+   */
+  public void setNbestDiversity(boolean bDiversity) {
+    diverseNbest = bDiversity;
   }
 
   // TODO(spenceg): Remove static members. The Phrasal object itself is not
@@ -868,6 +880,10 @@ public class Phrasal {
       distinctNbest = true;
     }
 
+    if (config.containsKey(DIVERSE_NBEST_LIST_OPT)) {
+      diverseNbest = true;
+    }
+
     // Determine if we need to generate an alignment file
     final List<String> alignmentOpt = config.get(ALIGNMENT_OUTPUT_FILE);
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
@@ -1199,7 +1215,7 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, outputSpace,
-          outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
+          outputSpace.getAllowableSequences(), numTranslations, distinctNbest, diverseNbest);
 
       // Return an empty n-best list
       if (translations == null)
