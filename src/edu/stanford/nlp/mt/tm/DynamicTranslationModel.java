@@ -562,6 +562,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public List<ParallelSuffixArrayEntry> lookupSource(String sourceQuery, int numResults) {
     final int[] sourcePhrase = toTMArray(IStrings.tokenize(sourceQuery));
+    for (int id : sourcePhrase) {
+      if (id < 0) return Collections.emptyList();
+    }
     SuffixArraySample sample = sa.sample(sourcePhrase, numResults);
     return sample.samples.stream().map(s -> s.getParallelEntry()).collect(Collectors.toList());
   }
@@ -576,6 +579,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public List<ParallelSuffixArrayEntry> lookupTarget(String targetQuery, int numResults) {
     final int[] targetPhrase = toTMArray(IStrings.tokenize(targetQuery));
+    for (int id : targetPhrase) {
+      if (id < 0) return Collections.emptyList();
+    }
     SuffixArraySample sample = sa.sampleTarget(targetPhrase, numResults);
     return sample.samples.stream().map(s -> s.getParallelEntry()).collect(Collectors.toList());
   }
