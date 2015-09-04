@@ -882,6 +882,7 @@ public class Phrasal {
 
     if (config.containsKey(DIVERSE_NBEST_LIST_OPT)) {
       diverseNbest = true;
+      logger.info("N-best diversity: {}", diverseNbest);
     }
 
     // Determine if we need to generate an alignment file
