@@ -3,11 +3,8 @@ package edu.stanford.nlp.mt.decoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -243,6 +240,14 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     return new PhraseQuery<>(source, ruleList);
   }
   
+  /**
+   * Container for the result of a TM query.
+   * 
+   * @author Spence Green
+   *
+   * @param <TK>
+   * @param <FV>
+   */
   public static class PhraseQuery<TK,FV> {
     public final List<ConcreteRule<TK,FV>> ruleList;
     public final Sequence<TK> filteredSource;
@@ -375,8 +380,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
-    return translate(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets);
+    return translate(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets);
   }
 
   @Override
@@ -386,14 +390,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
 
     if (outputSpace != null) outputSpace.setSourceSequence(source);
-    
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         null, outputSpace, targets, 1);
-    if (beam == null)
-      return null;
-    Derivation<TK, FV> hyp = beam.iterator().next();
-    return new RichTranslation<TK, FV>(hyp.featurizable, hyp.score,
-        FeatureValues.combine(hyp), 0);
+    if (beam == null) return null;
+    final Derivation<TK, FV> hyp = beam.iterator().next();
+    return new RichTranslation<TK, FV>(hyp.featurizable, hyp.score, FeatureValues.combine(hyp), 0);
   }
 
   /**
@@ -420,68 +421,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           recombinationHistory);
     }
     return beams;
-  }
-
-  /**
-   *
-   */
-  protected Beam<Derivation<TK, FV>>[] createBeamsForCoverageCounts(
-      int beamCnt, int capacity, RecombinationFilter<Derivation<TK, FV>> filter) {
-    @SuppressWarnings("unchecked")
-    Beam<Derivation<TK, FV>>[] beams = new Beam[beamCnt];
-    for (int i = 0; i < beams.length; i++) {
-      beams[i] = BeamFactory.factory(beamType, filter, capacity);
-    }
-    return beams;
-  }
-
-  /**
-   * 
-   * @author danielcer
-   */
-  public class CoverageBeams {
-    final private Map<CoverageSet, Beam<Derivation<TK, FV>>> beams = new HashMap<>();
-    final private Set<CoverageSet>[] coverageCountToCoverageSets;
-    final private RecombinationHistory<Derivation<TK, FV>> recombinationHistory;
-
-    @SuppressWarnings("unchecked")
-    public CoverageBeams(int sourceSize,
-        RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
-      coverageCountToCoverageSets = new Set[sourceSize + 1];
-      for (int i = 0; i < sourceSize + 1; i++) {
-        coverageCountToCoverageSets[i] = new HashSet<>();
-      }
-      this.recombinationHistory = recombinationHistory;
-    }
-
-    public void put(Derivation<TK, FV> hypothesis) {
-      get(hypothesis.sourceCoverage).put(hypothesis);
-    }
-
-    private Beam<Derivation<TK, FV>> get(CoverageSet coverage) {
-      Beam<Derivation<TK, FV>> beam = beams.get(coverage);
-      if (beam == null) {
-        beam = BeamFactory.factory(beamType, filter, beamCapacity,
-            recombinationHistory);
-        beams.put(coverage, beam);
-        int coverageCount = coverage.cardinality();
-        coverageCountToCoverageSets[coverageCount].add(coverage);
-      }
-      return beam;
-    }
-
-    public List<Derivation<TK, FV>> getHypotheses(int coverageCount) {
-      List<Derivation<TK, FV>> hypothesisList = new LinkedList<>();
-
-      for (CoverageSet coverage : coverageCountToCoverageSets[coverageCount]) {
-        Beam<Derivation<TK, FV>> hypothesisBeam = get(coverage);
-        for (Derivation<TK, FV> hypothesis : hypothesisBeam) {
-          hypothesisList.add(hypothesis);
-        }
-      }
-
-      return hypothesisList;
-    }
   }
 
   abstract public void dump(Derivation<TK, FV> hyp);
