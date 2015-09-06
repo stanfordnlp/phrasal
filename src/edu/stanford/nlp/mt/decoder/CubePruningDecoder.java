@@ -175,11 +175,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int startBeam = Math.max(rootBeam, minCoverage);
 
       // Initialize the priority queue
-      Queue<Item<TK,FV>> pq = new PriorityQueue<>(2*beamCapacity);
+      Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          for(Item<TK,FV> consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace)) {
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
@@ -190,7 +190,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
-        Item<TK,FV> item = pq.poll();
+        Item item = pq.poll();
 
         // WSGDEBUG
 //                System.err.printf("BEAM %d STATUS%n", i);
@@ -202,7 +202,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
 
         // Expand this consequent
-        for(Item<TK,FV> consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
+        for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace)) {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
@@ -271,20 +271,22 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param outputSpace
    * @return
    */
-  private List<Item<TK, FV>> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
+  private List<Item> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    List<Item<TK,FV>> successors = new ArrayList<>(2);
+    List<Item> successors = new ArrayList<>(2);
     for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
           successor.rule);
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
-      successors.add(new Item<>(derivation, successor));
+      successors.add(new Item(derivation, successor));
     }
     return successors;
   }
 
+  private int itemId = 0;
+  
   /**
    * Wrapper for class for the priority queue that organizes successors.
    * 
@@ -293,13 +295,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param <TK>
    * @param <FV>
    */
-  protected static class Item<TK,FV> implements Comparable<Item<TK,FV>> {
-    // Not threadsafe...but Inferers run in a single thread.
-    private static int ID_COUNTER = 0;
+  protected class Item implements Comparable<Item> {
     
     public final Derivation<TK, FV> derivation;
     public final Consequent<TK, FV> consequent;
-    public int id = ID_COUNTER++;
+    public int id = itemId++;
 
     public Item(Derivation<TK,FV> derivation, Consequent<TK,FV> consequent) {
       this.derivation = derivation;
@@ -307,7 +307,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     @Override
-    public int compareTo(Item<TK,FV> o) {
+    public int compareTo(Item o) {
       if (derivation == null && o.derivation == null) {
         return id - o.id;
       } else if (derivation == null) {
