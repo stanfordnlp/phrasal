@@ -1,6 +1,12 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 
@@ -14,37 +20,24 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 public class StateLatticeDecoder<S extends State<S>> implements
     Iterator<List<S>>, Iterable<List<S>> {
 
-  static public final String DEBUG_OPT = "StateLatticeDecoderDebug";
-  static public final int DEBUG = Integer.parseInt(System.getProperty(
-      DEBUG_OPT, "0"));
-  // static public final int DEBUG_STATS = 1;
-  // static public final int DEBUG_DETAIL = 2;
-
-  PriorityQueue<CompositeState> agenda = new PriorityQueue<CompositeState>();
-  Set<CompositeState> dupCheckSet = new HashSet<CompositeState>();
+  private final PriorityQueue<CompositeState> agenda;
+  private final Set<CompositeState> dupCheckSet;
+  private final RecombinationHistory<S> recombinationHistory;
 
   /**
-	 *
-	 */
-  public StateLatticeDecoder(List<S> goalStates,
-      RecombinationHistory<S> recombinationHistory) {
-    init(goalStates, recombinationHistory);
-  }
-
-  /*
-   * public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S>
-   * recombinationHistory, int requestLimit, boolean reverse) { // this.reverse
-   * = reverse; XXX reverse is currently being ignored init(goalStates,
-   * recombinationHistory); }
+   * Constructor.
+   * 
+   * @param goalStates
+   * @param recombinationHistory
    */
-
-  private RecombinationHistory<S> recombinationHistory;
-
-  private void init(List<S> goalStates,
-      RecombinationHistory<S> recombinationHistory) {
+  public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory) {
     this.recombinationHistory = recombinationHistory;
+    agenda = new PriorityQueue<>(2000);
+    dupCheckSet = new HashSet<>(2000);
+    
     // initialize score deltas
     for (S goalState : goalStates) {
+      assert goalState != null;
       CompositeState newComposite = new CompositeState(goalState);
       dupCheckSet.add(newComposite); // not actually necessary right now
       agenda.add(newComposite);
@@ -58,22 +51,15 @@ public class StateLatticeDecoder<S extends State<S>> implements
 
   @Override
   public List<S> next() {
-    CompositeState best = agenda.remove();
-
-    // System.err.printf("returning state with score: %f\n", best.score);
-    int statesLength = best.states.size();
-    for (int i = 0; i < statesLength; i++) {
-      List<S> recombinedStates = recombinationHistory
-          .recombinations(best.states.get(i));
-      if (recombinedStates == null)
-        continue;
+    final CompositeState best = agenda.remove();
+    for (int i = 0, sz = best.states.size(); i < sz; i++) {
+      final List<S> recombinedStates = recombinationHistory.recombinations(best.states.get(i));
       for (S recombinedState : recombinedStates) {
-        CompositeState newComposite = new CompositeState(best, recombinedState,
-            i);
-        if (dupCheckSet.contains(newComposite))
-          continue;
-        dupCheckSet.add(newComposite);
-        agenda.add(newComposite);
+        CompositeState newComposite = new CompositeState(best, recombinedState, i);
+        if ( ! dupCheckSet.contains(newComposite)) {
+          dupCheckSet.add(newComposite);
+          agenda.add(newComposite);
+        }
       }
     }
     return best.states;
@@ -94,10 +80,6 @@ public class StateLatticeDecoder<S extends State<S>> implements
       return hashCode;
     }
 
-    private int computeHashCode() {
-      return states.hashCode();
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public boolean equals(Object o) {
@@ -107,22 +89,19 @@ public class StateLatticeDecoder<S extends State<S>> implements
     }
 
     @SuppressWarnings("unchecked")
-    public CompositeState(S initialState) {
-      assert (initialState != null);
-      int length = initialState.depth() + 1;
+    public CompositeState(S goalState) {
+      int length = goalState.depth() + 1;
       states = new ArrayList<S>(length);
       states.addAll(Collections.nCopies(length, (S) null));
       int pos = length - 1;
-      for (State<S> state = initialState; state != null; state = state.parent(), --pos)
+      for (State<S> state = goalState; state != null; state = state.parent(), --pos)
         states.set(pos, (S) state);
-      score = initialState.partialScore();
-      hashCode = computeHashCode();
-      // System.err.printf("cost from goal state: %e cost from computeListCost: %e\n",
-      // score, computeListCost());
+      score = goalState.partialScore();
+      hashCode = states.hashCode();
     }
 
     private double computeListCost() {
-      double cost = 0;
+      double cost = 0.0;
       for (State<S> state : states) {
         State<S> parent = state.parent();
         double parentScore = (parent == null ? 0 : parent.partialScore());
@@ -145,7 +124,7 @@ public class StateLatticeDecoder<S extends State<S>> implements
         states.add(original.states.get(i));
       }
       score = computeListCost();
-      hashCode = computeHashCode();
+      hashCode = states.hashCode();
     }
 
     public double score() {

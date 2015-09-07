@@ -282,12 +282,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       return null;
     }
     List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
-    for (Derivation<TK, FV> hyp : beam) {
-      goalStates.add(hyp);
+    for (Derivation<TK, FV> derivation : beam) {
+      goalStates.add(derivation);
     }
 
     // Setup for n-best extraction
-    StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<Derivation<TK, FV>>(
+    StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<>(
         goalStates, recombinationHistory);
     Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<>();
 
@@ -307,10 +307,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = new HashSet<>();
       
-      // TODO(spenceg): This is very inefficient. Reconstruct the derivation
-      // from the lattice path since the current n-best list extractor
-      // does not set the parent references when it traverses the lattice. These
-      // references may be incorrect due to recombination.
+      // TODO(spenceg): This is very inefficient. Reconstruct the derivation since
+      // StateLatticeDecoder does not set parent pointers. Really only need to reconstruct the 
+      // inputs to RichTranslation here.
       // When we replace StateLatticeDecoder, this code should go away.
       Derivation<TK, FV> goalHyp = null;
       for (Derivation<TK, FV> node : latticePath) {
@@ -330,21 +329,21 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
 
-      if (withDTUs) {
-        DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) goalHyp;
-        if (!dtuHyp.isDone() || dtuHyp.hasExpired())
-          System.err.printf("Warning: option not complete(%d,%s): %s\n",
-              translations.size(), dtuHyp.hasExpired(), goalHyp);
-      }
-
       // Decoder failure in which the null hypothesis was returned.
       if (goalHyp == null || goalHyp.featurizable == null) {
         logger.warn("Input {}: null hypothesis encountered. Decoder failed", sourceInputId);
         return null;
       }
-      
+
       ++numExtracted;
       
+      if (withDTUs) {
+        DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) goalHyp;
+        if (!dtuHyp.isDone() || dtuHyp.hasExpired())
+          System.err.printf("Warning: option not complete(%d,%s): %s%n", translations.size(), 
+              dtuHyp.hasExpired(), goalHyp);
+      }
+            
       if (distinct) {
         if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
           // Seen a higher-scoring derivation with this target string before
@@ -354,19 +353,20 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         }
       }
       
-      translations.add(new RichTranslation<TK, FV>(goalHyp.featurizable,
-            goalHyp.score, FeatureValues.combine(goalHyp), nbestId++));
+      // Create the n-best item
+      translations.add(new RichTranslation<>(goalHyp.featurizable, goalHyp.score, 
+          FeatureValues.combine(goalHyp), nbestId++));
+      
+      // Terminate if at desired n-best size
       if (translations.size() >= size) {
         break;
       }
     }
     timer.mark("Extraction");
 
-    // If a non-admissible recombination heuristic is used, the hypothesis
+    // If an inadmissible search heuristic is used, the hypothesis
     // scores predicted by the lattice may not actually correspond to their real
     // scores.
-    // Since the n-best list should be sorted according to the true scores, we
-    // re-sort things here just in case.
     Collections.sort(translations, translationComparator);
     timer.mark("Sort");
 
@@ -394,7 +394,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         null, outputSpace, targets, 1);
     if (beam == null) return null;
     final Derivation<TK, FV> hyp = beam.iterator().next();
-    return new RichTranslation<TK, FV>(hyp.featurizable, hyp.score, FeatureValues.combine(hyp), 0);
+    return new RichTranslation<>(hyp.featurizable, hyp.score, FeatureValues.combine(hyp), 0);
   }
 
   /**
