@@ -19,6 +19,7 @@ public final class SyntheticRules {
 
   private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
   public static final String PHRASE_TABLE_NAME = "synthetic";
+  private static final double SYNTHETIC_PENALTY = 20;
   
   private SyntheticRules() {}
   
@@ -35,12 +36,14 @@ public final class SyntheticRules {
       CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<String> scorer,
       FeatureExtractor<IString,String> featurizer,
       double cnt_f_e, int cnt_e, int cnt_f, InputProperties inputProperties, Sequence<IString> sourceSequence,
-      int sourceInputId) {
+      int sourceInputId, boolean penalize) {
     // Baseline dense features
     float[] scores = new float[phraseScoreNames.length];
-    scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e));
+    scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e) 
+        - (penalize ? SYNTHETIC_PENALTY : 0.0));
     scores[1] = scores[0];
-    scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f));
+    scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f)
+        - (penalize ? SYNTHETIC_PENALTY : 0.0));
     scores[3] = scores[2];
     if (scores.length == 6) {
       // Extended features
