@@ -112,9 +112,10 @@ public class PrefixRuleGrid<TK,FV> {
     final String[] featureNames = (String[]) backgroundModel.getFeatureNames().toArray();
 
     // Augment with synthetic singleton rules
-    for (int i = targetCoverage.nextClearBit(0), pSz = prefix.size(); 
+    for (int i = 0, pSz = prefix.size(); 
         i >= 0 && i < pSz; 
-        i = targetCoverage.nextClearBit(i+1)) {
+        //i = targetCoverage.nextClearBit(i+1)) {
+        ++i) {
 
       IString targetQuery = (IString) prefix.get(i);
       int tgtIdBackground = backgroundModel.getTMVocabularyId(targetQuery);
@@ -142,7 +143,7 @@ public class PrefixRuleGrid<TK,FV> {
         ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule(sourceSpan, 
             targetSpan, sourceSpanCoverage, featureNames, (Scorer<String>) scorer, 
             (FeatureExtractor<IString,String>) featurizer, cnt_ef, cntE, cnt_f, inputProperties, 
-            (Sequence<IString>) source, sourceInputId);
+            (Sequence<IString>) source, sourceInputId, targetCoverage.get(i));
         index.get(i).add(syntheticRule);
         
         // WSGDEBUG
