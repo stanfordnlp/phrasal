@@ -1,7 +1,10 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import edu.stanford.nlp.mt.decoder.util.State;
 
@@ -13,54 +16,41 @@ import edu.stanford.nlp.mt.decoder.util.State;
  */
 public class RecombinationHistory<S extends State<S>> {
 
-  private final Map<S, List<S>> historyMap = new ConcurrentHashMap<S, List<S>>();
-
-  private RecombinationFilter<S> secondaryFilter;
+  private final Map<S, List<S>> historyMap = new HashMap<>(3000);
 
   /**
-   * This filter does not affect beam search, but only which discarded
-   * hypotheses should be logged. Setting here a filter that enables more
-   * combinations (e.g., TranslationIdentityRecombinationFilter instead of the
-   * Moses default) enables more diverse n-best lists, while not affecting the
-   * quality of the search for the one-best.
+   * Log a recombination decision.
+   * 
+   * @param retained The derivation that survived.
+   * @param discarded The derivation that was discarded.
    */
-  public void setSecondaryFilter(RecombinationFilter<S> f) {
-    this.secondaryFilter = f;
-  }
-
-  /**
-	 * 
-	 */
   public void log(S retained, S discarded) {
     if (discarded == null) {
       return;
     }
-    List<S> discardedList = historyMap.get(discarded);
     List<S> retainedList = historyMap.get(retained);
     if (retainedList == null) {
       retainedList = new LinkedList<S>();
       historyMap.put(retained, retainedList);
     }
+    List<S> discardedList = historyMap.get(discarded);
     if (discardedList != null) {
       historyMap.remove(discarded);
       retainedList.addAll(discardedList);
     }
-    if (secondaryFilter == null
-        || !secondaryFilter.combinable(retained, discarded))
-      retainedList.add(discarded);
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   public void remove(S pruned) {
     historyMap.remove(pruned);
   }
 
   /**
-	 * 
-	 */
+   * 
+   */
   public List<S> recombinations(State<S> retainedState) {
-    return historyMap.get(retainedState);
+    return historyMap.getOrDefault(retainedState, Collections.emptyList());
   }
 }
