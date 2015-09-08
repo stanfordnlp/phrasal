@@ -103,6 +103,9 @@ public final class OnlineTuner {
   // output single best translation?
   private boolean outputSingleBest = false;
   
+  // output additional prefix decoding results?
+  private boolean outputPrefixDecoding = false;
+  
   // sequetial optimization? i.e. no stale gradient!
   private boolean enforceStrictlySequential = false;
 
@@ -253,6 +256,13 @@ public final class OnlineTuner {
   private void outputSingleBest(boolean b) { this.outputSingleBest = b; }
   
   /**
+   * Output additional prefix decoding results?
+   * 
+   * @param b
+   */
+  private void outputPrefixDecoding(boolean b) { this.outputPrefixDecoding= b; }
+  
+  /**
    * Determine whether a feature has been seen enough times
    * to learn a decoding model weight for it
    */ 
@@ -304,10 +314,12 @@ public final class OnlineTuner {
     public final int inputId;
     public final TranslationModel<IString,String> localTM;
     public final boolean createForcedAlignment;
+    public final boolean additionalPrefixDecoding;
     public ProcessorInput(List<Sequence<IString>> input, 
         List<List<Sequence<IString>>> references, 
         Counter<String> weights, int[] translationIds, int inputId, 
-        TranslationModel<IString,String> localTM, boolean createForcedAlignment) {
+        TranslationModel<IString,String> localTM, boolean createForcedAlignment,
+        boolean additionalPrefixDecoding) {
       this.source = input;
       this.translationIds = translationIds;
       this.references = references;
@@ -317,6 +329,7 @@ public final class OnlineTuner {
       this.weights = new ClassicCounter<String>(weights);
       this.localTM = localTM;
       this.createForcedAlignment = createForcedAlignment;
+      this.additionalPrefixDecoding = additionalPrefixDecoding;
     }
   }
 
@@ -332,14 +345,17 @@ public final class OnlineTuner {
     public final List<List<RichTranslation<IString, String>>> nbestLists;
     public final int[] translationIds;
     List<RichTranslation<IString, String>> forcedAlignment;
+    List<RichTranslation<IString, String>> prefixDecodingOutput;
     public ProcessorOutput(Counter<String> gradient, 
         int inputId, 
-        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds, List<RichTranslation<IString, String>> forcedAlignment) {
+        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds, List<RichTranslation<IString, String>> forcedAlignment,
+        List<RichTranslation<IString, String>> prefixDecodingOutput) {
       this.gradient = gradient;
       this.inputId = inputId;
       this.nbestLists = nbestLists;
       this.translationIds = translationIds;
       this.forcedAlignment = forcedAlignment;
+      this.prefixDecodingOutput = prefixDecodingOutput;
     }
   }
 
@@ -373,7 +389,9 @@ public final class OnlineTuner {
       List<List<RichTranslation<IString,String>>> nbestLists = new ArrayList<>(input.translationIds.length);
       List<RichTranslation<IString,String>> forcedAlignments = input.createForcedAlignment ? 
                                                                new ArrayList<>(input.translationIds.length) : null;
-      
+      List<RichTranslation<IString,String>> prefixDecodingResult = input.additionalPrefixDecoding ? 
+                                                                   new ArrayList<>(input.translationIds.length) : null;
+
       // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
@@ -393,12 +411,29 @@ public final class OnlineTuner {
           targets = Collections.singletonList(prefixes.get(sourceId));
         }
         
-        List<RichTranslation<IString,String>> nbestList;
-        if(input.createForcedAlignment) {
-          // no forced decoding for optimization
-          nbestList = decoder.decode(input.source.get(i), sourceId, 
-              threadId, decoder.getNbestListSize(), targets, inputProperties);
+        List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(i), sourceId, 
+            threadId, decoder.getNbestListSize(), targets, inputProperties);
+        
+        inputProperties.put(InputProperty.TargetPrefix, true);
+        
+        if(input.additionalPrefixDecoding) {
+          int[] prefixLengths = inputProperties.containsKey(InputProperty.PrefixLengths) ?
+              (int[]) inputProperties.get(InputProperty.PrefixLengths) : new int[0];
           
+          // we want to evaluate prefix decoding quality during online optimization, so they are generated and passed on for writing.
+          // they have no effect on tuning.
+          for(int pref = 0; pref < prefixLengths.length; ++pref) {
+            List<Sequence<IString>> prefix = Collections.singletonList(input.references.get(i).get(0).subsequence(0, prefixLengths[pref]));
+            List<RichTranslation<IString, String>> prefixDecodingNbestList = decoder.decode(input.source.get(i), sourceId, 
+                threadId, decoder.getNbestListSize(), prefix, inputProperties);
+
+            prefixDecodingResult.add(prefixDecodingNbestList.get(0));
+          }
+
+        }
+            
+        
+        if(input.createForcedAlignment) {          
           // now compute forced alignment
           inputProperties.put(InputProperty.TargetPrefix, true);
           inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
@@ -411,10 +446,6 @@ public final class OnlineTuner {
           logger.info("Target: {}", faNbestList.get(0).translation.toString());
           logger.info("Alignment: {}", faNbestList.get(0).alignmentString());
           
-        }
-        else {
-          nbestList = decoder.decode(input.source.get(i), sourceId, 
-              threadId, decoder.getNbestListSize(), targets, inputProperties);
         }
         nbestLists.add(nbestList);
       }
@@ -440,7 +471,7 @@ public final class OnlineTuner {
            }
         } 
       }
-      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds, forcedAlignments);
+      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds, forcedAlignments, prefixDecodingResult);
     }
 
     @Override
@@ -455,7 +486,8 @@ public final class OnlineTuner {
   private int update(Counter<String> currentWts, 
       int updateStep, MulticoreWrapper<ProcessorInput,ProcessorOutput> threadpool, 
       OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
-      boolean endOfEpoch, ParallelCorpus localTmTrainingData) {
+      boolean endOfEpoch, ParallelCorpus localTmTrainingData,
+      List<Sequence<IString>> prefixDecodingOutputs) {
     assert threadpool != null;
     assert currentWts != null;
     assert updater != null;
@@ -511,6 +543,15 @@ public final class OnlineTuner {
          
         }
       }
+      
+      // Now store the prefix decoding output
+      if(prefixDecodingOutputs != null && result.prefixDecodingOutput != null) {
+        for(int i = 0; i < result.prefixDecodingOutput.size(); ++i)
+          prefixDecodingOutputs.add(result.prefixDecodingOutput.get(i).translation);
+      }
+      
+      
+      
     }
     
     return updateStep;
@@ -566,6 +607,8 @@ public final class OnlineTuner {
       // n-best lists. Purge for each epoch
       Map<Integer,Sequence<IString>> nbestLists = new HashMap<>(tuneSetSize);
       if (createPseudoReferences) updatePseudoReferences(epoch);
+      
+      List<Sequence<IString>> prefixDecodingOutputs = outputPrefixDecoding ? new ArrayList<>(2*tuneSetSize) : null;
 
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       if(shuffleDev)
@@ -585,7 +628,7 @@ public final class OnlineTuner {
         logger.info("Threadpool.status: {}", wrapper);
         if(enforceStrictlySequential)
           wrapper.join(false);
-        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false, corpus);
+        updateId = update(currentWts, updateId, wrapper, updater, nbestLists, false, corpus, prefixDecodingOutputs);
         
         if((t+1) % weightWriteOutInterval == 0) {
           String filename = String.format("%s.%d.%d%s", outputWeightPrefix, epoch, t, IOTools.WEIGHTS_FILE_EXTENSION);
@@ -596,7 +639,7 @@ public final class OnlineTuner {
       // Wait for threadpool shutdown for this epoch and get final gradients
       boolean isLastEpoch = epoch+1 == numEpochs;
       wrapper.join(isLastEpoch);
-      updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true, corpus);
+      updateId = update(currentWts, updateId, wrapper, updater, nbestLists, true, corpus, prefixDecodingOutputs);
       
       // Compute (averaged) intermediate weights for next epoch, and write to file.
       if (doParameterAveraging) {
@@ -612,6 +655,14 @@ public final class OnlineTuner {
       if(outputSingleBest) {
         PrintStream ps = IOTools.getWriterFromFile(epochFilePrefix + ".trans");
         IOTools.writeSingleBest(nbestLists, ps);
+        ps.close();
+      }
+      
+      if(outputPrefixDecoding) {
+        PrintStream ps = IOTools.getWriterFromFile(epochFilePrefix + ".prefixTrans");
+        for(int i = 0; i < prefixDecodingOutputs.size(); ++i)
+          ps.println(prefixDecodingOutputs.get(i).toString());
+        ps.flush();
         ps.close();
       }
       
@@ -737,7 +788,7 @@ public final class OnlineTuner {
         referenceList.add(references.get(sourceId));
       }
     }
-    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId, localTM, localTMTraining);
+    return new ProcessorInput(sourceList, referenceList, weights, batch, inputId, localTM, localTMTraining, outputPrefixDecoding);
   }
 
   /**
@@ -958,6 +1009,7 @@ public final class OnlineTuner {
     boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
     boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);
     boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
+    boolean outputPrefixDecoding = PropertiesUtils.getBool(opts, "pd", false);
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
     int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
@@ -997,6 +1049,7 @@ public final class OnlineTuner {
       tuner.minFeatureCount(minFeatureCount);
       tuner.shuffleDev(shuffleDev);
       tuner.outputSingleBest(outputSingleBest);
+      tuner.outputPrefixDecoding(outputPrefixDecoding);
       tuner.enforceStrictlySequential(enforceStrictlySequential);
       tuner.trainLocalTM(trainLocalTM, faDistortionLimit);
       tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
