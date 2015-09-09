@@ -5,7 +5,7 @@ import java.util.List;
 import edu.stanford.nlp.mt.util.Sequence;
 
 /**
- * Number of correctly predicted words under constrained decoding with a prefix.
+ * Computes the rate of correctly predicting the next word under constrained decoding with a prefix.
  * The first file passed as a reference is the prefix.
  * 
  * @author Joern Wuebker
@@ -13,18 +13,18 @@ import edu.stanford.nlp.mt.util.Sequence;
  * @param <TK>
  * @param <FV>
  */
-public class LocalNumPredictedWordsMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
+public class LocalNextPredictedWordMetric<TK,FV> implements SentenceLevelMetric<TK, FV> {
   
   /**
    * Constructor.
    */
-  public LocalNumPredictedWordsMetric() {
+  public LocalNextPredictedWordMetric() {
   }
 
   @Override
   public double score(int sourceId, Sequence<TK> source,
       List<Sequence<TK>> references, Sequence<TK> translation) {
-    return NumPredictedWordsMetric.getNumPredictedWords(translation, references, sourceId, 0);
+    return NumPredictedWordsMetric.getNumPredictedWords(translation, references, sourceId,1);
   }
 
   @Override

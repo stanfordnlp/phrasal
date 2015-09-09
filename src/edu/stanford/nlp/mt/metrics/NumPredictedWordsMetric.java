@@ -53,8 +53,8 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
   public class NumPredictedWordsIncrementalMetric implements
         IncrementalEvaluationMetric<TK, FV> {
 
-    private int totalPredictedWords = 0;
-    private List<Integer> predictedWords = new ArrayList<Integer>();
+    protected int totalPredictedWords = 0;
+    protected List<Integer> predictedWords = new ArrayList<Integer>();
 
     NumPredictedWordsIncrementalMetric() {}
     
@@ -118,7 +118,10 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         Sequence<TK> tran) {
-      
+      return add(tran, 0);
+    }
+    
+    protected IncrementalEvaluationMetric<TK, FV> add(Sequence<TK> tran, int maxNumWords) { 
       if(referencesList.size() <= predictedWords.size())
         throw new RuntimeException(
             "NumPredictedWordsMetric: insufficient number of references.");
@@ -128,7 +131,7 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
         return this;
       }
       
-      int predW = getNumPredictedWords(tran, referencesList.get(predictedWords.size()), predictedWords.size()) ;
+      int predW = getNumPredictedWords(tran, referencesList.get(predictedWords.size()), predictedWords.size(), maxNumWords) ;
       
       totalPredictedWords += predW;
       predictedWords.add(predW);
@@ -139,7 +142,7 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
     public IncrementalEvaluationMetric<TK, FV> replace(int id,
         ScoredFeaturizedTranslation<TK, FV> trans) { 
       totalPredictedWords -= predictedWords.get(id);
-      predictedWords.set(id, getNumPredictedWords(trans.translation, referencesList.get(id), id));
+      predictedWords.set(id, getNumPredictedWords(trans.translation, referencesList.get(id), id, 0));
       totalPredictedWords += predictedWords.get(id);
       return this;
     }
@@ -153,7 +156,7 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
 
   }
   
-  public static <TK> int getNumPredictedWords(Sequence<TK> tran, List<Sequence<TK>> references, int id) {
+  public static <TK> int getNumPredictedWords(Sequence<TK> tran, List<Sequence<TK>> references, int id, int maxNumWords) {
     // the first reference is actually the prefix
     assert(references.size() > 1);
     
@@ -178,8 +181,11 @@ public class NumPredictedWordsMetric<TK, FV> extends AbstractMetric<TK, FV> {
       
       foundRef = true;
       int predictedWords = 0;
+      int max = Math.min(tran.size(),  ref.size());
+      if(maxNumWords > 0) max = Math.min(max, prefix.size() + maxNumWords);
+      
       for(int j = prefix.size(); 
-          j < tran.size() && j < ref.size() && tran.get(j).equals(ref.get(j)); 
+          j < max && tran.get(j).equals(ref.get(j)); 
           ++j) {
         predictedWords++;
       }
