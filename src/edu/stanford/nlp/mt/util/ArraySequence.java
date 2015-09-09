@@ -107,7 +107,7 @@ public class ArraySequence<T> extends AbstractSequence<T> {
   @Override
   public Sequence<T> concat(Sequence<T> other) {
     int newSize = size() + other.size();
-    T[] newArr = Arrays.copyOf(elements, newSize);
+    T[] newArr = Arrays.copyOf(elements(), newSize);
     System.arraycopy(other.elements(), 0, newArr, size(), other.size());
     return new ArraySequence<T>(true, newArr);
   }

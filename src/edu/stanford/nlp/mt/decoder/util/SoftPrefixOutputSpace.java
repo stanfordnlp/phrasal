@@ -97,7 +97,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
         if (cnt_joint == 0) cnt_joint = 1;
         ConcreteRule<IString,String> syntheticRule = SyntheticRules.makeSyntheticRule(source, target, 
             sourceCoverage, featureNames, inferer.scorer, inferer.featurizer, 
-            cnt_joint, cntE, cntF, inputProperties, sourceSequence, sourceInputId);
+            cnt_joint, cntE, cntF, inputProperties, sourceSequence, sourceInputId, false);
         ruleList.add(syntheticRule);
       }
     }

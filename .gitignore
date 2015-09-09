@@ -36,6 +36,7 @@ phrasal.iws
 .DS_Store
 .doit.db
 logs/
+classmexer.jar
 
 # Ignore gradle settings
 .gradle/
