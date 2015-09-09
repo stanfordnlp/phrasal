@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -432,7 +433,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       goalStates.add(hyp);
     }
 
-    List<RichTranslation<TK, FV>> translations = new LinkedList<>();
     final long nbestStartTime = System.nanoTime();
 
     // Check if FA prefix is set
@@ -479,7 +479,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
     }
 
-    List<RichTranslation<TK, FV>> finalTranslations = new LinkedList<>();
+    List<RichTranslation<TK, FV>> finalTranslations = new ArrayList<>();
     Set<TK> seenCompl = new HashSet<>();
     int nExtracted = 0;
     while (!transPQ.isEmpty()) {
