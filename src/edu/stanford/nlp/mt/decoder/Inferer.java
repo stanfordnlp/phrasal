@@ -55,11 +55,13 @@ public interface Inferer<TK, FV> {
    * @param targets
    * @param size
    * @param distinct if true then return distinct nbest items
+   * @param diverse if true then return more diverse nbest items
    * @return
    */
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets, int size, boolean distinct);
+      OutputSpace<TK, FV> constrainedOutputSpace, List<Sequence<TK>> targets,
+      int size, boolean distinct, boolean diverse);
 
   /**
    * Produce an n-best list of translations.
@@ -72,9 +74,11 @@ public interface Inferer<TK, FV> {
    * @param targets
    * @param size
    * @param distinct if true then return distinct nbest items
+   * @param diverse if true then return more diverse nbest items
    * @return
    */
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer, Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct);
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets,
+      int size, boolean distinct, boolean diverse);
 }

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -52,7 +53,27 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
   private final Comparator<RichTranslation<TK,FV>> translationComparator;
-  
+
+  /**
+   * Completion container. Holds a completion sequence and its score.
+   */
+  private static class Completion<TK> {
+    public Sequence<TK> completion;
+    public double score;
+    public Completion(Sequence<TK> seq, double scr) {
+      completion = seq;
+      score = scr;
+    }
+    public String toString() {
+      return String.format("%s [%.6f]", completion, score);
+    }
+  }
+  private static class CompletionComparator<TK> implements Comparator<Completion<TK>> {
+    public int compare(Completion<TK> x, Completion<TK> y) {
+      return (int) Math.signum(y.score - x.score);
+    }
+  }
+
   /**
    * Constructor.
    * 
@@ -73,9 +94,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct, boolean diverse) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size, distinct);
+        outputSpace, targets, size, distinct, diverse);
   }
 
   // TODO(spenceg) Relax this constraint once we consolidate LM scores
@@ -265,8 +286,18 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct, boolean diverse) {
+    if (diverse) {
+      return nbestDiversity(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets, size, distinct);
+    } else {
+      return nbestDefault(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets, size, distinct);
+    }
+  }
 
+  public List<RichTranslation<TK, FV>> nbestDefault(Scorer<FV> scorer,
+      Sequence<TK> source, int sourceInputId,
+      InputProperties sourceInputProperties,
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     
     TimeKeeper timer = TimingUtils.start();
@@ -374,6 +405,117 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     logger.info("Input {}: nbest timing {}", sourceInputId, timer);
     
     return translations;
+  }
+
+  /**
+   * Faster and more diverse n-best extraction directly from beam given a target prefix.
+   */
+  public List<RichTranslation<TK, FV>> nbestDiversity(Scorer<FV> scorer,
+                                             Sequence<TK> source, int sourceInputId,
+                                             InputProperties sourceInputProperties,
+                                             OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets,
+                                             int size, boolean distinct) {
+
+    if (outputSpace != null) outputSpace.setSourceSequence(source);
+
+    // Decoding part, identical to nbestLegacy() -> TODO(sasa): move to common function
+    RecombinationHistory<Derivation<TK, FV>> recombinationHistory =
+            new RecombinationHistory<Derivation<TK, FV>>();
+    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
+            recombinationHistory, outputSpace, targets, size);
+    if (beam == null) {
+      // Decoder failure
+      return null;
+    }
+    List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
+    for (Derivation<TK, FV> hyp : beam) {
+      goalStates.add(hyp);
+    }
+
+    List<RichTranslation<TK, FV>> translations = new LinkedList<>();
+    final long nbestStartTime = System.nanoTime();
+
+    // Check if FA prefix is set
+    final int prefixLength = outputSpace.getPrefixLength();
+
+    long nbestId = 0;
+    HashMap<Sequence<TK>, Double> localCompletions = new HashMap<>();
+    HashMap<Sequence<TK>, Double> completions = new HashMap<>();
+    PriorityQueue<RichTranslation<TK, FV>> transPQ = new PriorityQueue<>(size, new RichTranslationComparator<TK, FV>());
+    PriorityQueue<Completion<TK>> complPQ = new PriorityQueue<>(size, new CompletionComparator<TK>());
+
+    /*
+     * Locate target prefix:
+     * - iterate back through predecessor derivations for all goal states
+     * - stop when target sequence length equals prefix length
+     * - add full goal state sequence to translation PQ
+     * - add local completion sequence to completion PQ, with score: (goal state - prefix end state)
+     */
+    for (Derivation<TK, FV> gs : goalStates) {
+      logger.debug(String.format("src='%s', trg='%s', score=%.6f, gs=%d",
+              gs.sourceSequence, gs.targetSequence, gs.score, gs.id));
+      Derivation<TK, FV> parent = gs.preceedingDerivation;
+      if ((completions.containsKey(gs.targetSequence) && completions.get(gs.targetSequence) < gs.score) ||
+              !completions.containsKey(gs.targetSequence)) {
+        completions.put(gs.targetSequence, gs.score);
+        transPQ.add(new RichTranslation<TK, FV>(gs.featurizable, gs.score, FeatureValues.combine(gs), nbestId++));
+      }
+      while (parent != null && (parent.targetSequence.size() > prefixLength)) {
+        // find derivation where completion starts
+        parent = parent.preceedingDerivation;
+      }
+      // extract completion (target sequence suffix)
+      Sequence<TK> compl = null;
+      if (prefixLength < gs.targetSequence.size()) {
+        compl = gs.targetSequence.subsequence(prefixLength, gs.targetSequence.size());
+        double complScore = parent == null ? gs.score : gs.score - parent.score;
+        if ((localCompletions.containsKey(compl) &&
+             localCompletions.get(compl) < complScore) ||
+            !localCompletions.containsKey(compl)) {
+          // store best local completions
+          localCompletions.put(compl, complScore);
+          complPQ.add(new Completion<>(compl, complScore));
+        }
+      }
+    }
+
+    List<RichTranslation<TK, FV>> finalTranslations = new LinkedList<>();
+    Set<TK> seenCompl = new HashSet<>();
+    int nExtracted = 0;
+    while (!transPQ.isEmpty()) {
+      RichTranslation<TK, FV> trans = transPQ.poll();
+      // we store the first word of the completion for diversity constraint reasons (see below)
+      TK complWord = prefixLength < trans.translation.size() ? trans.translation.get(prefixLength)
+              : trans.translation.get(trans.translation.size()-1);
+      if (nExtracted > size/2 && !seenCompl.contains(complWord)) {
+        // enforce more diversity for half of the n-best list
+        // TODO(sasa): make this more parameterizable
+        finalTranslations.add(trans);
+        ++nExtracted;
+        seenCompl.add(complWord);
+      } else if (nExtracted <= size/2) {
+        finalTranslations.add(trans);
+        ++nExtracted;
+      }
+      if (nExtracted >= size) {
+        break;
+      }
+    }
+    while (nExtracted-- > 0) {
+      // TODO: pop some local completions, only log for now
+      logger.debug("local compl: " + complPQ.poll());
+    }
+    final long nbestEndTime = System.nanoTime();
+    logger.info("nbest time: {} sec", (nbestEndTime - nbestStartTime) / 1e9);
+
+    return finalTranslations;
+  }
+
+  private static class RichTranslationComparator<TK,FV> implements Comparator<RichTranslation<TK,FV>> {
+    @Override
+    public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+      return (int) Math.signum(o2.score - o1.score);
+    }
   }
 
   @Override
