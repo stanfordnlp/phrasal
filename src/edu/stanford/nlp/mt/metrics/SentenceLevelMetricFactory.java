@@ -57,6 +57,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("numPredictedWords")) {
       return scoreMetricStr;
       
+    } else if (scoreMetricStr.equals("nextPredictedWord")) {
+      return scoreMetricStr;
+      
     } else if (scoreMetricStr.equals("bleu-prefix")) {
       return scoreMetricStr;
       
@@ -143,6 +146,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("numPredictedWords")) {
       return new LocalNumPredictedWordsMetric<IString,String>();
 
+    } else if (scoreMetricStr.equals("nextPredictedWord")) {
+      return new LocalNextPredictedWordMetric<IString,String>();
+      
     } else if (scoreMetricStr.equals("maxPredictedWords")) {
       return new MaxPredictedWordsMetric.Local<IString,String>();
 
