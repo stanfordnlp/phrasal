@@ -52,7 +52,7 @@ public class NextPredictedWordMetric<TK, FV> extends NumPredictedWordsMetric<TK,
     @Override
     public IncrementalEvaluationMetric<TK, FV> add(
         Sequence<TK> tran) {
-      return add(tran, 0);
+      return add(tran, 1);
     }
 
     @Override
