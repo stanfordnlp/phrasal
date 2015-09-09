@@ -24,8 +24,8 @@ public class NextPredictedWordMetric<TK, FV> extends NumPredictedWordsMetric<TK,
   }
 
   @Override
-  public NumPredictedWordsIncrementalMetric getIncrementalMetric() {
-    return new NumPredictedWordsIncrementalMetric();
+  public NextPredictedWordIncrementalMetric getIncrementalMetric() {
+    return new NextPredictedWordIncrementalMetric();
   }
 
 
