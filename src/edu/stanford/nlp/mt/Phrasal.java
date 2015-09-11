@@ -877,11 +877,12 @@ public class Phrasal {
     }
 
     if (config.containsKey(DISTINCT_NBEST_LIST_OPT)) {
-      distinctNbest = true;
+      distinctNbest = Boolean.parseBoolean(config.get(DISTINCT_NBEST_LIST_OPT).get(0));
+      logger.info("N-best distinct: {}", distinctNbest);
     }
 
     if (config.containsKey(DIVERSE_NBEST_LIST_OPT)) {
-      diverseNbest = true;
+      diverseNbest = Boolean.parseBoolean(config.get(DIVERSE_NBEST_LIST_OPT).get(0));
       logger.info("N-best diversity: {}", diverseNbest);
     }
 
