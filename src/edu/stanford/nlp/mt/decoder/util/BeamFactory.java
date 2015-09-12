@@ -4,51 +4,56 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 
 /**
+ * Beam factory for @{link edu.stanford.nlp.mt.decoder.MultiBeamDecoder} and
+ * {@link edu.stanford.nlp.mt.decoder.DTUDecoder}.
  * 
  * @author danielcer
  * 
  */
-public class BeamFactory {
+public final class BeamFactory {
 
   static public enum BeamType {
     treebeam, sloppybeam
   }
 
   /**
-	 * 
-	 */
-  private BeamFactory() {
-  }
+   * 
+   */
+  private BeamFactory() {}
 
   /**
+   * Get a new Beam instance.
    * 
-   * @param <TK>
-   * @param <FV>
+   * @param beamType
+   * @param filter
+   * @param capacity
+   * @param recombinationHistory
+   * @return
    */
-  static public <TK, FV> Beam<Derivation<TK, FV>> factory(BeamType beamType,
+  public static <TK, FV> Beam<Derivation<TK, FV>> factory(BeamType beamType,
       RecombinationFilter<Derivation<TK, FV>> filter, int capacity,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
+
     switch (beamType) {
     case treebeam:
-      return new TreeBeam<Derivation<TK, FV>>(capacity, filter,
-          recombinationHistory);
+      return new TreeBeam<>(capacity, filter, recombinationHistory);
     case sloppybeam:
-      return new SloppyBeam<Derivation<TK, FV>>(capacity, filter,
-          recombinationHistory);
-    }
-
-    throw new RuntimeException(String.format("Unsupported beam type %s\n",
-        beamType));
+      return new SloppyBeam<>(capacity, filter, recombinationHistory);
+    default:
+      throw new IllegalArgumentException("Unsupported beam type: " + beamType.toString());
+    } 
   }
 
   /**
+   * Get a new Beam instance.
    * 
-   * @param <TK>
-   * @param <FV>
+   * @param beamType
+   * @param filter
+   * @param capacity
+   * @return
    */
-  static public <TK, FV> Beam<Derivation<TK, FV>> factory(BeamType beamType,
+  public static <TK, FV> Beam<Derivation<TK, FV>> factory(BeamType beamType,
       RecombinationFilter<Derivation<TK, FV>> filter, int capacity) {
     return factory(beamType, filter, capacity, null);
   }
-
 }
