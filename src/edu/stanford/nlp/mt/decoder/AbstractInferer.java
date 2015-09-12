@@ -71,8 +71,8 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
       }
     }
     LinkedFeatureValues<FV> features = new LinkedFeatureValues<FV>();
-    for (; hyp != null; hyp = hyp.preceedingDerivation) {
-      List<FeatureValue<FV>> localFeatures = hyp.localFeatures;
+    for (; hyp != null; hyp = hyp.parent) {
+      List<FeatureValue<FV>> localFeatures = hyp.features;
       if (localFeatures != null) {
         features.addAll(localFeatures);
       }

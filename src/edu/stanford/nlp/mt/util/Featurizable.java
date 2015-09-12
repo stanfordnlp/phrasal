@@ -76,7 +76,7 @@ public class Featurizable<TK, FV> {
   /**
    * Partial Target sequence associated with the current hypothesis
    */
-  public final Sequence<TK> targetPrefix;
+  public final Sequence<TK> targetSequence;
 
   /**
    * Full source input sentence.
@@ -139,11 +139,11 @@ public class Featurizable<TK, FV> {
     targetPosition = derivation.insertionPosition;
     sourcePosition = rule.sourcePosition;
     linearDistortion = derivation.linearDistortion;
-    targetPrefix = derivation.targetSequence;
+    targetSequence = derivation.targetSequence;
     sourceSentence = derivation.sourceSequence;
     sourceInputProperties = derivation.sourceInputProperties;
-    numUntranslatedSourceTokens = derivation.untranslatedTokens;
-    prior = derivation.preceedingDerivation.featurizable;
+    numUntranslatedSourceTokens = derivation.untranslatedSourceTokens;
+    prior = derivation.parent.featurizable;
     states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
         : null;
     this.derivation = derivation;
@@ -181,11 +181,11 @@ public class Featurizable<TK, FV> {
     sourcePosition = rule.sourcePosition;
     linearDistortion = derivation.linearDistortion;
 
-    targetPrefix = derivation.targetSequence;
+    targetSequence = derivation.targetSequence;
     sourceSentence = derivation.sourceSequence;
     sourceInputProperties = derivation.sourceInputProperties;
-    numUntranslatedSourceTokens = derivation.untranslatedTokens;
-    prior = derivation.preceedingDerivation.featurizable;
+    numUntranslatedSourceTokens = derivation.untranslatedSourceTokens;
+    prior = derivation.parent.featurizable;
     states = (nbStatefulFeaturizers > 0) ? new FeaturizerState[nbStatefulFeaturizers]
         : null;
     this.derivation = derivation;
@@ -235,7 +235,7 @@ public class Featurizable<TK, FV> {
     phraseScoreNames = abstractRule.phraseScoreNames;
     targetPosition = 0;
     sourcePosition = rule.sourcePosition;
-    targetPrefix = targetPhrase;
+    targetSequence = targetPhrase;
     sourceSentence = sourceSequence;
     this.sourceInputProperties = sourceInputProperties;
     numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();
@@ -270,7 +270,7 @@ public class Featurizable<TK, FV> {
     // phraseScoreNames = transOpt.phraseScoreNames;
     targetPosition = 0;
     sourcePosition = rule.sourcePosition;
-    targetPrefix = targetPhrase;
+    targetSequence = targetPhrase;
     sourceSentence = sourceSequence;
     this.sourceInputProperties = sourceInputProperties;
     numUntranslatedSourceTokens = sourceSequence.size() - sourcePhrase.size();

@@ -76,7 +76,7 @@ public class ConstrainedOutputSpace<TK, FV> implements
   @Override
   public boolean allowableFinal(Featurizable<TK, FV> featurizable) {
     if (featurizable != null) {
-      Sequence<TK> translation = featurizable.targetPrefix;
+      Sequence<TK> translation = featurizable.targetSequence;
       for (Sequence<TK> allowableSequence : allowableSequences) {
         if (allowableSequence.equals(translation)) {
           return true;
@@ -102,7 +102,7 @@ public class ConstrainedOutputSpace<TK, FV> implements
     }
 
     // Next rule in a derivation
-    final Sequence<TK> partialTranslation = featurizable.targetPrefix;
+    final Sequence<TK> partialTranslation = featurizable.targetSequence;
 
     asfor: for (Sequence<TK> allowableSequence : allowableSequences) {
       if (allowableSequence.startsWith(partialTranslation)) {

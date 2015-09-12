@@ -476,7 +476,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
 
     if (!this.hasExpired && baseHyp instanceof DTUHypothesis) {
       DTUHypothesis<TK, FV> dtuBaseHyp = (DTUHypothesis<TK, FV>) baseHyp;
-      if (dtuBaseHyp.hasExpired && (nextHyp.untranslatedTokens != 0))
+      if (dtuBaseHyp.hasExpired && (nextHyp.untranslatedSourceTokens != 0))
         this.hasExpired = true;
     }
 
@@ -580,9 +580,9 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
         this);
     System.err.printf(
         "parent hypothesis [class=%s,id=%d,pos=%d,expired=%s]: %s\n",
-        preceedingDerivation.getClass(), System.identityHashCode(preceedingDerivation),
-        preceedingDerivation.featurizable.targetPosition,
-        preceedingDerivation.hasExpired(), preceedingDerivation);
+        parent.getClass(), System.identityHashCode(parent),
+        parent.featurizable.targetPosition,
+        parent.hasExpired(), parent);
     System.err.println("pendingPhrasesCost: " + pendingPhrasesCost);
 
     DTUHypothesis<TK, FV> hyp = this;
@@ -594,7 +594,7 @@ public class DTUHypothesis<TK, FV> extends Derivation<TK, FV> {
       Derivation<TK, FV> curHyp = hyp;
       while (curHyp != null) {
         System.err.println("  " + curHyp.toString());
-        curHyp = curHyp.preceedingDerivation;
+        curHyp = curHyp.parent;
       }
       throw new RuntimeException();
     }

@@ -1,9 +1,7 @@
 package edu.stanford.nlp.mt.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -183,8 +181,7 @@ public final class Sequences {
 
     @Override
     public TK get(int i) {
-      throw new IndexOutOfBoundsException(String.format(
-          "Index: %d Sequence size: 0", i));
+      throw new IndexOutOfBoundsException(String.format("Index: %d Sequence size: 0", i));
     }
 
     @Override

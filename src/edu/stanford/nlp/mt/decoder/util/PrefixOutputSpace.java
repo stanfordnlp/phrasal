@@ -58,7 +58,7 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
   @Override
   public boolean allowableContinuation(Featurizable<IString, String> featurizable,
       ConcreteRule<IString, String> rule) {
-    final Sequence<IString> prefix = featurizable == null ? null : featurizable.targetPrefix;
+    final Sequence<IString> prefix = featurizable == null ? null : featurizable.targetSequence;
     return exactMatch(prefix, rule.abstractRule.target);
   }
 

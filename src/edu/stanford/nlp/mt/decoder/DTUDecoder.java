@@ -295,14 +295,14 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   public void dump(Derivation<TK, FV> bestHyp) {
 
     List<Derivation<TK, FV>> trace = new ArrayList<Derivation<TK, FV>>();
-    for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingDerivation) {
+    for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.parent) {
       trace.add(hyp);
     }
     Collections.reverse(trace);
 
     ClassicCounter<String> finalFeatureVector = new ClassicCounter<String>();
     if (bestHyp != null && bestHyp.featurizable != null) {
-      System.err.printf("hyp: %s%n", bestHyp.featurizable.targetPrefix);
+      System.err.printf("hyp: %s%n", bestHyp.featurizable.targetSequence);
       System.err.printf("score: %e%n", bestHyp.score());
       System.err.printf("Trace:%n");
       System.err.printf("--------------%n");
@@ -338,10 +338,10 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
         }
         if (abstractOption != null)
           System.err.printf("\tAbstract option: %s", abstractOption);
-        System.err.printf("\tFeatures: %s%n", hyp.localFeatures);
+        System.err.printf("\tFeatures: %s%n", hyp.features);
         System.err.printf("\tHypothesis: %s%n", hyp);
-        if (hyp.localFeatures != null) {
-          for (FeatureValue<FV> featureValue : hyp.localFeatures) {
+        if (hyp.features != null) {
+          for (FeatureValue<FV> featureValue : hyp.features) {
             finalFeatureVector.incrementCount(featureValue.name.toString(),
                 featureValue.value);
             allfeatures.add(featureValue);
@@ -485,11 +485,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
                   System.err.printf("creating hypothesis %d from %d%n",
                       newHyp.id, hyp.id);
                   System.err.printf("hyp: %s%n",
-                      newHyp.featurizable.targetPrefix);
+                      newHyp.featurizable.targetSequence);
                   System.err.printf("coverage: %s%n", newHyp.sourceCoverage);
                   if (hyp.featurizable != null) {
                     System.err.printf("par: %s%n",
-                        hyp.featurizable.targetPrefix);
+                        hyp.featurizable.targetSequence);
                     System.err.printf("coverage: %s%n", hyp.sourceCoverage);
                   }
                   System.err.printf("\tbase score: %.3f%n", hyp.score);
@@ -525,7 +525,7 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
                 if (!hyp.hasExpired()) {
                   int beamIdx = newHyp.sourceCoverage.cardinality();
-                  if (0 == newHyp.untranslatedTokens && newHyp.isDone()) {
+                  if (0 == newHyp.untranslatedSourceTokens && newHyp.isDone()) {
                     ++beamIdx;
                   }
                   beams[beamIdx].put(newHyp);
@@ -554,11 +554,11 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
   void writeAlignments(BufferedWriter alignmentDump, Derivation<TK, FV> bestHyp)
       throws IOException {
-    alignmentDump.append(bestHyp.featurizable.targetPrefix.toString());
+    alignmentDump.append(bestHyp.featurizable.targetSequence.toString());
     alignmentDump.newLine();
     alignmentDump.append(bestHyp.featurizable.sourceSentence.toString());
     alignmentDump.newLine();
-    for (Derivation<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.preceedingDerivation) {
+    for (Derivation<TK, FV> hyp = bestHyp; hyp.featurizable != null; hyp = hyp.parent) {
       alignmentDump.append(String.format("%d:%d => %d:%d # %s => %s%n",
           hyp.featurizable.sourcePosition, hyp.featurizable.sourcePosition
               + hyp.featurizable.sourcePhrase.size() - 1,

@@ -33,14 +33,13 @@ State<Derivation<TK, FV>> {
   public final long id;
   public final double h;
   public final int insertionPosition;
-  public final int untranslatedTokens;
+  public final int untranslatedSourceTokens;
   public final int depth;
   public final int linearDistortion;
   public final int length;
   
   // In prefix-constrained decoding, we need to know whether the prefix has been completed for recombination
   public final boolean prefixCompleted;
-  
   public final int prefixLength;
   
   public final double score;
@@ -53,24 +52,26 @@ State<Derivation<TK, FV>> {
   public final ConcreteRule<TK,FV> rule;
   public final Sequence<TK> sourceSequence;
 
+  // The partial translation
   public final Sequence<TK> targetSequence;
   
   // right now, translations are built up strictly in sequence.
   // however, we don't want to encourage people writing feature
   // functions to be dependent upon this fact.
-  public final Derivation<TK, FV> preceedingDerivation;
+  public final Derivation<TK, FV> parent;
 
   // non-primitives created anew for each hypothesis
   public final CoverageSet sourceCoverage;
   public final Featurizable<TK, FV> featurizable;
 
-  public final List<FeatureValue<FV>> localFeatures;
+  // Features extracted to score this derivation
+  public final List<FeatureValue<FV>> features;
 
   /**
    * 
    */
   public boolean isDone() {
-    return untranslatedTokens == 0;
+    return untranslatedSourceTokens == 0;
   }
 
   /**
@@ -114,11 +115,11 @@ State<Derivation<TK, FV>> {
     this.prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
     this.sourceSequence = sourceSequence;
     this.sourceInputProperties = sourceInputProperties;
-    preceedingDerivation = null;
+    parent = null;
     featurizable = null;
-    untranslatedTokens = sourceSequence.size();
+    untranslatedSourceTokens = sourceSequence.size();
     sourceCoverage = new CoverageSet(sourceSequence.size());
-    localFeatures = null;
+    features = null;
     depth = 0;
     linearDistortion = 0;
     targetSequence = Sequences.emptySequence();    
@@ -144,7 +145,7 @@ State<Derivation<TK, FV>> {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.rule = rule;
-    this.preceedingDerivation = base;
+    this.parent = base;
     this.sourceInputProperties = base.sourceInputProperties;
     this.sourceCoverage = base.sourceCoverage.clone();
     this.sourceCoverage.or(rule.sourceCoverage);
@@ -154,7 +155,7 @@ State<Derivation<TK, FV>> {
       insertionPosition + rule.abstractRule.target.size()); // edge insertion
     sourceSequence = base.sourceSequence;
     targetSequence = base.targetSequence.concat(rule.abstractRule.target);
-    untranslatedTokens = this.sourceSequence.size()
+    untranslatedSourceTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
         : base.rule.linearDistortion(rule));
@@ -162,9 +163,9 @@ State<Derivation<TK, FV>> {
     featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
         .getNumDerivationFeaturizers());
     
-    localFeatures = featurizer.featurize(featurizable);
-    localFeatures.addAll(rule.cachedFeatureList);
-    score = base.score + scorer.getIncrementalScore(localFeatures);
+    features = featurizer.featurize(featurizable);
+    features.addAll(rule.cachedFeatureList);
+    score = base.score + scorer.getIncrementalScore(features);
     h = (Double.isInfinite(base.h)) ? base.h : base.h
         + heuristic.getHeuristicDelta(this, rule.sourceCoverage);
     // System.err.printf("h: %f %f %d %s\n", baseHyp.h,
@@ -200,7 +201,7 @@ State<Derivation<TK, FV>> {
     this.id = nextId.incrementAndGet();
     this.insertionPosition = insertionPosition;
     this.rule = rule;
-    this.preceedingDerivation = base;
+    this.parent = base;
     this.sourceInputProperties = base.sourceInputProperties;
     this.sourceCoverage = base.sourceCoverage.clone();
     this.sourceCoverage.or(rule.sourceCoverage);
@@ -208,7 +209,7 @@ State<Derivation<TK, FV>> {
         : insertionPosition + targetPhrase.size();
     sourceSequence = base.sourceSequence;
     targetSequence = base.targetSequence.concat(targetPhrase);
-    untranslatedTokens = this.sourceSequence.size()
+    untranslatedSourceTokens = this.sourceSequence.size()
     - this.sourceCoverage.cardinality();
     linearDistortion = (base.rule == null ? rule.sourcePosition
         : base.rule.linearDistortion(rule));
@@ -217,9 +218,9 @@ State<Derivation<TK, FV>> {
         sourceInputId, featurizer.getNumDerivationFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
-    localFeatures = featurizer.featurize(featurizable);
-    localFeatures.addAll(rule.cachedFeatureList);
-    score = base.score + scorer.getIncrementalScore(localFeatures);
+    features = featurizer.featurize(featurizable);
+    features.addAll(rule.cachedFeatureList);
+    score = base.score + scorer.getIncrementalScore(features);
     depth = base.depth + 1;
     h = (Double.isInfinite(base.h)) ? base.h : base.h
         + heuristic.getHeuristicDelta(this, rule.sourceCoverage);
@@ -244,7 +245,7 @@ State<Derivation<TK, FV>> {
 
   @Override
   public State<Derivation<TK, FV>> parent() {
-    return preceedingDerivation;
+    return parent;
   }
 
   @Override
@@ -268,7 +269,7 @@ State<Derivation<TK, FV>> {
     while (d != null) {
       if (sb.length() > 0) sb.append("\n");
       sb.append(d.rule == null ? "<GOAL>" : d.rule.toString());
-      d = d.preceedingDerivation;
+      d = d.parent;
     }
     return sb.toString();
   }
@@ -278,7 +279,7 @@ State<Derivation<TK, FV>> {
   }
 
   public boolean hasUntranslatedTokens() {
-    return untranslatedTokens > 0;
+    return untranslatedSourceTokens > 0;
   }
 
   public void debug() { /* nothing relevant to debug; meant to be overridden */

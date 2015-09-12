@@ -231,14 +231,14 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
   @Override
   public void dump(Derivation<TK, FV> bestHyp) {
     List<Derivation<TK, FV>> trace = new ArrayList<Derivation<TK, FV>>();
-    for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.preceedingDerivation) {
+    for (Derivation<TK, FV> hyp = bestHyp; hyp != null; hyp = hyp.parent) {
       trace.add(hyp);
     }
     Collections.reverse(trace);
 
     ClassicCounter<String> finalFeatureVector = new ClassicCounter<String>();
     if (bestHyp != null && bestHyp.featurizable != null) {
-      System.err.printf("hyp: %s\n", bestHyp.featurizable.targetPrefix);
+      System.err.printf("hyp: %s\n", bestHyp.featurizable.targetSequence);
       System.err.printf("score: %e\n", bestHyp.score());
       System.err.printf("Trace:\n");
       System.err.printf("--------------\n");
@@ -253,9 +253,9 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               hyp.featurizable.targetPosition);
         }
         System.err.printf("\tCoverage: %s\n", hyp.sourceCoverage);
-        System.err.printf("\tFeatures: %s\n", hyp.localFeatures);
-        if (hyp.localFeatures != null) {
-          for (FeatureValue<FV> featureValue : hyp.localFeatures) {
+        System.err.printf("\tFeatures: %s\n", hyp.features);
+        if (hyp.features != null) {
+          for (FeatureValue<FV> featureValue : hyp.features) {
             finalFeatureVector.incrementCount(featureValue.name.toString(),
                 featureValue.value);
             allfeatures.add(featureValue);
@@ -378,11 +378,11 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
               System.err.printf("creating hypothesis %d from %d\n",
                   newHyp.id, hyp.id);
               System.err.printf("hyp: %s\n",
-                  newHyp.featurizable.targetPrefix);
+                  newHyp.featurizable.targetSequence);
               System.err.printf("coverage: %s\n", newHyp.sourceCoverage);
               if (hyp.featurizable != null) {
                 System.err.printf("par: %s\n",
-                    hyp.featurizable.targetPrefix);
+                    hyp.featurizable.targetSequence);
                 System.err.printf("coverage: %s\n", hyp.sourceCoverage);
               }
               System.err.printf("\tbase score: %.3f\n", hyp.score);

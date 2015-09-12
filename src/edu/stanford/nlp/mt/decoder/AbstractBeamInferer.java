@@ -392,11 +392,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
             
       if (distinct) {
-        if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetPrefix)) {
+        if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetSequence)) {
           // Seen a higher-scoring derivation with this target string before
           continue;
         } else {
-          distinctSurfaceTranslations.add(goalHyp.featurizable.targetPrefix);
+          distinctSurfaceTranslations.add(goalHyp.featurizable.targetSequence);
         }
       }
       
@@ -469,7 +469,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     for (Derivation<TK, FV> gs : goalStates) {
       logger.debug(String.format("src='%s', trg='%s', score=%.6f, gs=%d",
               gs.sourceSequence, gs.targetSequence, gs.score, gs.id));
-      Derivation<TK, FV> parent = gs.preceedingDerivation;
+      Derivation<TK, FV> parent = gs.parent;
       if ((completions.containsKey(gs.targetSequence) && completions.get(gs.targetSequence) < gs.score) ||
               !completions.containsKey(gs.targetSequence)) {
         completions.put(gs.targetSequence, gs.score);
@@ -477,7 +477,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
       while (parent != null && (parent.targetSequence.size() > prefixLength)) {
         // find derivation where completion starts
-        parent = parent.preceedingDerivation;
+        parent = parent.parent;
       }
       // extract completion (target sequence suffix)
       Sequence<TK> compl = null;

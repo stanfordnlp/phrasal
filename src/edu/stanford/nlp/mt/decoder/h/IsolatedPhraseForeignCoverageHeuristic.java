@@ -36,7 +36,7 @@ public class IsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   @Override
   public double getHeuristicDelta(Derivation<TK, FV> newHypothesis,
       CoverageSet newCoverage) {
-    double oldH = newHypothesis.preceedingDerivation.h;
+    double oldH = newHypothesis.parent.h;
     double newH = 0;
     CoverageSet coverage = newHypothesis.sourceCoverage;
     int startEdge = coverage.nextClearBit(0);
