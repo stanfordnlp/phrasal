@@ -69,8 +69,7 @@ public class NGramLMRecombinationFilter implements RecombinationFilter<Derivatio
     }
     
     if (lmFeaturizers.size() == 1) {
-      LMState state = (LMState) hyp.featurizable.getState(lmFeaturizers.get(0));
-      return state.hashCode();
+      return hyp.featurizable.getState(lmFeaturizers.get(0)).hashCode();
     
     } else {
       // Ripped off from MurmurHash3
