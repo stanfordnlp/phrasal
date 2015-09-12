@@ -15,9 +15,6 @@ import java.util.stream.IntStream;
  */
 public final class Sequences {
   
-  @SuppressWarnings("rawtypes")
-  private static final Sequence EMPTY_SEQUENCE = new EmptySequence<>();
-  
   private Sequences() {}
 
   /**
@@ -95,7 +92,9 @@ public final class Sequences {
    * @return
    */
   public static <T> String[] toStringArray(Sequence<T> sequence) {
-    return Arrays.stream(sequence.elements()).map(t -> t.toString()).toArray(String[]::new);
+    String[] tokens = new String[sequence.size()];
+    for (int i = 0, sz = sequence.size(); i < sz; ++i) tokens[i] = sequence.get(i).toString();
+    return tokens;
   }
 
   /**
@@ -105,9 +104,11 @@ public final class Sequences {
    * @return
    */
   public static <T> List<String> toStringList(Sequence<T> sequence) {
-    return Arrays.stream(sequence.elements()).map(t -> t.toString()).collect(Collectors.toList());
+    List<String> tokens = new ArrayList<>(sequence.size());
+    for (int i = 0, sz = sequence.size(); i < sz; ++i) tokens.add(sequence.get(i).toString());
+    return tokens;
   }
-
+  
   /**
    * Append a start symbol to the beginning of a sequence.
    *
@@ -156,6 +157,9 @@ public final class Sequences {
     return new ArraySequence<T>(true, (T[]) arr);
   }
 
+  @SuppressWarnings("rawtypes")
+  private static final Sequence EMPTY_SEQUENCE = new EmptySequence<>();
+  
   /**
    * Return the empty sequence.
    * 

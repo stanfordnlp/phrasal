@@ -45,7 +45,6 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
-import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
@@ -1178,7 +1177,7 @@ public class Phrasal {
       throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
     }
 
-    TimeKeeper timer = TimingUtils.start();
+    final TimeKeeper timer = TimingUtils.start();
     
     // Wrapping input for TMs with boundary tokens
     if (wrapBoundary) {
@@ -1207,10 +1206,10 @@ public class Phrasal {
     } else {
       this.scorers.get(threadId).updateWeights(this.globalModel);
     }
+    if (! inputProperties.containsKey(InputProperty.RuleQueryLimit)) {
+      inputProperties.put(InputProperty.RuleQueryLimit, ruleQueryLimit);
+    }
     timer.mark("setup");
-
-    // Rule query limit
-    inputProperties.put(InputProperty.RuleQueryLimit, ruleQueryLimit);
     
     // Decode
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
@@ -1218,23 +1217,19 @@ public class Phrasal {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, outputSpace,
           outputSpace.getAllowableSequences(), numTranslations, distinctNbest, diverseNbest);
 
-      // Return an empty n-best list
-      if (translations == null)
-        translations = Collections.emptyList();
+      // Decoder failure
+      if (translations == null) translations = Collections.emptyList();
 
     } else {
       // The 1-best translation in this case is potentially different from
       // calling nbest() with a list size of 1. Therefore, this call is *not* a
-      // special
-      // case of the condition above.
+      // special case of the condition above.
       final RichTranslation<IString, String> translation = inferers.get(threadId).translate(source, sourceInputId,
           inputProperties, outputSpace, outputSpace.getAllowableSequences());
-      if (translation != null) {
-        translations.add(translation);
-      }
+      if (translation != null) translations.add(translation);
     }
     timer.mark("decode");
-    logger.info("top-level timing: {}", timer);
+    logger.info("Decode timing: {}", timer);
     return translations;
   }
 
@@ -1264,14 +1259,11 @@ public class Phrasal {
    */
   private static Map<String, List<String>> getConfigurationFrom(String configFile, Properties options)
       throws IOException {
-    final Map<String, List<String>> config = configFile == null ? new HashMap<String, List<String>>()
+    final Map<String, List<String>> config = configFile == null ? new HashMap<>()
         : IOTools.readConfigFile(configFile);
     // Command-line options supersede config file options
-    for (final Map.Entry<Object, Object> e : options.entrySet()) {
-      final String key = e.getKey().toString();
-      final String value = e.getValue().toString();
-      config.put(key, Arrays.asList(value.split("\\s+")));
-    }
+    options.entrySet().stream().forEach(e -> config.put(e.getKey().toString(), 
+        Arrays.asList(e.getValue().toString().split("\\s+"))));
     return config;
   }
 
@@ -1304,9 +1296,10 @@ public class Phrasal {
       });
       return phrasal;
 
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SecurityException
-        | InvocationTargetException | NoSuchMethodException | ClassNotFoundException | IOException e) {
-      logger.error(e);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | 
+        SecurityException | InvocationTargetException | NoSuchMethodException | 
+        ClassNotFoundException | IOException e) {
+      logger.error("Unable to load Phrasal", e);
     }
     return null;
   }
@@ -1336,6 +1329,6 @@ public class Phrasal {
     final Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
     final Phrasal p = Phrasal.loadDecoder(configuration);
     p.decode(System.in, true);
-//     p.decode(new FileInputStream(new File("copy-data/debug.seq.ar")), true);
+//     p.decode(new FileInputStream(new File("copy-data/debug.input")), true);
   }
 }

@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
@@ -121,7 +122,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
     
     // Sort rule list by target
-    PrefixRuleGrid<TK,FV> ruleGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
+    PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
     
     // Augment grid (if necessary)
     if (phraseGenerator instanceof DynamicTranslationModel) {
@@ -130,10 +131,16 @@ abstract public class AbstractBeamInferer<TK, FV> extends
         foregroundTM = 
             (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
       }
-      ruleGrid.augmentGrid(((DynamicTranslationModel<FV>) phraseGenerator), foregroundTM,
+      // TODO(spenceg) This should be very conservative!!
+      prefixGrid.augmentGrid(((DynamicTranslationModel<FV>) phraseGenerator), foregroundTM,
           scorer, featurizer, sourceInputProperties, sourceInputId);
     }
-
+    
+    // WSGDEBUG
+    if (prefixGrid.getTargetCoverage().cardinality() != prefix.size()) {
+      logger.warn("Input {}: Partial target coverage {}", sourceInputId, prefixGrid.getTargetCoverage().toString());
+    }
+    
     // Populate beams (indexed by source coverage)
     // If this is cube pruning, then there is no need to create hyperedge bundles
     // because the LM score is constant. We can simply sort the derivations.
@@ -152,7 +159,15 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 //              antecedent.sourceCoverage, antecedent.targetSequence.toString());
           continue;
         }
-        List<ConcreteRule<TK,FV>> rulesForPosition = ruleGrid.get(insertionPosition);
+        List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);
+        
+        // if rulesForPosition.size() == 0, then add a gap
+        // Sort rules compatible with this derivation by isolation score?
+        // That will be a lot of rules
+        // If we skip and leave a gap, then we have to skip back, which is a problematic move.
+        // Something in the source coverage maps here....
+        // But if we fill something in the source that we need later, then the derivation will fail.
+        
         for (ConcreteRule<TK,FV> rule : rulesForPosition) {
           if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
           CoverageSet testCoverage = antecedent.sourceCoverage.clone();
@@ -181,12 +196,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     logger.info("Input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
     
     // WSGDEBUG
-//    for (int i = 0; i < beams.size(); ++i) {
-//      System.err.printf("BEAM %d%n", i);
-//      BundleBeam<TK,FV> beam = (BundleBeam<TK, FV>) beams.get(i);
-//      System.err.println(beam.beamString());
-//      System.err.println("================");
-//    }
+    for (int i = 0; i < beams.size(); ++i) {
+      System.err.printf("BEAM %d%n", i);
+      BundleBeam<TK,FV> beam = (BundleBeam<TK, FV>) beams.get(i);
+      System.err.println(beam.beamString(10));
+      System.err.println("================");
+    }
     
     // Clamp the maxPrefix to the prefix length
     maxPrefix = Math.min(maxPrefix, prefix.size());

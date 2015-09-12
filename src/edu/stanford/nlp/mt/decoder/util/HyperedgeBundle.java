@@ -52,7 +52,7 @@ public class HyperedgeBundle<TK,FV> {
       expandedItems.set(0);
 
     } else {
-      // Move down in the grid
+      // Move down in the grid (items)
       int lastItem = antecedent.itemId;
       int lastRule = antecedent.ruleId;
       int nextItem = getIndex(lastItem+1, lastRule);
@@ -61,7 +61,7 @@ public class HyperedgeBundle<TK,FV> {
             this, lastItem+1, lastRule));
         expandedItems.set(nextItem);
       }
-      // Move right in the grid
+      // Move right in the grid (rules)
       int nextRule = getIndex(lastItem, lastRule+1);
       if ( ! expandedItems.get(nextRule) && lastRule+1 < ruleList.size()) {
         consequentList.add(new Consequent<TK,FV>(itemList.get(lastItem), ruleList.get(lastRule+1), 
@@ -79,7 +79,7 @@ public class HyperedgeBundle<TK,FV> {
 
   @Override
   public String toString() {
-    return String.format("#items: %d  #rules: %d  coverage: %s", 
+    return String.format("#items: %d  #rules: %d  expanded: %s", 
         itemList.size(), ruleList.size(), expandedItems.toString());
   }
 

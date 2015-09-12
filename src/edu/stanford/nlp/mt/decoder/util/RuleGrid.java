@@ -133,6 +133,22 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   }
 
   @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
+    for (int i = 0; i < sourceLength; ++i) {
+      for (int j = i; j < sourceLength; ++j) {
+        List<ConcreteRule<TK,FV>> rules = get(i, j);
+        if (rules.size() > 0) {
+          sb.append("## ").append(i).append("-").append(j).append(nl);
+          rules.stream().forEach(r -> sb.append(r).append(nl));
+        }
+      }
+    }
+    return sb.toString();
+  }
+  
+  @Override
   public Iterator<ConcreteRule<TK, FV>> iterator() {
     return new Iterator<ConcreteRule<TK,FV>>() {
       int coverageId = 0;

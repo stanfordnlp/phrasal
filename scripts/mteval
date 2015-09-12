@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# Run an arbitrary corpus-level metric
+#
+# Author: Spence Green
+#
+MEM=1g
+JAVA_OPTS="-ea -Xmx$MEM -Xms$MEM"
+
+if [ $# -lt 1 ]; then
+    echo Usage: $(basename $0) metric_name [args]
+    exit -1
+fi
+
+METRIC=$1
+shift 1
+    
+java $JAVA_OPTS edu.stanford.nlp.mt.tools.Evaluate $METRIC $*

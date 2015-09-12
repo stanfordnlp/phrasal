@@ -104,7 +104,7 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
               size(), capacity, recombinationHash.size());
     }
 
-    List<S> hypotheses = recombinationHash.hypotheses();
+    List<S> hypotheses = recombinationHash.derivations();
     if (hypotheses.isEmpty())
       return;
 
@@ -157,7 +157,7 @@ public class SloppyBeam<S extends State<S>> implements Beam<S> {
   @Override
   public Iterator<S> iterator() {
     pruneBeam();
-    List<S> hypotheses = recombinationHash.hypotheses();
+    List<S> hypotheses = recombinationHash.derivations();
     Collections.sort(hypotheses);
 
     return hypotheses.iterator();

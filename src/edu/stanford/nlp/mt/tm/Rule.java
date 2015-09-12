@@ -34,9 +34,10 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public final String[] phraseScoreNames;
   
   /**
-   * The target side of the rule.
+   * The target side of the rule. Not final because for prefix decoding we sometimes want to
+   * modify existing rules.
    */
-  public final Sequence<T> target;
+  public Sequence<T> target;
   
   /**
    * The source side of the rule.

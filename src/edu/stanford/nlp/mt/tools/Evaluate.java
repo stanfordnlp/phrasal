@@ -83,7 +83,7 @@ public class Evaluate {
     for (String line; (line = reader.readLine()) != null; ) {
       line = NISTTokenizer.tokenize(line);
       Sequence<IString> translation = IStrings.tokenize(line);
-      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<IString, String>(
+      ScoredFeaturizedTranslation<IString, String> tran = new ScoredFeaturizedTranslation<>(
           translation, null, 0);
       incMetric.add(tran);
     }

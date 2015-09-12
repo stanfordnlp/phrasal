@@ -26,19 +26,19 @@ def make_prefixes(filename, samples_per_sent, step_size):
         n_examples = 0
         n_full = 0
         n_force = 0
-        for i in range(0,samples_per_sent):
-            for j,line in enumerate(lines):
+        for j,line in enumerate(lines):
+            for i in range(0,samples_per_sent):
                 split_this = split % (len(line)+1)
                 prefix_len = len(line) - split_this
-                # err(str('%d %d %d' % (len(line), split, split_this)))
                 assert prefix_len <= len(line)
                 if prefix_len == len(line):
                     n_force += 1
                 if prefix_len > 0:
+                    # Prefix constraints
                     prefix = line[:prefix_len]
                     sys.stdout.write(' '.join(prefix) + os.linesep)
                 else:
-                    #err('%d: Length 0 (%d)' % (j+1, split_this))
+                    # Unconstrained decoding
                     n_full += 1
                     print
                 n_examples += 1
