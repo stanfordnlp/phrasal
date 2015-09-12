@@ -9,7 +9,7 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
  * @param <TK>
  * @param <FV>
  */
-public class ForeignCoverageRecombinationFilter<TK, FV> implements
+public class SourceCoverageRecombinationFilter<TK, FV> implements
     RecombinationFilter<Derivation<TK, FV>> {
 
   @Override
@@ -26,5 +26,4 @@ public class ForeignCoverageRecombinationFilter<TK, FV> implements
   public long recombinationHashCode(Derivation<TK, FV> hyp) {
     return hyp.sourceCoverage.hashCode();
   }
-
 }
