@@ -160,8 +160,7 @@ State<Derivation<TK, FV>> {
     linearDistortion = (base.rule == null ? rule.sourcePosition
         : base.rule.linearDistortion(rule));
     
-    featurizable = new Featurizable<TK, FV>(this, sourceInputId, featurizer
-        .getNumDerivationFeaturizers());
+    featurizable = new Featurizable<>(this, sourceInputId, featurizer.getNumDerivationFeaturizers());
     
     features = featurizer.featurize(featurizable);
     features.addAll(rule.cachedFeatureList);
@@ -214,7 +213,7 @@ State<Derivation<TK, FV>> {
     linearDistortion = (base.rule == null ? rule.sourcePosition
         : base.rule.linearDistortion(rule));
 
-    featurizable = new DTUFeaturizable<TK, FV>(this, abstractRule,
+    featurizable = new DTUFeaturizable<>(this, abstractRule,
         sourceInputId, featurizer.getNumDerivationFeaturizers(), targetPhrase,
         hasPendingPhrases, segmentIdx);
 
@@ -238,8 +237,7 @@ State<Derivation<TK, FV>> {
 
   @Override
   public int compareTo(Derivation<TK, FV> competitor) {
-    int cmp = (int) Math.signum(competitor.finalScoreEstimate()
-        - finalScoreEstimate());
+    final int cmp = (int) Math.signum(competitor.finalScoreEstimate() - finalScoreEstimate());
     return cmp == 0 ? (int) (id - competitor.id) : cmp;
   }
 

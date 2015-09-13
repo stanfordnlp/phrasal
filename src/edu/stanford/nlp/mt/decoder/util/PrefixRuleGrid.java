@@ -133,12 +133,9 @@ public class PrefixRuleGrid<TK,FV> {
    * @param coocTable
    */
   @SuppressWarnings("unchecked")
-  public void augmentGrid(DynamicTranslationModel<FV> backgroundModel, 
-      DynamicTranslationModel<FV> foregroundModel, Scorer<FV> scorer,
+  public void augmentGrid(List<DynamicTranslationModel<FV>> tmList, String[] featureNames, Scorer<FV> scorer,
       FeatureExtractor<TK,FV> featurizer, InputProperties inputProperties, 
       int sourceInputId) {
-    
-    final String[] featureNames = (String[]) backgroundModel.getFeatureNames().toArray();
 
     // Augment with synthetic singleton rules
     for (int i = targetCoverage.nextClearBit(0), pSz = prefix.size(); 
@@ -146,24 +143,18 @@ public class PrefixRuleGrid<TK,FV> {
         i = targetCoverage.nextClearBit(i+1)) {
         // ++i) {
 
-      IString targetQuery = (IString) prefix.get(i);
-      int tgtIdBackground = backgroundModel.getTMVocabularyId(targetQuery);
-      int tgtIdForeground = foregroundModel == null ? -1 : foregroundModel.getTMVocabularyId(targetQuery);
-      final int cnt_e = backgroundModel.coocTable.getTgtMarginal(tgtIdBackground)
-          + (foregroundModel == null ? 0 : foregroundModel.coocTable.getTgtMarginal(tgtIdForeground));
+      final IString targetQuery = (IString) prefix.get(i);
+      final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(targetQuery)).sum();
       final Sequence<IString> targetSpan = (Sequence<IString>) prefix.subsequence(i, i+1);
       
-      // Check the Cooc table
+      // Highest precision.
+      // Maybe missed due to sampling in the TM. Check the TM.
       boolean addedRule = false;
       for (int j = 0, sSz = source.size(); j < sSz; ++j) {
         IString sourceQuery = (IString) source.get(j);
-        int srcIdBack = backgroundModel.getTMVocabularyId(sourceQuery);
-        int srcIdFore = foregroundModel == null ? -1 : foregroundModel.getTMVocabularyId(sourceQuery);
-        int cnt_ef = backgroundModel.coocTable.getJointCount(srcIdBack, tgtIdBackground)
-            + (foregroundModel == null ? 0 : foregroundModel.coocTable.getJointCount(srcIdFore, tgtIdForeground));
+        final int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(sourceQuery, targetQuery)).sum();
         if (cnt_ef == 0) continue;
-        int cnt_f = backgroundModel.coocTable.getSrcMarginal(srcIdBack) +
-            (foregroundModel == null ? 0 : foregroundModel.coocTable.getSrcMarginal(srcIdFore));
+        final int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(sourceQuery)).sum();
         final Sequence<IString> sourceSpan = (Sequence<IString>) source.subsequence(j,j+1);
         CoverageSet sourceSpanCoverage = new CoverageSet(source.size());
         sourceSpanCoverage.set(j);
@@ -175,7 +166,9 @@ public class PrefixRuleGrid<TK,FV> {
         addedRule = true;
       }
       
-      // A new word type. Check here to see if it's similar to anything in the target query.
+      // Next highest precision.
+      // Either a new word type, or a word type that hasn't been seen with anything in the source.
+      // See if this word type is similar to anything in the query, e.g., maybe this is a mis-spelling.
       if (!addedRule) {
         final String queryStr = targetSpan.toString();
         for (Sequence<TK> tgt : tgtToRule.keySet()) {
@@ -192,11 +185,17 @@ public class PrefixRuleGrid<TK,FV> {
         }
       }
       
-      if (!addedRule) logger.warn("Could not create rule for '{}' (position {})", targetQuery, i);
+      // Lowest precision. Revert to target OOV model.
+      if (!addedRule) {
+        
+      }
+      
+      
+      if (!addedRule) logger.warn("Could not create rule for token '{}' (position {})", targetQuery, i);
     }
     
     // Sort the final list of rules
-    index.stream().forEach(l -> Collections.sort(l));
+    for (List<ConcreteRule<TK,FV>> l : index) Collections.sort(l);
   }
 
   /**

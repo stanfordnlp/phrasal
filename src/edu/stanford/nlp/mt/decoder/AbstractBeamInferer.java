@@ -122,52 +122,37 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
     
     // Sort rule list by target
-    PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
+    final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
     
     // Augment grid (if necessary)
     if (phraseGenerator instanceof DynamicTranslationModel) {
-      DynamicTranslationModel<FV> foregroundTM = null;
+      List<DynamicTranslationModel<FV>> tmList = new ArrayList<>();
+      tmList.add((DynamicTranslationModel<FV>) phraseGenerator);
       if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
-        foregroundTM = 
-            (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+        tmList.add((DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM));
       }
-      // TODO(spenceg) This should be very conservative!!
-      prefixGrid.augmentGrid(((DynamicTranslationModel<FV>) phraseGenerator), foregroundTM,
-          scorer, featurizer, sourceInputProperties, sourceInputId);
+      final String[] featureNames = (String[]) phraseGenerator.getFeatureNames().toArray();
+      prefixGrid.augmentGrid(tmList, featureNames, scorer, featurizer, sourceInputProperties, sourceInputId);
     }
     
-    // WSGDEBUG
-    if (prefixGrid.getTargetCoverage().cardinality() != prefix.size()) {
-      logger.warn("Input {}: Partial target coverage {}", sourceInputId, prefixGrid.getTargetCoverage().toString());
-    }
-    
-    // Populate beams (indexed by source coverage)
-    // If this is cube pruning, then there is no need to create hyperedge bundles
-    // because the LM score is constant. We can simply sort the derivations.
-    // TODO(spenceg) Only compute LM scores once.
-    int[] prefixCoverages = IntStream.range(0, prefix.size() + phraseGenerator.maxLengthTarget())
-        .map(i -> Integer.MAX_VALUE).toArray();
-    int maxPrefix = 0;
+    // Book-keeping
+    int minSourceCoverage = Integer.MAX_VALUE;
     int[] hypsForBeam = new int[beams.size()];
+    
+    // Populate beams
     int numHyps = 0;
     for (int i = 0, sz = beams.size(); i < sz; ++i) {
       final int beamCardinality = i;
       for (Derivation<TK,FV> antecedent : beams.get(beamCardinality)) {
-        int insertionPosition = antecedent.targetSequence.size();
+        // Check the status of this antecedent
+        final int insertionPosition = antecedent.targetSequence.size();
         if (insertionPosition >= prefix.size()) {
-//          System.err.printf("OVERLAP %d %d: %f %s %s%n", i, hypsForBeam, antecedent.score, 
-//              antecedent.sourceCoverage, antecedent.targetSequence.toString());
+          // No need to continue expanding this derivation
           continue;
         }
-        List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);
-        
-        // if rulesForPosition.size() == 0, then add a gap
-        // Sort rules compatible with this derivation by isolation score?
-        // That will be a lot of rules
-        // If we skip and leave a gap, then we have to skip back, which is a problematic move.
-        // Something in the source coverage maps here....
-        // But if we fill something in the source that we need later, then the derivation will fail.
-        
+
+        final List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);
+        assert rulesForPosition.size() > 0;
         for (ConcreteRule<TK,FV> rule : rulesForPosition) {
           if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
           CoverageSet testCoverage = antecedent.sourceCoverage.clone();
@@ -180,39 +165,26 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           assert succCardinality == successor.sourceCoverage.cardinality();
           ++numHyps;
           hypsForBeam[succCardinality]++;
-          // WSGDEBUG
-//          System.err.printf("%d %d: %f %s %s%n", i, hypsForBeam, successor.score, 
-//              successor.sourceCoverage, successor.targetSequence.toString());
           beams.get(succCardinality).put(successor);
-          
+
           // Book-keeping
-          maxPrefix = Math.max(maxPrefix, successor.targetSequence.size());
-          if (succCardinality < prefixCoverages[successor.targetSequence.size()]) {
-            prefixCoverages[successor.targetSequence.size()] = succCardinality;
-          }
+          if (successor.targetSequence.size() >= prefix.size() && succCardinality < minSourceCoverage)
+            minSourceCoverage = succCardinality;
         }
       }
     }
     logger.info("Input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
     
     // WSGDEBUG
-    for (int i = 0; i < beams.size(); ++i) {
-      System.err.printf("BEAM %d%n", i);
-      BundleBeam<TK,FV> beam = (BundleBeam<TK, FV>) beams.get(i);
-      System.err.println(beam.beamString(10));
-      System.err.println("================");
-    }
+//    for (int i = 0; i < beams.size(); ++i) {
+//      System.err.printf("BEAM %d%n", i);
+//      BundleBeam<TK,FV> beam = (BundleBeam<TK, FV>) beams.get(i);
+//      System.err.println(beam.beamString(10));
+//      System.err.println("================");
+//    }
     
-    // Clamp the maxPrefix to the prefix length
-    maxPrefix = Math.min(maxPrefix, prefix.size());
-    if (prefixCoverages[maxPrefix] == Integer.MAX_VALUE) {
-      logger.warn("input {}: No prefix coverage.", sourceInputId);
-      return 0;
-    }
-    
-    // Return beam number of the starting point (longest prefix with the minimum source
-    // coverage)
-    return maxPrefix >= 0 ? prefixCoverages[maxPrefix] : 0;
+    // Return value is the minimum source coverage for a compatible derivation.
+    return minSourceCoverage;
   }
   
   /**

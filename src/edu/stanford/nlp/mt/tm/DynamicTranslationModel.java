@@ -278,18 +278,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @return
    */
   public ParallelSuffixArray getSuffixArray() { return sa; }
-  
-  /**
-   * Returns the TM vocabulary id of the item if it is in the TM vocabulary
-   * and -1 otherwise.
-   * 
-   * @param word
-   * @return
-   */
-  public int getTMVocabularyId(IString word) {
-    return (word.id >= 0 && word.id < sys2TM.length) ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
-  }
-  
+    
   /**
    * Setup cache for lexical translations by iterating over every alignment point
    * in the underlying corpus.
@@ -524,6 +513,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
                 r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
           }
         }).collect(Collectors.toList());
+        
+        // Use a parallel collector above, and then dump into the final rule list.
         concreteRules.addAll(rules);
       }
     }
@@ -587,18 +578,60 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
+   * 
+   * @param source
+   * @return
+   */
+  public int getSourceLexCount(IString source) {
+    int id = toTMId(source);
+    return id >= 0 ? coocTable.getSrcMarginal(id) : 0;
+  }
+  
+  /**
+   * 
+   * @param target
+   * @return
+   */
+  public int getTargetLexCount(IString target) {
+    int id = toTMId(target);
+    return id >= 0 ? coocTable.getTgtMarginal(id) : 0;
+  }
+  
+  /**
+   * 
+   * @param source
+   * @param target
+   * @return
+   */
+  public int getJointLexCount(IString source, IString target) {
+    int srcId = toTMId(source);
+    int tgtId = toTMId(target);
+    return srcId >= 0 && tgtId >= 0 ? coocTable.getJointCount(srcId, tgtId) : 0;
+  }
+  
+  /**
+   * Returns the TM vocabulary id of the item if it is in the TM vocabulary
+   * and -1 otherwise.
+   * 
+   * @param word
+   * @return
+   */
+  private int toTMId(IString word) {
+    return word.id < sys2TM.length ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
+  }
+  
+  /**
    * Convert a sequence to translation model indices.
    * 
    * @param sequence
    * @return
    */
   private int[] toTMArray(Sequence<IString> sequence) {
-    int sourceSize = sequence.size();
+    final int sourceSize = sequence.size();
     int[] tmIds = new int[sourceSize];
     for (int i = 0; i < sourceSize; ++i) {
-      IString word = sequence.get(i);
       // TODO(spenceg) The array must be grown if material is added to the underlying suffix array
-      tmIds[i] = word.id < this.sys2TM.length ? sys2TM[word.id] : Vocabulary.UNKNOWN_ID;
+      tmIds[i] = toTMId(sequence.get(i));
     }
     return tmIds;
   }
@@ -610,13 +643,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @return
    */
   private Sequence<IString> toSequence(int[] tmTokens) {
-    IString[] tokens = new IString[tmTokens.length];
+    final IString[] tokens = new IString[tmTokens.length];
     for (int i = 0; i < tmTokens.length; ++i) {
       assert tmTokens[i] < tm2Sys.length;
       int systemId = tm2Sys[tmTokens[i]];
       tokens[i] = new IString(systemId);
     }
-    return new ArraySequence<IString>(true, tokens);
+    return new ArraySequence<>(true, tokens);
   }
 
   /**
@@ -633,8 +666,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private List<Rule<IString>> samplesToRules(List<SentencePair> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
     // Extract rules from sentence pairs
-    List<SampledRule> rules = samples.stream().flatMap(s -> extractRules(s, order, maxTargetPhrase).stream())
-        .collect(Collectors.toList());
+    final List<SampledRule> rules = new ArrayList<>(2*samples.size());
+    for (SentencePair sample : samples) rules.addAll(extractRules(sample, order, maxTargetPhrase));
     
     // Collect counts
     Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rules.size());
@@ -921,7 +954,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  public static class LexCoocTable {
+  private static class LexCoocTable {
 
     public static final int NULL_ID = Integer.MIN_VALUE + 1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;
@@ -1108,8 +1141,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     for (Sequence<IString> source : sourceFile) {
       for (Sequence<IString> ngram : Sequences.ngrams(source, 2)) {
         int[] query = new int[ngram.size()];
-        query[0] = tm.getTMVocabularyId(ngram.get(0));
-        if (ngram.size() == 2) query[1] = tm.getTMVocabularyId(ngram.get(1));
+        query[0] = tm.toTMId(ngram.get(0));
+        if (ngram.size() == 2) query[1] = tm.toTMId(ngram.get(1));
         boolean doQuery = Arrays.stream(query).allMatch(q -> q >= 0);
         if (doQuery) tm.sa.count(query, true);
         ++numSAQueries;
