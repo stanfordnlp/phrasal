@@ -610,11 +610,8 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
 
     public int compare(int[] query) {
       int[] bitext = isSource ? srcBitext : tgtBitext;
-      int j = pos;
       boolean consumedQuery = false;
-      for (int i = 0; 
-          i < query.length && bitext[j] >= 0; 
-          i++, j++) {
+      for (int i = 0, j = pos; i < query.length && bitext[j] >= 0; ++i, ++j) {
         consumedQuery = (i == query.length-1);
         int xId = query[i];
         int yId = bitext[j];
