@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -24,7 +24,7 @@ RecombinationFilter<Derivation<TK, FV>> {
   private final DerivationFeaturizer<TK, FV> distortionFeaturizer;
 
   public LinearDistortionRecombinationFilter(List<Featurizer<TK, FV>> featurizers) {
-    List<DerivationFeaturizer<TK,FV>> distortionFeaturizers = new LinkedList<>();
+    List<DerivationFeaturizer<TK,FV>> distortionFeaturizers = new ArrayList<>();
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof LinearFutureCostFeaturizer ||
           featurizer instanceof DTULinearDistortionFeaturizer) {

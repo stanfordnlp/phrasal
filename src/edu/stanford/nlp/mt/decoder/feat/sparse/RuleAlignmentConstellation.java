@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -27,10 +27,8 @@ public class RuleAlignmentConstellation implements
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = new LinkedList<>();
-    features.add(new FeatureValue<String>(FEATURE_PREFIX
+    return Collections.singletonList(new FeatureValue<String>(FEATURE_PREFIX
         + f.rule.abstractRule.alignment, 1.0));
-    return features;
   }
 
   @Override

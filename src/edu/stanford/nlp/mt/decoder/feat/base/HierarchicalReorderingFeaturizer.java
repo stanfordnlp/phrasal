@@ -197,7 +197,7 @@ public class HierarchicalReorderingFeaturizer extends
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
-    List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
+    List<FeatureValue<String>> values = new ArrayList<FeatureValue<String>>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
     boolean locallySwapping = (f.prior != null && f.derivation.rule.sourceCoverage

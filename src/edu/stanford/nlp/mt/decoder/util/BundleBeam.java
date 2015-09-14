@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -124,7 +123,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
           final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
           List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
           if (bundleList == null) {
-            bundleList = new LinkedList<>();
+            bundleList = new ArrayList<>();
             bundles.put(range.size(), bundleList);
           }
           bundleList.add(bundle);
@@ -155,7 +154,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   }
 
   protected List<Range> ranges(CoverageSet sourceCoverage) {
-    List<Range> rangeList = new LinkedList<>();
+    List<Range> rangeList = new ArrayList<>();
     int firstCoverageGap = sourceCoverage.nextClearBit(0);
     for (int startPos = firstCoverageGap; startPos < sourceLength; startPos++) {
       int endPosMax = sourceCoverage.nextSetBit(startPos);

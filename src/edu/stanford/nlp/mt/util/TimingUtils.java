@@ -2,7 +2,7 @@ package edu.stanford.nlp.mt.util;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -51,8 +51,8 @@ public final class TimingUtils {
     private final List<Long> marks;
     private final List<String> labels;
     private TimeKeeper() {
-      this.marks = new LinkedList<>();
-      this.labels = new LinkedList<>();
+      this.marks = new ArrayList<>();
+      this.labels = new ArrayList<>();
       marks.add(System.nanoTime());
       labels.add("Start");
     }

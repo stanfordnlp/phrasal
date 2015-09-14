@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.tm;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -91,7 +90,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
         new ArrayList<>() : phraseFeaturizer.ruleFeaturize(f);
     
     // Cache selected features
-    cachedFeatureList = new LinkedList<>();
+    cachedFeatureList = new ArrayList<>();
     for (FeatureValue<FV> feature : features) {
       if ( ! feature.doNotCache) {
         cachedFeatureList.add(feature);
@@ -123,7 +122,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     this.sourceCoverage = sourceCoverage;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
 
-    cachedFeatureList = new LinkedList<>();
+    cachedFeatureList = new ArrayList<>();
     
     // TM scores:
     double totalScore = 0.0;

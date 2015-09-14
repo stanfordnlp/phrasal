@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -66,7 +66,7 @@ public class RuleIndicator implements RuleFeaturizer<IString, String> {
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = new LinkedList<>();
+    List<FeatureValue<String>> features = new ArrayList<>();
     if (addLexicalizedRule && aboveLexicalThreshold(f.rule)) {
       String sourcePhrase = f.sourcePhrase.toString("-");
       String targetPhrase = f.targetPhrase.toString("-");

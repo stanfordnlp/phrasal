@@ -1,13 +1,17 @@
 package edu.stanford.nlp.mt.train;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
+import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.ArraySequence;
 
 /**
  * Sentence pair with GIZA word alignment, with GIZA alignment probability for
@@ -102,7 +106,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   private static List<String> extractWordsFromAlignment(String alignStr)
       throws IOException {
     String[] tokens = alignStr.split("\\s+");
-    List<String> words = new ArrayList<String>();
+    List<String> words = new ArrayList<>();
     assert (tokens[0].equals("NULL"));
     // Read alignment from string:
     int pos = -1;
@@ -215,7 +219,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
       String feAlign, String efAlign) {
     LineNumberReader feReader, efReader;
     GIZAWordAlignment sent = new GIZAWordAlignment();
-    List<GIZAWordAlignment> sents = new LinkedList<GIZAWordAlignment>();
+    List<GIZAWordAlignment> sents = new ArrayList<>();
     try {
       feReader = IOTools.getReaderFromFile(feAlign);
       efReader = IOTools.getReaderFromFile(efAlign);

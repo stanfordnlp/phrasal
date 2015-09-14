@@ -2,8 +2,8 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -127,8 +127,6 @@ public class TargetFunctionWordInsertion extends DerivationFeaturizer<IString, S
         ++numTargetFunctionTokens;
       }
     }
-    List<FeatureValue<String>> features = new LinkedList<>();
-    features.add(new FeatureValue<String>(FEATURE_NAME, (double) numTargetFunctionTokens / (double) numSourceFunctionTokens));
-    return features;
+    return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, (double) numTargetFunctionTokens / (double) numSourceFunctionTokens));
   }
 }

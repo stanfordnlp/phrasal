@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,8 +75,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
 
     nbestLists = new ArrayList<>(initialCapacity);
 
-    List<ScoredFeaturizedTranslation<IString, String>> currentNbest =
-        new LinkedList<>();
+    List<ScoredFeaturizedTranslation<IString, String>> currentNbest = new ArrayList<>();
 
     LineNumberReader reader = IOTools.getReaderFromFile(filename);
     int lastId = -1;
@@ -104,8 +102,8 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
         if (nbestLists.get(lastId) != null) {
           throw new RuntimeException("N-best lists are not contiguous for id: " + String.valueOf(lastId));
         }
-        nbestLists.set(lastId, new ArrayList<ScoredFeaturizedTranslation<IString, String>>(currentNbest));
-        currentNbest = new LinkedList<ScoredFeaturizedTranslation<IString, String>>();
+        nbestLists.set(lastId, new ArrayList<>(currentNbest));
+        currentNbest = new ArrayList<>();
         if (DEBUG) {
           System.err.printf("Doing %s Memory: %d MiB%n", id,
               (rt.totalMemory() - rt.freeMemory()) / (1024 * 1024));
@@ -153,7 +151,7 @@ public class FlatNBestList implements NBestListContainer<IString, String> {
         }
       }
 
-      List<FeatureValue<String>> featureValuesTmp = new LinkedList<FeatureValue<String>>();
+      List<FeatureValue<String>> featureValuesTmp = new ArrayList<>();
 
       for (String feature : featureMap.keySet()) {
         if (featureIndex != null)

@@ -35,13 +35,9 @@ public class PrefixRuleGrid<TK,FV> {
   private static final double SIM_THRESHOLD = 0.75;
   
   private final List<List<ConcreteRule<TK,FV>>> index;
-  private final CoverageSet sourceCoverage;
   private final CoverageSet targetCoverage;
   private final Sequence<TK> prefix;
   private final Sequence<TK> source;
-
-  // WSGDEBUG
-  private Map<Sequence<TK>, List<ConcreteRule<TK,FV>>> tgtToRule;
   
   /**
    * Constructor.
@@ -54,7 +50,6 @@ public class PrefixRuleGrid<TK,FV> {
       Sequence<TK> prefix) {
     this.source = source;
     this.prefix = prefix;
-    this.sourceCoverage = new CoverageSet();
     this.targetCoverage = new CoverageSet();
     this.index = sortRules(ruleList);
   }
@@ -77,35 +72,21 @@ public class PrefixRuleGrid<TK,FV> {
       positionList.add(i);
     }
     
-    // WSGDEBUG
-    this.tgtToRule = new HashMap<>();
-    
-    // Filter the rules
-    int numRules = 0, auxRules = 0;
+    // Find the prefix rules
+    int numRules = 0;
     List<List<ConcreteRule<TK,FV>>> ruleIndex = new ArrayList<>(prefix.size());
     for (int i = 0, sz = prefix.size(); i < sz; ++i) ruleIndex.add(new ArrayList<>());
     for (ConcreteRule<TK,FV> rule : ruleList) {
       List<Integer> matches = findAll(wordToPosition, rule.abstractRule.target);
       if (matches.size() > 0) {
-        sourceCoverage.or(rule.sourceCoverage);
         for (int i : matches) {
           targetCoverage.set(i, i + rule.abstractRule.target.size());
           ruleIndex.get(i).add(rule);
           ++numRules;
         }
-      } else {
-        if (rule.abstractRule.target.size() == 1) {
-          List<ConcreteRule<TK,FV>> tgtRules = tgtToRule.get(rule.abstractRule.target);
-          if (tgtRules == null) {
-            tgtRules = new LinkedList<>();
-            tgtToRule.put(rule.abstractRule.target, tgtRules);
-          }
-          tgtRules.add(rule);
-          ++auxRules;
-        }
       }
     }
-    logger.info("# prefix rules: {}/{}  # aux rules: {}/{} ", numRules, ruleList.size(), auxRules, ruleList.size());
+    logger.info("# prefix rules: {}/{}", numRules, ruleList.size());
     return ruleIndex;
   }
 
@@ -170,19 +151,7 @@ public class PrefixRuleGrid<TK,FV> {
       // Either a new word type, or a word type that hasn't been seen with anything in the source.
       // See if this word type is similar to anything in the query, e.g., maybe this is a mis-spelling.
       if (!addedRule) {
-        final String queryStr = targetSpan.toString();
-        for (Sequence<TK> tgt : tgtToRule.keySet()) {
-          String candidateStr = tgt.toString();
-          double score = SimilarityMeasures.jaccard(queryStr, candidateStr);
-          if (score > SIM_THRESHOLD) {
-            List<ConcreteRule<TK,FV>> ruleList = tgtToRule.get(tgt);
-            for (ConcreteRule<TK,FV> rule : ruleList) {
-              rule.abstractRule.target = (Sequence<TK>) targetSpan;
-              index.get(i).add(rule);
-              addedRule = true;
-            }
-          }
-        }
+
       }
       
       // Lowest precision. Revert to target OOV model.
@@ -217,7 +186,7 @@ public class PrefixRuleGrid<TK,FV> {
    * @return
    */
   public CoverageSet getSourceCoverage() {
-    return sourceCoverage;
+    return null;
   }
 
   /**
