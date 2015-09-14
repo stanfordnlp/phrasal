@@ -36,11 +36,15 @@ public final class TimingUtils {
    * @return
    */
   public static double elapsedSeconds(long startTime) {
-    return elapsedSeconds(startTime, System.nanoTime());
+    return elapsedTime(startTime, System.nanoTime(), 1e9);
   }
   
-  public static double elapsedSeconds(long startTime, long endTime) {
-    return (endTime - startTime) / 1e9;
+  private static double elapsedTime(long startTime, long endTime, double units) {
+    return (endTime - startTime) / units;
+  }
+  
+  public static double elapsedMillis(long startTime) {
+    return elapsedTime(startTime, System.nanoTime(), 1e6);
   }
   
   public static class TimeKeeper {
@@ -66,7 +70,7 @@ public final class TimingUtils {
       NumberFormat nf = new DecimalFormat("0.000");
       for (int i = 1, sz = marks.size(); i < sz; ++i) {
         if (i > 1) sb.append(" || ");
-        double elapsed = elapsedSeconds(marks.get(i-1), marks.get(i));
+        double elapsed = elapsedTime(marks.get(i-1), marks.get(i), 1e9);
         sb.append(labels.get(i)).append(" ").append(nf.format(elapsed));
       }
       sb.append(" || Total ").append(" ").append(nf.format(elapsedSecs()));

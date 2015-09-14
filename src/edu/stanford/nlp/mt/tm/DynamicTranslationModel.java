@@ -449,16 +449,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final int[] sourceArray = toTMArray(source);
     
     // Zhang and Vogel (2005) trick -- prune higher-order queries using lower-order misses
-    boolean[][] misses = new boolean[source.size()][source.size()+1];
+    final boolean[][] misses = new boolean[source.size()][source.size()+1];
     
     // Speed up higher-order queries with bounds from lower-order queries
-    int[][][] searchBounds = new int[source.size()][source.size()+1][];
+    final int[][][] searchBounds = new int[source.size()][source.size()+1][];
     
     // Iterate over source span lengths
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
       // Filter higher-order ranges based on lower-order misses
-      List<Range> ranges = new ArrayList<>();
+      List<Range> ranges = new ArrayList<>(source.size());
       for (int i = 0, sz = source.size() - len; i <= sz; ++i) {
         final int j = i + len;
         // Check lower-order n-grams for misses
@@ -481,7 +481,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Only use a parallel stream if the overhead is justified
       try (Stream<Range> rangeStream = ranges.size() > 5 ? ranges.parallelStream()
           : ranges.stream()) {
-        List<ConcreteRule<IString,FV>> rules = rangeStream.flatMap(range -> {
+        rangeStream.flatMap(range -> {
           final int i = range.i;
           final int j = range.j;
           final int order = j - i;
@@ -498,8 +498,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           } else {
             // Sample from the suffix array
             final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-            int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-            SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+            final int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
+            final SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
                 : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
             if (corpusSample.size() == 0) {
               // This span is not present in the training data.
@@ -507,15 +507,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
               return Stream.empty();
             }
             searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
-            int numHits = corpusSample.ub - corpusSample.lb + 1;
-            double sampleRate = corpusSample.size() / (double) numHits;
+            final int numHits = corpusSample.ub - corpusSample.lb + 1;
+            final double sampleRate = corpusSample.size() / (double) numHits;
             return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
                 r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
           }
-        }).collect(Collectors.toList());
-        
-        // Use a parallel collector above, and then dump into the final rule list.
-        concreteRules.addAll(rules);
+        }).forEachOrdered(concreteRules::add);
       }
     }
     
@@ -523,12 +520,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
       DynamicTranslationModel<FV> foregroundTM = 
           (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
-      InputProperties fgProperties = new InputProperties(sourceInputProperties);
+      final InputProperties fgProperties = new InputProperties(sourceInputProperties);
       fgProperties.remove(InputProperty.ForegroundTM);
-      List<ConcreteRule<IString, FV>> fgRules = foregroundTM.getRules(source, fgProperties, 
-          sourceInputId, scorer);
-      logger.info("input {}: adding {} rules from foreground model", sourceInputId, fgRules.size());
-      concreteRules.addAll(fgRules);
+      int bgSize = concreteRules.size();
+      concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
+      logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
     }
 
     return concreteRules;
@@ -1103,6 +1099,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @param args
    */
   public static void main(String[] args) throws IOException {
+    if (args.length != 2) {
+      System.err.printf("Usage: java %s tm_file source_file%n", DynamicTranslationModel.class.getName());
+      System.exit(-1);
+    }
     String fileName = args[0];
     String inputFile = args[1];
     TimeKeeper timer = TimingUtils.start();
@@ -1125,15 +1125,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     timer.mark("Source file loading");
 
     long startTime = TimingUtils.startTime();
-    int sourceId = 0, numRules = 0, numNgrams = 0;
+    int sourceId = 0, numRules = 0;
     InputProperties inProps = new InputProperties();
     for (Sequence<IString> source : sourceFile) {
-      for (Sequence<IString> ngram : Sequences.ngrams(source, 4)) {
-        numRules += tm.getRules(ngram, inProps, sourceId++, null).size();
-        ++numNgrams;
-      }
+      numRules += tm.getRules(source, inProps, sourceId++, null).size();
     }
-    double queryTime = TimingUtils.elapsedSeconds(startTime);
+    double queryTimeMillis = TimingUtils.elapsedMillis(startTime);
     timer.mark("Query");
     
     startTime = TimingUtils.startTime();
@@ -1157,9 +1154,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
     System.out.printf("#source segments:   %d%n", sourceFile.size());
     System.out.printf("Timing: %s%n", timer);
-    System.out.printf("Time/ngram: %.5fs%n", queryTime / (double) numNgrams);
+    System.out.printf("Time/segment: %.2fms%n", queryTimeMillis / (double) sourceFile.size());
     System.out.printf("#rules: %d%n", numRules);
-    System.out.printf("#ngrams: %d%n", numNgrams);
+    System.out.printf("#segments: %d%n", sourceFile.size());
     System.out.printf("#sa queries: %d%n", numSAQueries);
     System.out.printf("Time/sa query: %.5fs%n", saTime);
   }
