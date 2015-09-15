@@ -194,6 +194,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item item = pq.poll();
+        ++numPoppedItems;
 
         // WSGDEBUG
 //                System.err.printf("BEAM %d STATUS%n", i);
@@ -201,7 +202,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 //                System.err.println("===========");
         if (item.derivation != null) {
           newBeam.put(item.derivation);
-          ++numPoppedItems;
         }
 
         // Expand this consequent
