@@ -48,5 +48,10 @@ public enum InputProperty {
   
   // The phrase query limit
   // Type: Integer
-  RuleQueryLimit
+  RuleQueryLimit,
+  
+  // in tuning, decode with these prefix lengths for evaluation
+  // Type: int[]
+  PrefixLengths
+  
 }

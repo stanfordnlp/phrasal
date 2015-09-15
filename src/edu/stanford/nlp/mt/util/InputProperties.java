@@ -59,6 +59,15 @@ public class InputProperties extends HashMap<InputProperty, Object> {
         if(inputProperty == InputProperty.Domain) {
           inputProperties.put(inputProperty, value.split(LIST_DELIMITER));
         
+        } else if (inputProperty == InputProperty.PrefixLengths) {
+          String[] strings = value.split(LIST_DELIMITER);
+          int[] values = new int[strings.length];
+          
+          for(int i = 0; i < values.length; ++i)
+            values[i] = Integer.valueOf(strings[i]);
+          
+          inputProperties.put(inputProperty, values);
+            
         } else if (inputProperty == InputProperty.TargetPrefix) {
           inputProperties.put(inputProperty, Boolean.valueOf(value));
           

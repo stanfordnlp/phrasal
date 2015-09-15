@@ -89,6 +89,8 @@ public final class CorpusLevelMetricFactory {
       
     } else if (evalMetric.equals("numPredictedWords")) {
       emetric = new NumPredictedWordsMetric<IString, String>(references);
+    } else if (evalMetric.equals("nextPredictedWord")) {
+      emetric = new NextPredictedWordMetric<IString, String>(references);
     } else if (evalMetric.equals("maxPredictedWords")) {
       emetric = new MaxPredictedWordsMetric<IString, String>(references);
     } else if (evalMetric.equals("bleu-prefix")) {
