@@ -3,7 +3,6 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,12 +31,22 @@ public class PrefixRuleGrid<TK,FV> {
 
   private static final Logger logger = LogManager.getLogger(PrefixRuleGrid.class.getName());
   
+  // Method: rule adaptation
+  private static final int MAX_ORDER = 3;
+  private static final double ADAPTATION_THRESHOLD = 0.20;
+  
+  // Method: target side similarity
   private static final double SIM_THRESHOLD = 0.75;
   
-  private final List<List<ConcreteRule<TK,FV>>> index;
+  private List<List<ConcreteRule<TK,FV>>> index;
+  private Map<Sequence<TK>,List<ConcreteRule<TK,FV>>> tgtUnigramToRule;
   private final CoverageSet targetCoverage;
   private final Sequence<TK> prefix;
   private final Sequence<TK> source;
+  private final List<ConcreteRule<TK, FV>> originalList;
+  
+  // Low probability rules that can be adapted.
+  private List<ConcreteRule<TK,FV>> adaptableRules;
   
   /**
    * Constructor.
@@ -50,8 +59,9 @@ public class PrefixRuleGrid<TK,FV> {
       Sequence<TK> prefix) {
     this.source = source;
     this.prefix = prefix;
-    this.targetCoverage = new CoverageSet();
-    this.index = sortRules(ruleList);
+    this.targetCoverage = new CoverageSet(prefix.size());
+    this.originalList = ruleList;
+    sortRules(ruleList);
   }
 
   /**
@@ -59,7 +69,7 @@ public class PrefixRuleGrid<TK,FV> {
    * 
    * @return 
    */
-  private List<List<ConcreteRule<TK, FV>>> sortRules(List<ConcreteRule<TK, FV>> ruleList) {
+  private void sortRules(List<ConcreteRule<TK, FV>> ruleList) {
     // Make prefix word type -> position
     Map<TK,List<Integer>> wordToPosition = new HashMap<>();
     for (int i = 0, limit = prefix.size(); i < limit; ++i) {
@@ -74,20 +84,28 @@ public class PrefixRuleGrid<TK,FV> {
     
     // Find the prefix rules
     int numRules = 0;
-    List<List<ConcreteRule<TK,FV>>> ruleIndex = new ArrayList<>(prefix.size());
-    for (int i = 0, sz = prefix.size(); i < sz; ++i) ruleIndex.add(new ArrayList<>());
+    tgtUnigramToRule = new HashMap<>();
+    index = new ArrayList<>(prefix.size());
+    for (int i = 0, sz = prefix.size(); i < sz; ++i) index.add(new ArrayList<>());
     for (ConcreteRule<TK,FV> rule : ruleList) {
+      if (rule.abstractRule.target.size() == 0) continue;
       List<Integer> matches = findAll(wordToPosition, rule.abstractRule.target);
       if (matches.size() > 0) {
         for (int i : matches) {
           targetCoverage.set(i, i + rule.abstractRule.target.size());
-          ruleIndex.get(i).add(rule);
+          index.get(i).add(rule);
           ++numRules;
         }
+      } else if(rule.abstractRule.target.size() == 1) {
+        List<ConcreteRule<TK,FV>> rulesForTgt = tgtUnigramToRule.get(rule.abstractRule.target);
+        if (rulesForTgt == null) {
+          rulesForTgt = new ArrayList<>();
+          tgtUnigramToRule.put(rule.abstractRule.target, rulesForTgt);
+        }
+        rulesForTgt.add(rule);
       }
     }
     logger.info("# prefix rules: {}/{}", numRules, ruleList.size());
-    return ruleIndex;
   }
 
   /**
@@ -115,14 +133,14 @@ public class PrefixRuleGrid<TK,FV> {
    */
   @SuppressWarnings("unchecked")
   public void augmentGrid(List<DynamicTranslationModel<FV>> tmList, String[] featureNames, Scorer<FV> scorer,
-      FeatureExtractor<TK,FV> featurizer, InputProperties inputProperties, 
-      int sourceInputId) {
+      FeatureExtractor<TK,FV> featurizer, InputProperties inputProperties, int sourceInputId) {
 
     // Augment with synthetic singleton rules
     for (int i = targetCoverage.nextClearBit(0), pSz = prefix.size(); 
         i >= 0 && i < pSz; 
         i = targetCoverage.nextClearBit(i+1)) {
         // ++i) {
+      final List<ConcreteRule<TK,FV>> rulesForPosition = index.get(i);
 
       final IString targetQuery = (IString) prefix.get(i);
       final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(targetQuery)).sum();
@@ -136,14 +154,16 @@ public class PrefixRuleGrid<TK,FV> {
         final int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(sourceQuery, targetQuery)).sum();
         if (cnt_ef == 0) continue;
         final int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(sourceQuery)).sum();
+        assert cnt_f > 0;
         final Sequence<IString> sourceSpan = (Sequence<IString>) source.subsequence(j,j+1);
         CoverageSet sourceSpanCoverage = new CoverageSet(source.size());
         sourceSpanCoverage.set(j);
         ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule(sourceSpan, 
             targetSpan, sourceSpanCoverage, featureNames, (Scorer<String>) scorer, 
             (FeatureExtractor<IString,String>) featurizer, cnt_ef, cnt_e, cnt_f, inputProperties, 
-            (Sequence<IString>) source, sourceInputId, targetCoverage.get(i));
-        index.get(i).add(syntheticRule);
+            (Sequence<IString>) source, sourceInputId);
+        System.err.printf("P1: %s%n", syntheticRule);
+        rulesForPosition.add(syntheticRule);
         addedRule = true;
       }
       
@@ -151,22 +171,94 @@ public class PrefixRuleGrid<TK,FV> {
       // Either a new word type, or a word type that hasn't been seen with anything in the source.
       // See if this word type is similar to anything in the query, e.g., maybe this is a mis-spelling.
       if (!addedRule) {
-
+        final String queryStr = targetSpan.toString();
+        for (Sequence<TK> tgt : tgtUnigramToRule.keySet()) {
+          String candidateStr = tgt.toString();
+          double score = SimilarityMeasures.jaccard(queryStr, candidateStr);
+          if (score > SIM_THRESHOLD) {
+            final List<ConcreteRule<TK,FV>> ruleList = tgtUnigramToRule.get(tgt);
+            for (ConcreteRule<TK,FV> rule : ruleList) {
+              ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule((ConcreteRule<IString, String>) rule,
+                  (Sequence<IString>) tgt, (Scorer<String>) scorer, (FeatureExtractor<IString,String>) featurizer, 
+                  (Sequence<IString>) source, inputProperties, sourceInputId);
+              System.err.printf("P2: %s%n", syntheticRule);
+              rulesForPosition.add(syntheticRule);
+              addedRule = true;
+            }
+          }
+        }
       }
       
       // Lowest precision. Revert to target OOV model.
       if (!addedRule) {
-        
+        if (this.adaptableRules == null) populateAdaptableRules();
+        for (ConcreteRule<TK,FV> rule : adaptableRules) {
+          ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule((ConcreteRule<IString, String>) rule,
+              targetSpan, (Scorer<String>) scorer, (FeatureExtractor<IString,String>) featurizer, 
+              (Sequence<IString>) source, inputProperties, sourceInputId);
+          System.err.printf("P3: %s%n", syntheticRule);
+          rulesForPosition.add(syntheticRule);
+          addedRule = true;
+        }
       }
       
-      
+      // Sort the augmented list
+      Collections.sort(rulesForPosition);
+
       if (!addedRule) logger.warn("Could not create rule for token '{}' (position {})", targetQuery, i);
     }
-    
-    // Sort the final list of rules
-    for (List<ConcreteRule<TK,FV>> l : index) Collections.sort(l);
   }
 
+  private void populateAdaptableRules() {
+    this.adaptableRules = new ArrayList<>();
+    RuleGrid<TK,FV> ruleGrid = new RuleGrid<TK,FV>(this.originalList, source);
+    for (int order = 1; order <= MAX_ORDER; ++order) {
+      // Get posterior coverage
+      List<RuleCoverage> coverage = new ArrayList<>(source.size());
+      for (int i = 0, limit = source.size() - order; i <= limit; ++i) {
+        int j = i + order - 1;
+        final List<ConcreteRule<TK,FV>> rules = ruleGrid.get(i, j);
+        if (rules.size() == 0) continue;
+        double sumScore = 0.0;
+        for (ConcreteRule<TK,FV> rule : rules) {
+          sumScore += Math.exp(rule.isolationScore);
+        }
+        coverage.add(new RuleCoverage(i, j, rules.size(), sumScore));
+      }
+      // Sort by posterior probability
+      Collections.sort(coverage);
+
+      // Adapt rules in bottom quartile
+      final int max = (int) Math.ceil(ADAPTATION_THRESHOLD * coverage.size());
+      for (int i = 0; i < max; ++i) {
+        RuleCoverage ruleCoverage = coverage.get(i);
+        List<ConcreteRule<TK,FV>> rules = ruleGrid.get(ruleCoverage.i, ruleCoverage.j);
+        adaptableRules.add(rules.get(0));
+      }
+    }
+  }
+  
+  private static class RuleCoverage implements Comparable<RuleCoverage> {
+    public final int i;
+    public final int j;
+    public final int numRules;
+    public final double sumScore;
+    public RuleCoverage(int i, int j, int numRules, double sumScore) {
+      this.i = i;
+      this.j = j;
+      this.numRules = numRules;
+      this.sumScore = sumScore;
+    }
+    @Override
+    public int compareTo(RuleCoverage o) {
+      // TODO(spenceg) Could compare based on histogram or score?
+      return (int) Math.signum(sumScore - o.sumScore);
+    }
+    @Override
+    public String toString() {
+      return String.format("%d,%d %d %.2f", i, j, numRules, sumScore);
+    }
+  }
   /**
    * Add synthetic rules to the grid.
    * 
@@ -178,24 +270,6 @@ public class PrefixRuleGrid<TK,FV> {
       Scorer<FV> scorer) {
     // Augment with the full translation model
     throw new RuntimeException("Not yet implemented");
-  }
-
-  /**
-   * Source coverage.
-   * 
-   * @return
-   */
-  public CoverageSet getSourceCoverage() {
-    return null;
-  }
-
-  /**
-   * Target coverage.
-   * 
-   * @return
-   */
-  public CoverageSet getTargetCoverage() { 
-    return targetCoverage;
   }
 
   /**

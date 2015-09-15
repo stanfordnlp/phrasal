@@ -111,7 +111,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // TM (phrase table) query for applicable rules
-    PhraseQuery<TK,FV> phraseQuery = 
+    final PhraseQuery<TK,FV> phraseQuery = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = phraseQuery.filteredSource;
     timer.mark("TM query");

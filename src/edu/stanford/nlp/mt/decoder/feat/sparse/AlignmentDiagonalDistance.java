@@ -25,6 +25,11 @@ public class AlignmentDiagonalDistance extends DerivationFeaturizer<IString, Str
 
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
+    if (f.targetPhrase.size() == 0) {
+      // Source deletion rule
+      f.setState(this, new DiagonalState(-1));
+      return null;
+    }
     final int value = Math.abs(f.sourcePosition - f.targetPosition);
     f.setState(this, new DiagonalState(value));
     return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, value));

@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.tm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -87,10 +88,10 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     Featurizable<TK, FV> f = new Featurizable<>(sourceSequence, sourceInputProperties, this,
         sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer == null ? 
-        new ArrayList<>() : phraseFeaturizer.ruleFeaturize(f);
+        Collections.emptyList() : phraseFeaturizer.ruleFeaturize(f);
     
     // Cache selected features
-    cachedFeatureList = new ArrayList<>();
+    cachedFeatureList = new ArrayList<>(features.size());
     for (FeatureValue<FV> feature : features) {
       if ( ! feature.doNotCache) {
         cachedFeatureList.add(feature);
@@ -228,5 +229,4 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
   public int compareTo(ConcreteRule<TK,FV> o) {
     return (int) Math.signum(o.isolationScore - this.isolationScore);
   }
-
 }

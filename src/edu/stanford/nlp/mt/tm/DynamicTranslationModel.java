@@ -329,6 +329,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     });
   }
   
+  public int bitextSize() {
+    return sa.numSentences();
+  }
+  
   /**
    * Set the type of dense rule features.
    * 
@@ -581,6 +585,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public int getSourceLexCount(IString source) {
     int id = toTMId(source);
     return id >= 0 ? coocTable.getSrcMarginal(id) : 0;
+  }
+  
+  public int getSourceUnalignedCount(IString source) {
+    int id = toTMId(source);
+    return id >= 0 ? coocTable.getJointCount(id, LexCoocTable.NULL_ID) : 0;    
   }
   
   /**

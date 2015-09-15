@@ -5,9 +5,12 @@ import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
+import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.InputProperties;
 
 /**
@@ -46,13 +49,33 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
   }
 
   @Override
-  public void filter(List<ConcreteRule<IString, String>> ruleList, 
-      AbstractInferer<IString, String> inferer) {
+  public void filter(List<ConcreteRule<IString, String>> ruleList, AbstractInferer<IString, String> inferer) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
-  public void filter(List<ConcreteRule<IString, String>> ruleList, 
-      AbstractInferer<IString, String> inferer, InputProperties inputProperties) {
+  public void filter(List<ConcreteRule<IString, String>> ruleList, AbstractInferer<IString, String> inferer, 
+      InputProperties inputProperties) {
+    // Add source deletion rules
+    if ( ! (inferer.phraseGenerator instanceof DynamicTranslationModel)) return;
+    DynamicTranslationModel<String> tm = (DynamicTranslationModel<String>) inferer.phraseGenerator;
+    final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
+    for (int i = 0, sz = sourceSequence.size(); i < sz; ++i) {
+      IString sourceQuery = sourceSequence.get(i);
+      int cnt_f = tm.getSourceLexCount(sourceQuery);
+      final boolean isSourceOOV = cnt_f == 0;
+      if (isSourceOOV) continue;
+      final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
+      CoverageSet sourceCoverage = new CoverageSet(sourceSequence.size());
+      sourceCoverage.set(i);
+      int cnt_joint = tm.getSourceUnalignedCount(sourceQuery);
+      if (cnt_joint == 0) continue;
+      ConcreteRule<IString,String> syntheticRule = SyntheticRules.makeSyntheticRule(source, Sequences.emptySequence(), 
+          sourceCoverage, featureNames, inferer.scorer, inferer.featurizer, 
+          cnt_joint, tm.bitextSize(), cnt_f, inputProperties, sourceSequence, sourceInputId);
+      System.err.printf("SDL %s%n", syntheticRule);
+      ruleList.add(syntheticRule);
+    }
   }
 
   @Override

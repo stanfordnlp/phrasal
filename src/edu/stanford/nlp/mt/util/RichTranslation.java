@@ -7,7 +7,6 @@ import java.text.DecimalFormat;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.CompiledPhraseTable;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 
@@ -190,12 +189,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
     sb.append(df.format(this.score));
     return sb.toString();
   }
-  
-  // Thang May14
-  public String ruleInfo(ConcreteRule<TK,FV> rule){
-    return String.format("%s <r> %s <r> %d <r> %s", rule.abstractRule.source,
-        rule.abstractRule.target, rule.sourcePosition, rule.abstractRule.alignment);
-  }
+    
   /**
    * Print out list of rules participating in building up this translation
    * Useful for JointNNLM model
@@ -205,17 +199,12 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
   // Thang May14
   public String historyString() {
     StringBuilder sb = new StringBuilder();
-    
+    String nl = System.getProperty("line.separator");
     Stack<Featurizable<TK, FV>> featurizables = featurizables();
     Featurizable<TK,FV> f = null;
     while ( ! featurizables.isEmpty()) {
       f = featurizables.pop();
-      if (featurizables.isEmpty()) {
-        // last one
-        sb.append(ruleInfo(f.rule));
-      } else {
-        sb.append(ruleInfo(f.rule) + " |R| ");
-      }
+      sb.append(f.rule).append(nl);
     }
     return sb.toString();
   }
