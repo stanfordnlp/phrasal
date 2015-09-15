@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -8,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +17,6 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
-import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
@@ -136,7 +135,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     }
     
     // Book-keeping
-    int minSourceCoverage = Integer.MAX_VALUE;
+    int[] prefixCoverages = new int[prefix.size() + phraseGenerator.maxLengthTarget()];
+    Arrays.fill(prefixCoverages, Integer.MAX_VALUE);
+    int maxPrefix = 0;
     int[] hypsForBeam = new int[beams.size()];
     
     // Populate beams
@@ -168,8 +169,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
           beams.get(succCardinality).put(successor);
 
           // Book-keeping
-          if (successor.targetSequence.size() >= prefix.size() && succCardinality < minSourceCoverage)
-            minSourceCoverage = succCardinality;
+          maxPrefix = Math.max(maxPrefix, successor.targetSequence.size());
+          if (succCardinality < prefixCoverages[successor.targetSequence.size()]) {
+            prefixCoverages[successor.targetSequence.size()] = succCardinality;
+          }
         }
       }
     }
@@ -183,8 +186,15 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 //      System.err.println("================");
 //    }
     
-    // Return value is the minimum source coverage for a compatible derivation.
-    return minSourceCoverage;
+    maxPrefix = Math.min(maxPrefix, prefix.size());
+    if (prefixCoverages[maxPrefix] == Integer.MAX_VALUE) {
+      logger.warn("input {}: No prefix coverage.", sourceInputId);
+      return 0;
+    }
+    
+    // Return beam number of the starting point (longest prefix with the minimum source
+    // coverage)
+    return maxPrefix >= 0 ? prefixCoverages[maxPrefix] : 0;
   }
   
   /**

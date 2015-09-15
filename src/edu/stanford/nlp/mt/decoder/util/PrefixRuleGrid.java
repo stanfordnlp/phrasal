@@ -136,14 +136,14 @@ public class PrefixRuleGrid<TK,FV> {
       FeatureExtractor<TK,FV> featurizer, InputProperties inputProperties, int sourceInputId) {
 
     // Augment with synthetic singleton rules
-    for (int i = targetCoverage.nextClearBit(0), pSz = prefix.size(); 
+    for (int i = 0, pSz = prefix.size(); 
         i >= 0 && i < pSz; 
-        i = targetCoverage.nextClearBit(i+1)) {
-        // ++i) {
+//        i = targetCoverage.nextClearBit(i+1)) {
+         ++i) {
       final List<ConcreteRule<TK,FV>> rulesForPosition = index.get(i);
 
       final IString targetQuery = (IString) prefix.get(i);
-      final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(targetQuery)).sum();
+      int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(targetQuery)).sum();
       final Sequence<IString> targetSpan = (Sequence<IString>) prefix.subsequence(i, i+1);
       
       // Highest precision.
@@ -151,10 +151,14 @@ public class PrefixRuleGrid<TK,FV> {
       boolean addedRule = false;
       for (int j = 0, sSz = source.size(); j < sSz; ++j) {
         IString sourceQuery = (IString) source.get(j);
-        final int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(sourceQuery, targetQuery)).sum();
-        if (cnt_ef == 0) continue;
-        final int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(sourceQuery)).sum();
-        assert cnt_f > 0;
+        double cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(sourceQuery, targetQuery)).sum();
+//        if (cnt_ef == 0) continue;
+        int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(sourceQuery)).sum();
+        
+        if (cnt_ef == 0.0) cnt_ef = 1e-6;
+        if (cnt_e == 0) cnt_e = 1;
+        if (cnt_f == 0) cnt_f = 1;
+        
         final Sequence<IString> sourceSpan = (Sequence<IString>) source.subsequence(j,j+1);
         CoverageSet sourceSpanCoverage = new CoverageSet(source.size());
         sourceSpanCoverage.set(j);
@@ -162,7 +166,7 @@ public class PrefixRuleGrid<TK,FV> {
             targetSpan, sourceSpanCoverage, featureNames, (Scorer<String>) scorer, 
             (FeatureExtractor<IString,String>) featurizer, cnt_ef, cnt_e, cnt_f, inputProperties, 
             (Sequence<IString>) source, sourceInputId);
-        System.err.printf("P1: %s%n", syntheticRule);
+//        System.err.printf("P1: %s%n", syntheticRule);
         rulesForPosition.add(syntheticRule);
         addedRule = true;
       }
@@ -170,37 +174,37 @@ public class PrefixRuleGrid<TK,FV> {
       // Next highest precision.
       // Either a new word type, or a word type that hasn't been seen with anything in the source.
       // See if this word type is similar to anything in the query, e.g., maybe this is a mis-spelling.
-      if (!addedRule) {
-        final String queryStr = targetSpan.toString();
-        for (Sequence<TK> tgt : tgtUnigramToRule.keySet()) {
-          String candidateStr = tgt.toString();
-          double score = SimilarityMeasures.jaccard(queryStr, candidateStr);
-          if (score > SIM_THRESHOLD) {
-            final List<ConcreteRule<TK,FV>> ruleList = tgtUnigramToRule.get(tgt);
-            for (ConcreteRule<TK,FV> rule : ruleList) {
-              ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule((ConcreteRule<IString, String>) rule,
-                  (Sequence<IString>) tgt, (Scorer<String>) scorer, (FeatureExtractor<IString,String>) featurizer, 
-                  (Sequence<IString>) source, inputProperties, sourceInputId);
-              System.err.printf("P2: %s%n", syntheticRule);
-              rulesForPosition.add(syntheticRule);
-              addedRule = true;
-            }
-          }
-        }
-      }
+//      if (!addedRule) {
+//        final String queryStr = targetSpan.toString();
+//        for (Sequence<TK> tgt : tgtUnigramToRule.keySet()) {
+//          String candidateStr = tgt.toString();
+//          double score = SimilarityMeasures.jaccard(queryStr, candidateStr);
+//          if (score > SIM_THRESHOLD) {
+//            final List<ConcreteRule<TK,FV>> ruleList = tgtUnigramToRule.get(tgt);
+//            for (ConcreteRule<TK,FV> rule : ruleList) {
+//              ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule((ConcreteRule<IString, String>) rule,
+//                  (Sequence<IString>) tgt, (Scorer<String>) scorer, (FeatureExtractor<IString,String>) featurizer, 
+//                  (Sequence<IString>) source, inputProperties, sourceInputId);
+////              System.err.printf("P2: %s%n", syntheticRule);
+//              rulesForPosition.add(syntheticRule);
+//              addedRule = true;
+//            }
+//          }
+//        }
+//      }
       
       // Lowest precision. Revert to target OOV model.
-      if (!addedRule) {
-        if (this.adaptableRules == null) populateAdaptableRules();
-        for (ConcreteRule<TK,FV> rule : adaptableRules) {
-          ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule((ConcreteRule<IString, String>) rule,
-              targetSpan, (Scorer<String>) scorer, (FeatureExtractor<IString,String>) featurizer, 
-              (Sequence<IString>) source, inputProperties, sourceInputId);
-          System.err.printf("P3: %s%n", syntheticRule);
-          rulesForPosition.add(syntheticRule);
-          addedRule = true;
-        }
-      }
+//      if (!addedRule) {
+//        if (this.adaptableRules == null) populateAdaptableRules();
+//        for (ConcreteRule<TK,FV> rule : adaptableRules) {
+//          ConcreteRule<TK,FV> syntheticRule = (ConcreteRule<TK, FV>) SyntheticRules.makeSyntheticRule((ConcreteRule<IString, String>) rule,
+//              targetSpan, (Scorer<String>) scorer, (FeatureExtractor<IString,String>) featurizer, 
+//              (Sequence<IString>) source, inputProperties, sourceInputId);
+////          System.err.printf("P3: %s%n", syntheticRule);
+//          rulesForPosition.add(syntheticRule);
+//          addedRule = true;
+//        }
+//      }
       
       // Sort the augmented list
       Collections.sort(rulesForPosition);

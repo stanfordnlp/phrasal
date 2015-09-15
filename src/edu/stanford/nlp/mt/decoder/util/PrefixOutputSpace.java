@@ -73,7 +73,7 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
       ConcreteRule<IString,String> syntheticRule = SyntheticRules.makeSyntheticRule(source, Sequences.emptySequence(), 
           sourceCoverage, featureNames, inferer.scorer, inferer.featurizer, 
           cnt_joint, tm.bitextSize(), cnt_f, inputProperties, sourceSequence, sourceInputId);
-      System.err.printf("SDL %s%n", syntheticRule);
+//      System.err.printf("SDL %s%n", syntheticRule);
       ruleList.add(syntheticRule);
     }
   }
