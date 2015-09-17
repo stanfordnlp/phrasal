@@ -44,7 +44,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
   /**
    * The isolation score of this rule.
    */
-  public double isolationScore;
+  public final double isolationScore;
   
   /**
    * Features that are extracted at query-time and then
@@ -228,5 +228,20 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
   @Override
   public int compareTo(ConcreteRule<TK,FV> o) {
     return (int) Math.signum(o.isolationScore - this.isolationScore);
+  }
+  
+  @Override
+  public int hashCode() {
+    return abstractRule.hashCode() ^ (sourceCoverage.hashCode()*0xc2b2ae35);
+  }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    else if ( ! (o instanceof ConcreteRule)) return false;
+    else {
+      ConcreteRule<TK,FV> other = (ConcreteRule<TK,FV>) o;
+      return abstractRule.equals(other.abstractRule) && sourceCoverage.equals(other.sourceCoverage);
+    }
   }
 }

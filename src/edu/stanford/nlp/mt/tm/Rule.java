@@ -62,11 +62,6 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public ReorderingTypes backwardOrientation;
 
   /**
-   * Memoize the hash code.
-   */
-  private int hashCode = -1;
-
-  /**
    * Constructor for synthetic rules, which typically are generated at runtime
    * and contained faked-up scores and/or alignments.
    * 
@@ -120,10 +115,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
 
   @Override
   public int hashCode() {
-    if (hashCode == -1) {
-      hashCode = source.hashCode() ^ target.hashCode();
-    }
-    return hashCode;
+    return source.hashCode() ^ target.hashCode();
   }
   
   @SuppressWarnings("unchecked")

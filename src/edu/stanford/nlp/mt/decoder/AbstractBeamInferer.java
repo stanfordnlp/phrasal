@@ -25,12 +25,10 @@ import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.mt.decoder.util.PrefixRuleGrid;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTURule;
-import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValues;
 import edu.stanford.nlp.mt.util.InputProperties;
-import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
@@ -114,7 +112,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
    * @param beams
    * @return The beam at which standard decoding should begin.
    */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
       List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
@@ -124,15 +121,15 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
     
     // Augment grid (if necessary)
-    if (phraseGenerator instanceof DynamicTranslationModel) {
-      List<DynamicTranslationModel<FV>> tmList = new ArrayList<>();
-      tmList.add((DynamicTranslationModel<FV>) phraseGenerator);
-      if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
-        tmList.add((DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM));
-      }
-      final String[] featureNames = (String[]) phraseGenerator.getFeatureNames().toArray();
-      prefixGrid.augmentGrid(tmList, featureNames, scorer, featurizer, sourceInputProperties, sourceInputId);
-    }
+//    if (phraseGenerator instanceof DynamicTranslationModel) {
+//      List<DynamicTranslationModel<FV>> tmList = new ArrayList<>();
+//      tmList.add((DynamicTranslationModel<FV>) phraseGenerator);
+//      if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
+//        tmList.add((DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM));
+//      }
+//      final String[] featureNames = (String[]) phraseGenerator.getFeatureNames().toArray();
+//      prefixGrid.augmentGrid(tmList, featureNames, scorer, featurizer, sourceInputProperties, sourceInputId);
+//    }
     
     // Book-keeping
     int[] prefixCoverages = new int[prefix.size() + phraseGenerator.maxLengthTarget()];
