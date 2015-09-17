@@ -2,11 +2,9 @@ package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
-import java.util.Set;
 
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 
@@ -21,7 +19,6 @@ public class StateLatticeDecoder<S extends State<S>> implements
     Iterator<List<S>>, Iterable<List<S>> {
 
   private final PriorityQueue<CompositeState> agenda;
-  private final Set<CompositeState> dupCheckSet;
   private final RecombinationHistory<S> recombinationHistory;
 
   /**
@@ -33,13 +30,11 @@ public class StateLatticeDecoder<S extends State<S>> implements
   public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory) {
     this.recombinationHistory = recombinationHistory;
     agenda = new PriorityQueue<>(2000);
-    dupCheckSet = new HashSet<>(2000);
     
     // initialize score deltas
     for (S goalState : goalStates) {
       assert goalState != null;
       CompositeState newComposite = new CompositeState(goalState);
-      dupCheckSet.add(newComposite); // not actually necessary right now
       agenda.add(newComposite);
     }
   }
@@ -56,10 +51,7 @@ public class StateLatticeDecoder<S extends State<S>> implements
       final List<S> recombinedStates = recombinationHistory.recombinations(best.states.get(i));
       for (S recombinedState : recombinedStates) {
         CompositeState newComposite = new CompositeState(best, recombinedState, i);
-        if ( ! dupCheckSet.contains(newComposite)) {
-          dupCheckSet.add(newComposite);
-          agenda.add(newComposite);
-        }
+        agenda.add(newComposite);
       }
     }
     return best.states;
