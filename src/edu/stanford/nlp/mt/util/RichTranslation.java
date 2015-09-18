@@ -137,7 +137,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
       sbuf.append(" ").append(alignmentString);
     } else {
       // Very Verbose Alignments 
-      sbuf.append(' ').append(this.featurizable.sourceSentence.toString());
+      sbuf.append(' ').append(this.source.toString());
       sbuf.append(' ').append(delim).append(' ');
       Stack<Featurizable<TK,FV>> featurizables = featurizables();
       Featurizable<TK,FV> f = null;

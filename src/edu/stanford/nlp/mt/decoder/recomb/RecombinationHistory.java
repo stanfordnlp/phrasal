@@ -1,8 +1,8 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +30,7 @@ public class RecombinationHistory<S extends State<S>> {
     }
     List<S> retainedList = historyMap.get(retained);
     if (retainedList == null) {
-      retainedList = new LinkedList<S>();
+      retainedList = new ArrayList<>();
       historyMap.put(retained, retainedList);
     }
     List<S> discardedList = historyMap.get(discarded);
@@ -38,6 +38,7 @@ public class RecombinationHistory<S extends State<S>> {
       historyMap.remove(discarded);
       retainedList.addAll(discardedList);
     }
+    retainedList.add(discarded);
   }
 
   /**
@@ -46,11 +47,22 @@ public class RecombinationHistory<S extends State<S>> {
   public void remove(S pruned) {
     historyMap.remove(pruned);
   }
-
+  
   /**
    * 
    */
   public List<S> recombinations(State<S> retainedState) {
     return historyMap.getOrDefault(retainedState, Collections.emptyList());
+  }
+  
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
+    for (Map.Entry<S, List<S>> entry : historyMap.entrySet()) {
+      if (sb.length() > 0) sb.append(nl);
+      sb.append(entry.getKey().toString()).append("\t").append(entry.getValue());
+    }
+    return sb.toString();
   }
 }

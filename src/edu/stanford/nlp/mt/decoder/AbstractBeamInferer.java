@@ -324,7 +324,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // We want the algorithm to terminate eventually....
     final int maxItemsToExtract = distinct ? size * 5 : Integer.MAX_VALUE;
     int numExtracted = 0;
-    long nbestId = 0;
+    long nbestId = 0;    
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
       if (numExtracted >= maxItemsToExtract) {
         break;
@@ -333,27 +333,37 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       boolean withDTUs = false;
       Set<Rule<TK>> seenOptions = new HashSet<>();
       
-      // TODO(spenceg): This is very inefficient. Reconstruct the derivation since
-      // StateLatticeDecoder does not set parent pointers. Really only need to reconstruct the 
-      // inputs to RichTranslation here.
-      // When we replace StateLatticeDecoder, this code should go away.
+      // This is very inefficient. But we need to reconstruct the Featurizable
+      // object for RichTranslation below, and there's not a good way to do that without
+      // building up the derivation from the list of rule applications in the lattice path.
       Derivation<TK, FV> goalHyp = null;
+//      Derivation<TK, FV> lastNode = null;
       for (Derivation<TK, FV> node : latticePath) {
         if (goalHyp == null) {
+          // Root node.
           goalHyp = node;
+//          lastNode = node;
+//          System.err.printf("%.5f\t%.5f%n", goalHyp.score, goalHyp.score);
           continue;
         }
         if (node.rule.abstractRule instanceof DTURule)
           withDTUs = true;
         if (withDTUs) {
-          goalHyp = new DTUHypothesis<TK, FV>(sourceInputId,
+          goalHyp = new DTUHypothesis<>(sourceInputId,
               node.rule, goalHyp.length, goalHyp, node, featurizer,
               scorer, heuristic, seenOptions, outputSpace);
         } else {
-          goalHyp = new Derivation<TK, FV>(sourceInputId, node.rule,
+          
+          goalHyp = new Derivation<>(sourceInputId, node.rule,
               goalHyp.length, goalHyp, featurizer, scorer, heuristic, outputSpace);
+          
+//          String isRecomb = node.parent == lastNode ? "" : "*";
+//          System.err.printf("%.5f\t%.5f%s%n", goalHyp.score, node.score, isRecomb);
+//          lastNode = node;
         }
       }
+      
+//      System.err.printf("Final: %.6f%n", goalHyp.score);
 
       // Decoder failure in which the null hypothesis was returned.
       if (goalHyp == null || goalHyp.featurizable == null) {
@@ -380,8 +390,10 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       }
       
       // Create the n-best item
-      translations.add(new RichTranslation<>(goalHyp.featurizable, goalHyp.score, 
-          FeatureValues.combine(goalHyp), nbestId++));
+      RichTranslation<TK,FV> t = new RichTranslation<>(goalHyp.featurizable, goalHyp.score, 
+          FeatureValues.combine(goalHyp), nbestId++);
+      translations.add(t);
+//      System.err.printf("Return: %.6f%n%n", t.score);
       
       // Terminate if at desired n-best size
       if (translations.size() >= size) {
@@ -394,8 +406,8 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     // scores predicted by the lattice may not actually correspond to their real
     // scores.
     Collections.sort(translations, translationComparator);
-    timer.mark("Sort");
-
+    timer.mark("Sort");    
+    
     logger.info("Input {}: nbest #extracted {}", sourceInputId, numExtracted);
     logger.info("Input {}: nbest timing {}", sourceInputId, timer);
     
