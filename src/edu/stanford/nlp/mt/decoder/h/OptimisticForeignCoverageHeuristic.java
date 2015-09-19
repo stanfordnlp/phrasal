@@ -30,10 +30,10 @@ public class OptimisticForeignCoverageHeuristic<TK, FV> implements
 
     int foreignLength = newHypothesis.sourceSequence.size();
     double scorePerTranslatedWord = newHypothesis.score
-        / (foreignLength - newHypothesis.untranslatedTokens);
-    double newH = scorePerTranslatedWord * newHypothesis.untranslatedTokens;
+        / (foreignLength - newHypothesis.untranslatedSourceTokens);
+    double newH = scorePerTranslatedWord * newHypothesis.untranslatedSourceTokens;
 
-    double oldH = newHypothesis.preceedingDerivation.h;
+    double oldH = newHypothesis.parent.h;
 
     return newH - oldH;
 

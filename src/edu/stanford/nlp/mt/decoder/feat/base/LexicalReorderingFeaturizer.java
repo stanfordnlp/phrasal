@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
@@ -140,7 +139,7 @@ public class LexicalReorderingFeaturizer extends
   @Override
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
-    final List<FeatureValue<String>> features = new LinkedList<>();
+    final List<FeatureValue<String>> features = new ArrayList<>();
     final boolean monotone = f.linearDistortion == 0;
     final boolean swap = (f.prior != null && f.sourcePosition
         + f.sourcePhrase.size() == f.prior.sourcePosition);

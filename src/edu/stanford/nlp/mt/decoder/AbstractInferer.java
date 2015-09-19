@@ -1,16 +1,11 @@
 package edu.stanford.nlp.mt.decoder;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.tm.TranslationModel;
-import edu.stanford.nlp.mt.util.FeatureValue;
-import edu.stanford.nlp.mt.util.FeatureValueCollection;
 
 /**
  * An abstract inference algorithm.
@@ -57,26 +52,5 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     filter = inferer.filter;
     filterUnknownWords = inferer.filterUnknownWords;
     unknownWordModel = inferer.unknownWordModel;
-  }
-
-  protected FeatureValueCollection<FV> collectFeatureValues(
-      Derivation<TK, FV> hyp) {
-    class LinkedFeatureValues<FV2> extends LinkedList<FeatureValue<FV2>>
-        implements FeatureValueCollection<FV2> {
-      private static final long serialVersionUID = 1L;
-
-      @Override
-      public Object clone() {
-        return super.clone();
-      }
-    }
-    LinkedFeatureValues<FV> features = new LinkedFeatureValues<FV>();
-    for (; hyp != null; hyp = hyp.preceedingDerivation) {
-      List<FeatureValue<FV>> localFeatures = hyp.localFeatures;
-      if (localFeatures != null) {
-        features.addAll(localFeatures);
-      }
-    }
-    return features;
   }
 }

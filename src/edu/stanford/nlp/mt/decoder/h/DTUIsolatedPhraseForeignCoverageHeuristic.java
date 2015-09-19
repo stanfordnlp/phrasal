@@ -67,7 +67,7 @@ public class DTUIsolatedPhraseForeignCoverageHeuristic<TK, FV> implements
   public double getHeuristicDelta(Derivation<TK, FV> hyp,
       CoverageSet newCoverage) {
 
-    double oldH = hyp.preceedingDerivation.h;
+    double oldH = hyp.parent.h;
     double newH = 0.0;
 
     CoverageSet coverage = hyp.sourceCoverage;

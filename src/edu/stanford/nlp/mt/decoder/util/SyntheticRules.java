@@ -19,7 +19,6 @@ public final class SyntheticRules {
 
   private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
   public static final String PHRASE_TABLE_NAME = "synthetic";
-  private static final double SYNTHETIC_PENALTY = 20;
   
   private SyntheticRules() {}
   
@@ -36,14 +35,12 @@ public final class SyntheticRules {
       CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<String> scorer,
       FeatureExtractor<IString,String> featurizer,
       double cnt_f_e, int cnt_e, int cnt_f, InputProperties inputProperties, Sequence<IString> sourceSequence,
-      int sourceInputId, boolean penalize) {
+      int sourceInputId) {
     // Baseline dense features
     float[] scores = new float[phraseScoreNames.length];
-    scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e) 
-        - (penalize ? SYNTHETIC_PENALTY : 0.0));
+    scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e));
     scores[1] = scores[0];
-    scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f)
-        - (penalize ? SYNTHETIC_PENALTY : 0.0));
+    scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f));
     scores[3] = scores[2];
     if (scores.length == 6) {
       // Extended features
@@ -54,6 +51,29 @@ public final class SyntheticRules {
     Rule<IString> abstractRule = new Rule<>(scores, phraseScoreNames, target, source, 
         UNIGRAM_ALIGNMENT, PHRASE_TABLE_NAME);
     ConcreteRule<IString,String> rule = new ConcreteRule<>(abstractRule, sourceCoverage, featurizer, 
+        scorer, sourceSequence, sourceInputId, inputProperties);
+    return rule;
+  }
+  
+  /**
+   * Create a new rule from an existing rule by replacing the target side.
+   * 
+   * @param base
+   * @param target
+   * @param scorer
+   * @param featurizer
+   * @param sourceSequence
+   * @param inputProperties
+   * @param sourceInputId
+   * @return
+   */
+  public static ConcreteRule<IString,String> makeSyntheticRule(ConcreteRule<IString,String> base,
+      Sequence<IString> target, Scorer<String> scorer, FeatureExtractor<IString,String> featurizer,
+      Sequence<IString> sourceSequence, InputProperties inputProperties, int sourceInputId) {
+    Rule<IString> baseRule = base.abstractRule;
+    Rule<IString> newRule = new Rule<>(baseRule.scores, baseRule.phraseScoreNames, target, baseRule.source, 
+        UNIGRAM_ALIGNMENT, PHRASE_TABLE_NAME);
+    ConcreteRule<IString,String> rule = new ConcreteRule<>(newRule, base.sourceCoverage, featurizer, 
         scorer, sourceSequence, sourceInputId, inputProperties);
     return rule;
   }

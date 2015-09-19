@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.decoder.feat;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +70,7 @@ public final class FeaturizerFactory {
         withGaps ? new DTULinearDistortionFeaturizer() : new LinearFutureCostFeaturizer(futureCostDelay);
 
     // DTU features
-    List<DerivationFeaturizer<IString, String>> gapFeaturizers = new LinkedList<>();
+    List<DerivationFeaturizer<IString, String>> gapFeaturizers = new ArrayList<>();
     if (withGaps) {
       GapType gapType = GapType.valueOf(paramPairs.get(GAP_PARAMETER));
       if (gapType == GapType.source || gapType == GapType.both)
@@ -87,7 +87,7 @@ public final class FeaturizerFactory {
               "Baseline featurizers requires that a language model is specificed using the parameter '%s'",
               ARPA_LM_PARAMETER));
         }
-        List<Featurizer<IString, String>> featurizers = new LinkedList<>();
+        List<Featurizer<IString, String>> featurizers = new ArrayList<>();
         if (withGaps) featurizers.addAll(gapFeaturizers);
 
         // ARPA LM
@@ -105,7 +105,7 @@ public final class FeaturizerFactory {
         return new FeatureExtractor<IString, String>(featurizers);
 
       } else if (featurizerName.equals(MOSES_DENSE_FEATURES)) {
-        List<Featurizer<IString, String>> featurizers = new LinkedList<>();
+        List<Featurizer<IString, String>> featurizers = new ArrayList<>();
         if (withGaps) featurizers.addAll(gapFeaturizers);
 
         DerivationFeaturizer<IString, String> arpaLmFeaturizer;

@@ -44,7 +44,7 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
       return false;
     }   
  
-    Sequence<TK> translation = featurizable.targetPrefix;
+    Sequence<TK> translation = featurizable.targetSequence;
     int targetLength = translation.size();
 
     // First token in translation is not the start token.
@@ -79,7 +79,7 @@ public class WrapBoundaryOutputSpace<TK, FV> implements OutputSpace<TK, FV> {
       return false;
     }
     
-    Sequence<TK> translation = featurizable.targetPrefix;
+    Sequence<TK> translation = featurizable.targetSequence;
     int targetLength = translation.size();
     
     // Translation too short to contain start and stop tokens.

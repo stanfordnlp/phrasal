@@ -54,11 +54,11 @@ public final class RecombinationFilterFactory {
 
         // maintain uniqueness of hypotheses that differ by the last N-tokens,
         // this being relevant to lg model scoring
-        filters.add(new TranslationNgramRecombinationFilter(featurizers));
+        filters.add(new NGramLMRecombinationFilter(featurizers));
 
         // maintain uniqueness of hypotheses that differ in terms of foreign
         // sequence coverage
-        filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
+        filters.add(new SourceCoverageRecombinationFilter<IString, String>());
 
         if (msdRecombination) {
           filters.add(new MSDRecombinationFilter(featurizers));
@@ -69,8 +69,8 @@ public final class RecombinationFilterFactory {
       }
       case DTU_RECOMBINATION: {
         filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
-        filters.add(new TranslationNgramRecombinationFilter(featurizers));
-        filters.add(new ForeignCoverageRecombinationFilter<IString, String>());
+        filters.add(new NGramLMRecombinationFilter(featurizers));
+        filters.add(new SourceCoverageRecombinationFilter<IString, String>());
         filters.add(new DTURecombinationFilter<IString, String>());
         if (msdRecombination) {
           filters.add(new MSDRecombinationFilter(featurizers));

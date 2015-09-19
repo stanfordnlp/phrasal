@@ -43,7 +43,7 @@ RecombinationFilter<Derivation<IString, String>> {
         this.featurizers.add((DerivationFeaturizer<IString, String>) featurizer);
       }
     }
-    sourceCoverageFilter = new ForeignCoverageRecombinationFilter<IString, String>();
+    sourceCoverageFilter = new SourceCoverageRecombinationFilter<IString, String>();
   }
 
   @Override

@@ -197,7 +197,7 @@ public class HierarchicalReorderingFeaturizer extends
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
-    List<FeatureValue<String>> values = new LinkedList<FeatureValue<String>>();
+    List<FeatureValue<String>> values = new ArrayList<FeatureValue<String>>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
     boolean locallySwapping = (f.prior != null && f.derivation.rule.sourceCoverage
@@ -215,7 +215,7 @@ public class HierarchicalReorderingFeaturizer extends
       CoverageSet fCoverage = f.derivation.sourceCoverage;
       System.err.printf("----\n");
       System.err.printf("Partial translation (pos=%d): %s\n",
-          f.targetPosition, f.targetPrefix);
+          f.targetPosition, f.targetSequence);
       System.err.printf("Foreign sentence (pos=%d): %s\n", f.sourcePosition,
           f.sourceSentence);
       System.err.printf("Coverage: %s (size=%d)\n", fCoverage,

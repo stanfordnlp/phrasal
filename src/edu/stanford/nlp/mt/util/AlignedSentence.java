@@ -93,8 +93,8 @@ public class AlignedSentence implements Serializable {
   
   public static int[] expand(int al) {
     if (al == 0) return new int[0];
-    int numLinks = ((31 - Integer.numberOfLeadingZeros(al)) / 8) + 1;
-    int[] links = new int[numLinks];
+    final int numLinks = ((31 - Integer.numberOfLeadingZeros(al)) / 8) + 1;
+    final int[] links = new int[numLinks];
     for (int i = 0; i < numLinks; ++i) {
       int pos = i * 8;
       int mask = 0xff << pos;

@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.tm;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -44,7 +44,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
   /**
    * The isolation score of this rule.
    */
-  public double isolationScore;
+  public final double isolationScore;
   
   /**
    * Features that are extracted at query-time and then
@@ -88,10 +88,10 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     Featurizable<TK, FV> f = new Featurizable<>(sourceSequence, sourceInputProperties, this,
         sourceInputId);
     List<FeatureValue<FV>> features = phraseFeaturizer == null ? 
-        new ArrayList<>() : phraseFeaturizer.ruleFeaturize(f);
+        Collections.emptyList() : phraseFeaturizer.ruleFeaturize(f);
     
     // Cache selected features
-    cachedFeatureList = new LinkedList<>();
+    cachedFeatureList = new ArrayList<>(features.size());
     for (FeatureValue<FV> feature : features) {
       if ( ! feature.doNotCache) {
         cachedFeatureList.add(feature);
@@ -123,7 +123,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     this.sourceCoverage = sourceCoverage;
     this.sourcePosition = sourceCoverage.nextSetBit(0);
 
-    cachedFeatureList = new LinkedList<>();
+    cachedFeatureList = new ArrayList<>();
     
     // TM scores:
     double totalScore = 0.0;
@@ -229,5 +229,19 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
   public int compareTo(ConcreteRule<TK,FV> o) {
     return (int) Math.signum(o.isolationScore - this.isolationScore);
   }
-
+  
+  @Override
+  public int hashCode() {
+    return abstractRule.hashCode() ^ (sourceCoverage.hashCode()*0xc2b2ae35);
+  }
+  
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    else if ( ! (o instanceof ConcreteRule)) return false;
+    else {
+      ConcreteRule<TK,FV> other = (ConcreteRule<TK,FV>) o;
+      return abstractRule.equals(other.abstractRule) && sourceCoverage.equals(other.sourceCoverage);
+    }
+  }
 }

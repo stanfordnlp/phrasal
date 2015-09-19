@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,12 +102,12 @@ public class PhraseAlignment {
 
   public int[][] s2t() {
     if (t2s == null) return null;
-    List<List<Integer>> f2eL = new LinkedList<>();
+    List<List<Integer>> f2eL = new ArrayList<>();
     for (int ei=0; ei<t2s.length; ++ei) {
       if (t2s[ei] != null) {
         for (int fi : t2s[ei]) {
           while (f2eL.size() <= fi)
-            f2eL.add(new LinkedList<>());
+            f2eL.add(new ArrayList<>());
           f2eL.get(fi).add(ei);
         }
       }

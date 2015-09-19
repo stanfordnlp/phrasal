@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
@@ -18,8 +18,7 @@ import edu.stanford.nlp.mt.util.IString;
  * @author Spence Green
  * 
  */
-public class TranslationNgramRecombinationFilter
-        implements RecombinationFilter<Derivation<IString, String>> {
+public class NGramLMRecombinationFilter implements RecombinationFilter<Derivation<IString, String>> {
 
   private final List<DerivationFeaturizer<IString,String>> lmFeaturizers;
 
@@ -28,9 +27,9 @@ public class TranslationNgramRecombinationFilter
    * 
    * @param featurizers
    */
-  public TranslationNgramRecombinationFilter(
+  public NGramLMRecombinationFilter(
       List<Featurizer<IString, String>> featurizers) {
-    lmFeaturizers = new LinkedList<>();
+    lmFeaturizers = new ArrayList<>();
     for (Featurizer<IString,String> featurizer : featurizers) {
       if (featurizer instanceof NGramLanguageModelFeaturizer) {
         lmFeaturizers.add((NGramLanguageModelFeaturizer) featurizer);
@@ -68,17 +67,31 @@ public class TranslationNgramRecombinationFilter
       // in the combinable() function above.
       return hyp.sourceSequence.hashCode();
     }
-    int maxLength = -1;
-    int hashCode = 0;
-    for (DerivationFeaturizer<IString,String> lmFeaturizer : lmFeaturizers) {
-      LMState state = (LMState) hyp.featurizable.getState(lmFeaturizer);
-      if (state.length() > maxLength) {
-        maxLength = state.length();
-        hashCode = state.hashCode();
+    
+    if (lmFeaturizers.size() == 1) {
+      return hyp.featurizable.getState(lmFeaturizers.get(0)).hashCode();
+    
+    } else {
+      // Ripped off from MurmurHash3
+      final int c1 = 0xcc9e2d51;
+      final int c2 = 0x1b873593;
+
+      final int sz = lmFeaturizers.size();
+      int h1 = sz*4;
+
+      for (int i=0; i<sz; i++) {
+        LMState state = (LMState) hyp.featurizable.getState(lmFeaturizers.get(i));
+        int k1 = state.hashCode();
+        k1 *= c1;
+        k1 = (k1 << 15) | (k1 >>> 17);  // ROTL32(k1,15);
+        k1 *= c2;
+
+        h1 ^= k1;
+        h1 = (h1 << 13) | (h1 >>> 19);  // ROTL32(h1,13);
+        h1 = h1*5+0xe6546b64;
       }
+      return h1;
     }
-    assert maxLength >= 0;
-    return hashCode;
   }
   
   @Override

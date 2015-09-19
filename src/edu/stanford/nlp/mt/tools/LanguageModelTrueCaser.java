@@ -11,7 +11,7 @@ import edu.stanford.nlp.mt.decoder.Inferer;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.h.IsolatedPhraseForeignCoverageHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
-import edu.stanford.nlp.mt.decoder.recomb.TranslationNgramRecombinationFilter;
+import edu.stanford.nlp.mt.decoder.recomb.NGramLMRecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.UnconstrainedOutputSpace;
 import edu.stanford.nlp.mt.decoder.util.UniformScorer;
@@ -72,7 +72,7 @@ public class LanguageModelTrueCaser {
 
     // misc. decoder configuration
     RecombinationFilter<Derivation<IString, String>> recombinationFilter =
-        new TranslationNgramRecombinationFilter(listFeaturizers);
+        new NGramLMRecombinationFilter(listFeaturizers);
     infererBuilder.setRecombinationFilter(recombinationFilter);
     infererBuilder.setMaxDistortion(0);
 

@@ -45,7 +45,6 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
-import edu.stanford.nlp.mt.lm.KenLanguageModel;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
@@ -107,6 +106,7 @@ public class Phrasal {
     sb.append("Usage: java ").append(Phrasal.class.getName()).append(" OPTS [ini_file] < input > output").append(nl)
         .append(nl).append("Phrasal: A phrase-based machine translation decoder from the Stanford NLP group.")
         .append(nl).append(nl).append("Command-line arguments override arguments specified in the optional ini_file:")
+        .append(nl).append("  -").append(INPUT_FILE_OPT).append(" file : Filename of file to decode").append(nl)
         .append(nl).append("  -").append(TRANSLATION_TABLE_OPT)
         .append(
             " filename : Translation model file. Multiple models can be specified by separating filenames with colons.")
@@ -115,7 +115,6 @@ public class Phrasal {
         .append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl).append("  -")
         .append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl).append("  -")
         .append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl).append("  -")
-        .append(DIVERSE_NBEST_LIST_OPT).append(" boolean : Generate diverse n-best lists (default: false)").append(nl)
         .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).")
         .append(nl).append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl).append("  -")
         .append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
@@ -164,12 +163,12 @@ public class Phrasal {
 
   private static final Logger logger = LogManager.getLogger(Phrasal.class);
 
+  public static final String INPUT_FILE_OPT = "text";
   public static final String TRANSLATION_TABLE_OPT = "ttable-file";
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   public static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
-  public static final String DIVERSE_NBEST_LIST_OPT = "diverse-n-best-list";
   public static final String FORCE_DECODE = "force-decode";
   public static final String BEAM_SIZE = "stack";
   public static final String SEARCH_ALGORITHM = "search-algorithm";
@@ -204,9 +203,9 @@ public class Phrasal {
   private static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<>();
 
   static {
-    REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT));
-    OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, DIVERSE_NBEST_LIST_OPT, FORCE_DECODE,
+    REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
+    OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
+        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
@@ -221,6 +220,8 @@ public class Phrasal {
    */
   public static final String TM_BACKGROUND_NAME = "background-tm";
   public static final String TM_FOREGROUND_NAME = "foreground-tm";
+  
+  public static final int MAX_NBEST_SIZE = 1000;
 
   /**
    * Number of decoding threads. Setting this parameter to 0 enables
@@ -294,7 +295,6 @@ public class Phrasal {
   private PrintStream nbestListWriter;
   private int nbestListSize;
   private boolean distinctNbest = false;
-  private boolean diverseNbest = false;
 
   /**
    * Internal alignment options
@@ -403,15 +403,6 @@ public class Phrasal {
    */
   public boolean getWrapBoundary() {
     return wrapBoundary;
-  }
-
-  /**
-   * Activates n-best algorithm with more diverse candidates.
-   *
-   * @param bDiversity
-   */
-  public void setNbestDiversity(boolean bDiversity) {
-    diverseNbest = bDiversity;
   }
 
   // TODO(spenceg): Remove static members. The Phrasal object itself is not
@@ -875,16 +866,14 @@ public class Phrasal {
       nbestListSize = -1;
       nbestListWriter = null;
     }
-
-    if (config.containsKey(DISTINCT_NBEST_LIST_OPT)) {
-      distinctNbest = Boolean.parseBoolean(config.get(DISTINCT_NBEST_LIST_OPT).get(0));
-      logger.info("N-best distinct: {}", distinctNbest);
+    if (nbestListSize > MAX_NBEST_SIZE) {
+      logger.warn("nbest list size {} exceeds maximum of {}", nbestListSize, MAX_NBEST_SIZE);
+      nbestListSize = MAX_NBEST_SIZE;
     }
-
-    if (config.containsKey(DIVERSE_NBEST_LIST_OPT)) {
-      diverseNbest = Boolean.parseBoolean(config.get(DIVERSE_NBEST_LIST_OPT).get(0));
-      logger.info("N-best diversity: {}", diverseNbest);
-    }
+    
+    distinctNbest = config.containsKey(DISTINCT_NBEST_LIST_OPT) ?
+        Boolean.parseBoolean(config.get(DISTINCT_NBEST_LIST_OPT).get(0)) : false;
+    logger.info("Distinct n-best lists: {}", distinctNbest);
 
     // Determine if we need to generate an alignment file
     final List<String> alignmentOpt = config.get(ALIGNMENT_OUTPUT_FILE);
@@ -1179,7 +1168,7 @@ public class Phrasal {
       throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
     }
 
-    TimeKeeper timer = TimingUtils.start();
+    final TimeKeeper timer = TimingUtils.start();
     
     // Wrapping input for TMs with boundary tokens
     if (wrapBoundary) {
@@ -1208,34 +1197,30 @@ public class Phrasal {
     } else {
       this.scorers.get(threadId).updateWeights(this.globalModel);
     }
+    if (! inputProperties.containsKey(InputProperty.RuleQueryLimit)) {
+      inputProperties.put(InputProperty.RuleQueryLimit, ruleQueryLimit);
+    }
     timer.mark("setup");
-
-    // Rule query limit
-    inputProperties.put(InputProperty.RuleQueryLimit, ruleQueryLimit);
     
     // Decode
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, outputSpace,
-          outputSpace.getAllowableSequences(), numTranslations, distinctNbest, diverseNbest);
+          outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
 
-      // Return an empty n-best list
-      if (translations == null)
-        translations = Collections.emptyList();
+      // Decoder failure
+      if (translations == null) translations = Collections.emptyList();
 
     } else {
       // The 1-best translation in this case is potentially different from
       // calling nbest() with a list size of 1. Therefore, this call is *not* a
-      // special
-      // case of the condition above.
+      // special case of the condition above.
       final RichTranslation<IString, String> translation = inferers.get(threadId).translate(source, sourceInputId,
           inputProperties, outputSpace, outputSpace.getAllowableSequences());
-      if (translation != null) {
-        translations.add(translation);
-      }
+      if (translation != null) translations.add(translation);
     }
     timer.mark("decode");
-    logger.info("top-level timing: {}", timer);
+    logger.info("Decode timing: {}", timer);
     return translations;
   }
 
@@ -1265,14 +1250,11 @@ public class Phrasal {
    */
   private static Map<String, List<String>> getConfigurationFrom(String configFile, Properties options)
       throws IOException {
-    final Map<String, List<String>> config = configFile == null ? new HashMap<String, List<String>>()
+    final Map<String, List<String>> config = configFile == null ? new HashMap<>()
         : IOTools.readConfigFile(configFile);
     // Command-line options supersede config file options
-    for (final Map.Entry<Object, Object> e : options.entrySet()) {
-      final String key = e.getKey().toString();
-      final String value = e.getValue().toString();
-      config.put(key, Arrays.asList(value.split("\\s+")));
-    }
+    options.entrySet().stream().forEach(e -> config.put(e.getKey().toString(), 
+        Arrays.asList(e.getValue().toString().split("\\s+"))));
     return config;
   }
 
@@ -1305,9 +1287,10 @@ public class Phrasal {
       });
       return phrasal;
 
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SecurityException
-        | InvocationTargetException | NoSuchMethodException | ClassNotFoundException | IOException e) {
-      logger.error(e);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | 
+        SecurityException | InvocationTargetException | NoSuchMethodException | 
+        ClassNotFoundException | IOException e) {
+      logger.error("Unable to load Phrasal", e);
     }
     return null;
   }
@@ -1329,14 +1312,14 @@ public class Phrasal {
 
     // by default, exit on uncaught exception
     Thread.setDefaultUncaughtExceptionHandler((t, ex) -> {
-      logger.fatal("Uncaught exception from thread: {}", t.getName());
-      logger.fatal("Exception: ", ex);
+      logger.fatal("Uncaught top-level exception", ex);
       System.exit(-1);
     });
 
     final Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
     final Phrasal p = Phrasal.loadDecoder(configuration);
-    p.decode(System.in, true);
-//     p.decode(new FileInputStream(new File("copy-data/debug.seq.ar")), true);
+    
+    if (options.containsKey("text")) p.decode(new FileInputStream(new File(options.getProperty("text"))), true);
+    else p.decode(System.in, true);
   }
 }

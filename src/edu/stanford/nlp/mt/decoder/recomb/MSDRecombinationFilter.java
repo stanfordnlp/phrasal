@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class MSDRecombinationFilter implements
   // and hurts search)
   private static final boolean HIERARCHICAL_RECOMBINATION = false;
 
-  private final List<DerivationFeaturizer<IString, String>> hierFeaturizers = new LinkedList<>();
+  private final List<DerivationFeaturizer<IString, String>> hierFeaturizers = new ArrayList<>();
 
   public MSDRecombinationFilter(
       List<Featurizer<IString, String>> featurizers) {

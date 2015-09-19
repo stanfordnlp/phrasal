@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,22 +75,23 @@ public class RecombinationHash<S extends State<S>> {
       lastRedundantOnQuery = null;
       recombinationHash.put(wrappedHyp, wrappedHyp);
       return Status.NOVEL;
-    }
-    if (hypothesis == filterEquivWrappedHyp.hypothesis) {
+    
+    } else if (hypothesis == filterEquivWrappedHyp.hypothesis) {
       lastBestOnQuery = hypothesis;
       lastRedundantOnQuery = null;
       return Status.SELF;
-    }
-    if (hypothesis.score() > filterEquivWrappedHyp.hypothesis.score()) {
+    
+    } else if (hypothesis.score() > filterEquivWrappedHyp.hypothesis.score()) {
       lastRedundantOnQuery = filterEquivWrappedHyp.hypothesis;
       lastBestOnQuery = hypothesis;
       filterEquivWrappedHyp.hypothesis = hypothesis;
       return Status.BETTER;
+    
+    } else {
+      lastRedundantOnQuery = hypothesis;
+      lastBestOnQuery = filterEquivWrappedHyp.hypothesis;
+      return Status.COMBINABLE;
     }
-
-    lastRedundantOnQuery = hypothesis;
-    lastBestOnQuery = filterEquivWrappedHyp.hypothesis;
-    return Status.COMBINABLE;
   }
 
   private S lastBestOnQuery;
@@ -178,12 +180,14 @@ public class RecombinationHash<S extends State<S>> {
    * 
    * @return
    */
-  public List<S> hypotheses() {
-    return recombinationHash.keySet().stream().map(fwh -> fwh.hypothesis).collect(Collectors.toList());
+  public List<S> derivations() {
+    final List<S> derivations = new ArrayList<>(recombinationHash.size());
+    for (FilterWrappedHypothesis hyp : recombinationHash.keySet()) derivations.add(hyp.hypothesis);
+    return derivations;
   }
   
   @Override
   public String toString() {
-    return hypotheses().stream().map(h -> h.toString()).collect(Collectors.joining(" ||| "));
+    return derivations().stream().map(h -> h.toString()).collect(Collectors.joining(" ||| "));
   }
 }

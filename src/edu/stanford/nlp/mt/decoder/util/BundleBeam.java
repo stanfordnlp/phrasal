@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,8 +58,8 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * @param maxPhraseLength 
    */
   public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter,
-      RuleGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, int distortionLimit, 
-      int coverageCardinality) {
+      RuleGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, 
+      int distortionLimit, int coverageCardinality) {
     recombinationHash = new RecombinationHash<>(filter);
     this.capacity = capacity;
     this.recombinationHistory = recombinationHistory;
@@ -84,11 +83,11 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
 
     Derivation<TK,FV> recombinedDerivation = null;
     if (status == Status.COMBINABLE) {
-      recombined++;
+      ++recombined;
       recombinedDerivation = derivation;
 
     } else if(status == Status.BETTER) {
-      recombined++;
+      ++recombined;
       recombinedDerivation = recombinationHash.getLastRedundant();
     } 
 
@@ -100,24 +99,34 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    */
   private void groupBundles() {
     // Group hypotheses by source source coverage
-    List<Derivation<TK,FV>> hypothesisList = recombinationHash.hypotheses();
-    assert hypothesisList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", hypothesisList.size(), capacity);
-    Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(hypothesisList.size() / 2);
-    for (Derivation<TK,FV> hypothesis : hypothesisList) {
-      coverageGroups.computeIfAbsent(hypothesis.sourceCoverage, k -> new ArrayList<>(32)).add(hypothesis);
+    List<Derivation<TK,FV>> derivationList = recombinationHash.derivations();
+    assert derivationList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", derivationList.size(), capacity);
+    final Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(derivationList.size() / 2);
+    for (Derivation<TK,FV> derivation : derivationList) {
+      List<Derivation<TK,FV>> hypList = coverageGroups.get(derivation.sourceCoverage);
+      if (hypList == null) {
+        hypList = new ArrayList<>(32);
+        coverageGroups.put(derivation.sourceCoverage, hypList);
+      }
+      hypList.add(derivation);
     }
 
     // Make hyperedge bundles
     bundles = new HashMap<>(2*coverageGroups.size());
     for (CoverageSet coverage : coverageGroups.keySet()) {
-      List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
+      final List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
       Collections.sort(itemList);
       for (Range range : ranges(coverage)) {
         assert range.start <= range.end : "Invalid range";
-        List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
+        final List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
         if (ruleList.size() > 0) {
-          HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
-          bundles.computeIfAbsent(range.size(), k -> new LinkedList<>()).add(bundle);
+          final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
+          List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
+          if (bundleList == null) {
+            bundleList = new ArrayList<>();
+            bundles.put(range.size(), bundleList);
+          }
+          bundleList.add(bundle);
         }
       }
     }
@@ -139,13 +148,13 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
 
   @Override
   public Iterator<Derivation<TK, FV>> iterator() {
-    List<Derivation<TK,FV>> hypotheses = recombinationHash.hypotheses();
-    Collections.sort(hypotheses);
-    return hypotheses.iterator();
+    List<Derivation<TK,FV>> derivations = recombinationHash.derivations();
+    Collections.sort(derivations);
+    return derivations.iterator();
   }
 
   protected List<Range> ranges(CoverageSet sourceCoverage) {
-    List<Range> rangeList = new LinkedList<>();
+    List<Range> rangeList = new ArrayList<>();
     int firstCoverageGap = sourceCoverage.nextClearBit(0);
     for (int startPos = firstCoverageGap; startPos < sourceLength; startPos++) {
       int endPosMax = sourceCoverage.nextSetBit(startPos);
@@ -191,13 +200,19 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
         size(), bundles == null ? 0 : bundles.size(), this.recombined);
   }
   
-  public String beamString() {
+  /**
+   * Return the top-k items on this beam.
+   * 
+   * @return
+   */
+  public String beamString(int k) {
     StringBuilder sb = new StringBuilder();
+    final String nl = System.getProperty("line.separator");
     int i = 0;
     for (Derivation<TK,FV> h : this) {
-      if (sb.length() > 0) sb.append("\n");
+      if (sb.length() > 0) sb.append(nl);
       sb.append(i++).append(" ").append(h.toString());
-      if (i > 10) break;
+      if (i >= k) break;
     }
     return sb.toString();
   }

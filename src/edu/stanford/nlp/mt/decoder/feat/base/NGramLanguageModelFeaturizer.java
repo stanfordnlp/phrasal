@@ -116,7 +116,7 @@ RuleFeaturizer<IString, String> {
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (DEBUG) {
       System.err.printf("Sequence: %s%n\tNovel Phrase: %s%n",
-          f.targetPrefix, f.targetPhrase);
+          f.targetSequence, f.targetPhrase);
       System.err.printf("Untranslated tokens: %d%n", f.numUntranslatedSourceTokens);
       System.err.println("ngram scoring:");
     }
@@ -141,7 +141,7 @@ RuleFeaturizer<IString, String> {
       if (partialTranslation.size() < 2) return null;
       startIndex = 1;
     } else if (f.prior != null && priorState == null) {
-      partialTranslation = Sequences.wrapStart(partialTranslation, f.prior.targetPrefix.get(0));
+      partialTranslation = Sequences.wrapStart(partialTranslation, f.prior.targetSequence.get(0));
       startIndex = 1;
     }
     

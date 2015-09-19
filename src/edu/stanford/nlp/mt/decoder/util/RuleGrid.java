@@ -30,7 +30,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   private final int sourceLength;
   private final BitSet isSorted;
   private boolean completeCoverage;
-  private CoverageSet incrementalCoverage;
+  private CoverageSet coverage;
   private final int size;
   private final int ruleQueryLimit;
   
@@ -57,8 +57,8 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
     grid = new List[sourceLength * sourceLength];
-    incrementalCoverage = new CoverageSet();
-    ruleList.stream().forEach(rule -> addEntry(rule));
+    coverage = new CoverageSet(sourceLength);
+    for (ConcreteRule<TK,FV> rule : ruleList) addEntry(rule);
   }
   
   /**
@@ -76,8 +76,8 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     int offset = getIndex(startPos, endPos);
     if (grid[offset] == null) grid[offset] = new ArrayList<>();
     grid[offset].add(rule);
-    incrementalCoverage.or(rule.sourceCoverage);
-    completeCoverage = (incrementalCoverage.cardinality() == sourceLength);
+    coverage.or(rule.sourceCoverage);
+    completeCoverage = (coverage.cardinality() == sourceLength);
   }
   
   /**
@@ -85,6 +85,13 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @return
    */
   public boolean isCoverageComplete() { return completeCoverage; }
+  
+  /**
+   * Get the source coverage.
+   * 
+   * @return
+   */
+  public CoverageSet getCoverage() { return coverage; }
   
   /**
    * Return the number of rules in this grid.
@@ -132,6 +139,22 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     return startPos * sourceLength + endPos;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
+    for (int i = 0; i < sourceLength; ++i) {
+      for (int j = i; j < sourceLength; ++j) {
+        List<ConcreteRule<TK,FV>> rules = get(i, j);
+        if (rules.size() > 0) {
+          sb.append("## ").append(i).append("-").append(j).append(nl);
+          rules.stream().forEach(r -> sb.append(r).append(nl));
+        }
+      }
+    }
+    return sb.toString();
+  }
+  
   @Override
   public Iterator<ConcreteRule<TK, FV>> iterator() {
     return new Iterator<ConcreteRule<TK,FV>>() {

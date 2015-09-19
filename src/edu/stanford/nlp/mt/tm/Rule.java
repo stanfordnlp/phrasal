@@ -34,9 +34,10 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public final String[] phraseScoreNames;
   
   /**
-   * The target side of the rule.
+   * The target side of the rule. Not final because for prefix decoding we sometimes want to
+   * modify existing rules.
    */
-  public final Sequence<T> target;
+  public Sequence<T> target;
   
   /**
    * The source side of the rule.
@@ -59,11 +60,6 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public float[] reoderingScores;
   public ReorderingTypes forwardOrientation;
   public ReorderingTypes backwardOrientation;
-
-  /**
-   * Memoize the hash code.
-   */
-  private int hashCode = -1;
 
   /**
    * Constructor for synthetic rules, which typically are generated at runtime
@@ -119,10 +115,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
 
   @Override
   public int hashCode() {
-    if (hashCode == -1) {
-      hashCode = source.hashCode() ^ target.hashCode();
-    }
-    return hashCode;
+    return source.hashCode() ^ target.hashCode();
   }
   
   @SuppressWarnings("unchecked")

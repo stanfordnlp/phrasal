@@ -252,7 +252,7 @@ public class AlignmentGrid {
       PrintStream out) {
     if (!f.done)
       throw new RuntimeException("AlignmentGrid: not finished decoding!");
-    Sequence<IString> eSeq = f.targetPrefix, fSeq = f.sourceSentence;
+    Sequence<IString> eSeq = f.targetSequence, fSeq = f.sourceSentence;
     SymmetricalWordAlignment sent = new SymmetricalWordAlignment(fSeq, eSeq);
     AlignmentGrid alGrid = new AlignmentGrid(eSeq.size(), fSeq.size());
     while (f != null) {

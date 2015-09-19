@@ -1,7 +1,7 @@
 package edu.stanford.nlp.mt.process;
 
 import java.io.StringReader;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.ling.CoreLabel;
@@ -51,7 +51,7 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
   public Sequence<IString> process(String input) {
     String tokenizerInput = toUncased(input.trim());
     Tokenizer<CoreLabel> tokenizer = tf.getTokenizer(new StringReader(tokenizerInput));
-    List<String> outputStrings = new LinkedList<>();
+    List<String> outputStrings = new ArrayList<>();
     while (tokenizer.hasNext()) {
       String string = tokenizer.next().get(TextAnnotation.class);
       outputStrings.add(string);

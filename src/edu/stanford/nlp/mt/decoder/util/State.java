@@ -33,12 +33,12 @@ public interface State<T> extends Comparable<T> {
   public double partialScore();
 
   /**
-	 * 
+	 * Backpointer to the parent in the lattice. null for the root.
 	 */
   public State<T> parent();
 
   /**
-	 * 
+	 * In the lattice from the root. The root has depth = 0.
 	 */
   public int depth();
 }

@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
-import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -111,7 +110,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     
     // TM (phrase table) query for applicable rules
-    PhraseQuery<TK,FV> phraseQuery = 
+    final PhraseQuery<TK,FV> phraseQuery = 
         getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
     source = phraseQuery.filteredSource;
     timer.mark("TM query");
@@ -134,6 +133,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     timer.mark("Rulegrid");
     
+    // WSGDEBUG
+//    System.err.println(ruleGrid);
+    
     // Fill Beam 0 (root)...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
@@ -145,8 +147,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     nullBeam.put(nullHypothesis);
     final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
-    IntStream.rangeClosed(1, sourceLength).forEach(i -> beams.add(new BundleBeam<>(beamCapacity, 
-        filter, ruleGrid, recombinationHistory, maxDistortion, i)));
+    for (int i = 1; i <= sourceLength; ++i) {
+      beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, recombinationHistory, maxDistortion, i));
+    }
 
     // Initialize feature extractors
     featurizer.initialize(sourceInputId, source);
@@ -191,6 +194,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item item = pq.poll();
+        ++numPoppedItems;
 
         // WSGDEBUG
 //                System.err.printf("BEAM %d STATUS%n", i);
@@ -198,7 +202,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 //                System.err.println("===========");
         if (item.derivation != null) {
           newBeam.put(item.derivation);
-          ++numPoppedItems;
         }
 
         // Expand this consequent
@@ -212,7 +215,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
       // WSGDEBUG
 //          System.err.printf("BEAM %d STATUS%n", i);
-//          System.err.println(newBeam.beamString());
+//          System.err.println(newBeam.beamString(10));
 //          System.err.println("===========");
 
       numRecombined += newBeam.recombined();
@@ -244,14 +247,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
             logger.warn("input {}: DECODER FAILURE, but backed off to coverage {}/{}: ", sourceInputId,
                 coveredTokens, sourceLength);
           }
-          /*
-          Featurizable<TK, FV> hyp = bestHyp;
-          logger.info("translation: " + hyp.derivation.targetSequence.toString());
-          logger.info("derivation: ");
-          while(hyp != null && hyp.derivation != null) {
-            logger.info(hyp.derivation.rule.toString());
-            hyp = hyp.prior;
-          } */
           return beam;
         }
       }

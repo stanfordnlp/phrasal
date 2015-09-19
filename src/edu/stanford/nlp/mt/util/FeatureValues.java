@@ -43,9 +43,9 @@ public class FeatureValues {
   public static <TK,FV> FeatureValueCollection<FV> combine(
       Derivation<TK, FV> hyp) {
     Counter<FV> counter = new ClassicCounter<FV>();
-    for (; hyp != null; hyp = hyp.preceedingDerivation) {
-      if (hyp.localFeatures != null) {
-        for (FeatureValue<FV> feature : hyp.localFeatures) {
+    for (; hyp != null; hyp = hyp.parent) {
+      if (hyp.features != null) {
+        for (FeatureValue<FV> feature : hyp.features) {
           counter.incrementCount(feature.name, feature.value);
         }
       }
