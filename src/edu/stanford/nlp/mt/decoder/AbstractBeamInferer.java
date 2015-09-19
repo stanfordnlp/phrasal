@@ -156,15 +156,16 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         }
       }
     }
-    logger.info("input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
 
     if (minSourceCoverage > source.size()) {
       // No compatible derivations
       logger.warn("input {}: no compatible derivations. Decoding will fail", sourceInputId);
       return -1;
+    } else {
+      logger.info("input {}: prefix filling derivations: {}  mincoverage: {}", sourceInputId, 
+          numHyps, minSourceCoverage);
+      return minSourceCoverage;
     }
-    
-    return minSourceCoverage;
   }
   
   /**

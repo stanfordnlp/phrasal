@@ -24,6 +24,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private static final Logger logger = LogManager.getLogger(KenLanguageModel.class.getName());
   
   private static final int[] EMPTY_INT_ARRAY = new int[0];
+  private static final KenLMState ZERO_LENGTH_STATE = new KenLMState(0.0, EMPTY_INT_ARRAY, 0);
   public static final String KENLM_LIBRARY_NAME = "PhrasalKenLM";
   
   static {
@@ -132,12 +133,14 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
   @Override
   public LMState score(Sequence<IString> sequence, int startIndex, LMState priorState) {
+    if (sequence.size() == 0) {
+      // Source deletion rule
+      return priorState == null ? ZERO_LENGTH_STATE : priorState;
+    }
+
     // Extract prior state
     int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
     int[] ngramIds = makeKenLMInput(sequence, state);
-    if (ngramIds.length == 0) {
-      return new KenLMState(0.0, EMPTY_INT_ARRAY, 0);
-    }
 
     // Reverse the start index for KenLM
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;

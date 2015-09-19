@@ -36,7 +36,7 @@ public class KenLMState extends LMState {
       this.state = state;
     } else {
       logger.error("State length mis-match: {} vs. {}", state.length, stateLength);
-      throw new RuntimeException();
+      throw new RuntimeException("Bad state length returned from KenLM query");
     }
     this.hashCode = MurmurHash2.hash32(state, state.length, 1);
   }

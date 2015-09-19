@@ -219,6 +219,10 @@ public class ARPALanguageModel implements LanguageModel<IString> {
 
   @Override
   public LMState score(Sequence<IString> sequence, int startOffsetIndex, LMState priorState) {
+    if (sequence.size() == 0) {
+      // Source deletion rule
+      return priorState == null ? EMPTY_STATE : priorState;
+    }
     // Concatenate the state onto the sequence.
     if (priorState != null && priorState instanceof ARPALMState) {
       int seqLength = sequence.size();
