@@ -47,7 +47,7 @@ public class StateLatticeDecoder<S extends State<S>> implements
 
   @Override
   public List<S> next() {
-    final CompositeState best = agenda.remove();
+    final CompositeState best = agenda.poll();
     for (int i = 0, sz = best.states.size(); i < sz; i++) {
       final S currentState = best.states.get(i);
       final List<S> recombinedStates = recombinationHistory.recombinations(currentState);

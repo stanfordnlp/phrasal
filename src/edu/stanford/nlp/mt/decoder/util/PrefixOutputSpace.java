@@ -19,8 +19,6 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.stats.ClassicCounter;
-import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 
@@ -70,6 +68,7 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
     throw new UnsupportedOperationException();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public void filter(List<ConcreteRule<IString, String>> ruleList, AbstractInferer<IString, String> inferer, 
       InputProperties inputProperties) {
@@ -94,17 +93,11 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
     // Collect gross statistics about the phrase query
     final CoverageSet targetCoverage = new CoverageSet();
     final CoverageSet sourceCoverage = new CoverageSet();
-//    Counter<UnigramForm<IString>> surfaceUnigramForms = new ClassicCounter<>(ruleList.size());
     final Map<RuleSpan,List<ConcreteRule<IString,String>>> spanToSource = new HashMap<>();
     for (ConcreteRule<IString,String> rule : ruleList) {
       // Check for OOV
       if ( ! rule.abstractRule.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME))
         sourceCoverage.or(rule.sourceCoverage);
-      
-//      if (rule.abstractRule.source.size() == 1 && rule.abstractRule.target.size() == 1) {
-//        surfaceUnigramForms.incrementCount(new UnigramForm<IString>(rule.abstractRule.source.get(0), 
-//            rule.abstractRule.target.get(0)));
-//      }
       RuleSpan sourceSpan = new RuleSpan(rule.sourcePosition, rule.sourcePosition + rule.sourceCoverage.cardinality());
       spanToSource.computeIfAbsent(sourceSpan, k -> new ArrayList<>()).add(rule);
       List<RuleSpan> targetSpans = tgtToSpan.getOrDefault(rule.abstractRule.target, Collections.emptyList());
@@ -133,7 +126,7 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
       
       final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
       CoverageSet sourceSpanCoverage = new CoverageSet(sourceSequence.size());
-      sourceCoverage.set(i);
+      sourceSpanCoverage.set(i);
       int cnt_joint = tmList.stream().mapToInt(tm -> tm.getSourceUnalignedCount(sourceQuery)).sum();
       if (cnt_joint == 0) continue; // Never been deleted in the corpus
       int numNull = tmList.stream().mapToInt(tm -> tm.bitextSize()).sum();
@@ -142,7 +135,7 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
           cnt_joint, numNull, cnt_f[i], inputProperties, sourceSequence, sourceInputId);
       
       // WSGDEBUG
-      System.err.printf("SDL %s%n", syntheticRule);
+//      System.err.printf("SDL %s%n", syntheticRule);
       ruleList.add(syntheticRule);
     }
     
@@ -150,7 +143,6 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
     for (int i = targetCoverage.nextClearBit(0), pSz = allowablePrefix.size(); 
         i >= 0 && i < pSz; 
         i = targetCoverage.nextClearBit(i+1)) {
-//         ++i) {
 
       final IString targetQuery = (IString) allowablePrefix.get(i);
       int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(targetQuery)).sum();
@@ -160,7 +152,6 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
       boolean addedRule = false;
       for (int j = 0, sSz = sourceSequence.size(); j < sSz; ++j) {
         IString sourceQuery = (IString) sourceSequence.get(j);
-//        if (surfaceUnigramForms.getCount(new UnigramForm<IString>(sourceQuery, targetQuery)) > 0.0) continue;
         double cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(sourceQuery, targetQuery)).sum();
         boolean isSourceOOV = ! sourceCoverage.get(j);
         if (isSourceOOV) {
@@ -169,7 +160,6 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
           if (cnt_f[j] == 0) cnt_f[j] =1;
         }
         else if (cnt_ef == 0) continue;
-//        int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(sourceQuery)).sum();
         
         final Sequence<IString> sourceSpan = (Sequence<IString>) sourceSequence.subsequence(j,j+1);
         CoverageSet sourceSpanCoverage = new CoverageSet(sourceSequence.size());
@@ -180,14 +170,13 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
             sourceSequence, sourceInputId);
         
         // WSGDEBUG
-        if (isSourceOOV) System.err.printf("P1 (OOV): %s%n", syntheticRule); 
-        else System.err.printf("P1: %s%n", syntheticRule);
-        
+//        if (isSourceOOV) System.err.printf("P1 (OOV): %s%n", syntheticRule); 
+//        else System.err.printf("P1: %s%n", syntheticRule);
+//        
         ruleList.add(syntheticRule);
         addedRule = true;
+        
         // Book-keeping
-//        surfaceUnigramForms.incrementCount(new UnigramForm<IString>(syntheticRule.abstractRule.source.get(0), 
-//            syntheticRule.abstractRule.target.get(0)));
         RuleSpan srcSpan = new RuleSpan(syntheticRule.sourcePosition, syntheticRule.sourcePosition 
             + syntheticRule.sourceCoverage.cardinality());
         spanToSource.computeIfAbsent(srcSpan, k -> new ArrayList<>()).add(syntheticRule);
@@ -221,20 +210,20 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
       List<ConcreteRule<IString,String>> tgtRules = spanToTarget.get(tgtSpan);
       
       // WSGDEBUG
-      if (tgtRules.size() == 0) System.err.printf("%s**: %s%n", tgtSpan, allowablePrefix.get(tgtSpan.i));
-      else System.err.printf("%s: %s%n", tgtSpan, tgtRules);
+//      if (tgtRules.size() == 0) System.err.printf("%s**: %s%n", tgtSpan, allowablePrefix.get(tgtSpan.i));
+//      else System.err.printf("%s: %s%n", tgtSpan, tgtRules);
     }
-    System.err.println("===============");
+//    System.err.println("===============");
     for (RuleSpan sourceSpan : rareSourceSpans) {
       List<ConcreteRule<IString,String>> srcRules = spanToSource.get(sourceSpan);
       
       // WSGDEBUG
-      System.err.printf("  %s%n", srcRules);
+//      System.err.printf("  %s%n", srcRules);
       // TODO(spenceg) Compute feature values.      
     }
         
     // WSGDEBUG
-    System.err.println("################");
+//    System.err.println("################");
   }
 
   @Override
@@ -278,27 +267,27 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
     return allowablePrefixLength;
   }
   
-  private static class UnigramForm<TK> {
-    public final TK source;
-    public final TK target;
-    public UnigramForm(TK source, TK target) {
-      this.source = source;
-      this.target = target;
-    }
-    @Override
-    public int hashCode() {
-      return source.hashCode() ^ target.hashCode();
-    }
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      else if (! (o instanceof UnigramForm)) return false;
-      else {
-        UnigramForm<TK> other = (UnigramForm<TK>) o;
-        return source.equals(other.source) && target.equals(other.target);
-      }
-    }
-  }
+//  private static class UnigramForm<TK> {
+//    public final TK source;
+//    public final TK target;
+//    public UnigramForm(TK source, TK target) {
+//      this.source = source;
+//      this.target = target;
+//    }
+//    @Override
+//    public int hashCode() {
+//      return source.hashCode() ^ target.hashCode();
+//    }
+//    @Override
+//    public boolean equals(Object o) {
+//      if (this == o) return true;
+//      else if (! (o instanceof UnigramForm)) return false;
+//      else {
+//        UnigramForm<TK> other = (UnigramForm<TK>) o;
+//        return source.equals(other.source) && target.equals(other.target);
+//      }
+//    }
+//  }
   
   private static class RuleSpan {
     public final int i; // inclusive

@@ -4,15 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
@@ -29,6 +28,7 @@ import edu.stanford.nlp.mt.tm.Rule;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValues;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
@@ -49,6 +49,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 
   private static final Logger logger = LogManager.getLogger(AbstractBeamInferer.class.getName());
   
+  // Size of the diversity window at the end of a prefix
+  private static final int PREFIX_DIVERSITY_SIZE = 1;
+  
+  // Maximum threshold that only applies when generating distinct n-best lists
+  private static final int MAX_POPPED_ITEMS = Phrasal.MAX_NBEST_SIZE * 2;
+  
   public final int beamCapacity;
   public final BeamFactory.BeamType beamType;
   private final Comparator<RichTranslation<TK,FV>> translationComparator;
@@ -56,22 +62,22 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   /**
    * Completion container. Holds a completion sequence and its score.
    */
-  private static class Completion<TK> {
-    public Sequence<TK> completion;
-    public double score;
-    public Completion(Sequence<TK> seq, double scr) {
-      completion = seq;
-      score = scr;
-    }
-    public String toString() {
-      return String.format("%s [%.6f]", completion, score);
-    }
-  }
-  private static class CompletionComparator<TK> implements Comparator<Completion<TK>> {
-    public int compare(Completion<TK> x, Completion<TK> y) {
-      return (int) Math.signum(y.score - x.score);
-    }
-  }
+//  private static class Completion<TK> {
+//    public Sequence<TK> completion;
+//    public double score;
+//    public Completion(Sequence<TK> seq, double scr) {
+//      completion = seq;
+//      score = scr;
+//    }
+//    public String toString() {
+//      return String.format("%s [%.6f]", completion, score);
+//    }
+//  }
+//  private static class CompletionComparator<TK> implements Comparator<Completion<TK>> {
+//    public int compare(Completion<TK> x, Completion<TK> y) {
+//      return (int) Math.signum(y.score - x.score);
+//    }
+//  }
 
   /**
    * Constructor.
@@ -93,9 +99,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct, boolean diverse) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size, distinct, diverse);
+        outputSpace, targets, size, distinct);
   }
 
   // TODO(spenceg) Relax this constraint once we consolidate LM scores
@@ -119,18 +125,7 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     
     // Sort rule list by target
     final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
-    
-    // Augment grid (if necessary)
-//    if (phraseGenerator instanceof DynamicTranslationModel) {
-//      List<DynamicTranslationModel<FV>> tmList = new ArrayList<>();
-//      tmList.add((DynamicTranslationModel<FV>) phraseGenerator);
-//      if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
-//        tmList.add((DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM));
-//      }
-//      final String[] featureNames = (String[]) phraseGenerator.getFeatureNames().toArray();
-//      prefixGrid.augmentGrid(tmList, featureNames, scorer, featurizer, sourceInputProperties, sourceInputId);
-//    }
-    
+        
     // Book-keeping
     int[] prefixCoverages = new int[prefix.size() + phraseGenerator.maxLengthTarget()];
     Arrays.fill(prefixCoverages, Integer.MAX_VALUE);
@@ -208,14 +203,12 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
     // Initial query
-    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator
-        .getRules(source, sourceInputProperties, sourceInputId, scorer);
+    List<ConcreteRule<TK,FV>> ruleList = phraseGenerator.getRules(source, sourceInputProperties, 
+        sourceInputId, scorer);
     
     // Compute coverage
-    CoverageSet coverage = new CoverageSet(source.size());
-    for (ConcreteRule<TK,FV> rule : ruleList) {
-      coverage.or(rule.sourceCoverage);
-    }
+    final CoverageSet coverage = new CoverageSet(source.size());
+    for (ConcreteRule<TK,FV> rule : ruleList) coverage.or(rule.sourceCoverage);
     
     // Decide what to do if the coverage set is incomplete
     if (coverage.cardinality() != source.size()) {
@@ -274,131 +267,101 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   }
   
   /**
-   * TODO(spenceg): This routine is *extremely* inefficient. Rewrite with e.g., Huang and Chiang's
-   * k-best extraction or something.
+   * This procedure could be made more efficient by not reconstructing the Derivation---and thus
+   * running the LM---for every lattice path. However, RichTranslation depends on Featurizable,
+   * which is currently difficult to reconstruct without rebuilding the whole derivation.
    */
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct, boolean diverse) {
-    if (diverse) {
-      return nbestDiversity(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets, size, distinct);
-    } else {
-      return nbestDefault(scorer, source, sourceInputId, sourceInputProperties, outputSpace, targets, size, distinct);
-    }
-  }
-
-  public List<RichTranslation<TK, FV>> nbestDefault(Scorer<FV> scorer,
-      Sequence<TK> source, int sourceInputId,
-      InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
+ 
     if (outputSpace != null) outputSpace.setSourceSequence(source);
-    
-    TimeKeeper timer = TimingUtils.start();
+    final TimeKeeper timer = TimingUtils.start();
     
     // Decoding
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = new RecombinationHistory<>();
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         recombinationHistory, outputSpace, targets, size);
-    timer.mark("Decode");
-    
-    if (beam == null) {
-      // Decoder failure
-      return null;
-    }
+    if (beam == null) return null; // Decoder failure
+    timer.mark("Decode");    
+
+    // Configure n-best extractor from goal states in final beam.
     List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
-    for (Derivation<TK, FV> derivation : beam) {
-      goalStates.add(derivation);
-    }
-
-    // Setup for n-best extraction
-    StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<>(
+    for (Derivation<TK, FV> derivation : beam) goalStates.add(derivation);
+    final StateLatticeDecoder<Derivation<TK, FV>> latticeDecoder = new StateLatticeDecoder<>(
         goalStates, recombinationHistory);
-    Set<Sequence<TK>> distinctSurfaceTranslations = new HashSet<>();
 
-    // Extract
-    List<RichTranslation<TK, FV>> translations = new ArrayList<>(size);
-    
-    // Limit the number of popped items in the case of distinct nbest lists.
-    // We want the algorithm to terminate eventually....
-    final int maxItemsToExtract = distinct ? size * 5 : Integer.MAX_VALUE;
+    // Extract lattice paths
+    final boolean prefixDecoding = sourceInputProperties.containsKey(InputProperty.TargetPrefix);
+    final boolean prefixDiversity = distinct && prefixDecoding;
+    final Sequence<TK> prefix = prefixDecoding ? targets.get(0) : null;
+    final Set<Sequence<TK>> distinctSurfaceTranslations = distinct ? new HashSet<>(size) : null;
+    final List<RichTranslation<TK, FV>> translations = new ArrayList<>(size);
     int numExtracted = 0;
     long nbestId = 0;    
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
-      if (numExtracted >= maxItemsToExtract) {
-        break;
+      ++numExtracted;
+      if (numExtracted > MAX_POPPED_ITEMS) break;
+
+      // Check for distinct n-best before building the Derivation and thus incurring the cost
+      // of running the LM.
+      // TODO(spenceg) Not sure if this works for DTU since derivations aren't built up
+      // left-to-right. Might need to move this check *after* building the DTUHypothesis
+      // below.
+      if (distinct) {
+        Sequence<TK> pathTarget = extractTarget(latticePath);
+        if(prefixDiversity) {
+          int start = prefix.size();
+          int end = Math.min(pathTarget.size(), prefix.size() + PREFIX_DIVERSITY_SIZE);
+          if (start < end) pathTarget = pathTarget.subsequence(start, end);
+        }
+        // Seen a higher-scoring derivation with this target string before
+        if (distinctSurfaceTranslations.contains(pathTarget)) continue;
+
+        distinctSurfaceTranslations.add(pathTarget);
       }
-      // DTU stuff
-      boolean withDTUs = false;
-      Set<Rule<TK>> seenOptions = new HashSet<>();
       
       // This is very inefficient. But we need to reconstruct the Featurizable
       // object for RichTranslation below, and there's not a good way to do that without
       // building up the derivation from the list of rule applications in the lattice path.
+      boolean withDTUs = false;
+      final Set<Rule<TK>> seenOptions = new HashSet<>();
       Derivation<TK, FV> goalHyp = null;
-//      Derivation<TK, FV> lastNode = null;
       for (Derivation<TK, FV> node : latticePath) {
         if (goalHyp == null) {
           // Root node.
           goalHyp = node;
-//          lastNode = node;
-//          System.err.printf("%.5f\t%.5f%n", goalHyp.score, goalHyp.score);
           continue;
         }
-        if (node.rule.abstractRule instanceof DTURule)
-          withDTUs = true;
-        if (withDTUs) {
-          goalHyp = new DTUHypothesis<>(sourceInputId,
-              node.rule, goalHyp.length, goalHyp, node, featurizer,
-              scorer, heuristic, seenOptions, outputSpace);
-        } else {
-          
-          goalHyp = new Derivation<>(sourceInputId, node.rule,
-              goalHyp.length, goalHyp, featurizer, scorer, heuristic, outputSpace);
-          
-//          String isRecomb = node.parent == lastNode ? "" : "*";
-//          System.err.printf("%.5f\t%.5f%s%n", goalHyp.score, node.score, isRecomb);
-//          lastNode = node;
-        }
+        withDTUs = withDTUs || node.rule.abstractRule instanceof DTURule;
+        goalHyp = withDTUs ? new DTUHypothesis<>(sourceInputId, node.rule, goalHyp.length, goalHyp, 
+            node, featurizer, scorer, heuristic, seenOptions, outputSpace)
+            : new Derivation<>(sourceInputId, node.rule, goalHyp.length, goalHyp, featurizer, scorer, 
+                heuristic, outputSpace);
       }
       
-//      System.err.printf("Final: %.6f%n", goalHyp.score);
-
       // Decoder failure in which the null hypothesis was returned.
       if (goalHyp == null || goalHyp.featurizable == null) {
-        logger.warn("Input {}: null hypothesis encountered. Decoder failed", sourceInputId);
+        logger.warn("Input {}: null hypothesis encountered. Decoder failed.", sourceInputId);
         return null;
       }
-
-      ++numExtracted;
       
       if (withDTUs) {
         DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) goalHyp;
         if (!dtuHyp.isDone() || dtuHyp.hasExpired())
-          System.err.printf("Warning: option not complete(%d,%s): %s%n", translations.size(), 
+          logger.warn("Option not complete({},{}): {}", translations.size(), 
               dtuHyp.hasExpired(), goalHyp);
-      }
-            
-      if (distinct) {
-        if (distinctSurfaceTranslations.contains(goalHyp.featurizable.targetSequence)) {
-          // Seen a higher-scoring derivation with this target string before
-          continue;
-        } else {
-          distinctSurfaceTranslations.add(goalHyp.featurizable.targetSequence);
-        }
       }
       
       // Create the n-best item
       RichTranslation<TK,FV> t = new RichTranslation<>(goalHyp.featurizable, goalHyp.score, 
           FeatureValues.combine(goalHyp), nbestId++);
       translations.add(t);
-//      System.err.printf("Return: %.6f%n%n", t.score);
       
-      // Terminate if at desired n-best size
-      if (translations.size() >= size) {
-        break;
-      }
+      // Book-keeping
+      if (translations.size() >= size) break;
     }
     timer.mark("Extraction");
 
@@ -415,114 +378,132 @@ abstract public class AbstractBeamInferer<TK, FV> extends
   }
 
   /**
-   * Faster and more diverse n-best extraction directly from beam given a target prefix.
+   * Extract the target sequence from the lattice path.
+   * 
+   * @param latticePath
+   * @return
    */
-  public List<RichTranslation<TK, FV>> nbestDiversity(Scorer<FV> scorer,
-                                             Sequence<TK> source, int sourceInputId,
-                                             InputProperties sourceInputProperties,
-                                             OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets,
-                                             int size, boolean distinct) {
-
-    if (outputSpace != null) outputSpace.setSourceSequence(source);
-
-    // Decoding part, identical to nbestLegacy() -> TODO(sasa): move to common function
-    RecombinationHistory<Derivation<TK, FV>> recombinationHistory =
-            new RecombinationHistory<Derivation<TK, FV>>();
-    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
-            recombinationHistory, outputSpace, targets, size);
-    if (beam == null) {
-      // Decoder failure
-      return null;
-    }
-    List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
-    for (Derivation<TK, FV> hyp : beam) {
-      goalStates.add(hyp);
-    }
-
-    final long nbestStartTime = System.nanoTime();
-
-    // Check if FA prefix is set
-    final int prefixLength = outputSpace.getPrefixLength();
-
-    long nbestId = 0;
-    HashMap<Sequence<TK>, Double> localCompletions = new HashMap<>();
-    HashMap<Sequence<TK>, Double> completions = new HashMap<>();
-    PriorityQueue<RichTranslation<TK, FV>> transPQ = new PriorityQueue<>(size, new RichTranslationComparator<TK, FV>());
-    PriorityQueue<Completion<TK>> complPQ = new PriorityQueue<>(size, new CompletionComparator<TK>());
-
-    /*
-     * Locate target prefix:
-     * - iterate back through predecessor derivations for all goal states
-     * - stop when target sequence length equals prefix length
-     * - add full goal state sequence to translation PQ
-     * - add local completion sequence to completion PQ, with score: (goal state - prefix end state)
-     */
-    for (Derivation<TK, FV> gs : goalStates) {
-      logger.debug(String.format("src='%s', trg='%s', score=%.6f, gs=%d",
-              gs.sourceSequence, gs.targetSequence, gs.score, gs.id));
-      Derivation<TK, FV> parent = gs.parent;
-      if ((completions.containsKey(gs.targetSequence) && completions.get(gs.targetSequence) < gs.score) ||
-              !completions.containsKey(gs.targetSequence)) {
-        completions.put(gs.targetSequence, gs.score);
-        transPQ.add(new RichTranslation<TK, FV>(gs.featurizable, gs.score, FeatureValues.combine(gs), nbestId++));
-      }
-      while (parent != null && (parent.targetSequence.size() > prefixLength)) {
-        // find derivation where completion starts
-        parent = parent.parent;
-      }
-      // extract completion (target sequence suffix)
-      Sequence<TK> compl = null;
-      if (prefixLength < gs.targetSequence.size()) {
-        compl = gs.targetSequence.subsequence(prefixLength, gs.targetSequence.size());
-        double complScore = parent == null ? gs.score : gs.score - parent.score;
-        if ((localCompletions.containsKey(compl) &&
-             localCompletions.get(compl) < complScore) ||
-            !localCompletions.containsKey(compl)) {
-          // store best local completions
-          localCompletions.put(compl, complScore);
-          complPQ.add(new Completion<>(compl, complScore));
+  private Sequence<TK> extractTarget(List<Derivation<TK, FV>> latticePath) {
+    List<TK> tokens = new ArrayList<>(100);
+    for (Derivation<TK, FV> node : latticePath) {
+      if (node.rule != null) {
+        for (TK token : node.rule.abstractRule.target) {
+          tokens.add(token);
         }
       }
     }
-
-    List<RichTranslation<TK, FV>> finalTranslations = new ArrayList<>();
-    Set<TK> seenCompl = new HashSet<>();
-    int nExtracted = 0;
-    while (!transPQ.isEmpty()) {
-      RichTranslation<TK, FV> trans = transPQ.poll();
-      // we store the first word of the completion for diversity constraint reasons (see below)
-      TK complWord = prefixLength < trans.translation.size() ? trans.translation.get(prefixLength)
-              : trans.translation.get(trans.translation.size()-1);
-      if (nExtracted > size/2 && !seenCompl.contains(complWord)) {
-        // enforce more diversity for half of the n-best list
-        // TODO(sasa): make this more parameterizable
-        finalTranslations.add(trans);
-        ++nExtracted;
-        seenCompl.add(complWord);
-      } else if (nExtracted <= size/2) {
-        finalTranslations.add(trans);
-        ++nExtracted;
-      }
-      if (nExtracted >= size) {
-        break;
-      }
-    }
-    while (nExtracted-- > 0) {
-      // TODO: pop some local completions, only log for now
-      logger.debug("local compl: " + complPQ.poll());
-    }
-    final long nbestEndTime = System.nanoTime();
-    logger.info("nbest time: {} sec", (nbestEndTime - nbestStartTime) / 1e9);
-
-    return finalTranslations;
+    return new ArraySequence<>(tokens);
   }
 
-  private static class RichTranslationComparator<TK,FV> implements Comparator<RichTranslation<TK,FV>> {
-    @Override
-    public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
-      return (int) Math.signum(o2.score - o1.score);
-    }
-  }
+  /**
+   * Faster and more diverse n-best extraction directly from beam given a target prefix.
+   */
+//  public List<RichTranslation<TK, FV>> nbestDiversity(Scorer<FV> scorer,
+//                                             Sequence<TK> source, int sourceInputId,
+//                                             InputProperties sourceInputProperties,
+//                                             OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets,
+//                                             int size, boolean distinct) {
+//
+//    if (outputSpace != null) outputSpace.setSourceSequence(source);
+//
+//    // Decoding part, identical to nbestLegacy() -> TODO(sasa): move to common function
+//    RecombinationHistory<Derivation<TK, FV>> recombinationHistory =
+//            new RecombinationHistory<Derivation<TK, FV>>();
+//    Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
+//            recombinationHistory, outputSpace, targets, size);
+//    if (beam == null) {
+//      // Decoder failure
+//      return null;
+//    }
+//    List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
+//    for (Derivation<TK, FV> hyp : beam) {
+//      goalStates.add(hyp);
+//    }
+//
+//    final long nbestStartTime = System.nanoTime();
+//
+//    // Check if FA prefix is set
+//    final int prefixLength = outputSpace.getPrefixLength();
+//
+//    long nbestId = 0;
+//    HashMap<Sequence<TK>, Double> localCompletions = new HashMap<>();
+//    HashMap<Sequence<TK>, Double> completions = new HashMap<>();
+//    PriorityQueue<RichTranslation<TK, FV>> transPQ = new PriorityQueue<>(size, new RichTranslationComparator<TK, FV>());
+//    PriorityQueue<Completion<TK>> complPQ = new PriorityQueue<>(size, new CompletionComparator<TK>());
+//
+//    /*
+//     * Locate target prefix:
+//     * - iterate back through predecessor derivations for all goal states
+//     * - stop when target sequence length equals prefix length
+//     * - add full goal state sequence to translation PQ
+//     * - add local completion sequence to completion PQ, with score: (goal state - prefix end state)
+//     */
+//    for (Derivation<TK, FV> gs : goalStates) {
+//      logger.debug(String.format("src='%s', trg='%s', score=%.6f, gs=%d",
+//              gs.sourceSequence, gs.targetSequence, gs.score, gs.id));
+//      Derivation<TK, FV> parent = gs.parent;
+//      if ((completions.containsKey(gs.targetSequence) && completions.get(gs.targetSequence) < gs.score) ||
+//              !completions.containsKey(gs.targetSequence)) {
+//        completions.put(gs.targetSequence, gs.score);
+//        transPQ.add(new RichTranslation<TK, FV>(gs.featurizable, gs.score, FeatureValues.combine(gs), nbestId++));
+//      }
+//      while (parent != null && (parent.targetSequence.size() > prefixLength)) {
+//        // find derivation where completion starts
+//        parent = parent.parent;
+//      }
+//      // extract completion (target sequence suffix)
+//      Sequence<TK> compl = null;
+//      if (prefixLength < gs.targetSequence.size()) {
+//        compl = gs.targetSequence.subsequence(prefixLength, gs.targetSequence.size());
+//        double complScore = parent == null ? gs.score : gs.score - parent.score;
+//        if ((localCompletions.containsKey(compl) &&
+//             localCompletions.get(compl) < complScore) ||
+//            !localCompletions.containsKey(compl)) {
+//          // store best local completions
+//          localCompletions.put(compl, complScore);
+//          complPQ.add(new Completion<>(compl, complScore));
+//        }
+//      }
+//    }
+//
+//    List<RichTranslation<TK, FV>> finalTranslations = new ArrayList<>();
+//    Set<TK> seenCompl = new HashSet<>();
+//    int nExtracted = 0;
+//    while (!transPQ.isEmpty()) {
+//      RichTranslation<TK, FV> trans = transPQ.poll();
+//      // we store the first word of the completion for diversity constraint reasons (see below)
+//      TK complWord = prefixLength < trans.translation.size() ? trans.translation.get(prefixLength)
+//              : trans.translation.get(trans.translation.size()-1);
+//      if (nExtracted > size/2 && !seenCompl.contains(complWord)) {
+//        // enforce more diversity for half of the n-best list
+//        // TODO(sasa): make this more parameterizable
+//        finalTranslations.add(trans);
+//        ++nExtracted;
+//        seenCompl.add(complWord);
+//      } else if (nExtracted <= size/2) {
+//        finalTranslations.add(trans);
+//        ++nExtracted;
+//      }
+//      if (nExtracted >= size) {
+//        break;
+//      }
+//    }
+//    while (nExtracted-- > 0) {
+//      // TODO: pop some local completions, only log for now
+//      logger.debug("local compl: " + complPQ.poll());
+//    }
+//    final long nbestEndTime = System.nanoTime();
+//    logger.info("nbest time: {} sec", (nbestEndTime - nbestStartTime) / 1e9);
+//
+//    return finalTranslations;
+//  }
+
+//  private static class RichTranslationComparator<TK,FV> implements Comparator<RichTranslation<TK,FV>> {
+//    @Override
+//    public int compare(RichTranslation<TK, FV> o1, RichTranslation<TK, FV> o2) {
+//      return (int) Math.signum(o2.score - o1.score);
+//    }
+//  }
 
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> source,
@@ -536,13 +517,13 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets) {
-
     if (outputSpace != null) outputSpace.setSourceSequence(source);
+    final int nbestSize = 1;
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
-        null, outputSpace, targets, 1);
-    if (beam == null) return null;
-    final Derivation<TK, FV> hyp = beam.iterator().next();
-    return new RichTranslation<>(hyp.featurizable, hyp.score, FeatureValues.combine(hyp), 0);
+        null, outputSpace, targets, nbestSize);
+    if (beam == null) return null; // Decoder failure
+    final Derivation<TK, FV> best = beam.iterator().next();
+    return new RichTranslation<>(best.featurizable, best.score, FeatureValues.combine(best), 0);
   }
 
   /**
