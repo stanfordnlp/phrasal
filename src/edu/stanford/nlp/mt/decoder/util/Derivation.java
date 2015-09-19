@@ -53,7 +53,7 @@ State<Derivation<TK, FV>> {
   public final Sequence<TK> sourceSequence;
 
   // The partial translation
-  public final Sequence<TK> targetSequence;
+  public Sequence<TK> targetSequence;
   
   // right now, translations are built up strictly in sequence.
   // however, we don't want to encourage people writing feature

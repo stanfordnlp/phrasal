@@ -68,7 +68,7 @@ public class PrefixRuleGrid<TK,FV> {
     for (int i = 0, sz = prefix.size(); i < sz; ++i) index.add(new ArrayList<>());
     for (ConcreteRule<TK,FV> rule : ruleList) {
       if (rule.abstractRule.target.size() == 0) {
-        continue;
+        continue; // Source deletion rule
       } else {
         List<Integer> matches = findAll(wordToPosition, rule.abstractRule.target);
         for (int i : matches) {

@@ -11,6 +11,7 @@ import edu.stanford.nlp.mt.decoder.util.State;
 /**
  * 
  * @author danielcer
+ * @author Spence Green
  * 
  * @param <S>
  */
@@ -25,28 +26,23 @@ public class RecombinationHistory<S extends State<S>> {
    * @param discarded The derivation that was discarded.
    */
   public void log(S retained, S discarded) {
-    if (discarded == null) {
-      return;
-    }
+    if (discarded == null) return;
+    
     List<S> retainedList = historyMap.get(retained);
     if (retainedList == null) {
       retainedList = new ArrayList<>();
       historyMap.put(retained, retainedList);
     }
-    List<S> discardedList = historyMap.get(discarded);
-    if (discardedList != null) {
-      historyMap.remove(discarded);
-      retainedList.addAll(discardedList);
-    }
+    List<S> discardedList = historyMap.getOrDefault(discarded, Collections.emptyList());
+    historyMap.remove(discarded);
+    retainedList.addAll(discardedList);
     retainedList.add(discarded);
   }
 
   /**
    * 
    */
-  public void remove(S pruned) {
-    historyMap.remove(pruned);
-  }
+  public void remove(S pruned) { historyMap.remove(pruned); }
   
   /**
    * 

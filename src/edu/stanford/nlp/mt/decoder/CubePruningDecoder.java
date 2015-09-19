@@ -133,9 +133,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     }
     timer.mark("Rulegrid");
     
-    // WSGDEBUG
-//    System.err.println(ruleGrid);
-    
     // Fill Beam 0 (root)...only has one cube
     BundleBeam<TK,FV> nullBeam = new BundleBeam<>(beamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
@@ -162,11 +159,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
       minSourceCoverage = prefixFillBeams(source, ruleList, sourceInputProperties, targets.get(0), 
           scorer, beams, sourceInputId, outputSpace);
+      if (minSourceCoverage < 0) {
+        logger.warn("input {}: PREFIX DECODING FAILURE", sourceInputId);
+        return null;
+      }
       startOfDecoding = minSourceCoverage + 1;
       prefilledBeams = true;
       timer.mark("Prefill");
-      // WSGDEBUG
-//      System.err.printf("PREFILLING: %d %d%n", minSourceCoverage, startOfDecoding);
     }
     
     // main translation loop---beam expansion
@@ -190,19 +189,15 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
       
+      // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();      
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         Item item = pq.poll();
         ++numPoppedItems;
 
-        // WSGDEBUG
-//                System.err.printf("BEAM %d STATUS%n", i);
-//                System.err.println(newBeam.beamString());
-//                System.err.println("===========");
-        if (item.derivation != null) {
-          newBeam.put(item.derivation);
-        }
+        // Derivations are null if they're pruned by an output constraint.
+        if (item.derivation != null) newBeam.put(item.derivation);
 
         // Expand this consequent
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
@@ -213,20 +208,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
 
-      // WSGDEBUG
-//          System.err.printf("BEAM %d STATUS%n", i);
-//          System.err.println(newBeam.beamString(10));
-//          System.err.println("===========");
-
       numRecombined += newBeam.recombined();
     }
     timer.mark("Inference");
     
     // Debug statistics
     logger.info("input {}: Decoding time: {}", sourceInputId, timer);
-    logger.info("input {}: #derivations generated: {}", sourceInputId, totalHypothesesGenerated);
-    logger.info("input {}: #recombined: {}", sourceInputId, numRecombined);
-    logger.info("input {}: #pruned by output constraint: {}", sourceInputId, numPruned);
+    logger.info("input {}: #derivation generated: {}  pruned: {}  recombined: {}", sourceInputId, 
+        totalHypothesesGenerated, numPruned, numRecombined);
 
     // Return the best beam, which should be the goal beam
     boolean isGoalBeam = true;
@@ -234,13 +223,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Beam<Derivation<TK,FV>> beam = beams.get(i);
       if (beam.size() != 0) {
         Featurizable<TK,FV> bestHyp = beam.iterator().next().featurizable;
-        
-        // WSGDEBUG
-//        System.err.println(targets.get(0).toString());
-//        System.err.println(bestHyp.derivation.score);
-//        System.err.println(bestHyp.derivation.historyString());
-//        System.err.println("=========");
-        
         if (outputSpace.allowableFinal(bestHyp)) {
           if ( ! isGoalBeam) {
             final int coveredTokens = sourceLength - bestHyp.numUntranslatedSourceTokens;

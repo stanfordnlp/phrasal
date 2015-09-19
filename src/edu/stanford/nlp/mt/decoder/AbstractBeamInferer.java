@@ -44,40 +44,27 @@ import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
  * @param <TK>
  * @param <FV>
  */
-abstract public class AbstractBeamInferer<TK, FV> extends
-    AbstractInferer<TK, FV> {
+public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV> {
 
   private static final Logger logger = LogManager.getLogger(AbstractBeamInferer.class.getName());
+  
+  /*
+   * Hyperparameters
+   */
   
   // Size of the diversity window at the end of a prefix
   private static final int PREFIX_DIVERSITY_SIZE = 1;
   
   // Maximum threshold that only applies when generating distinct n-best lists
   private static final int MAX_POPPED_ITEMS = Phrasal.MAX_NBEST_SIZE * 2;
-  
-  public final int beamCapacity;
-  public final BeamFactory.BeamType beamType;
-  private final Comparator<RichTranslation<TK,FV>> translationComparator;
 
-  /**
-   * Completion container. Holds a completion sequence and its score.
-   */
-//  private static class Completion<TK> {
-//    public Sequence<TK> completion;
-//    public double score;
-//    public Completion(Sequence<TK> seq, double scr) {
-//      completion = seq;
-//      score = scr;
-//    }
-//    public String toString() {
-//      return String.format("%s [%.6f]", completion, score);
-//    }
-//  }
-//  private static class CompletionComparator<TK> implements Comparator<Completion<TK>> {
-//    public int compare(Completion<TK> x, Completion<TK> y) {
-//      return (int) Math.signum(y.score - x.score);
-//    }
-//  }
+  // TODO(spenceg) Relax this constraint once we consolidate LM scores
+  private static final int MAX_HYPS_PER_BEAM = 100;
+
+  // Members
+  protected final int beamCapacity;
+  protected final BeamFactory.BeamType beamType;
+  private final Comparator<RichTranslation<TK,FV>> translationComparator;
 
   /**
    * Constructor.
@@ -103,9 +90,6 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
         outputSpace, targets, size, distinct);
   }
-
-  // TODO(spenceg) Relax this constraint once we consolidate LM scores
-  private static final int MAX_HYPS_PER_BEAM = 100;
   
   /**
    * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
@@ -125,13 +109,20 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     
     // Sort rule list by target
     final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<>(ruleList, source, prefix);
-    if (prefixGrid.getTargetCoverage().cardinality() != prefix.size()) return 0;
+    
+    // Special case. Uncovered material at the beginning of a prefix. Just append to the null
+    // hypothesis
+    List<ConcreteRule<TK,FV>> nullRules = prefixGrid.get(0);
+    if (nullRules.size() == 0) {
+      int start = 0;
+      int end = Math.max(prefixGrid.getTargetCoverage().nextSetBit(0), prefix.size());
+      Sequence<TK> nullTarget = prefix.subsequence(start, end);
+      beams.get(0).iterator().next().targetSequence = nullTarget;
+    }
     
     // Book-keeping
-    int[] prefixCoverages = new int[prefix.size() + phraseGenerator.maxLengthTarget()];
-    Arrays.fill(prefixCoverages, Integer.MAX_VALUE);
-    int maxPrefix = 0;
     int[] hypsForBeam = new int[beams.size()];
+    int minSourceCoverage = Integer.MAX_VALUE;
     
     // Populate beams
     int numHyps = 0;
@@ -140,52 +131,40 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       for (Derivation<TK,FV> antecedent : beams.get(beamCardinality)) {
         // Check the status of this antecedent
         final int insertionPosition = antecedent.targetSequence.size();
-        if (insertionPosition >= prefix.size()) continue; // Compatible derivation
+        if (insertionPosition >= prefix.size()) {
+          // Compatible derivation
+          minSourceCoverage = Math.min(minSourceCoverage, antecedent.sourceCoverage.cardinality());
+          continue;
+        }
 
-        final List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);
-        if (rulesForPosition.size() == 0) continue;
-        
+        // Hypothesis expansion
+        final List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);        
         for (ConcreteRule<TK,FV> rule : rulesForPosition) {
           if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
-          CoverageSet testCoverage = antecedent.sourceCoverage.clone();
-          testCoverage.or(rule.sourceCoverage);
-          int succCardinality = testCoverage.cardinality();
-          boolean capacityExceeded = hypsForBeam[succCardinality] > MAX_HYPS_PER_BEAM;
-          if (capacityExceeded) continue; // Check beam capacity
-          Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, insertionPosition, antecedent, featurizer,
-              scorer, heuristic, outputSpace);
+          CoverageSet sourceCoverage = antecedent.sourceCoverage.clone();
+          sourceCoverage.or(rule.sourceCoverage);
+          int succCardinality = sourceCoverage.cardinality();
+          if (hypsForBeam[succCardinality] > MAX_HYPS_PER_BEAM) continue; // Check beam capacity
+          Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, insertionPosition, 
+              antecedent, featurizer, scorer, heuristic, outputSpace);
           assert succCardinality == successor.sourceCoverage.cardinality();
+          beams.get(succCardinality).put(successor);
+         
+          // Book-keeping
           ++numHyps;
           hypsForBeam[succCardinality]++;
-          beams.get(succCardinality).put(successor);
-
-          // Book-keeping
-          maxPrefix = Math.max(maxPrefix, successor.targetSequence.size());
-          if (succCardinality < prefixCoverages[successor.targetSequence.size()]) {
-            prefixCoverages[successor.targetSequence.size()] = succCardinality;
-          }
         }
       }
     }
-    logger.info("Input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
-    
-    // WSGDEBUG
-//    for (int i = 0; i < beams.size(); ++i) {
-//      System.err.printf("BEAM %d%n", i);
-//      BundleBeam<TK,FV> beam = (BundleBeam<TK, FV>) beams.get(i);
-//      System.err.println(beam.beamString(10));
-//      System.err.println("================");
-//    }
-    
-    maxPrefix = Math.min(maxPrefix, prefix.size());
-    if (prefixCoverages[maxPrefix] == Integer.MAX_VALUE) {
-      logger.warn("input {}: No prefix coverage.", sourceInputId);
-      return 0;
+    logger.info("input {}: {} prefix hypotheses generated", sourceInputId, numHyps);
+
+    if (minSourceCoverage > source.size()) {
+      // No compatible derivations
+      logger.warn("input {}: no compatible derivations. Decoding will fail", sourceInputId);
+      return -1;
     }
     
-    // Return beam number of the starting point (longest prefix with the minimum source
-    // coverage)
-    return maxPrefix >= 0 ? prefixCoverages[maxPrefix] : 0;
+    return minSourceCoverage;
   }
   
   /**
@@ -503,6 +482,27 @@ abstract public class AbstractBeamInferer<TK, FV> extends
 //      return (int) Math.signum(o2.score - o1.score);
 //    }
 //  }
+  
+  /**
+   * Completion container. Holds a completion sequence and its score.
+   */
+//  private static class Completion<TK> {
+//    public Sequence<TK> completion;
+//    public double score;
+//    public Completion(Sequence<TK> seq, double scr) {
+//      completion = seq;
+//      score = scr;
+//    }
+//    public String toString() {
+//      return String.format("%s [%.6f]", completion, score);
+//    }
+//  }
+//  private static class CompletionComparator<TK> implements Comparator<Completion<TK>> {
+//    public int compare(Completion<TK> x, Completion<TK> y) {
+//      return (int) Math.signum(y.score - x.score);
+//    }
+//  }
+
 
   @Override
   public RichTranslation<TK, FV> translate(Sequence<TK> source,

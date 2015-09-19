@@ -105,9 +105,9 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
         sourceCoverage.or(rule.sourceCoverage);
       RuleSpan sourceSpan = new RuleSpan(rule.sourcePosition, rule.sourcePosition + rule.sourceCoverage.cardinality());
       spanToSource.computeIfAbsent(sourceSpan, k -> new ArrayList<>()).add(rule);
-      List<RuleSpan> prefixSpans = prefixToSpan.getOrDefault(rule.abstractRule.target, Collections.emptyList());
       if (rule.abstractRule.target.size() == 1) 
         unigramTargetRules.computeIfAbsent(rule.abstractRule.target, k -> new ArrayList<>()).add(rule);
+      List<RuleSpan> prefixSpans = prefixToSpan.getOrDefault(rule.abstractRule.target, Collections.emptyList());
       for (RuleSpan prefixSpan : prefixSpans) {
         spanToPrefix.get(prefixSpan).add(rule);
         targetCoverage.set(prefixSpan.i, prefixSpan.j);
@@ -122,13 +122,15 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
 
     
-    // TODO(spenceg): Should be for content words only.
+    // Should be for non-content words only.
     // Add source deletion rules
     final int[] cnt_f = new int[sourceSequence.size()];
     final int minCutoff = (int) (tmList.get(0).bitextSize() * SOURCE_DELETE_PERC_BITEXT);
     for (int i = 0, sz = sourceSequence.size(); i < sz; ++i) {
       IString sourceQuery = sourceSequence.get(i);
       cnt_f[i] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(sourceQuery)).sum();
+      // TODO(spenceg) Should we allow source OOVs to be deleted here? This conditional
+      // excludes tokens with cnt_f == 0.
       if (cnt_f[i] <= minCutoff) continue;
       
       final Sequence<IString> source = sourceSequence.subsequence(i,i+1);
@@ -161,6 +163,7 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
         IString sourceQuery = (IString) sourceSequence.get(j);
         double cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(sourceQuery, targetQuery)).sum();
         boolean isSourceOOV = ! sourceCoverage.get(j);
+        // Allow target OOVs to align to source OOVs
         if (isSourceOOV) {
           cnt_ef = 1e-4;
           if (cnt_e == 0) cnt_e = 1;
@@ -199,7 +202,8 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
         String targetToken = targetQuery.toString();
         for (Sequence<IString> target : unigramTargetRules.keySet()) {
           if (SimilarityMeasures.jaccard(targetToken, target.toString()) > TARGET_SIM_THRESHOLD) {
-            List<ConcreteRule<IString,String>> targetRules = unigramTargetRules.getOrDefault(target, Collections.emptyList());
+            List<ConcreteRule<IString,String>> targetRules = unigramTargetRules.getOrDefault(target, 
+                Collections.emptyList());
             for (ConcreteRule<IString,String> r : targetRules) {
               ConcreteRule<IString,String> syntheticRule = (ConcreteRule<IString, String>) 
                   SyntheticRules.makeSyntheticRule(r, targetSpan, inferer.scorer, 
@@ -215,7 +219,6 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
         }
       }
       
-      // Step 3. Target insertion
       if (!addedRule) {
         List<Sequence<IString>> neighbors = new ArrayList<>(2);
         List<Sequence<IString>> bigrams = new ArrayList<>(2);
@@ -251,7 +254,8 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
     }
     
     if (targetCoverage.cardinality() != allowablePrefix.size()) {
-      logger.warn("Incomplete coverage for prefix {} {}", targetCoverage, allowablePrefix);
+      logger.warn("Incomplete coverage {} for prefix (len: {}): {}", targetCoverage, allowablePrefix.size(), 
+          allowablePrefix);
     }
     
     // TODO(spenceg) Implement rule doctoring. Leave it here.
@@ -329,28 +333,6 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
   public int getPrefixLength() {
     return allowablePrefixLength;
   }
-  
-//  private static class UnigramForm<TK> {
-//    public final TK source;
-//    public final TK target;
-//    public UnigramForm(TK source, TK target) {
-//      this.source = source;
-//      this.target = target;
-//    }
-//    @Override
-//    public int hashCode() {
-//      return source.hashCode() ^ target.hashCode();
-//    }
-//    @Override
-//    public boolean equals(Object o) {
-//      if (this == o) return true;
-//      else if (! (o instanceof UnigramForm)) return false;
-//      else {
-//        UnigramForm<TK> other = (UnigramForm<TK>) o;
-//        return source.equals(other.source) && target.equals(other.target);
-//      }
-//    }
-//  }
   
   private static class RuleSpan {
     public final int i; // inclusive
