@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.util.IString;
-import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.Vocabulary;
@@ -15,7 +14,7 @@ import edu.stanford.nlp.mt.util.Vocabulary;
 /**
  * KenLM language model support via JNI.
  *
- * @author daniel cer (danielcer@stanford.edu)
+ * @author daniel cer
  * @author Spence Green
  * @author Kenneth Heafield
  *
@@ -38,7 +37,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
   }
 
-  private KenLM model;
+  private final KenLM model;
 
   private final String name;
 
@@ -136,25 +135,16 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // Extract prior state
     int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
     int[] ngramIds = makeKenLMInput(sequence, state);
+    if (ngramIds.length == 0) {
+      return new KenLMState(0.0, EMPTY_INT_ARRAY, 0);
+    }
 
     // Reverse the start index for KenLM
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
-
-    // Local direct-mapped cache
-//    KenLMCache cache = threadLocalCache.get();
-//    if (cache == null) {
-//      cache = new KenLMCache(DEFAULT_CACHE_SIZE);
-//      threadLocalCache.set(cache);
-//    } else {
-//      Long got = cache.get(ngramIds, kenLMStartIndex);
-//      if (got != null) {
-//        return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
-//      }
-//    }
     
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
-//    cache.insert(ngramIds, kenLMStartIndex, got);
+    
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
 
@@ -178,33 +168,34 @@ public class KenLanguageModel implements LanguageModel<IString> {
     return ngramIds;
   }
   
-  private static final int DEFAULT_CACHE_SIZE = 10000;
-  private static final ThreadLocal<KenLMCache> threadLocalCache =
-      new ThreadLocal<KenLMCache>();
-  
-  private static class KenLMCache {
-    private final long[] keys;
-    private final long[] values;
-    private final int mask;
-    public KenLMCache(int size) {
-      this.keys = new long[size];
-      this.values = new long[size];
-      this.mask = size - 1;
-    }
-    
-    public Long get(int[] kenLMInput, int startIndex) {
-      long hashValue = MurmurHash2.hash64(kenLMInput, kenLMInput.length, startIndex);
-      int k = ideal(hashValue);
-      return keys[k] == hashValue ? values[k] : null;
-    }
-    private int ideal(long hashed) {
-      return ((int)hashed) & mask;
-    }
-    public void insert(int[] kenLMInput, int startIndex, long value) {
-      long hashValue = MurmurHash2.hash64(kenLMInput, kenLMInput.length, startIndex);
-      int k = ideal(hashValue);
-      keys[k] = hashValue;
-      values[k] = value;
-    }
-  }
+// TODO(spenceg) This never yielded an improvement....
+//  private static final int DEFAULT_CACHE_SIZE = 10000;
+//  private static final ThreadLocal<KenLMCache> threadLocalCache =
+//      new ThreadLocal<KenLMCache>();
+//  
+//  private static class KenLMCache {
+//    private final long[] keys;
+//    private final long[] values;
+//    private final int mask;
+//    public KenLMCache(int size) {
+//      this.keys = new long[size];
+//      this.values = new long[size];
+//      this.mask = size - 1;
+//    }
+//    
+//    public Long get(int[] kenLMInput, int startIndex) {
+//      long hashValue = MurmurHash2.hash64(kenLMInput, kenLMInput.length, startIndex);
+//      int k = ideal(hashValue);
+//      return keys[k] == hashValue ? values[k] : null;
+//    }
+//    private int ideal(long hashed) {
+//      return ((int)hashed) & mask;
+//    }
+//    public void insert(int[] kenLMInput, int startIndex, long value) {
+//      long hashValue = MurmurHash2.hash64(kenLMInput, kenLMInput.length, startIndex);
+//      int k = ideal(hashValue);
+//      keys[k] = hashValue;
+//      values[k] = value;
+//    }
+//  }
 }
