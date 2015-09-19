@@ -106,6 +106,7 @@ public class Phrasal {
     sb.append("Usage: java ").append(Phrasal.class.getName()).append(" OPTS [ini_file] < input > output").append(nl)
         .append(nl).append("Phrasal: A phrase-based machine translation decoder from the Stanford NLP group.")
         .append(nl).append(nl).append("Command-line arguments override arguments specified in the optional ini_file:")
+        .append(nl).append("  -").append(INPUT_FILE_OPT).append(" file : Filename of file to decode").append(nl)
         .append(nl).append("  -").append(TRANSLATION_TABLE_OPT)
         .append(
             " filename : Translation model file. Multiple models can be specified by separating filenames with colons.")
@@ -162,6 +163,7 @@ public class Phrasal {
 
   private static final Logger logger = LogManager.getLogger(Phrasal.class);
 
+  public static final String INPUT_FILE_OPT = "text";
   public static final String TRANSLATION_TABLE_OPT = "ttable-file";
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   public static final String OPTION_LIMIT_OPT = "ttable-limit";
@@ -201,8 +203,8 @@ public class Phrasal {
   private static final Set<String> ALL_RECOGNIZED_FIELDS = new HashSet<>();
 
   static {
-    REQUIRED_FIELDS.addAll(Arrays.asList(TRANSLATION_TABLE_OPT));
-    OPTIONAL_FIELDS.addAll(Arrays.asList(WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
+    REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
+    OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
         DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
         RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
@@ -1317,7 +1319,7 @@ public class Phrasal {
     final Map<String, List<String>> configuration = getConfigurationFrom(configFile, options);
     final Phrasal p = Phrasal.loadDecoder(configuration);
     
-    if (options.containsKey("file")) p.decode(new FileInputStream(new File(options.getProperty("file"))), true);
+    if (options.containsKey("text")) p.decode(new FileInputStream(new File(options.getProperty("text"))), true);
     else p.decode(System.in, true);
   }
 }

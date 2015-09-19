@@ -124,8 +124,9 @@ abstract public class AbstractBeamInferer<TK, FV> extends
     if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
     
     // Sort rule list by target
-    final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<TK,FV>(ruleList, source, prefix);
-        
+    final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<>(ruleList, source, prefix);
+    if (prefixGrid.getTargetCoverage().cardinality() != prefix.size()) return 0;
+    
     // Book-keeping
     int[] prefixCoverages = new int[prefix.size() + phraseGenerator.maxLengthTarget()];
     Arrays.fill(prefixCoverages, Integer.MAX_VALUE);
@@ -139,13 +140,11 @@ abstract public class AbstractBeamInferer<TK, FV> extends
       for (Derivation<TK,FV> antecedent : beams.get(beamCardinality)) {
         // Check the status of this antecedent
         final int insertionPosition = antecedent.targetSequence.size();
-        if (insertionPosition >= prefix.size()) {
-          // No need to continue expanding this derivation
-          continue;
-        }
+        if (insertionPosition >= prefix.size()) continue; // Compatible derivation
 
         final List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);
-        assert rulesForPosition.size() > 0;
+        if (rulesForPosition.size() == 0) continue;
+        
         for (ConcreteRule<TK,FV> rule : rulesForPosition) {
           if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
           CoverageSet testCoverage = antecedent.sourceCoverage.clone();

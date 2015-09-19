@@ -72,7 +72,8 @@ public class PrefixRuleGrid<TK,FV> {
       } else {
         List<Integer> matches = findAll(wordToPosition, rule.abstractRule.target);
         for (int i : matches) {
-          targetCoverage.set(i, i + rule.abstractRule.target.size());
+          int end = Math.min(prefix.size(), i + rule.abstractRule.target.size());
+          targetCoverage.set(i, end);
           index.get(i).add(rule);
           ++numRules;
         }
@@ -97,6 +98,15 @@ public class PrefixRuleGrid<TK,FV> {
       }
       return true;
     }).collect(Collectors.toList());
+  }
+  
+  /**
+   * Return the prefix coverage.
+   * 
+   * @return
+   */
+  public CoverageSet getTargetCoverage() {
+    return targetCoverage;
   }
   
   /**
