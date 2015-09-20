@@ -1,10 +1,7 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
@@ -21,45 +18,15 @@ import edu.stanford.nlp.mt.util.IString;
  * @param <T>
  */
 public class TranslationModelFeaturizer implements RuleFeaturizer<IString, String> {
+  
   public static final String FEATURE_PREFIX = "TM";
-
-  // Only construct the feature strings once for each phrase table
-  private final ConcurrentHashMap<String, String[]> featureNamesHash;
 
   /**
    * Constructor.
    * 
-   * @param numFeatures Set to <code>Integer.MAX_VALUE</code> to specify
-   * all features defined in the phrase table.
    */
-  public TranslationModelFeaturizer() {
-    this.featureNamesHash = new ConcurrentHashMap<>();
-  }
+  public TranslationModelFeaturizer() {}
   
-  /**
-   * Convert the feature name to a format that is easily greppable in the weight vector.
-   * 
-   * @param featureName
-   * @return
-   */
-  public static String toTMFeature(String featureName) {
-    return String.format("%s:%s", FEATURE_PREFIX, featureName);
-  }
-  
-  /**
-   * Add a prefix to the feature names.
-   * 
-   * @param phraseTableName
-   * @param phraseScoreNames
-   * @return
-   */
-  private String[] createAndCacheFeatureNames(String phraseTableName, String[] phraseScoreNames) {
-    String[] featureNames = Arrays.stream(phraseScoreNames).filter(s -> s != null)
-        .map(s -> toTMFeature(s)).toArray(String[]::new);
-    featureNamesHash.putIfAbsent(phraseTableName, featureNames);
-    return featureNames;
-  }
-
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> featurizable) {
     if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
@@ -71,14 +38,14 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     final String phraseTableName = featurizable.phraseTableName;
     assert featurizable.phraseScoreNames.length == featurizable.translationScores.length :
       "Score name/value arrays of different dimensions for table: " + phraseTableName;
-    String[] featureNames = featureNamesHash.containsKey(phraseTableName) ? 
-        featureNamesHash.get(phraseTableName) : 
-          createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames);
-    assert featureNames.length == featurizable.translationScores.length : String.format("%s %d %d ", 
-        phraseTableName, featureNames.length, featurizable.translationScores.length);
-    // construct array of FeatureValue objects
-    return IntStream.range(0, featureNames.length).mapToObj(i -> new FeatureValue<String>(
-        featureNames[i], featurizable.translationScores[i], true)).collect(Collectors.toList());
+    
+    final String[] featureNames = featurizable.phraseScoreNames;
+    final List<FeatureValue<String>> features = new ArrayList<>(featureNames.length);
+    for (int i = 0; i < featureNames.length; ++i) {
+      String name = String.format("%s:%s", FEATURE_PREFIX, featureNames[i]);
+      features.add(new FeatureValue<>(name, featurizable.translationScores[i], true));
+    }
+    return features;
   }
 
   @Override
