@@ -27,6 +27,16 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
    */
   public TranslationModelFeaturizer() {}
   
+  /**
+   * Convert raw TM feature names to the featurized format.
+   * 
+   * @param featureName
+   * @return
+   */
+  public static String toTMFeature(String featureName) {
+    return String.format("%s:%s", FEATURE_PREFIX, featureName);
+  }
+  
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> featurizable) {
     if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
@@ -42,8 +52,7 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     final String[] featureNames = featurizable.phraseScoreNames;
     final List<FeatureValue<String>> features = new ArrayList<>(featureNames.length);
     for (int i = 0; i < featureNames.length; ++i) {
-      String name = String.format("%s:%s", FEATURE_PREFIX, featureNames[i]);
-      features.add(new FeatureValue<>(name, featurizable.translationScores[i], true));
+      features.add(new FeatureValue<>(toTMFeature(featureNames[i]), featurizable.translationScores[i], true));
     }
     return features;
   }
