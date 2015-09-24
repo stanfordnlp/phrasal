@@ -55,7 +55,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   private static final int PREFIX_DIVERSITY_SIZE = 1;
   
   // Maximum threshold that only applies when generating distinct n-best lists
-  private static final int MAX_POPPED_ITEMS = Phrasal.MAX_NBEST_SIZE * 4;
+  private static final int MAX_POPPED_ITEMS = Phrasal.MAX_NBEST_SIZE * 6;
 
   // TODO(spenceg) Relax this constraint once we consolidate LM scores
   private static final int MAX_HYPS_PER_BEAM = 100;
