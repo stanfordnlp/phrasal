@@ -2,6 +2,7 @@
 #include "util/fake_ofstream.hh"
 #include "util/file.hh"
 #include "util/file_piece.hh"
+#include "util/usage.hh"
 
 #include <stdint.h>
 
@@ -16,10 +17,10 @@ template <class Model, class Width> void ConvertToBytes(const Model &model, int 
   while (true) {
     while (in.ReadWordSameLine(word)) {
       width = (Width)model.GetVocabulary().Index(word);
-      out.Write(&width, sizeof(Width));
+      out.write(&width, sizeof(Width));
     }
     if (!in.ReadLineOrEOF(word)) break;
-    out.Write(&end_sentence, sizeof(Width));
+    out.write(&end_sentence, sizeof(Width));
   }
 }
 
@@ -29,12 +30,19 @@ template <class Model, class Width> void QueryFromBytes(const Model &model, int 
   const lm::ngram::State *next_state = begin_state;
   Width kEOS = model.GetVocabulary().EndSentence();
   Width buf[4096];
-  float sum = 0.0;
-  while (true) {
-    std::size_t got = util::ReadOrEOF(fd_in, buf, sizeof(buf));
-    if (!got) break;
+
+  uint64_t completed = 0;
+  double loaded = util::CPUTime();
+  std::cout << "After loading: ";
+  util::PrintUsage(std::cout);
+
+  // Numerical precision: batch sums.
+  double total = 0.0;
+  while (std::size_t got = util::ReadOrEOF(fd_in, buf, sizeof(buf))) {
+    float sum = 0.0;
     UTIL_THROW_IF2(got % sizeof(Width), "File size not a multiple of vocab id size " << sizeof(Width));
     got /= sizeof(Width);
+    completed += got;
     // Do even stuff first.
     const Width *even_end = buf + (got & ~1);
     // Alternating states
@@ -50,8 +58,11 @@ template <class Model, class Width> void QueryFromBytes(const Model &model, int 
       sum += model.FullScore(*next_state, *i, state[2]).prob;
       next_state = (*i++ == kEOS) ? begin_state : &state[2];
     }
+    total += sum;
   }
-  std::cout << "Sum is " << sum << std::endl;
+  std::cerr << "Probability sum is " << total << std::endl;
+
+  std::cout << "CPU_excluding_load:" << (util::CPUTime() - loaded) << " CPU_per_query:" << ((util::CPUTime() - loaded) / static_cast<double>(completed)) << " Queries:" << completed << std::endl;
 }
 
 template <class Model, class Width> void DispatchFunction(const Model &model, bool query) {
@@ -63,7 +74,10 @@ template <class Model, class Width> void DispatchFunction(const Model &model, bo
 }
 
 template <class Model> void DispatchWidth(const char *file, bool query) {
-  Model model(file);
+  lm::ngram::Config config;
+  config.load_method = util::READ;
+  std::cerr << "Using load_method = READ." << std::endl;
+  Model model(file, config);
   lm::WordIndex bound = model.GetVocabulary().Bound();
   if (bound <= 256) {
     DispatchFunction<Model, uint8_t>(model, query);
@@ -122,5 +136,6 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   Dispatch(argv[2], !strcmp(argv[1], "query"));
+  util::PrintUsage(std::cerr);
   return 0;
 }

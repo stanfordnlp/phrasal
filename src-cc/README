@@ -1,9 +1,13 @@
-To update kenlm, download:
+To update kenlm, clone the repository:
 
-  https://github.com/kpu/kenlm/archive/master.zip
+  git clone https://github.com/kpu/kenlm.git
 
-When updating the kenlm distribution, you must add -fPIC to the CXXFLAGS line in compile_query_only.sh.
+Then rsync the directories:
+
+  rsync -rtvu --delete $KEN_LM_REPO kenlm/
+
+You might want to try a dry-run first. Add the "-n" option to the rsync command above.
 
 Spence
-17 July 2013
+23 September 2015
 

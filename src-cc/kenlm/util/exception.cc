@@ -4,8 +4,13 @@
 #include <typeinfo>
 #endif
 
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#include <io.h>
+#endif
 
 namespace util {
 
@@ -30,7 +35,7 @@ void Exception::SetLocation(const char *file, unsigned int line, const char *fun
   /* The child class might have set some text, but we want this to come first.
    * Another option would be passing this information to the constructor, but
    * then child classes would have to accept constructor arguments and pass
-   * them down.  
+   * them down.
    */
   text_ = stream_.str();
   stream_.str("");
@@ -94,5 +99,18 @@ ErrnoException::~ErrnoException() throw() {}
 
 OverflowException::OverflowException() throw() {}
 OverflowException::~OverflowException() throw() {}
+
+#if defined(_WIN32) || defined(_WIN64)
+WindowsException::WindowsException() throw() {
+  unsigned int last_error = GetLastError();
+  char error_msg[256] = "";
+  if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, last_error, LANG_NEUTRAL, error_msg, sizeof(error_msg), NULL)) {
+    *this << "Windows error " << GetLastError() << " while formatting Windows error " << last_error << ". ";
+  } else {
+    *this << "Windows error " << last_error << ": " << error_msg;
+  }
+}
+WindowsException::~WindowsException() throw() {}
+#endif
 
 } // namespace util
