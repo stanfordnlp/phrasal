@@ -484,10 +484,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
       // Filter higher-order ranges based on lower-order misses
-//      List<Range> ranges = new ArrayList<>(source.size());
-      int numJobs = 0;
+      int numTasks = 0;
       for (int i = 0, sz = source.size() - len; i <= sz; ++i) {
         final int j = i + len;
+        
         // Check lower-order n-grams for misses
         boolean miss = (len == 1 && sourceArray[i] < 0);
         for(int a = i, b = i + len - 1; len > 1 && b <= j && ! miss; ++a, ++b) {
@@ -499,24 +499,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           final int[] prefixBounds = (len > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
           workQueue.submit(new ExtractionTask(i, j, source, sourceInputProperties, 
               sourceInputId, scorer, sourceArray, prefixBounds));
-          ++numJobs;
-//          ranges.add(new Range(i, j));
+          ++numTasks;
         }
       }
       
-      if (numJobs == 0) {
+      if (numTasks == 0) {
         // There can't be any higher order matches
         break;
       } 
       
       // Wait for results
       try {
-        for (int k = 0; k < numJobs; ++k) {
+        for (int k = 0; k < numTasks; ++k) {
           QueryResult<FV> result = workQueue.take().get();
           if (result != null) {
             int i = result.i;
             int j = result.j;
-            misses[i][j] = result.ruleList.size() == 0;
+            misses[i][j] = result.miss;
             searchBounds[i][j] = result.searchBounds;
             concreteRules.addAll(result.ruleList);
           }
@@ -526,43 +525,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         e.printStackTrace();
         return Collections.emptyList();
       }
-      
-      // Only use a parallel stream if the overhead is justified
-//      try (Stream<Range> rangeStream = ranges.size() > 5 ? ranges.parallelStream()
-//          : ranges.stream()) {
-//        rangeStream.flatMap(range -> {
-//          final int i = range.i;
-//          final int j = range.j;
-//          final int order = j - i;
-//
-//          // Generate rules for this span
-//          final Sequence<IString> sourceSpan = source.subsequence(i, j);
-//          final CoverageSet sourceCoverage = new CoverageSet(source.size());
-//          sourceCoverage.set(i, j);
-//          if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
-//            // Get from the rule cache
-//            return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-//                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
-//
-//          } else {
-//            // Sample from the suffix array
-//            final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-//            final int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-//            final SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
-//                : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-//            if (corpusSample.size() == 0) {
-//              // This span is not present in the training data.
-//              misses[i][j] = true;
-//              return Stream.empty();
-//            }
-//            searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
-//            final int numHits = corpusSample.ub - corpusSample.lb + 1;
-//            final double sampleRate = corpusSample.size() / (double) numHits;
-//            return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-//                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
-//          }
-//        }).forEachOrdered(concreteRules::add);
-//      }
     }
     
     // Concatenate foreground model rules
@@ -579,6 +541,12 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return concreteRules;
   }
   
+  /**
+   * Extract rules from suffix array.
+   * 
+   * @author Spence Green
+   *
+   */
   private class ExtractionTask implements Callable<QueryResult<FV>> {
     private final int i;
     private final int j;
@@ -614,13 +582,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       if (rules == null) {
         // Sample from the suffix array
         final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-//        final int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
         final SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
             : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
         if (corpusSample.size() == 0) {
           // This span is not present in the training data.
           rules = Collections.emptyList();
-
+          result.miss = true;
+          
         } else {
           result.searchBounds = new int[]{corpusSample.lb, corpusSample.ub};
           final int numHits = corpusSample.ub - corpusSample.lb + 1;
@@ -643,6 +611,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     public final int j;
     public List<ConcreteRule<IString,FV>> ruleList;
     public int[] searchBounds;
+    public boolean miss = false;
     public QueryResult(int i, int j) {
       this.i = i;
       this.j = j;
@@ -650,15 +619,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   
-//  private static class Range {
-//    public final int i;
-//    public final int j;
-//    public Range(int i, int j) {
-//      this.i = i;
-//      this.j = j;
-//    }
-//  }
-
   /**
    * Perform a source lookup into the underlying suffix array. Performs whitespace tokenization
    * of the input.
