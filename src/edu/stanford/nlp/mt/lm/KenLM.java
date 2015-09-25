@@ -2,6 +2,9 @@ package edu.stanford.nlp.mt.lm;
 
 import java.io.File;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * KenLM language model support via JNI.
  * 
@@ -12,6 +15,8 @@ import java.io.File;
  */
 public class KenLM {
 
+  private static final Logger logger = LogManager.getLogger(KenLM.class.getName());
+  
   // Should match util::LoadMethod defined in kenlm/util/mmap.hh
   public static enum LoadMethod {
     LAZY,
@@ -47,7 +52,7 @@ public class KenLM {
    * @param loadMethod
    */
   public KenLM(String filename, long nplm_cache_size, int loadMethod) {
-    System.err.printf("KenLM: Reading %s%n", filename);
+    logger.info("KenLM: Reading {}", filename);
     if (0 == (kenLMPtr = readKenLM(filename, nplm_cache_size, loadMethod))) {
       File f = new File(filename);
       if (!f.exists()) {
