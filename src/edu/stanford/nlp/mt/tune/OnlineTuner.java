@@ -440,11 +440,18 @@ public final class OnlineTuner {
           List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
               threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
           
-          forcedAlignments.add(faNbestList.get(0));
-          
-          logger.info("Source: {}", faNbestList.get(0).source.toString());
-          logger.info("Target: {}", faNbestList.get(0).translation.toString());
-          logger.info("Alignment: {}", faNbestList.get(0).alignmentString());
+          if(!faNbestList.isEmpty()){
+            forcedAlignments.add(faNbestList.get(0));
+            
+            logger.info("Source: {}", faNbestList.get(0).source.toString());
+            logger.info("Target: {}", faNbestList.get(0).translation.toString());
+            logger.info("Alignment: {}", faNbestList.get(0).alignmentString());
+          }
+          else {
+            logger.info("No Alignment");
+            logger.info("Source: {}", input.source.get(i).toString());
+            logger.info("Target prefix: {}", input.references.get(i).toString());
+          }
           
         }
         nbestLists.add(nbestList);
@@ -532,7 +539,7 @@ public final class OnlineTuner {
               nbestLists.put(sourceId, Sequences.emptySequence());
             }
           }
-          if(localTmTrainingData != null && result.forcedAlignment != null) {
+          if(localTmTrainingData != null && result.forcedAlignment != null && !result.forcedAlignment.isEmpty()) {
             RichTranslation<IString, String> fa = result.forcedAlignment.get(i);
             if (fa != null) {
               localTmTrainingData.add(fa.alignmentGrid().f().toString(), fa.translation.toString(), fa.alignmentString());
