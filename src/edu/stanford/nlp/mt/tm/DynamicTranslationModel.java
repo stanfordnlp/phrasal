@@ -9,11 +9,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,6 +71,20 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static final int DEFAULT_MAX_PHRASE_LEN = 12;
   private static final int RULE_CACHE_THRESHOLD = 10000;
   private static final double MIN_LEX_PROB = 1e-5;
+  
+  /**
+   * Parallelize TM queries. 
+   */
+  private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
+  private static final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) 
+      Executors.newFixedThreadPool(NUM_THREADS, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+          Thread t = new Thread(r);
+          t.setDaemon(true);
+          return t;
+        }
+      });
   
   /**
    * Feature specification:
@@ -458,13 +477,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Speed up higher-order queries with bounds from lower-order queries
     final int[][][] searchBounds = new int[source.size()][source.size()+1][];
     
+    final ExecutorCompletionService<QueryResult<FV>> workQueue = 
+        new ExecutorCompletionService<>(threadPool);
+    
     // Iterate over source span lengths
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
       // Filter higher-order ranges based on lower-order misses
-      List<Range> ranges = new ArrayList<>(source.size());
+      int numTasks = 0;
       for (int i = 0, sz = source.size() - len; i <= sz; ++i) {
         final int j = i + len;
+        
         // Check lower-order n-grams for misses
         boolean miss = (len == 1 && sourceArray[i] < 0);
         for(int a = i, b = i + len - 1; len > 1 && b <= j && ! miss; ++a, ++b) {
@@ -473,50 +496,34 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         if (miss) {
           misses[i][j] = true;
         } else {
-          ranges.add(new Range(i, j));
+          final int[] prefixBounds = (len > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
+          workQueue.submit(new ExtractionTask(i, j, source, sourceInputProperties, 
+              sourceInputId, scorer, sourceArray, prefixBounds));
+          ++numTasks;
         }
       }
       
-      if (ranges.size() == 0) {
+      if (numTasks == 0) {
         // There can't be any higher order matches
         break;
-      }
+      } 
       
-      // Only use a parallel stream if the overhead is justified
-      try (Stream<Range> rangeStream = ranges.size() > 5 ? ranges.parallelStream()
-          : ranges.stream()) {
-        rangeStream.flatMap(range -> {
-          final int i = range.i;
-          final int j = range.j;
-          final int order = j - i;
-
-          // Generate rules for this span
-          final Sequence<IString> sourceSpan = source.subsequence(i, j);
-          final CoverageSet sourceCoverage = new CoverageSet(source.size());
-          sourceCoverage.set(i, j);
-          if (ruleCache != null && ruleCache.containsKey(sourceSpan)) {
-            // Get from the rule cache
-            return ruleCache.get(sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
-
-          } else {
-            // Sample from the suffix array
-            final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
-            final int[] prefixBounds = (order > 1 && searchBounds[i][j-1] != null) ? searchBounds[i][j-1] : null;
-            final SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
-                : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-            if (corpusSample.size() == 0) {
-              // This span is not present in the training data.
-              misses[i][j] = true;
-              return Stream.empty();
-            }
-            searchBounds[i][j] = new int[]{corpusSample.lb, corpusSample.ub};
-            final int numHits = corpusSample.ub - corpusSample.lb + 1;
-            final double sampleRate = corpusSample.size() / (double) numHits;
-            return samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan).stream().map(r -> new ConcreteRule<IString,FV>(
-                r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+      // Wait for results
+      try {
+        for (int k = 0; k < numTasks; ++k) {
+          QueryResult<FV> result = workQueue.take().get();
+          if (result != null) {
+            int i = result.i;
+            int j = result.j;
+            misses[i][j] = result.miss;
+            searchBounds[i][j] = result.searchBounds;
+            concreteRules.addAll(result.ruleList);
           }
-        }).forEachOrdered(concreteRules::add);
+        }
+      } catch (InterruptedException | ExecutionException e) {
+        logger.error("input {}: rule extraction failed for order {}", sourceInputId, len);
+        e.printStackTrace();
+        return Collections.emptyList();
       }
     }
     
@@ -534,15 +541,84 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return concreteRules;
   }
   
-  private static class Range {
+  /**
+   * Extract rules from suffix array.
+   * 
+   * @author Spence Green
+   *
+   */
+  private class ExtractionTask implements Callable<QueryResult<FV>> {
+    private final int i;
+    private final int j;
+    private final Sequence<IString> source;
+    private InputProperties sourceInputProperties;
+    private int sourceInputId;
+    private Scorer<FV> scorer;
+    private int[] sourceArray;
+    private int[] prefixBounds;
+
+    public ExtractionTask(int i, int j, Sequence<IString> source, InputProperties sourceInputProperties, 
+        int sourceInputId, Scorer<FV> scorer, int[] sourceArray, int[] prefixBounds) {
+      this.i = i;
+      this.j = j;
+      this.source = source;
+      this.sourceInputProperties = sourceInputProperties;
+      this.sourceInputId = sourceInputId;
+      this.scorer = scorer;
+      this.sourceArray = sourceArray;
+      this.prefixBounds = prefixBounds;
+    }
+
+    @Override
+    public QueryResult<FV> call() throws Exception {
+      final int order = j - i;
+      final QueryResult<FV> result = new QueryResult<>(i, j);
+
+      // Generate rules for this span
+      final Sequence<IString> sourceSpan = source.subsequence(i, j);
+      final CoverageSet sourceCoverage = new CoverageSet(source.size());
+      sourceCoverage.set(i, j);
+      List<Rule<IString>> rules = ruleCache == null ? null : ruleCache.get(sourceSpan);
+      if (rules == null) {
+        // Sample from the suffix array
+        final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
+        final SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
+            : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
+        if (corpusSample.size() == 0) {
+          // This span is not present in the training data.
+          rules = Collections.emptyList();
+          result.miss = true;
+          
+        } else {
+          result.searchBounds = new int[]{corpusSample.lb, corpusSample.ub};
+          final int numHits = corpusSample.ub - corpusSample.lb + 1;
+          final double sampleRate = corpusSample.size() / (double) numHits;
+          rules = samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan);
+        }
+      }
+      // Extract rules
+      result.ruleList = new ArrayList<>(rules.size());
+      for (Rule<IString> r : rules) {
+        result.ruleList.add(new ConcreteRule<>(
+            r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
+      }
+      return result;
+    }
+  }
+  
+  private static class QueryResult<FV> {
     public final int i;
     public final int j;
-    public Range(int i, int j) {
+    public List<ConcreteRule<IString,FV>> ruleList;
+    public int[] searchBounds;
+    public boolean miss = false;
+    public QueryResult(int i, int j) {
       this.i = i;
       this.j = j;
     }
   }
-
+  
+  
   /**
    * Perform a source lookup into the underlying suffix array. Performs whitespace tokenization
    * of the input.
