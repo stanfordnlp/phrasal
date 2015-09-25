@@ -75,7 +75,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Parallelize TM queries. 
    */
-  private static final int NUM_THREADS = (int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.5);
+  private static final int NUM_THREADS = (int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.25);
   private static final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) 
       Executors.newFixedThreadPool(NUM_THREADS, new ThreadFactory() {
         @Override
