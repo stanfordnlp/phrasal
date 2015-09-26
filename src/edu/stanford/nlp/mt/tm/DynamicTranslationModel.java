@@ -678,6 +678,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return id >= 0 ? coocTable.getTgtMarginal(id) : 0;
   }
   
+  public int getTargetUnalignedCount(IString target) {
+    int id = toTMId(target);
+    return id >= 0 ? coocTable.getJointCount(LexCoocTable.NULL_ID, id) : 0;    
+  }
+  
   /**
    * 
    * @param source

@@ -51,7 +51,7 @@ public class HyperedgeBundle<TK,FV> {
       consequentList.add(new Consequent<TK,FV>(itemList.get(0), ruleList.get(0), this, 0, 0));
       expandedItems.set(0);
 
-    } else {
+    } else if (antecedent != null) {
       // Move down in the grid (items)
       int lastItem = antecedent.itemId;
       int lastRule = antecedent.ruleId;
@@ -99,6 +99,10 @@ public class HyperedgeBundle<TK,FV> {
       this.bundle = bundle;
       this.itemId = itemId;
       this.ruleId = ruleId;
+    }
+
+    public double estimatedScore() {
+      return antecedent.score + rule.isolationScore + (antecedent.h - rule.isolationScore);
     }
 
     @Override

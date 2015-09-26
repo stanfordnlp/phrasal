@@ -162,14 +162,7 @@ public class ExtendedLexicalReorderingTable {
 
   public float[] getReorderingScores(Rule<IString> rule) {
     int reorderingId = -1;
-    if (rule.isSynthetic()) {
-      // Do nothing
-//    } else if (conditionType == ConditionTypes.f) {
-//      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[0];
-//    } else if (conditionType == ConditionTypes.e) {
-//      reorderingId = FlatPhraseTable.ruleIndex.get(rule.id)[1];
-//    } 
-    } else if (conditionType == ConditionTypes.fe) {
+    if (conditionType == ConditionTypes.fe) {
       reorderingId = rule.id;
     }
     reorderingId -= phraseTable.minRuleIndex();

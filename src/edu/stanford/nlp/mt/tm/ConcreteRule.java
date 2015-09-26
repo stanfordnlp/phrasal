@@ -235,6 +235,7 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
     return abstractRule.hashCode() ^ (sourceCoverage.hashCode()*0xc2b2ae35);
   }
   
+  @SuppressWarnings("unchecked")
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

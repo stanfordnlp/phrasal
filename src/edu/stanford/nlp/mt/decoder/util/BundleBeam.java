@@ -145,6 +145,13 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     int rangeSize = n - coverageCardinality;
     return bundles.getOrDefault(rangeSize, Collections.emptyList());
   }
+  
+  /**
+   * Reset this beam for search.
+   */
+  public void reset() {
+    groupBundles();
+  }
 
   @Override
   public Iterator<Derivation<TK, FV>> iterator() {

@@ -108,17 +108,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     
     // Sort rule list by target
     final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<>(ruleList, source, prefix);
-    
-    // Special case. Uncovered material at the beginning of a prefix. Just append to the null
-    // hypothesis
-//    List<ConcreteRule<TK,FV>> nullRules = prefixGrid.get(0);
-//    if (nullRules.size() == 0) {
-//      int start = 0;
-//      int end = Math.max(prefixGrid.getTargetCoverage().nextSetBit(0), prefix.size());
-//      Sequence<TK> nullTarget = prefix.subsequence(start, end);
-//      beams.get(0).iterator().next().targetSequence = nullTarget;
-//    }
-    
+        
     // Book-keeping
     int[] hypsForBeam = new int[beams.size()];
     int minSourceCoverage = Integer.MAX_VALUE;

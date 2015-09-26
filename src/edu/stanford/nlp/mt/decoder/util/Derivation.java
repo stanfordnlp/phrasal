@@ -36,20 +36,20 @@ State<Derivation<TK, FV>> {
   public final int untranslatedSourceTokens;
   public final int depth;
   public final int linearDistortion;
-  public final int length;
+  public int length;
   
   // In prefix-constrained decoding, we need to know whether the prefix has been completed for recombination
-  public final boolean prefixCompleted;
-  public final int prefixLength;
+  public boolean prefixCompleted;
+  public int prefixLength;
   
-  public final double score;
+  public double score;
   
   public final InputProperties sourceInputProperties;
 
   // non-primitives that already exist at the time of
   // hypothesis creation and just receive an additional
   // reference here
-  public final ConcreteRule<TK,FV> rule;
+  public ConcreteRule<TK,FV> rule;
   public final Sequence<TK> sourceSequence;
 
   // The partial translation
@@ -62,10 +62,10 @@ State<Derivation<TK, FV>> {
 
   // non-primitives created anew for each hypothesis
   public final CoverageSet sourceCoverage;
-  public final Featurizable<TK, FV> featurizable;
+  public Featurizable<TK, FV> featurizable;
 
   // Features extracted to score this derivation
-  public final List<FeatureValue<FV>> features;
+  public List<FeatureValue<FV>> features;
 
   /**
    * 
@@ -126,7 +126,7 @@ State<Derivation<TK, FV>> {
   }
 
   /**
-   * Constructor for derivation/hypothesis expansion.
+   * Constructor for standard phrase-based (left-to-right) derivation expansion.
    * 
    * @param sourceInputId
    * @param rule
@@ -151,8 +151,8 @@ State<Derivation<TK, FV>> {
     this.sourceCoverage.or(rule.sourceCoverage);
     this.prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
     this.prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
-    this.length = (insertionPosition < base.length ? base.length : // internal insertion
-      insertionPosition + rule.abstractRule.target.size()); // edge insertion
+    assert insertionPosition >= base.length : String.format("Invalid insertion position %d %d", insertionPosition, base.length);
+    this.length = insertionPosition + rule.abstractRule.target.size();
     sourceSequence = base.sourceSequence;
     targetSequence = base.targetSequence.concat(rule.abstractRule.target);
     untranslatedSourceTokens = this.sourceSequence.size()
@@ -229,6 +229,31 @@ State<Derivation<TK, FV>> {
     prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
   }
 
+  /**
+   * Extend this derivation with a target insertion rule.
+   * 
+   * @param rule
+   */
+  public void targetInsertion(Sequence<TK> targetSpan, FeatureExtractor<TK, FV> featurizer,
+      Scorer<FV> scorer, int sourceInputId) {
+    // Manufacture a new rule
+    Sequence<TK> ruleTarget = rule.abstractRule.target.concat(targetSpan);
+    ConcreteRule<TK,FV> newRule = SyntheticRules.makeSyntheticRule(rule, ruleTarget, scorer, featurizer,
+        sourceSequence, sourceInputProperties, sourceInputId);
+    
+    // Update the derivation
+    this.rule = newRule;
+    this.length = length + targetSpan.size();
+    targetSequence = targetSequence.concat(targetSpan);
+    
+    featurizable = new Featurizable<>(this, sourceInputId, featurizer.getNumDerivationFeaturizers());
+    
+    features = featurizer.featurize(featurizable);
+    features.addAll(rule.cachedFeatureList);
+    double baseScore = parent == null ? 0.0 : parent.score;
+    score = baseScore + scorer.getIncrementalScore(features);    
+  }
+  
   @Override
   public String toString() {
     return String.format("%s %s [%.3f h: %.3f]", targetSequence.toString(), 
@@ -263,9 +288,10 @@ State<Derivation<TK, FV>> {
 
   public String historyString() {
     StringBuilder sb = new StringBuilder();
+    String nl = System.getProperty("line.separator");
     Derivation<TK,FV> d = this;
     while (d != null) {
-      if (sb.length() > 0) sb.append("\n");
+      if (sb.length() > 0) sb.append(nl);
       sb.append(d.rule == null ? "<GOAL>" : d.rule.toString());
       d = d.parent;
     }

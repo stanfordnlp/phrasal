@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.recomb;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
@@ -32,6 +32,7 @@ public final class RecombinationFilterFactory {
    */
   public static RecombinationFilter<Derivation<IString, String>> factory(
       String recombinationMode, List<Featurizer<IString, String>> featurizers) {
+    
     boolean msdRecombination = false;
     for (Featurizer<IString, String> featurizer : featurizers) {
       if (featurizer instanceof HierarchicalReorderingFeaturizer ||
@@ -39,18 +40,18 @@ public final class RecombinationFilterFactory {
         msdRecombination = true;
     }
 
-    List<RecombinationFilter<Derivation<IString, String>>> filters = new LinkedList<>();
+    List<RecombinationFilter<Derivation<IString, String>>> filters = new ArrayList<>();
     
     // Always consider prefixes during recombination. Sort of like source coverage...a
     // hard constraint.
-    filters.add(new SoftConstrainedDecodingRecombinationFilter<IString, String>());
+    filters.add(new SoftConstrainedDecodingRecombinationFilter<>());
     
     switch (recombinationMode) {
       case PHAROAH_RECOMBINATION: {
         // maintain uniqueness of hypotheses that will result in different linear
         // distortion scores when extended
         // with future translation options.
-        filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
+        filters.add(new LinearDistortionRecombinationFilter<>(featurizers));
 
         // maintain uniqueness of hypotheses that differ by the last N-tokens,
         // this being relevant to lg model scoring
@@ -58,33 +59,31 @@ public final class RecombinationFilterFactory {
 
         // maintain uniqueness of hypotheses that differ in terms of foreign
         // sequence coverage
-        filters.add(new SourceCoverageRecombinationFilter<IString, String>());
+        filters.add(new SourceCoverageRecombinationFilter<>());
 
         if (msdRecombination) {
           filters.add(new MSDRecombinationFilter(featurizers));
         }
-        return new CombinedRecombinationFilter<Derivation<IString, String>>(
-            filters);
+        return new CombinedRecombinationFilter<Derivation<IString, String>>(filters);
 
       }
       case DTU_RECOMBINATION: {
-        filters.add(new LinearDistortionRecombinationFilter<IString, String>(featurizers));
+        filters.add(new LinearDistortionRecombinationFilter<>(featurizers));
         filters.add(new NGramLMRecombinationFilter(featurizers));
-        filters.add(new SourceCoverageRecombinationFilter<IString, String>());
-        filters.add(new DTURecombinationFilter<IString, String>());
+        filters.add(new SourceCoverageRecombinationFilter<>());
+        filters.add(new DTURecombinationFilter<>());
         if (msdRecombination) {
           filters.add(new MSDRecombinationFilter(featurizers));
         }
-        return new CombinedRecombinationFilter<Derivation<IString, String>>(
-            filters);
+        return new CombinedRecombinationFilter<Derivation<IString, String>>(filters);
+        
       }
       case EXACT_RECOMBINATION: {
         if(filters.isEmpty())
           return new ExactRecombinationFilter<Derivation<IString, String>>(featurizers);
         else {
           filters.add(new ExactRecombinationFilter<Derivation<IString, String>>(featurizers));
-          return new CombinedRecombinationFilter<Derivation<IString, String>>(
-              filters);
+          return new CombinedRecombinationFilter<Derivation<IString, String>>(filters);
         }
       }
     }
