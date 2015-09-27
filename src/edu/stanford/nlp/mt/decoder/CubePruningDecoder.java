@@ -249,7 +249,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         for (j = i-1; j >= 0; --j) {
           if (beams.get(j).size() > 0) break;
         }
-        if (j >= 0) {
+        if (j > 0) {
           // Try to extend the last compatible derivations
           boolean derivationsExtended = false;
           for (Derivation<TK,FV> d : beams.get(j)) {

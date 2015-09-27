@@ -138,11 +138,13 @@ public final class SyntheticRules {
     
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
+    CoverageSet prefixSourceCoverage = new CoverageSet(sourceSequence.size());
     for (int order = 1; order <= MAX_SYNTHETIC_ORDER; ++order) {
       for (int i = 0, sz = sourceSequence.size() - order; i <= sz; ++i) {
         List<RuleBound> rules = extractRules(sym, i, order, MAX_TARGET_ORDER);
         for (RuleBound r : rules) {
           targetCoverage.set(r.ei, r.ej);
+          prefixSourceCoverage.set(r.fi, r.fj);
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
           Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
@@ -169,8 +171,8 @@ public final class SyntheticRules {
             cnt_fe = 1e-9;
           }
           ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-              cov, featureNames, inferer.scorer, inferer.featurizer, 
-              cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
+              cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+              inputProperties, sourceSequence, sourceInputId, alignment);
           ruleGrid.addEntry(syntheticRule);
 
           // WSGDEBUG
@@ -181,7 +183,8 @@ public final class SyntheticRules {
 
     // Get source coverage and add source deletions
     CoverageSet sourceCoverage = new CoverageSet(sourceSequence.size());
-    for (int i = 0; i < sourceSequence.size(); ++i) {
+    final int maxSourceCoverage = Math.min(sourceSequence.size(), prefixSourceCoverage.cardinality() + tmList.get(0).maxLengthSource());
+    for (int i = 0; i < maxSourceCoverage; ++i) {
       if (sym.f2e(i).isEmpty()) {
         // Source deletion
         CoverageSet cov = new CoverageSet(sourceSequence.size());
@@ -193,8 +196,8 @@ public final class SyntheticRules {
         int cnt_e = 1;
         double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
         ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-            cov, featureNames, inferer.scorer, inferer.featurizer, 
-            cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
+            cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+            inputProperties, sourceSequence, sourceInputId, alignment);
         ruleGrid.addEntry(syntheticRule);
 
         // WSGDEBUG
