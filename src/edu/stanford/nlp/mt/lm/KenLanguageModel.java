@@ -145,18 +145,18 @@ public class KenLanguageModel implements LanguageModel<IString> {
 
     // Reverse the start index for KenLM
     int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
+
+    logger.info("WSGDEBUG: {} {} {} {}", sequence, startIndex, priorState);
+    logger.info("WSGDEBUG: {} {}", Arrays.toString(ngramIds), kenLMStartIndex);
+
     
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
     
-    // WSGDEBUG
     float score = KenLM.scoreFromMarshalled(got);
     int stateLength = KenLM.rightStateFromMarshalled(got);
-    if (stateLength > ngramIds.length) {
-      logger.error("WSGDEBUG: {} {} {} {}", sequence, startIndex, priorState);
-      logger.error("WSGDEBUG: {} {} {}", Arrays.toString(ngramIds), kenLMStartIndex, got);
-      logger.error("WSGDEBUG: {} {}", stateLength, score);
-    }
+    logger.info("WSGDEBUG: {} {} {}", got, stateLength, score);
+    // WSGDEBUG
         
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
