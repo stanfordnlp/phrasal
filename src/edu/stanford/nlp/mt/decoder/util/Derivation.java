@@ -12,6 +12,7 @@ import edu.stanford.nlp.mt.util.DTUFeaturizable;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
+import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 
@@ -238,16 +239,19 @@ State<Derivation<TK, FV>> {
       Scorer<FV> scorer, int sourceInputId) {
     // Manufacture a new rule
     Sequence<TK> ruleTarget = rule.abstractRule.target.concat(targetSpan);
-    ConcreteRule<TK,FV> newRule = SyntheticRules.makeSyntheticRule(rule, ruleTarget, scorer, featurizer,
+    int[][] e2f = new int[ruleTarget.size()][];
+    for (int i = 0; i < rule.abstractRule.target.size(); ++i) {
+      e2f[i] = rule.abstractRule.alignment.t2s(i);
+    }
+    PhraseAlignment align = new PhraseAlignment(e2f);
+    ConcreteRule<TK,FV> newRule = SyntheticRules.makeSyntheticRule(rule, ruleTarget, align, scorer, featurizer,
         sourceSequence, sourceInputProperties, sourceInputId);
     
-    // Update the derivation
+    // Update the derivation...Same sequence as the constructor above.
     this.rule = newRule;
     this.length = length + targetSpan.size();
     targetSequence = targetSequence.concat(targetSpan);
-    
     featurizable = new Featurizable<>(this, sourceInputId, featurizer.getNumDerivationFeaturizers());
-    
     features = featurizer.featurize(featurizable);
     features.addAll(rule.cachedFeatureList);
     double baseScore = parent == null ? 0.0 : parent.score;

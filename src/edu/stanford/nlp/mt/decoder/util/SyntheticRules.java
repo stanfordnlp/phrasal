@@ -34,6 +34,8 @@ public final class SyntheticRules {
   private static final Logger logger = LogManager.getLogger(SyntheticRules.class.getName());
   
   private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
+  private static final PhraseAlignment MONOTONE_ALIGNMENT = PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
+  
   public static final String PHRASE_TABLE_NAME = "synthetic";
   
   private static final int MAX_SYNTHETIC_ORDER = 3;
@@ -50,15 +52,34 @@ public final class SyntheticRules {
    * @param phraseScoreNames
    * @return
    */
-  public static <TK,FV> ConcreteRule<TK,FV> makeSyntheticRule(Sequence<TK> source, Sequence<TK> target, 
+  public static <TK,FV> ConcreteRule<TK,FV> makeSyntheticUnigramRule(Sequence<TK> source, Sequence<TK> target, 
       CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<FV> scorer,
       FeatureExtractor<TK,FV> featurizer,
       double cnt_f_e, int cnt_e, int cnt_f, InputProperties inputProperties, Sequence<TK> sourceSequence,
       int sourceInputId) {
+    if (source.size() != 1 || target.size() != 1) throw new IllegalArgumentException(String.format("Non-unigram arguments %d %d", source.size(), target.size()));
     return makeSyntheticRule(source, target, sourceCoverage, phraseScoreNames, scorer, featurizer,
         cnt_f_e, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, UNIGRAM_ALIGNMENT);
   }
   
+  /**
+   * Create a synthetic translation rule.
+   * 
+   * @param source
+   * @param target
+   * @param sourceCoverage
+   * @param phraseScoreNames
+   * @param scorer
+   * @param featurizer
+   * @param cnt_f_e
+   * @param cnt_e
+   * @param cnt_f
+   * @param inputProperties
+   * @param sourceSequence
+   * @param sourceInputId
+   * @param align
+   * @return
+   */
   public static <TK,FV> ConcreteRule<TK, FV> makeSyntheticRule(Sequence<TK> source, Sequence<TK> target, 
       CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<FV> scorer,
       FeatureExtractor<TK,FV> featurizer,
@@ -97,11 +118,11 @@ public final class SyntheticRules {
    * @return
    */
   public static <TK,FV> ConcreteRule<TK,FV> makeSyntheticRule(ConcreteRule<TK,FV> base,
-      Sequence<TK> target, Scorer<FV> scorer, FeatureExtractor<TK,FV> featurizer,
+      Sequence<TK> target, PhraseAlignment align, Scorer<FV> scorer, FeatureExtractor<TK,FV> featurizer,
       Sequence<TK> sourceSequence, InputProperties inputProperties, int sourceInputId) {
     Rule<TK> baseRule = base.abstractRule;
     Rule<TK> newRule = new Rule<>(baseRule.scores, baseRule.phraseScoreNames, target, baseRule.source, 
-        baseRule.alignment, PHRASE_TABLE_NAME);
+        align, PHRASE_TABLE_NAME);
     newRule.reoderingScores = baseRule.reoderingScores;
     newRule.forwardOrientation = baseRule.forwardOrientation;
     newRule.backwardOrientation = baseRule.backwardOrientation;
@@ -191,13 +212,12 @@ public final class SyntheticRules {
         cov.set(i);
         Sequence<TK> src = sourceSequence.subsequence(i, i+1);
         Sequence<TK> tgt = Sequences.emptySequence();
-        PhraseAlignment alignment = PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
         int cnt_f = 1;
         int cnt_e = 1;
         double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
         ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
             cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
-            inputProperties, sourceSequence, sourceInputId, alignment);
+            inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
         ruleGrid.addEntry(syntheticRule);
 
         // WSGDEBUG
@@ -240,13 +260,12 @@ public final class SyntheticRules {
           Sequence<TK> tgt = prefix.subsequence(ei, ej);
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(fi, fj);
-          PhraseAlignment alignment = PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
           
           int cnt_f = 1, cnt_e = 1;
           double cnt_fe = 1e-9;
           ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
               cov, featureNames, inferer.scorer, inferer.featurizer, 
-              cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
+              cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
           ruleGrid.addEntry(syntheticRule);
           finalTargetCoverage.set(ei, ej);
 
@@ -453,8 +472,6 @@ public final class SyntheticRules {
       // Populate alignment
       if (argmax >= 0) {
         a.addAlign(argmax, i);
-      } else {
-        System.err.printf("tgt null: %d %s%n", i, target.get(i));
       }
     }
     return a;
@@ -503,8 +520,6 @@ public final class SyntheticRules {
       // Populate alignment
       if (argmax >= 0) {
         a.addAlign(i, argmax);
-      } else {
-        System.err.printf("source null: %d %s%n", i, source.get(i));
       }
     }
     return a;
