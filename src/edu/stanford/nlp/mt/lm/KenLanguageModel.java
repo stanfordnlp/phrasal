@@ -1,6 +1,5 @@
 package edu.stanford.nlp.mt.lm;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -140,8 +139,8 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
 
     // Extract prior state
-    int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
-    int[] ngramIds = makeKenLMInput(sequence, state);
+    final int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
+    final int[] ngramIds = makeKenLMInput(sequence, state);
 
     if (sequence.size() == 1 && priorState == null && sequence.get(0).equals(TokenUtils.START_TOKEN)) {
       // Special case: Source deletion rule (e.g., from the OOV model) at the start of a string
@@ -153,18 +152,9 @@ public class KenLanguageModel implements LanguageModel<IString> {
     final int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
     assert kenLMStartIndex >= 0;
     
-    logger.info("WSGDEBUG: {} {} {} {}", sequence, startIndex, priorState);
-    logger.info("WSGDEBUG: {} {}", Arrays.toString(ngramIds), kenLMStartIndex);
-
-    
     // Execute the query (via JNI) and construct the return state
-    long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
+    final long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
     
-    float score = KenLM.scoreFromMarshalled(got);
-    int stateLength = KenLM.rightStateFromMarshalled(got);
-    logger.info("WSGDEBUG: {} {} {}", got, stateLength, score);
-    // WSGDEBUG
-        
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
 
