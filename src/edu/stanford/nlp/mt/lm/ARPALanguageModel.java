@@ -222,7 +222,11 @@ public class ARPALanguageModel implements LanguageModel<IString> {
     if (sequence.size() == 0) {
       // Source deletion rule
       return priorState == null ? EMPTY_STATE : priorState;
+    } else if (sequence.size() == 1 && priorState == null && sequence.get(0).equals(TokenUtils.START_TOKEN)) {
+      // Special case: Source deletion rule (e.g., from the OOV model) at the start of a string
+      return new ARPALMState(0.0f, sequence);
     }
+    
     // Concatenate the state onto the sequence.
     if (priorState != null && priorState instanceof ARPALMState) {
       int seqLength = sequence.size();
