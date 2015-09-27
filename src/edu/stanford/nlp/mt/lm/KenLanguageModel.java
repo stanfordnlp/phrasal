@@ -1,5 +1,6 @@
 package edu.stanford.nlp.mt.lm;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -148,6 +149,15 @@ public class KenLanguageModel implements LanguageModel<IString> {
     // Execute the query (via JNI) and construct the return state
     long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
     
+    // WSGDEBUG
+    float score = KenLM.scoreFromMarshalled(got);
+    int stateLength = KenLM.rightStateFromMarshalled(got);
+    if (stateLength > ngramIds.length) {
+      logger.error("WSGDEBUG: {} {} {} {}", sequence, startIndex, priorState);
+      logger.error("WSGDEBUG: {} {} {}", Arrays.toString(ngramIds), kenLMStartIndex, got);
+      logger.error("WSGDEBUG: {} {}", stateLength, score);
+    }
+        
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }
 
