@@ -24,7 +24,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private static final Logger logger = LogManager.getLogger(KenLanguageModel.class.getName());
   
   private static final int[] EMPTY_INT_ARRAY = new int[0];
-  private static final KenLMState ZERO_LENGTH_STATE = new KenLMState(0.0, EMPTY_INT_ARRAY, 0);
+  private static final KenLMState ZERO_LENGTH_STATE = new KenLMState(0.0f, EMPTY_INT_ARRAY, 0);
   public static final String KENLM_LIBRARY_NAME = "PhrasalKenLM";
   
   static {
@@ -139,14 +139,21 @@ public class KenLanguageModel implements LanguageModel<IString> {
     }
 
     // Extract prior state
-    int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
-    int[] ngramIds = makeKenLMInput(sequence, state);
+    final int[] state = priorState == null ? EMPTY_INT_ARRAY : ((KenLMState) priorState).getState();
+    final int[] ngramIds = makeKenLMInput(sequence, state);
 
+    if (sequence.size() == 1 && priorState == null && sequence.get(0).equals(TokenUtils.START_TOKEN)) {
+      // Special case: Source deletion rule (e.g., from the OOV model) at the start of a string
+      assert ngramIds.length == 1;
+      return new KenLMState(0.0f, ngramIds, ngramIds.length);
+    }
+    
     // Reverse the start index for KenLM
-    int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
+    final int kenLMStartIndex = ngramIds.length - state.length - startIndex - 1;
+    assert kenLMStartIndex >= 0;
     
     // Execute the query (via JNI) and construct the return state
-    long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
+    final long got = model.scoreSeqMarshalled(ngramIds, kenLMStartIndex);
     
     return new KenLMState(KenLM.scoreFromMarshalled(got), ngramIds, KenLM.rightStateFromMarshalled(got));
   }

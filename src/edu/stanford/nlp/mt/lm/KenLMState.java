@@ -80,6 +80,6 @@ public class KenLMState extends LMState {
   
   @Override
   public String toString() {
-    return String.format("%.6f\t%s", score, Arrays.toString(state));
+    return String.format("%.6f (%s)", score, Arrays.toString(state));
   }
 }
