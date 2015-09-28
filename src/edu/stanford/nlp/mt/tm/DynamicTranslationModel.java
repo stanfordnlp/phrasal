@@ -85,6 +85,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           return t;
         }
       });
+  static {
+    // Get ready for action.
+    threadPool.prestartAllCoreThreads();
+  }
   
   /**
    * Feature specification:
