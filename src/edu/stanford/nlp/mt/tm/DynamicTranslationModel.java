@@ -471,6 +471,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Scorer<FV> scorer) {
     if (source == null || source.size() == 0) return Collections.emptyList();
     
+    TimeKeeper timer = TimingUtils.start();
+    
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     
     final int[] sourceArray = toTMArray(source);
@@ -529,6 +531,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         e.printStackTrace();
         return Collections.emptyList();
       }
+      timer.mark("Order " + Integer.valueOf(len));
     }
     
     // Concatenate foreground model rules
@@ -541,6 +544,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
       logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
     }
+    timer.mark("Foreground");
+    
+    logger.info("input {} TM query timing: {}", sourceInputId, timer);
 
     return concreteRules;
   }
