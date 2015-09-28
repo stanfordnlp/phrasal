@@ -221,7 +221,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         timer.mark("OOV rulegen");
       }
     }
-    logger.info("input {} TM query top-level timing: {}", timer);
+    logger.info("input {} TM query top-level timing: {}", sourceInputId, timer);
     return new PhraseQuery<>(source, ruleList);
   }
   
