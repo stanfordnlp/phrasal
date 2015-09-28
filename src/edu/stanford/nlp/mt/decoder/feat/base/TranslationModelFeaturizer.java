@@ -1,10 +1,11 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
-import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -21,11 +22,17 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
   
   public static final String FEATURE_PREFIX = "TM";
 
+  // Only construct the feature strings once for each phrase table
+  private final ConcurrentHashMap<String, String[]> featureNamesHash;
+
+  
   /**
    * Constructor.
    * 
    */
-  public TranslationModelFeaturizer() {}
+  public TranslationModelFeaturizer() {
+    this.featureNamesHash = new ConcurrentHashMap<>();
+  }
   
   /**
    * Convert raw TM feature names to the featurized format.
@@ -37,22 +44,43 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     return String.format("%s:%s", FEATURE_PREFIX, featureName);
   }
   
+  /**
+   * Add a prefix to the feature names.
+   * 
+   * @param phraseTableName
+   * @param phraseScoreNames
+   * @return
+   */
+  private String[] createAndCacheFeatureNames(String phraseTableName, String[] phraseScoreNames, boolean forceUpdate) {
+    String[] featureNames = Arrays.stream(phraseScoreNames).map(s -> toTMFeature(s)).toArray(String[]::new);
+    if (forceUpdate) featureNamesHash.put(phraseTableName, featureNames);
+    else featureNamesHash.putIfAbsent(phraseTableName, featureNames);
+    return featureNames;
+  }
+  
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> featurizable) {
-    if (featurizable.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
-      // Don't score synthetic rules from the OOV model
-      return null;
-    }
-
-    // lookup/construct the list of feature names
     final String phraseTableName = featurizable.phraseTableName;
-    assert featurizable.phraseScoreNames.length == featurizable.translationScores.length :
-      "Score name/value arrays of different dimensions for table: " + phraseTableName;
+    if (featurizable.phraseScoreNames.length != featurizable.translationScores.length) {
+      throw new RuntimeException("Score name/value arrays of different dimensions for table: " + phraseTableName);
+    }
     
-    final String[] featureNames = featurizable.phraseScoreNames;
+    String[] featureNames = featureNamesHash.get(phraseTableName);
+    if (featureNames == null) {
+      featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, false);
+    }
+    if (featureNames.length < featurizable.translationScores.length) {
+      // Synthetic rules can have different numbers of features.
+      featureNames = Arrays.copyOf(featureNames, featurizable.translationScores.length);
+    } else if (featureNames.length > featurizable.translationScores.length) {
+      // We want to cache the longest feature list for each phrase table
+      featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, true);
+    }
+    
+    // construct array of FeatureValue objects
     final List<FeatureValue<String>> features = new ArrayList<>(featureNames.length);
     for (int i = 0; i < featureNames.length; ++i) {
-      features.add(new FeatureValue<>(toTMFeature(featureNames[i]), featurizable.translationScores[i], true));
+      features.add(new FeatureValue<>(featureNames[i], featurizable.translationScores[i], true));
     }
     return features;
   }

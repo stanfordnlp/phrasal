@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Set;
@@ -383,7 +384,7 @@ public final class OnlineTuner {
 
     @Override
     public ProcessorOutput process(ProcessorInput input) {
-      assert input.weights != null;
+      Objects.requireNonNull(input.weights);
             
       final int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = new ArrayList<>(input.translationIds.length);
@@ -432,7 +433,6 @@ public final class OnlineTuner {
 
         }
             
-        
         if(input.createForcedAlignment) {          
           // now compute forced alignment
           inputProperties.put(InputProperty.TargetPrefix, true);
@@ -495,9 +495,9 @@ public final class OnlineTuner {
       OnlineUpdateRule<String> updater, Map<Integer, Sequence<IString>> nbestLists, 
       boolean endOfEpoch, ParallelCorpus localTmTrainingData,
       List<Sequence<IString>> prefixDecodingOutputs) {
-    assert threadpool != null;
-    assert currentWts != null;
-    assert updater != null;
+    Objects.requireNonNull(threadpool);
+    Objects.requireNonNull(currentWts);
+    Objects.requireNonNull(updater);
     
     // There may be more than one gradient available, so loop
     while (threadpool.peek()) {
@@ -556,9 +556,6 @@ public final class OnlineTuner {
         for(int i = 0; i < result.prefixDecodingOutput.size(); ++i)
           prefixDecodingOutputs.add(result.prefixDecodingOutput.get(i).translation);
       }
-      
-      
-      
     }
     
     return updateStep;
