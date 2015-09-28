@@ -150,10 +150,10 @@ State<Derivation<TK, FV>> {
     this.sourceInputProperties = base.sourceInputProperties;
     this.sourceCoverage = base.sourceCoverage.clone();
     this.sourceCoverage.or(rule.sourceCoverage);
-    this.prefixCompleted = outputSpace == null ? true : (outputSpace.getPrefixLength() == 0);
-    this.prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
     assert insertionPosition >= base.length : String.format("Invalid insertion position %d %d", insertionPosition, base.length);
     this.length = insertionPosition + rule.abstractRule.target.size();
+    this.prefixCompleted = outputSpace == null ? true : (this.length >= outputSpace.getPrefixLength());
+    this.prefixLength = outputSpace == null ? 0 : outputSpace.getPrefixLength();
     sourceSequence = base.sourceSequence;
     targetSequence = base.targetSequence.concat(rule.abstractRule.target);
     untranslatedSourceTokens = this.sourceSequence.size()
@@ -250,6 +250,7 @@ State<Derivation<TK, FV>> {
     // Update the derivation...Same sequence as the constructor above.
     this.rule = newRule;
     this.length = length + targetSpan.size();
+    this.prefixCompleted = (this.length >= this.prefixLength);
     targetSequence = targetSequence.concat(targetSpan);
     featurizable = new Featurizable<>(this, sourceInputId, featurizer.getNumDerivationFeaturizers());
     features = featurizer.featurize(featurizable);
