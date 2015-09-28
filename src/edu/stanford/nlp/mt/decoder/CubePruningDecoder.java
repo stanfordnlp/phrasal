@@ -259,6 +259,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
             Sequence<TK> extension = targets.get(0).subsequence(prefixLength, prefixLength+1);
             d.targetInsertion(extension, featurizer, scorer, sourceInputId);
             derivationsExtended = true;
+            
+            // Iterate over recombinations
+            for (Derivation<TK,FV> recomb : recombinationHistory.recombinations(d)) {
+              recomb.targetInsertion(extension, featurizer, scorer, sourceInputId);
+            }
           }
           
           // Reset search. This is some scary shit.
