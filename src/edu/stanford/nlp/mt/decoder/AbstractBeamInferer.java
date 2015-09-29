@@ -93,6 +93,9 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   /**
    * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
    * 
+   * TODO(spenceg) This is less effective than the procedure in SyntheticRules, but an
+   * interesting idea for future work.
+   * 
    * @param source
    * @param ruleList
    * @param sourceInputProperties
@@ -101,6 +104,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    * @param beams
    * @return The beam at which standard decoding should begin.
    */
+  @Deprecated
   protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
       List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
