@@ -19,12 +19,13 @@ import edu.stanford.nlp.mt.util.Featurizable;
 public class UnknownWordFeaturizer<TK> implements RuleFeaturizer<TK, String> {
 
   public static final String FEATURE_NAME = "UnknownWord";
-
+  private static final List<FeatureValue<String>> FEATURE = 
+      Collections.singletonList(new FeatureValue<>(FEATURE_NAME, -1.0, true));
+  
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<TK, String> f) {
-    final int size = f.targetPhrase.size();
-    return (size != 0 && f.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) ?
-      Collections.singletonList(new FeatureValue<>(FEATURE_NAME, -1.0 * size, true)) : null;
+    return f.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME) ? 
+        FEATURE : null;
   }
 
   @Override

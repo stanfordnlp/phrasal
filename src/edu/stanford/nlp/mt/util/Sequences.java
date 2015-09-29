@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -208,6 +210,11 @@ public final class Sequences {
     @Override
     public Sequence<TK> concat(Sequence<TK> other) {
       return other;
+    }
+    
+    @Override
+    public Iterator<TK> iterator() {
+      return Collections.emptyIterator();
     }
   }
 }

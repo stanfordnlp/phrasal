@@ -21,14 +21,13 @@ public class UnknownWordPhraseGenerator<TK, FV> extends
     AbstractPhraseGenerator<TK, FV> {
 
   public static final String PHRASE_TABLE_NAME = UnknownWordPhraseGenerator.class.getName();
-  public static final String UNK_FEATURE_NAME = "TM.UNK";
 
   private static final PhraseAlignment DEFAULT_ALIGNMENT = PhraseAlignment
       .getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
 
   private final boolean dropUnknownWords;
-  private final String[] featureNames = { UNK_FEATURE_NAME };
-  private final float[] featureValues = { (float) 1.0 };
+  private final String[] featureNames = new String[0];
+  private final float[] featureValues = new float[0];
   
   /**
    * Constructor.

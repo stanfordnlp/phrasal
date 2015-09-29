@@ -541,7 +541,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
       logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
     }
-
+    
     return concreteRules;
   }
   
