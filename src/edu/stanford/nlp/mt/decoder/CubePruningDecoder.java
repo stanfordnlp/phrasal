@@ -172,15 +172,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Add new rules to the rule grid
       SyntheticRules.augmentRuleGrid(ruleGrid, targets.get(0), sourceInputId, source, this, sourceInputProperties);
       
-//      minSourceCoverage = prefixFillBeams(source, ruleList, sourceInputProperties, targets.get(0), 
-//          scorer, beams, sourceInputId, outputSpace);
-//      if (minSourceCoverage < 0) {
-//        logger.warn("input {}: PREFIX DECODING FAILURE", sourceInputId);
-//        return null;
-//      }
-//      startOfDecoding = minSourceCoverage + 1;
-//      prefilledBeams = true;
-      timer.mark("Prefill");
+      timer.mark("PrefixAug");
     }
     
     // main translation loop---beam expansion
@@ -206,18 +198,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
       
-      // WSGDEBUG
-//      int actualPoppedItems = 0;
-      
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         final Item item = pq.poll();
 
-        // WSGDEBUG
-//        ++actualPoppedItems;
-        
         // Derivations are null if they're pruned by an output constraint.
         if (item.derivation != null) {
           newBeam.put(item.derivation);

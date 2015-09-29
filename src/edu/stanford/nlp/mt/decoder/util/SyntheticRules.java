@@ -419,7 +419,7 @@ public final class SyntheticRules {
   private static SymmetricalWordAlignment intersect(SymmetricalWordAlignment align,
       SymmetricalWordAlignment alignInverse) {
     SymmetricalWordAlignment a = new SymmetricalWordAlignment(align.f(), align.e());
-    for (int fi = 0; fi < align.fSize(); ++fi) {
+    for (int fi = 0, sz = align.fSize(); fi < sz; ++fi) {
       for (int ei : align.f2e(fi)) {
         if (alignInverse.e2f(ei).contains(fi)) {
           a.addAlign(fi, ei);
@@ -437,14 +437,12 @@ public final class SyntheticRules {
     
     int[] cnt_f = new int[source.size()];
     Arrays.fill(cnt_f, -1);
-//    cnt_f[cnt_f.length-1] = tmList.stream().mapToInt(tm -> tm.bitextSize()).sum();
     
-    for (int i = 0; i < target.size(); ++i) {
+    for (int i = 0, tSz = target.size(); i < tSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
       final IString tgtToken = (IString) target.get(i);
-//      int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
-      for (int j = 0; j < source.size(); ++j) {
+      for (int j = 0, sz = source.size(); j < sz; ++j) {
         final IString srcToken = (IString) source.get(j);
         if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
@@ -459,7 +457,7 @@ public final class SyntheticRules {
         // Backoff to lexical similarity
         // TODO(spenceg) Only works for languages with similar orthography.
         String tgt = target.get(i).toString();
-        for (int j = 0; j < source.size(); ++j) {
+        for (int j = 0, sz = source.size(); j < sz; ++j) {
           String src = source.get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           if (q > max) {
@@ -485,14 +483,12 @@ public final class SyntheticRules {
     
     int[] cnt_e = new int[target.size()];
     Arrays.fill(cnt_e, -1);
-//    cnt_e[cnt_e.length-1] = tmList.stream().mapToInt(tm -> tm.bitextSize()).sum();
     
-    for (int i = 0; i < source.size(); ++i) {
+    for (int i = 0, sSz = source.size(); i < sSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
       final IString srcToken = (IString) source.get(i);
-//      int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
-      for (int j = 0; j < target.size(); ++j) {
+      for (int j = 0, sz = target.size(); j < sz; ++j) {
         final IString tgtToken = (IString) target.get(j);
         if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
@@ -507,7 +503,7 @@ public final class SyntheticRules {
         // Backoff to lexical similarity
         // TODO(spenceg) Only works for languages with similar orthography.
         String src = source.get(i).toString();
-        for (int j = 0; j < target.size(); ++j) {
+        for (int j = 0, sz = target.size(); j < sz; ++j) {
           String tgt = target.get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           if (q > max) {
