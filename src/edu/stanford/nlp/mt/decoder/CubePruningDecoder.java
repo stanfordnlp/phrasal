@@ -18,6 +18,7 @@ import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
+import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -43,6 +44,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
 
+  // Find at least this many derivations when output constraints are enabled.
+  private static final int MIN_SIZE = 5;
+  
+  // TODO(spenceg) May need to cap the number of popped items to keep it from running forever.
+  
   protected int maxDistortion;
   protected final int defaultDistortion;
   
@@ -155,22 +161,25 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     int startOfDecoding = 1;
     int minSourceCoverage = 0;
     boolean prefilledBeams = false;
-    if (sourceInputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
+    final boolean prefixEnabled = sourceInputProperties.containsKey(InputProperty.TargetPrefix) && 
+        targets != null && targets.size() > 0 && targets.get(0).size() > 0;
+    if (prefixEnabled) {
       if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
-      minSourceCoverage = prefixFillBeams(source, ruleList, sourceInputProperties, targets.get(0), 
-          scorer, beams, sourceInputId, outputSpace);
-      if (minSourceCoverage < 0) {
-        logger.warn("input {}: PREFIX DECODING FAILURE", sourceInputId);
-        return null;
-      }
-      startOfDecoding = minSourceCoverage + 1;
-      prefilledBeams = true;
-      timer.mark("Prefill");
+
+      // Disable query limit. We might need some of these rules.
+      ruleGrid.setRuleQueryLimit(-1);
+
+      // Add new rules to the rule grid
+      SyntheticRules.augmentRuleGrid(ruleGrid, targets.get(0), sourceInputId, source, this, sourceInputProperties);
+      
+      timer.mark("PrefixAug");
     }
     
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
+    boolean outputConstrained = false;
+    boolean seenCompatiblePrefix = ! prefixEnabled;
     for (int i = startOfDecoding; i <= sourceLength; i++) {
       int rootBeam = prefilledBeams ? minSourceCoverage : 0;
       int minCoverage = i - maxPhraseLength;
@@ -191,13 +200,15 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
-      int numPoppedItems = newBeam.size();      
+      int numPoppedItems = newBeam.size();
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
-        Item item = pq.poll();
-        ++numPoppedItems;
+        final Item item = pq.poll();
 
         // Derivations are null if they're pruned by an output constraint.
-        if (item.derivation != null) newBeam.put(item.derivation);
+        if (item.derivation != null) {
+          newBeam.put(item.derivation);
+          seenCompatiblePrefix = seenCompatiblePrefix || item.derivation.length >= targets.get(0).size();
+        }
 
         // Expand this consequent
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
@@ -206,15 +217,58 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
         }
+        
+        // If output constraints are enabled, keep searching until we find at least one
+        // compatible derivation.
+        outputConstrained = outputConstrained || item.derivation == null;
+        if (! outputConstrained || numPoppedItems < newBeam.capacity() - 1 || newBeam.size() > MIN_SIZE) {
+          ++numPoppedItems;
+        }
       }
 
+      // Couldn't figure out how to extend any derivations in the beams. Walk back from this point
+      // to the first beam that has valid derivations in. Try to reset that beam by extending each
+      // derivation with target insertion rules.
+      if (prefixEnabled && ! seenCompatiblePrefix && newBeam.size() == 0) {
+        if (i == 0) throw new RuntimeException("Couldn't decode null prefix?");
+        int j;
+        for (j = i-1; j >= 0; --j) {
+          if (beams.get(j).size() > 0) break;
+        }
+        if (j > 0) {
+          // Try to extend the last compatible derivations
+          boolean derivationsExtended = false;
+          for (Derivation<TK,FV> d : beams.get(j)) {
+            int prefixLength = d.length;
+            if (prefixLength >= targets.get(0).size()) break;
+            
+            Sequence<TK> extension = targets.get(0).subsequence(prefixLength, prefixLength+1);
+            d.targetInsertion(extension, featurizer, scorer, sourceInputId);
+            derivationsExtended = true;
+            
+            if (recombinationHistory != null) {
+              // Iterate over recombinations
+              for (Derivation<TK,FV> recomb : recombinationHistory.recombinations(d)) {
+                recomb.targetInsertion(extension, featurizer, scorer, sourceInputId);
+              }
+            }
+          }
+          
+          // Reset search. This is some scary shit.
+          if (derivationsExtended) {
+            ((BundleBeam<TK,FV>) beams.get(j)).reset();
+            i -= 1;
+          } // else we can't make any more progress, so continue with decoding, which will fail.
+        }
+      }
+      
       numRecombined += newBeam.recombined();
     }
     timer.mark("Inference");
     
     // Debug statistics
     logger.info("input {}: Decoding time: {}", sourceInputId, timer);
-    logger.info("input {}: #derivation generated: {}  pruned: {}  recombined: {}", sourceInputId, 
+    logger.info("input {}: #derivations generated: {}  pruned: {}  recombined: {}", sourceInputId, 
         totalHypothesesGenerated, numPruned, numRecombined);
 
     // Return the best beam, which should be the goal beam

@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.lm.ARPALanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.stats.NumericalPrecision;
 
 /**
  * Simple unit test for Java-based ARPALanguageModel loader.
@@ -41,6 +42,6 @@ public class ARPALanguageModelTest {
     Sequence<IString> paddedSequence = 
         Sequences.wrapStartEnd(seq, lm.getStartToken(), lm.getEndToken());
     double score = lm.score(paddedSequence, 1, null).getScore();
-    assertTrue(score == (double) -72.46472558379173);
+    assertTrue(NumericalPrecision.equals(score, -72.46472558379173, 1e-6));
   }
 }

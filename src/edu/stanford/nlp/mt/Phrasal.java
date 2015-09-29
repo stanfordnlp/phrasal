@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -1161,19 +1162,17 @@ public class Phrasal {
   @SuppressWarnings("unchecked")
   public List<RichTranslation<IString, String>> decode(Sequence<IString> source, int sourceInputId, int threadId,
       int numTranslations, List<Sequence<IString>> targets, InputProperties inputProperties) {
-    if (threadId < 0 || threadId >= numThreads) {
+    Objects.requireNonNull(source);
+    if (threadId < 0 || threadId >= numThreads)
       throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
-    }
-    if (sourceInputId < 0) {
+    if (sourceInputId < 0)
       throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
-    }
 
     final TimeKeeper timer = TimingUtils.start();
     
     // Wrapping input for TMs with boundary tokens
-    if (wrapBoundary) {
-      source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, TokenUtils.END_TOKEN);
-    }
+    if (wrapBoundary) source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, 
+        TokenUtils.END_TOKEN);
 
     // Output space of the decoder
     final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix)

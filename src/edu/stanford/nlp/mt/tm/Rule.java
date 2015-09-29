@@ -15,8 +15,6 @@ import edu.stanford.nlp.mt.util.Sequence;
  * @param <T>
  */
 public class Rule<T> implements Comparable<Rule<T>>{
-
-  private static final int SYNTHETIC_RULE_ID = -1;
   
   /**
    * The id of this rule in the phrase table.
@@ -74,7 +72,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public Rule(float[] scores, String[] phraseScoreNames,
       Sequence<T> target, Sequence<T> source,
       PhraseAlignment alignment, String phraseTableName) {
-    this(SYNTHETIC_RULE_ID, scores, phraseScoreNames, target, source, alignment, phraseTableName);
+    this(0, scores, phraseScoreNames, target, source, alignment, phraseTableName);
   }
 
   /**
@@ -99,14 +97,6 @@ public class Rule<T> implements Comparable<Rule<T>>{
     this.phraseScoreNames = phraseScoreNames;
     this.phraseTableName = phraseTableName;
   }
-
-  /**
-   * True if this rule is synthetic, namely it was not extracted by PhraseExtract and thus
-   * probably has faked-up scores or alignments.
-   * 
-   * @return
-   */
-  public boolean isSynthetic() { return id == SYNTHETIC_RULE_ID; }
   
   @Override
   public String toString() {

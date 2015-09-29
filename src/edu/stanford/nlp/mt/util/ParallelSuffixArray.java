@@ -375,7 +375,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    * Find all source spans up to dimension == 3.
    * 
    * TODO(spenceg) Lopez reports finding a few order=5 n-grams of high frequency
-   * so maybe generalize this looku
+   * so maybe generalize this lookup.
    * 
    * @param sampleSize
    * @param minOccurrences
@@ -449,12 +449,11 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       return cnt + 1;
       
     } else if (cnt > ruleCacheThreshold) {
-      int maxHits = 10*sampleSize;
       int numHits = endSa - startSa;
-      int stepSize = (numHits < maxHits) ? 1 : numHits / maxHits;
+      final int stepSize = (numHits < sampleSize) ? 1 : numHits / sampleSize;
       assert stepSize > 0;
-      List<SentencePair> hits = new ArrayList<>(maxHits);
-      for (int i = startSa; i < endSa && hits.size() < maxHits; i += stepSize) {
+      final List<SentencePair> hits = new ArrayList<>(sampleSize);
+      for (int i = startSa; i < endSa && hits.size() < sampleSize; i += stepSize) {
         int corpusPosition = srcSuffixArray[i];
         assert srcBitext[corpusPosition] >= 0;
         hits.add(new SentencePair(corpusPosition));

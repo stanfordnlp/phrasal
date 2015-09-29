@@ -85,6 +85,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           return t;
         }
       });
+  static {
+    // Get ready for action.
+    threadPool.prestartAllCoreThreads();
+  }
   
   /**
    * Feature specification:
@@ -537,7 +541,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
       logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
     }
-
+    
     return concreteRules;
   }
   
@@ -676,6 +680,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public int getTargetLexCount(IString target) {
     int id = toTMId(target);
     return id >= 0 ? coocTable.getTgtMarginal(id) : 0;
+  }
+  
+  public int getTargetUnalignedCount(IString target) {
+    int id = toTMId(target);
+    return id >= 0 ? coocTable.getJointCount(LexCoocTable.NULL_ID, id) : 0;    
   }
   
   /**

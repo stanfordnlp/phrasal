@@ -16,21 +16,16 @@ import edu.stanford.nlp.mt.util.Featurizable;
  *
  * @param <TK>
  */
-public class UnknownWordFeaturizer<TK> implements
-    RuleFeaturizer<TK, String> {
+public class UnknownWordFeaturizer<TK> implements RuleFeaturizer<TK, String> {
 
   public static final String FEATURE_NAME = "UnknownWord";
-  public static final double MOSES_UNKNOWN_WORD_MUL = -100.0;
-
+  private static final List<FeatureValue<String>> FEATURE = 
+      Collections.singletonList(new FeatureValue<>(FEATURE_NAME, -1.0, true));
+  
   @Override
-  public List<FeatureValue<String>> ruleFeaturize(
-      Featurizable<TK, String> f) {
-    final int size = f.targetPhrase.size();
-    if (size != 0 && f.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME)) {
-      return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME,
-          MOSES_UNKNOWN_WORD_MUL * size, true));
-    }
-    return null;
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<TK, String> f) {
+    return f.phraseTableName.equals(UnknownWordPhraseGenerator.PHRASE_TABLE_NAME) ? 
+        FEATURE : null;
   }
 
   @Override

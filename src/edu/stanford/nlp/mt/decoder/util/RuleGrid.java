@@ -29,10 +29,9 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   private final List<ConcreteRule<TK,FV>>[] grid;
   private final int sourceLength;
   private final BitSet isSorted;
-  private boolean completeCoverage;
   private CoverageSet coverage;
   private final int size;
-  private final int ruleQueryLimit;
+  private int ruleQueryLimit;
   
   /**
    * Constructor.
@@ -52,7 +51,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, int ruleQueryLimit) {
     sourceLength = source.size();
     isSorted = new BitSet();
-    this.ruleQueryLimit = ruleQueryLimit;
+    this.ruleQueryLimit = ruleQueryLimit < 0 ? Integer.MAX_VALUE : ruleQueryLimit;
     this.size = ruleList.size();
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
@@ -61,12 +60,14 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     for (ConcreteRule<TK,FV> rule : ruleList) addEntry(rule);
   }
   
+  public void setRuleQueryLimit(int l) { ruleQueryLimit = l < 0 ? Integer.MAX_VALUE : l; }
+  
   /**
    * Add a new entry to the rule table.
    * 
    * @param rule
    */
-  private void addEntry(ConcreteRule<TK,FV> rule) {
+  public void addEntry(ConcreteRule<TK,FV> rule) {
     int startPos = rule.sourcePosition;
     int endPos = startPos + rule.abstractRule.source.size() - 1;
     // Sanity checks
@@ -77,14 +78,13 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     if (grid[offset] == null) grid[offset] = new ArrayList<>();
     grid[offset].add(rule);
     coverage.or(rule.sourceCoverage);
-    completeCoverage = (coverage.cardinality() == sourceLength);
   }
   
   /**
    * True if the grid completely covers the source input. Otherwise, false.
    * @return
    */
-  public boolean isCoverageComplete() { return completeCoverage; }
+  public boolean isCoverageComplete() { return coverage.cardinality() == sourceLength; }
   
   /**
    * Get the source coverage.

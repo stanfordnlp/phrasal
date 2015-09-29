@@ -13,21 +13,14 @@ import edu.stanford.nlp.mt.util.Featurizable;
  * @author danielcer
  * 
  */
-public class WordPenaltyFeaturizer<TK> implements
-    RuleFeaturizer<TK, String> {
+public class WordPenaltyFeaturizer<TK> implements RuleFeaturizer<TK, String> {
 
   public static final String FEATURE_NAME = "WordPenalty";
-  private static final double MOSES_WORD_PENALTY_MUL = -1.0;
 
   @Override
-  public List<FeatureValue<String>> ruleFeaturize(
-      Featurizable<TK, String> f) {
-    if (f.targetPhrase == null || f.targetPhrase.size() == 0) {
-      return null;
-    } else {
-      return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, MOSES_WORD_PENALTY_MUL
-          * f.targetPhrase.size(), true));
-    }
+  public List<FeatureValue<String>> ruleFeaturize(Featurizable<TK, String> f) {
+    return (f.targetPhrase == null || f.targetPhrase.size() == 0) ? null :
+      Collections.singletonList(new FeatureValue<>(FEATURE_NAME, -1.0 * f.targetPhrase.size(), true));
   }
 
   @Override

@@ -13,6 +13,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
+import edu.stanford.nlp.mt.stats.NumericalPrecision;
 
 /**
  * Simple unit test for the KenLM loader. Tests both
@@ -60,7 +61,7 @@ public class KenLanguageModelTest {
       throw new RuntimeException(e);
     }  
     double score = scoreTestSentence(lm);
-    assertTrue(score == (double) -72.4647216796875);
+    assertTrue(NumericalPrecision.equals(score, -72.4647216796875, 1e-6));
   }
 
   @Test
@@ -74,6 +75,6 @@ public class KenLanguageModelTest {
       throw new RuntimeException(e);
     }  
     double score = scoreTestSentence(lm);
-    assertTrue(score == (double) -72.4647216796875);
+    assertTrue(NumericalPrecision.equals(score, -72.4647216796875, 1e-6));
   }
 }
