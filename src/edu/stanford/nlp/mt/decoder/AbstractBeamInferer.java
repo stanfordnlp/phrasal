@@ -171,12 +171,9 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       InputProperties sourceInputProperties, List<Sequence<TK>> targets,
       int sourceInputId, Scorer<FV> scorer) {
     
-    TimeKeeper timer = TimingUtils.start();
-    
     // Initial query
     List<ConcreteRule<TK,FV>> ruleList = phraseGenerator.getRules(source, sourceInputProperties, 
         sourceInputId, scorer);
-    timer.mark("Initial query");
     
     // Compute coverage
     final CoverageSet coverage = new CoverageSet(source.size());
@@ -195,8 +192,6 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         Sequence<TK> sourceFiltered = filteredToks.size() > 0 ? 
             new ArraySequence<TK>(filteredToks) : Sequences.emptySequence();
         ruleList = phraseGenerator.getRules(sourceFiltered, sourceInputProperties, sourceInputId, scorer);
-        timer.mark("OOV filter");
-        logger.info("input {} TM query top-level timing: {}", timer);
         return new PhraseQuery<>(sourceFiltered, ruleList);
         
       } else {
@@ -218,10 +213,8 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
                 sourceInputProperties));
           }
         }
-        timer.mark("OOV rulegen");
       }
     }
-    logger.info("input {} TM query top-level timing: {}", sourceInputId, timer);
     return new PhraseQuery<>(source, ruleList);
   }
   

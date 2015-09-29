@@ -471,8 +471,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Scorer<FV> scorer) {
     if (source == null || source.size() == 0) return Collections.emptyList();
     
-    TimeKeeper timer = TimingUtils.start();
-    
     final List<ConcreteRule<IString,FV>> concreteRules = new ArrayList<>(source.size() * source.size() * 100);
     
     final int[] sourceArray = toTMArray(source);
@@ -531,7 +529,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         e.printStackTrace();
         return Collections.emptyList();
       }
-      timer.mark("Order " + Integer.valueOf(len) + " " + Integer.valueOf(numTasks));
     }
     
     // Concatenate foreground model rules
@@ -542,12 +539,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       fgProperties.remove(InputProperty.ForegroundTM);
       int bgSize = concreteRules.size();
       concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
-      timer.mark("Foreground");
       logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
     }
     
-    logger.info("input {} TM query timing: {}", sourceInputId, timer);
-
     return concreteRules;
   }
   
@@ -584,20 +578,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       final int order = j - i;
       final QueryResult<FV> result = new QueryResult<>(i, j);
 
-      TimeKeeper timer = TimingUtils.start();
-      
       // Generate rules for this span
       final Sequence<IString> sourceSpan = source.subsequence(i, j);
       final CoverageSet sourceCoverage = new CoverageSet(source.size());
       sourceCoverage.set(i, j);
       List<Rule<IString>> rules = ruleCache == null ? null : ruleCache.get(sourceSpan);
-      timer.mark("Cache query");
       if (rules == null) {
         // Sample from the suffix array
         final int[] sourcePhrase = Arrays.copyOfRange(sourceArray, i, j);
         final SuffixArraySample corpusSample = prefixBounds == null ? sa.sample(sourcePhrase, sampleSize)
             : sa.sample(sourcePhrase, sampleSize, prefixBounds[0], prefixBounds[1]);
-        timer.mark("SA query");
         if (corpusSample.size() == 0) {
           // This span is not present in the training data.
           rules = Collections.emptyList();
@@ -608,7 +598,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           final int numHits = corpusSample.ub - corpusSample.lb + 1;
           final double sampleRate = corpusSample.size() / (double) numHits;
           rules = samplesToRules(corpusSample.samples, order, sampleRate, sourceSpan);
-          timer.mark("Extract");
         }
       }
       // Extract rules
@@ -617,8 +606,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         result.ruleList.add(new ConcreteRule<>(
             r, sourceCoverage, featurizer, scorer, source, sourceInputId, sourceInputProperties));
       }
-      timer.mark("Rule featurize");
-      logger.info("input {} {} TM extract: {}", sourceInputId, sourceCoverage, timer);
       return result;
     }
   }
