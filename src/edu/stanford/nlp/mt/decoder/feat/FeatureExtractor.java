@@ -158,13 +158,19 @@ public class FeatureExtractor<TK, FV> extends
         if (listFeatureValues != null) {
           for (FeatureValue<FV> fv : listFeatureValues) {
             featureValues.add(fv);
-            if (featureAugmentationMode >= 0) {
+            /*if (featureAugmentationMode >= 0) {
               augmentFeatureValue(fv, f, featureValues);
             }
+            */
           }
         }
       }
     }
+    
+    if(featureAugmentationMode >= 0) {
+      augmentFeatures(f, featureValues);
+    }
+    
     return featureValues;
   }
 
@@ -184,15 +190,58 @@ public class FeatureExtractor<TK, FV> extends
           for (FeatureValue<FV> fv : listFeatureValues) {
             fv.doNotCache = doNotCache;
             featureValues.add(fv);
-            if (featureAugmentationMode >= 0) {
+            /* if (featureAugmentationMode >= 0) {
               augmentFeatureValue(fv, f, featureValues);
-            }
+            }*/
           }
         }
       }
     }
+    
+    if(featureAugmentationMode >= 0) {
+      augmentFeatures(f, featureValues);
+    }
+    
     return featureValues;
   }
+  
+
+  /**
+   * Feature space augmentation a la Daume III (2007).
+   * 
+   * @param f
+   * @param featureValues
+   */
+  @SuppressWarnings("unchecked")
+  private void augmentFeatures(Featurizable<TK, FV> f, List<FeatureValue<FV>> featureValues) {
+    final String[] genres = f.sourceInputProperties.containsKey(InputProperty.Domain)
+        ? (String[]) f.sourceInputProperties.get(InputProperty.Domain) : null;
+    if (genres != null) {
+      List<FeatureValue<FV>> listFeatureValues = featureValues;
+      for(FeatureValue<FV> fv : listFeatureValues) {
+        if (featureAugmentationMode == 0 ||
+            (featureAugmentationMode == 1 && fv.isDenseFeature) ||
+            (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
+          for(int i = 0; i < genres.length; ++i) {
+            String featureValue = String.format("aug-%s-%s", genres[i], fv.name.toString());
+            featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+          }
+        }
+      }
+    } else if (featureAugmentationMode == 3) {
+      // Prefix mode
+      List<FeatureValue<FV>> listFeatureValues = featureValues;
+      for(FeatureValue<FV> fv : listFeatureValues) {
+        final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
+            f.targetSequence.size() < f.derivation.prefixLength;
+        if (inPrefix) {
+          String featureValue = String.format("aug-%s", fv.name.toString());
+          featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+        }
+      }
+    }
+  }
+  
 
   /**
    * Feature space augmentation a la Daume III (2007).
