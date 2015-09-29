@@ -217,7 +217,7 @@ public class FeatureExtractor<TK, FV> extends
     final String[] genres = f.sourceInputProperties.containsKey(InputProperty.Domain)
         ? (String[]) f.sourceInputProperties.get(InputProperty.Domain) : null;
     if (genres != null) {
-      List<FeatureValue<FV>> listFeatureValues = featureValues;
+      List<FeatureValue<FV>> listFeatureValues = new ArrayList<>(featureValues);
       for(FeatureValue<FV> fv : listFeatureValues) {
         if (featureAugmentationMode == 0 ||
             (featureAugmentationMode == 1 && fv.isDenseFeature) ||
