@@ -34,8 +34,8 @@ public class LexicalReorderingFeaturizer extends
 
   private static final boolean DETAILED_DEBUG = false;
   
-  private static final String DISCRIMINATIVE_PREFIX = "Disc";
   public static final String FEATURE_PREFIX = "LexR";
+  private static final String DISCRIMINATIVE_PREFIX = "Disc" + FEATURE_PREFIX;
   public final String[] featureTags;
   public final LexicalReorderingTable mlrt;
   private List<LexicalReorderingTable.ReorderingTypes> discriminativeSet;
@@ -159,7 +159,7 @@ public class LexicalReorderingFeaturizer extends
           } else {
             ruleRep = getDiscriminativeRepresentation(f.prior);
           }
-          String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
+          String featureString = DISCRIMINATIVE_PREFIX + ":" + mrt + ":"
               + ruleRep;
           features.add(new FeatureValue<String>(featureString, 1.0, true));
         
@@ -167,7 +167,7 @@ public class LexicalReorderingFeaturizer extends
           String ruleRep = useAlignmentConstellations ? 
               f.rule.abstractRule.alignment.toString() :
                 getDiscriminativeRepresentation(f);
-          String featureString = DISCRIMINATIVE_PREFIX + FEATURE_PREFIX + ":" + mrt + ":"
+          String featureString = DISCRIMINATIVE_PREFIX + ":" + mrt + ":"
               + ruleRep;
           features.add(new FeatureValue<String>(featureString, 1.0, true));
         }
@@ -220,10 +220,9 @@ public class LexicalReorderingFeaturizer extends
           if (priorScores != null && ff) {
             features.add(new FeatureValue<String>(featureTags[i], priorScores[i], true));
             if (dynamicDiscrim) {
-              features.add(new FeatureValue<String>(
-                  String.format("%s%s:%s-%s", DISCRIMINATIVE_PREFIX, FEATURE_PREFIX,
-                      f.prior.rule.abstractRule.forwardOrientation.toString(),
-                      type.toString()), 1.0));
+              String featureName = DISCRIMINATIVE_PREFIX + ":" + f.prior.rule.abstractRule.forwardOrientation.toString()
+                + "-" + type.toString();
+              features.add(new FeatureValue<String>(featureName, 1.0));
             }
           }
         
@@ -233,10 +232,9 @@ public class LexicalReorderingFeaturizer extends
           if (scores != null && ff) {
             features.add(new FeatureValue<String>(featureTags[i], scores[i], true));
             if (dynamicDiscrim) {
-              features.add(new FeatureValue<String>(
-                  String.format("%s%s:%s-%s", DISCRIMINATIVE_PREFIX, FEATURE_PREFIX,
-                      f.rule.abstractRule.forwardOrientation.toString(),
-                      type.toString()), 1.0));
+              String featureName = DISCRIMINATIVE_PREFIX + ":" + f.rule.abstractRule.backwardOrientation.toString()
+                + "-" + type.toString();
+              features.add(new FeatureValue<String>(featureName, 1.0));
             }
           }
         }

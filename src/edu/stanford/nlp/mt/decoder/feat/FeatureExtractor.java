@@ -224,7 +224,7 @@ public class FeatureExtractor<TK, FV> extends
             (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
           for(int i = 0; i < genres.length; ++i) {
             String featureValue = "aug-" +  genres[i] + "-" + fv.name.toString();
-            featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+            featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
           }
         }
       }
@@ -236,7 +236,7 @@ public class FeatureExtractor<TK, FV> extends
             f.targetSequence.size() < f.derivation.prefixLength;
         if (inPrefix) {
           String featureValue = "aug-" + fv.name.toString();
-          featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
+          featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
       }
     }
