@@ -69,17 +69,14 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     if (featureNames == null) {
       featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, false);
     }
-    if (featureNames.length < featurizable.translationScores.length) {
-      // Synthetic rules can have different numbers of features.
-      featureNames = Arrays.copyOf(featureNames, featurizable.translationScores.length);
-    } else if (featureNames.length > featurizable.translationScores.length) {
+    if (featureNames.length > featurizable.translationScores.length) {
       // We want to cache the longest feature list for each phrase table
       featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, true);
     }
     
     // construct array of FeatureValue objects
     final List<FeatureValue<String>> features = new ArrayList<>(featureNames.length);
-    for (int i = 0; i < featureNames.length; ++i) {
+    for (int i = 0; i < featurizable.translationScores.length; ++i) {
       features.add(new FeatureValue<>(featureNames[i], featurizable.translationScores[i], true));
     }
     return features;
