@@ -24,8 +24,8 @@ public class RuleShape implements RuleFeaturizer<IString, String> {
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    return Collections.singletonList(new FeatureValue<>(String.format("%s:%d-%d",FEATURE_NAME, 
-        f.sourcePhrase.size(), f.targetPhrase.size()), 1.0));
+    return Collections.singletonList(new FeatureValue<>(
+        FEATURE_NAME + ":" + f.sourcePhrase.size() + "-" + f.targetPhrase.size(), 1.0));
   }
 
   @Override

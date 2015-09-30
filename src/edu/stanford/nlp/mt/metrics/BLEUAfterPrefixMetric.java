@@ -67,7 +67,8 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
                         Sequence<IString> masked = new ArraySequence<>(ref);
                         IString[] elements = masked.elements();
                         for (int i = 0; i < prefix.size(); i++) {
-                          elements[i] = TokenUtils.NULL_TOKEN;
+                          if(!ref.subsequence(prefix.size(), ref.size()).contains(ref.subsequence(i,i+1)))
+                            elements[i] = TokenUtils.NULL_TOKEN;
                         }
                         return (Sequence<IString>) masked;
                       }

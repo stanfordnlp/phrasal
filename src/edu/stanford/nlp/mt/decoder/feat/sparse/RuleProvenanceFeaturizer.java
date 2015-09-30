@@ -24,7 +24,7 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
     return Collections.singletonList(new FeatureValue<>(
-        String.format("%s:%s", FEATURE_NAME, f.phraseTableName), 1.0));
+        FEATURE_NAME + ":" + f.phraseTableName, 1.0));
   }
 
   @Override
