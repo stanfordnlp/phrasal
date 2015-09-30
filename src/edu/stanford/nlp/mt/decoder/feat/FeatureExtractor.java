@@ -204,8 +204,8 @@ public class FeatureExtractor<TK, FV> extends
     
     return featureValues;
   }
+ 
   
-
   /**
    * Feature space augmentation a la Daume III (2007).
    * 
@@ -223,7 +223,7 @@ public class FeatureExtractor<TK, FV> extends
             (featureAugmentationMode == 1 && fv.isDenseFeature) ||
             (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
           for(int i = 0; i < genres.length; ++i) {
-            String featureValue = String.format("aug-%s-%s", genres[i], fv.name.toString());
+            String featureValue = "aug-" +  genres[i] + "-" + fv.name.toString();
             featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
           }
         }
@@ -235,45 +235,13 @@ public class FeatureExtractor<TK, FV> extends
         final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
             f.targetSequence.size() < f.derivation.prefixLength;
         if (inPrefix) {
-          String featureValue = String.format("aug-%s", fv.name.toString());
+          String featureValue = "aug-" + fv.name.toString();
           featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
       }
     }
   }
   
-
-  /**
-   * Feature space augmentation a la Daume III (2007).
-   * 
-   * @param fv
-   * @param f
-   * @param featureValues
-   */
-  @SuppressWarnings("unchecked")
-  private void augmentFeatureValue(FeatureValue<FV> fv,
-      Featurizable<TK, FV> f, List<FeatureValue<FV>> featureValues) {
-    final String[] genres = f.sourceInputProperties.containsKey(InputProperty.Domain)
-        ? (String[]) f.sourceInputProperties.get(InputProperty.Domain) : null;
-    if (genres != null) {
-      if (featureAugmentationMode == 0 ||
-          (featureAugmentationMode == 1 && fv.isDenseFeature) ||
-          (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
-        for(int i = 0; i < genres.length; ++i) {
-          String featureValue = String.format("aug-%s-%s", genres[i], fv.name.toString());
-          featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
-        }
-      }
-    } else if (featureAugmentationMode == 3) {
-      // Prefix mode
-      final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
-          f.targetSequence.size() < f.derivation.prefixLength;
-      if (inPrefix) {
-        String featureValue = String.format("aug-%s", fv.name.toString());
-        featureValues.add(new FeatureValue<FV>((FV) featureValue, fv.value, fv.isDenseFeature));
-      }
-    }
-  }
 
   @Override
   public void initialize(int sourceInputId,
