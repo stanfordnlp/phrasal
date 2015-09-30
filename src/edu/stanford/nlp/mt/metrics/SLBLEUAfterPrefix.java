@@ -54,7 +54,8 @@ public class SLBLEUAfterPrefix<TK,FV> implements SentenceLevelMetric<TK, FV> {
       Sequence<TK> masked = new ArraySequence<>(r);
       TK[] elements = masked.elements();
       for (int i = 0, sz = prefix.size(); i < sz; i++) {
-        elements[i] = (TK) TokenUtils.NULL_TOKEN;
+        if(!r.subsequence(prefix.size(), r.size()).contains(r.subsequence(i,i+1)))
+          elements[i] = (TK) TokenUtils.NULL_TOKEN;
       }
       return masked;
     }).collect(Collectors.toList());
