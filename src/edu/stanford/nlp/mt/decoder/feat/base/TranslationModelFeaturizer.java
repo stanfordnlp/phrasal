@@ -71,7 +71,7 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     }
     if (featureNames.length < featurizable.translationScores.length) {
       // Synthetic rules can have different numbers of features.
-      featureNames = Arrays.copyOf(featureNames, featurizable.translationScores.length);
+      featureNames = Arrays.copyOf(featurizable.phraseScoreNames, featurizable.translationScores.length);
     } else if (featureNames.length > featurizable.translationScores.length) {
       // We want to cache the longest feature list for each phrase table
       featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, true);
