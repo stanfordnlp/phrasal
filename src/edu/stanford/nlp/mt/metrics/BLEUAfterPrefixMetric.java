@@ -70,7 +70,7 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
                           if(!ref.subsequence(prefix.size(), ref.size()).contains(ref.subsequence(i,i+1)))
                             elements[i] = TokenUtils.NULL_TOKEN;
                         }
-                        return (Sequence<IString>) masked;
+                        return (Sequence<IString>) new ArraySequence<>(true, elements);
                       }
               ).collect(toList());
     }).collect(toList());
