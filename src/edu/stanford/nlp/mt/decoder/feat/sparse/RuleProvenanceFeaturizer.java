@@ -3,6 +3,7 @@ package edu.stanford.nlp.mt.decoder.feat.sparse;
 import java.util.Collections;
 import java.util.List;
 
+import edu.stanford.nlp.mt.Phrasal;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
@@ -23,8 +24,9 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    return Collections.singletonList(new FeatureValue<>(
-        FEATURE_NAME + ":" + f.phraseTableName, 1.0));
+    return f.phraseTableName.equals(Phrasal.TM_BACKGROUND_NAME) ? null :
+      Collections.singletonList(new FeatureValue<>(
+          FEATURE_NAME + ":" + f.phraseTableName, 1.0));
   }
 
   @Override

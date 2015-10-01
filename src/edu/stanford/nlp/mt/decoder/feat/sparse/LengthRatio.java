@@ -17,7 +17,7 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class LengthRatio extends DerivationFeaturizer<IString, String> {
 
-  public static final String FEATURE_NAME = "LengthRatio";
+  public static final String FEATURE_NAME = "LRA";
   
   @Override
   public void initialize(int sourceInputId,
@@ -27,6 +27,6 @@ public class LengthRatio extends DerivationFeaturizer<IString, String> {
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     double ratio = (double) f.targetPhrase.size() / (double) f.sourceSentence.size();
-    return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, ratio));
+    return Collections.singletonList(new FeatureValue<>(FEATURE_NAME, ratio));
   }
 }
