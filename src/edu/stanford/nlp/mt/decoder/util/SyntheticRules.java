@@ -263,9 +263,16 @@ public final class SyntheticRules {
           
           int cnt_f = 1, cnt_e = 1;
           double cnt_fe = 1e-9;
+          
+          int[][] e2f = new int[tgt.size()][src.size()];
+          for (int k = 0; k < tgt.size() && k < src.size(); ++k) {
+            e2f[k] = new int[] { k } ;
+          }
+          PhraseAlignment alignment = new PhraseAlignment(e2f);
+          
           ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
               cov, featureNames, inferer.scorer, inferer.featurizer, 
-              cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
+              cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
           ruleGrid.addEntry(syntheticRule);
           finalTargetCoverage.set(ei, ej);
 

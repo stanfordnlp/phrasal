@@ -69,7 +69,8 @@ public class TranslationModelFeaturizer implements RuleFeaturizer<IString, Strin
     if (featureNames == null) {
       featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, false);
     }
-    if (featureNames.length > featurizable.translationScores.length) {
+
+    if (featureNames.length != featurizable.translationScores.length) {
       // We want to cache the longest feature list for each phrase table
       featureNames = createAndCacheFeatureNames(phraseTableName, featurizable.phraseScoreNames, true);
     }
