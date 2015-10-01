@@ -3,7 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -136,6 +138,12 @@ public final class SyntheticRules {
       Sequence<TK> prefix, int sourceInputId, Sequence<TK> sourceSequence, 
       AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
     
+    // WSGDEBUG
+    boolean printDebug = sourceInputId == 97;
+    if (printDebug) {
+      System.err.println("HERE");
+    }
+    
     // Fetch translation models
     final List<DynamicTranslationModel<FV>> tmList = new ArrayList<>(2);
     tmList.add((DynamicTranslationModel<FV>) inferer.phraseGenerator);
@@ -146,16 +154,16 @@ public final class SyntheticRules {
     
     // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
     // need to change for languages with different orthographies.
-    SymmetricalWordAlignment alignInverse = alignInverse(sourceSequence, prefix, tmList);
+    SymmetricalWordAlignment alignInverse = alignInverse(sourceSequence, prefix, tmList, ruleGrid);
     
     // f2e align with Cooc table and lexical similarity. Includes deletion rules.
-    SymmetricalWordAlignment align = align(sourceSequence, prefix, tmList);
+    SymmetricalWordAlignment align = align(sourceSequence, prefix, tmList, ruleGrid);
     
     // Symmetrize Apply. Start with intersection. Then try grow.
     SymmetricalWordAlignment sym = intersect(align, alignInverse);
     
     // WSGDEBUG
-//    System.err.println(sym.toString());
+    if (printDebug) System.err.println(sym.toString());
     
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
@@ -197,7 +205,7 @@ public final class SyntheticRules {
           ruleGrid.addEntry(syntheticRule);
 
           // WSGDEBUG
-//          System.err.printf("Ext: %s%n", syntheticRule);
+          if (printDebug) System.err.printf("Ext: %s%n", syntheticRule);
         }
       }
     }
@@ -215,10 +223,10 @@ public final class SyntheticRules {
         int cnt_f = 1;
         int cnt_e = 1;
         double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
-        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-            cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
-            inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
-        ruleGrid.addEntry(syntheticRule);
+//        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
+//            cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+//            inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
+//        ruleGrid.addEntry(syntheticRule);
 
         // WSGDEBUG
 //        System.err.printf("ExtDel: %s%n", syntheticRule);
@@ -270,7 +278,7 @@ public final class SyntheticRules {
           finalTargetCoverage.set(ei, ej);
 
           // WSGDEBUG
-//          System.err.printf("ExtUnk: %s%n", syntheticRule);
+          if (printDebug) System.err.printf("ExtUnk: %s%n", syntheticRule);
         }
       }
       if (finalTargetCoverage.cardinality() != prefix.size()) {
@@ -430,20 +438,20 @@ public final class SyntheticRules {
   }
 
   @SuppressWarnings("unchecked")
-  private static <TK,FV> SymmetricalWordAlignment align(Sequence<TK> source,
-      Sequence<TK> target, List<DynamicTranslationModel<FV>> tmList) {
-    SymmetricalWordAlignment a = new SymmetricalWordAlignment((Sequence<IString>) source, 
-        (Sequence<IString>) target);
+  private static <TK,FV> SymmetricalWordAlignment align(Sequence<TK> sourceSequence,
+      Sequence<TK> prefix, List<DynamicTranslationModel<FV>> tmList,  RuleGrid<TK, FV> ruleGrid) {
+    SymmetricalWordAlignment a = new SymmetricalWordAlignment((Sequence<IString>) sourceSequence, 
+        (Sequence<IString>) prefix);
     
-    int[] cnt_f = new int[source.size()];
+    int[] cnt_f = new int[sourceSequence.size()];
     Arrays.fill(cnt_f, -1);
     
-    for (int i = 0, tSz = target.size(); i < tSz; ++i) {
+    for (int i = 0, tSz = prefix.size(); i < tSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
-      final IString tgtToken = (IString) target.get(i);
-      for (int j = 0, sz = source.size(); j < sz; ++j) {
-        final IString srcToken = (IString) source.get(j);
+      final IString tgtToken = (IString) prefix.get(i);
+      for (int j = 0, sz = sourceSequence.size(); j < sz; ++j) {
+        final IString srcToken = (IString) sourceSequence.get(j);
         if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
         double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
@@ -455,15 +463,25 @@ public final class SyntheticRules {
       
       if (argmax < 0) {
         // Backoff to lexical similarity
-        // TODO(spenceg) Only works for languages with similar orthography.
-        String tgt = target.get(i).toString();
-        for (int j = 0, sz = source.size(); j < sz; ++j) {
-          String src = source.get(j).toString();
+        String tgt = prefix.get(i).toString();
+        for (int j = 0, sz = sourceSequence.size(); j < sz; ++j) {
+          String src = sourceSequence.get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           if (q > max) {
             max = q;
             argmax = j;
           }
+          
+//          List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(j, j);
+//          if (ruleList == null) ruleList = Collections.emptyList();
+//          for (ConcreteRule<TK,FV> r : ruleList) {
+//            if (r.abstractRule.target.size() != 1) continue;
+//            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
+//            if (qq > max) {
+//              max = qq;
+//              argmax = j;
+//            }
+//          }
         }
       }
       
@@ -476,20 +494,20 @@ public final class SyntheticRules {
   }
   
   @SuppressWarnings("unchecked")
-  private static <TK,FV> SymmetricalWordAlignment alignInverse(Sequence<TK> source,
-      Sequence<TK> target, List<DynamicTranslationModel<FV>> tmList) {
-    SymmetricalWordAlignment a = new SymmetricalWordAlignment((Sequence<IString>) source, 
-        (Sequence<IString>) target);
+  private static <TK,FV> SymmetricalWordAlignment alignInverse(Sequence<TK> sourceSequence,
+      Sequence<TK> prefix, List<DynamicTranslationModel<FV>> tmList, RuleGrid<TK, FV> ruleGrid) {
+    SymmetricalWordAlignment a = new SymmetricalWordAlignment((Sequence<IString>) sourceSequence, 
+        (Sequence<IString>) prefix);
     
-    int[] cnt_e = new int[target.size()];
+    int[] cnt_e = new int[prefix.size()];
     Arrays.fill(cnt_e, -1);
     
-    for (int i = 0, sSz = source.size(); i < sSz; ++i) {
+    for (int i = 0, sSz = sourceSequence.size(); i < sSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
-      final IString srcToken = (IString) source.get(i);
-      for (int j = 0, sz = target.size(); j < sz; ++j) {
-        final IString tgtToken = (IString) target.get(j);
+      final IString srcToken = (IString) sourceSequence.get(i);
+      for (int j = 0, sz = prefix.size(); j < sz; ++j) {
+        final IString tgtToken = (IString) prefix.get(j);
         if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
         double tEF = Math.log(cnt_ef) - Math.log(cnt_e[j]);
@@ -501,15 +519,29 @@ public final class SyntheticRules {
       
       if (argmax < 0) {
         // Backoff to lexical similarity
-        // TODO(spenceg) Only works for languages with similar orthography.
-        String src = source.get(i).toString();
-        for (int j = 0, sz = target.size(); j < sz; ++j) {
-          String tgt = target.get(j).toString();
+        String src = sourceSequence.get(i).toString();
+
+        // Iterate over everything in the prefix
+        List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(i, i);
+        for (int j = 0, sz = prefix.size(); j < sz; ++j) {
+          // Check for similarity with the source item
+          String tgt = prefix.get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           if (q > max) {
             max = q;
             argmax = j;
           }
+          
+          // Check for similarity with known translations of this
+          // source token.
+//          for (ConcreteRule<TK,FV> r : ruleList) {
+//            if (r.abstractRule.target.size() != 1) continue;
+//            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
+//            if (qq > max) {
+//              max = qq;
+//              argmax = j;
+//            }
+//          }
         }
       }
       

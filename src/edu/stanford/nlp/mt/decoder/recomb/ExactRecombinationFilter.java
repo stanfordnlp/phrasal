@@ -91,6 +91,8 @@ RecombinationFilter<Derivation<IString, String>> {
     long code = 0x87c37b91114253d5L ^ (featurizers.size()*0x4cf5ad432745937fL);
     for (int i = 0, sz = featurizers.size(); i < sz; ++i) {
       DerivationFeaturizer<IString, String> featurizer = featurizers.get(i);
+      FeaturizerState state = hyp.featurizable.getState(featurizer);
+      if (state == null) continue;
       int h = hyp.featurizable.getState(featurizer).hashCode();
       if (i % 2 == 0) {
         code ^= (h << 32);
