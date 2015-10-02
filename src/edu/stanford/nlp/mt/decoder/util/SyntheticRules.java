@@ -3,9 +3,7 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +21,6 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.Sequences;
 
 /**
  * For constructing synthetic rules.
@@ -87,7 +84,7 @@ public final class SyntheticRules {
       FeatureExtractor<TK,FV> featurizer,
       double cnt_f_e, int cnt_e, int cnt_f, InputProperties inputProperties, Sequence<TK> sourceSequence,
       int sourceInputId, PhraseAlignment align) {
- // Baseline dense features
+    // Baseline dense features
     float[] scores = new float[phraseScoreNames.length];
     scores[0] = (float) (Math.log(cnt_f_e) - Math.log(cnt_e));
     scores[1] = scores[0];
@@ -104,6 +101,55 @@ public final class SyntheticRules {
     ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, featurizer, 
         scorer, sourceSequence, sourceInputId, inputProperties);
     return rule;
+  }
+
+  /**
+   * Augment the rule grid for a window relative to the current derivation.
+   * 
+   * @param ruleGrid
+   * @param target
+   * @param d
+   * @param maxDistortion
+   * @param sourceInputId
+   * @param inferer
+   * @param sourceInputProperties
+   * @return
+   */
+  public static <TK,FV> int augmentRuleGrid(RuleGrid<TK, FV> ruleGrid, Sequence<TK> target, 
+      Derivation<TK, FV> d, int maxDistortion, int sourceInputId, AbstractInferer<TK, FV> inferer,
+      InputProperties sourceInputProperties) {
+    int numRules = 0;
+
+    // Baseline dense features
+    final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
+    float[] scores = new float[featureNames.length];
+    scores[0] = (float) Math.log(1e-9);
+    scores[1] = scores[0];
+    scores[2] = scores[0];
+    scores[3] = scores[0];
+    if (scores.length == 6) {
+      // Extended features
+      scores[4] = 0.0f;
+      scores[5] = -1.0f;
+    }
+    
+    CoverageSet dCoverage = d.sourceCoverage;
+    int firstClearBit = dCoverage.nextClearBit(0);
+    for(int i = firstClearBit; 
+        (i - firstClearBit) < maxDistortion &&
+        i < d.sourceSequence.size();
+        i = dCoverage.nextClearBit(i+1)) {
+      Sequence<TK> source = d.sourceSequence.subsequence(i, i+1);
+      CoverageSet sourceCoverage = new CoverageSet(d.sourceSequence.size());
+      sourceCoverage.set(i);
+      Rule<TK> abstractRule = new Rule<>(scores, featureNames, target, source, 
+          UNIGRAM_ALIGNMENT, PHRASE_TABLE_NAME);
+      ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, inferer.featurizer, 
+          inferer.scorer, d.sourceSequence, sourceInputId, sourceInputProperties);
+      ruleGrid.addEntry(rule);
+      ++numRules;
+    }
+    return numRules;
   }
 
   
@@ -138,11 +184,15 @@ public final class SyntheticRules {
       Sequence<TK> prefix, int sourceInputId, Sequence<TK> sourceSequence, 
       AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
     
-    // WSGDEBUG
-    boolean printDebug = sourceInputId == 97;
-    if (printDebug) {
-      System.err.println("HERE");
+    if (! (inferer.phraseGenerator instanceof DynamicTranslationModel)) {
+      throw new RuntimeException("Synthetic rule generation requires DynamicTranslationModel");
     }
+    
+    // WSGDEBUG
+    boolean printDebug = false; // sourceInputId == 355;
+//    if (printDebug) {
+//      System.err.println("HERE");
+//    }
     
     // Fetch translation models
     final List<DynamicTranslationModel<FV>> tmList = new ArrayList<>(2);
@@ -216,13 +266,13 @@ public final class SyntheticRules {
     for (int i = 0; i < maxSourceCoverage; ++i) {
       if (sym.f2e(i).isEmpty()) {
         // Source deletion
-        CoverageSet cov = new CoverageSet(sourceSequence.size());
-        cov.set(i);
-        Sequence<TK> src = sourceSequence.subsequence(i, i+1);
-        Sequence<TK> tgt = Sequences.emptySequence();
-        int cnt_f = 1;
-        int cnt_e = 1;
-        double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
+//        CoverageSet cov = new CoverageSet(sourceSequence.size());
+//        cov.set(i);
+//        Sequence<TK> src = sourceSequence.subsequence(i, i+1);
+//        Sequence<TK> tgt = Sequences.emptySequence();
+//        int cnt_f = 1;
+//        int cnt_e = 1;
+//        double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
 //        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
 //            cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
 //            inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
@@ -479,6 +529,7 @@ public final class SyntheticRules {
             argmax = j;
           }
           
+          // TODO(spenceg) This results in lower prefix BLEU right now.
 //          List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(j, j);
 //          if (ruleList == null) ruleList = Collections.emptyList();
 //          for (ConcreteRule<TK,FV> r : ruleList) {
@@ -529,7 +580,7 @@ public final class SyntheticRules {
         String src = sourceSequence.get(i).toString();
 
         // Iterate over everything in the prefix
-        List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(i, i);
+//        List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(i, i);
         for (int j = 0, sz = prefix.size(); j < sz; ++j) {
           // Check for similarity with the source item
           String tgt = prefix.get(j).toString();
@@ -538,7 +589,8 @@ public final class SyntheticRules {
             max = q;
             argmax = j;
           }
-          
+
+          // TODO(spenceg) This results in lower prefix-bleu right now.
           // Check for similarity with known translations of this
           // source token.
 //          for (ConcreteRule<TK,FV> r : ruleList) {
@@ -559,4 +611,5 @@ public final class SyntheticRules {
     }
     return a;
   }
+
 }
