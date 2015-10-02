@@ -520,6 +520,7 @@ public final class SyntheticRules {
       
       if (argmax < 0) {
         // Backoff to lexical similarity
+        // TODO(spenceg) Only works for orthographically similar languages. 
         String tgt = prefix.get(i).toString();
         for (int j = 0, sz = sourceSequence.size(); j < sz; ++j) {
           String src = sourceSequence.get(j).toString();
@@ -580,7 +581,7 @@ public final class SyntheticRules {
         String src = sourceSequence.get(i).toString();
 
         // Iterate over everything in the prefix
-//        List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(i, i);
+        // TODO(spenceg) Only works for orthographically similar languages.
         for (int j = 0, sz = prefix.size(); j < sz; ++j) {
           // Check for similarity with the source item
           String tgt = prefix.get(j).toString();
@@ -611,5 +612,4 @@ public final class SyntheticRules {
     }
     return a;
   }
-
 }
