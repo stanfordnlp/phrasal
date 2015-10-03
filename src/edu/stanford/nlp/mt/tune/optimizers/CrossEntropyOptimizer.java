@@ -57,8 +57,8 @@ public class CrossEntropyOptimizer extends AbstractOnlineOptimizer {
         printDebugOutput = Boolean.valueOf(args[1]);
       }
     }
-    logger.info("Top K: {}", String.valueOf(topK));
-    logger.info("Debug mode: {}", String.valueOf(printDebugOutput));
+    logger.info("Top K: {}", topK);
+    logger.info("Debug mode: {}", printDebugOutput);
   }	
 
   @Override

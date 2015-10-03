@@ -721,7 +721,7 @@ public final class OnlineTuner {
         if(pseudoReferences.get(i).size() >= numPseudoReferences) pseudoReferences.get(i).remove(0);
         pseudoReferences.get(i).add(translation);
       }
-      logger.info("Number of pseudo references: {}", String.valueOf(pseudoReferences.get(0).size()));
+      logger.info("Number of pseudo references: {}", pseudoReferences.get(0).size());
       // Cleanup...these n-best files can get huge.
       File file = new File(nbestFilename);
       file.delete();

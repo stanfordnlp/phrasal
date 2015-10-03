@@ -124,7 +124,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     }
     
     // Filter features that have been nullified
-    logger.info("Nullified features: {}", String.valueOf(featuresToRemove.size()));
+    logger.info("Nullified features: {}", featuresToRemove.size());
     for (String feature : featuresToRemove) {
       weights.remove(feature);
     }
