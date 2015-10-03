@@ -98,7 +98,7 @@ public class AlignedSentence implements Serializable {
     for (int i = 0; i < numLinks; ++i) {
       int pos = i * 8;
       int mask = 0xff << pos;
-      int lnk = (al & mask) >> pos;
+      int lnk = (al & mask) >>> pos;
       links[i] = lnk - 1;
     }
     return links;

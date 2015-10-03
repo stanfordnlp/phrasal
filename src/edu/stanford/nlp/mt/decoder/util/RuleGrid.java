@@ -77,6 +77,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     int offset = getIndex(startPos, endPos);
     if (grid[offset] == null) grid[offset] = new ArrayList<>();
     grid[offset].add(rule);
+    isSorted.clear(offset);
     coverage.or(rule.sourceCoverage);
   }
   
@@ -121,12 +122,13 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
       throw new ArrayIndexOutOfBoundsException("Span is out-of-bounds");
     }
     if (! isSorted.get(offset)) {
-      if (grid[offset] == null) grid[offset] = Collections.emptyList();
-      Collections.sort(grid[offset]);
-      if (grid[offset].size() > ruleQueryLimit) grid[offset] = grid[offset].subList(0, ruleQueryLimit);
+      if (grid[offset] != null) {
+        Collections.sort(grid[offset]);
+        if (grid[offset].size() > ruleQueryLimit) grid[offset] = grid[offset].subList(0, ruleQueryLimit);
+      }
       isSorted.set(offset);
     } 
-    return grid[offset];
+    return grid[offset] == null ? Collections.emptyList() : grid[offset];
   }
 
   /**
@@ -174,6 +176,11 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
 
       @Override
       public ConcreteRule<TK, FV> next() {
+        if ( ! setup) {
+          // First call. Set the pointers
+          setCoverageId();
+          setup = true;          
+        }
         ConcreteRule<TK,FV> rule = grid[coverageId].get(ruleId++);
         if (ruleId >= grid[coverageId].size()) {
           ruleId = 0;

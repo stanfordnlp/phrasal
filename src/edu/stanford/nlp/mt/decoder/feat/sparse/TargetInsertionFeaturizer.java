@@ -9,27 +9,26 @@ import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
 
 /**
- * The percentage of unaligned source words relative to the source.
+ * Target insertion ratio.
  * 
  * @author Spence Green
  *
  */
-public class SourceDeletionFeaturizer implements RuleFeaturizer<IString, String> {
+public class TargetInsertionFeaturizer implements RuleFeaturizer<IString, String> {
 
-  public static final String FEATURE_NAME = "SDL";
-  
+  public static final String FEATURE_NAME = "TNS";
+
   @Override
   public void initialize() {}
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    int numUnaligned = 0;
-    final int[][] s2t = f.rule.abstractRule.alignment.s2t();
-    if (s2t == null) return null;
-    for (int i = 0; i < s2t.length; ++i) {
-      if (s2t[i] == null || s2t[i].length == 0) ++numUnaligned;
+    int numInserted = 0;
+    for (int i = 0; i < f.targetPhrase.size(); ++i) {
+      int[] t2s = f.rule.abstractRule.alignment.t2s(i);
+      if (t2s == null || t2s.length == 0) ++numInserted;
     }
-    final double ratio = (double) numUnaligned / (double) f.sourceSentence.size();
+    final double ratio = (double) numInserted / (double) f.sourceSentence.size();
     return Collections.singletonList(new FeatureValue<>(FEATURE_NAME, ratio));
   }
 

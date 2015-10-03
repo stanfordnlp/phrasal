@@ -235,31 +235,22 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         for (j = i-1; j >= 0; --j) {
           if (beams.get(j).size() > 0) break;
         }
-        if (j > 0) {
-          // Try to extend the last compatible derivations
-          boolean derivationsExtended = false;
-          for (Derivation<TK,FV> d : beams.get(j)) {
-            int prefixLength = d.length;
-            if (prefixLength >= targets.get(0).size()) break;
-            
-            Sequence<TK> extension = targets.get(0).subsequence(prefixLength, prefixLength+1);
-            d.targetInsertion(extension, featurizer, scorer, sourceInputId);
-            derivationsExtended = true;
-            
-            if (recombinationHistory != null) {
-              // Iterate over recombinations
-              for (Derivation<TK,FV> recomb : recombinationHistory.recombinations(d)) {
-                recomb.targetInsertion(extension, featurizer, scorer, sourceInputId);
-              }
-            }
-          }
-          
-          // Reset search. This is some scary shit.
-          if (derivationsExtended) {
-            ((BundleBeam<TK,FV>) beams.get(j)).reset();
-            i -= 1;
-          } // else we can't make any more progress, so continue with decoding, which will fail.
+        boolean derivationsExtended = false;
+        for (Derivation<TK,FV> d : beams.get(j)) {
+          int prefixLength = d.length;
+          if (prefixLength >= targets.get(0).size()) break;
+
+          Sequence<TK> extension = targets.get(0).subsequence(prefixLength, prefixLength+1);
+          int numRules = SyntheticRules.augmentRuleGrid(ruleGrid, extension, d, maxDistortion, sourceInputId, 
+              this, sourceInputProperties);
+          derivationsExtended = derivationsExtended || numRules > 0;
         }
+
+        // Reset search. This is some scary shit.
+        if (derivationsExtended) {
+          ((BundleBeam<TK,FV>) beams.get(j)).reset();
+          i -= 1;
+        } // else we can't make any more progress, so continue with decoding, which will fail.
       }
       
       numRecombined += newBeam.recombined();
