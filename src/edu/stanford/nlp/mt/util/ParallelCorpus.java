@@ -71,7 +71,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   public boolean add(String source, String target, String align) {
     AlignedSentence s = getSentence(source, target, align);
     if (s == null) {
-      logger.warn("Sentence exceeds length constraints: {} ||| {} ||| {}", 
+      logger.warn("Invalid sentence: {} ||| {} ||| {}", 
           source, target, align);
       return false;
     } else {
