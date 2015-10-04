@@ -523,6 +523,10 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    */
   public int numSentences() { return numSentences; }
 
+  public int sourceSASize() { return srcSuffixArray.length; }
+  
+  public int targetSASize() { return tgtSuffixArray.length; }
+  
   /**
    * Find a lower or upper bound in the suffix array.
    * 

@@ -1242,10 +1242,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     double saTime = TimingUtils.elapsedSeconds(startTime);
     timer.mark("SA Query");
     
-    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
-    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
-    System.out.printf("Cooc table size:    %d%n", tm.coocTable.size());
-    System.out.printf("Vocab size:         %d%n", tm.sa.getVocabulary().size());
+    System.out.printf("SA src size:        %d%n", tm.sa.sourceSASize());
+    System.out.printf("SA tgt size:        %d%n", tm.sa.targetSASize());
+    System.out.printf("SA num sentences:   %d%n", tm.sa.numSentences());
+    System.out.printf("SA vocab size:      %d%n", tm.sa.getVocabulary().size());
+    System.out.printf("TM src cardinality: %d%n", tm.maxLengthSource());
+    System.out.printf("TM tgt cardinality: %d%n", tm.maxLengthTarget());
+    System.out.printf("TM Cooc table size: %d%n", tm.coocTable.size());
+    System.out.println("===========");
     System.out.printf("#source segments:   %d%n", sourceFile.size());
     System.out.printf("Timing: %s%n", timer);
     System.out.printf("Time/segment: %.2fms%n", queryTimeMillis / (double) sourceFile.size());
