@@ -9,8 +9,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -147,7 +147,7 @@ public class CRFPostprocessor implements Postprocessor, Serializable {
     List<CoreLabel> labeledTokens = ProcessorTools.toCharacterSequence(inputSequence);
     labeledTokens = classifier.classify(labeledTokens);
     List<CoreLabel> outputTokens = ProcessorTools.toPostProcessedSequence(labeledTokens);
-    List<String> outputStrings = new LinkedList<>();
+    List<String> outputStrings = new ArrayList<>();
     for (CoreLabel label : outputTokens) {
       outputStrings.add(label.word());
     }

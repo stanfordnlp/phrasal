@@ -5,6 +5,7 @@ import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 
 import edu.stanford.nlp.mt.util.ArraySequence;
@@ -40,6 +41,21 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   GIZAWordAlignment() {
   }
 
+  /**
+   * Constructor.
+   * 
+   * @param f
+   * @param e
+   */
+  @SuppressWarnings("unchecked")
+  public GIZAWordAlignment(Sequence<IString> f, Sequence<IString> e) {
+    super(f, e, new SortedSet[f.size()], new SortedSet[e.size()]);
+    for (int i = 0; i < f.size(); ++i)
+      f2e[i] = new TreeSet<>();
+    for (int i = 0; i < e.size(); ++i)
+      e2f[i] = new TreeSet<>();
+  }
+  
   /**
    * Init sentence pair from giza alignment.
    */
@@ -177,6 +193,26 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
     }
   }
 
+  /**
+   * Add src->tgt alignment point.
+   * 
+   * @param f
+   * @param e
+   */
+  public void addf2e(int f, int e) {
+    f2e[f].add(e);
+  }
+
+  /**
+   * Add tgt->src alignment point.
+   * 
+   * @param f
+   * @param e
+   */
+  public void adde2f(int f, int e) {
+    e2f[e].add(f);
+  }
+  
   /**
    * It prints many-to-one alignments, unless inverse is true (in which case it
    * prints one-to-many).

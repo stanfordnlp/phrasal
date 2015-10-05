@@ -25,12 +25,6 @@ import edu.stanford.nlp.mt.util.Sequence;
 
 public class AbstractWordAlignment implements WordAlignment {
 
-  public static final String DEBUG_PROPERTY = "DebugWordAlignment";
-  public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
-      DEBUG_PROPERTY, "false"));
-
-  public static final boolean KEEP_BAD_TOKENS = false;
-
   protected Integer id;
 
   Sequence<IString> f;
@@ -38,8 +32,7 @@ public class AbstractWordAlignment implements WordAlignment {
   SortedSet<Integer>[] f2e;
   SortedSet<Integer>[] e2f;
 
-  AbstractWordAlignment() {
-  }
+  AbstractWordAlignment() {}
 
   AbstractWordAlignment(Sequence<IString> f, Sequence<IString> e,
       SortedSet<Integer>[] f2e, SortedSet<Integer>[] e2f) {

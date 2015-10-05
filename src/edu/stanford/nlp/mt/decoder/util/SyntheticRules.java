@@ -14,7 +14,10 @@ import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
+import edu.stanford.nlp.mt.train.AlignmentSymmetrizer;
+import edu.stanford.nlp.mt.train.GIZAWordAlignment;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.InputProperties;
@@ -35,10 +38,13 @@ public final class SyntheticRules {
   private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
   private static final PhraseAlignment MONOTONE_ALIGNMENT = PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
   
+  // This heuristic seems to maximize prefix BLEU relative to the other heuristics.
+  private static final SymmetrizationType SYM_HEURISTIC = SymmetrizationType.intersection;
+  
   public static final String PHRASE_TABLE_NAME = "synthetic";
   
   private static final int MAX_SYNTHETIC_ORDER = 3;
-  private static final int MAX_TARGET_ORDER = 5;
+  private static final int MAX_TARGET_ORDER = 4;
   
   private SyntheticRules() {}
   
@@ -202,15 +208,26 @@ public final class SyntheticRules {
     }
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
     
+    GIZAWordAlignment align = new GIZAWordAlignment((Sequence<IString>) sourceSequence, 
+        (Sequence<IString>) prefix);
+
     // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
     // need to change for languages with different orthographies.
-    SymmetricalWordAlignment alignInverse = alignInverse(sourceSequence, prefix, tmList, ruleGrid);
+    alignInverse(tmList, align);
     
     // f2e align with Cooc table and lexical similarity. Includes deletion rules.
-    SymmetricalWordAlignment align = align(sourceSequence, prefix, tmList, ruleGrid);
+    align(tmList, align);
+    
+    if (printDebug) {
+      System.err.printf("src: %s%n", sourceSequence);
+      System.err.printf("tgt: %s%n", prefix);
+      System.err.printf("f2e: %s%n", align.toString(false));
+      System.err.printf("e2f: %s%n", align.toString(true));
+    }
     
     // Symmetrize Apply. Start with intersection. Then try grow.
-    SymmetricalWordAlignment sym = intersect(align, alignInverse);
+//    SymmetricalWordAlignment sym = intersect(align, alignInverse);
+    SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
     
     // WSGDEBUG
     if (printDebug) System.err.println(sym.toString());
@@ -409,7 +426,8 @@ public final class SyntheticRules {
       this.ej = ej;
     }
   }
-  
+
+// Och and Ney (2004) procedure
 //  protected static boolean addPhrasesToIndex(WordAlignment sent, int maxPhraseLenE, int maxPhraseLenF) {
 //
 //    int fsize = sent.f().size();
@@ -481,34 +499,17 @@ public final class SyntheticRules {
 //  }
   
   
-  private static SymmetricalWordAlignment intersect(SymmetricalWordAlignment align,
-      SymmetricalWordAlignment alignInverse) {
-    SymmetricalWordAlignment a = new SymmetricalWordAlignment(align.f(), align.e());
-    for (int fi = 0, sz = align.fSize(); fi < sz; ++fi) {
-      for (int ei : align.f2e(fi)) {
-        if (alignInverse.e2f(ei).contains(fi)) {
-          a.addAlign(fi, ei);
-        }
-      }
-    }
-    return a;
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <TK,FV> SymmetricalWordAlignment align(Sequence<TK> sourceSequence,
-      Sequence<TK> prefix, List<DynamicTranslationModel<FV>> tmList,  RuleGrid<TK, FV> ruleGrid) {
-    SymmetricalWordAlignment a = new SymmetricalWordAlignment((Sequence<IString>) sourceSequence, 
-        (Sequence<IString>) prefix);
+  private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
     
-    int[] cnt_f = new int[sourceSequence.size()];
+    int[] cnt_f = new int[a.fSize()];
     Arrays.fill(cnt_f, -1);
     
-    for (int i = 0, tSz = prefix.size(); i < tSz; ++i) {
+    for (int i = 0, tSz = a.e().size(); i < tSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
-      final IString tgtToken = (IString) prefix.get(i);
-      for (int j = 0, sz = sourceSequence.size(); j < sz; ++j) {
-        final IString srcToken = (IString) sourceSequence.get(j);
+      final IString tgtToken = (IString) a.e().get(i);
+      for (int j = 0, sz = a.fSize(); j < sz; ++j) {
+        final IString srcToken = (IString) a.f().get(j);
         if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
         double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
@@ -521,9 +522,9 @@ public final class SyntheticRules {
       if (argmax < 0) {
         // Backoff to lexical similarity
         // TODO(spenceg) Only works for orthographically similar languages. 
-        String tgt = prefix.get(i).toString();
-        for (int j = 0, sz = sourceSequence.size(); j < sz; ++j) {
-          String src = sourceSequence.get(j).toString();
+        String tgt = a.e().get(i).toString();
+        for (int j = 0, sz = a.fSize(); j < sz; ++j) {
+          String src = a.f().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           if (q > max) {
             max = q;
@@ -546,27 +547,22 @@ public final class SyntheticRules {
       
       // Populate alignment
       if (argmax >= 0) {
-        a.addAlign(argmax, i);
+        a.addf2e(argmax, i);
       }
     }
-    return a;
   }
   
-  @SuppressWarnings("unchecked")
-  private static <TK,FV> SymmetricalWordAlignment alignInverse(Sequence<TK> sourceSequence,
-      Sequence<TK> prefix, List<DynamicTranslationModel<FV>> tmList, RuleGrid<TK, FV> ruleGrid) {
-    SymmetricalWordAlignment a = new SymmetricalWordAlignment((Sequence<IString>) sourceSequence, 
-        (Sequence<IString>) prefix);
+  private static <TK,FV> void alignInverse(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
     
-    int[] cnt_e = new int[prefix.size()];
+    int[] cnt_e = new int[a.eSize()];
     Arrays.fill(cnt_e, -1);
     
-    for (int i = 0, sSz = sourceSequence.size(); i < sSz; ++i) {
+    for (int i = 0, sSz = a.fSize(); i < sSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
-      final IString srcToken = (IString) sourceSequence.get(i);
-      for (int j = 0, sz = prefix.size(); j < sz; ++j) {
-        final IString tgtToken = (IString) prefix.get(j);
+      final IString srcToken = (IString) a.f().get(i);
+      for (int j = 0, sz = a.eSize(); j < sz; ++j) {
+        final IString tgtToken = (IString) a.e().get(j);
         if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
         double tEF = Math.log(cnt_ef) - Math.log(cnt_e[j]);
@@ -578,13 +574,13 @@ public final class SyntheticRules {
       
       if (argmax < 0) {
         // Backoff to lexical similarity
-        String src = sourceSequence.get(i).toString();
+        String src = a.f().get(i).toString();
 
         // Iterate over everything in the prefix
         // TODO(spenceg) Only works for orthographically similar languages.
-        for (int j = 0, sz = prefix.size(); j < sz; ++j) {
+        for (int j = 0, sz = a.eSize(); j < sz; ++j) {
           // Check for similarity with the source item
-          String tgt = prefix.get(j).toString();
+          String tgt = a.e().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           if (q > max) {
             max = q;
@@ -607,9 +603,8 @@ public final class SyntheticRules {
       
       // Populate alignment
       if (argmax >= 0) {
-        a.addAlign(i, argmax);
+        a.adde2f(i, argmax);
       }
     }
-    return a;
   }
 }
