@@ -28,18 +28,12 @@ public class IStringTest extends TestCase {
 	
   @Test
 	public void testSystemIndex() {
-    // Sanity check
-    Vocabulary.systemClear();
-
     IString test1 = new IString("AnIString1");
 		IString test2 = new IString("AnotherIString2");
 		IString test3 = new IString("YetAnotherIString2");
 		assertTrue(test1.id == Vocabulary.systemIndexOf(test1.toString()));
 		assertTrue(test2.id == Vocabulary.systemIndexOf(test2.toString()));
 		assertTrue(test3.id == Vocabulary.systemIndexOf(test3.toString()));
-		
-		// Clean up for other unit tests
-		Vocabulary.systemClear();
 	}
 	
   @Test

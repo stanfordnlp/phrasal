@@ -46,6 +46,11 @@ compileJava {
     options.incremental = true
 }
 
+test {
+    // Set to true to see stderr
+    testLogging.showStandardStreams = false
+}
+
 // Configure build targets
 sourceSets {
   main {

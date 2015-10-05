@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoSerializable;
@@ -29,6 +33,8 @@ import edu.stanford.nlp.util.concurrent.ConcurrentHashIndex;
 public class Vocabulary implements Serializable,KryoSerializable {
 
   private static final long serialVersionUID = 5124110481914822964L;
+  
+  private static final Logger logger = LogManager.getLogger(Vocabulary.class.getName());
   
   // System-wide translation model index
   private static final int INITIAL_SYSTEM_CAPACITY = 1000000;
@@ -171,13 +177,20 @@ public class Vocabulary implements Serializable,KryoSerializable {
   }
   
   /**
-   * Clear the system index.
-   * 
+   * Write the vocabulary to a string.
    */
-  public static void systemClear() {
-    systemIndex.clear();
+  public static String vocabString() {
+    StringWriter sw = new StringWriter(Vocabulary.systemSize() * 10);
+    try {
+      systemIndex.saveToWriter(sw);
+      return sw.toString();
+      
+    } catch (IOException e) {
+      logger.error("Unable to write system vocabulary.");
+    }
+    return "";
   }
-
+  
   /**
    * Size of this index.
    * 

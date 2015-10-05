@@ -47,18 +47,11 @@ public class VocabularyTest {
    */
   @Test
   public void testSystemIndex() {
-    // Sanity check
-    Vocabulary.systemClear();
-    
-    Vocabulary.systemAdd("We");
-    Vocabulary.systemAdd("three");
-    Vocabulary.systemAdd("kings");
-    assertEquals(3, Vocabulary.systemSize());
-    assertEquals(0, Vocabulary.systemIndexOf("We"));
-    assertEquals(1, Vocabulary.systemIndexOf("three"));
-    assertEquals(2, Vocabulary.systemIndexOf("kings"));
-    
-    // Clean up after ourselves
-    Vocabulary.systemClear();
+    int a = Vocabulary.systemAdd("We");
+    int b = Vocabulary.systemAdd("three");
+    int c = Vocabulary.systemAdd("kings");
+    assertEquals(a, Vocabulary.systemIndexOf("We"));
+    assertEquals(b, Vocabulary.systemIndexOf("three"));
+    assertEquals(c, Vocabulary.systemIndexOf("kings"));
   }
 }
