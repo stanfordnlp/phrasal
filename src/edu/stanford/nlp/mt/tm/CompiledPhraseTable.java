@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -111,7 +110,7 @@ public class CompiledPhraseTable<FV> extends AbstractPhraseGenerator<IString, FV
     }
     List<PhraseTableEntry> intTransOpts = ruleLists.get(fIndex);
     if (intTransOpts == null) {
-      intTransOpts = new LinkedList<>();
+      intTransOpts = new ArrayList<>();
       ruleLists.set(fIndex, intTransOpts);
     }
     intTransOpts.add(new PhraseTableEntry(ruleIdCounter.getAndIncrement(),

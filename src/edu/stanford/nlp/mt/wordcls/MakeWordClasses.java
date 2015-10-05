@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -120,7 +119,7 @@ public class MakeWordClasses {
    * @throws IOException
    */
   private void initialize(String[] filenames) throws IOException {
-    List<IString> defaultHistory = new LinkedList<>();
+    List<IString> defaultHistory = new ArrayList<>();
     for (int i = 0; i < order-1; ++i) {
       defaultHistory.add(TokenUtils.START_TOKEN);
     }
@@ -134,7 +133,7 @@ public class MakeWordClasses {
         line = line.trim();
         if (line.length() == 0) continue;
         Sequence<IString> tokens = IStrings.tokenize(line);
-        List<IString> history = new LinkedList<>(defaultHistory);
+        List<IString> history = new ArrayList<>(defaultHistory);
         for (IString token : tokens) {
           if (normalizeDigits && TokenUtils.hasDigit(token.toString())) {
             token = new IString(TokenUtils.normalizeDigits(token.toString()));

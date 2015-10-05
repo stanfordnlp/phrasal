@@ -50,7 +50,6 @@ OnlineOptimizer<IString, String> {
   private final int expectedNumFeatures;
 
   final double sigmaSq;
-  final Random random;
 
   public AbstractOnlineOptimizer(int tuneSetSize, int expectedNumFeatures,
       String...args) {
@@ -70,7 +69,6 @@ OnlineOptimizer<IString, String> {
     this.tuneSetSize = tuneSetSize;
     this.learningRate = rate;
     this.updaterType = updaterType;
-    random = new Random();
 
     // L1 regularization
     this.L1lambda = L1lambda;

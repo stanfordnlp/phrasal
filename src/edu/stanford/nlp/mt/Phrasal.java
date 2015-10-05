@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -575,7 +574,7 @@ public class Phrasal {
         .<String> factory(translationModelFile, factoryOptions);
     primaryModel.setName(TM_BACKGROUND_NAME);
     
-    final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new LinkedList<>();
+    final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new ArrayList<>();
     if (primaryModel instanceof DynamicTranslationModel) {
       // we can NOT use a CombinedTranslationModel here due to "instanceof DynamicTranslationModel" used for ruleGrid augmentation
       translationModel = primaryModel; //new CombinedTranslationModel<>(primaryModel, ruleQueryLimit);
