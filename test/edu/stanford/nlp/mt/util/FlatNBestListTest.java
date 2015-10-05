@@ -56,8 +56,8 @@ public class FlatNBestListTest extends TestCase {
 
   public void testRuntimeException() throws IOException {
     String[] fileNames = new String[] {
-        "projects/mt/test/inputs/improperIDs.test",
-        "projects/mt/test/inputs/improperFeatures.test" };
+        "test-resources/inputs/improperIDs.test",
+        "test-resources/inputs/improperFeatures.test" };
     for (String fileName : fileNames) {
       boolean goodFile = false;
       try {
