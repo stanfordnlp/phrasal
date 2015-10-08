@@ -9,7 +9,9 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.util.MurmurHash2;
 
 /**
- * A simple a-star based Lattice decoder
+ * A simple a-star based lattice decoder.
+ * 
+ * TODO(spenceg) The underlying agenda becomes enormous.
  * 
  * @author danielcer
  * @author Spence Green
@@ -19,8 +21,13 @@ import edu.stanford.nlp.mt.util.MurmurHash2;
 public class StateLatticeDecoder<S extends State<S>> implements
     Iterator<List<S>>, Iterable<List<S>> {
 
+  // Set empirically assuming n-best size of 200, the standard value for
+  // tuning.
+  private static final int DEFAULT_INITIAL_CAPACITY = 25000;
+  
   private final PriorityQueue<CompositeState> agenda;
   private final RecombinationHistory<S> recombinationHistory;
+  public int maxAgendaSize = 0; 
 
   /**
    * Constructor.
@@ -30,33 +37,35 @@ public class StateLatticeDecoder<S extends State<S>> implements
    */
   public StateLatticeDecoder(List<S> goalStates, RecombinationHistory<S> recombinationHistory) {
     this.recombinationHistory = recombinationHistory;
-    agenda = new PriorityQueue<>(2000);
+    agenda = new PriorityQueue<>(DEFAULT_INITIAL_CAPACITY);
     
     // Initialize the agenda with list of goal nodes
     for (S goalState : goalStates) {
       assert goalState != null;
-      CompositeState newComposite = new CompositeState(goalState);
-      agenda.add(newComposite);
+      agenda.add(new CompositeState(goalState));
     }
   }
 
   @Override
   public boolean hasNext() {
-    return !agenda.isEmpty();
+    return ! agenda.isEmpty();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<S> next() {
     final CompositeState best = agenda.poll();
-    for (int i = 0, sz = best.states.size(); i < sz; i++) {
-      final S currentState = best.states.get(i);
+    for (int i = 0, sz = best.states.length; i < sz; i++) {
+      // Undo recombinations along the Viterbi path.
+      final S currentState = (S) best.states[i];
       final List<S> recombinedStates = recombinationHistory.recombinations(currentState);
       for (S recombinedState : recombinedStates) {
         CompositeState newComposite = new CompositeState(best, recombinedState, i);
         agenda.add(newComposite);
       }
     }
-    return best.states;
+    if (agenda.size() > maxAgendaSize) maxAgendaSize = agenda.size();
+    return (List<S>) Arrays.asList(best.states);
   }
 
   @Override
@@ -65,7 +74,7 @@ public class StateLatticeDecoder<S extends State<S>> implements
   }
 
   private class CompositeState implements Comparable<CompositeState> {
-    public final List<S> states;
+    public final State<S>[] states;
     private final double score;
     private final int hashCode;
 
@@ -82,21 +91,20 @@ public class StateLatticeDecoder<S extends State<S>> implements
       else {
         CompositeState oCS = (CompositeState) o;
         return score == oCS.score && // comparing "score" speeds up equals()
-            states.equals(oCS.states);
+            Arrays.equals(states, oCS.states);
       }
     }
 
     @SuppressWarnings("unchecked")
     public CompositeState(S goalState) {
       final int length = goalState.depth() + 1;
-      State<S>[] stateArr = new State[length];
+      states = new State[length];
       int[] hashArr = new int[length];
       State<S> state = goalState;
       for (int i = length-1; i >= 0 && state != null; state = state.parent(), --i) {
-        stateArr[i] = state;
+        states[i] = state;
         hashArr[i] = state.hashCode();
       }
-      states = (List<S>) Arrays.asList(stateArr);
       score = goalState.partialScore();
       hashCode = MurmurHash2.hash32(hashArr, hashArr.length, 1);
     }
@@ -121,20 +129,19 @@ public class StateLatticeDecoder<S extends State<S>> implements
     @SuppressWarnings("unchecked")
     public CompositeState(CompositeState original, S varState, int varPosition) {
       final int newPrefixLength = varState.depth() + 1;
-      final int length = original.states.size() + newPrefixLength - varPosition - 1;
-      State<S>[] stateArr = new State[length];
+      final int length = original.states.length + newPrefixLength - varPosition - 1;
+      states = new State[length];
       int[] hashArr = new int[length];
       State<S> newState = varState;
       for (int i = newPrefixLength - 1; i >= 0 && newState != null; newState = newState.parent(), --i) {
-        stateArr[i] = newState;
+        states[i] = newState;
         hashArr[i] = newState.hashCode();
       }
-      for (int i = varPosition + 1, sz = original.states.size(), j = newPrefixLength; i < sz; i++, ++j) {
-        assert j < stateArr.length;
-        stateArr[j] = original.states.get(i);
-        hashArr[j] = stateArr[j].hashCode();
+      for (int i = varPosition + 1, sz = original.states.length, j = newPrefixLength; i < sz; i++, ++j) {
+        assert j < states.length;
+        states[j] = original.states[i];
+        hashArr[j] = states[j].hashCode();
       }
-      states = (List<S>) Arrays.asList(stateArr);
       hashCode = MurmurHash2.hash32(hashArr, hashArr.length, 1);
       score = scorePath();
     }
