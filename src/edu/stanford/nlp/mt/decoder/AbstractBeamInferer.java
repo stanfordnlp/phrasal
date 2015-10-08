@@ -344,7 +344,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     Collections.sort(translations, translationComparator);
     timer.mark("Sort");    
     
-    logger.info("Input {}: nbest #extracted {}", sourceInputId, numExtracted);
+    logger.info("Input {}: nbest #extracted {} max-agenda-size {}", sourceInputId, numExtracted, latticeDecoder.maxAgendaSize);
     logger.info("Input {}: nbest timing {}", sourceInputId, timer);
     
     return translations;

@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -54,6 +53,8 @@ import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 /**
  * A dynamic translation model backed by a suffix array.
@@ -311,9 +312,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private void createLexCoocTable(int vocabSize) {
     logger.info("Creating lexical cooc table");
     // Constant chosen empirically
-    coocTable = new LexCoocTable(7*vocabSize);
+    coocTable = new LexCoocTable(10*vocabSize);
     // Iterate over every (symmetric) alignment point in parallel
-    sa.parallelStream().forEach(s -> {
+    sa.stream().forEach(s -> {
       for(int i = 0, sz = s.sourceLength(); i < sz; ++i) {
         final int srcId = s.source(i);
         if (s.isSourceUnaligned(i)) {
@@ -1036,20 +1037,20 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
-   * A hash-based lexical co-occurrence table. This object is threadsafe.
+   * A hash-based lexical co-occurrence table.
    * 
-   * NOTE: This class is not static because it depends on the vocabulary mapping
-   * of its containing DynamicTranslationModel.
+   * NOTE: This class is not threadsafe.
    * 
    * @author Spence Green
    *
    */
-  private static class LexCoocTable {
+  private class LexCoocTable {
 
     public static final int NULL_ID = Integer.MIN_VALUE + 1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;
     
-    private final ConcurrentHashMap<Long,AtomicInteger> counts;
+    // Use primitive long->int map to avoid boxing/unboxing costs.
+    private final Long2IntMap counts;
     
     /**
      * Constructor.
@@ -1057,7 +1058,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @param initialCapacity
      */
     public LexCoocTable(int initialCapacity) {
-      counts = new ConcurrentHashMap<>(initialCapacity);
+      counts = new Long2IntOpenHashMap(initialCapacity);
+      counts.defaultReturnValue(0);
     }
     
     /**
@@ -1073,7 +1075,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
     
     private void increment(long key) {
-      counts.computeIfAbsent(key, k -> new AtomicInteger()).incrementAndGet();
+      counts.put(key, counts.get(key) + 1);
     }
 
     /**
@@ -1100,8 +1102,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @return
      */
     public int getJointCount(int srcId, int tgtId) { 
-      AtomicInteger counter = counts.get(pack(srcId, tgtId));
-      return counter == null ? 0 : counter.get();
+      return counts.get(pack(srcId, tgtId));
     }
     
     /**
