@@ -9,13 +9,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -76,12 +77,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Parallelize TM queries. 
    */
+  private static final int WORK_QUEUE_SIZE = 1028;
   private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
-  private static final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) 
-      Executors.newFixedThreadPool(NUM_THREADS, new ThreadFactory() {
+  private static final ThreadPoolExecutor threadPool = 
+      new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 0L, TimeUnit.MILLISECONDS,
+          new ArrayBlockingQueue<>(WORK_QUEUE_SIZE), new ThreadFactory() {
+        int threadId = 0;
         @Override
         public Thread newThread(Runnable r) {
           Thread t = new Thread(r);
+          t.setName("dyntm-" + Integer.toString(threadId++));
           t.setDaemon(true);
           return t;
         }
@@ -89,6 +94,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   static {
     // Get ready for action.
     threadPool.prestartAllCoreThreads();
+    threadPool.allowCoreThreadTimeOut(false);
   }
   
   /**
@@ -486,6 +492,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         new ExecutorCompletionService<>(threadPool);
     
     // Iterate over source span lengths
+    TimeKeeper timer = TimingUtils.start();
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
       // Filter higher-order ranges based on lower-order misses
@@ -507,7 +514,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           ++numTasks;
         }
       }
-      
+      timer.mark(String.format("submit %d/%d", len, numTasks));
+            
       if (numTasks == 0) {
         // There can't be any higher order matches
         break;
@@ -516,6 +524,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Wait for results
       try {
         for (int k = 0; k < numTasks; ++k) {
+//          logger.info("input {}: TM threadpool active: {}/{}  submitted: {}  completed: {}  input_q: {}", 
+//              sourceInputId,
+//              threadPool.getActiveCount(),
+//              threadPool.getPoolSize(),
+//              threadPool.getTaskCount(),
+//              threadPool.getCompletedTaskCount(),
+//              threadPool.getQueue().size());
           QueryResult<FV> result = workQueue.take().get();
           if (result != null) {
             int i = result.i;
@@ -527,10 +542,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         }
       } catch (InterruptedException | ExecutionException e) {
         logger.error("input {}: rule extraction failed for order {}", sourceInputId, len);
-        e.printStackTrace();
+        logger.error("Rule extraction exception", e);
         return Collections.emptyList();
       }
+      timer.mark(String.format("extract %d/%d", len, numTasks));      
     }
+    
+    logger.info("input {}: TM timing {}", sourceInputId, timer);
     
     // Concatenate foreground model rules
     if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {

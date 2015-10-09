@@ -27,12 +27,13 @@ import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 public final class DynamicTMThreading {
 
   public static void main(String[] args) throws IOException {
-    if (args.length != 2) {
-      System.err.printf("Usage: java %s tm_file source_file%n", DynamicTMThreading.class.getName());
+    if (args.length != 3) {
+      System.err.printf("Usage: java %s tm_file source_file n%n", DynamicTMThreading.class.getName());
       System.exit(-1);
     }
     String fileName = args[0];
     String inputFile = args[1];
+    int numThreads = Integer.parseInt(args[2]);
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, "benchmark");
     tm.setReorderingScores();
@@ -44,7 +45,6 @@ public final class DynamicTMThreading {
     List<Sequence<IString>> sourceFile = IStrings.tokenizeFile(inputFile);
     timer.mark("Source file loading");
     
-    final int numThreads = Runtime.getRuntime().availableProcessors();
     final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) 
         Executors.newFixedThreadPool(numThreads);
     final ExecutorCompletionService<List<ConcreteRule<IString,String>>> workQueue = 
@@ -77,8 +77,9 @@ public final class DynamicTMThreading {
 
     threadPool.shutdown();
     
-    System.out.printf("Source cardinality: %d%n", tm.maxLengthSource());
-    System.out.printf("Target cardinality: %d%n", tm.maxLengthTarget());
+    System.out.printf("TM src cardinality: %d%n", tm.maxLengthSource());
+    System.out.printf("TM tgt cardinality: %d%n", tm.maxLengthTarget());
+    System.out.println("===========");
     System.out.printf("#source segments:   %d%n", sourceFile.size());
     System.out.printf("Timing: %s%n", timer);
     System.out.printf("Time/segment: %.2fms%n", queryTimeMillis / (double) sourceFile.size());
