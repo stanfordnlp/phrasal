@@ -11,6 +11,23 @@ public class Distributions {
   //Creates a random number generator on the first call
   protected static double uniformDraw() { return Math.random(); }
   
+  /**
+   * Uniform distribution U(a,b).
+   * 
+   * @author Spence Green
+   *
+   */
+  public static class Uniform {
+    
+    public static double probOf(double a, double b) {
+      return 1.0 / (b - a);
+    }
+    
+    public static double mean(double a, double b) {
+      return 0.5 * (b - a);
+    }
+  }
+  
   public static class Poisson {
     
     /**

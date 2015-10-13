@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.stats.Distributions.Poisson;
+import edu.stanford.nlp.mt.stats.Distributions.Uniform;
 import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
@@ -189,6 +190,17 @@ public final class SyntheticRules {
     return rule;
   }
 
+  /**
+   * IBM Model 2 t() parameter.
+   * 
+   * @param k
+   * @param max
+   * @return
+   */
+  private static double tParam(int k, int max) {
+    return (0.99 * Poisson.probOf(k, POSITION_TERM_LAMBDA)) + (0.01 * Uniform.probOf(0, max));
+  }
+  
   /**
    * Augment the rule grid by aligning the source to the supplied prefix.
    * 
@@ -529,7 +541,7 @@ public final class SyntheticRules {
         if ((isTargetPunc && !isSourcePunc) || (!isTargetPunc && isSourcePunc)) continue; // Punctuation must align to punctuation.
         double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
         int posDiff = Math.abs(i - j);
-        tEF += Math.log(Poisson.probOf(posDiff, POSITION_TERM_LAMBDA));
+        tEF += Math.log(tParam(posDiff, sz-1));
         if (tEF > max) {
           max = tEF;
           argmax = j;
@@ -544,7 +556,7 @@ public final class SyntheticRules {
           String src = a.f().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           int posDiff = Math.abs(i - j);
-          q *= Poisson.probOf(posDiff, POSITION_TERM_LAMBDA);
+          q *= tParam(posDiff, sz-1);
           if (q > max) {
             max = q;
             argmax = j;
@@ -590,7 +602,7 @@ public final class SyntheticRules {
         if ((isTargetPunc && !isSourcePunc) || (!isTargetPunc && isSourcePunc)) continue; // Punctuation must align to punctuation.
         double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
         int posDiff = Math.abs(i - j);
-        tFE += Math.log(Poisson.probOf(posDiff, POSITION_TERM_LAMBDA));
+        tFE += Math.log(tParam(posDiff, sz-1));
         if (tFE > max) {
           max = tFE;
           argmax = j;
@@ -608,7 +620,7 @@ public final class SyntheticRules {
           String tgt = a.e().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           int posDiff = Math.abs(i - j);
-          q *= Poisson.probOf(posDiff, POSITION_TERM_LAMBDA);
+          q *= tParam(posDiff, sz-1);
           if (q > max) {
             max = q;
             argmax = j;
