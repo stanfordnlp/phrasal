@@ -492,7 +492,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         new ExecutorCompletionService<>(threadPool);
     
     // Iterate over source span lengths
-    TimeKeeper timer = TimingUtils.start();
+//    TimeKeeper timer = TimingUtils.start();
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
       // Filter higher-order ranges based on lower-order misses
@@ -514,7 +514,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           ++numTasks;
         }
       }
-      timer.mark(String.format("submit %d/%d", len, numTasks));
+//      timer.mark(String.format("submit %d/%d", len, numTasks));
             
       if (numTasks == 0) {
         // There can't be any higher order matches
@@ -524,13 +524,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Wait for results
       try {
         for (int k = 0; k < numTasks; ++k) {
-//          logger.info("input {}: TM threadpool active: {}/{}  submitted: {}  completed: {}  input_q: {}", 
-//              sourceInputId,
-//              threadPool.getActiveCount(),
-//              threadPool.getPoolSize(),
-//              threadPool.getTaskCount(),
-//              threadPool.getCompletedTaskCount(),
-//              threadPool.getQueue().size());
           QueryResult<FV> result = workQueue.take().get();
           if (result != null) {
             int i = result.i;
@@ -545,10 +538,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         logger.error("Rule extraction exception", e);
         return Collections.emptyList();
       }
-      timer.mark(String.format("extract %d/%d", len, numTasks));      
+//      timer.mark(String.format("extract %d/%d", len, numTasks));      
     }
     
-    logger.info("input {}: TM timing {}", sourceInputId, timer);
+//    logger.info("input {}: TM timing {}", sourceInputId, timer);
     
     // Concatenate foreground model rules
     if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
@@ -934,7 +927,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  private class AlignmentTemplate {
+  private static class AlignmentTemplate {
     public final SampledRule rule;
     private final int hashCode;
     public AlignmentTemplate(SampledRule rule) {
@@ -946,7 +939,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     public String toString() { return rule.toString(); }
     @Override
     public int hashCode() { return hashCode; }
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -1062,7 +1054,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  private class LexCoocTable {
+  private static class LexCoocTable {
 
     public static final int NULL_ID = Integer.MIN_VALUE + 1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;

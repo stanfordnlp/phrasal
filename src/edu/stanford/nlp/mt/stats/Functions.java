@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Spence Green
  *
  */
-public class Functions {
+public final class Functions {
 
 //  public static double gamma(double x) {
 //    return Stat.gammaFunction(x);
@@ -18,7 +18,6 @@ public class Functions {
 //  public static double logGamma(double x) {
 //    return Stat.logGammaFunction(x);
 //  }
-  
 //  public static double pochhammer(double x, int n) {
 //    return Math.exp(logPochhammer(x,n));
 //  }
@@ -40,6 +39,19 @@ public class Functions {
 //    
 //    return num - denom;
 //  }
+
+  /**
+   * ln(n!).
+   * 
+   * Implemented as Stirling's approximation.
+   * 
+   * @param n
+   * @return
+   */
+  public static double logFactorial(int n) {
+    if (n == 0) return 0; // 0! := 1
+    return (n * Math.log(n)) - n + (0.5 * Math.log(2 * Math.PI * n));
+  }
   
   /**
    * Returns a random permutation of n choose k using a KFY shuffle.

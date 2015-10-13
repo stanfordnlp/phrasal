@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
+import edu.stanford.nlp.mt.stats.Distributions.Poisson;
 import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
@@ -195,10 +196,10 @@ public final class SyntheticRules {
     }
     
     // WSGDEBUG
-    boolean printDebug = false; // sourceInputId == 355;
-//    if (printDebug) {
-//      System.err.println("HERE");
-//    }
+    boolean printDebug = false; // sourceInputId == 94;
+    if (printDebug) {
+      System.err.printf("DEBUG %d%n", sourceInputId);
+    }
     
     // Fetch translation models
     final List<DynamicTranslationModel<FV>> tmList = new ArrayList<>(2);
@@ -217,20 +218,18 @@ public final class SyntheticRules {
     
     // f2e align with Cooc table and lexical similarity. Includes deletion rules.
     align(tmList, align);
-    
+        
+    // Symmetrization
+    SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
+
+    // WSGDEBUG
     if (printDebug) {
       System.err.printf("src: %s%n", sourceSequence);
       System.err.printf("tgt: %s%n", prefix);
       System.err.printf("f2e: %s%n", align.toString(false));
       System.err.printf("e2f: %s%n", align.toString(true));
+      System.err.printf("sym: %s%n", sym.toString());
     }
-    
-    // Symmetrize Apply. Start with intersection. Then try grow.
-//    SymmetricalWordAlignment sym = intersect(align, alignInverse);
-    SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
-    
-    // WSGDEBUG
-    if (printDebug) System.err.println(sym.toString());
     
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
@@ -512,7 +511,10 @@ public final class SyntheticRules {
         final IString srcToken = (IString) a.f().get(j);
         if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
+        if (cnt_ef == 0) continue;
         double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
+        int posDiff = Math.abs(i - j);
+        tEF += Math.log(Poisson.probOf(posDiff, LAMBDA));
         if (tEF > max) {
           max = tEF;
           argmax = j;
@@ -526,6 +528,8 @@ public final class SyntheticRules {
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           String src = a.f().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
+          int posDiff = Math.abs(i - j);
+          q *= Poisson.probOf(posDiff, LAMBDA);
           if (q > max) {
             max = q;
             argmax = j;
@@ -552,6 +556,8 @@ public final class SyntheticRules {
     }
   }
   
+  private static final double LAMBDA = 1.0;
+  
   private static <TK,FV> void alignInverse(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
     
     int[] cnt_e = new int[a.eSize()];
@@ -565,9 +571,12 @@ public final class SyntheticRules {
         final IString tgtToken = (IString) a.e().get(j);
         if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
-        double tEF = Math.log(cnt_ef) - Math.log(cnt_e[j]);
-        if (tEF > max) {
-          max = tEF;
+        if (cnt_ef == 0) continue;
+        double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
+        int posDiff = Math.abs(i - j);
+        tFE += Math.log(Poisson.probOf(posDiff, LAMBDA));
+        if (tFE > max) {
+          max = tFE;
           argmax = j;
         }
       }
@@ -582,6 +591,8 @@ public final class SyntheticRules {
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
+          int posDiff = Math.abs(i - j);
+          q *= Poisson.probOf(posDiff, LAMBDA);
           if (q > max) {
             max = q;
             argmax = j;

@@ -106,6 +106,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     TimeKeeper timer = TimingUtils.start();
     
+    boolean printDebug =  false; // sourceInputId == 94;
+    
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
       this.maxDistortion = (int) sourceInputProperties.get(InputProperty.DistortionLimit);
@@ -126,7 +128,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final int sourceLength = source.size();
     final List<ConcreteRule<TK,FV>> ruleList = phraseQuery.ruleList;
     logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
-        
+    
+    if (printDebug) {
+      for (ConcreteRule<TK,FV> rule : ruleList)
+        System.err.println(rule);
+    }
+    
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     outputSpace.filter(ruleList, this, sourceInputProperties);
@@ -268,6 +275,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Beam<Derivation<TK,FV>> beam = beams.get(i);
       if (beam.size() != 0) {
         Featurizable<TK,FV> bestHyp = beam.iterator().next().featurizable;
+        
+        if (printDebug) {
+          System.err.println(bestHyp.derivation.historyString());
+        }
+               
         if (outputSpace.allowableFinal(bestHyp)) {
           if ( ! isGoalBeam) {
             final int coveredTokens = sourceLength - bestHyp.numUntranslatedSourceTokens;
