@@ -106,7 +106,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     TimeKeeper timer = TimingUtils.start();
     
-    boolean printDebug =  false; // sourceInputId == 94;
+    boolean printDebug = false; // sourceInputId == 680;
     
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
