@@ -1008,7 +1008,7 @@ public final class OnlineTuner {
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
-    String tmpPath = opts.getProperty("tmp", "/tmp");
+    String tmpPath = opts.getProperty("tmp", System.getProperty("java.io.tmpdir"));
     String pseudoRefOptions = opts.getProperty("p", null);
     boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
     boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);

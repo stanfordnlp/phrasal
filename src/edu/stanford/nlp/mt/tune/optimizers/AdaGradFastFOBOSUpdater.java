@@ -23,6 +23,8 @@ import edu.stanford.nlp.stats.Counter;
  */
 public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
 
+  private static final Logger logger = LogManager.getLogger(AdaGradFastFOBOSUpdater.class.getName());
+
   private final double rate;
 
   // for flexible divisions. Think of 1/eps as the maximum
@@ -39,17 +41,34 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private int timeStepOffset = 0;
   private int lastTimeStep = 0;
   
-  private static final Logger logger = LogManager.getLogger(AdaGradFastFOBOSUpdater.class.getName());
-
-  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
+  /**
+   * Constructor.
+   * 
+   * @param initialRate
+   * @param expectedNumFeatures
+   * @param L1lambda
+   * @param customL1
+   */
+  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, 
+      Counter<String> customL1) {
     this(initialRate, expectedNumFeatures, L1lambda, customL1, null);
   }
-      
-  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1, HashSet<String> fixedFeatures) {
+  
+  /**
+   * Constructor.
+   * 
+   * @param initialRate
+   * @param expectedNumFeatures
+   * @param L1lambda
+   * @param customL1
+   * @param fixedFeatures
+   */
+  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, 
+      Counter<String> customL1, HashSet<String> fixedFeatures) {
     this.rate = initialRate;
     this.L1lambda = L1lambda;
-    sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
-    lastUpdated = new ClassicCounter<String>(expectedNumFeatures);
+    sumGradSquare = new ClassicCounter<>(expectedNumFeatures);
+    lastUpdated = new ClassicCounter<>(expectedNumFeatures);
     this.customL1 = customL1;
     this.fixedFeatures = fixedFeatures;
   }
