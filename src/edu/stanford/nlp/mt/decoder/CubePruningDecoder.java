@@ -106,7 +106,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     TimeKeeper timer = TimingUtils.start();
     
-    boolean printDebug = false; // sourceInputId == 680;
+    boolean printDebug = sourceInputId == 1022;
     
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
@@ -232,32 +232,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
         }
       }
-
-      // Couldn't figure out how to extend any derivations in the beams. Walk back from this point
-      // to the first beam that has valid derivations in. Try to reset that beam by extending each
-      // derivation with target insertion rules.
-      if (prefixEnabled && ! seenCompatiblePrefix && newBeam.size() == 0) {
-        if (i == 0) throw new RuntimeException("Couldn't decode null prefix?");
-        int j;
-        for (j = i-1; j >= 0; --j) {
-          if (beams.get(j).size() > 0) break;
-        }
-        boolean derivationsExtended = false;
-        for (Derivation<TK,FV> d : beams.get(j)) {
-          int prefixLength = d.length;
-          if (prefixLength >= targets.get(0).size()) break;
-
-          Sequence<TK> extension = targets.get(0).subsequence(prefixLength, prefixLength+1);
-          int numRules = SyntheticRules.augmentRuleGrid(ruleGrid, extension, d, maxDistortion, sourceInputId, 
-              this, sourceInputProperties);
-          derivationsExtended = derivationsExtended || numRules > 0;
-        }
-
-        // Reset search. This is some scary shit.
-        if (derivationsExtended) {
-          ((BundleBeam<TK,FV>) beams.get(j)).reset();
-          i -= 1;
-        } // else we can't make any more progress, so continue with decoding, which will fail.
+      
+      if (printDebug) {
+        System.err.println(newBeam.beamString(10));
       }
       
       numRecombined += newBeam.recombined();

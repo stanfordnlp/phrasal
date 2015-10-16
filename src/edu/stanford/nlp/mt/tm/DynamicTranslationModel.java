@@ -458,7 +458,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * Set the name of the TM.
    */
   @Override
-  public void setName(String name) { this.name = name; }
+  public void setName(String name) { 
+    this.name = name;
+    if (this.ruleCache != null) {
+      for (List<Rule<IString>> ruleList : ruleCache.values()) {
+        for (Rule<IString> r : ruleList) {
+          r.phraseTableName = name;
+        }
+      }
+    }
+  }
   
   @Override
   public Object clone() throws CloneNotSupportedException {

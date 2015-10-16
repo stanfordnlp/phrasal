@@ -5,7 +5,6 @@ import java.io.FileReader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -98,9 +97,9 @@ OnlineOptimizer<IString, String> {
         customl1.incrementCount(columns[0], Double.parseDouble(columns[1]));
       }
       scanner.close();
-      System.out.println("Using custom L1: " + customl1);
+      logger.info("Using custom L1: {}", customl1);
     } catch (FileNotFoundException ex) {
-      System.out.println("Not using custom L1");
+      logger.info("Not using custom L1");
     }
 
     if (this.updaterType.equalsIgnoreCase("adagradl1"))

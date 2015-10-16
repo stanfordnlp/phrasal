@@ -158,18 +158,12 @@ public class FeatureExtractor<TK, FV> extends
         if (listFeatureValues != null) {
           for (FeatureValue<FV> fv : listFeatureValues) {
             featureValues.add(fv);
-            /*if (featureAugmentationMode >= 0) {
-              augmentFeatureValue(fv, f, featureValues);
-            }
-            */
           }
         }
       }
     }
     
-    if(featureAugmentationMode >= 0) {
-      augmentFeatures(f, featureValues);
-    }
+    if(featureAugmentationMode >= 0) augmentFeatures(f, featureValues);
     
     return featureValues;
   }
@@ -190,21 +184,17 @@ public class FeatureExtractor<TK, FV> extends
           for (FeatureValue<FV> fv : listFeatureValues) {
             fv.doNotCache = doNotCache;
             featureValues.add(fv);
-            /* if (featureAugmentationMode >= 0) {
-              augmentFeatureValue(fv, f, featureValues);
-            }*/
           }
         }
       }
     }
     
-    if(featureAugmentationMode >= 0) {
-      augmentFeatures(f, featureValues);
-    }
+    if(featureAugmentationMode >= 0) augmentFeatures(f, featureValues);
     
     return featureValues;
   }
  
+  private static final String[] NO_GENRE = new String[]{""};
   
   /**
    * Feature space augmentation a la Daume III (2007).
@@ -214,24 +204,25 @@ public class FeatureExtractor<TK, FV> extends
    */
   @SuppressWarnings("unchecked")
   private void augmentFeatures(Featurizable<TK, FV> f, List<FeatureValue<FV>> featureValues) {
-    final String[] genres = f.sourceInputProperties.containsKey(InputProperty.Domain)
-        ? (String[]) f.sourceInputProperties.get(InputProperty.Domain) : null;
-    if (genres != null) {
-      List<FeatureValue<FV>> listFeatureValues = new ArrayList<>(featureValues);
-      for(FeatureValue<FV> fv : listFeatureValues) {
+    String[] genres = (String[]) f.sourceInputProperties.get(InputProperty.Domain);
+    if (genres == null) genres = NO_GENRE;
+    
+    if (featureAugmentationMode < 3) {
+      for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
+        FeatureValue<FV> fv = featureValues.get(i);
         if (featureAugmentationMode == 0 ||
             (featureAugmentationMode == 1 && fv.isDenseFeature) ||
             (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
-          for(int i = 0; i < genres.length; ++i) {
-            String featureValue = "aug-" +  genres[i] + "-" + fv.name.toString();
+          for(String genre : genres) {
+            String featureValue = "aug-" +  genre + "-" + fv.name.toString();
             featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
           }
         }
       }
     } else if (featureAugmentationMode == 3) {
       // Prefix mode
-      List<FeatureValue<FV>> listFeatureValues = featureValues;
-      for(FeatureValue<FV> fv : listFeatureValues) {
+      for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
+        FeatureValue<FV> fv = featureValues.get(i);
         final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
             f.targetSequence.size() < f.derivation.prefixLength;
         if (inPrefix) {

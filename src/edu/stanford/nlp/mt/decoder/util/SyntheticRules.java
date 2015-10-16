@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.stats.Distributions.Poisson;
-import edu.stanford.nlp.mt.stats.Distributions.Uniform;
 import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
@@ -26,7 +25,6 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
  * For constructing synthetic rules.
@@ -44,6 +42,7 @@ public final class SyntheticRules {
   // This heuristic seems to maximize prefix BLEU relative to the other heuristics.
   private static final SymmetrizationType SYM_HEURISTIC = SymmetrizationType.intersection;
   private static final double SYNTHETIC_PROB = 1e-5;
+  private static final double BACKOFF_PROB = 1e-6;
   private static final double POSITION_TERM_LAMBDA = 1.0;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
@@ -197,8 +196,9 @@ public final class SyntheticRules {
    * @param max
    * @return
    */
-  private static double tParam(int k, int max) {
-    return (0.99 * Poisson.probOf(k, POSITION_TERM_LAMBDA)) + (0.01 * Uniform.probOf(0, max));
+  private static double distortionParam(int k, int max) {
+    return Poisson.probOf(k, POSITION_TERM_LAMBDA);
+//    return (0.99 * Poisson.probOf(k, POSITION_TERM_LAMBDA)) + (0.01 * Uniform.probOf(0, max));
   }
   
   /**
@@ -221,7 +221,7 @@ public final class SyntheticRules {
     }
 
     // WSGDEBUG
-    boolean printDebug = false; // sourceInputId == 680;
+    boolean printDebug = sourceInputId == 1022;
     if (printDebug) {
       System.err.printf("DEBUG %d%n", sourceInputId);
     }
@@ -301,29 +301,41 @@ public final class SyntheticRules {
       }
     }
 
+    // Add backoff unigram rules.
+    // TODO(spenceg) Cache cnt_f, which is expensive.
+    for (int j = 0, tgtLength = prefix.size(); j < tgtLength; ++j) {
+      TK targetQuery = prefix.get(j);
+      final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) targetQuery)).sum();
+      boolean isTargetOOV = cnt_e == 0;
+      final Sequence<TK> target = prefix.subsequence(j, j+1);
+
+      for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
+        TK sourceQuery = sourceSequence.get(i);
+        int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) sourceQuery)).sum();
+        final boolean isSourceOOV = cnt_f == 0;
+        final Sequence<TK> source = sourceSequence.subsequence(i,i+1);
+
+        CoverageSet ruleCoverage = new CoverageSet(srcLength);
+        ruleCoverage.set(i);
+        int cntE = isTargetOOV ? 1 : cnt_e;
+        int cntF = isSourceOOV ? 1 : cnt_f;
+        double cnt_joint = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) sourceQuery, (IString) targetQuery)).sum();
+        if (cnt_joint != 0) continue;
+        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticUnigramRule(source, target, 
+            ruleCoverage, featureNames, inferer.scorer, inferer.featurizer, 
+            BACKOFF_PROB, cntE, cntF, inputProperties, sourceSequence, sourceInputId);
+        ruleGrid.addEntry(syntheticRule);
+        
+//      WSGDEBUG
+        if (printDebug) System.err.printf("BackExt: %s%n", syntheticRule);
+      }
+    }
+    
     // Get source coverage and add source deletions
     CoverageSet sourceCoverage = new CoverageSet(sourceSequence.size());
     final int maxSourceCoverage = Math.min(sourceSequence.size(), prefixSourceCoverage.cardinality() + tmList.get(0).maxLengthSource());
     for (int i = 0; i < maxSourceCoverage; ++i) {
-      if (sym.f2e(i).isEmpty()) {
-        // Source deletion
-        // Don't do this. It doesn't work very well.
-        //        CoverageSet cov = new CoverageSet(sourceSequence.size());
-        //        cov.set(i);
-        //        Sequence<TK> src = sourceSequence.subsequence(i, i+1);
-        //        Sequence<TK> tgt = Sequences.emptySequence();
-        //        int cnt_f = 1;
-        //        int cnt_e = 1;
-        //        double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
-        //        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-        //            cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
-        //            inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
-        //        ruleGrid.addEntry(syntheticRule);
-
-        // WSGDEBUG
-        //        System.err.printf("ExtDel: %s%n", syntheticRule);
-
-      } else {
+      if ( ! sym.f2e(i).isEmpty()) {
         sourceCoverage.set(i);
       }
     }
@@ -450,78 +462,6 @@ public final class SyntheticRules {
     }
   }
 
-  // Och and Ney (2004) procedure
-  //  protected static boolean addPhrasesToIndex(WordAlignment sent, int maxPhraseLenE, int maxPhraseLenF) {
-  //
-  //    int fsize = sent.f().size();
-  //    int esize = sent.e().size();
-  //
-  //    // For each English phrase:
-  //    for (int e1 = 0; e1 < esize; ++e1) {
-  //
-  //      int f1 = Integer.MAX_VALUE;
-  //      int f2 = Integer.MIN_VALUE;
-  //      int lastE = Math.min(esize, e1 + maxPhraseLenE) - 1;
-  //
-  //      for (int e2 = e1; e2 <= lastE; ++e2) {
-  //
-  //        // Find range of f aligning to e1...e2:
-  //        SortedSet<Integer> fss = sent.e2f(e2);
-  //        if (!fss.isEmpty()) {
-  //          int fmin = fss.first();
-  //          int fmax = fss.last();
-  //          if (fmin < f1)
-  //            f1 = fmin;
-  //          if (fmax > f2)
-  //            f2 = fmax;
-  //        }
-  //
-  //        // Phrase too long:
-  //        if (f2 - f1 >= maxPhraseLenF)
-  //          continue;
-  //
-  //        // No word alignment within that range, or phrase too long?
-  //        if (f1 > f2)
-  //          continue;
-  //
-  //        // Check if range [e1-e2] [f1-f2] is admissible:
-  //        boolean admissible = true;
-  //        for (int fi = f1; fi <= f2; ++fi) {
-  //          SortedSet<Integer> ess = sent.f2e(fi);
-  //          if (!ess.isEmpty())
-  //            if (ess.first() < e1 || ess.last() > e2) {
-  //              admissible = false;
-  //              break;
-  //            }
-  //        }
-  //        if (!admissible)
-  //          continue;
-  //
-  //        // See how much we can expand the phrase to cover unaligned words:
-  //        int F1 = f1, F2 = f2;
-  //        int lastF1 = Math.max(0, f2 - maxPhraseLenF + 1);
-  //        while (F1 > lastF1 && sent.f2e(F1 - 1).isEmpty()) {
-  //          --F1;
-  //        }
-  //        int lastF2 = Math.min(fsize - 1, f1 + maxPhraseLenF - 1);
-  //        while (F2 < lastF2 && sent.f2e(F2 + 1).isEmpty()) {
-  //          ++F2;
-  //        }
-  //
-  //        for (int i = F1; i <= f1; ++i) {
-  //          int lasti = Math.min(F2, i + maxPhraseLenF - 1);
-  //          for (int j = f2; j <= lasti; ++j) {
-  //            assert (j - i < maxPhraseLenF);
-  //            addPhraseToIndex(sent, i, j, e1, e2, true, 1.0f);
-  //          }
-  //        }
-  //      }
-  //    }
-  //
-  //    return true;
-  //  }
-
-
   private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
 
     int[] cnt_f = new int[a.fSize()];
@@ -531,17 +471,14 @@ public final class SyntheticRules {
       double max = -10000.0;
       int argmax = -1;
       final IString tgtToken = (IString) a.e().get(i);
-      boolean isTargetPunc = TokenUtils.isPunctuation(tgtToken.toString());
       for (int j = 0, sz = a.fSize(); j < sz; ++j) {
         final IString srcToken = (IString) a.f().get(j);
         if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
         if (cnt_ef == 0) continue;
-        boolean isSourcePunc = TokenUtils.isPunctuation(srcToken.toString());
-        if ((isTargetPunc && !isSourcePunc) || (!isTargetPunc && isSourcePunc)) continue; // Punctuation must align to punctuation.
         double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
         int posDiff = Math.abs(i - j);
-        tEF += Math.log(tParam(posDiff, sz-1));
+        tEF += Math.log(distortionParam(posDiff, sz-1));
         if (tEF > max) {
           max = tEF;
           argmax = j;
@@ -556,7 +493,7 @@ public final class SyntheticRules {
           String src = a.f().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           int posDiff = Math.abs(i - j);
-          q *= tParam(posDiff, sz-1);
+          q *= distortionParam(posDiff, sz-1);
           if (q > max) {
             max = q;
             argmax = j;
@@ -592,17 +529,14 @@ public final class SyntheticRules {
       double max = -10000.0;
       int argmax = -1;
       final IString srcToken = (IString) a.f().get(i);
-      boolean isSourcePunc = TokenUtils.isPunctuation(srcToken.toString());
       for (int j = 0, sz = a.eSize(); j < sz; ++j) {
         final IString tgtToken = (IString) a.e().get(j);
         if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
         if (cnt_ef == 0) continue;
-        boolean isTargetPunc = TokenUtils.isPunctuation(tgtToken.toString());
-        if ((isTargetPunc && !isSourcePunc) || (!isTargetPunc && isSourcePunc)) continue; // Punctuation must align to punctuation.
         double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
         int posDiff = Math.abs(i - j);
-        tFE += Math.log(tParam(posDiff, sz-1));
+        tFE += Math.log(distortionParam(posDiff, sz-1));
         if (tFE > max) {
           max = tFE;
           argmax = j;
@@ -620,7 +554,7 @@ public final class SyntheticRules {
           String tgt = a.e().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
           int posDiff = Math.abs(i - j);
-          q *= tParam(posDiff, sz-1);
+          q *= distortionParam(posDiff, sz-1);
           if (q > max) {
             max = q;
             argmax = j;
