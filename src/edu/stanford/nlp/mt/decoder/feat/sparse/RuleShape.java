@@ -18,7 +18,7 @@ import edu.stanford.nlp.mt.util.IString;
 public class RuleShape implements RuleFeaturizer<IString, String> {
 
   private static final String FEATURE_NAME = "RSHP";
-  
+
   @Override
   public void initialize() {}
 

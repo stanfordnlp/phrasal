@@ -23,6 +23,8 @@ import edu.stanford.nlp.stats.Counter;
  */
 public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
 
+  private static final Logger logger = LogManager.getLogger(AdaGradFastFOBOSUpdater.class.getName());
+
   private final double rate;
 
   // for flexible divisions. Think of 1/eps as the maximum
@@ -33,23 +35,40 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
   private Counter<String> sumGradSquare;
   private Counter<String> lastUpdated;
   private Counter<String> customL1;
-  private HashSet<String> fixedFeatures;
+  private Set<String> fixedFeatures;
 
   // Fields needed for warm restarts
   private int timeStepOffset = 0;
   private int lastTimeStep = 0;
   
-  private static final Logger logger = LogManager.getLogger(AdaGradFastFOBOSUpdater.class.getName());
-
-  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1) {
+  /**
+   * Constructor.
+   * 
+   * @param initialRate
+   * @param expectedNumFeatures
+   * @param L1lambda
+   * @param customL1
+   */
+  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, 
+      Counter<String> customL1) {
     this(initialRate, expectedNumFeatures, L1lambda, customL1, null);
   }
-      
-  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, Counter<String> customL1, HashSet<String> fixedFeatures) {
+  
+  /**
+   * Constructor.
+   * 
+   * @param initialRate
+   * @param expectedNumFeatures
+   * @param L1lambda
+   * @param customL1
+   * @param fixedFeatures
+   */
+  public AdaGradFastFOBOSUpdater(double initialRate, int expectedNumFeatures, double L1lambda, 
+      Counter<String> customL1, Set<String> fixedFeatures) {
     this.rate = initialRate;
     this.L1lambda = L1lambda;
-    sumGradSquare = new ClassicCounter<String>(expectedNumFeatures);
-    lastUpdated = new ClassicCounter<String>(expectedNumFeatures);
+    sumGradSquare = new ClassicCounter<>(expectedNumFeatures);
+    lastUpdated = new ClassicCounter<>(expectedNumFeatures);
     this.customL1 = customL1;
     this.fixedFeatures = fixedFeatures;
   }
@@ -74,8 +93,7 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     Set<String> featuresToRemove = new HashSet<String>();
     for (String feature : featuresToUpdate) {
       
-      if(fixedFeatures != null && 
-              fixedFeatures.size() > 0) {
+      if(fixedFeatures != null && fixedFeatures.size() > 0) {
         boolean fixed = false;
         for (String prefix : fixedFeatures) {
           if(feature.startsWith(prefix)) {
@@ -157,10 +175,10 @@ public class AdaGradFastFOBOSUpdater implements OnlineUpdateRule<String> {
     private static final long serialVersionUID = 5395903981292983859L;
     private final Counter<String> gradHistory;
     private final Counter<String> customReg;
-    private final HashSet<String> fixedFeatures;
+    private final Set<String> fixedFeatures;
     private final Counter<String> lastUp;
     private final int timeStep;
-    public AdaGradFastFOBOSState(Counter<String> h, Counter<String> r, HashSet<String> f, Counter<String> u, int t) {
+    public AdaGradFastFOBOSState(Counter<String> h, Counter<String> r, Set<String> f, Counter<String> u, int t) {
       this.gradHistory = h;
       this.customReg = r;
       this.fixedFeatures = f;
