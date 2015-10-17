@@ -90,8 +90,7 @@ public final class OnlineTuner {
   private final boolean discardInitialWeightState;
   private final String initialWtsFileName;
   private Counter<String> wtsAccumulator;
-  private final boolean fixDense;
-
+ 
   // The optimization algorithm
   private OnlineOptimizer<IString,String> optimizer;
 
@@ -143,14 +142,12 @@ public final class OnlineTuner {
    * @param wrapBoundary 
    * @param experimentName 
    * @param prefixTuning 
-   * @param fixDense 
    * @throws IOException 
    */
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
       boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, 
-      boolean wrapBoundary, String experimentName, boolean normalizeInitialWeights, 
-      boolean fixDense) throws IOException {
+      boolean wrapBoundary, String experimentName, boolean normalizeInitialWeights) throws IOException {
     
     // Load Phrasal
     decoder = Phrasal.loadDecoder(phrasalIniFile);
@@ -163,8 +160,6 @@ public final class OnlineTuner {
         decoder.getTranslationModel());
     logger.info("Initial weights: '{}' {}", Counters.toBiggestValuesFirstString(wtsAccumulator, 20), 
         (wtsAccumulator.size() > 20 ? "..." : ""));
-    this.fixDense = fixDense;
-    logger.info("Fix baseline weights: {}", fixDense);    
     this.outputWeightPrefix = experimentName + ".online";
     logger.info("Models will have the file prefix: {}", outputWeightPrefix);
 
@@ -480,24 +475,14 @@ public final class OnlineTuner {
       }
 
       // Compute gradient
-      Counter<String> gradient;
-      if (batchSize == 1) {
-        gradient = optimizer.getGradient(input.weights, input.source.get(0), 
+      Counter<String> gradient = batchSize == 1 ?
+        optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestLists.get(0), input.references.get(0), 
-            referenceWeights, scoreMetric);
-        
-      } else {
-        gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
-                nbestLists, input.references, referenceWeights, scoreMetric);
-      }
+            referenceWeights, scoreMetric) :
 
-      if (fixDense) {
-        // Zero-out baseline coordinates of the gradient.
-        for (String featureName : FeatureUtils.getBaselineFeatures(decoder.getTranslationModel())) {
-          gradient.setCount(featureName, 0);
-        }
-      }
-      
+        optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
+                nbestLists, input.references, referenceWeights, scoreMetric);
+
       if (minFeatureCount > 0) {
         updateFeatureCounts(input.translationIds, nbestLists);
         Set<String> features = new TreeSet<String>(gradient.keySet());
@@ -604,7 +589,7 @@ public final class OnlineTuner {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
-    Counter<String> currentWts = new ClassicCounter<String>(wtsAccumulator);
+    Counter<String> currentWts = new ClassicCounter<>(wtsAccumulator);
     // Clear the accumulator, which we will use for parameter averaging.
     wtsAccumulator.clear();
     
@@ -960,7 +945,6 @@ public final class OnlineTuner {
     optionMap.put("niw", 1);    
     optionMap.put("sb", 0);
     optionMap.put("pt", 1);
-    optionMap.put("fd", 0);
     return optionMap;
   }
 
@@ -973,7 +957,7 @@ public final class OnlineTuner {
     sb.append("Usage: java ").append(OnlineTuner.class.getName())
       .append(" [OPTIONS] source_file target_file phrasal_ini initial_weights").append(nl).append(nl)
       .append("Options:").append(nl)
-      .append("   -uw        : Uniform weight initialization").append(nl)
+      .append("   -uw        : Uniform weight initialization (default: false)").append(nl)
       .append("   -rw        : Randomize starting weights at the start of each epoch").append(nl)
       .append("   -e num     : Number of online epochs").append(nl)
       .append("   -o str     : Optimizer: [pro-sgd,mira-1best]").append(nl)
@@ -995,10 +979,9 @@ public final class OnlineTuner {
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
       .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
       .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
-      .append("   -niw       : normalize the initial weights file (default: true)").append(nl)
+      .append("   -niw       : normalize the initial weights file (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ").append(nl)
-      .append("   -pt path   : Prefix tuning file. Only one reference allowed.").append(nl)
-      .append("   -fd        : Fix the dense baseline weights during updating");
+      .append("   -pt path   : Prefix tuning file. Only one reference allowed.");
     
     return sb.toString();
   }
@@ -1035,9 +1018,8 @@ public final class OnlineTuner {
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
     int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
-    boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", true);
+    boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", false);
     String prefixTuningFile = opts.getProperty("pt", null);
-    boolean fixDense = PropertiesUtils.getBool(opts, "fd", false);
     
     // Check option combinations
     if (prefixTuningFile != null && refStr != null) {
@@ -1067,7 +1049,7 @@ public final class OnlineTuner {
       final String clMetricString = SentenceLevelMetricFactory.sentenceLevelToCorpusLevel(scoreMetricStr);
       OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
           optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
-          expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights, fixDense);
+          expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights);
       if (refStr != null) tuner.loadReferences(refStr, wrapBoundary);
       if (prefixTuningFile != null) tuner.loadPrefixFile(prefixTuningFile);
       if (pseudoRefOptions != null) tuner.computePseudoReferences(pseudoRefOptions, tmpPath);

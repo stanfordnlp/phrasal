@@ -140,8 +140,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
     // L1 regularization
     this.L1lambda = L1lambda;
-    this.regconfig = regconfig;
-    this.fixedFeaturesFile = fixedFeaturesFile;
+    this.regconfig = regconfig != null && regconfig.trim().length() == 0 ? null : regconfig;
+    this.fixedFeaturesFile = fixedFeaturesFile != null && fixedFeaturesFile.trim().length() == 0 ? null : fixedFeaturesFile;
 
     // L2 regularization
     this.l2Regularization = ! Double.isInfinite(sigma);
@@ -412,7 +412,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       }
     }
     
-    HashSet<String> fixedFeatures = new HashSet<String>();
+    Set<String> fixedFeatures = new HashSet<String>();
     if (fixedFeaturesFile != null) {
       try{
         LineNumberReader reader = IOTools.getReaderFromFile(fixedFeaturesFile);

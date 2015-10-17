@@ -42,7 +42,7 @@ public final class SyntheticRules {
   // This heuristic seems to maximize prefix BLEU relative to the other heuristics.
   private static final SymmetrizationType SYM_HEURISTIC = SymmetrizationType.intersection;
   private static final double SYNTHETIC_PROB = 1e-5;
-  private static final double BACKOFF_PROB = 1e-6;
+  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
@@ -221,7 +221,7 @@ public final class SyntheticRules {
     }
 
     // WSGDEBUG
-    boolean printDebug = sourceInputId == 1022;
+    boolean printDebug = false; // sourceInputId == 1022;
     if (printDebug) {
       System.err.printf("DEBUG %d%n", sourceInputId);
     }
@@ -303,33 +303,33 @@ public final class SyntheticRules {
 
     // Add backoff unigram rules.
     // TODO(spenceg) Cache cnt_f, which is expensive.
-    for (int j = 0, tgtLength = prefix.size(); j < tgtLength; ++j) {
-      TK targetQuery = prefix.get(j);
-      final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) targetQuery)).sum();
-      boolean isTargetOOV = cnt_e == 0;
-      final Sequence<TK> target = prefix.subsequence(j, j+1);
-
-      for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
-        TK sourceQuery = sourceSequence.get(i);
-        int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) sourceQuery)).sum();
-        final boolean isSourceOOV = cnt_f == 0;
-        final Sequence<TK> source = sourceSequence.subsequence(i,i+1);
-
-        CoverageSet ruleCoverage = new CoverageSet(srcLength);
-        ruleCoverage.set(i);
-        int cntE = isTargetOOV ? 1 : cnt_e;
-        int cntF = isSourceOOV ? 1 : cnt_f;
-        double cnt_joint = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) sourceQuery, (IString) targetQuery)).sum();
-        if (cnt_joint != 0) continue;
-        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticUnigramRule(source, target, 
-            ruleCoverage, featureNames, inferer.scorer, inferer.featurizer, 
-            BACKOFF_PROB, cntE, cntF, inputProperties, sourceSequence, sourceInputId);
-        ruleGrid.addEntry(syntheticRule);
-        
-//      WSGDEBUG
-        if (printDebug) System.err.printf("BackExt: %s%n", syntheticRule);
-      }
-    }
+//    for (int j = 0, tgtLength = prefix.size(); j < tgtLength; ++j) {
+//      TK targetQuery = prefix.get(j);
+//      final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) targetQuery)).sum();
+//      boolean isTargetOOV = cnt_e == 0;
+//      final Sequence<TK> target = prefix.subsequence(j, j+1);
+//
+//      for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
+//        TK sourceQuery = sourceSequence.get(i);
+//        int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) sourceQuery)).sum();
+//        final boolean isSourceOOV = cnt_f == 0;
+//        final Sequence<TK> source = sourceSequence.subsequence(i,i+1);
+//
+//        CoverageSet ruleCoverage = new CoverageSet(srcLength);
+//        ruleCoverage.set(i);
+//        int cntE = isTargetOOV ? 1 : cnt_e;
+//        int cntF = isSourceOOV ? 1 : cnt_f;
+//        double cnt_joint = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) sourceQuery, (IString) targetQuery)).sum();
+//        if (cnt_joint != 0) continue;
+//        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticUnigramRule(source, target, 
+//            ruleCoverage, featureNames, inferer.scorer, inferer.featurizer, 
+//            BACKOFF_PROB, cntE, cntF, inputProperties, sourceSequence, sourceInputId);
+//        ruleGrid.addEntry(syntheticRule);
+//        
+////      WSGDEBUG
+//        if (printDebug) System.err.printf("BackExt: %s%n", syntheticRule);
+//      }
+//    }
     
     // Get source coverage and add source deletions
     CoverageSet sourceCoverage = new CoverageSet(sourceSequence.size());
