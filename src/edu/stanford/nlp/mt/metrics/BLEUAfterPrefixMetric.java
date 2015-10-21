@@ -34,19 +34,22 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
    * <p>
    * Pref:  I love dogs
    * <p>
-   * Gets converted to...
+   * With order=2 gets converted to...
    * <p>
-   * Ref 1: _ _ _ so much .
-   * Ref 3: _ _ _ a lot .
+   * Ref 1: _ _ dogs so much .
+   * Ref 3: _ _ dogs a lot .
    * <p>
    * So the following hypothesis has these n-gram matches.
    * <p>
    * Hyp 1: I love dogs so damn much .
-   * Unigram matches: (so)  (much)  (.)
-   * Bigram matches:  (much .)
+   * Unigram matches: (dogs) (so)  (much)  (.)
+   * Bigram matches: (dogs so) (much .)
+   * <p>
+   * If a unigram is repeated in both the suffix and prefix of the reference,
+   * it is retained in the masked reference.
    */
-  public BLEUAfterPrefixMetric(List<List<Sequence<IString>>> referencesList) {
-    super(excludePrefix(referencesList));
+  public BLEUAfterPrefixMetric(List<List<Sequence<IString>>> referencesList, int order) {
+    super(excludePrefix(referencesList, order), order);
     if (referencesList == null ||
             referencesList.size() < 1 ||
             referencesList.get(0).size() < 2) {
@@ -55,7 +58,11 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
     }
   }
 
-  private static List<List<Sequence<IString>>> excludePrefix(List<List<Sequence<IString>>> referencesList) {
+  public BLEUAfterPrefixMetric(List<List<Sequence<IString>>> referencesList) {
+    this(referencesList, DEFAULT_MAX_NGRAM_ORDER);
+  }
+
+  private static List<List<Sequence<IString>>> excludePrefix(List<List<Sequence<IString>>> referencesList, int order) {
     return referencesList.stream().map(refs -> {
       if (refs.size() < 2) {
         throw new RuntimeException("BLEUAfterPrefixMetric requires prefixes!");
@@ -66,7 +73,8 @@ public class BLEUAfterPrefixMetric<FV> extends BLEUMetric<IString, FV> {
               .map(ref -> {
                         Sequence<IString> masked = new ArraySequence<>(ref);
                         IString[] elements = masked.elements();
-                        for (int i = 0; i < prefix.size(); i++) {
+                        int exclude_up_to = Math.max(0, prefix.size()-order+1);
+                        for (int i = 0; i < exclude_up_to; i++) {
                           if(!ref.subsequence(prefix.size(), ref.size()).contains(ref.subsequence(i,i+1)))
                             elements[i] = TokenUtils.NULL_TOKEN;
                         }
