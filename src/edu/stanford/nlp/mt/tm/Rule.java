@@ -50,7 +50,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   /**
    * The phrase table from which this rule was queried.
    */
-  public final String phraseTableName;
+  public String phraseTableName;
   
   /**
    * Dynamic translation model lexicalized reordering information.

@@ -152,7 +152,7 @@ RuleFeaturizer<IString, String> {
       System.err.printf("Final score: %f%n", state.getScore());
       System.err.println("===================");
     }
-    return Collections.singletonList(new FeatureValue<String>(featureName, state.getScore()));
+    return Collections.singletonList(new FeatureValue<>(featureName, state.getScore(), true));
   }
 
   @Override
@@ -160,7 +160,7 @@ RuleFeaturizer<IString, String> {
       Featurizable<IString, String> f) {
     assert (f.targetPhrase != null);
     double lmScore = lm.score(f.targetPhrase, 0, null).getScore();
-    return Collections.singletonList(new FeatureValue<String>(featureName, lmScore));
+    return Collections.singletonList(new FeatureValue<>(featureName, lmScore, true));
   }
 
   @Override

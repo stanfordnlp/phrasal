@@ -9,9 +9,6 @@ import edu.stanford.nlp.mt.tune.OnlineUpdateRule;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 
-
-
-
 /**
  * Basic AdaGrad update rule from Duchi et al. (2010).
  * 
@@ -36,13 +33,13 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
   private Counter<String> sumGradSquare;
   private Norm norm;
   private Counter<String> customL1;
-  private HashSet<String> fixedFeatures;
+  private Set<String> fixedFeatures;
 
   public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm, Counter<String> customL1) {
     this(initialRate, expectedNumFeatures, lambda, norm, customL1, null);
   }
   
-  public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm, Counter<String> customL1, HashSet<String> fixedFeatures) {
+  public AdaGradFOBOSUpdater(double initialRate, int expectedNumFeatures, double lambda, Norm norm, Counter<String> customL1, Set<String> fixedFeatures) {
     this.rate = initialRate;
     this.lambda = lambda;
     this.norm = norm;
@@ -239,8 +236,8 @@ public class AdaGradFOBOSUpdater implements OnlineUpdateRule<String> {
     private static final long serialVersionUID = -7994685877722145964L;
     private final Counter<String> gradHistory;
     private final Counter<String> customReg;
-    private final HashSet<String> fixedFeatures;
-    public AdaGradFOBOSState(Counter<String> h, Counter<String> r, HashSet<String> f) {
+    private final Set<String> fixedFeatures;
+    public AdaGradFOBOSState(Counter<String> h, Counter<String> r, Set<String> f) {
       this.gradHistory = h;
       this.customReg = r;
       this.fixedFeatures = f;

@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -139,8 +140,8 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
 
     // L1 regularization
     this.L1lambda = L1lambda;
-    this.regconfig = regconfig;
-    this.fixedFeaturesFile = fixedFeaturesFile;
+    this.regconfig = regconfig != null && regconfig.trim().length() == 0 ? null : regconfig;
+    this.fixedFeaturesFile = fixedFeaturesFile != null && fixedFeaturesFile.trim().length() == 0 ? null : fixedFeaturesFile;
 
     // L2 regularization
     this.l2Regularization = ! Double.isInfinite(sigma);
@@ -273,17 +274,16 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
   public Counter<String> getGradient(Counter<String> weights, Sequence<IString> source, int sourceId,
       List<RichTranslation<IString, String>> translations, List<Sequence<IString>> references,
       double[] referenceWeights, SentenceLevelMetric<IString, String> scoreMetric) {
-    // TODO(spenceg): Sanity checking. For public methods, replace with exceptions.
-    assert weights != null;
+    Objects.requireNonNull(weights);
+    Objects.requireNonNull(scoreMetric);
     assert sourceId >= 0;
     assert translations.size() > 0 : "No translations for source id: " + String.valueOf(sourceId);
     assert references.size() > 0;
-    assert scoreMetric != null;
 
     // Sample from the n-best list
     List<Datum> dataset = sampleNbestList(sourceId, source, scoreMetric, translations, references);
     Counter<String> gradient = computeGradient(dataset, weights, 1);
-    if (dataset.size() == 0) {
+    if (dataset.isEmpty()) {
       logger.warn("Null gradient for sourceId: {}", sourceId);
     }
     
@@ -412,7 +412,7 @@ public class PairwiseRankingOptimizerSGD implements OnlineOptimizer<IString,Stri
       }
     }
     
-    HashSet<String> fixedFeatures = new HashSet<String>();
+    Set<String> fixedFeatures = new HashSet<String>();
     if (fixedFeaturesFile != null) {
       try{
         LineNumberReader reader = IOTools.getReaderFromFile(fixedFeaturesFile);

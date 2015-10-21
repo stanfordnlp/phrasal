@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.decoder.AbstractInferer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
+import edu.stanford.nlp.mt.stats.Distributions.Poisson;
 import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
@@ -34,20 +35,23 @@ import edu.stanford.nlp.mt.util.Sequence;
 public final class SyntheticRules {
 
   private static final Logger logger = LogManager.getLogger(SyntheticRules.class.getName());
-  
+
   private static final PhraseAlignment UNIGRAM_ALIGNMENT = PhraseAlignment.getPhraseAlignment("(0)");
-  private static final PhraseAlignment MONOTONE_ALIGNMENT = PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
-  
+//  private static final PhraseAlignment MONOTONE_ALIGNMENT = PhraseAlignment.getPhraseAlignment(PhraseAlignment.MONOTONE_ALIGNMENT);
+
   // This heuristic seems to maximize prefix BLEU relative to the other heuristics.
   private static final SymmetrizationType SYM_HEURISTIC = SymmetrizationType.intersection;
-  
+  private static final double SYNTHETIC_PROB = 1e-5;
+  private static final double BACKOFF_PROB = 1e-9;
+  private static final double POSITION_TERM_LAMBDA = 1.0;
+
   public static final String PHRASE_TABLE_NAME = "synthetic";
-  
+
   private static final int MAX_SYNTHETIC_ORDER = 3;
   private static final int MAX_TARGET_ORDER = 4;
-  
+
   private SyntheticRules() {}
-  
+
   /**
    * Create a synthetic translation rule.
    * 
@@ -66,7 +70,7 @@ public final class SyntheticRules {
     return makeSyntheticRule(source, target, sourceCoverage, phraseScoreNames, scorer, featurizer,
         cnt_f_e, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, UNIGRAM_ALIGNMENT);
   }
-  
+
   /**
    * Create a synthetic translation rule.
    * 
@@ -129,7 +133,7 @@ public final class SyntheticRules {
     // Baseline dense features
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
     float[] scores = new float[featureNames.length];
-    scores[0] = (float) Math.log(1e-9);
+    scores[0] = (float) Math.log(SYNTHETIC_PROB);
     scores[1] = scores[0];
     scores[2] = scores[0];
     scores[3] = scores[0];
@@ -138,7 +142,7 @@ public final class SyntheticRules {
       scores[4] = 0.0f;
       scores[5] = -1.0f;
     }
-    
+
     CoverageSet dCoverage = d.sourceCoverage;
     int firstClearBit = dCoverage.nextClearBit(0);
     for(int i = firstClearBit; 
@@ -158,7 +162,7 @@ public final class SyntheticRules {
     return numRules;
   }
 
-  
+
   /**
    * Create a new rule from an existing rule by replacing the target side.
    * 
@@ -184,22 +188,44 @@ public final class SyntheticRules {
         scorer, sourceSequence, sourceInputId, inputProperties);
     return rule;
   }
+
+  /**
+   * IBM Model 2 t() parameter.
+   * 
+   * @param k
+   * @param max
+   * @return
+   */
+  private static double distortionParam(int k, int max) {
+    return Poisson.probOf(k, POSITION_TERM_LAMBDA);
+//    return (0.99 * Poisson.probOf(k, POSITION_TERM_LAMBDA)) + (0.01 * Uniform.probOf(0, max));
+  }
   
+  /**
+   * Augment the rule grid by aligning the source to the supplied prefix.
+   * 
+   * @param ruleGrid
+   * @param prefix
+   * @param sourceInputId
+   * @param sourceSequence
+   * @param inferer
+   * @param inputProperties
+   */
   @SuppressWarnings("unchecked")
   public static <TK,FV> void augmentRuleGrid(RuleGrid<TK,FV> ruleGrid, 
       Sequence<TK> prefix, int sourceInputId, Sequence<TK> sourceSequence, 
       AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
-    
+
     if (! (inferer.phraseGenerator instanceof DynamicTranslationModel)) {
       throw new RuntimeException("Synthetic rule generation requires DynamicTranslationModel");
     }
-    
+
     // WSGDEBUG
-    boolean printDebug = false; // sourceInputId == 355;
-//    if (printDebug) {
-//      System.err.println("HERE");
-//    }
-    
+    boolean printDebug = false; // sourceInputId == 1022;
+    if (printDebug) {
+      System.err.printf("DEBUG %d%n", sourceInputId);
+    }
+
     // Fetch translation models
     final List<DynamicTranslationModel<FV>> tmList = new ArrayList<>(2);
     tmList.add((DynamicTranslationModel<FV>) inferer.phraseGenerator);
@@ -207,31 +233,29 @@ public final class SyntheticRules {
       tmList.add((DynamicTranslationModel<FV>) inputProperties.get(InputProperty.ForegroundTM));
     }
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
-    
-    GIZAWordAlignment align = new GIZAWordAlignment((Sequence<IString>) sourceSequence, 
+
+    final GIZAWordAlignment align = new GIZAWordAlignment((Sequence<IString>) sourceSequence, 
         (Sequence<IString>) prefix);
 
     // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
     // need to change for languages with different orthographies.
     alignInverse(tmList, align);
-    
+
     // f2e align with Cooc table and lexical similarity. Includes deletion rules.
     align(tmList, align);
-    
+
+    // Symmetrization
+    final SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
+
+    // WSGDEBUG
     if (printDebug) {
       System.err.printf("src: %s%n", sourceSequence);
       System.err.printf("tgt: %s%n", prefix);
       System.err.printf("f2e: %s%n", align.toString(false));
       System.err.printf("e2f: %s%n", align.toString(true));
+      System.err.printf("sym: %s%n", sym.toString());
     }
-    
-    // Symmetrize Apply. Start with intersection. Then try grow.
-//    SymmetricalWordAlignment sym = intersect(align, alignInverse);
-    SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
-    
-    // WSGDEBUG
-    if (printDebug) System.err.println(sym.toString());
-    
+
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
     CoverageSet prefixSourceCoverage = new CoverageSet(sourceSequence.size());
@@ -250,7 +274,7 @@ public final class SyntheticRules {
             e2f[eIdx - r.ei] = sym.e2f(eIdx).stream().mapToInt(a -> a - r.fi).toArray();
           }
           PhraseAlignment alignment = new PhraseAlignment(e2f);
-          
+
           int cnt_f = 0, cnt_e = 0;
           double cnt_fe = 0.0;
           if (src.size() == 1 && tgt.size() == 1) { // Unigram rule
@@ -259,12 +283,12 @@ public final class SyntheticRules {
             cnt_fe = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) src.get(0), (IString) tgt.get(0))).sum();
             if (cnt_f == 0) cnt_f = 1;
             if (cnt_e == 0) cnt_e = 1;
-            if (cnt_fe == 0) cnt_fe = 1e-9;
-            
+            if (cnt_fe == 0) cnt_fe = SYNTHETIC_PROB;
+
           } else {
             cnt_f = 1;
             cnt_e = 1;
-            cnt_fe = 1e-9;
+            cnt_fe = SYNTHETIC_PROB;
           }
           ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
               cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
@@ -277,32 +301,45 @@ public final class SyntheticRules {
       }
     }
 
+    // Add backoff unigram rules.
+    // TODO(spenceg) Cache cnt_f, which is expensive.
+//    for (int j = 0, tgtLength = prefix.size(); j < tgtLength; ++j) {
+//      TK targetQuery = prefix.get(j);
+//      final int cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) targetQuery)).sum();
+//      boolean isTargetOOV = cnt_e == 0;
+//      final Sequence<TK> target = prefix.subsequence(j, j+1);
+//
+//      for (int i = 0, srcLength = sourceSequence.size(); i < srcLength; ++i) {
+//        TK sourceQuery = sourceSequence.get(i);
+//        int cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) sourceQuery)).sum();
+//        final boolean isSourceOOV = cnt_f == 0;
+//        final Sequence<TK> source = sourceSequence.subsequence(i,i+1);
+//
+//        CoverageSet ruleCoverage = new CoverageSet(srcLength);
+//        ruleCoverage.set(i);
+//        int cntE = isTargetOOV ? 1 : cnt_e;
+//        int cntF = isSourceOOV ? 1 : cnt_f;
+//        double cnt_joint = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) sourceQuery, (IString) targetQuery)).sum();
+//        if (cnt_joint != 0) continue;
+//        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticUnigramRule(source, target, 
+//            ruleCoverage, featureNames, inferer.scorer, inferer.featurizer, 
+//            BACKOFF_PROB, cntE, cntF, inputProperties, sourceSequence, sourceInputId);
+//        ruleGrid.addEntry(syntheticRule);
+//        
+////      WSGDEBUG
+//        if (printDebug) System.err.printf("BackExt: %s%n", syntheticRule);
+//      }
+//    }
+    
     // Get source coverage and add source deletions
     CoverageSet sourceCoverage = new CoverageSet(sourceSequence.size());
     final int maxSourceCoverage = Math.min(sourceSequence.size(), prefixSourceCoverage.cardinality() + tmList.get(0).maxLengthSource());
     for (int i = 0; i < maxSourceCoverage; ++i) {
-      if (sym.f2e(i).isEmpty()) {
-        // Source deletion
-//        CoverageSet cov = new CoverageSet(sourceSequence.size());
-//        cov.set(i);
-//        Sequence<TK> src = sourceSequence.subsequence(i, i+1);
-//        Sequence<TK> tgt = Sequences.emptySequence();
-//        int cnt_f = 1;
-//        int cnt_e = 1;
-//        double cnt_fe = 1e-15; // Really discourage this! Should always be a last resort since the LM will prefer deleting words
-//        ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-//            cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
-//            inputProperties, sourceSequence, sourceInputId, MONOTONE_ALIGNMENT);
-//        ruleGrid.addEntry(syntheticRule);
-
-        // WSGDEBUG
-//        System.err.printf("ExtDel: %s%n", syntheticRule);
-
-      } else {
+      if ( ! sym.f2e(i).isEmpty()) {
         sourceCoverage.set(i);
       }
     }
-    
+
     // Iterate over gaps in target coverage, aligning to source gaps along the diagonal
     if (targetCoverage.cardinality() != prefix.size()) {
       // Iterate over the target coverage
@@ -312,10 +349,10 @@ public final class SyntheticRules {
         int ei = i;
         int ej = targetCoverage.nextSetBit(ei+1);
         if (ej < 0) ej = prefix.size();
-        
+
         // Must be a valid index
         int mid = Math.max(0, Math.min((int) Math.round((ej + ei) / 2.0), sourceSequence.size() - 1));
-        
+
         int rightQuery = sourceCoverage.nextClearBit(mid);
         int leftQuery = sourceCoverage.previousClearBit(mid);
         int sourceAnchor = -1;
@@ -326,7 +363,7 @@ public final class SyntheticRules {
         } else if (rightQuery < sourceSequence.size()) {
           sourceAnchor = rightQuery;
         }
-        
+
         if (sourceAnchor >= 0) {
           int fi = Math.max(0, sourceCoverage.previousSetBit(sourceAnchor-1)+1);
           int fj = sourceCoverage.nextSetBit(sourceAnchor+1);
@@ -334,20 +371,18 @@ public final class SyntheticRules {
           Sequence<TK> src = sourceSequence.subsequence(fi, fj);
           Sequence<TK> tgt = prefix.subsequence(ei, ej);
           CoverageSet cov = new CoverageSet(sourceSequence.size());
-          cov.set(fi, fj);
-          
-          int cnt_f = 1, cnt_e = 1;
-          double cnt_fe = 1e-9;
-          
+          cov.set(fi, fj);   
+
           int[][] e2f = new int[tgt.size()][src.size()];
           for (int k = 0; k < tgt.size() && k < src.size(); ++k) {
             e2f[k] = new int[] { k } ;
           }
           PhraseAlignment alignment = new PhraseAlignment(e2f);
-          
+
+          final int cnt_f = 1, cnt_e = 1;
           ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
               cov, featureNames, inferer.scorer, inferer.featurizer, 
-              cnt_fe, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
+              SYNTHETIC_PROB, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
           ruleGrid.addEntry(syntheticRule);
           finalTargetCoverage.set(ei, ej);
 
@@ -381,9 +416,9 @@ public final class SyntheticRules {
         }
       }
     }
-    
+
     if (maxTarget < 0 || maxTarget-minTarget >= maxTargetPhrase) return Collections.emptyList();
-    
+
     // Admissibility check
     for (int i = minTarget; i <= maxTarget; ++i) {
       if ( align.e2f(i).size() > 0) {
@@ -395,7 +430,7 @@ public final class SyntheticRules {
         }
       }
     }
-    
+
     // "Loose" heuristic to grow the target
     // Try to grow the left bound of the target
     List<RuleBound> ruleList = new ArrayList<>();
@@ -413,7 +448,7 @@ public final class SyntheticRules {
     }
     return ruleList;
   }
-  
+
   private static class RuleBound {
     public final int fi;
     public final int fj; // exclusive
@@ -427,83 +462,11 @@ public final class SyntheticRules {
     }
   }
 
-// Och and Ney (2004) procedure
-//  protected static boolean addPhrasesToIndex(WordAlignment sent, int maxPhraseLenE, int maxPhraseLenF) {
-//
-//    int fsize = sent.f().size();
-//    int esize = sent.e().size();
-//
-//    // For each English phrase:
-//    for (int e1 = 0; e1 < esize; ++e1) {
-//
-//      int f1 = Integer.MAX_VALUE;
-//      int f2 = Integer.MIN_VALUE;
-//      int lastE = Math.min(esize, e1 + maxPhraseLenE) - 1;
-//
-//      for (int e2 = e1; e2 <= lastE; ++e2) {
-//
-//        // Find range of f aligning to e1...e2:
-//        SortedSet<Integer> fss = sent.e2f(e2);
-//        if (!fss.isEmpty()) {
-//          int fmin = fss.first();
-//          int fmax = fss.last();
-//          if (fmin < f1)
-//            f1 = fmin;
-//          if (fmax > f2)
-//            f2 = fmax;
-//        }
-//
-//        // Phrase too long:
-//        if (f2 - f1 >= maxPhraseLenF)
-//          continue;
-//
-//        // No word alignment within that range, or phrase too long?
-//        if (f1 > f2)
-//          continue;
-//
-//        // Check if range [e1-e2] [f1-f2] is admissible:
-//        boolean admissible = true;
-//        for (int fi = f1; fi <= f2; ++fi) {
-//          SortedSet<Integer> ess = sent.f2e(fi);
-//          if (!ess.isEmpty())
-//            if (ess.first() < e1 || ess.last() > e2) {
-//              admissible = false;
-//              break;
-//            }
-//        }
-//        if (!admissible)
-//          continue;
-//
-//        // See how much we can expand the phrase to cover unaligned words:
-//        int F1 = f1, F2 = f2;
-//        int lastF1 = Math.max(0, f2 - maxPhraseLenF + 1);
-//        while (F1 > lastF1 && sent.f2e(F1 - 1).isEmpty()) {
-//          --F1;
-//        }
-//        int lastF2 = Math.min(fsize - 1, f1 + maxPhraseLenF - 1);
-//        while (F2 < lastF2 && sent.f2e(F2 + 1).isEmpty()) {
-//          ++F2;
-//        }
-//
-//        for (int i = F1; i <= f1; ++i) {
-//          int lasti = Math.min(F2, i + maxPhraseLenF - 1);
-//          for (int j = f2; j <= lasti; ++j) {
-//            assert (j - i < maxPhraseLenF);
-//            addPhraseToIndex(sent, i, j, e1, e2, true, 1.0f);
-//          }
-//        }
-//      }
-//    }
-//
-//    return true;
-//  }
-  
-  
   private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
-    
+
     int[] cnt_f = new int[a.fSize()];
     Arrays.fill(cnt_f, -1);
-    
+
     for (int i = 0, tSz = a.e().size(); i < tSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
@@ -512,13 +475,16 @@ public final class SyntheticRules {
         final IString srcToken = (IString) a.f().get(j);
         if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
+        if (cnt_ef == 0) continue;
         double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
+        int posDiff = Math.abs(i - j);
+        tEF += Math.log(distortionParam(posDiff, sz-1));
         if (tEF > max) {
           max = tEF;
           argmax = j;
         }
       }
-      
+
       if (argmax < 0) {
         // Backoff to lexical similarity
         // TODO(spenceg) Only works for orthographically similar languages. 
@@ -526,37 +492,39 @@ public final class SyntheticRules {
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           String src = a.f().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
+          int posDiff = Math.abs(i - j);
+          q *= distortionParam(posDiff, sz-1);
           if (q > max) {
             max = q;
             argmax = j;
           }
-          
+
           // TODO(spenceg) This results in lower prefix BLEU right now.
-//          List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(j, j);
-//          if (ruleList == null) ruleList = Collections.emptyList();
-//          for (ConcreteRule<TK,FV> r : ruleList) {
-//            if (r.abstractRule.target.size() != 1) continue;
-//            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
-//            if (qq > max) {
-//              max = qq;
-//              argmax = j;
-//            }
-//          }
+          //          List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(j, j);
+          //          if (ruleList == null) ruleList = Collections.emptyList();
+          //          for (ConcreteRule<TK,FV> r : ruleList) {
+          //            if (r.abstractRule.target.size() != 1) continue;
+          //            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
+          //            if (qq > max) {
+          //              max = qq;
+          //              argmax = j;
+          //            }
+          //          }
         }
       }
-      
+
       // Populate alignment
       if (argmax >= 0) {
         a.addf2e(argmax, i);
       }
     }
   }
-  
+
   private static <TK,FV> void alignInverse(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
-    
+
     int[] cnt_e = new int[a.eSize()];
     Arrays.fill(cnt_e, -1);
-    
+
     for (int i = 0, sSz = a.fSize(); i < sSz; ++i) {
       double max = -10000.0;
       int argmax = -1;
@@ -565,13 +533,16 @@ public final class SyntheticRules {
         final IString tgtToken = (IString) a.e().get(j);
         if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
         int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
-        double tEF = Math.log(cnt_ef) - Math.log(cnt_e[j]);
-        if (tEF > max) {
-          max = tEF;
+        if (cnt_ef == 0) continue;
+        double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
+        int posDiff = Math.abs(i - j);
+        tFE += Math.log(distortionParam(posDiff, sz-1));
+        if (tFE > max) {
+          max = tFE;
           argmax = j;
         }
       }
-      
+
       if (argmax < 0) {
         // Backoff to lexical similarity
         String src = a.f().get(i).toString();
@@ -582,6 +553,8 @@ public final class SyntheticRules {
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
+          int posDiff = Math.abs(i - j);
+          q *= distortionParam(posDiff, sz-1);
           if (q > max) {
             max = q;
             argmax = j;
@@ -590,17 +563,17 @@ public final class SyntheticRules {
           // TODO(spenceg) This results in lower prefix-bleu right now.
           // Check for similarity with known translations of this
           // source token.
-//          for (ConcreteRule<TK,FV> r : ruleList) {
-//            if (r.abstractRule.target.size() != 1) continue;
-//            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
-//            if (qq > max) {
-//              max = qq;
-//              argmax = j;
-//            }
-//          }
+          //          for (ConcreteRule<TK,FV> r : ruleList) {
+          //            if (r.abstractRule.target.size() != 1) continue;
+          //            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
+          //            if (qq > max) {
+          //              max = qq;
+          //              argmax = j;
+          //            }
+          //          }
         }
       }
-      
+
       // Populate alignment
       if (argmax >= 0) {
         a.adde2f(i, argmax);

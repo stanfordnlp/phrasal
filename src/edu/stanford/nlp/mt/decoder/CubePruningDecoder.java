@@ -106,6 +106,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     TimeKeeper timer = TimingUtils.start();
     
+    boolean printDebug = false; // sourceInputId == 1022;
+    
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
       this.maxDistortion = (int) sourceInputProperties.get(InputProperty.DistortionLimit);
@@ -126,7 +128,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final int sourceLength = source.size();
     final List<ConcreteRule<TK,FV>> ruleList = phraseQuery.ruleList;
     logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
-        
+    
+    if (printDebug) {
+      for (ConcreteRule<TK,FV> rule : ruleList)
+        System.err.println(rule);
+    }
+    
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
     outputSpace.filter(ruleList, this, sourceInputProperties);
@@ -225,7 +232,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
         }
       }
-
+      
+      // TODO(spenceg) Would be better if we could remove this.
       // Couldn't figure out how to extend any derivations in the beams. Walk back from this point
       // to the first beam that has valid derivations in. Try to reset that beam by extending each
       // derivation with target insertion rules.
@@ -253,6 +261,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         } // else we can't make any more progress, so continue with decoding, which will fail.
       }
       
+      if (printDebug) {
+        System.err.println(newBeam.beamString(10));
+      }
+      
       numRecombined += newBeam.recombined();
     }
     timer.mark("Inference");
@@ -268,6 +280,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Beam<Derivation<TK,FV>> beam = beams.get(i);
       if (beam.size() != 0) {
         Featurizable<TK,FV> bestHyp = beam.iterator().next().featurizable;
+        
+        if (printDebug) {
+          System.err.println(bestHyp.derivation.historyString());
+        }
+               
         if (outputSpace.allowableFinal(bestHyp)) {
           if ( ! isGoalBeam) {
             final int coveredTokens = sourceLength - bestHyp.numUntranslatedSourceTokens;

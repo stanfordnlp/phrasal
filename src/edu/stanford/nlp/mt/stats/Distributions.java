@@ -11,6 +11,42 @@ public class Distributions {
   //Creates a random number generator on the first call
   protected static double uniformDraw() { return Math.random(); }
   
+  /**
+   * Uniform distribution U(a,b).
+   * 
+   * @author Spence Green
+   *
+   */
+  public static class Uniform {
+    
+    public static double probOf(double a, double b) {
+      return 1.0 / (b - a);
+    }
+    
+    public static double mean(double a, double b) {
+      return 0.5 * (b - a);
+    }
+  }
+  
+  public static class Poisson {
+    
+    /**
+     * See the numerical formulation: https://en.wikipedia.org/wiki/Poisson_distribution.
+     * 
+     * @param k
+     * @param lambda
+     * @return
+     */
+    public static double probOf(int k, double lambda) {
+      return Math.exp((k * Math.log(lambda)) - lambda - Functions.logFactorial(k));
+    }
+    
+    public static double mean(double lambda) {
+      return lambda;
+    }
+  }
+  
+  
   public static class Bernoulli implements RandomDistribution {
 
     //params[0] contains the probability of a success
@@ -66,8 +102,8 @@ public class Distributions {
 
     @Override
     public double mean(double[] params, double[] hyperParams) {
-      // TODO Auto-generated method stub
-      return 0;
+     if (hyperParams.length != 2) throw new IllegalArgumentException();
+      return hyperParams[0] / (hyperParams[0] + hyperParams[1]);
     }
   }
   

@@ -23,13 +23,14 @@ import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
  */
 public final class FeatureUtils {
 
-  private static final String TRUE = String.valueOf(true);
+  private static final String TRUE = Boolean.toString(true);
   private static final String SEPARATOR = "=";
   
   private FeatureUtils() {}
 
   /**
    * Get the baseline dense features from Green et al. (2013).
+   * 
    * @param tm
    * @return
    */

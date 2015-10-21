@@ -43,8 +43,8 @@ public final class TimingUtils {
     return (endTime - startTime) / units;
   }
   
-  public static double elapsedMillis(long startTime) {
-    return elapsedTime(startTime, System.nanoTime(), 1e6);
+  public static long elapsedMillis(long startTime) {
+    return (long) elapsedTime(startTime, System.nanoTime(), 1e6);
   }
   
   public static class TimeKeeper {

@@ -16,7 +16,7 @@ package edu.stanford.nlp.mt.util;
  * @version 1.0.2
  *
  */
-public final class MurmurHash2 {
+public class MurmurHash2 {
 
 	/** Generates 32 bit hash from byte array of the given length and
 	 * seed.
@@ -96,7 +96,40 @@ public final class MurmurHash2 {
 
     return h;
   }
-	
+
+  /**
+   * An incremental version of MurmurHash2.
+   */
+  private int incH;
+  public MurmurHash2(int seed) {
+    incH = seed;
+  }
+  public void add(int d) {
+    // 'm' and 'r' are mixing constants generated offline.
+    // They're not really 'magic', they just happen to work well.
+    final int m = 0x5bd1e995;
+    final int r = 24;
+    // Initialize the hash to a random value
+    int k = (d&0xff);
+    k *= m;
+    k ^= k >>> r;
+    k *= m;
+    incH *= m;
+    incH ^= k;
+  }
+  public int getHashCode() {
+    // 'm' and 'r' are mixing constants generated offline.
+    // They're not really 'magic', they just happen to work well.
+    final int m = 0x5bd1e995;
+
+    // Handle the last few bytes of the input array
+    incH *= m;
+ 
+    incH ^= incH >>> 13;
+    incH *= m;
+    incH ^= incH >>> 15;
+    return incH;
+  }
 
 	/** Generates 32 bit hash from byte array with default seed value.
 	 * 

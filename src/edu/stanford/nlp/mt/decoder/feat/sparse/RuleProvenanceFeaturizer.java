@@ -18,15 +18,15 @@ import edu.stanford.nlp.mt.util.IString;
 public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String> {
 
   public static final String FEATURE_NAME = "PRV";
-  
+
   @Override
   public void initialize() {}
 
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    return f.phraseTableName.equals(Phrasal.TM_BACKGROUND_NAME) ? null :
-      Collections.singletonList(new FeatureValue<>(
-          FEATURE_NAME + ":" + f.phraseTableName, 1.0));
+      return f.phraseTableName.equals(Phrasal.TM_BACKGROUND_NAME) ? null :
+        Collections.singletonList(new FeatureValue<>(
+            FEATURE_NAME + ":" + f.phraseTableName, 1.0));
   }
 
   @Override

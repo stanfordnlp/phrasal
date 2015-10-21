@@ -3,12 +3,9 @@ package edu.stanford.nlp.mt.tune;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -82,6 +79,7 @@ public final class OnlineTuner {
   // Tuning set
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
+  private List<Sequence<IString>> prefixes;
   private int numReferences;
 
   // Various options
@@ -92,7 +90,7 @@ public final class OnlineTuner {
   private final boolean discardInitialWeightState;
   private final String initialWtsFileName;
   private Counter<String> wtsAccumulator;
-
+ 
   // The optimization algorithm
   private OnlineOptimizer<IString,String> optimizer;
 
@@ -117,8 +115,7 @@ public final class OnlineTuner {
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
   private int minFeatureCount;
-  private final Map<String,Set<Integer>> clippedFeatureIndex = 
-    new HashMap<String,Set<Integer>>();
+  private final Map<String,Set<Integer>> clippedFeatureIndex = new HashMap<>();
   
   // Pseudo-reference selection
   private boolean createPseudoReferences = false;
@@ -129,8 +126,6 @@ public final class OnlineTuner {
   private int pseudoReferenceBurnIn = -1;
   private List<List<Sequence<IString>>> pseudoReferences;
   private double[] referenceWeights;
-
-  private List<Sequence<IString>> prefixes;
     
   /**
    * Constructor.
@@ -146,14 +141,14 @@ public final class OnlineTuner {
    * @param expectedNumFeatures
    * @param wrapBoundary 
    * @param experimentName 
+   * @param prefixTuning 
    * @throws IOException 
    */
   private OnlineTuner(String srcFile, String tgtFile, String phrasalIniFile, 
       String initialWtsFile, String optimizerAlg, String[] optimizerFlags, 
       boolean uniformStartWeights, boolean randomizeStartWeights, int expectedNumFeatures, 
       boolean wrapBoundary, String experimentName, boolean normalizeInitialWeights) throws IOException {
-    this.outputWeightPrefix = experimentName + ".online";
-
+    
     // Load Phrasal
     decoder = Phrasal.loadDecoder(phrasalIniFile);
     logger.info("Loaded Phrasal from: {}", phrasalIniFile);
@@ -165,22 +160,49 @@ public final class OnlineTuner {
         decoder.getTranslationModel());
     logger.info("Initial weights: '{}' {}", Counters.toBiggestValuesFirstString(wtsAccumulator, 20), 
         (wtsAccumulator.size() > 20 ? "..." : ""));
+    this.outputWeightPrefix = experimentName + ".online";
+    logger.info("Models will have the file prefix: {}", outputWeightPrefix);
 
     // Load the tuning set
     tuneSource = IStrings.tokenizeFile(srcFile);
-    assert tuneSource.size() > 0;
     loadReferences(tgtFile, wrapBoundary);
-    logger.info("Intrinsic loss corpus contains {} examples", tuneSource.size());
-        
+    if (tuneSource.size() != references.size()) {
+      throw new RuntimeException("Source file size not equal to reference file size");
+    }
+    logger.info("Tuning corpus contains {} examples", tuneSource.size());
+    
     // Load the optimizer last since some optimizers depend on fields initialized
     // by OnlineTuner.
     optimizer = OnlineOptimizerFactory.configureOptimizer(optimizerAlg, optimizerFlags, tuneSource.size(), expectedNumFeatures);
-    if(normalizeInitialWeights)
-      Counters.normalize(wtsAccumulator);
+    if(normalizeInitialWeights) Counters.normalize(wtsAccumulator);
     logger.info("Loaded optimizer: {}", optimizer);
   }
 
+  /**
+   * Load a prefix file for prefix tuning.
+   * 
+   * @param prefixTuningFile
+   */
+  private void loadPrefixFile(String prefixTuningFile) {
+    prefixes = IStrings.tokenizeFile(prefixTuningFile);
+    logger.info("Prefix tuning mode: {} examples", prefixes.size());
+    if (prefixes.size() != tuneSource.size()) {
+      throw new RuntimeException("Prefix file size not equal to source file size");
+    }
+    logger.info("Prefix tuning mode: {} examples", prefixes.size());
+    
+    // The metrics require the prefix to be the first item in the reference list.
+    for (int i = 0, sz = references.size(); i < sz; ++i) {
+      references.get(i).add(0, prefixes.get(i));
+    }
+  }
 
+  /**
+   * Simulate training of a foreground model.
+   * 
+   * @param trainLocalTM
+   * @param faDistortionLimit
+   */
   private void trainLocalTM(boolean trainLocalTM, int faDistortionLimit) { 
     this.localTMTraining = trainLocalTM;
     this.faDistortionLimit = faDistortionLimit; 
@@ -307,7 +329,7 @@ public final class OnlineTuner {
    * @author Spence Green
    *
    */
-  private class ProcessorInput {
+  private static class ProcessorInput {
     public final List<Sequence<IString>> source;
     public final List<List<Sequence<IString>>> references;
     public final int[] translationIds;
@@ -340,7 +362,7 @@ public final class OnlineTuner {
    * @author Spence Green
    *
    */
-  private class ProcessorOutput {
+  private static class ProcessorOutput {
     public final Counter<String> gradient;
     public final int inputId;
     public final List<List<RichTranslation<IString, String>>> nbestLists;
@@ -392,32 +414,28 @@ public final class OnlineTuner {
                                                                new ArrayList<>(input.translationIds.length) : null;
       List<RichTranslation<IString,String>> prefixDecodingResult = input.additionalPrefixDecoding ? 
                                                                    new ArrayList<>(input.translationIds.length) : null;
-
-      // Decode
       for (int i = 0; i < batchSize; ++i) {
         final int sourceId = input.translationIds[i];
         
         // Setup the parameters for decoding this segment
-        InputProperties inputProperties;
-        if(decoder.getInputProperties().size() > sourceId) {
-            inputProperties = new InputProperties(decoder.getInputProperties().get(sourceId));
-        } else {
-            inputProperties = new InputProperties();
-        }
+        InputProperties inputProperties = decoder.getInputProperties().size() > sourceId ?
+          new InputProperties(decoder.getInputProperties().get(sourceId)) :
+          new InputProperties();
+
         inputProperties.put(InputProperty.ModelWeights, input.weights);
         if (input.localTM != null) inputProperties.put(InputProperty.ForegroundTM, input.localTM);
         List<Sequence<IString>> targets = null;
-        if (prefixes != null && sourceId < prefixes.size()) {
+        if (prefixes != null) {
           inputProperties.put(InputProperty.TargetPrefix, true);
           targets = Collections.singletonList(prefixes.get(sourceId));
         }
         
+        // Decode
         List<RichTranslation<IString,String>> nbestList = decoder.decode(input.source.get(i), sourceId, 
             threadId, decoder.getNbestListSize(), targets, inputProperties);
         
-        inputProperties.put(InputProperty.TargetPrefix, true);
-        
         if(input.additionalPrefixDecoding) {
+          inputProperties.put(InputProperty.TargetPrefix, true);
           int[] prefixLengths = inputProperties.containsKey(InputProperty.PrefixLengths) ?
               (int[]) inputProperties.get(InputProperty.PrefixLengths) : new int[0];
           
@@ -430,7 +448,6 @@ public final class OnlineTuner {
 
             prefixDecodingResult.add(prefixDecodingNbestList.get(0));
           }
-
         }
             
         if(input.createForcedAlignment) {          
@@ -458,16 +475,13 @@ public final class OnlineTuner {
       }
 
       // Compute gradient
-      Counter<String> gradient;
-      if (batchSize == 1) {
-        gradient = optimizer.getGradient(input.weights, input.source.get(0), 
+      Counter<String> gradient = batchSize == 1 ?
+        optimizer.getGradient(input.weights, input.source.get(0), 
             input.translationIds[0], nbestLists.get(0), input.references.get(0), 
-            referenceWeights, scoreMetric);
-        
-      } else {
-        gradient = optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
+            referenceWeights, scoreMetric) :
+
+        optimizer.getBatchGradient(input.weights, input.source, input.translationIds, 
                 nbestLists, input.references, referenceWeights, scoreMetric);
-      }
 
       if (minFeatureCount > 0) {
         updateFeatureCounts(input.translationIds, nbestLists);
@@ -547,7 +561,6 @@ public final class OnlineTuner {
               logger.error("No forced alignment for input {}", result.inputId);
             }
           }
-         
         }
       }
       
@@ -576,7 +589,7 @@ public final class OnlineTuner {
     // Initialize weight vector(s) for the decoder
     // currentWts will be used in every round; wts will accumulate weight vectors
     final int numThreads = decoder.getNumThreads();
-    Counter<String> currentWts = new ClassicCounter<String>(wtsAccumulator);
+    Counter<String> currentWts = new ClassicCounter<>(wtsAccumulator);
     // Clear the accumulator, which we will use for parameter averaging.
     wtsAccumulator.clear();
     
@@ -685,8 +698,6 @@ public final class OnlineTuner {
     TranslationModel<IString,String> localTM = tmBuilder.build();
     // Don't use extended features for the foreground model. They have different semantics.
     ((DynamicTranslationModel<String>) localTM).configureAsForegroundTM(FeatureTemplate.DENSE);
-    
-    //IOTools.serialize("localTM.bin", localTM);
     return localTM;
   }
 
@@ -811,7 +822,7 @@ public final class OnlineTuner {
     }
     
     String[] filenames = refStr.split(",");
-    System.err.println("reading references: " + refStr);
+    logger.info("reading references: {}", refStr);
     references = MetricUtils.readReferences(filenames);
     assert references.get(0).size() == filenames.length;
     numReferences = filenames.length;
@@ -823,17 +834,7 @@ public final class OnlineTuner {
     assert references.size() == tuneSource.size();
     logger.info("Number of references for objective function calculation: {}", numReferences);
   }
-  
-  /**
-   * Load a prefix file.
-   * 
-   * @param prefixFile
-   * @throws IOException
-   */
-  private void loadPrefixes(String prefixFile) throws IOException {
-    prefixes = Files.lines(Paths.get(prefixFile)).map(s -> IStrings.tokenize(s)).collect(Collectors.toList());
-  }
-  
+    
   /**
    * Wrap all sequences in the input with start and end tokens.
    * 
@@ -918,7 +919,7 @@ public final class OnlineTuner {
    * Command-line parameter specification.
    */
   private static Map<String,Integer> optionArgDefs() {
-    Map<String,Integer> optionMap = new HashMap<String,Integer>();
+    Map<String,Integer> optionMap = new HashMap<>(32);
     optionMap.put("uw", 0);
     optionMap.put("rw", 0);
     optionMap.put("e", 1);
@@ -943,7 +944,7 @@ public final class OnlineTuner {
     optionMap.put("faDistLimit", 1);    
     optionMap.put("niw", 1);    
     optionMap.put("sb", 0);
-    optionMap.put("prf", 1);
+    optionMap.put("pt", 1);
     return optionMap;
   }
 
@@ -956,7 +957,7 @@ public final class OnlineTuner {
     sb.append("Usage: java ").append(OnlineTuner.class.getName())
       .append(" [OPTIONS] source_file target_file phrasal_ini initial_weights").append(nl).append(nl)
       .append("Options:").append(nl)
-      .append("   -uw        : Uniform weight initialization").append(nl)
+      .append("   -uw        : Uniform weight initialization (default: false)").append(nl)
       .append("   -rw        : Randomize starting weights at the start of each epoch").append(nl)
       .append("   -e num     : Number of online epochs").append(nl)
       .append("   -o str     : Optimizer: [pro-sgd,mira-1best]").append(nl)
@@ -978,9 +979,9 @@ public final class OnlineTuner {
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
       .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
       .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
-      .append("   -niw       : normalize the initial weights file (default: true)").append(nl)
+      .append("   -niw       : normalize the initial weights file (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ").append(nl)
-      .append("   -prf file  : Prefix file for tuning. Length must match the length of the tuning set.");
+      .append("   -pt path   : Prefix tuning file. Only one reference allowed.");
     
     return sb.toString();
   }
@@ -1008,7 +1009,7 @@ public final class OnlineTuner {
     int expectedNumFeatures = PropertiesUtils.getInt(opts, "ef", 30);
     int weightWriteOutInterval = PropertiesUtils.getInt(opts, "wi", 10000/batchSize);
     int minFeatureCount = PropertiesUtils.getInt(opts, "fmc", 0);
-    String tmpPath = opts.getProperty("tmp", "/tmp");
+    String tmpPath = opts.getProperty("tmp", System.getProperty("java.io.tmpdir"));
     String pseudoRefOptions = opts.getProperty("p", null);
     boolean wrapBoundary = PropertiesUtils.getBool(opts, "s", false);
     boolean shuffleDev = PropertiesUtils.getBool(opts, "rand", true);
@@ -1017,8 +1018,14 @@ public final class OnlineTuner {
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
     int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
-    boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", true);
-    String prefixFile = opts.getProperty("prf", null);
+    boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", false);
+    String prefixTuningFile = opts.getProperty("pt", null);
+    
+    // Check option combinations
+    if (prefixTuningFile != null && refStr != null) {
+      System.err.println("ERROR: Only one reference allowed for prefix tuning.");
+      System.exit(-1);
+    }
     
     // Parse arguments
     String[] parsedArgs = opts.getProperty("","").split("\\s+");
@@ -1033,9 +1040,7 @@ public final class OnlineTuner {
 
     final long startTime = TimingUtils.startTime();
     logger.info("Phrasal Online Tuner");
-    logger.info("Startup: {}", new Date());
-    logger.info("Options: {}", 
-        PropertiesUtils.getSortedEntries(opts).stream()
+    logger.info("Options: {}", PropertiesUtils.getSortedEntries(opts).stream()
         .map(e -> String.format("%s %s", e.getKey(), e.getValue()))
         .collect(Collectors.joining(" ")));
 
@@ -1046,8 +1051,8 @@ public final class OnlineTuner {
           optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
           expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights);
       if (refStr != null) tuner.loadReferences(refStr, wrapBoundary);
+      if (prefixTuningFile != null) tuner.loadPrefixFile(prefixTuningFile);
       if (pseudoRefOptions != null) tuner.computePseudoReferences(pseudoRefOptions, tmpPath);
-      if (prefixFile != null) tuner.loadPrefixes(prefixFile);
       tuner.doParameterAveraging(doParameterAveraging);
       tuner.finalWeightsFromBestEpoch(finalWeightsFromBestEpoch);
       tuner.minFeatureCount(minFeatureCount);
@@ -1060,7 +1065,7 @@ public final class OnlineTuner {
 
       final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
       logger.info("Elapsed time: {} seconds", elapsedTime);
-      logger.info("Finished at: {}", new Date());
+      logger.info("Shutdown");
     
     } catch (IOException e) {
       logger.fatal(e);

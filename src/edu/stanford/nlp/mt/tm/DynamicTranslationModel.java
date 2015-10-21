@@ -9,14 +9,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -54,6 +54,8 @@ import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 
 /**
  * A dynamic translation model backed by a suffix array.
@@ -75,12 +77,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Parallelize TM queries. 
    */
+  private static final int WORK_QUEUE_SIZE = 1028;
   private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
-  private static final ThreadPoolExecutor threadPool = (ThreadPoolExecutor) 
-      Executors.newFixedThreadPool(NUM_THREADS, new ThreadFactory() {
+  private static final ThreadPoolExecutor threadPool = 
+      new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 0L, TimeUnit.MILLISECONDS,
+          new ArrayBlockingQueue<>(WORK_QUEUE_SIZE), new ThreadFactory() {
+        int threadId = 0;
         @Override
         public Thread newThread(Runnable r) {
           Thread t = new Thread(r);
+          t.setName("dyntm-" + Integer.toString(threadId++));
           t.setDaemon(true);
           return t;
         }
@@ -88,6 +94,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   static {
     // Get ready for action.
     threadPool.prestartAllCoreThreads();
+    threadPool.allowCoreThreadTimeOut(false);
   }
   
   /**
@@ -311,9 +318,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private void createLexCoocTable(int vocabSize) {
     logger.info("Creating lexical cooc table");
     // Constant chosen empirically
-    coocTable = new LexCoocTable(7*vocabSize);
+    coocTable = new LexCoocTable(10*vocabSize);
     // Iterate over every (symmetric) alignment point in parallel
-    sa.parallelStream().forEach(s -> {
+    sa.stream().forEach(s -> {
       for(int i = 0, sz = s.sourceLength(); i < sz; ++i) {
         final int srcId = s.source(i);
         if (s.isSourceUnaligned(i)) {
@@ -451,7 +458,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * Set the name of the TM.
    */
   @Override
-  public void setName(String name) { this.name = name; }
+  public void setName(String name) { 
+    this.name = name;
+    if (this.ruleCache != null) {
+      for (List<Rule<IString>> ruleList : ruleCache.values()) {
+        for (Rule<IString> r : ruleList) {
+          r.phraseTableName = name;
+        }
+      }
+    }
+  }
   
   @Override
   public Object clone() throws CloneNotSupportedException {
@@ -485,6 +501,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         new ExecutorCompletionService<>(threadPool);
     
     // Iterate over source span lengths
+//    TimeKeeper timer = TimingUtils.start();
     for (int len = 1, longestSourcePhrase = Math.min(maxSourcePhrase, source.size()); 
         len <= longestSourcePhrase; len++) {
       // Filter higher-order ranges based on lower-order misses
@@ -506,7 +523,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           ++numTasks;
         }
       }
-      
+//      timer.mark(String.format("submit %d/%d", len, numTasks));
+            
       if (numTasks == 0) {
         // There can't be any higher order matches
         break;
@@ -526,10 +544,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         }
       } catch (InterruptedException | ExecutionException e) {
         logger.error("input {}: rule extraction failed for order {}", sourceInputId, len);
-        e.printStackTrace();
+        logger.error("Rule extraction exception", e);
         return Collections.emptyList();
       }
+//      timer.mark(String.format("extract %d/%d", len, numTasks));      
     }
+    
+//    logger.info("input {}: TM timing {}", sourceInputId, timer);
     
     // Concatenate foreground model rules
     if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
@@ -915,7 +936,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @author Spence Green
    *
    */
-  private class AlignmentTemplate {
+  private static class AlignmentTemplate {
     public final SampledRule rule;
     private final int hashCode;
     public AlignmentTemplate(SampledRule rule) {
@@ -927,7 +948,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     public String toString() { return rule.toString(); }
     @Override
     public int hashCode() { return hashCode; }
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -1036,10 +1056,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
-   * A hash-based lexical co-occurrence table. This object is threadsafe.
+   * A hash-based lexical co-occurrence table.
    * 
-   * NOTE: This class is not static because it depends on the vocabulary mapping
-   * of its containing DynamicTranslationModel.
+   * NOTE: This class is not threadsafe.
    * 
    * @author Spence Green
    *
@@ -1049,7 +1068,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     public static final int NULL_ID = Integer.MIN_VALUE + 1;
     private static final int MARGINALIZE = Integer.MIN_VALUE;
     
-    private final ConcurrentHashMap<Long,AtomicInteger> counts;
+    // Use primitive long->int map to avoid boxing/unboxing costs.
+    private final Long2IntMap counts;
     
     /**
      * Constructor.
@@ -1057,7 +1077,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @param initialCapacity
      */
     public LexCoocTable(int initialCapacity) {
-      counts = new ConcurrentHashMap<>(initialCapacity);
+      counts = new Long2IntOpenHashMap(initialCapacity);
+      counts.defaultReturnValue(0);
     }
     
     /**
@@ -1073,7 +1094,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     }
     
     private void increment(long key) {
-      counts.computeIfAbsent(key, k -> new AtomicInteger()).incrementAndGet();
+      counts.put(key, counts.get(key) + 1);
     }
 
     /**
@@ -1100,8 +1121,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
      * @return
      */
     public int getJointCount(int srcId, int tgtId) { 
-      AtomicInteger counter = counts.get(pack(srcId, tgtId));
-      return counter == null ? 0 : counter.get();
+      return counts.get(pack(srcId, tgtId));
     }
     
     /**
