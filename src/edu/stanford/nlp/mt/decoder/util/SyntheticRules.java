@@ -461,7 +461,7 @@ public final class SyntheticRules {
       this.ej = ej;
     }
   }
-
+  
   private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
 
     int[] cnt_f = new int[a.fSize()];
@@ -473,15 +473,21 @@ public final class SyntheticRules {
       final IString tgtToken = (IString) a.e().get(i);
       for (int j = 0, sz = a.fSize(); j < sz; ++j) {
         final IString srcToken = (IString) a.f().get(j);
-        if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
-        int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
-        if (cnt_ef == 0) continue;
-        double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
-        int posDiff = Math.abs(i - j);
-        tEF += Math.log(distortionParam(posDiff, sz-1));
-        if (tEF > max) {
-          max = tEF;
+        if (srcToken.equals(tgtToken)) {
+          // Exact match
+          max = 0.0;
           argmax = j;
+        } else {
+          if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
+          int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
+          if (cnt_ef == 0) continue;
+          double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
+          int posDiff = Math.abs(i - j);
+          tEF += Math.log(distortionParam(posDiff, sz-1));
+          if (tEF > max) {
+            max = tEF;
+            argmax = j;
+          }
         }
       }
 
@@ -531,15 +537,20 @@ public final class SyntheticRules {
       final IString srcToken = (IString) a.f().get(i);
       for (int j = 0, sz = a.eSize(); j < sz; ++j) {
         final IString tgtToken = (IString) a.e().get(j);
-        if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
-        int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
-        if (cnt_ef == 0) continue;
-        double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
-        int posDiff = Math.abs(i - j);
-        tFE += Math.log(distortionParam(posDiff, sz-1));
-        if (tFE > max) {
-          max = tFE;
+        if (srcToken.equals(tgtToken)) {
+          max = 0.0;
           argmax = j;
+        } else {
+          if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
+          int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
+          if (cnt_ef == 0) continue;
+          double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
+          int posDiff = Math.abs(i - j);
+          tFE += Math.log(distortionParam(posDiff, sz-1));
+          if (tFE > max) {
+            max = tFE;
+            argmax = j;
+          }
         }
       }
 
