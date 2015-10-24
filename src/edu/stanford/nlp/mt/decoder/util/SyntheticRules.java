@@ -42,7 +42,7 @@ public final class SyntheticRules {
   // This heuristic seems to maximize prefix BLEU relative to the other heuristics.
   private static final SymmetrizationType SYM_HEURISTIC = SymmetrizationType.intersection;
   private static final double SYNTHETIC_PROB = 1e-5;
-  private static final double BACKOFF_PROB = 1e-9;
+//  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
@@ -504,18 +504,6 @@ public final class SyntheticRules {
             max = q;
             argmax = j;
           }
-
-          // TODO(spenceg) This results in lower prefix BLEU right now.
-          //          List<ConcreteRule<TK,FV>> ruleList = ruleGrid.get(j, j);
-          //          if (ruleList == null) ruleList = Collections.emptyList();
-          //          for (ConcreteRule<TK,FV> r : ruleList) {
-          //            if (r.abstractRule.target.size() != 1) continue;
-          //            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
-          //            if (qq > max) {
-          //              max = qq;
-          //              argmax = j;
-          //            }
-          //          }
         }
       }
 
@@ -570,18 +558,6 @@ public final class SyntheticRules {
             max = q;
             argmax = j;
           }
-
-          // TODO(spenceg) This results in lower prefix-bleu right now.
-          // Check for similarity with known translations of this
-          // source token.
-          //          for (ConcreteRule<TK,FV> r : ruleList) {
-          //            if (r.abstractRule.target.size() != 1) continue;
-          //            double qq = SimilarityMeasures.jaccard(tgt, r.abstractRule.target.toString());
-          //            if (qq > max) {
-          //              max = qq;
-          //              argmax = j;
-          //            }
-          //          }
         }
       }
 

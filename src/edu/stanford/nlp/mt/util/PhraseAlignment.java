@@ -36,12 +36,11 @@ public class PhraseAlignment {
 
   private PhraseAlignment(String s) {
     // System.err.println("align: "+s);
-    String stringRep = s.intern();
-    if (stringRep.equals(MONOTONE_ALIGNMENT)) {
+    if (s.equals(MONOTONE_ALIGNMENT)) {
       // No internal alignment
       t2s = null;
     } else {
-      String[] els = stringRep.split("\\s+");
+      String[] els = s.split("\\s+");
       t2s = new int[els.length][];
       for (int i = 0; i < t2s.length; ++i) {
         // System.err.printf("(%d): %s\n",i,els[i]);

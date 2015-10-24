@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
-import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
@@ -27,37 +26,9 @@ public class AlignmentDiagonalDistance extends DerivationFeaturizer<IString, Str
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
     if (f.targetPhrase.size() == 0) {
       // Source deletion rule
-      f.setState(this, new DiagonalState(-1));
       return null;
     }
     final int value = Math.abs(f.sourcePosition - f.targetPosition);
-    f.setState(this, new DiagonalState(value));
     return Collections.singletonList(new FeatureValue<String>(FEATURE_NAME, value));
-  }
-  
-  private static class DiagonalState extends FeaturizerState {
-
-    private final int distance;
-
-    public DiagonalState(int distortion) {
-      this.distance = distortion;
-    }
-    
-    @Override
-    public boolean equals(Object other) {
-      if (this == other) {
-        return true;
-      } else if ( ! (other instanceof DiagonalState)) {
-        return false;
-      } else {
-        DiagonalState o = (DiagonalState) other;
-        return this.distance == o.distance;
-      }
-    }
-
-    @Override
-    public int hashCode() {
-      return distance;
-    }
-  }
+  }  
 }
