@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -197,6 +198,31 @@ public final class OnlineTuner {
     }
   }
 
+  /**
+   * Load additional feature values from plain text file.
+   * Features are only updated if not already present in weight vector.
+   * 
+   * @param additionalFeatureWeights
+   */
+  private void addAdditionalFeatureWeights(String additionalFeatureWeightsFile) {
+    try {
+      Counter<String> weights = IOTools.readWeightsPlain(additionalFeatureWeightsFile);
+      System.err.println("read weights: ");
+      for(Entry<String,Double> entry : weights.entrySet()) {
+        if(!wtsAccumulator.containsKey(entry.getKey())) {
+          wtsAccumulator.setCount(entry.getKey(), entry.getValue());
+          System.err.println("setting feature: " + entry.getKey() + " = " + entry.getValue());
+        }
+        else System.err.println("skipping feature: " + entry.getKey());
+      }
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+      logger.fatal("Could not load additional weights from : {}", additionalFeatureWeightsFile);
+    }
+    
+  }
+  
   /**
    * Simulate training of a foreground model.
    * 
@@ -945,6 +971,7 @@ public final class OnlineTuner {
     optionMap.put("niw", 1);    
     optionMap.put("sb", 0);
     optionMap.put("pt", 1);
+    optionMap.put("ifw", 1);
     return optionMap;
   }
 
@@ -981,7 +1008,8 @@ public final class OnlineTuner {
       .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
       .append("   -niw       : normalize the initial weights file (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ").append(nl)
-      .append("   -pt path   : Prefix tuning file. Only one reference allowed.");
+      .append("   -pt path   : Prefix tuning file. Only one reference allowed.")
+      .append("   -ifw path  : Additional initial feature weights file in plain text. Values are only used if feature is not already present in the weight vector.");
     
     return sb.toString();
   }
@@ -1020,6 +1048,7 @@ public final class OnlineTuner {
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
     boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", false);
     String prefixTuningFile = opts.getProperty("pt", null);
+    String additionalInitialFeatureWeights = opts.getProperty("ifw", null);
     
     // Check option combinations
     if (prefixTuningFile != null && refStr != null) {
@@ -1050,6 +1079,7 @@ public final class OnlineTuner {
       OnlineTuner tuner = new OnlineTuner(srcFile, tgtFile, phrasalIniFile, wtsInitialFile, 
           optimizerAlg, optimizerFlags, uniformStartWeights, randomizeStartingWeights,
           expectedNumFeatures, wrapBoundary, experimentName, normalizeInitialWeights);
+      if(additionalInitialFeatureWeights != null) tuner.addAdditionalFeatureWeights(additionalInitialFeatureWeights);
       if (refStr != null) tuner.loadReferences(refStr, wrapBoundary);
       if (prefixTuningFile != null) tuner.loadPrefixFile(prefixTuningFile);
       if (pseudoRefOptions != null) tuner.computePseudoReferences(pseudoRefOptions, tmpPath);

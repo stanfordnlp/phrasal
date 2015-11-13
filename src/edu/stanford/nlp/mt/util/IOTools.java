@@ -362,6 +362,9 @@ public final class IOTools {
     }
     return wts;
   }
+  
+  
+  
 
   /**
    * Read weights from a file.
@@ -373,6 +376,30 @@ public final class IOTools {
   public static Counter<String> readWeights(String filename) {
     return readWeights(filename, null);
   }
+  
+  /**
+   * Read weights from a plain text file.
+   * 
+   * @param filename
+   * @return
+   * @throws IOException
+   */
+  public static Counter<String> readWeightsPlain(String filename) throws IOException {
+    LineNumberReader reader = new LineNumberReader(new FileReader(filename));
+    
+    Counter<String> wts = new ClassicCounter<String>();
+    for (String line; (line = reader.readLine()) != null;) {
+      String[] input = line.split(" ");
+      if(input.length != 2) {
+        reader.close();
+        throw new IOException("Illegal input in weight file " + filename + ": " + line);
+      }
+      wts.setCount(input[0],Double.parseDouble(input[1]));
+    }
+    reader.close();
+    return wts;
+  }
+  
 
   /**
    * Write weights to a file. Supports both binary and text formats.
