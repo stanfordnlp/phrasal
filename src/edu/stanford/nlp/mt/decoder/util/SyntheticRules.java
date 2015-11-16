@@ -46,7 +46,8 @@ public final class SyntheticRules {
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
   private static final int GARBAGE_CNT_THRESHOLD = 100000;
-  private static final int SIMILARITY_THRESHOLD = 0;
+  private static final double SIMILARITY_THRESHOLD = -1.8;
+  private static final double TOTAL_SIMILARITY_THRESHOLD = -9;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
@@ -605,9 +606,10 @@ public final class SyntheticRules {
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           String src = a.f().get(j).toString();
           double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
+          if(q < SIMILARITY_THRESHOLD) continue;
           int posDiff = Math.abs(i - j);
           q +=  Math.log(distortionParam(posDiff, sz-1));
-          if (q > max) {
+          if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
             System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
@@ -718,9 +720,10 @@ public final class SyntheticRules {
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
           double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
+          if(q < SIMILARITY_THRESHOLD) continue;
           int posDiff = Math.abs(i - j);
           q += Math.log(distortionParam(posDiff, sz-1));
-          if (q > max) {
+          if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
             System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
