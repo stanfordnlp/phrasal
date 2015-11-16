@@ -45,7 +45,7 @@ public final class SyntheticRules {
   private static final double SYNTHETIC_PROB = 1e-5;
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
-  private static final int GARBAGE_CNT_THRESHOLD = 100000;
+  private static final int GARBAGE_CNT_THRESHOLD = 10000;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
