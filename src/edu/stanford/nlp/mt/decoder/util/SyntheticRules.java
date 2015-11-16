@@ -45,6 +45,7 @@ public final class SyntheticRules {
   private static final double SYNTHETIC_PROB = 1e-5;
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
+  private static final int GARBAGE_CNT_THRESHOLD = 100000;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
@@ -539,7 +540,7 @@ public final class SyntheticRules {
           }
         }
       }
-
+      
       if (argmax < 0) {
         //System.err.println("align: no match found for " + tgtToken);
         
@@ -548,32 +549,41 @@ public final class SyntheticRules {
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           final IString srcToken = (IString) a.f().get(j);
           int cnt_ef = 0;
+          if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
+          
+          if(cnt_f[j] >= GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
+          
           //target compounds
           for(int k = 4; k < tgtSize - 3 ; ++k) {
             //count prefix matches
             IString prefix = new IString(tgtToken.subSequence(0, k).toString());
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, prefix)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, prefix)).sum();
             //count suffix matches, both lowercase and capitalized
             IString suffix = new IString(tgtToken.subSequence(tgtSize - k, tgtSize).toString());
             IString suffixCap =  new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString()));
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
-            if(!suffix.equals(suffixCap)) cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
+            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
           }
           //source compounds
           int srcSize = srcToken.length(); 
           for(int k = 4; k < srcSize - 3; ++k) {
             //count prefix matches
             IString prefix = new IString(srcToken.subSequence(0, k).toString());
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
             //count suffix matches, both lowercase and capitalized
             IString suffix = new IString(srcToken.subSequence(srcSize - k, srcSize).toString());
             IString suffixCap =  new IString(StringUtils.capitalize(srcToken.subSequence(srcSize - k, srcSize).toString()));
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffix, tgtToken)).sum();
-            if(!suffix.equals(suffixCap)) cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffixCap, tgtToken)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffix, tgtToken)).sum();
+            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffixCap, tgtToken)).sum();
           }
           
           if (cnt_ef == 0) continue;
-          if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
           int marginal = cnt_f[j] + cnt_ef;
           double tEF = Math.log(cnt_ef) - Math.log(marginal);
           int posDiff = Math.abs(i - j);
@@ -599,6 +609,7 @@ public final class SyntheticRules {
           if (q > max) {
             max = q;
             argmax = j;
+            System.err.println("align found lex similarity: " + src + " " + tgt);
           }
         }
       }
@@ -655,23 +666,28 @@ public final class SyntheticRules {
           for(int k = 4; k < tgtSize - 3; ++k) {
             //count prefix matches
             IString prefix = new IString(tgtToken.subSequence(0, k).toString());
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, prefix)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, prefix)).sum();
             //count suffix matches, both lowercase and capitalized
             IString suffix = new IString(tgtToken.subSequence(tgtSize - k, tgtSize).toString());
             IString suffixCap =  new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString()));
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
-            if(!suffix.equals(suffixCap)) cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
+            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
           }
           //source compounds
           for(int k = 4; k < srcSize - 3 ; ++k) {
             //count prefix matches
             IString prefix = new IString(srcToken.subSequence(0, k).toString());
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
             //count suffix matches, both lowercase and capitalized
             IString suffix = new IString(srcToken.subSequence(srcSize - k , srcSize).toString());
             IString suffixCap =  new IString(StringUtils.capitalize(srcToken.subSequence(srcSize - k, srcSize).toString()));
-            cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffix, tgtToken)).sum();
-            if(!suffix.equals(suffixCap)) cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffixCap, tgtToken)).sum();
+            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffix, tgtToken)).sum();
+            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
+              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffixCap, tgtToken)).sum();
           }
           
           if (cnt_ef == 0) continue;
@@ -703,6 +719,7 @@ public final class SyntheticRules {
           if (q > max) {
             max = q;
             argmax = j;
+            System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt);
           }
         }
       }
