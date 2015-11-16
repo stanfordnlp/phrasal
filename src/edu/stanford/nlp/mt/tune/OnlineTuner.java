@@ -38,6 +38,8 @@ import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.train.DynamicTMBuilder;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
+import edu.stanford.nlp.mt.train.WordAlignment;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -229,9 +231,8 @@ public final class OnlineTuner {
    * @param trainLocalTM
    * @param faDistortionLimit
    */
-  private void trainLocalTM(boolean trainLocalTM, int faDistortionLimit) { 
+  private void trainLocalTM(boolean trainLocalTM) { 
     this.localTMTraining = trainLocalTM;
-    this.faDistortionLimit = faDistortionLimit; 
   }
   
   /**
@@ -393,17 +394,17 @@ public final class OnlineTuner {
     public final int inputId;
     public final List<List<RichTranslation<IString, String>>> nbestLists;
     public final int[] translationIds;
-    List<RichTranslation<IString, String>> forcedAlignment;
+    List<SymmetricalWordAlignment> wordAlignments;
     List<RichTranslation<IString, String>> prefixDecodingOutput;
     public ProcessorOutput(Counter<String> gradient, 
         int inputId, 
-        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds, List<RichTranslation<IString, String>> forcedAlignment,
+        List<List<RichTranslation<IString, String>>> nbestLists, int[] translationIds, List<SymmetricalWordAlignment> wordAlignments,
         List<RichTranslation<IString, String>> prefixDecodingOutput) {
       this.gradient = gradient;
       this.inputId = inputId;
       this.nbestLists = nbestLists;
       this.translationIds = translationIds;
-      this.forcedAlignment = forcedAlignment;
+      this.wordAlignments = wordAlignments;
       this.prefixDecodingOutput = prefixDecodingOutput;
     }
   }
@@ -436,8 +437,8 @@ public final class OnlineTuner {
             
       final int batchSize = input.translationIds.length;
       List<List<RichTranslation<IString,String>>> nbestLists = new ArrayList<>(input.translationIds.length);
-      List<RichTranslation<IString,String>> forcedAlignments = input.createForcedAlignment ? 
-                                                               new ArrayList<>(input.translationIds.length) : null;
+      List<SymmetricalWordAlignment> wordAlignments = input.createForcedAlignment ? 
+                                                      new ArrayList<>(input.translationIds.length) : null;
       List<RichTranslation<IString,String>> prefixDecodingResult = input.additionalPrefixDecoding ? 
                                                                    new ArrayList<>(input.translationIds.length) : null;
       for (int i = 0; i < batchSize; ++i) {
@@ -480,21 +481,14 @@ public final class OnlineTuner {
           // now compute forced alignment
           inputProperties.put(InputProperty.WordAlignment, true);
           //inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
-          List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
-              threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
+          SymmetricalWordAlignment wordAlignment = decoder.wordAlign(input.source.get(i), sourceId, 
+              threadId, input.references.get(i).get(0), inputProperties);
           
-          if(!faNbestList.isEmpty()){
-            forcedAlignments.add(faNbestList.get(0));
-            
-            logger.info("Source: {}", faNbestList.get(0).source.toString());
-            logger.info("Target: {}", faNbestList.get(0).translation.toString());
-            logger.info("Alignment: {}", faNbestList.get(0).alignmentString());
-          }
-          else {
-            logger.info("No Alignment");
-            logger.info("Source: {}", input.source.get(i).toString());
-            logger.info("Target prefix: {}", input.references.get(i).toString());
-          }
+          wordAlignments.add(wordAlignment);
+          
+          logger.info("Source: {}", wordAlignment.f().toString());
+          logger.info("Target: {}", wordAlignment.e().toString());
+          logger.info("Alignment: {}", wordAlignment.toString());
           
         }
         nbestLists.add(nbestList);
@@ -518,7 +512,7 @@ public final class OnlineTuner {
            }
         } 
       }
-      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds, forcedAlignments, prefixDecodingResult);
+      return new ProcessorOutput(gradient, input.inputId, nbestLists, input.translationIds, wordAlignments, prefixDecodingResult);
     }
 
     @Override
@@ -579,10 +573,10 @@ public final class OnlineTuner {
               nbestLists.put(sourceId, Sequences.emptySequence());
             }
           }
-          if(localTmTrainingData != null && result.forcedAlignment != null && !result.forcedAlignment.isEmpty()) {
-            RichTranslation<IString, String> fa = result.forcedAlignment.get(i);
-            if (fa != null) {
-              localTmTrainingData.add(fa.alignmentGrid().f().toString(), fa.translation.toString(), fa.alignmentString());
+          if(localTmTrainingData != null && result.wordAlignments != null && !result.wordAlignments.isEmpty()) {
+            SymmetricalWordAlignment alignment = result.wordAlignments.get(i);
+            if (alignment != null) {
+              localTmTrainingData.add(alignment.f().toString(), alignment.e().toString(), alignment.toString());
             } else {
               logger.error("No forced alignment for input {}", result.inputId);
             }
@@ -967,7 +961,7 @@ public final class OnlineTuner {
     optionMap.put("rand", 1);
     optionMap.put("localTM", 0);
     optionMap.put("seq", 0);
-    optionMap.put("faDistLimit", 1);    
+    //optionMap.put("faDistLimit", 1);    
     optionMap.put("niw", 1);    
     optionMap.put("sb", 0);
     optionMap.put("pt", 1);
@@ -1005,7 +999,7 @@ public final class OnlineTuner {
       .append("   -rand      : Randomize dev set before tuning (default: true)").append(nl)
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
       .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
-      .append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
+      //.append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
       .append("   -niw       : normalize the initial weights file (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ").append(nl)
       .append("   -pt path   : Prefix tuning file. Only one reference allowed.")
@@ -1044,7 +1038,7 @@ public final class OnlineTuner {
     boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
     boolean outputPrefixDecoding = PropertiesUtils.getBool(opts, "pd", false);
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
-    int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
+    //int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
     boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", false);
     String prefixTuningFile = opts.getProperty("pt", null);
@@ -1090,7 +1084,7 @@ public final class OnlineTuner {
       tuner.outputSingleBest(outputSingleBest);
       tuner.outputPrefixDecoding(outputPrefixDecoding);
       tuner.enforceStrictlySequential(enforceStrictlySequential);
-      tuner.trainLocalTM(trainLocalTM, faDistortionLimit);
+      tuner.trainLocalTM(trainLocalTM);
       tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
 
       final double elapsedTime = TimingUtils.elapsedSeconds(startTime);

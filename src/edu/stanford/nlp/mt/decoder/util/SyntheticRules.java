@@ -246,7 +246,8 @@ public final class SyntheticRules {
     align(tmList, align);
 
     // Symmetrization
-    final SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
+    final SymmetricalWordAlignment sym = bidirAlign((Sequence<IString>) sourceSequence, 
+        (Sequence<IString>) prefix, tmList);
 
     // WSGDEBUG
     if (printDebug) {
