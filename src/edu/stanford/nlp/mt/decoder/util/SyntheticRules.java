@@ -45,7 +45,7 @@ public final class SyntheticRules {
   private static final double SYNTHETIC_PROB = 1e-5;
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
-  private static final int GARBAGE_CNT_THRESHOLD = 10000;
+  private static final int GARBAGE_CNT_THRESHOLD = 100000;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
@@ -671,15 +671,16 @@ public final class SyntheticRules {
             //count suffix matches, both lowercase and capitalized
             IString suffix = new IString(tgtToken.subSequence(tgtSize - k, tgtSize).toString());
             IString suffixCap =  new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString()));
+            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
               cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
-            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
+            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
               cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
           }
           //source compounds
           for(int k = 4; k < srcSize - 3 ; ++k) {
             //count prefix matches
             IString prefix = new IString(srcToken.subSequence(0, k).toString());
-            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
+            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
               cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
             //count suffix matches, both lowercase and capitalized
             IString suffix = new IString(srcToken.subSequence(srcSize - k , srcSize).toString());
