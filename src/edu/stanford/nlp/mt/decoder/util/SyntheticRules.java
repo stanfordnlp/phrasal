@@ -46,6 +46,7 @@ public final class SyntheticRules {
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
   private static final int GARBAGE_CNT_THRESHOLD = 100000;
+  private static final int SIMILARITY_THRESHOLD = 0;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
@@ -603,13 +604,13 @@ public final class SyntheticRules {
         String tgt = a.e().get(i).toString();
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           String src = a.f().get(j).toString();
-          double q = SimilarityMeasures.jaccard(tgt, src);
+          double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
           int posDiff = Math.abs(i - j);
-          q *= distortionParam(posDiff, sz-1);
+          q +=  Math.log(distortionParam(posDiff, sz-1));
           if (q > max) {
             max = q;
             argmax = j;
-            System.err.println("align found lex similarity: " + src + " " + tgt + " " + q);
+            System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
           }
         }
       }
@@ -716,13 +717,13 @@ public final class SyntheticRules {
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
-          double q = SimilarityMeasures.jaccard(tgt, src);
+          double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
           int posDiff = Math.abs(i - j);
-          q *= distortionParam(posDiff, sz-1);
+          q += Math.log(distortionParam(posDiff, sz-1));
           if (q > max) {
             max = q;
             argmax = j;
-            System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q);
+            System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
           }
         }
       }
