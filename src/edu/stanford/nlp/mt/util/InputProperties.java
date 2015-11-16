@@ -80,6 +80,9 @@ public class InputProperties extends HashMap<InputProperty, Object> {
         } else if (inputProperty == InputProperty.RuleFeatureIndex) {
           inputProperties.put(inputProperty, Integer.valueOf(value));
           
+        } else if (inputProperty == InputProperty.WordAlignment) {
+          inputProperties.put(inputProperty, Boolean.valueOf(value));
+          
         } else {
           // Leave as a string
           inputProperties.put(inputProperty, value);

@@ -2,6 +2,8 @@ package edu.stanford.nlp.mt.util;
 
 import java.io.Serializable;
 
+import edu.stanford.nlp.util.StringUtils;
+
 /**
  * Represents a String with a corresponding integer ID. Keeps a static index of
  * all the Strings, indexed by ID.
@@ -114,4 +116,19 @@ public class IString implements CharSequence, Serializable, Comparable<IString> 
     return index == null ? Vocabulary.systemGet(id).compareTo(Vocabulary.systemGet(o.id)) :
       index.get(id).compareTo(index.get(o.id));
   }
+  
+  
+  /**
+   * Get the string in lower case.
+   * 
+   * @return 
+   */
+  public IString toLowerCase() {
+    String s = toString();
+    String lc = s.toLowerCase();
+    if(s.equals(lc)) return this;
+    
+    return new IString(lc, index);
+  }
+  
 }

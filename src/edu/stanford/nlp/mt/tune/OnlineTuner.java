@@ -111,7 +111,7 @@ public final class OnlineTuner {
 
   // Train a local translation model.
   private boolean localTMTraining;
-  private int faDistortionLimit = 15;
+  //private int faDistortionLimit = 15;
   
   // minimum number of times we need to see a feature 
   // before learning a decoding model weight for it 
@@ -478,8 +478,8 @@ public final class OnlineTuner {
             
         if(input.createForcedAlignment) {          
           // now compute forced alignment
-          inputProperties.put(InputProperty.TargetPrefix, true);
-          inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
+          inputProperties.put(InputProperty.WordAlignment, true);
+          //inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
           List<RichTranslation<IString, String>> faNbestList = decoder.decode(input.source.get(i), sourceId, 
               threadId, decoder.getNbestListSize(), input.references.get(i), inputProperties);
           
