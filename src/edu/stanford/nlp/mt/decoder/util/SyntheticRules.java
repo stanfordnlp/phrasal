@@ -486,7 +486,18 @@ public final class SyntheticRules {
     align(tmList, align);
 
     // Symmetrization
-    return AlignmentSymmetrizer.symmetrize(align, sym_heuristic);
+    SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, sym_heuristic);
+    // WSGDEBUG
+    boolean printDebug = true;
+    if (printDebug) {
+      System.err.printf("src: %s%n", sourceSequence);
+      System.err.printf("tgt: %s%n", targetSequence);
+      System.err.printf("f2e: %s%n", align.toString(false));
+      System.err.printf("e2f: %s%n", align.toString(true));
+      System.err.printf("sym: %s%n", sym.toString());
+    }
+
+    return sym;
 
     // WSGDEBUG
   }
@@ -508,8 +519,12 @@ public final class SyntheticRules {
         final IString srcTokenLc = srcToken.toLowerCase();
         if (srcTokenLc.equals(tgtTokenLc)) {
           // Exact match
-          max = 0.0;
-          argmax = j;
+          int posDiff = Math.abs(i - j);
+          double tEF = Math.log(distortionParam(posDiff, sz-1));
+          if (tEF > max) {
+            max = tEF;
+            argmax = j;
+          }
         } else {
           if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
           int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
@@ -520,13 +535,13 @@ public final class SyntheticRules {
           if (tEF > max) {
             max = tEF;
             argmax = j;
-            System.err.println("align found match: " + srcToken + " " + tgtToken);
+            //System.err.println("align found match: " + srcToken + " " + tgtToken);
           }
         }
       }
 
       if (argmax < 0) {
-        System.err.println("align: no match found for " + tgtToken);
+        //System.err.println("align: no match found for " + tgtToken);
         
         // check for compound words
         int tgtSize = tgtToken.length(); 
@@ -607,8 +622,12 @@ public final class SyntheticRules {
       for (int j = 0, sz = a.eSize(); j < sz; ++j) {
         final IString tgtToken = (IString) a.e().get(j);
         if (srcToken.equals(tgtToken)) {
-          max = 0.0;
-          argmax = j;
+          int posDiff = Math.abs(i - j);
+          double tFE = Math.log(distortionParam(posDiff, sz-1));
+          if (tFE > max) {
+            max = tFE;
+            argmax = j;
+          }
         } else {
           if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
           int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
@@ -619,13 +638,13 @@ public final class SyntheticRules {
           if (tFE > max) {
             max = tFE;
             argmax = j;
-            System.err.println("invAlign found match: " + srcToken + " " + tgtToken);
+            //System.err.println("invAlign found match: " + srcToken + " " + tgtToken);
           }
         }
       }
       
       if (argmax < 0) {
-        System.err.println("invAlign: no match found for " + srcToken);
+        //System.err.println("invAlign: no match found for " + srcToken);
         // check for compound words
         int srcSize = srcToken.length(); 
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
