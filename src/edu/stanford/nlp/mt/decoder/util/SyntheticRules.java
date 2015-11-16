@@ -45,7 +45,7 @@ public final class SyntheticRules {
   private static final double SYNTHETIC_PROB = 1e-5;
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
-  private static final int GARBAGE_CNT_THRESHOLD = 10000;
+  private static final int GARBAGE_CNT_THRESHOLD = 100000;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
@@ -660,6 +660,9 @@ public final class SyntheticRules {
         int srcSize = srcToken.length(); 
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
           final IString tgtToken = (IString) a.e().get(j);
+          if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
+          if(cnt_e[j] >= GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
+          
           int cnt_ef = 0;
           //target compounds
           int tgtSize = tgtToken.length(); 
@@ -692,7 +695,6 @@ public final class SyntheticRules {
           }
           
           if (cnt_ef == 0) continue;
-          if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
           int marginal = cnt_e[j] + cnt_ef;
           double tFE = Math.log(cnt_ef) - Math.log(marginal);
           int posDiff = Math.abs(i - j);
