@@ -609,7 +609,7 @@ public final class SyntheticRules {
           if (q > max) {
             max = q;
             argmax = j;
-            System.err.println("align found lex similarity: " + src + " " + tgt);
+            System.err.println("align found lex similarity: " + src + " " + tgt + " " + q);
           }
         }
       }
@@ -722,7 +722,7 @@ public final class SyntheticRules {
           if (q > max) {
             max = q;
             argmax = j;
-            System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt);
+            System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q);
           }
         }
       }
