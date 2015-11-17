@@ -227,7 +227,7 @@ public final class SyntheticRules {
     }
 
     // WSGDEBUG
-    boolean printDebug = false; // sourceInputId == 1022;
+    //boolean printDebug = false; // sourceInputId == 1022;
     if (printDebug) {
       System.err.printf("DEBUG %d%n", sourceInputId);
     }
@@ -240,16 +240,6 @@ public final class SyntheticRules {
     }
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
 
-    final GIZAWordAlignment align = new GIZAWordAlignment((Sequence<IString>) sourceSequence, 
-        (Sequence<IString>) prefix);
-
-    // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
-    // need to change for languages with different orthographies.
-    alignInverse(tmList, align);
-
-    // f2e align with Cooc table and lexical similarity. Includes deletion rules.
-    align(tmList, align);
-
     // Symmetrization
     final SymmetricalWordAlignment sym = bidirAlign((Sequence<IString>) sourceSequence, 
         (Sequence<IString>) prefix, tmList);
@@ -258,8 +248,6 @@ public final class SyntheticRules {
     if (printDebug) {
       System.err.printf("src: %s%n", sourceSequence);
       System.err.printf("tgt: %s%n", prefix);
-      System.err.printf("f2e: %s%n", align.toString(false));
-      System.err.printf("e2f: %s%n", align.toString(true));
       System.err.printf("sym: %s%n", sym.toString());
     }
 
@@ -472,9 +460,7 @@ public final class SyntheticRules {
   
   public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
       Sequence<IString> targetSequence, List<DynamicTranslationModel<FV>> tmList) {
-    
     return bidirAlign(sourceSequence, targetSequence, tmList, SYM_HEURISTIC);
-  
   }
   
   public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
@@ -493,7 +479,6 @@ public final class SyntheticRules {
     // Symmetrization
     SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, sym_heuristic);
     // WSGDEBUG
-    boolean printDebug = true;
     if (printDebug) {
       System.err.printf("src: %s%n", sourceSequence);
       System.err.printf("tgt: %s%n", targetSequence);
