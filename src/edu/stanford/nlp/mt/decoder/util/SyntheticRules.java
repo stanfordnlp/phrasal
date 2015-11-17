@@ -54,7 +54,7 @@ public final class SyntheticRules {
   private static final int MAX_SYNTHETIC_ORDER = 3;
   private static final int MAX_TARGET_ORDER = 4;
   
-  private static final boolean printDebug = true;
+  private static final boolean printDebug = false;
 
   private SyntheticRules() {}
 
@@ -227,7 +227,7 @@ public final class SyntheticRules {
     }
 
     // WSGDEBUG
-    boolean printDebug = true; // sourceInputId == 1022;
+    boolean printDebug = false; // sourceInputId == 1022;
     if (printDebug) {
       System.err.printf("DEBUG %d%n", sourceInputId);
     }
