@@ -579,7 +579,7 @@ public final class SyntheticRules {
         // TODO(spenceg) Only works for orthographically similar languages. 
         String tgt = a.e().get(i).toString();
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
-          if(srcGarbageCollection(a.f().get(j), tmList)) continue;
+          if(cnt_f[j] > GARBAGE_CNT_THRESHOLD) continue; 
           
           String src = a.f().get(j).toString();
           double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
@@ -590,7 +590,7 @@ public final class SyntheticRules {
             max = q;
             argmax = j;
             if(printDebug)
-              System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
+              System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_f[j]);
           }
         }
       }
@@ -673,7 +673,7 @@ public final class SyntheticRules {
         // Iterate over everything in the prefix
         // TODO(spenceg) Only works for orthographically similar languages.
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
-          if(tgtGarbageCollection(a.e().get(j), tmList)) continue;
+          if(cnt_e[j] > GARBAGE_CNT_THRESHOLD) continue;
           
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
@@ -685,7 +685,7 @@ public final class SyntheticRules {
             max = q;
             argmax = j;
             if(printDebug)
-              System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
+              System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_e[j]);
           }
         }
       }
