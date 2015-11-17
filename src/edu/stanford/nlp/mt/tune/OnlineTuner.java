@@ -479,7 +479,6 @@ public final class OnlineTuner {
             
         if(input.createForcedAlignment) {          
           // now compute forced alignment
-          inputProperties.put(InputProperty.WordAlignment, true);
           //inputProperties.put(InputProperty.DistortionLimit, faDistortionLimit);
           SymmetricalWordAlignment wordAlignment = decoder.wordAlign(input.source.get(i), sourceId, 
               threadId, input.references.get(i).get(0), inputProperties);

@@ -52,10 +52,6 @@ public enum InputProperty {
   
   // in tuning, decode with these prefix lengths for evaluation
   // Type: int[]
-  PrefixLengths,
-  
-  // Only perform word alignment
-  // Type: boolean
-  WordAlignment
+  PrefixLengths
   
 }
