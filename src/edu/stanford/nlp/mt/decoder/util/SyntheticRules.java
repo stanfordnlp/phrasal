@@ -704,10 +704,10 @@ public final class SyntheticRules {
     String src = srcToken.toString();
     String tgt = tgtToken.toString();
     return ( (src.equals(".") || src.equals(",") || src.equals("!") ||  src.equals("?"))
-             && !(tgt.equals(".") || tgt.equals(",") || tgt.equals("!") || tgt.equals("?"))
+             && !(tgt.equals(src))
            ) || (
              (tgt.equals(".") || tgt.equals(",") || tgt.equals("!") ||  tgt.equals("?"))
-             && !(src.equals(".") || src.equals(",") || src.equals("!") || src.equals("?")) );
+             && !(src.equals(tgt)) );
 
   }
 
