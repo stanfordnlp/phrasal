@@ -53,6 +53,8 @@ public final class SyntheticRules {
 
   private static final int MAX_SYNTHETIC_ORDER = 3;
   private static final int MAX_TARGET_ORDER = 4;
+  
+  private static final boolean printDebug = true;
 
   private SyntheticRules() {}
 
@@ -544,46 +546,18 @@ public final class SyntheticRules {
       }
       
       if (argmax < 0) {
-        //System.err.println("align: no match found for " + tgtToken);
-        
         // check for compound words
-        int tgtSize = tgtToken.length(); 
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           final IString srcToken = (IString) a.f().get(j);
           int cnt_ef = 0;
           if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
           
-          if(cnt_f[j] >= GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
+          if(cnt_f[j] > GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
           
           //target compounds
-          for(int k = 4; k < tgtSize - 3 ; ++k) {
-            //count prefix matches
-            IString prefix = new IString(tgtToken.subSequence(0, k).toString());
-            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, prefix)).sum();
-            //count suffix matches, both lowercase and capitalized
-            IString suffix = new IString(tgtToken.subSequence(tgtSize - k, tgtSize).toString());
-            IString suffixCap =  new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString()));
-            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
-            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
-          }
+          cnt_ef += tgtCompoundCnt(srcToken, tgtToken, tmList);
           //source compounds
-          int srcSize = srcToken.length(); 
-          for(int k = 4; k < srcSize - 3; ++k) {
-            //count prefix matches
-            IString prefix = new IString(srcToken.subSequence(0, k).toString());
-            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
-            //count suffix matches, both lowercase and capitalized
-            IString suffix = new IString(srcToken.subSequence(srcSize - k, srcSize).toString());
-            IString suffixCap =  new IString(StringUtils.capitalize(srcToken.subSequence(srcSize - k, srcSize).toString()));
-            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffix, tgtToken)).sum();
-            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffixCap, tgtToken)).sum();
-          }
+          cnt_ef += srcCompoundCnt(srcToken, tgtToken, tmList);
           
           if (cnt_ef == 0) continue;
           int marginal = cnt_f[j] + cnt_ef;
@@ -593,7 +567,8 @@ public final class SyntheticRules {
           if (tEF > max) {
             max = tEF;
             argmax = j;
-            System.err.println("align found compound: " + srcToken + " " + tgtToken);
+            if(printDebug)
+              System.err.println("align found compound: " + srcToken + " " + tgtToken);
           }
         }
       }
@@ -604,6 +579,8 @@ public final class SyntheticRules {
         // TODO(spenceg) Only works for orthographically similar languages. 
         String tgt = a.e().get(i).toString();
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
+          if(srcGarbageCollection(a.f().get(j), tmList)) continue;
+          
           String src = a.f().get(j).toString();
           double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
           if(q < SIMILARITY_THRESHOLD) continue;
@@ -612,7 +589,8 @@ public final class SyntheticRules {
           if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
-            System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
+            if(printDebug)
+              System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
           }
         }
       }
@@ -620,6 +598,9 @@ public final class SyntheticRules {
       // Populate alignment
       if (argmax >= 0) {
         a.addf2e(argmax, i);
+      }
+      else if(printDebug) {
+        System.err.println("align: no alignment found for tgt token: " + tgtToken);
       }
     }
   }
@@ -658,54 +639,29 @@ public final class SyntheticRules {
       }
       
       if (argmax < 0) {
-        //System.err.println("invAlign: no match found for " + srcToken);
         // check for compound words
-        int srcSize = srcToken.length(); 
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
           final IString tgtToken = (IString) a.e().get(j);
           if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
-          if(cnt_e[j] >= GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
+          if(cnt_e[j] > GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
           
-          int cnt_ef = 0;
+          int cnt_fe = 0;
           //target compounds
-          int tgtSize = tgtToken.length(); 
-          for(int k = 4; k < tgtSize - 3; ++k) {
-            //count prefix matches
-            IString prefix = new IString(tgtToken.subSequence(0, k).toString());
-            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, prefix)).sum();
-            //count suffix matches, both lowercase and capitalized
-            IString suffix = new IString(tgtToken.subSequence(tgtSize - k, tgtSize).toString());
-            IString suffixCap =  new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString()));
-            if(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffix)).sum();
-            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getTargetLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, suffixCap)).sum();
-          }
+          cnt_fe += tgtCompoundCnt(srcToken, tgtToken, tmList);
+
           //source compounds
-          for(int k = 4; k < srcSize - 3 ; ++k) {
-            //count prefix matches
-            IString prefix = new IString(srcToken.subSequence(0, k).toString());
-            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(prefix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(prefix, tgtToken)).sum();
-            //count suffix matches, both lowercase and capitalized
-            IString suffix = new IString(srcToken.subSequence(srcSize - k , srcSize).toString());
-            IString suffixCap =  new IString(StringUtils.capitalize(srcToken.subSequence(srcSize - k, srcSize).toString()));
-            if(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffix)).sum() < GARBAGE_CNT_THRESHOLD)
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffix, tgtToken)).sum();
-            if(!suffix.equals(suffixCap) && tmList.stream().mapToInt(tm -> tm.getSourceLexCount(suffixCap)).sum() < GARBAGE_CNT_THRESHOLD) 
-              cnt_ef += tmList.stream().mapToInt(tm -> tm.getJointLexCount(suffixCap, tgtToken)).sum();
-          }
+          cnt_fe += srcCompoundCnt(srcToken, tgtToken, tmList);
           
-          if (cnt_ef == 0) continue;
-          int marginal = cnt_e[j] + cnt_ef;
-          double tFE = Math.log(cnt_ef) - Math.log(marginal);
+          if (cnt_fe == 0) continue;
+          int marginal = cnt_e[j] + cnt_fe;
+          double tFE = Math.log(cnt_fe) - Math.log(marginal);
           int posDiff = Math.abs(i - j);
           tFE += Math.log(distortionParam(posDiff, sz-1));
           if (tFE > max) {
-            System.err.println("invAlign found compound: " + srcToken + " " + tgtToken);
             max = tFE;
             argmax = j;
+            if(printDebug)
+              System.err.println("invAlign found compound: " + srcToken + " " + tgtToken);
           }
         }
       }
@@ -717,6 +673,8 @@ public final class SyntheticRules {
         // Iterate over everything in the prefix
         // TODO(spenceg) Only works for orthographically similar languages.
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
+          if(tgtGarbageCollection(a.e().get(j), tmList)) continue;
+          
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
           double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
@@ -726,7 +684,8 @@ public final class SyntheticRules {
           if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
-            System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
+            if(printDebug)
+              System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)));
           }
         }
       }
@@ -734,6 +693,9 @@ public final class SyntheticRules {
       // Populate alignment
       if (argmax >= 0) {
         a.adde2f(i, argmax);
+      }
+      else if(printDebug) {
+        System.err.println("invAlign: no alignment found for src token: " + srcToken);
       }
     }
   }
@@ -748,4 +710,60 @@ public final class SyntheticRules {
              && !(src.equals(".") || src.equals(",") || src.equals("!") || src.equals("?")) );
 
   }
+
+
+  private static <TK,FV> boolean srcGarbageCollection(IString srcToken, List<DynamicTranslationModel<FV>> tmList) { 
+    return tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum() > GARBAGE_CNT_THRESHOLD;
+  } 
+  
+  private static <TK,FV> boolean tgtGarbageCollection(IString tgtToken, List<DynamicTranslationModel<FV>> tmList) { 
+    return tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum() > GARBAGE_CNT_THRESHOLD;
+  } 
+  
+  private static <TK,FV> int srcCompoundCnt(IString srcToken, IString tgtToken, List<DynamicTranslationModel<FV>> tmList) {
+    int srcSize = srcToken.length(); 
+    int cnt = 0;
+    // each compound should have at least 4 characters
+    for(int k = 4; k < srcSize - 3 ; ++k) {
+      IString[] preSuffixes = new IString[3];
+      preSuffixes[0] = new IString(srcToken.subSequence(0, k).toString()); // prefix
+      preSuffixes[1] = new IString(srcToken.subSequence(srcSize - k , srcSize).toString()); // suffix
+      preSuffixes[2] = new IString(StringUtils.capitalize(srcToken.subSequence(srcSize - k, srcSize).toString())); // capitalized suffix
+      
+      int mMax = preSuffixes[1] == preSuffixes[2] ? 2 : 3;
+      
+      for(int m = 0; m < mMax; ++m) {
+        IString src = preSuffixes[m];
+        if(!srcGarbageCollection(src, tmList)) {
+          cnt += tmList.stream().mapToInt(tm -> tm.getJointLexCount(src, tgtToken)).sum();
+        }
+      }
+    }
+    return cnt;
+  }
+  
+  private static <TK,FV> int tgtCompoundCnt(IString srcToken, IString tgtToken, List<DynamicTranslationModel<FV>> tmList) {
+    int tgtSize = tgtToken.length(); 
+    int cnt = 0;
+    // each compound should have at least 4 characters
+    for(int k = 4; k < tgtSize - 3 ; ++k) {
+      IString[] preSuffixes = new IString[3];
+      preSuffixes[0] = new IString(tgtToken.subSequence(0, k).toString()); // prefix
+      preSuffixes[1] = new IString(tgtToken.subSequence(tgtSize - k , tgtSize).toString()); // suffix
+      preSuffixes[2] = new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString())); // capitalized suffix
+      
+      int mMax = preSuffixes[1] == preSuffixes[2] ? 2 : 3;
+      
+      for(int m = 0; m < mMax; ++m) {
+        IString tgt = preSuffixes[m];
+        if(!tgtGarbageCollection(tgt, tmList)) {
+          cnt += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgt)).sum();
+        }
+      }
+    }
+    return cnt;
+  }
+  
+
 }
+
