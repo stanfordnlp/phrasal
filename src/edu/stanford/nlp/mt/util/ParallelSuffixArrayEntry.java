@@ -2,6 +2,7 @@ package edu.stanford.nlp.mt.util;
 
 import java.util.stream.IntStream;
 
+import edu.stanford.nlp.mt.train.GIZAWordAlignment;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 
 /**
@@ -32,5 +33,15 @@ public class ParallelSuffixArrayEntry {
     for (int i = 0; i < source.length; ++i) {
       f2e[i] = s.f2e(i);
     }
+  }
+  
+  @Override
+  public String toString() {
+    String nl = System.getProperty("line.separator");
+    StringBuilder sb = new StringBuilder(2*source.length + target.length);
+    sb.append(String.join(" ", source)).append(nl)
+      .append(String.join(" ", target)).append(nl)
+      .append(GIZAWordAlignment.toGizaString(f2e));
+    return sb.toString();
   }
 }

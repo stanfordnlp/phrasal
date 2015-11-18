@@ -214,6 +214,23 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
   }
   
   /**
+   * Convert an alignment grid to a GIZA string.
+   * 
+   * @param f2e
+   * @return
+   */
+  public static String toGizaString(int[][] f2e) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < f2e.length; ++i) {
+      for (int j : f2e[i]) {
+        if (sb.length() > 0) sb.append(" ");
+        sb.append(i).append("-").append(j);
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
    * It prints many-to-one alignments, unless inverse is true (in which case it
    * prints one-to-many).
    * 

@@ -73,6 +73,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static final int DEFAULT_MAX_PHRASE_LEN = 12;
   private static final int RULE_CACHE_THRESHOLD = 10000;
   private static final double MIN_LEX_PROB = 1e-5;
+  private static final int MAX_FERTILITY = 5;
   
   /**
    * Parallelize TM queries. 
@@ -1200,8 +1201,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       for (int endTarget=maxTarget; (endTarget < sentencePair.targetLength() &&
           endTarget < startTarget+maxTargetPhrase && 
           (endTarget==maxTarget || sentencePair.isTargetUnaligned(endTarget))); endTarget++) {
-          SampledRule r = new SampledRule(startSource, endSource, startTarget, endTarget + 1, sentencePair);
-          ruleList.add(r);
+        final int fertility = Math.abs((endTarget - startTarget + 1) - (endSource - startSource));
+        if (fertility > MAX_FERTILITY) break;
+        SampledRule r = new SampledRule(startSource, endSource, startTarget, endTarget + 1, 
+            sentencePair);
+        ruleList.add(r);
       }
     }
     return ruleList;
