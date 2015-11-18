@@ -21,11 +21,16 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.mt.decoder.util.PrefixRuleGrid;
+import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTURule;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
+import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValues;
+import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.RichTranslation;
@@ -398,6 +403,33 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory,
       OutputSpace<TK, FV> outputSpace,
       List<Sequence<TK>> targets, int nbest);
+  
+  /**
+   * Produce a word alignment.
+   * 
+   * @param source
+   * @param target
+   * @param sourceInputId
+   * @param sourceInputProperties
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  public SymmetricalWordAlignment wordAlign(Sequence<TK> source, Sequence<TK> target, int sourceInputId,
+      InputProperties sourceInputProperties) {
+    
+    if (! (phraseGenerator instanceof DynamicTranslationModel)) {
+      throw new RuntimeException("Word alignment requires DynamicTranslationModel");
+    }
+
+    // Fetch translation models
+    final List<DynamicTranslationModel<FV>> tmList = new ArrayList<>(2);
+    tmList.add((DynamicTranslationModel<FV>) phraseGenerator);
+    if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
+      tmList.add((DynamicTranslationModel<FV>) sourceInputProperties.get(InputProperty.ForegroundTM));
+    }
+    
+    return SyntheticRules.bidirAlign((Sequence<IString>)source, (Sequence<IString>)target, tmList, SymmetrizationType.grow_diag_final_and);
+  }
 
   /**
    *

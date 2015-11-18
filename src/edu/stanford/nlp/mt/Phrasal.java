@@ -45,6 +45,7 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
+import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
@@ -60,6 +61,8 @@ import edu.stanford.nlp.mt.tm.PhraseTable;
 import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.tm.TranslationModelFactory;
 import edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator;
+import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
+import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.FactoryUtil;
 import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
@@ -1223,6 +1226,62 @@ public class Phrasal {
   }
 
   /**
+   * Word-align a given sentence pair.
+   *
+   * @param source
+   * @param sourceInputId
+   * @param threadId
+   *          -- Inferer object to use (one per thread)
+   * @param target
+   * @param inputProperties
+   * 
+   */
+  @SuppressWarnings("unchecked")
+  public SymmetricalWordAlignment wordAlign(Sequence<IString> source, int sourceInputId, int threadId,
+      Sequence<IString> target, InputProperties inputProperties) {
+    Objects.requireNonNull(source);
+    Objects.requireNonNull(target);
+    
+    if (threadId < 0 || threadId >= numThreads)
+      throw new IndexOutOfBoundsException("Thread id out of bounds: " + String.valueOf(threadId));
+    if (sourceInputId < 0)
+      throw new IndexOutOfBoundsException("Source id must be non-negative: " + String.valueOf(sourceInputId));
+
+    final TimeKeeper timer = TimingUtils.start();
+    
+    // Wrapping input for TMs with boundary tokens
+    if (wrapBoundary) source = Sequences.wrapStartEnd(source, TokenUtils.START_TOKEN, 
+        TokenUtils.END_TOKEN);
+    
+    // Configure the translation model
+    if (inputProperties.containsKey(InputProperty.ForegroundTM)) {
+      final TranslationModel<IString, String> tm = (TranslationModel<IString, String>) inputProperties
+          .get(InputProperty.ForegroundTM);
+      tm.setFeaturizer(featurizer);
+      tm.setName(TM_FOREGROUND_NAME);
+      logger.info("Configured foreground translation model for thread {}: {}", threadId, tm.getName());
+    }
+    if (inputProperties.containsKey(InputProperty.ModelWeights)) {
+      final Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.ModelWeights);
+      this.scorers.get(threadId).updateWeights(weights);
+      logger.info("Loaded decoder-local weights for thread {}", threadId);
+
+    } else {
+      this.scorers.get(threadId).updateWeights(this.globalModel);
+    }
+    timer.mark("setup");
+
+    // Align
+    final SymmetricalWordAlignment alignment = inferers.get(threadId).wordAlign(source, target, sourceInputId, inputProperties);
+    
+    timer.mark("alignment");
+    logger.info("Alignment timing: {}", timer);
+    return alignment;
+
+  }
+  
+  
+  /**
    * Free resources and cleanup.
    */
   private void shutdown() {
@@ -1292,6 +1351,7 @@ public class Phrasal {
     }
     return null;
   }
+  
 
   /**
    * Run Phrasal from the command line.

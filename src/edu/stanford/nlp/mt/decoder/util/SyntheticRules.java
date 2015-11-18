@@ -25,6 +25,7 @@ import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.PhraseAlignment;
 import edu.stanford.nlp.mt.util.Sequence;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * For constructing synthetic rules.
@@ -44,11 +45,16 @@ public final class SyntheticRules {
   private static final double SYNTHETIC_PROB = 1e-5;
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double POSITION_TERM_LAMBDA = 1.0;
+  private static final int GARBAGE_CNT_THRESHOLD = 100000;
+  private static final double SIMILARITY_THRESHOLD = -1.8;
+  private static final double TOTAL_SIMILARITY_THRESHOLD = -9;
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
   private static final int MAX_SYNTHETIC_ORDER = 3;
   private static final int MAX_TARGET_ORDER = 4;
+  
+  private static final boolean printDebug = false;
 
   private SyntheticRules() {}
 
@@ -221,7 +227,7 @@ public final class SyntheticRules {
     }
 
     // WSGDEBUG
-    boolean printDebug = false; // sourceInputId == 1022;
+    //boolean printDebug = false; // sourceInputId == 1022;
     if (printDebug) {
       System.err.printf("DEBUG %d%n", sourceInputId);
     }
@@ -234,25 +240,14 @@ public final class SyntheticRules {
     }
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
 
-    final GIZAWordAlignment align = new GIZAWordAlignment((Sequence<IString>) sourceSequence, 
-        (Sequence<IString>) prefix);
-
-    // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
-    // need to change for languages with different orthographies.
-    alignInverse(tmList, align);
-
-    // f2e align with Cooc table and lexical similarity. Includes deletion rules.
-    align(tmList, align);
-
     // Symmetrization
-    final SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, SYM_HEURISTIC);
+    final SymmetricalWordAlignment sym = bidirAlign((Sequence<IString>) sourceSequence, 
+        (Sequence<IString>) prefix, tmList);
 
     // WSGDEBUG
     if (printDebug) {
       System.err.printf("src: %s%n", sourceSequence);
       System.err.printf("tgt: %s%n", prefix);
-      System.err.printf("f2e: %s%n", align.toString(false));
-      System.err.printf("e2f: %s%n", align.toString(true));
       System.err.printf("sym: %s%n", sym.toString());
     }
 
@@ -462,6 +457,43 @@ public final class SyntheticRules {
     }
   }
   
+  
+  public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
+      Sequence<IString> targetSequence, List<DynamicTranslationModel<FV>> tmList) {
+    return bidirAlign(sourceSequence, targetSequence, tmList, SYM_HEURISTIC);
+  }
+  
+  public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
+      Sequence<IString> targetSequence, List<DynamicTranslationModel<FV>> tmList,
+      SymmetrizationType sym_heuristic) {
+
+    final GIZAWordAlignment align = new GIZAWordAlignment(sourceSequence, targetSequence);
+
+    // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
+    // need to change for languages with different orthographies.
+    alignInverse(tmList, align);
+
+    // f2e align with Cooc table and lexical similarity. Includes deletion rules.
+    align(tmList, align);
+
+    // Symmetrization
+    SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, sym_heuristic);
+    // WSGDEBUG
+    if (printDebug) {
+      System.err.printf("src: %s%n", sourceSequence);
+      System.err.printf("tgt: %s%n", targetSequence);
+      System.err.printf("f2e: %s%n", align.toString(false));
+      System.err.printf("e2f: %s%n", align.toString(true));
+      System.err.printf("sym: %s%n", sym.toString());
+    }
+
+    return sym;
+
+    // WSGDEBUG
+  }
+  
+  
+  
   private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
 
     int[] cnt_f = new int[a.fSize()];
@@ -471,38 +503,79 @@ public final class SyntheticRules {
       double max = -10000.0;
       int argmax = -1;
       final IString tgtToken = (IString) a.e().get(i);
+      final IString tgtTokenLc = tgtToken.toLowerCase();
       for (int j = 0, sz = a.fSize(); j < sz; ++j) {
         final IString srcToken = (IString) a.f().get(j);
-        if (srcToken.equals(tgtToken)) {
+        final IString srcTokenLc = srcToken.toLowerCase();
+        if (srcTokenLc.equals(tgtTokenLc)) {
           // Exact match
-          max = 0.0;
-          argmax = j;
+          int posDiff = Math.abs(i - j);
+          double tEF = Math.log(distortionParam(posDiff, sz-1));
+          if (tEF > max) {
+            max = tEF;
+            argmax = j;
+          }
         } else {
           if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
           int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
-          if (cnt_ef == 0) continue;
+          if (cnt_ef == 0 || isGarbageCollectionAlignment(srcToken, tgtToken)) continue;
           double tEF = Math.log(cnt_ef) - Math.log(cnt_f[j]);
           int posDiff = Math.abs(i - j);
           tEF += Math.log(distortionParam(posDiff, sz-1));
           if (tEF > max) {
             max = tEF;
             argmax = j;
+            //System.err.println("align found match: " + srcToken + " " + tgtToken);
+          }
+        }
+      }
+      
+      if (argmax < 0) {
+        // check for compound words
+        for (int j = 0, sz = a.fSize(); j < sz; ++j) {
+          final IString srcToken = (IString) a.f().get(j);
+          int cnt_ef = 0;
+          if (cnt_f[j] < 0) cnt_f[j] = tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum();
+          
+          if(cnt_f[j] > GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
+          
+          //target compounds
+          cnt_ef += tgtCompoundCnt(srcToken, tgtToken, tmList);
+          //source compounds
+          cnt_ef += srcCompoundCnt(srcToken, tgtToken, tmList);
+          
+          if (cnt_ef == 0) continue;
+          int marginal = cnt_f[j] + cnt_ef;
+          double tEF = Math.log(cnt_ef) - Math.log(marginal);
+          int posDiff = Math.abs(i - j);
+          tEF += Math.log(distortionParam(posDiff, sz-1));
+          if (tEF > max) {
+            max = tEF;
+            argmax = j;
+            if(printDebug)
+              System.err.println("align found compound: " + srcToken + " " + tgtToken);
           }
         }
       }
 
+      
       if (argmax < 0) {
         // Backoff to lexical similarity
         // TODO(spenceg) Only works for orthographically similar languages. 
         String tgt = a.e().get(i).toString();
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
+          if(cnt_f[j] > GARBAGE_CNT_THRESHOLD) continue; 
+          
           String src = a.f().get(j).toString();
-          double q = SimilarityMeasures.jaccard(tgt, src);
+          double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
+          if(q < SIMILARITY_THRESHOLD) continue;
           int posDiff = Math.abs(i - j);
-          q *= distortionParam(posDiff, sz-1);
-          if (q > max) {
+          q +=  Math.log(distortionParam(posDiff, sz-1));
+          if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
+            if(printDebug)
+              System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_f[j]);
           }
         }
       }
@@ -510,6 +583,9 @@ public final class SyntheticRules {
       // Populate alignment
       if (argmax >= 0) {
         a.addf2e(argmax, i);
+      }
+      else if(printDebug) {
+        System.err.println("align: no alignment found for tgt token: " + tgtToken);
       }
     }
   }
@@ -526,18 +602,51 @@ public final class SyntheticRules {
       for (int j = 0, sz = a.eSize(); j < sz; ++j) {
         final IString tgtToken = (IString) a.e().get(j);
         if (srcToken.equals(tgtToken)) {
-          max = 0.0;
-          argmax = j;
+          int posDiff = Math.abs(i - j);
+          double tFE = Math.log(distortionParam(posDiff, sz-1));
+          if (tFE > max) {
+            max = tFE;
+            argmax = j;
+          }
         } else {
           if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
           int cnt_ef = tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgtToken)).sum();
-          if (cnt_ef == 0) continue;
+          if (cnt_ef == 0 || isGarbageCollectionAlignment(srcToken, tgtToken)) continue;
           double tFE = Math.log(cnt_ef) - Math.log(cnt_e[j]);
           int posDiff = Math.abs(i - j);
           tFE += Math.log(distortionParam(posDiff, sz-1));
           if (tFE > max) {
             max = tFE;
             argmax = j;
+            //System.err.println("invAlign found match: " + srcToken + " " + tgtToken);
+          }
+        }
+      }
+      
+      if (argmax < 0) {
+        // check for compound words
+        for (int j = 0, sz = a.eSize(); j < sz; ++j) {
+          final IString tgtToken = (IString) a.e().get(j);
+          if (cnt_e[j] < 0) cnt_e[j] = tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum();
+          if(cnt_e[j] > GARBAGE_CNT_THRESHOLD) continue; // this should only happen for non-content words
+          
+          int cnt_fe = 0;
+          //target compounds
+          cnt_fe += tgtCompoundCnt(srcToken, tgtToken, tmList);
+
+          //source compounds
+          cnt_fe += srcCompoundCnt(srcToken, tgtToken, tmList);
+          
+          if (cnt_fe == 0) continue;
+          int marginal = cnt_e[j] + cnt_fe;
+          double tFE = Math.log(cnt_fe) - Math.log(marginal);
+          int posDiff = Math.abs(i - j);
+          tFE += Math.log(distortionParam(posDiff, sz-1));
+          if (tFE > max) {
+            max = tFE;
+            argmax = j;
+            if(printDebug)
+              System.err.println("invAlign found compound: " + srcToken + " " + tgtToken);
           }
         }
       }
@@ -549,14 +658,19 @@ public final class SyntheticRules {
         // Iterate over everything in the prefix
         // TODO(spenceg) Only works for orthographically similar languages.
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
+          if(cnt_e[j] > GARBAGE_CNT_THRESHOLD) continue;
+          
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
-          double q = SimilarityMeasures.jaccard(tgt, src);
+          double q = Math.log(SimilarityMeasures.jaccard(tgt, src));
+          if(q < SIMILARITY_THRESHOLD) continue;
           int posDiff = Math.abs(i - j);
-          q *= distortionParam(posDiff, sz-1);
-          if (q > max) {
+          q += Math.log(distortionParam(posDiff, sz-1));
+          if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
+            if(printDebug)
+              System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_e[j]);
           }
         }
       }
@@ -565,6 +679,76 @@ public final class SyntheticRules {
       if (argmax >= 0) {
         a.adde2f(i, argmax);
       }
+      else if(printDebug) {
+        System.err.println("invAlign: no alignment found for src token: " + srcToken);
+      }
     }
   }
+  
+  private static <TK,FV> boolean isGarbageCollectionAlignment(IString srcToken, IString tgtToken) {
+    String src = srcToken.toString();
+    String tgt = tgtToken.toString();
+    return ( (src.equals(".") || src.equals(",") || src.equals("!") ||  src.equals("?"))
+             && !(tgt.equals(src))
+           ) || (
+             (tgt.equals(".") || tgt.equals(",") || tgt.equals("!") ||  tgt.equals("?"))
+             && !(src.equals(tgt)) );
+
+  }
+
+
+  private static <TK,FV> boolean srcGarbageCollection(IString srcToken, List<DynamicTranslationModel<FV>> tmList) { 
+    return tmList.stream().mapToInt(tm -> tm.getSourceLexCount(srcToken)).sum() > GARBAGE_CNT_THRESHOLD;
+  } 
+  
+  private static <TK,FV> boolean tgtGarbageCollection(IString tgtToken, List<DynamicTranslationModel<FV>> tmList) { 
+    return tmList.stream().mapToInt(tm -> tm.getTargetLexCount(tgtToken)).sum() > GARBAGE_CNT_THRESHOLD;
+  } 
+  
+  private static <TK,FV> int srcCompoundCnt(IString srcToken, IString tgtToken, List<DynamicTranslationModel<FV>> tmList) {
+    int srcSize = srcToken.length(); 
+    int cnt = 0;
+    // each compound should have at least 4 characters
+    for(int k = 4; k < srcSize - 3 ; ++k) {
+      IString[] preSuffixes = new IString[3];
+      preSuffixes[0] = new IString(srcToken.subSequence(0, k).toString()); // prefix
+      preSuffixes[1] = new IString(srcToken.subSequence(srcSize - k , srcSize).toString()); // suffix
+      preSuffixes[2] = new IString(StringUtils.capitalize(srcToken.subSequence(srcSize - k, srcSize).toString())); // capitalized suffix
+      
+      int mMax = preSuffixes[1] == preSuffixes[2] ? 2 : 3;
+      
+      for(int m = 0; m < mMax; ++m) {
+        IString src = preSuffixes[m];
+        if(!srcGarbageCollection(src, tmList)) {
+          cnt += tmList.stream().mapToInt(tm -> tm.getJointLexCount(src, tgtToken)).sum();
+        }
+      }
+    }
+    return cnt;
+  }
+  
+  private static <TK,FV> int tgtCompoundCnt(IString srcToken, IString tgtToken, List<DynamicTranslationModel<FV>> tmList) {
+    int tgtSize = tgtToken.length(); 
+    int cnt = 0;
+    // each compound should have at least 4 characters
+    for(int k = 4; k < tgtSize - 3 ; ++k) {
+      IString[] preSuffixes = new IString[3];
+      preSuffixes[0] = new IString(tgtToken.subSequence(0, k).toString()); // prefix
+      preSuffixes[1] = new IString(tgtToken.subSequence(tgtSize - k , tgtSize).toString()); // suffix
+      preSuffixes[2] = new IString(StringUtils.capitalize(tgtToken.subSequence(tgtSize - k, tgtSize).toString())); // capitalized suffix
+      
+      int mMax = preSuffixes[1] == preSuffixes[2] ? 2 : 3;
+      
+      for(int m = 0; m < mMax; ++m) {
+        IString tgt = preSuffixes[m];
+        if(!tgtGarbageCollection(tgt, tmList)) {
+          cnt += tmList.stream().mapToInt(tm -> tm.getJointLexCount(srcToken, tgt)).sum();
+        }
+      }
+    }
+    return cnt;
+  }
+  
+
 }
+
