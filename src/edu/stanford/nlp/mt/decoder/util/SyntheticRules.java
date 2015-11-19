@@ -15,6 +15,7 @@ import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer;
 import edu.stanford.nlp.mt.train.GIZAWordAlignment;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -106,7 +107,7 @@ public final class SyntheticRules {
     scores[1] = scores[0];
     scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f));
     scores[3] = scores[2];
-    if (scores.length == 6) {
+    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
       // Extended features
       scores[4] = cnt_f_e > 1 ? (float) Math.log(cnt_f_e) : 0.0f;
       scores[5] = cnt_f_e <= 1 ? -1.0f : 0.0f;
@@ -143,7 +144,7 @@ public final class SyntheticRules {
     scores[1] = scores[0];
     scores[2] = scores[0];
     scores[3] = scores[0];
-    if (scores.length == 6) {
+    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
       // Extended features
       scores[4] = 0.0f;
       scores[5] = -1.0f;
