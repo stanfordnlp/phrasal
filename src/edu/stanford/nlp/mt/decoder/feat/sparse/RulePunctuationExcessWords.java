@@ -63,7 +63,7 @@ public class RulePunctuationExcessWords implements RuleFeaturizer<IString, Strin
     
     int numExcessWords = phrase.size();
     if(hasPunct) numExcessWords--;
-    numExcessWords = Math.max(MAX_EXCESS, numExcessWords);
+    numExcessWords = Math.min(MAX_EXCESS, numExcessWords);
     
     String featureName = FEATURE_PREFIX + ":" +
                          (isSrcPunct ? "SRC:" : "TGT:") + 
