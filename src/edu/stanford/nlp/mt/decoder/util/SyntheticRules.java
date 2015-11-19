@@ -188,7 +188,7 @@ public final class SyntheticRules {
     double score = 0.0;
     for(int e = 0; e < cnt_f_e[0].length; ++e) {
       double max = Double.MIN_VALUE;
-      for(int f = 0; f < cnt_f.length; ++e) {
+      for(int f = 0; f < cnt_f.length; ++f) {
         double s = Math.log(cnt_f_e[f][e]) - Math.log(cnt_f[f]);
         if(s > max) max = s; 
       }
