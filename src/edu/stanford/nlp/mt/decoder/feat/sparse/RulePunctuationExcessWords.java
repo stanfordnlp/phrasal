@@ -24,12 +24,6 @@ public class RulePunctuationExcessWords implements RuleFeaturizer<IString, Strin
   public static final String INCONSISTENT_PUNCTUATION = "INCONSISTENT";
   public static final int MAX_EXCESS = 3;
 
-  /**
-   * Constructor.
-   * 
-   * @param args
-   */
-  public RulePunctuationExcessWords(String...args) {}
 
   @Override
   public void initialize() {}
