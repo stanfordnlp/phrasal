@@ -3,7 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -258,13 +260,25 @@ public final class SyntheticRules {
     for (int order = 1; order <= MAX_SYNTHETIC_ORDER; ++order) {
       for (int i = 0, sz = sourceSequence.size() - order; i <= sz; ++i) {
         List<RuleBound> rules = extractRules(sym, i, order, MAX_TARGET_ORDER);
+        
+        List<ConcreteRule<TK,FV>> existingRules = ruleGrid.get(i, i + order - 1);
+        Set<Sequence<TK>> existingTargetSides = new HashSet<>(existingRules.size());
+        
+        for(ConcreteRule<TK,FV> existingRule : existingRules)
+          existingTargetSides.add(existingRule.abstractRule.target);
+        
         for (RuleBound r : rules) {
+          Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
+          Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
+          if(existingTargetSides.contains(tgt)) {
+            if (printDebug) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
+            continue;
+          }
+          
           targetCoverage.set(r.ei, r.ej);
           prefixSourceCoverage.set(r.fi, r.fj);
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
-          Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
-          Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
           int[][] e2f = new int[tgt.size()][src.size()];
           for (int eIdx = r.ei; eIdx < r.ej; ++eIdx) {
             e2f[eIdx - r.ei] = sym.e2f(eIdx).stream().mapToInt(a -> a - r.fi).toArray();
