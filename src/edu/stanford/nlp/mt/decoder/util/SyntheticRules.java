@@ -149,7 +149,7 @@ public final class SyntheticRules {
     float[] scores = new float[phraseScoreNames.length];
     scores[0] = getF2eScore(cnt_f_e, cnt_e);
     scores[1] = scores[0];
-    scores[2] = getF2eScore(cnt_f_e, cnt_f);
+    scores[2] = getE2fScore(cnt_f_e, cnt_f);
     scores[3] = scores[2];
     if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
       // Extended features
