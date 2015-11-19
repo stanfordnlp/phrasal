@@ -121,6 +121,81 @@ public final class SyntheticRules {
         scorer, sourceSequence, sourceInputId, inputProperties);
     return rule;
   }
+  
+  /**
+   * Create a synthetic translation rule from word-to-word counts.
+   * 
+   * @param source
+   * @param target
+   * @param sourceCoverage
+   * @param phraseScoreNames
+   * @param scorer
+   * @param featurizer
+   * @param cnt_f_e
+   * @param cnt_e
+   * @param cnt_f
+   * @param inputProperties
+   * @param sourceSequence
+   * @param sourceInputId
+   * @param align
+   * @return
+   */
+  public static <TK,FV> ConcreteRule<TK, FV> makeSyntheticRule(Sequence<TK> source, Sequence<TK> target, 
+      CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<FV> scorer,
+      FeatureExtractor<TK,FV> featurizer,
+      double[][] cnt_f_e, int[] cnt_e, int[] cnt_f, InputProperties inputProperties, Sequence<TK> sourceSequence,
+      int sourceInputId, PhraseAlignment align) {
+    // Baseline dense features
+    float[] scores = new float[phraseScoreNames.length];
+    scores[0] = getF2eScore(cnt_f_e, cnt_e);
+    scores[1] = scores[0];
+    scores[2] = getF2eScore(cnt_f_e, cnt_f);
+    scores[3] = scores[2];
+    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
+      // Extended features
+      scores[4] =  0.0f;
+      scores[5] = -1.0f;
+    }
+
+    Rule<TK> abstractRule = new Rule<>(scores, phraseScoreNames, target, source, 
+        align, PHRASE_TABLE_NAME);
+    ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, featurizer, 
+        scorer, sourceSequence, sourceInputId, inputProperties);
+    return rule;
+  }
+  
+  /**
+   * Compute synthetic rule (F,E) score from lexical co-occurrence counts cnt(f,e).
+   * 
+   * p(F|E) = prod_f max_e p(f|e)
+   * 
+   * 
+   */
+  private static float getF2eScore(double[][] cnt_f_e, int[] cnt_e) {
+    double score = 0.0;
+    for(int f = 0; f < cnt_f_e.length; ++f) {
+      double max = Double.MIN_VALUE;
+      for(int e = 0; e < cnt_e.length; ++e) {
+        double s = Math.log(cnt_f_e[f][e]) - Math.log(cnt_e[e]);
+        if(s > max) max = s; 
+      }
+      score += max;
+    }
+    return (float) score;
+  }
+  
+  private static float getE2fScore(double[][] cnt_f_e, int[] cnt_f) {
+    double score = 0.0;
+    for(int e = 0; e < cnt_f_e[0].length; ++e) {
+      double max = Double.MIN_VALUE;
+      for(int f = 0; f < cnt_f.length; ++e) {
+        double s = Math.log(cnt_f_e[f][e]) - Math.log(cnt_f[f]);
+        if(s > max) max = s; 
+      }
+      score += max;
+    }
+    return (float) score;
+  }
 
   /**
    * Augment the rule grid for a window relative to the current derivation.
@@ -285,24 +360,35 @@ public final class SyntheticRules {
           }
           PhraseAlignment alignment = new PhraseAlignment(e2f);
 
-          int cnt_f = 0, cnt_e = 0;
-          double cnt_fe = 0.0;
+          ConcreteRule<TK,FV> syntheticRule = null;
           if (src.size() == 1 && tgt.size() == 1) { // Unigram rule
-            cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) src.get(0))).sum();
-            cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) tgt.get(0))).sum();
-            cnt_fe = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) src.get(0), (IString) tgt.get(0))).sum();
-            if (cnt_f == 0) cnt_f = 1;
-            if (cnt_e == 0) cnt_e = 1;
-            if (cnt_fe == 0) cnt_fe = SYNTHETIC_PROB;
-
+            int cnt_f = 0, cnt_e = 0;
+            double cnt_fe = 0.0;
+            cnt_f = getFcount(src.get(0), tmList);
+            cnt_e = getEcount(tgt.get(0), tmList);
+            cnt_fe = getFEcount(src.get(0), tgt.get(0), tmList);
+            syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
+                cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+                inputProperties, sourceSequence, sourceInputId, alignment);
           } else {
-            cnt_f = 1;
-            cnt_e = 1;
-            cnt_fe = SYNTHETIC_PROB;
+            int[] cnt_f = new int[src.size()];
+            int[] cnt_e = new int[tgt.size()];
+            double[][] cnt_fe = new double[src.size()][tgt.size()];
+            
+            for(int f = 0; f < src.size(); ++f) {
+              cnt_f[f] = getFcount(src.get(f), tmList);
+              
+              for(int e = 0; e < tgt.size(); ++e)
+                cnt_fe[f][e] = getFEcount(src.get(f), tgt.get(e), tmList);
+            }
+            
+            for(int e = 0; e < tgt.size(); ++e)
+              cnt_e[e] = getEcount(tgt.get(e), tmList);
+            
+            syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
+                cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+                inputProperties, sourceSequence, sourceInputId, alignment);
           }
-          ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-              cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
-              inputProperties, sourceSequence, sourceInputId, alignment);
           ruleGrid.addEntry(syntheticRule);
 
           // WSGDEBUG
@@ -405,6 +491,25 @@ public final class SyntheticRules {
       }
     }
   }
+  
+  private static <TK,FV> int getFcount(TK src, List<DynamicTranslationModel<FV>> tmList) {
+    int cnt = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) src)).sum();
+    if(cnt == 0) cnt = 1;
+    return cnt;
+  }
+  
+  private static <TK,FV> int getEcount(TK tgt, List<DynamicTranslationModel<FV>> tmList) {
+    int cnt = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) tgt)).sum();
+    if(cnt == 0) cnt = 1;
+    return cnt;
+  }
+  
+  private static <TK,FV> double getFEcount(TK src, TK tgt, List<DynamicTranslationModel<FV>> tmList) {
+    double cnt = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) src, (IString) tgt)).sum();
+    if(cnt == 0) cnt = SYNTHETIC_PROB;
+    return cnt;
+  }
+  
 
   public static List<RuleBound> extractRules(SymmetricalWordAlignment align, int sourcePosition, 
       int length, int maxTargetPhrase) {
