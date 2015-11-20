@@ -245,8 +245,9 @@ public class FeatureExtractor<TK, FV> extends
       rv = new ArrayList<>();
       // Prefix mode
       for(FeatureValue<FV> fv : ruleFeatures) {
+        if(fv.name.toString().startsWith("aug-")) continue;
         String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
-          rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
+        rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
       }
     }
     return rv;
