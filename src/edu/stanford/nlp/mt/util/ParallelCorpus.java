@@ -71,8 +71,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
   public boolean add(String source, String target, String align) {
     AlignedSentence s = getSentence(source, target, align);
     if (s == null) {
-      logger.warn("Invalid sentence: {} ||| {} ||| {}", 
-          source, target, align);
+      logger.warn("Cannot add unaligned sentence to corpus: {} ||| {} ||| {}", source, target, align);
       return false;
     } else {
       segments.add(s);
@@ -89,7 +88,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
    * @return The sentence object, or null if the input exceeds the length constraints.
    */
   public AlignedSentence getSentence(String source, String target, String align) {
-    if (align.trim().length() == 0) return null;
+    if (align.trim().length() == 0) return null; // The segment is unaligned, so reject it.
     int[] f = stringToArray(source);
     int[] e = stringToArray(target);
     if (f.length > MAX_SENTENCE_LENGTH || 
