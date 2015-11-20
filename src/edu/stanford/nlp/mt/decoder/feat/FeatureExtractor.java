@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperty;
@@ -69,8 +70,10 @@ public class FeatureExtractor<TK, FV> extends
         this.featureAugmentationMode = 1;
       } else if (featureAugmentationMode.equals("extended")) {
         this.featureAugmentationMode = 2;
-      } else if (featureAugmentationMode.equals("prefix")) {
+      } else if (featureAugmentationMode.equals("prefixAndGenre")) {
         this.featureAugmentationMode = 3;
+      } else if (featureAugmentationMode.equals("prefix")) {
+        this.featureAugmentationMode = 4;
       }
       return true;
     }
@@ -195,6 +198,7 @@ public class FeatureExtractor<TK, FV> extends
   }
  
   private static final String[] NO_GENRE = new String[]{""};
+  private static final String PREFIX = "PRF";
   
   /**
    * Feature space augmentation a la Daume III (2007).
@@ -207,10 +211,11 @@ public class FeatureExtractor<TK, FV> extends
     String[] genres = (String[]) f.sourceInputProperties.get(InputProperty.Domain);
     if (genres == null) genres = NO_GENRE;
     
-    if (featureAugmentationMode < 3) {
+    if (featureAugmentationMode < 4) {
       for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
         FeatureValue<FV> fv = featureValues.get(i);
         if (featureAugmentationMode == 0 ||
+            featureAugmentationMode == 3 ||
             (featureAugmentationMode == 1 && fv.isDenseFeature) ||
             (featureAugmentationMode == 2 && ! fv.isDenseFeature)) {
           for(String genre : genres) {
@@ -219,18 +224,32 @@ public class FeatureExtractor<TK, FV> extends
           }
         }
       }
-    } else if (featureAugmentationMode == 3) {
+    } else if (featureAugmentationMode >= 3) {
       // Prefix mode
       for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
         FeatureValue<FV> fv = featureValues.get(i);
         final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
             f.targetSequence.size() < f.derivation.prefixLength;
         if (inPrefix) {
-          String featureValue = "aug-" + fv.name.toString();
+          String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
           featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
       }
     }
+  }
+  
+  @SuppressWarnings("unchecked")
+  public List<FeatureValue<FV>> nonLocalAugmentRuleFeatures(List<FeatureValue<FV>> ruleFeatures, Derivation<TK, FV> derivation) {
+    List<FeatureValue<FV>> rv = null;
+    if (featureAugmentationMode >= 3 && !derivation.prefixCompleted) {
+      rv = new ArrayList<>();
+      // Prefix mode
+      for(FeatureValue<FV> fv : ruleFeatures) {
+        String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
+          rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
+      }
+    }
+    return rv;
   }
   
 
