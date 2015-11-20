@@ -229,7 +229,7 @@ public class FeatureExtractor<TK, FV> extends
       for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
         FeatureValue<FV> fv = featureValues.get(i);
         final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
-            f.targetSequence.size() < f.derivation.prefixLength;
+            f.derivation.insertionPosition < f.derivation.prefixLength;
         if (inPrefix) {
           String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
           featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
@@ -241,7 +241,7 @@ public class FeatureExtractor<TK, FV> extends
   @SuppressWarnings("unchecked")
   public List<FeatureValue<FV>> nonLocalAugmentRuleFeatures(List<FeatureValue<FV>> ruleFeatures, Derivation<TK, FV> derivation) {
     List<FeatureValue<FV>> rv = null;
-    if (featureAugmentationMode >= 3 && !derivation.prefixCompleted) {
+    if (featureAugmentationMode >= 3 && derivation.insertionPosition < derivation.prefixLength) {
       rv = new ArrayList<>();
       // Prefix mode
       for(FeatureValue<FV> fv : ruleFeatures) {
