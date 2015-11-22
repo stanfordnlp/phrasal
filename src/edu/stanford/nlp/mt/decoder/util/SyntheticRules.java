@@ -608,11 +608,7 @@ public final class SyntheticRules {
     }
 
     return sym;
-
-    // WSGDEBUG
   }
-  
-  
   
   private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
 

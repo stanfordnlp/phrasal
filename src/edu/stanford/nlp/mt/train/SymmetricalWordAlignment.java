@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -24,13 +28,11 @@ import edu.stanford.nlp.mt.util.Sequence;
 
 public class SymmetricalWordAlignment extends AbstractWordAlignment {
 
+  private static final Logger logger = LogManager.getLogger(SymmetricalWordAlignment.class.getName());
+  
   public static final String DEBUG_PROPERTY = "DebugWordAlignment";
   public static final boolean DEBUG = Boolean.parseBoolean(System.getProperty(
       DEBUG_PROPERTY, "false"));
-
-  public static final String VDEBUG_PROPERTY = "VerboseDebugWordAlignment";
-  public static final boolean VERBOSE_DEBUG = Boolean.parseBoolean(System
-      .getProperty(VDEBUG_PROPERTY, "false"));
 
   static public final String ADD_BOUNDARY_MARKERS_OPT = "addSentenceBoundaryMarkers";
   static public final String UNALIGN_BOUNDARY_MARKERS_OPT = "unalignSentenceBoundaryMarkers";
@@ -94,12 +96,12 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
 
   public void init(String fStr, String eStr, String aStr, boolean reverse,
       boolean oneIndexed) {
-    if (VERBOSE_DEBUG)
+    if (DEBUG)
       System.err.printf("f: %s\ne: %s\nalign: %s\n", fStr, eStr, aStr);
     initSentPair(fStr, eStr);
     initAlignment();
     if (aStr == null) {
-      System.err.println("Warning: empty line.");
+      logger.warn("Empty line.");
       return;
     }
     for (String al : aStr.split("\\s+")) {
@@ -125,14 +127,14 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
               + ",fsize=" + f.size() + ") : " + epos);
         f2e[fpos].add(epos);
         e2f[epos].add(fpos);
-        if (VERBOSE_DEBUG) {
+        if (DEBUG) {
           System.err.println("word alignment: [" + f.get(fpos) + "] -> ["
               + e.get(epos) + "]");
           System.err.println("with indices: (" + fpos + ")[" + f.get(fpos)
               + "] -> (" + epos + ")[" + e.get(epos) + "]");
         }
       } else {
-        System.err.printf("Warning: bad alignment token: <%s>\n", al);
+        logger.warn("Bad alignment token: {}", al);
       }
     }
     if (addBoundaryMarkers && !unalignedBoundaryMarkers) {
@@ -143,7 +145,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       f2e[lastf].add(laste);
       e2f[laste].add(lastf);
     }
-    if (VERBOSE_DEBUG)
+    if (DEBUG)
       System.err.println("sentence alignment: " + toString());
   }
 
@@ -214,5 +216,4 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
       }
     }
   }
-
 }
