@@ -869,6 +869,174 @@ public final class SyntheticRules {
     return cnt;
   }
   
+  private static class AlignmentScorer <FV> {
+    double[] cnt_e;
+    double[] cnt_f;
+    double[][] cnt_fe;
+    double[][] score_fe;
+    final List<DynamicTranslationModel<FV>> tmList;
+    final Sequence<IString> f;
+    final Sequence<IString> e;
+    final int sz;
+    
+    final double MIN_CNT = 1e-5;
+    
+    public AlignmentScorer(SymmetricalWordAlignment alignment, List<DynamicTranslationModel<FV>> tmList) {
+      cnt_e = new double[alignment.eSize()];
+      cnt_f = new double[alignment.fSize()];
+      cnt_fe = new double[alignment.fSize()][alignment.eSize()];
+      score_fe = new double[alignment.fSize()][alignment.eSize()];
+      Arrays.fill(cnt_e, -1);    
+      Arrays.fill(cnt_f, -1);
+      for(int j = 0; j < cnt_fe.length; ++j) {
+        Arrays.fill(cnt_fe[j], -1);
+        Arrays.fill(score_fe[j], Double.MIN_VALUE);        
+      }
+      
+      this.tmList = tmList;
+      f = alignment.f();
+      e = alignment.e();
+      sz = e.size();
+    }
+    
+    public double score(int j, int i) {
+      if (cnt_fe[j][i] < 0) {
+        cnt_fe[j][i] = Math.max(tmList.stream().mapToInt(tm -> tm.getJointLexCount(f.get(j), e.get(i))).sum(), MIN_CNT);
+        if (cnt_e[i] < 0) cnt_e[i] = Math.max(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(e.get(i))).sum(), MIN_CNT);
+        if (cnt_f[j] < 0) cnt_f[j] = Math.max(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(f.get(j))).sum(), MIN_CNT);
+        
+        double q = 2 * Math.log(cnt_fe[j][i]) - Math.log(cnt_f[j]) - Math.log(cnt_e[i]);
+        int posDiff = Math.abs(i - j);
+        q += Math.log(distortionParam(posDiff, sz-1));
+        score_fe[j][i] = q;
+      }
+      return score_fe[j][i];
+    }
+    
+  }
+  
+  public static <TK,FV> void resolveUnalignedTargetWords(
+      SymmetricalWordAlignment alignment, List<DynamicTranslationModel<FV>> tmList) {
+    
+   if(printDebug) {
+      System.err.println("called resolveUnalignedTargetWords");
+    }
+    
+    AlignmentScorer<FV> scorer = new AlignmentScorer<>(alignment, tmList);
+    
+    boolean foundAlignment = true;
+    while(foundAlignment) {
+      foundAlignment = false;
+
+      int bestJ = -1;
+      int bestI = -1;
+      double bestScore = -Double.MAX_VALUE;
+      
+      //first look for unaligned candidates
+      for(int i = alignment.unalignedE().nextSetBit(0); i > 0; i = alignment.unalignedE().nextSetBit(i + 1)) {
+        Set<Integer> leftAlignments = i > 0 ? alignment.e2f(i - 1) : new HashSet<Integer>();
+        Set<Integer> rightAlignments = i < alignment.eSize() - 1 ? alignment.e2f(i + 1) : new HashSet<Integer>();
+        
+        Set<Integer> candidates = new HashSet<>();
+        for(int j : leftAlignments) {
+          if(j + 1 < alignment.fSize() && alignment.f2e(j + 1).isEmpty())
+            candidates.add(j + 1);
+        }
+        for(int j : rightAlignments) {
+          if(j > 0 && alignment.f2e(j - 1).isEmpty())
+            candidates.add(j - 1);
+        }
+
+        if(candidates.size() > 0) {
+          for(int j : candidates) {
+            double q = scorer.score(j, i);
+            if(q > bestScore) {
+              bestJ = j;
+              bestI = i;
+              bestScore = q;
+            }
+          }
+        }  
+      }
+      
+      if(bestJ >= 0) {
+        foundAlignment = true;
+        if(printDebug) System.err.println("adding alignment: " + bestJ + " " + bestI);
+        alignment.addAlign(bestJ, bestI);
+        continue;
+      }
+      
+      //now check multiply aligned candidates
+      for(int i = alignment.unalignedE().nextSetBit(0); i > 0; i = alignment.unalignedE().nextSetBit(i + 1)) {
+        System.err.println("checking unaligned tgt pos " + i + " for multiply aligned candidates");
+        Set<Integer> leftAlignments = i > 0 ? alignment.e2f(i - 1) : new HashSet<Integer>();
+        Set<Integer> rightAlignments = i < alignment.eSize() - 1 ? alignment.e2f(i + 1) : new HashSet<Integer>();
+
+        Set<Integer> candidates = new HashSet<>();
+        for(int j : leftAlignments) {
+          if(j + 1 < alignment.fSize() && alignment.f2e(j + 1).size() == 1) {
+            int iPrime = alignment.f2e(j + 1).iterator().next();
+            if(alignment.e2f(iPrime).size() > 1) {
+              boolean lowestScoring = true;
+              for(int jPrime : alignment.e2f(iPrime)) {
+                if(jPrime == j + 1) continue;
+                if(scorer.score(jPrime, iPrime) <= scorer.score(j + 1, iPrime)) {
+                  lowestScoring = false;
+                  break;
+                }
+              }
+
+              if(lowestScoring) candidates.add(j + 1);
+            }
+          }
+        }
+            
+        for(int j : rightAlignments) {
+          if(j > 0 && alignment.f2e(j - 1).size() == 1) {
+            int iPrime = alignment.f2e(j - 1).iterator().next();
+            if(alignment.e2f(iPrime).size() > 1) {
+              boolean lowestScoring = true;
+              for(int jPrime : alignment.e2f(iPrime)) {
+                if(jPrime == j - 1) continue;
+                if(scorer.score(jPrime, iPrime) <= scorer.score(j - 1, iPrime)) {
+                  lowestScoring = false;
+                  break;
+                }
+              }
+            
+              if(lowestScoring) candidates.add(j - 1);
+            }
+          }
+        }
+        
+        if(candidates.size() > 0) {
+          for(int j : candidates) {
+            double q = scorer.score(j, i);
+            if(q > bestScore) {
+              bestJ = j;
+              bestI = i;
+              bestScore = q;
+            }
+          }
+        }  
+
+      }
+      
+      if(bestJ >= 0) {
+        foundAlignment = true;
+        Set<Integer> removeAlignments = new HashSet<>(alignment.f2e(bestJ));
+        for(int i : removeAlignments) {
+          if(printDebug) System.err.println("removing alignment: " + bestJ + " " + i);
+          alignment.removeAlign(bestJ, i);
+        }
+        
+        if(printDebug) System.err.println("adding alignment: " + bestJ + " " + bestI);
+        alignment.addAlign(bestJ, bestI);
+      }
+       
+    }
+  }
+  
 
 }
 

@@ -161,6 +161,11 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
     f2e[f].add(e);
     e2f[e].add(f);
   }
+  
+  public void removeAlign(int f, int e) {
+    f2e[f].remove(e);
+    e2f[e].remove(f);
+  }
 
   @Override
   public String toString() {
