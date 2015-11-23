@@ -165,6 +165,10 @@ State<Derivation<TK, FV>> {
     
     features = featurizer.featurize(featurizable);
     features.addAll(rule.cachedFeatureList);
+    
+    List<FeatureValue<FV>> nonLocalRuleAugments = featurizer.nonLocalAugmentRuleFeatures(rule.cachedFeatureList, this);
+    if(nonLocalRuleAugments != null) features.addAll(nonLocalRuleAugments);
+    
     score = base.score + scorer.getIncrementalScore(features);
     h = (Double.isInfinite(base.h)) ? base.h : base.h
         + heuristic.getHeuristicDelta(this, rule.sourceCoverage);
@@ -220,6 +224,10 @@ State<Derivation<TK, FV>> {
 
     features = featurizer.featurize(featurizable);
     features.addAll(rule.cachedFeatureList);
+    
+    List<FeatureValue<FV>> nonLocalRuleAugments = featurizer.nonLocalAugmentRuleFeatures(rule.cachedFeatureList, this);
+    if(nonLocalRuleAugments != null) features.addAll(nonLocalRuleAugments);
+    
     score = base.score + scorer.getIncrementalScore(features);
     depth = base.depth + 1;
     h = (Double.isInfinite(base.h)) ? base.h : base.h
@@ -255,6 +263,10 @@ State<Derivation<TK, FV>> {
     featurizable = new Featurizable<>(this, sourceInputId, featurizer.getNumDerivationFeaturizers());
     features = featurizer.featurize(featurizable);
     features.addAll(rule.cachedFeatureList);
+    
+    List<FeatureValue<FV>> nonLocalRuleAugments = featurizer.nonLocalAugmentRuleFeatures(rule.cachedFeatureList, this);
+    if(nonLocalRuleAugments != null) features.addAll(nonLocalRuleAugments);
+    
     double baseScore = parent == null ? 0.0 : parent.score;
     score = baseScore + scorer.getIncrementalScore(features);    
   }

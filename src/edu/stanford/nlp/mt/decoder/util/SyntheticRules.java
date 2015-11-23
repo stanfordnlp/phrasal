@@ -3,7 +3,9 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +17,7 @@ import edu.stanford.nlp.mt.stats.SimilarityMeasures;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DynamicTranslationModel;
 import edu.stanford.nlp.mt.tm.Rule;
+import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.train.AlignmentSymmetrizer;
 import edu.stanford.nlp.mt.train.GIZAWordAlignment;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -106,7 +109,7 @@ public final class SyntheticRules {
     scores[1] = scores[0];
     scores[2] = (float) (Math.log(cnt_f_e) - Math.log(cnt_f));
     scores[3] = scores[2];
-    if (scores.length == 6) {
+    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
       // Extended features
       scores[4] = cnt_f_e > 1 ? (float) Math.log(cnt_f_e) : 0.0f;
       scores[5] = cnt_f_e <= 1 ? -1.0f : 0.0f;
@@ -117,6 +120,81 @@ public final class SyntheticRules {
     ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, featurizer, 
         scorer, sourceSequence, sourceInputId, inputProperties);
     return rule;
+  }
+  
+  /**
+   * Create a synthetic translation rule from word-to-word counts.
+   * 
+   * @param source
+   * @param target
+   * @param sourceCoverage
+   * @param phraseScoreNames
+   * @param scorer
+   * @param featurizer
+   * @param cnt_f_e
+   * @param cnt_e
+   * @param cnt_f
+   * @param inputProperties
+   * @param sourceSequence
+   * @param sourceInputId
+   * @param align
+   * @return
+   */
+  public static <TK,FV> ConcreteRule<TK, FV> makeSyntheticRule(Sequence<TK> source, Sequence<TK> target, 
+      CoverageSet sourceCoverage, String[] phraseScoreNames, Scorer<FV> scorer,
+      FeatureExtractor<TK,FV> featurizer,
+      double[][] cnt_f_e, int[] cnt_e, int[] cnt_f, InputProperties inputProperties, Sequence<TK> sourceSequence,
+      int sourceInputId, PhraseAlignment align) {
+    // Baseline dense features
+    float[] scores = new float[phraseScoreNames.length];
+    scores[0] = getF2eScore(cnt_f_e, cnt_e);
+    scores[1] = scores[0];
+    scores[2] = getE2fScore(cnt_f_e, cnt_f);
+    scores[3] = scores[2];
+    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
+      // Extended features
+      scores[4] =  0.0f;
+      scores[5] = -1.0f;
+    }
+
+    Rule<TK> abstractRule = new Rule<>(scores, phraseScoreNames, target, source, 
+        align, PHRASE_TABLE_NAME);
+    ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, featurizer, 
+        scorer, sourceSequence, sourceInputId, inputProperties);
+    return rule;
+  }
+  
+  /**
+   * Compute synthetic rule (F,E) score from lexical co-occurrence counts cnt(f,e).
+   * 
+   * p(F|E) = prod_f max_e p(f|e)
+   * 
+   * 
+   */
+  private static float getF2eScore(double[][] cnt_f_e, int[] cnt_e) {
+    double score = 0.0;
+    for(int f = 0; f < cnt_f_e.length; ++f) {
+      double max = Double.MIN_VALUE;
+      for(int e = 0; e < cnt_e.length; ++e) {
+        double s = Math.log(cnt_f_e[f][e]) - Math.log(cnt_e[e]);
+        if(s > max) max = s; 
+      }
+      score += max;
+    }
+    return (float) score;
+  }
+  
+  private static float getE2fScore(double[][] cnt_f_e, int[] cnt_f) {
+    double score = 0.0;
+    for(int e = 0; e < cnt_f_e[0].length; ++e) {
+      double max = Double.MIN_VALUE;
+      for(int f = 0; f < cnt_f.length; ++f) {
+        double s = Math.log(cnt_f_e[f][e]) - Math.log(cnt_f[f]);
+        if(s > max) max = s; 
+      }
+      score += max;
+    }
+    return (float) score;
   }
 
   /**
@@ -143,7 +221,7 @@ public final class SyntheticRules {
     scores[1] = scores[0];
     scores[2] = scores[0];
     scores[3] = scores[0];
-    if (scores.length == 6) {
+    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
       // Extended features
       scores[4] = 0.0f;
       scores[5] = -1.0f;
@@ -245,11 +323,12 @@ public final class SyntheticRules {
         (Sequence<IString>) prefix, tmList);
 
     // WSGDEBUG
-    if (printDebug) {
-      System.err.printf("src: %s%n", sourceSequence);
-      System.err.printf("tgt: %s%n", prefix);
-      System.err.printf("sym: %s%n", sym.toString());
-    }
+    //if (printDebug) {
+      logger.info("M2 alignment: ");
+      logger.info("src: " + sourceSequence);
+      logger.info("tgt: " + prefix);
+      logger.info("sym: " + sym.toString());
+    //}
 
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
@@ -257,37 +336,60 @@ public final class SyntheticRules {
     for (int order = 1; order <= MAX_SYNTHETIC_ORDER; ++order) {
       for (int i = 0, sz = sourceSequence.size() - order; i <= sz; ++i) {
         List<RuleBound> rules = extractRules(sym, i, order, MAX_TARGET_ORDER);
+        
+        List<ConcreteRule<TK,FV>> existingRules = ruleGrid.get(i, i + order - 1);
+        Set<Sequence<TK>> existingTargetSides = new HashSet<>(existingRules.size());
+        
+        for(ConcreteRule<TK,FV> existingRule : existingRules)
+          existingTargetSides.add(existingRule.abstractRule.target);
+        
         for (RuleBound r : rules) {
+          Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
+          Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
+          if(existingTargetSides.contains(tgt)) {
+            if (printDebug) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
+            continue;
+          }
+          
           targetCoverage.set(r.ei, r.ej);
           prefixSourceCoverage.set(r.fi, r.fj);
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
-          Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
-          Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
           int[][] e2f = new int[tgt.size()][src.size()];
           for (int eIdx = r.ei; eIdx < r.ej; ++eIdx) {
             e2f[eIdx - r.ei] = sym.e2f(eIdx).stream().mapToInt(a -> a - r.fi).toArray();
           }
           PhraseAlignment alignment = new PhraseAlignment(e2f);
 
-          int cnt_f = 0, cnt_e = 0;
-          double cnt_fe = 0.0;
+          ConcreteRule<TK,FV> syntheticRule = null;
           if (src.size() == 1 && tgt.size() == 1) { // Unigram rule
-            cnt_f = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) src.get(0))).sum();
-            cnt_e = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) tgt.get(0))).sum();
-            cnt_fe = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) src.get(0), (IString) tgt.get(0))).sum();
-            if (cnt_f == 0) cnt_f = 1;
-            if (cnt_e == 0) cnt_e = 1;
-            if (cnt_fe == 0) cnt_fe = SYNTHETIC_PROB;
-
+            int cnt_f = 0, cnt_e = 0;
+            double cnt_fe = 0.0;
+            cnt_f = getFcount(src.get(0), tmList);
+            cnt_e = getEcount(tgt.get(0), tmList);
+            cnt_fe = getFEcount(src.get(0), tgt.get(0), tmList);
+            syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
+                cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+                inputProperties, sourceSequence, sourceInputId, alignment);
           } else {
-            cnt_f = 1;
-            cnt_e = 1;
-            cnt_fe = SYNTHETIC_PROB;
+            int[] cnt_f = new int[src.size()];
+            int[] cnt_e = new int[tgt.size()];
+            double[][] cnt_fe = new double[src.size()][tgt.size()];
+            
+            for(int f = 0; f < src.size(); ++f) {
+              cnt_f[f] = getFcount(src.get(f), tmList);
+              
+              for(int e = 0; e < tgt.size(); ++e)
+                cnt_fe[f][e] = getFEcount(src.get(f), tgt.get(e), tmList);
+            }
+            
+            for(int e = 0; e < tgt.size(); ++e)
+              cnt_e[e] = getEcount(tgt.get(e), tmList);
+            
+            syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
+                cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+                inputProperties, sourceSequence, sourceInputId, alignment);
           }
-          ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
-              cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
-              inputProperties, sourceSequence, sourceInputId, alignment);
           ruleGrid.addEntry(syntheticRule);
 
           // WSGDEBUG
@@ -390,6 +492,25 @@ public final class SyntheticRules {
       }
     }
   }
+  
+  private static <TK,FV> int getFcount(TK src, List<DynamicTranslationModel<FV>> tmList) {
+    int cnt = tmList.stream().mapToInt(tm -> tm.getSourceLexCount((IString) src)).sum();
+    if(cnt == 0) cnt = 1;
+    return cnt;
+  }
+  
+  private static <TK,FV> int getEcount(TK tgt, List<DynamicTranslationModel<FV>> tmList) {
+    int cnt = tmList.stream().mapToInt(tm -> tm.getTargetLexCount((IString) tgt)).sum();
+    if(cnt == 0) cnt = 1;
+    return cnt;
+  }
+  
+  private static <TK,FV> double getFEcount(TK src, TK tgt, List<DynamicTranslationModel<FV>> tmList) {
+    double cnt = tmList.stream().mapToInt(tm -> tm.getJointLexCount((IString) src, (IString) tgt)).sum();
+    if(cnt == 0) cnt = SYNTHETIC_PROB;
+    return cnt;
+  }
+  
 
   public static List<RuleBound> extractRules(SymmetricalWordAlignment align, int sourcePosition, 
       int length, int maxTargetPhrase) {
@@ -743,6 +864,174 @@ public final class SyntheticRules {
       }
     }
     return cnt;
+  }
+  
+  private static class AlignmentScorer <FV> {
+    double[] cnt_e;
+    double[] cnt_f;
+    double[][] cnt_fe;
+    double[][] score_fe;
+    final List<DynamicTranslationModel<FV>> tmList;
+    final Sequence<IString> f;
+    final Sequence<IString> e;
+    final int sz;
+    
+    final double MIN_CNT = 1e-5;
+    
+    public AlignmentScorer(SymmetricalWordAlignment alignment, List<DynamicTranslationModel<FV>> tmList) {
+      cnt_e = new double[alignment.eSize()];
+      cnt_f = new double[alignment.fSize()];
+      cnt_fe = new double[alignment.fSize()][alignment.eSize()];
+      score_fe = new double[alignment.fSize()][alignment.eSize()];
+      Arrays.fill(cnt_e, -1);    
+      Arrays.fill(cnt_f, -1);
+      for(int j = 0; j < cnt_fe.length; ++j) {
+        Arrays.fill(cnt_fe[j], -1);
+        Arrays.fill(score_fe[j], Double.MIN_VALUE);        
+      }
+      
+      this.tmList = tmList;
+      f = alignment.f();
+      e = alignment.e();
+      sz = e.size();
+    }
+    
+    public double score(int j, int i) {
+      if (cnt_fe[j][i] < 0) {
+        cnt_fe[j][i] = Math.max(tmList.stream().mapToInt(tm -> tm.getJointLexCount(f.get(j), e.get(i))).sum(), MIN_CNT);
+        if (cnt_e[i] < 0) cnt_e[i] = Math.max(tmList.stream().mapToInt(tm -> tm.getTargetLexCount(e.get(i))).sum(), MIN_CNT);
+        if (cnt_f[j] < 0) cnt_f[j] = Math.max(tmList.stream().mapToInt(tm -> tm.getSourceLexCount(f.get(j))).sum(), MIN_CNT);
+        
+        double q = 2 * Math.log(cnt_fe[j][i]) - Math.log(cnt_f[j]) - Math.log(cnt_e[i]);
+        int posDiff = Math.abs(i - j);
+        q += Math.log(distortionParam(posDiff, sz-1));
+        score_fe[j][i] = q;
+      }
+      return score_fe[j][i];
+    }
+    
+  }
+  
+  public static <TK,FV> void resolveUnalignedTargetWords(
+      SymmetricalWordAlignment alignment, List<DynamicTranslationModel<FV>> tmList) {
+    
+   if(printDebug) {
+      System.err.println("called resolveUnalignedTargetWords");
+    }
+    
+    AlignmentScorer<FV> scorer = new AlignmentScorer<>(alignment, tmList);
+    
+    boolean foundAlignment = true;
+    while(foundAlignment) {
+      foundAlignment = false;
+
+      int bestJ = -1;
+      int bestI = -1;
+      double bestScore = -Double.MAX_VALUE;
+      
+      //first look for unaligned candidates
+      for(int i = alignment.unalignedE().nextSetBit(0); i > 0; i = alignment.unalignedE().nextSetBit(i + 1)) {
+        Set<Integer> leftAlignments = i > 0 ? alignment.e2f(i - 1) : new HashSet<Integer>();
+        Set<Integer> rightAlignments = i < alignment.eSize() - 1 ? alignment.e2f(i + 1) : new HashSet<Integer>();
+        
+        Set<Integer> candidates = new HashSet<>();
+        for(int j : leftAlignments) {
+          if(j + 1 < alignment.fSize() && alignment.f2e(j + 1).isEmpty())
+            candidates.add(j + 1);
+        }
+        for(int j : rightAlignments) {
+          if(j > 0 && alignment.f2e(j - 1).isEmpty())
+            candidates.add(j - 1);
+        }
+
+        if(candidates.size() > 0) {
+          for(int j : candidates) {
+            double q = scorer.score(j, i);
+            if(q > bestScore) {
+              bestJ = j;
+              bestI = i;
+              bestScore = q;
+            }
+          }
+        }  
+      }
+      
+      if(bestJ >= 0) {
+        foundAlignment = true;
+        if(printDebug) System.err.println("adding alignment: " + bestJ + " " + bestI);
+        alignment.addAlign(bestJ, bestI);
+        continue;
+      }
+      
+      //now check multiply aligned candidates
+      for(int i = alignment.unalignedE().nextSetBit(0); i > 0; i = alignment.unalignedE().nextSetBit(i + 1)) {
+        System.err.println("checking unaligned tgt pos " + i + " for multiply aligned candidates");
+        Set<Integer> leftAlignments = i > 0 ? alignment.e2f(i - 1) : new HashSet<Integer>();
+        Set<Integer> rightAlignments = i < alignment.eSize() - 1 ? alignment.e2f(i + 1) : new HashSet<Integer>();
+
+        Set<Integer> candidates = new HashSet<>();
+        for(int j : leftAlignments) {
+          if(j + 1 < alignment.fSize() && alignment.f2e(j + 1).size() == 1) {
+            int iPrime = alignment.f2e(j + 1).iterator().next();
+            if(alignment.e2f(iPrime).size() > 1) {
+              boolean lowestScoring = true;
+              for(int jPrime : alignment.e2f(iPrime)) {
+                if(jPrime == j + 1) continue;
+                if(scorer.score(jPrime, iPrime) <= scorer.score(j + 1, iPrime)) {
+                  lowestScoring = false;
+                  break;
+                }
+              }
+
+              if(lowestScoring) candidates.add(j + 1);
+            }
+          }
+        }
+            
+        for(int j : rightAlignments) {
+          if(j > 0 && alignment.f2e(j - 1).size() == 1) {
+            int iPrime = alignment.f2e(j - 1).iterator().next();
+            if(alignment.e2f(iPrime).size() > 1) {
+              boolean lowestScoring = true;
+              for(int jPrime : alignment.e2f(iPrime)) {
+                if(jPrime == j - 1) continue;
+                if(scorer.score(jPrime, iPrime) <= scorer.score(j - 1, iPrime)) {
+                  lowestScoring = false;
+                  break;
+                }
+              }
+            
+              if(lowestScoring) candidates.add(j - 1);
+            }
+          }
+        }
+        
+        if(candidates.size() > 0) {
+          for(int j : candidates) {
+            double q = scorer.score(j, i);
+            if(q > bestScore) {
+              bestJ = j;
+              bestI = i;
+              bestScore = q;
+            }
+          }
+        }  
+
+      }
+      
+      if(bestJ >= 0) {
+        foundAlignment = true;
+        Set<Integer> removeAlignments = new HashSet<>(alignment.f2e(bestJ));
+        for(int i : removeAlignments) {
+          if(printDebug) System.err.println("removing alignment: " + bestJ + " " + i);
+          alignment.removeAlign(bestJ, i);
+        }
+        
+        if(printDebug) System.err.println("adding alignment: " + bestJ + " " + bestI);
+        alignment.addAlign(bestJ, bestI);
+      }
+       
+    }
   }
   
 

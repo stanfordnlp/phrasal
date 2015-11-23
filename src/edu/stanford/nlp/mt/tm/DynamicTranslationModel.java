@@ -112,7 +112,18 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    *  [5] := 1 if count == 1 else 0
    *
    */
-  public static enum FeatureTemplate {DENSE, DENSE_EXT, DENSE_EXT_LEX};
+  public static enum FeatureTemplate {
+    DENSE(4), 
+    DENSE_EXT(6), 
+    DENSE_EXT_LOPEZ(8);
+  
+    private final int numFeatures;
+    
+    FeatureTemplate(int n) {
+      this.numFeatures = n;
+    }
+    public int getNumFeatures() { return numFeatures; }
+  };
   
   protected ParallelSuffixArray sa;
   
@@ -371,19 +382,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public void setFeatureTemplate(FeatureTemplate t) {
     this.featureTemplate = t;
-    if (t == FeatureTemplate.DENSE) {
-      featureNames = (String[]) IntStream.range(0, 4).mapToObj(i -> {
-        return String.format("%s.%d", FEATURE_PREFIX, i);
-      }).toArray(String[]::new);
-    
-    } else if (t == FeatureTemplate.DENSE_EXT) {
-      featureNames = (String[]) IntStream.range(0, 6).mapToObj(i -> {
-        return String.format("%s.%d", FEATURE_PREFIX, i);
-      }).toArray(String[]::new);
-    
-    } else {
-      throw new UnsupportedOperationException("Not yet implemented.");
-    }
+    featureNames = (String[]) IntStream.range(0, t.getNumFeatures()).mapToObj(i -> {
+      return String.format("%s.%d", FEATURE_PREFIX, i);
+    }).toArray(String[]::new);
   }
 
   /**
@@ -767,8 +768,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Note that these are abstract rules, so be sure to avoid:
    * 
-   *  1) double counting repeated rules extracted from the same sentence
-   *  2) 
    * @param samples
    * @param order
    * @param sampleRate
@@ -824,40 +823,33 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     List<Rule<IString>> scoredRules = new ArrayList<>(ruleList.size());
     for (int r = 0, sz = ruleList.size(); r < sz; ++r) {
       final SampledRule rule = ruleList.get(r);
-      
-      float[] scores;
-      if (featureTemplate == FeatureTemplate.DENSE) {
-        scores = new float[4];        
-        int eCnt = sa.count(rule.tgt, false);
-        assert eCnt > 0 : Arrays.toString(rule.tgt);
-        int adjustedCount = (int) (histogram[r] / sampleRate);
-        // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
-        // bitext.
-        adjustedCount = Math.min(adjustedCount, eCnt);
-        
-        scores[0] = (float) (Math.log(adjustedCount) - Math.log(eCnt));
-        scores[1] = (float) Math.log(rule.lex_f_e);
-        scores[2] = (float) (Math.log(histogram[r]) -  Math.log(ef_denom));
-        scores[3] = (float) Math.log(rule.lex_e_f);
-        
-      } else if (featureTemplate == FeatureTemplate.DENSE_EXT) {
-        scores = new float[6];
-        int eCnt = sa.count(rule.tgt, false);
-        assert eCnt > 0 : Arrays.toString(rule.tgt);
-        int adjustedCount = (int) (histogram[r] / sampleRate);
-        // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
-        // bitext.
-        adjustedCount = Math.min(adjustedCount, eCnt);
-        
-        scores[0] = (float) (Math.log(adjustedCount) - Math.log(eCnt));
-        scores[1] = (float) Math.log(rule.lex_f_e);
-        scores[2] = (float) (Math.log(histogram[r]) - Math.log(ef_denom));
-        scores[3] = (float) Math.log(rule.lex_e_f);
+      float[] scores = new float[featureTemplate.getNumFeatures()];
+      int eCnt = sa.count(rule.tgt, false);
+      assert eCnt > 0 : Arrays.toString(rule.tgt);
+      int adjustedCount = (int) (histogram[r] / sampleRate);
+      // Clip if the adjustedCount overshoots the number of occurrences of the target string in the
+      // bitext.
+      adjustedCount = Math.min(adjustedCount, eCnt);
+
+      // FeatureTemplate.DENSE i.e., Koehn et al. (2003)
+      scores[0] = (float) (Math.log(adjustedCount) - Math.log(eCnt));
+      scores[1] = (float) Math.log(rule.lex_f_e);
+      scores[2] = (float) (Math.log(histogram[r]) -  Math.log(ef_denom));
+      scores[3] = (float) Math.log(rule.lex_e_f);
+
+      if (featureTemplate == FeatureTemplate.DENSE_EXT) {
         scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
         scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
-                
-      } else {
-        throw new UnsupportedOperationException("Not yet implemented.");
+      
+      } else if (featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ) {
+        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
+        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
+        
+        // See A. Lopez dissertation p.103
+        scores[6] = (float) (Math.log(rules.size()) - Math.log(samples.size()));
+        
+        // Add the sampling rate. I had this idea while ago. Not sure if it's good....
+        scores[7] = (float) Math.log(sampleRate);
       }
 
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);
@@ -1227,7 +1219,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
     tm.setReorderingScores();
     timer.mark("Load");
-    tm.createQueryCache(FeatureTemplate.DENSE_EXT);
+    tm.createQueryCache(FeatureTemplate.DENSE_EXT_LOPEZ);
     timer.mark("Cache creation");
 
     //      tm.sa.print(true, new PrintWriter(System.out));
