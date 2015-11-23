@@ -57,7 +57,7 @@ public final class SyntheticRules {
   private static final int MAX_SYNTHETIC_ORDER = 3;
   private static final int MAX_TARGET_ORDER = 4;
   
-  private static final boolean printDebug = false;
+  private static final boolean DEBUG = false;
 
   private SyntheticRules() {}
 
@@ -306,7 +306,7 @@ public final class SyntheticRules {
 
     // WSGDEBUG
     //boolean printDebug = false; // sourceInputId == 1022;
-    if (printDebug) {
+    if (DEBUG) {
       System.err.printf("DEBUG %d%n", sourceInputId);
     }
 
@@ -347,7 +347,7 @@ public final class SyntheticRules {
           Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
           Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
           if(existingTargetSides.contains(tgt)) {
-            if (printDebug) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
+            if (DEBUG) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
             continue;
           }
           
@@ -393,7 +393,7 @@ public final class SyntheticRules {
           ruleGrid.addEntry(syntheticRule);
 
           // WSGDEBUG
-          if (printDebug) System.err.printf("Ext: %s%n", syntheticRule);
+          if (DEBUG) System.err.printf("Ext: %s%n", syntheticRule);
         }
       }
     }
@@ -484,7 +484,7 @@ public final class SyntheticRules {
           finalTargetCoverage.set(ei, ej);
 
           // WSGDEBUG
-          if (printDebug) System.err.printf("ExtUnk: %s%n", syntheticRule);
+          if (DEBUG) System.err.printf("ExtUnk: %s%n", syntheticRule);
         }
       }
       if (finalTargetCoverage.cardinality() != prefix.size()) {
@@ -600,7 +600,7 @@ public final class SyntheticRules {
     // Symmetrization
     SymmetricalWordAlignment sym = AlignmentSymmetrizer.symmetrize(align, sym_heuristic);
     // WSGDEBUG
-    if (printDebug) {
+    if (DEBUG) {
       System.err.printf("src: %s%n", sourceSequence);
       System.err.printf("tgt: %s%n", targetSequence);
       System.err.printf("f2e: %s%n", align.toString(false));
@@ -669,7 +669,7 @@ public final class SyntheticRules {
           if (tEF > max) {
             max = tEF;
             argmax = j;
-            if(printDebug)
+            if(DEBUG)
               System.err.println("align found compound: " + srcToken + " " + tgtToken);
           }
         }
@@ -691,7 +691,7 @@ public final class SyntheticRules {
           if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
-            if(printDebug)
+            if(DEBUG)
               System.err.println("align found lex similarity: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_f[j]);
           }
         }
@@ -701,7 +701,7 @@ public final class SyntheticRules {
       if (argmax >= 0) {
         a.addf2e(argmax, i);
       }
-      else if(printDebug) {
+      else if(DEBUG) {
         System.err.println("align: no alignment found for tgt token: " + tgtToken);
       }
     }
@@ -762,7 +762,7 @@ public final class SyntheticRules {
           if (tFE > max) {
             max = tFE;
             argmax = j;
-            if(printDebug)
+            if(DEBUG)
               System.err.println("invAlign found compound: " + srcToken + " " + tgtToken);
           }
         }
@@ -786,7 +786,7 @@ public final class SyntheticRules {
           if (q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
-            if(printDebug)
+            if(DEBUG)
               System.err.println("invAlign found lex similarity: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_e[j]);
           }
         }
@@ -796,7 +796,7 @@ public final class SyntheticRules {
       if (argmax >= 0) {
         a.adde2f(i, argmax);
       }
-      else if(printDebug) {
+      else if(DEBUG) {
         System.err.println("invAlign: no alignment found for src token: " + srcToken);
       }
     }
@@ -915,7 +915,7 @@ public final class SyntheticRules {
   public static <TK,FV> void resolveUnalignedTargetWords(
       SymmetricalWordAlignment alignment, List<DynamicTranslationModel<FV>> tmList) {
     
-   if(printDebug) {
+   if(DEBUG) {
       System.err.println("called resolveUnalignedTargetWords");
     }
     
@@ -958,14 +958,14 @@ public final class SyntheticRules {
       
       if(bestJ >= 0) {
         foundAlignment = true;
-        if(printDebug) System.err.println("adding alignment: " + bestJ + " " + bestI);
+        if(DEBUG) System.err.println("adding alignment: " + bestJ + " " + bestI);
         alignment.addAlign(bestJ, bestI);
         continue;
       }
       
       //now check multiply aligned candidates
       for(int i = alignment.unalignedE().nextSetBit(0); i > 0; i = alignment.unalignedE().nextSetBit(i + 1)) {
-        System.err.println("checking unaligned tgt pos " + i + " for multiply aligned candidates");
+        if (DEBUG) System.err.println("checking unaligned tgt pos " + i + " for multiply aligned candidates");
         Set<Integer> leftAlignments = i > 0 ? alignment.e2f(i - 1) : new HashSet<Integer>();
         Set<Integer> rightAlignments = i < alignment.eSize() - 1 ? alignment.e2f(i + 1) : new HashSet<Integer>();
 
@@ -1023,11 +1023,11 @@ public final class SyntheticRules {
         foundAlignment = true;
         Set<Integer> removeAlignments = new HashSet<>(alignment.f2e(bestJ));
         for(int i : removeAlignments) {
-          if(printDebug) System.err.println("removing alignment: " + bestJ + " " + i);
+          if(DEBUG) System.err.println("removing alignment: " + bestJ + " " + i);
           alignment.removeAlign(bestJ, i);
         }
         
-        if(printDebug) System.err.println("adding alignment: " + bestJ + " " + bestI);
+        if(DEBUG) System.err.println("adding alignment: " + bestJ + " " + bestI);
         alignment.addAlign(bestJ, bestI);
       }
        
