@@ -323,11 +323,12 @@ public final class SyntheticRules {
         (Sequence<IString>) prefix, tmList);
 
     // WSGDEBUG
-    if (printDebug) {
-      System.err.printf("src: %s%n", sourceSequence);
-      System.err.printf("tgt: %s%n", prefix);
-      System.err.printf("sym: %s%n", sym.toString());
-    }
+    //if (printDebug) {
+      logger.info("M2 alignment: ");
+      logger.info("src: " + sourceSequence);
+      logger.info("tgt: " + prefix);
+      logger.info("sym: " + sym.toString());
+    //}
 
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
