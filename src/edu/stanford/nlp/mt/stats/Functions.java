@@ -49,8 +49,9 @@ public final class Functions {
    * @return
    */
   public static double logFactorial(int n) {
-    if (n == 0 || n == 1) return 0; // 0! := 1
-    return (n * Math.log(n)) - n + (0.5 * Math.log(2 * Math.PI * n));
+    if (n < 0) throw new IllegalArgumentException();
+    else if (n <= 1) return 0; // 0! := 1
+    else return (n * Math.log(n)) - n + (0.5 * Math.log(2 * Math.PI * n));
   }
   
   /**
