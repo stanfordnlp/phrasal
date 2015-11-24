@@ -20,6 +20,7 @@ public class DistributionsTest {
   @Test
   public void poissonTest() {
     assertEquals("Mismatch", 0.3678794, Poisson.probOf(0, 1.0), 1e-6);
+    assertEquals("Mismatch", 0.3678794, Poisson.probOf(1, 1.0), 1e-6);
     assertEquals("Mismatch", 0.1353353, Poisson.probOf(0, 2.0), 1e-6);
     assertEquals("Mismatch", 0.04978707, Poisson.probOf(0, 3.0), 1e-6);
     

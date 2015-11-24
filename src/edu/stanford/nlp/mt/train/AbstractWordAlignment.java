@@ -162,11 +162,6 @@ public class AbstractWordAlignment implements WordAlignment {
     return hs.hashCode();
   }
 
-  public double ratioFtoE() {
-    assert (eSize() > 0);
-    return fSize() * 1.0 / eSize();
-  }
-
   public boolean isAdmissiblePhraseF(int i, int j) {
     boolean empty = true;
     for (int k = i; k <= j; ++k)
@@ -235,5 +230,4 @@ public class AbstractWordAlignment implements WordAlignment {
         return false;
     return true;
   }
-
 }
