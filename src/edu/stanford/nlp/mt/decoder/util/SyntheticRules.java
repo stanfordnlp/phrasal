@@ -344,13 +344,13 @@ public final class SyntheticRules {
         for (RuleBound r : rules) {
           Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
           Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
+          targetCoverage.set(r.ei, r.ej);
+          prefixSourceCoverage.set(r.fi, r.fj);
           if(existingTargetSides.contains(tgt)) {
             if (DEBUG) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
             continue;
           }
           
-          targetCoverage.set(r.ei, r.ej);
-          prefixSourceCoverage.set(r.fi, r.fj);
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
           int[][] e2f = new int[tgt.size()][src.size()];
