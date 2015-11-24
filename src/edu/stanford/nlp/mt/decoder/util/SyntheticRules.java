@@ -666,23 +666,6 @@ public final class SyntheticRules {
         }
       }
       
-      if (argmax < 0) {
-        // Backoff to distortion parameter
-        String tgt = a.e().get(i).toString();
-        for (int j = 0, sz = a.fSize(); j < sz; ++j) {
-          String src = a.f().get(j).toString();
-          // Don't log because jaccard score is often zero.
-          int posDiff = Math.abs(i - j);
-          double q = distortionParam(posDiff, sz-1);
-          if (q > 0.0 && q > max) {
-            max = q;
-            argmax = j;
-            if(DEBUG)
-              System.err.println("align found distortion: " + src + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_f[j]);
-          }
-        }
-      }
-
       // Populate alignment
       if (argmax >= 0) {
         a.addf2e(argmax, i);
@@ -776,25 +759,6 @@ public final class SyntheticRules {
         }
       }
       
-      if (argmax < 0) {
-        // Backoff to distortion parameter
-        String src = a.f().get(i).toString();
-
-        // Iterate over everything in the prefix
-        for (int j = 0, sz = a.eSize(); j < sz; ++j) {
-          // Check for similarity with the source item
-          String tgt = a.e().get(j).toString();
-          int posDiff = Math.abs(i - j);
-          double q = distortionParam(posDiff, sz-1);
-          if (q > 0.0 && q > max) {
-            max = q;
-            argmax = j;
-            if(DEBUG)
-              System.err.println("invAlign found distortion: " + srcToken + " " + tgt + " " + q + " " + Math.log(SimilarityMeasures.jaccard(tgt, src)) + " " + cnt_e[j]);
-          }
-        }
-      }
-
       // Populate alignment
       if (argmax >= 0) {
         a.adde2f(i, argmax);
