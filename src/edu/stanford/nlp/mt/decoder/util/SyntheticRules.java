@@ -241,6 +241,7 @@ public final class SyntheticRules {
       ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, inferer.featurizer, 
           inferer.scorer, d.sourceSequence, sourceInputId, sourceInputProperties);
       ruleGrid.addEntry(rule);
+      if (DEBUG) System.err.printf("FallbackExt: %s%n", rule);
       ++numRules;
     }
     return numRules;
