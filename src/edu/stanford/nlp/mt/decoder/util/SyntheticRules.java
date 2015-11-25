@@ -49,8 +49,8 @@ public final class SyntheticRules {
 //  private static final double BACKOFF_PROB = 1e-9;
   private static final double DISTORTION_LAMBDA = 1.0;
   private static final int GARBAGE_CNT_THRESHOLD = 100000;
-//  private static final double SIMILARITY_THRESHOLD = -1.8;
-//  private static final double TOTAL_SIMILARITY_THRESHOLD = -9;
+  private static final double SIMILARITY_THRESHOLD = Math.exp(-1.8);
+  private static final double TOTAL_SIMILARITY_THRESHOLD = Math.exp(-9);
 
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
@@ -700,9 +700,10 @@ public final class SyntheticRules {
           String src = a.f().get(j).toString();
           // Don't log because jaccard score is often zero.
           double q = SimilarityMeasures.jaccard(tgt, src);
+          if(q < SIMILARITY_THRESHOLD) continue;
           int posDiff = Math.abs(i - j);
           q *= distortionParam(posDiff, sz-1);
-          if (q > 0.0 && q > max) {
+          if (q > 0.0 && q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
             if(DEBUG)
@@ -793,9 +794,10 @@ public final class SyntheticRules {
           // Check for similarity with the source item
           String tgt = a.e().get(j).toString();
           double q = SimilarityMeasures.jaccard(tgt, src);
+          if(q < SIMILARITY_THRESHOLD) continue;
           int posDiff = Math.abs(i - j);
           q *= distortionParam(posDiff, sz-1);
-          if (q > 0.0 && q > max) {
+          if (q > 0.0 && q > max && q > TOTAL_SIMILARITY_THRESHOLD) {
             max = q;
             argmax = j;
             if(DEBUG)
