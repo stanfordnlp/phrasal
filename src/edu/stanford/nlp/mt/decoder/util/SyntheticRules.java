@@ -332,6 +332,9 @@ public final class SyntheticRules {
     // Extract phrases using the same heuristics as the DynamicTM
     CoverageSet targetCoverage = new CoverageSet(prefix.size());
     CoverageSet prefixSourceCoverage = new CoverageSet(sourceSequence.size());
+    
+    RuleCounter<TK, FV> ruleCounter = new RuleCounter<>(sourceSequence, prefix, tmList);
+    
     for (int order = 1; order <= MAX_SYNTHETIC_ORDER; ++order) {
       for (int i = 0, sz = sourceSequence.size() - order; i <= sz; ++i) {
         List<RuleBound> rules = extractRules(sym, i, order, MAX_TARGET_ORDER);
@@ -364,9 +367,9 @@ public final class SyntheticRules {
           if (src.size() == 1 && tgt.size() == 1) { // Unigram rule
             int cnt_f = 0, cnt_e = 0;
             double cnt_fe = 0.0;
-            cnt_f = getFcount(src.get(0), tmList);
-            cnt_e = getEcount(tgt.get(0), tmList);
-            cnt_fe = getFEcount(src.get(0), tgt.get(0), tmList);
+            cnt_f = ruleCounter.getFcount(r.fi);
+            cnt_e = ruleCounter.getEcount(r.ei);
+            cnt_fe = ruleCounter.getFEcount(r.fi, r.ei);
             syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
                 cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
                 inputProperties, sourceSequence, sourceInputId, alignment);
@@ -376,14 +379,14 @@ public final class SyntheticRules {
             double[][] cnt_fe = new double[src.size()][tgt.size()];
             
             for(int f = 0; f < src.size(); ++f) {
-              cnt_f[f] = getFcount(src.get(f), tmList);
+              cnt_f[f] = ruleCounter.getFcount(r.fi + f);
               
               for(int e = 0; e < tgt.size(); ++e)
-                cnt_fe[f][e] = getFEcount(src.get(f), tgt.get(e), tmList);
+                cnt_fe[f][e] = ruleCounter.getFEcount(r.fi + f, r.ei + e);
             }
             
             for(int e = 0; e < tgt.size(); ++e)
-              cnt_e[e] = getEcount(tgt.get(e), tmList);
+              cnt_e[e] = ruleCounter.getEcount(r.ei + e);
             
             syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
                 cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
@@ -477,6 +480,47 @@ public final class SyntheticRules {
     if(cnt == 0) cnt = SYNTHETIC_PROB;
     return cnt;
   }
+  
+  private static class RuleCounter <TK, FV> {
+    int[] cnt_e;
+    int[] cnt_f;
+    double[][] cnt_fe;
+    final List<DynamicTranslationModel<FV>> tmList;
+    final Sequence<TK> f;
+    final Sequence<TK> e;
+    
+    public RuleCounter(Sequence <TK> f, Sequence<TK> e, List<DynamicTranslationModel<FV>> tmList) {
+      cnt_e = new int[e.size()];
+      cnt_f = new int[f.size()];
+      cnt_fe = new double[f.size()][e.size()];
+      Arrays.fill(cnt_e, -1);    
+      Arrays.fill(cnt_f, -1);
+      for(int j = 0; j < cnt_fe.length; ++j) {
+        Arrays.fill(cnt_fe[j], -1);
+      }
+      
+      this.tmList = tmList;
+      this.f = f;
+      this.e = e;
+    }
+    
+    public int getEcount(int pos) {
+      if(cnt_e[pos] < 0) cnt_e[pos] = SyntheticRules.getEcount(e.get(pos), tmList);
+      return cnt_e[pos];
+    }
+    
+    public int getFcount(int pos) {
+      if(cnt_f[pos] < 0) cnt_f[pos] = SyntheticRules.getFcount(f.get(pos), tmList);
+      return cnt_f[pos];
+    }
+    
+    public double getFEcount(int fPos, int ePos) {
+      if(cnt_fe[fPos][ePos] < 0) cnt_fe[fPos][ePos] = SyntheticRules.getFEcount(f.get(fPos), e.get(ePos), tmList);
+      return cnt_fe[fPos][ePos];
+    }
+    
+  }
+  
 
   public static List<RuleBound> extractRules(SymmetricalWordAlignment align, int sourcePosition, 
       int length, int maxTargetPhrase) {
