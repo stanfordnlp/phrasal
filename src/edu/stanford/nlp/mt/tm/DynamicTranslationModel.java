@@ -78,7 +78,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Parallelize TM queries. 
    */
-  private static final int WORK_QUEUE_SIZE = 1028;
+  private static final int WORK_QUEUE_SIZE = 4096;
   private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
   private static final ThreadPoolExecutor threadPool = 
       new ThreadPoolExecutor(NUM_THREADS, NUM_THREADS, 0L, TimeUnit.MILLISECONDS,
