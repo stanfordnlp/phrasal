@@ -17,7 +17,7 @@ public class FunctionsTest {
    */
   @Test
   public void logFactorialTest() {
-    assertEquals("Error", 0.92, Math.exp(Functions.logFactorial(1)), 1e-2);
+    assertEquals("Error", 1.0, Math.exp(Functions.logFactorial(1)), 1e-2);
     assertEquals("Error", 1.92, Math.exp(Functions.logFactorial(2)), 1e-2);
     assertEquals("Error", 5.84, Math.exp(Functions.logFactorial(3)), 1e-2);
     assertEquals("Error", 23.51, Math.exp(Functions.logFactorial(4)), 1e-2);
