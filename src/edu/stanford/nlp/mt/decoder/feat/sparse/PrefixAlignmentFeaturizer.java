@@ -49,7 +49,7 @@ implements RuleFeaturizer<IString,String>{
 
   @Override
   public List<FeatureValue<String>> featurize(Featurizable<IString, String> f) {
-    if (f.targetPosition >= f.derivation.prefixLength || f.targetPhrase.size() == 0) return null;
+    //if (f.targetPosition >= f.derivation.prefixLength || f.targetPhrase.size() == 0) return null;
     List<FeatureValue<String>> features = new ArrayList<>();
     if (dDiagDistance) features.addAll(diagonalDistance(f));
     if (dOrthoSim) features.addAll(orthoSimilarity(f));
@@ -98,7 +98,7 @@ implements RuleFeaturizer<IString,String>{
   private static final String RULE_SHAPE = FEATURE_PREFIX + ":shp";
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    if ( ! f.sourceInputProperties.containsKey(InputProperty.TargetPrefix)) return null;
+    //if ( ! f.sourceInputProperties.containsKey(InputProperty.TargetPrefix)) return null;
     List<FeatureValue<String>> features = new ArrayList<>();
     if (rUnaligned) features.addAll(unalignedWords(f));
     if (rShape) {
