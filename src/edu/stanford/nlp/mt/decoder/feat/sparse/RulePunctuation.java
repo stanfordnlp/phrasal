@@ -32,6 +32,10 @@ public class RulePunctuation implements RuleFeaturizer<IString, String> {
     Properties options = FeatureUtils.argsToProperties(args);
     this.shape = options.containsKey("shape");
   }
+  
+  public RulePunctuation() {
+    this.shape = false;
+  }
 
   @Override
   public void initialize() {}
