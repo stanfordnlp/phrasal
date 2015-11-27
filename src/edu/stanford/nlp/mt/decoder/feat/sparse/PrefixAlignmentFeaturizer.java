@@ -52,8 +52,6 @@ implements RuleFeaturizer<IString,String>{
     //if (f.targetPosition >= f.derivation.prefixLength || f.targetPhrase.size() == 0) return null;
     List<FeatureValue<String>> features = new ArrayList<>();
     if (dDiagDistance) features.addAll(diagonalDistance(f));
-    if (dOrthoSim) features.addAll(orthoSimilarity(f));
-    
     
     return features;
   }
@@ -106,6 +104,7 @@ implements RuleFeaturizer<IString,String>{
       String tgtLen = Integer.toString(f.targetPhrase.size());
       features.add(new FeatureValue<>(RULE_SHAPE + ":" + srcLen + "-" + tgtLen, 1.0));
     }
+    if (dOrthoSim) features.addAll(orthoSimilarity(f));
     
     return features;
   }
