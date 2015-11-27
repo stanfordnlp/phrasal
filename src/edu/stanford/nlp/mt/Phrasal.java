@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
@@ -117,6 +118,7 @@ public class Phrasal {
         .append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl).append("  -")
         .append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl).append("  -")
         .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).")
+        .append(nl).append("  -").append(PREFIX_ALIGN_COMPOUNDS).append(" boolean : Apply heuristic compound word alignmen for prefix decoding? Affects cube pruning decoder only. (default: false) ")
         .append(nl).append("  -").append(BEAM_SIZE).append(" num : Stack/beam size.").append(nl).append("  -")
         .append(SEARCH_ALGORITHM).append(" [cube|multibeam] : Inference algorithm (default:cube)").append(nl)
         .append("  -").append(REORDERING_MODEL)
@@ -171,6 +173,7 @@ public class Phrasal {
   public static final String NBEST_LIST_OPT = "n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String FORCE_DECODE = "force-decode";
+  public static final String PREFIX_ALIGN_COMPOUNDS = "prefix-align-compounds";
   public static final String BEAM_SIZE = "stack";
   public static final String SEARCH_ALGORITHM = "search-algorithm";
   public static final String REORDERING_MODEL = "reordering-model";
@@ -206,7 +209,7 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
     OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE,
+        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, 
         RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
@@ -519,6 +522,8 @@ public class Phrasal {
       forceDecodeReferences = MetricUtils
           .readReferences(config.get(FORCE_DECODE).stream().toArray(String[]::new));
     }
+    
+    final boolean prefixAlignCompounds = config.containsKey(PREFIX_ALIGN_COMPOUNDS); 
 
     // int distortionLimit = -1;
     float distortionCost = 0.0f;
@@ -829,6 +834,8 @@ public class Phrasal {
         infererBuilder.setBeamSize(beamSize);
       }
       inferers.add(infererBuilder.newInferer());
+      
+      ((AbstractBeamInferer<IString, String>) inferers.get(i)).setPrefixAlignCompounds(prefixAlignCompounds);
     }
 
     // determine if we need to generate n-best lists

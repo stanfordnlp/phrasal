@@ -177,7 +177,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       ruleGrid.setRuleQueryLimit(-1);
 
       // Add new rules to the rule grid
-      SyntheticRules.augmentRuleGrid(ruleGrid, targets.get(0), sourceInputId, source, this, sourceInputProperties);
+      SyntheticRules.augmentRuleGrid(ruleGrid, targets.get(0), sourceInputId, source, this, sourceInputProperties, prefixAlignCompounds);
       
       timer.mark("PrefixAug");
     }

@@ -299,7 +299,7 @@ public final class SyntheticRules {
   @SuppressWarnings("unchecked")
   public static <TK,FV> void augmentRuleGrid(RuleGrid<TK,FV> ruleGrid, 
       Sequence<TK> prefix, int sourceInputId, Sequence<TK> sourceSequence, 
-      AbstractInferer<TK, FV> inferer, InputProperties inputProperties) {
+      AbstractInferer<TK, FV> inferer, InputProperties inputProperties, boolean handleCompounds) {
 
     if (! (inferer.phraseGenerator instanceof DynamicTranslationModel)) {
       throw new RuntimeException("Synthetic rule generation requires DynamicTranslationModel");
@@ -320,7 +320,7 @@ public final class SyntheticRules {
 
     // Symmetrization
     final SymmetricalWordAlignment sym = bidirAlign((Sequence<IString>) sourceSequence, 
-        (Sequence<IString>) prefix, tmList);
+        (Sequence<IString>) prefix, tmList, handleCompounds);
 
     if (DEBUG) {
       logger.info("M2 alignment: ");
@@ -587,16 +587,15 @@ public final class SyntheticRules {
       this.ej = ej;
     }
   }
-  
-  
-  public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
-      Sequence<IString> targetSequence, List<DynamicTranslationModel<FV>> tmList) {
-    return bidirAlign(sourceSequence, targetSequence, tmList, SYM_HEURISTIC);
+
+    public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
+      Sequence<IString> targetSequence, List<DynamicTranslationModel<FV>> tmList, boolean handleCompounds) {
+    return bidirAlign(sourceSequence, targetSequence, tmList, handleCompounds, SYM_HEURISTIC);
   }
   
   public static <TK,FV> SymmetricalWordAlignment bidirAlign(Sequence<IString> sourceSequence, 
       Sequence<IString> targetSequence, List<DynamicTranslationModel<FV>> tmList,
-      SymmetrizationType sym_heuristic) {
+      boolean handleCompounds, SymmetrizationType sym_heuristic) {
 
     final GIZAWordAlignment align = new GIZAWordAlignment(sourceSequence, targetSequence);
 
@@ -607,10 +606,10 @@ public final class SyntheticRules {
     } else {
       // e2f align prefix to source with Cooc table and lexical similarity as backoff. This will
       // need to change for languages with different orthographies.
-      alignInverse(tmList, align);
+      alignInverse(tmList, align, handleCompounds);
 
       // f2e align with Cooc table and lexical similarity. Includes deletion rules.
-      align(tmList, align);
+      align(tmList, align, handleCompounds);
     }
     
     // Symmetrization
@@ -627,7 +626,7 @@ public final class SyntheticRules {
     return sym;
   }
   
-  private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
+  private static <TK,FV> void align(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a, boolean handleCompounds) {
 
     int[] cnt_f = new int[a.fSize()];
     Arrays.fill(cnt_f, -1);
@@ -663,7 +662,7 @@ public final class SyntheticRules {
         }
       }
       
-      if (argmax < 0) {
+      if (handleCompounds && argmax < 0) {
         // check for compound words
         for (int j = 0, sz = a.fSize(); j < sz; ++j) {
           final IString srcToken = (IString) a.f().get(j);
@@ -722,7 +721,7 @@ public final class SyntheticRules {
     }
   }
 
-  private static <TK,FV> void alignInverse(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a) {
+  private static <TK,FV> void alignInverse(List<DynamicTranslationModel<FV>> tmList, GIZAWordAlignment a, boolean handleCompounds) {
 
     int[] cnt_e = new int[a.eSize()];
     Arrays.fill(cnt_e, -1);
@@ -755,7 +754,7 @@ public final class SyntheticRules {
         }
       }
       
-      if (argmax < 0) {
+      if (handleCompounds && argmax < 0) {
         // check for compound words
         for (int j = 0, sz = a.eSize(); j < sz; ++j) {
           final IString tgtToken = (IString) a.e().get(j);

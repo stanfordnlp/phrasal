@@ -69,6 +69,8 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   protected final int beamCapacity;
   protected final BeamFactory.BeamType beamType;
   private final Comparator<RichTranslation<TK,FV>> translationComparator;
+  
+  protected boolean prefixAlignCompounds = false;
 
   /**
    * Constructor.
@@ -428,7 +430,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       tmList.add((DynamicTranslationModel<FV>) sourceInputProperties.get(InputProperty.ForegroundTM));
     }
     
-    SymmetricalWordAlignment alignment = SyntheticRules.bidirAlign((Sequence<IString>)source, (Sequence<IString>)target, tmList, SymmetrizationType.grow_diag_final_and);
+    SymmetricalWordAlignment alignment = SyntheticRules.bidirAlign((Sequence<IString>)source, (Sequence<IString>)target, tmList, prefixAlignCompounds, SymmetrizationType.grow_diag_final_and);
       
     SyntheticRules.resolveUnalignedTargetWords(alignment, tmList);
     
@@ -437,8 +439,11 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     logger.info("align: " + alignment.toString());
     
     return alignment;
-    
-    
+  }
+  
+  
+  public void setPrefixAlignCompounds(boolean prefixAlignCompounds) {
+    this.prefixAlignCompounds = prefixAlignCompounds;
   }
 
   /**
