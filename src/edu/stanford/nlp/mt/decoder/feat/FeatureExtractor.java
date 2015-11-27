@@ -199,6 +199,7 @@ public class FeatureExtractor<TK, FV> extends
  
   private static final String[] NO_GENRE = new String[]{""};
   private static final String PREFIX = "PRF";
+  private static final String PREFIX_BOUNDARY_STRADDLE = PREFIX + "-" + "STR";
   
   /**
    * Feature space augmentation a la Daume III (2007).
@@ -230,8 +231,13 @@ public class FeatureExtractor<TK, FV> extends
         FeatureValue<FV> fv = featureValues.get(i);
         final boolean inPrefix = f.targetSequence != null && f.derivation != null && 
             f.derivation.insertionPosition < f.derivation.prefixLength;
+        final boolean straddle = inPrefix && f.derivation.length > f.derivation.prefixLength;
         if (inPrefix) {
           String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
+          featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
+        }
+        if (straddle) {
+          String featureValue = "aug-" + PREFIX_BOUNDARY_STRADDLE + "-" + fv.name.toString();
           featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
       }
@@ -242,12 +248,17 @@ public class FeatureExtractor<TK, FV> extends
   public List<FeatureValue<FV>> nonLocalAugmentRuleFeatures(List<FeatureValue<FV>> ruleFeatures, Derivation<TK, FV> derivation) {
     List<FeatureValue<FV>> rv = null;
     if (featureAugmentationMode >= 3 && derivation.insertionPosition < derivation.prefixLength) {
+      boolean straddle = derivation.length > derivation.prefixLength;
       rv = new ArrayList<>();
       // Prefix mode
       for(FeatureValue<FV> fv : ruleFeatures) {
         if(fv.name.toString().startsWith("aug-")) continue;
         String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
         rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
+        if(straddle) {
+          featureValue = "aug-" + PREFIX_BOUNDARY_STRADDLE + "-" + fv.name.toString();
+          rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
+        }
       }
     }
     return rv;
