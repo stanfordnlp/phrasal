@@ -63,7 +63,7 @@ public class RulePunctuation implements RuleFeaturizer<IString, String> {
     if (puncDiff > 0) features.add(new FeatureValue<>(FEATURE_PREFIX, Math.log(puncDiff)));
     if (shape && (numSourcePunc > 0 || numTargetPunc > 0)) features.add(
         new FeatureValue<>(FEATURE_PREFIX + ":" + numSourcePunc + "-" + numTargetPunc, 1.0));
-    if(consistency && (puncDiff > 0 || !checkConsistent(f.sourcePhrase, f.targetPhrase)) ) {
+    if(consistency && (puncDiff == 0 || !checkConsistent(f.sourcePhrase, f.targetPhrase)) ) {
       features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + INCONSISTENT, 1.0));
     }
     // only fires if one side contains only punctutation
