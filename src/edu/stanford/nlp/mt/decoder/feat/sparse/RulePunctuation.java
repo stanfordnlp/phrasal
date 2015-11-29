@@ -9,6 +9,7 @@ import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.util.FeatureValue;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.IString;
+import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.TokenUtils;
 
 /**
@@ -20,8 +21,13 @@ import edu.stanford.nlp.mt.util.TokenUtils;
 public class RulePunctuation implements RuleFeaturizer<IString, String> {
 
   public static final String FEATURE_PREFIX = "RPN";
-
+  public static final String INCONSISTENT = "inconsistent";
+  public static final String SRC_EXC = "srcExc";
+  public static final String TGT_EXC = "tgtExc";
+  
   private final boolean shape;
+  private final boolean consistency;
+  private final boolean excessWords;
 
   /**
    * Constructor.
@@ -31,10 +37,14 @@ public class RulePunctuation implements RuleFeaturizer<IString, String> {
   public RulePunctuation(String...args) {
     Properties options = FeatureUtils.argsToProperties(args);
     this.shape = options.containsKey("shape");
+    this.consistency = options.containsKey("consistency");
+    this.excessWords = options.containsKey("excessWords");
   }
   
   public RulePunctuation() {
     this.shape = false;
+    this.consistency = false;
+    this.excessWords = false;
   }
 
   @Override
@@ -53,7 +63,35 @@ public class RulePunctuation implements RuleFeaturizer<IString, String> {
     if (puncDiff > 0) features.add(new FeatureValue<>(FEATURE_PREFIX, Math.log(puncDiff)));
     if (shape && (numSourcePunc > 0 || numTargetPunc > 0)) features.add(
         new FeatureValue<>(FEATURE_PREFIX + ":" + numSourcePunc + "-" + numTargetPunc, 1.0));
+    if(consistency && (puncDiff > 0 || !checkConsistent(f.sourcePhrase, f.targetPhrase)) ) {
+      features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + INCONSISTENT, 1.0));
+    }
+    // only fires if one side contains only punctutation
+    if(excessWords) {
+      if(numSourcePunc == f.sourcePhrase.size()) {
+        if(f.targetPhrase.size() > numTargetPunc)
+          features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + TGT_EXC, f.targetPhrase.size() - numTargetPunc));
+      }
+      else if(numTargetPunc == f.targetPhrase.size()) {
+        features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + SRC_EXC, f.sourcePhrase.size() - numSourcePunc));
+      }
+    }
     return features;
+  }
+  
+  // returns true only if src and target phrase contain the same punctuation tokens in the same order
+  private boolean checkConsistent(Sequence<IString> src, Sequence<IString> tgt) {
+    int i = 0;
+    for(IString token : src) {
+      if(!TokenUtils.isPunctuation(token.toString())) continue;
+      while(i < tgt.size() && !TokenUtils.isPunctuation(tgt.get(i).toString())) ++i;
+      if(i == tgt.size() || !token.equals(tgt.get(i))) return false;
+    }
+    for(; i < tgt.size(); ++i) {
+      if(TokenUtils.isPunctuation(tgt.get(i).toString())) return false;
+    }
+    
+    return true;
   }
 
   @Override
