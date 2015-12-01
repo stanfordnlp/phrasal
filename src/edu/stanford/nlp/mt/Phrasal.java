@@ -523,7 +523,8 @@ public class Phrasal {
           .readReferences(config.get(FORCE_DECODE).stream().toArray(String[]::new));
     }
     
-    final boolean prefixAlignCompounds = config.containsKey(PREFIX_ALIGN_COMPOUNDS); 
+    final boolean prefixAlignCompounds = config.containsKey(PREFIX_ALIGN_COMPOUNDS) ?
+        Boolean.parseBoolean(config.get(PREFIX_ALIGN_COMPOUNDS).get(0)) : false;
 
     // int distortionLimit = -1;
     float distortionCost = 0.0f;

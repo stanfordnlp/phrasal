@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import edu.stanford.nlp.mt.util.FeatureValue;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.util.Index;
 
@@ -51,7 +52,7 @@ public class SparseScorer implements Scorer<String> {
 
   @Override
   public void saveWeights(String filename) throws IOException {
-    throw new UnsupportedOperationException();
+    IOTools.writeWeights(filename, weights);
   }
 
   @Override
