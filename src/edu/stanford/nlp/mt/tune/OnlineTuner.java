@@ -190,7 +190,7 @@ public final class OnlineTuner {
    * @param prefixTuningFile
    */
   private void loadPrefixFile(String prefixTuningFile) {
-    if(prefixTuningFile == "RANDOM") {
+    if(prefixTuningFile.equals("RANDOM")) {
       randomPrefixes = true;
       random = new Random();
       prefixes = new ArrayList<>();
@@ -211,7 +211,8 @@ public final class OnlineTuner {
   }
   
   private Sequence<IString> getRandomPrefix(int sourceId, Sequence<IString> ref) {
-    int length = random.nextInt(ref.size() - 2) + 1 ; // we do not want prefixes of length 0 or the full reference.
+    int length = ref.size() > 2 ? random.nextInt(ref.size() - 2) + 1 : ref.size() - 1; // we do not want prefixes of length 0 or the full reference.
+         
     System.err.println("prefix of length " + length + ": " + ref.subsequence(0, length));
     return ref.subsequence(0, length);
   }
