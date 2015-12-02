@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.Set;
 import java.util.HashSet;
@@ -83,6 +84,8 @@ public final class OnlineTuner {
   private List<Sequence<IString>> tuneSource;
   private List<List<Sequence<IString>>> references;
   private List<Sequence<IString>> prefixes;
+  private boolean randomPrefixes = false;
+  private Random random;
   private int numReferences;
 
   // Various options
@@ -187,6 +190,13 @@ public final class OnlineTuner {
    * @param prefixTuningFile
    */
   private void loadPrefixFile(String prefixTuningFile) {
+    if(prefixTuningFile == "RANDOM") {
+      randomPrefixes = true;
+      random = new Random();
+      prefixes = new ArrayList<>();
+      return;
+    }
+    
     prefixes = IStrings.tokenizeFile(prefixTuningFile);
     logger.info("Prefix tuning mode: {} examples", prefixes.size());
     if (prefixes.size() != tuneSource.size()) {
@@ -199,6 +209,28 @@ public final class OnlineTuner {
       references.get(i).add(0, prefixes.get(i));
     }
   }
+  
+  private Sequence<IString> getRandomPrefix(int sourceId, Sequence<IString> ref) {
+    int length = random.nextInt(ref.size() - 2) + 1 ; // we do not want prefixes of length 0 or the full reference.
+    System.err.println("prefix of length " + length + ": " + ref.subsequence(0, length));
+    return ref.subsequence(0, length);
+  }
+  
+  private void newRandomPrefixes(boolean firstTime) {
+    if(!firstTime) {
+      for (int i = 0, sz = references.size(); i < sz; ++i) {
+        references.get(i).remove(0);
+      }
+    }
+    
+    prefixes.clear();
+    for (int i = 0, sz = references.size(); i < sz; ++i) {
+      prefixes.add(getRandomPrefix(i, references.get(i).get(0)));
+      references.get(i).add(0, prefixes.get(i));
+    }
+  }
+  
+  
 
   /**
    * Load additional feature values from plain text file.
@@ -646,6 +678,8 @@ public final class OnlineTuner {
       
       List<Sequence<IString>> prefixDecodingOutputs = outputPrefixDecoding ? new ArrayList<>(2*tuneSetSize) : null;
 
+      if(randomPrefixes) newRandomPrefixes(epoch == 0);
+      
       // Randomize order of training examples in-place (Langford et al. (2009), p.4)
       if(shuffleDev)
         ArrayMath.shuffle(indices);
@@ -1001,7 +1035,7 @@ public final class OnlineTuner {
       //.append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
       .append("   -niw       : normalize the initial weights file (default: false)").append(nl)
       .append("   -sb        : Specify for single best output. ").append(nl)
-      .append("   -pt path   : Prefix tuning file. Only one reference allowed.")
+      .append("   -pt path   : Prefix tuning file. Only one reference allowed. Or RANDOM to randomly select prefixes from reference.")
       .append("   -ifw path  : Additional initial feature weights file in plain text. Values are only used if feature is not already present in the weight vector.");
     
     return sb.toString();
