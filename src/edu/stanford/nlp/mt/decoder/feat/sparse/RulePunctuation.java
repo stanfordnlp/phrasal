@@ -21,9 +21,9 @@ import edu.stanford.nlp.mt.util.TokenUtils;
 public class RulePunctuation implements RuleFeaturizer<IString, String> {
 
   public static final String FEATURE_PREFIX = "RPN";
-  public static final String INCONSISTENT = "inconsistent";
-  public static final String SRC_EXC = "srcExc";
-  public static final String TGT_EXC = "tgtExc";
+  public static final String INCONSISTENT = FEATURE_PREFIX + ":inconsistent";
+  public static final String SRC_EXC = FEATURE_PREFIX + ":srcExc";
+  public static final String TGT_EXC = FEATURE_PREFIX + ":tgtExc";
   
   private final boolean shape;
   private final boolean consistency;
@@ -64,16 +64,16 @@ public class RulePunctuation implements RuleFeaturizer<IString, String> {
     if (shape && (numSourcePunc > 0 || numTargetPunc > 0)) features.add(
         new FeatureValue<>(FEATURE_PREFIX + ":" + numSourcePunc + "-" + numTargetPunc, 1.0));
     if(consistency && (puncDiff == 0 || !checkConsistent(f.sourcePhrase, f.targetPhrase)) ) {
-      features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + INCONSISTENT, 1.0));
+      features.add(new FeatureValue<>(INCONSISTENT, 1.0));
     }
     // only fires if one side contains only punctutation
     if(excessWords) {
       if(numSourcePunc == f.sourcePhrase.size()) {
         if(f.targetPhrase.size() > numTargetPunc)
-          features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + TGT_EXC, f.targetPhrase.size() - numTargetPunc));
+          features.add(new FeatureValue<>(TGT_EXC, f.targetPhrase.size() - numTargetPunc));
       }
       else if(numTargetPunc == f.targetPhrase.size()) {
-        features.add(new FeatureValue<>(FEATURE_PREFIX + ":" + SRC_EXC, f.sourcePhrase.size() - numSourcePunc));
+        features.add(new FeatureValue<>(SRC_EXC, f.sourcePhrase.size() - numSourcePunc));
       }
     }
     return features;
