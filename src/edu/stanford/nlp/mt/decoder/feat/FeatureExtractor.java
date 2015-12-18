@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -27,6 +28,9 @@ public class FeatureExtractor<TK, FV> extends
   private List<Featurizer<TK, FV>> featurizers;
   private final int numDerivationFeaturizers;
   private int featureAugmentationMode = -1;
+  private ConcurrentHashMap<String, String> prefixFeatMap = null;
+  private ConcurrentHashMap<String, String> straddleFeatMap = null;
+  private ConcurrentHashMap<String, String> afterPrefixFeatMap = null;
   
   /**
    * Constructor.
@@ -72,12 +76,20 @@ public class FeatureExtractor<TK, FV> extends
         this.featureAugmentationMode = 2;
       } else if (featureAugmentationMode.equals("prefixAndGenre")) {
         this.featureAugmentationMode = 3;
+        initPrefixFeatMaps();
       } else if (featureAugmentationMode.equals("prefix")) {
         this.featureAugmentationMode = 4;
+        initPrefixFeatMaps();
       }
       return true;
     }
     return false;
+  }
+  
+  private void initPrefixFeatMaps() {
+    prefixFeatMap = new ConcurrentHashMap<>();
+    straddleFeatMap = new ConcurrentHashMap<>();
+    afterPrefixFeatMap = new ConcurrentHashMap<>();
   }
   
   /**
@@ -235,19 +247,28 @@ public class FeatureExtractor<TK, FV> extends
         final boolean straddle = inPrefix && f.derivation.length > f.derivation.prefixLength;
         final boolean afterPrefix = f.derivation != null && f.derivation.prefixLength > 0 && !inPrefix;
         if (inPrefix) {
-          String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
+          String featureValue = getAugFeatureName(fv.name.toString(), prefixFeatMap, PREFIX);
           featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
         else if(afterPrefix) {
-          String featureValue = "aug-" + AFTER_PREFIX + "-" + fv.name.toString();
+          String featureValue = getAugFeatureName(fv.name.toString(), afterPrefixFeatMap, AFTER_PREFIX);
           featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
         if (straddle) {
-          String featureValue = "aug-" + PREFIX_BOUNDARY_STRADDLE + "-" + fv.name.toString();
+          String featureValue = getAugFeatureName(fv.name.toString(), straddleFeatMap, PREFIX_BOUNDARY_STRADDLE);
           featureValues.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
       }
     }
+  }
+  
+  private String getAugFeatureName(String baseFeatureName, ConcurrentHashMap<String, String> map, String augLabel) {
+    String result = map.get(baseFeatureName);
+    if(result != null) return result;
+    
+    result = "aug-" + augLabel + "-" + baseFeatureName;
+    map.put(baseFeatureName, result);
+    return result;
   }
   
   @SuppressWarnings("unchecked")
@@ -260,10 +281,10 @@ public class FeatureExtractor<TK, FV> extends
         // Prefix mode
         for(FeatureValue<FV> fv : ruleFeatures) {
           if(fv.name.toString().startsWith("aug-")) continue;
-          String featureValue = "aug-" + PREFIX + "-" + fv.name.toString();
+          String featureValue = getAugFeatureName(fv.name.toString(), prefixFeatMap, PREFIX);
           rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
           if(straddle) {
-            featureValue = "aug-" + PREFIX_BOUNDARY_STRADDLE + "-" + fv.name.toString();
+            featureValue = getAugFeatureName(fv.name.toString(), straddleFeatMap, PREFIX_BOUNDARY_STRADDLE);
             rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
           }
         }
@@ -271,7 +292,7 @@ public class FeatureExtractor<TK, FV> extends
       else if(derivation.prefixLength > 0) {
         for(FeatureValue<FV> fv : ruleFeatures) {
           if(fv.name.toString().startsWith("aug-")) continue;
-          String featureValue = "aug-" + AFTER_PREFIX + "-" + fv.name.toString();
+          String featureValue = getAugFeatureName(fv.name.toString(), afterPrefixFeatMap, AFTER_PREFIX);
           rv.add(new FeatureValue<>((FV) featureValue, fv.value, fv.isDenseFeature));
         }
       }
