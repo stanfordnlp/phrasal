@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
@@ -35,10 +36,13 @@ public class MosesCompoundSplitter {
   private static int MAX_COUNT = 5;
 
   
+  private final boolean useUnigramProbs;
   private Counter<String> lcModel;
+  private Counter<String> probs = null;
   private HashMap<String, String> trueCase;
   
-  public MosesCompoundSplitter(String modelFileName) {
+  public MosesCompoundSplitter(String modelFileName, boolean useUnigramProbs) {
+    this.useUnigramProbs = useUnigramProbs;
     try {
       loadModel(modelFileName);
     }
@@ -54,7 +58,9 @@ public class MosesCompoundSplitter {
     
     lcModel = new ClassicCounter<String>();
     trueCase = new HashMap<>();
-    
+    double totalCount = 0.0;
+    if(useUnigramProbs) probs = new ClassicCounter<String>();
+
     int minCnt = Math.min(MAX_COUNT, MIN_COUNT);
     
     for (String line; (line = reader.readLine()) != null;) {
@@ -64,6 +70,7 @@ public class MosesCompoundSplitter {
         throw new IOException("Illegal input in model file, line " + reader.getLineNumber() + ": " + line);
       }
       int cnt = Integer.parseInt(input[2]);
+      totalCount += cnt;
       String tc = input[1];
       if(cnt < minCnt || tc.length() < MIN_SIZE + 1) continue; // these will never be used for splitting anyway
       
@@ -73,6 +80,13 @@ public class MosesCompoundSplitter {
         lcModel.setCount(lc, cnt);
         trueCase.put(lc, tc);
         //System.err.println("adding: " + input[1] + " ::: " + input[2]);
+      }
+    }
+    
+    totalCount = Math.log(totalCount);
+    if(useUnigramProbs) {
+      for(Entry<String, Double> e : lcModel.entrySet()) {
+        probs.setCount(e.getKey(), Math.log(e.getValue()) - totalCount);
       }
     }
     reader.close();
@@ -125,10 +139,10 @@ public class MosesCompoundSplitter {
   
   private class Match {
     int start;
-    int cnt;
+    double cnt;
     String tc;
     
-    Match(int s, int c, String w) {
+    Match(int s, double c, String w) {
       start = s;
       cnt = c;
       tc = w;
@@ -153,9 +167,11 @@ public class MosesCompoundSplitter {
           if(end - start - FILLERS[i].length() < MIN_SIZE) continue;
           if(!lc.substring(start, start + FILLERS[i].length()).equals(FILLERS[i])) continue;
           String subword = lc.substring(start + FILLERS[i].length(), end + 1);
-          if(lcModel.getCount(subword) < MIN_COUNT) continue;
+          double cnt = lcModel.getCount(subword);
+          if(cnt < MIN_COUNT) continue;
           if(matches.get(end) == null) matches.set(end, new ArrayList<>());
-          matches.get(end).add(new Match(start, (int) lcModel.getCount(subword), trueCase.get(subword)));
+          double score = useUnigramProbs ? probs.getCount(subword) : cnt;
+          matches.get(end).add(new Match(start, score, trueCase.get(subword)));
           //System.err.println("add match at pos " + end + ": " + trueCase.get(subword) + " " + lcModel.getCount(subword));
         }
       }
@@ -165,7 +181,7 @@ public class MosesCompoundSplitter {
 
     int[] iterator = new int[word.length()];
     for(int i = 0; i < iterator.length; ++i) iterator[i] = 0;
-    double bestScore = 0.0;
+    double bestScore = Double.NEGATIVE_INFINITY;
     List<String> bestSplit = new ArrayList<>();
     List<String> reverseSplit = new ArrayList<>();
     
@@ -183,13 +199,14 @@ public class MosesCompoundSplitter {
         Match match = posMatches.get(iterator[pos]);
         
         reverseSplit.add(match.tc);
-        score *= match.cnt;
+        if(useUnigramProbs) score += match.cnt;
+        else score *= match.cnt;
         ++num;
         splitPositions.push(pos);
         pos = match.start - 1;
       }
       
-      score = Math.pow(score, 1/num);
+      if(!useUnigramProbs) score = Math.pow(score, 1/num);
       
       if(score > bestScore) {
         bestScore = score;
@@ -228,14 +245,23 @@ public class MosesCompoundSplitter {
   
   private static void usage() {
     System.err.println("Usage:");
-    System.err.println("java " + MosesCompoundSplitter.class.getName() + " [modelFile] < [inputFile] > [outputFile] ");
+    System.err.println("java " + MosesCompoundSplitter.class.getName() + " [useUnigramProbs(true/false)] modelFile < inputFile > outputFile ");
     System.exit(0);
   }
   
+
   public static void main(String[] args) {
-    if(args.length < 1) usage();
+    if(args.length < 1 || args.length > 2) usage();
     
-    MosesCompoundSplitter splitter = new MosesCompoundSplitter(args[0]);
+    boolean useUnigramProbs = false;
+    String modelFile;
+    if(args.length == 2) {
+      useUnigramProbs = Boolean.parseBoolean(args[0]);
+      modelFile = args[1];
+    }
+    else modelFile = args[0];
+    
+    MosesCompoundSplitter splitter = new MosesCompoundSplitter(modelFile, useUnigramProbs);
     
     try {
       BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
