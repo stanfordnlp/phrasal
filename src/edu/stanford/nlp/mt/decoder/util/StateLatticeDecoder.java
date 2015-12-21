@@ -141,8 +141,6 @@ public class StateLatticeDecoder<S extends State<S>> implements
       this.original = original;
       this.varPosition = varPosition;
 
-//      final int newPrefixLength = varState.depth() + 1;
-//      final int length = original.states.length + newPrefixLength - varPosition - 1;
       State<S> childState = varState;
       
       // Walk backwards

@@ -292,18 +292,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
                 coveredTokens, sourceLength);
           }
           
-          StringBuilder sb = new StringBuilder();
-          sb.append(" ||| ");
-         
-          Derivation<TK, FV> best = beam.iterator().next();
-          
-          while(best.featurizable != null) {
-            sb.insert(0,best.featurizable.rule + " (" + best.featurizable.rule.abstractRule.phraseTableName + ") ");
-            sb.insert(0, " ||| ");
-            best = best.parent;
+          if (printDebug) {
+            Derivation<TK, FV> best = beam.iterator().next();
+            logger.info("input {}: best derivation {}", sourceInputId, best.historyString());
           }
-          
-          logger.info("Best derivation: " + sb.toString());
           
           return beam;
         }

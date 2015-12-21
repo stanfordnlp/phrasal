@@ -116,6 +116,7 @@ public class Phrasal {
         .append(" filename : Language model file. For KenLM, prefix filename with 'kenlm:'").append(nl).append("  -")
         .append(OPTION_LIMIT_OPT).append(" num : Translation option limit.").append(nl).append("  -")
         .append(NBEST_LIST_OPT).append(" num : n-best list size.").append(nl).append("  -")
+        .append(DIVERSE_NBEST_LIST_OPT).append(" boolean : Generate diverse n-best lists (default: false" ).append(nl).append("  -")
         .append(DISTINCT_NBEST_LIST_OPT).append(" boolean : Generate distinct n-best lists (default: false)").append(nl).append("  -")
         .append("  -").append(FORCE_DECODE).append(" filename [filename] : Force decode to reference file(s).")
         .append(nl).append("  -").append(PREFIX_ALIGN_COMPOUNDS).append(" boolean : Apply heuristic compound word alignmen for prefix decoding? Affects cube pruning decoder only. (default: false) ")
@@ -171,6 +172,7 @@ public class Phrasal {
   public static final String LANGUAGE_MODEL_OPT = "lmodel-file";
   public static final String OPTION_LIMIT_OPT = "ttable-limit";
   public static final String NBEST_LIST_OPT = "n-best-list";
+  public static final String DIVERSE_NBEST_LIST_OPT = "diverse-n-best-list";
   public static final String DISTINCT_NBEST_LIST_OPT = "distinct-n-best-list";
   public static final String FORCE_DECODE = "force-decode";
   public static final String PREFIX_ALIGN_COMPOUNDS = "prefix-align-compounds";
@@ -209,8 +211,8 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
     OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, 
-        RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
+        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, DIVERSE_NBEST_LIST_OPT, 
+        FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER, SOURCE_CLASS_MAP, TARGET_CLASS_MAP,
@@ -299,6 +301,7 @@ public class Phrasal {
   private PrintStream nbestListWriter;
   private int nbestListSize;
   private boolean distinctNbest = false;
+  private boolean diverseNbest = false;
 
   /**
    * Internal alignment options
@@ -884,6 +887,10 @@ public class Phrasal {
         Boolean.parseBoolean(config.get(DISTINCT_NBEST_LIST_OPT).get(0)) : false;
     logger.info("Distinct n-best lists: {}", distinctNbest);
 
+    diverseNbest = config.containsKey(DIVERSE_NBEST_LIST_OPT) ?
+        Boolean.parseBoolean(config.get(DIVERSE_NBEST_LIST_OPT).get(0)) : false;
+    logger.info("Diverse n-best lists: {}", diverseNbest);
+    
     // Determine if we need to generate an alignment file
     final List<String> alignmentOpt = config.get(ALIGNMENT_OUTPUT_FILE);
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
@@ -1213,7 +1220,7 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, outputSpace,
-          outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
+          outputSpace.getAllowableSequences(), numTranslations, distinctNbest, diverseNbest);
 
       // Decoder failure
       if (translations == null) translations = Collections.emptyList();

@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
+import edu.stanford.nlp.mt.decoder.util.DiverseNbestDecoder;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
@@ -92,9 +93,10 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   @Override
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct,
+      boolean diverse) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size, distinct);
+        outputSpace, targets, size, distinct, diverse);
   }
   
   /**
@@ -255,7 +257,8 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
-      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct) {
+      OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct,
+      boolean diverse) {
  
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     final TimeKeeper timer = TimingUtils.start();
@@ -267,6 +270,62 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     if (beam == null) return null; // Decoder failure
     timer.mark("Decode");    
 
+    // Nbest inference
+    List<RichTranslation<TK, FV>> nbestList = diverse ? 
+        diverseNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+            outputSpace, size, distinct) :
+              standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+                  outputSpace, size, distinct);
+    timer.mark("Extraction");
+    logger.info("Input {}: nbest timing {}", sourceInputId, timer);
+
+    return nbestList;
+  }
+  
+  /**
+   * 
+   * @param beam
+   * @param recombinationHistory
+   * @param sourceInputProperties
+   * @param sourceInputId
+   * @param targets
+   * @param outputSpace
+   * @param size
+   * @param distinct 
+   * @return
+   */
+  private List<RichTranslation<TK, FV>> diverseNbest(Beam<Derivation<TK, FV>> beam, 
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory, InputProperties sourceInputProperties, 
+      int sourceInputId, List<Sequence<TK>> targets, OutputSpace<TK, FV> outputSpace, int size, boolean distinct) {
+    DiverseNbestDecoder<TK,FV> decoder = new DiverseNbestDecoder<>(beam, recombinationHistory, sourceInputProperties,
+        targets);
+    List<Derivation<TK,FV>> derivationList = decoder.decode(size, distinct, sourceInputId, featurizer, scorer,
+        heuristic, outputSpace);
+    List<RichTranslation<TK,FV>> translationList = new ArrayList<>(derivationList.size());
+    int nbestId = 0;
+    for (Derivation<TK,FV> d : derivationList) {
+      translationList.add(new RichTranslation<>(d.featurizable, d.score, 
+          FeatureValues.combine(d), nbestId++));
+    }
+    return translationList;
+  }
+  
+  /**
+   * Standard A* search through lattice.
+   * 
+   * @param beam
+   * @param recombinationHistory
+   * @param sourceInputProperties
+   * @param sourceInputId
+   * @param targets
+   * @param outputSpace
+   * @param size
+   * @param distinct
+   * @return
+   */
+  private List<RichTranslation<TK, FV>> standardNbest(Beam<Derivation<TK, FV>> beam, 
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory, InputProperties sourceInputProperties, 
+      int sourceInputId, List<Sequence<TK>> targets, OutputSpace<TK, FV> outputSpace, int size, boolean distinct) {
     // Configure n-best extractor from goal states in final beam.
     List<Derivation<TK, FV>> goalStates = new ArrayList<>(beam.size());
     for (Derivation<TK, FV> derivation : beam) goalStates.add(derivation);
@@ -343,16 +402,12 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       // Book-keeping
       if (translations.size() >= size) break;
     }
-    timer.mark("Extraction");
 
     // If an inadmissible search heuristic is used, the hypothesis
     // scores predicted by the lattice may not actually correspond to their real
     // scores.
-    Collections.sort(translations, translationComparator);
-    timer.mark("Sort");    
-    
+    Collections.sort(translations, translationComparator);    
     logger.info("Input {}: nbest #extracted {} max-agenda-size {}", sourceInputId, numExtracted, latticeDecoder.maxAgendaSize);
-    logger.info("Input {}: nbest timing {}", sourceInputId, timer);
     
     return translations;
   }

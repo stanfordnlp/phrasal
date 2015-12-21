@@ -59,7 +59,7 @@ State<Derivation<TK, FV>> {
   // right now, translations are built up strictly in sequence.
   // however, we don't want to encourage people writing feature
   // functions to be dependent upon this fact.
-  public final Derivation<TK, FV> parent;
+  public Derivation<TK, FV> parent;
 
   // non-primitives created anew for each hypothesis
   public final CoverageSet sourceCoverage;
@@ -68,6 +68,10 @@ State<Derivation<TK, FV>> {
   // Features extracted to score this derivation
   public List<FeatureValue<FV>> features;
 
+  // Only used for diverse n-best extraction
+  public Derivation<TK,FV> bestChild;
+  public double bestChildScore;
+  
   /**
    * 
    */
@@ -328,5 +332,10 @@ State<Derivation<TK, FV>> {
 
   public boolean hasPendingPhrases() {
     return false;
+  }
+  
+  @Override
+  public Object clone() throws CloneNotSupportedException {
+    return super.clone();
   }
 }
