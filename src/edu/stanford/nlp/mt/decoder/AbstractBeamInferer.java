@@ -169,6 +169,108 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   }
   
   /**
+   * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
+   * 
+   * @param source
+   * @param ruleList
+   * @param sourceInputProperties
+   * @param prefix
+   * @param scorer
+   * @param beams
+   * @return The beam at which standard decoding should begin.
+   */
+  @Deprecated
+  protected int prefixFillBeamsJoern(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
+      InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
+      List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
+    if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
+    
+    // Sort rule list by target
+    final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<>(ruleList, source, prefix);
+   
+    // Special case. Uncovered material at the beginning of a prefix. Just append to the null
+    // hypothesis
+//    List<ConcreteRule<TK,FV>> nullRules = prefixGrid.get(0);
+//    if (nullRules.size() == 0) {
+//      int start = 0;
+//      int end = Math.max(prefixGrid.getTargetCoverage().nextSetBit(0), prefix.size());
+//      Sequence<TK> nullTarget = prefix.subsequence(start, end);
+//      beams.get(0).iterator().next().targetSequence = nullTarget;
+//    }
+    
+    // Book-keeping
+    int minSourceCoverage = Integer.MAX_VALUE;
+    
+    // Populate beams
+    int numHyps = 0;
+    for (int beamCardinality = 1, sz = beams.size(); beamCardinality < sz; ++beamCardinality) {
+      System.err.println("cardinality: " + beamCardinality);
+      
+      int hypsForBeam = 0;
+      int maxSourceLength = Math.min(prefixGrid.maxSourceLength(), beamCardinality);
+      Beam<Derivation<TK,FV>> beam = beams.get(beamCardinality);
+      
+      PriorityQueue<QueueElement> q = new PriorityQueue<>();
+      
+      // The chart stores the hypotheses that can be expanded to beamCardinality
+      // chart.get(i).get(j) is the jth best hypothesis with cardinality (beamCardinality - i - 1)
+      List<List<Derivation<TK,FV>>> chart = new ArrayList<>(maxSourceLength);
+      for (int srcLen = 0; srcLen < maxSourceLength; ++srcLen){
+        System.err.println("srcLen: " + srcLen);
+        chart.add(new ArrayList<>(MAX_HYPS_PER_BEAM));
+        
+        for (Derivation<TK,FV> antecedent : beams.get(beamCardinality - srcLen - 1))
+          if(antecedent.targetSequence.size() < prefix.size())
+            chart.get(srcLen).add(antecedent);
+        
+        // initialize queue
+        if(!chart.get(srcLen).isEmpty()) {
+          expandQueue(q, chart, prefixGrid, srcLen, 0, 0);
+        }
+      }
+      
+      while(hypsForBeam < MAX_HYPS_PER_BEAM && !q.isEmpty()) {
+        QueueElement e = q.poll();
+        System.err.println("polling score = " + e.score + " " + e.hypId + " " +e.ruleId);
+        Derivation<TK,FV> antecedent = chart.get(e.sourceLength).get(e.hypId);
+        final int insertionPosition = antecedent.targetSequence.size();
+        
+        // generate new hypothesis
+        ConcreteRule<TK,FV> rule = prefixGrid.get(insertionPosition, e.sourceLength, e.ruleId);
+        CoverageSet sourceCoverage = antecedent.sourceCoverage.clone();
+        sourceCoverage.or(rule.sourceCoverage);
+        Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, insertionPosition, 
+            antecedent, featurizer, scorer, heuristic, outputSpace);
+        
+        assert beamCardinality == successor.sourceCoverage.cardinality();        
+        beam.put(successor);
+        ++numHyps;
+        ++hypsForBeam;
+
+        if (successor.targetSequence.size() >= prefix.size()) {
+          // Compatible derivation
+          minSourceCoverage = Math.min(minSourceCoverage, antecedent.sourceCoverage.cardinality());
+        }
+        
+        // now add new candidates to the queue. 
+        expandQueue(q, chart, prefixGrid, e.sourceLength, e.hypId, e.ruleId + 1);
+      }
+    }
+
+    if (minSourceCoverage > source.size()) {
+      // No compatible derivations
+      logger.warn("input {}: no compatible derivations. Decoding will fail", sourceInputId);
+      return -1;
+    } else {
+      logger.info("input {}: prefix filling derivations: {}  mincoverage: {}", sourceInputId, 
+          numHyps, minSourceCoverage);
+      return minSourceCoverage;
+    }
+  }
+  
+  
+  
+  /**
    * Query the phrase table and decide how to handle unknown words.
    * 
    * @param source
