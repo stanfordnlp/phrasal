@@ -26,9 +26,10 @@ public class PrefixRuleGrid<TK,FV> {
 
   private static final Logger logger = LogManager.getLogger(PrefixRuleGrid.class.getName());
   
-  private List<List<ConcreteRule<TK,FV>>> index;
+  private List<List<List<ConcreteRule<TK,FV>>>> index;
   private final CoverageSet targetCoverage;
   private final Sequence<TK> prefix;
+  int maxSourceLength = 0;
   
   /**
    * Constructor.
@@ -45,7 +46,7 @@ public class PrefixRuleGrid<TK,FV> {
   }
 
   /**
-   * Organize the list of rules by target.
+   * Organize the list of rules by target position and source cardinality.
    * 
    * @return 
    */
@@ -65,8 +66,16 @@ public class PrefixRuleGrid<TK,FV> {
     // Find the prefix rules
     int numRules = 0;
     index = new ArrayList<>(prefix.size());
-    for (int i = 0, sz = prefix.size(); i < sz; ++i) index.add(new ArrayList<>());
+    for (int i = 0, sz = prefix.size(); i < sz; ++i) index.add(new ArrayList<>(4));
+    List<ConcreteRule<TK, FV>> filteredRuleList = new ArrayList<>(ruleList.size()/2);
     for (ConcreteRule<TK,FV> rule : ruleList) {
+      if(prefix.contains(rule.abstractRule.target))
+        filteredRuleList.add(rule);
+    }
+
+    Collections.sort(filteredRuleList);
+    
+    for (ConcreteRule<TK,FV> rule : filteredRuleList) {
       if (rule.abstractRule.target.size() == 0) {
         continue; // Source deletion rule
       } else {
@@ -74,7 +83,10 @@ public class PrefixRuleGrid<TK,FV> {
         for (int i : matches) {
           int end = Math.min(prefix.size(), i + rule.abstractRule.target.size());
           targetCoverage.set(i, end);
-          index.get(i).add(rule);
+          int sourceLength = rule.abstractRule.source.size();
+          while(index.get(i).size() < sourceLength) index.get(i).add(new ArrayList<>());
+          index.get(i).get(sourceLength - 1).add(rule);
+          if(sourceLength > maxSourceLength) maxSourceLength = sourceLength;
           ++numRules;
         }
       }
@@ -110,13 +122,14 @@ public class PrefixRuleGrid<TK,FV> {
   }
   
   /**
-   * Get rules for the start element in the prefix.
+   * Get rules for the start element in the prefix and given source phrase length.
    * 
    * @param startPos
+   * @param sourceLength
    * @return
    */
-  public List<ConcreteRule<TK,FV>> get(int startPos) {
-    return index.get(startPos);
+  public List<ConcreteRule<TK,FV>> get(int startPos, int sourceLength) {
+    return index.get(startPos).get(sourceLength - 1);
   }
   
   /**
@@ -135,5 +148,7 @@ public class PrefixRuleGrid<TK,FV> {
     return index.get(startPos).get(sourceLength).get(rulePosition);
   }
   
-  
+  public int maxSourceLength() {
+    return maxSourceLength;
+  }
 }

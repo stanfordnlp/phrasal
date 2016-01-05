@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,7 +40,6 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
-import edu.stanford.nlp.util.PriorityQueue;
 
 /**
  * An abstract interface for beam-based inference algorithms.
@@ -112,6 +112,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    * @param beams
    * @return The beam at which standard decoding should begin.
    */
+  /*
   @Deprecated
   protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
@@ -167,7 +168,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
           numHyps, minSourceCoverage);
       return minSourceCoverage;
     }
-  }
+  }*/
   
   
   private class QueueElement implements Comparable<QueueElement> {
@@ -231,8 +232,6 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     if(startWithNextAntecedent)
       expandQueue(q, chart, prefixGrid, sourceLength, hypId + 1, 0); 
   }
-
-  
   
   
   
@@ -248,7 +247,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    * @return The beam at which standard decoding should begin.
    */
   @Deprecated
-  protected int prefixFillBeamsJoern(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
+  protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
       List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
     if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
