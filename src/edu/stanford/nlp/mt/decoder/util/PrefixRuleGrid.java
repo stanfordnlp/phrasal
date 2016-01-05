@@ -118,4 +118,22 @@ public class PrefixRuleGrid<TK,FV> {
   public List<ConcreteRule<TK,FV>> get(int startPos) {
     return index.get(startPos);
   }
+  
+  /**
+   * Get a specific rule for the start element in the prefix and given source phrase length.
+   * source phrase lengths have -1 semantics: sourceLength == 0 => 1 source word
+   *                                          sourceLength == 1 => 2 source words etc.
+   * 
+   * @param startPos
+   * @param sourceLength
+   * @param rulePosition
+   * @return
+   */
+  public ConcreteRule<TK,FV> get(int startPos, int sourceLength, int rulePosition) {
+    if(index.get(startPos).size() <= sourceLength ||
+        index.get(startPos).get(sourceLength).size() <= rulePosition) return null;
+    return index.get(startPos).get(sourceLength).get(rulePosition);
+  }
+  
+  
 }
