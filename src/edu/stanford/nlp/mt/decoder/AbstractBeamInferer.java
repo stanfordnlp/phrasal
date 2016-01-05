@@ -39,6 +39,7 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
+import edu.stanford.nlp.util.PriorityQueue;
 
 /**
  * An abstract interface for beam-based inference algorithms.
