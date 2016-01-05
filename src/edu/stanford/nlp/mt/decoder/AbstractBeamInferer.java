@@ -169,6 +169,73 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     }
   }
   
+  
+  private class QueueElement implements Comparable<QueueElement> {
+    double score;
+    int sourceLength;
+    int hypId;
+    int ruleId;
+    
+    public QueueElement(Derivation<TK,FV> antecedent,
+        ConcreteRule<TK,FV> rule,
+        int sourceLength,
+        int hypId,
+        int ruleId) {
+      score = antecedent.score() + rule.isolationScore;
+      this.sourceLength = sourceLength;
+      this.hypId = hypId;
+      this.ruleId = ruleId;
+    }
+    
+    @Override
+    public int compareTo(QueueElement other) {
+      if(score > other.score) return -1;
+      if(score < other.score) return 1;
+      if(sourceLength < other.sourceLength) return -1;
+      if(hypId < other.hypId) return -1;
+      if(ruleId < other.ruleId) return -1;
+      return 0;
+    }
+  }
+  
+  private void expandQueue(PriorityQueue<QueueElement> q, 
+                           List<List<Derivation<TK,FV>>> chart, 
+                           PrefixRuleGrid<TK,FV> prefixGrid,
+                           int sourceLength,
+                           int hypId,
+                           int ruleId) {
+    if(chart.get(sourceLength).size() <= hypId)
+      return;
+    
+    Derivation<TK,FV> antecedent = chart.get(sourceLength).get(hypId);
+    final int insertionPosition = antecedent.targetSequence.size();
+    
+    // now add new candidates to the queue. (cube pruning)
+    int nextRuleId = ruleId;
+    ConcreteRule<TK,FV> nextRule = prefixGrid.get(insertionPosition, sourceLength, nextRuleId);
+    boolean noRules = nextRule == null;
+    
+    while (nextRule != null) {
+      if(antecedent.sourceCoverage.intersects(nextRule.sourceCoverage)) { 
+        ++nextRuleId;
+        nextRule = prefixGrid.get(insertionPosition, sourceLength, nextRuleId);
+        continue;
+      }
+      q.add(new QueueElement(antecedent, nextRule, sourceLength, hypId, nextRuleId));
+      break;
+    }
+    
+    boolean startWithNextAntecedent =
+        ruleId == 1 || (ruleId == 0 && (nextRuleId > 0 || noRules) );
+    
+    if(startWithNextAntecedent)
+      expandQueue(q, chart, prefixGrid, sourceLength, hypId + 1, 0); 
+  }
+
+  
+  
+  
+  
   /**
    * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
    * 
