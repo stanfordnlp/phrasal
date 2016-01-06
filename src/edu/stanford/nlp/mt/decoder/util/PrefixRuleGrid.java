@@ -26,10 +26,10 @@ public class PrefixRuleGrid<TK,FV> {
 
   private static final Logger logger = LogManager.getLogger(PrefixRuleGrid.class.getName());
   
-  private List<List<List<ConcreteRule<TK,FV>>>> index;
+  private List<List<List<ConcreteRule<TK,FV>>>> index; // index.get(tgtPos).get(tgtPhraseLength) is a list of matching phrases with length tgtPhraseLength starting at target position tgtPos
   private final CoverageSet targetCoverage;
   private final Sequence<TK> prefix;
-  int maxSourceLength = 0;
+  int maxTargetLength = 0;
   
   /**
    * Constructor.
@@ -72,7 +72,8 @@ public class PrefixRuleGrid<TK,FV> {
       if(prefix.contains(rule.abstractRule.target))
         filteredRuleList.add(rule);
     }
-
+    
+    // todo: sort based on additional isolation scores 
     Collections.sort(filteredRuleList);
     
     for (ConcreteRule<TK,FV> rule : filteredRuleList) {
@@ -81,12 +82,12 @@ public class PrefixRuleGrid<TK,FV> {
       } else {
         List<Integer> matches = findAll(wordToPosition, rule.abstractRule.target);
         for (int i : matches) {
-          int end = Math.min(prefix.size(), i + rule.abstractRule.target.size());
+          int targetLength = rule.abstractRule.target.size();
+          int end = Math.min(prefix.size(), i + targetLength);
           targetCoverage.set(i, end);
-          int sourceLength = rule.abstractRule.source.size();
-          while(index.get(i).size() < sourceLength) index.get(i).add(new ArrayList<>());
-          index.get(i).get(sourceLength - 1).add(rule);
-          if(sourceLength > maxSourceLength) maxSourceLength = sourceLength;
+          while(index.get(i).size() < targetLength) index.get(i).add(new ArrayList<>());
+          index.get(i).get(targetLength - 1).add(rule);
+          if(targetLength > maxTargetLength) maxTargetLength = targetLength;
           ++numRules;
         }
       }
@@ -125,11 +126,11 @@ public class PrefixRuleGrid<TK,FV> {
    * Get rules for the start element in the prefix and given source phrase length.
    * 
    * @param startPos
-   * @param sourceLength
+   * @param targetLength
    * @return
    */
-  public List<ConcreteRule<TK,FV>> get(int startPos, int sourceLength) {
-    return index.get(startPos).get(sourceLength - 1);
+  public List<ConcreteRule<TK,FV>> get(int startPos, int targetLength) {
+    return index.get(startPos).get(targetLength - 1);
   }
   
   /**
@@ -142,13 +143,13 @@ public class PrefixRuleGrid<TK,FV> {
    * @param rulePosition
    * @return
    */
-  public ConcreteRule<TK,FV> get(int startPos, int sourceLength, int rulePosition) {
-    if(index.get(startPos).size() <= sourceLength ||
-        index.get(startPos).get(sourceLength).size() <= rulePosition) return null;
-    return index.get(startPos).get(sourceLength).get(rulePosition);
+  public ConcreteRule<TK,FV> get(int startPos, int targetLength, int rulePosition) {
+    if(index.get(startPos).size() <= targetLength ||
+        index.get(startPos).get(targetLength).size() <= rulePosition) return null;
+    return index.get(startPos).get(targetLength).get(rulePosition);
   }
   
-  public int maxSourceLength() {
-    return maxSourceLength;
+  public int maxTargetLength() {
+    return maxTargetLength;
   }
 }

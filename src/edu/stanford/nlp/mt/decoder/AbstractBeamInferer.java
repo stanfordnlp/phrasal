@@ -16,9 +16,11 @@ import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BeamFactory;
+import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
+import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.mt.decoder.util.PrefixRuleGrid;
@@ -232,8 +234,6 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     if(startWithNextAntecedent)
       expandQueue(q, chart, prefixGrid, sourceLength, hypId + 1, 0); 
   }
-  
-  
   
   /**
    * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.

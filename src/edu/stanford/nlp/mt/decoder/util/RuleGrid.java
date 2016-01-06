@@ -3,8 +3,14 @@ package edu.stanford.nlp.mt.decoder.util;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.util.CoverageSet;
@@ -24,18 +30,25 @@ import edu.stanford.nlp.mt.util.Sequence;
  */
 public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   
+  private static final Logger logger = LogManager.getLogger(RuleGrid.class.getName());
+  
   private static final int DEFAULT_RULE_QUERY_LIMIT = Integer.MAX_VALUE;
   
   private final List<ConcreteRule<TK,FV>>[] grid;
-  private final int sourceLength;
+  private final int sequenceLength;
   private final BitSet isSorted;
   private CoverageSet coverage;
   private final int size;
   private int ruleQueryLimit;
+  private boolean isSourceGrid = true;
+  Map<TK,List<Integer>> wordToPosition = null;
+  Sequence<TK> prefix = null;
+  int maxTargetLength = 0;
   
   /**
    * Constructor.
    * 
+   * @param ruleList
    * @param source
    */
   public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source) {
@@ -45,21 +58,73 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   /**
    * Constructor.
    * 
+   * @param ruleList
    * @param source
+   * @param ruleQueryLimit
    */
   @SuppressWarnings("unchecked")
   public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, int ruleQueryLimit) {
-    sourceLength = source.size();
+    sequenceLength = source.size();
     isSorted = new BitSet();
     this.ruleQueryLimit = ruleQueryLimit < 0 ? Integer.MAX_VALUE : ruleQueryLimit;
     this.size = ruleList.size();
     // Sacrificing memory for speed. This array will be sparse due to the maximum
     // phrase length.
-    grid = new List[sourceLength * sourceLength];
-    coverage = new CoverageSet(sourceLength);
-    for (ConcreteRule<TK,FV> rule : ruleList) addEntry(rule);
+    grid = new List[sequenceLength * sequenceLength];
+    coverage = new CoverageSet(sequenceLength);
+    for (ConcreteRule<TK,FV> rule : ruleList) addSrcEntry(rule);
   }
   
+  
+  /**
+   * Constructor for prefix decoding rule grid. 
+   * The rules will be organized by target position.
+   * 
+   * @param ruleList
+   * @param sequence
+   * @param ruleQueryLimit
+   * @param prefixGrid
+   */
+  @SuppressWarnings("unchecked")
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, Sequence<TK> prefix, int ruleQueryLimit) {
+    isSourceGrid = false;
+    sequenceLength = prefix.size();
+    this.prefix = prefix;
+    isSorted = new BitSet();
+    this.ruleQueryLimit = ruleQueryLimit < 0 ? Integer.MAX_VALUE : ruleQueryLimit;
+    // Sacrificing memory for speed. This array will be sparse due to the maximum
+    // phrase length.
+    grid = new List[sequenceLength * sequenceLength];
+    coverage = new CoverageSet(sequenceLength);
+    
+    // Make prefix word type -> position
+    wordToPosition = new HashMap<>();
+    for (int i = 0, limit = prefix.size(); i < limit; ++i) {
+      TK token = prefix.get(i);
+      List<Integer> positionList = wordToPosition.get(token);
+      if (positionList == null) {
+        positionList = new ArrayList<>();
+        wordToPosition.put(token, positionList);
+      }
+      positionList.add(i);
+    }
+    
+    // Find the prefix rules
+    List<ConcreteRule<TK, FV>> filteredRuleList = new ArrayList<>(ruleList.size()/20);
+    for (ConcreteRule<TK,FV> rule : ruleList) {
+      if(prefix.contains(rule.abstractRule.target))
+        filteredRuleList.add(rule);
+    }
+    
+    // todo: sort based on additional prefix-isolation scores 
+    //Collections.sort(filteredRuleList);
+    
+    this.size = filteredRuleList.size();
+    for (ConcreteRule<TK,FV> rule : ruleList) addTgtEntry(rule);
+    logger.info("# prefix rules: {}/{}", this.size, ruleList.size());
+  }  
+  
+ 
   public void setRuleQueryLimit(int l) { ruleQueryLimit = l < 0 ? Integer.MAX_VALUE : l; }
   
   /**
@@ -68,11 +133,22 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @param rule
    */
   public void addEntry(ConcreteRule<TK,FV> rule) {
+    if(isSourceGrid) addSrcEntry(rule);
+    else addTgtEntry(rule);
+  }
+  
+  
+  /**
+   * Add a new entry to the rule table organized by source position.
+   * 
+   * @param rule
+   */
+  private void addSrcEntry(ConcreteRule<TK,FV> rule) {
     int startPos = rule.sourcePosition;
     int endPos = startPos + rule.abstractRule.source.size() - 1;
     // Sanity checks
     assert startPos <= endPos : String.format("Illegal span: [%d,%d]", startPos, endPos);
-    assert endPos < sourceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sourceLength);
+    assert endPos < sequenceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sequenceLength);
     
     int offset = getIndex(startPos, endPos);
     if (grid[offset] == null) grid[offset] = new ArrayList<>();
@@ -81,11 +157,59 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     coverage.or(rule.sourceCoverage);
   }
   
+  
+  /**
+   * Add a new entry to the rule table organized by target position.
+   * 
+   * @param rule
+   */
+  private void addTgtEntry(ConcreteRule<TK,FV> rule) {
+    if (rule.abstractRule.target.size() == 0) return; // Source deletion rule
+    
+    List<Integer> matches = findTgtMatches(rule.abstractRule.target);
+    
+    for (int startPos : matches) {
+      int targetLength = rule.abstractRule.target.size();
+      if(targetLength > maxTargetLength) maxTargetLength = targetLength;
+      
+      // We want to include phrases that straddle the boundary and store them under (startPos, prefix.size())
+      int endPos = Math.min(prefix.size(), startPos + targetLength - 1);
+      // Sanity checks
+      assert startPos <= endPos : String.format("Illegal span: [%d,%d]", startPos, endPos);
+      assert endPos < sequenceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sequenceLength);
+      int offset = getIndex(startPos, endPos);
+      if (grid[offset] == null) grid[offset] = new ArrayList<>();
+      grid[offset].add(rule);
+      isSorted.clear(offset);
+      
+      coverage.set(startPos, endPos + 1);
+    }
+  }
+  
+  /**
+   * Find all matching positions for target phrase.
+   * Targets can match past the end of the prefix.
+   * 
+   * @param wordToPosition
+   * @param target
+   * @return
+   */
+  private List<Integer> findTgtMatches(Sequence<TK> targetPhrase) {
+    return wordToPosition.getOrDefault(targetPhrase.get(0), Collections.emptyList()).stream().filter(pIdx -> {
+      for (int i = 0, sz = targetPhrase.size(), psz = prefix.size(); i < sz && pIdx+i < psz; ++i) {
+        if ( ! targetPhrase.get(i).equals(prefix.get(pIdx+i))) {
+          return false;
+        }
+      }
+      return true;
+    }).collect(Collectors.toList());
+  }
+  
   /**
    * True if the grid completely covers the source input. Otherwise, false.
    * @return
    */
-  public boolean isCoverageComplete() { return coverage.cardinality() == sourceLength; }
+  public boolean isCoverageComplete() { return coverage.cardinality() == sequenceLength; }
   
   /**
    * Get the source coverage.
@@ -107,7 +231,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * 
    * @return
    */
-  public int gridDimension() { return sourceLength; }
+  public int gridDimension() { return sequenceLength; }
   
   /**
    * Return rules by the given span.
@@ -138,15 +262,15 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * @return
    */
   private int getIndex(int startPos, int endPos) {
-    return startPos * sourceLength + endPos;
+    return startPos * sequenceLength + endPos;
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     String nl = System.getProperty("line.separator");
-    for (int i = 0; i < sourceLength; ++i) {
-      for (int j = i; j < sourceLength; ++j) {
+    for (int i = 0; i < sequenceLength; ++i) {
+      for (int j = i; j < sequenceLength; ++j) {
         List<ConcreteRule<TK,FV>> rules = get(i, j);
         if (rules.size() > 0) {
           sb.append("## ").append(i).append("-").append(j).append(nl);
@@ -207,5 +331,18 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
       hashCode += Double.hashCode(rule.isolationScore) ^ rule.abstractRule.source.hashCode() ^ rule.abstractRule.target.hashCode() ^ rule.sourceCoverage.hashCode();
     }
     return hashCode;
+  }
+  
+  public boolean isSourceGrid() {
+    return isSourceGrid;
+  }
+  
+  public boolean isPrefixGrid() {
+    return !isSourceGrid;
+  }
+  
+  
+  public int maxTargetLength() {
+    return maxTargetLength;
   }
 }

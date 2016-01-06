@@ -15,6 +15,7 @@ import edu.stanford.nlp.mt.decoder.util.BundleBeam;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle;
+import edu.stanford.nlp.mt.decoder.util.PrefixRuleGrid;
 import edu.stanford.nlp.mt.decoder.util.HyperedgeBundle.Consequent;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
@@ -217,7 +218,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, false)) {
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
@@ -239,7 +240,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
         // Expand this consequent
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace)) {
+            sourceInputId, outputSpace, false)) {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
@@ -342,14 +343,15 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @param bundle
    * @param sourceInputId
    * @param outputSpace
+   * @param checkSourceCoverage
    * @return
    */
   private List<Item> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
-      HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
+      HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace, boolean checkSourceCoverage) {
     List<Item> successors = new ArrayList<>(2);
     for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
-      boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, 
-          successor.rule);
+      boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule)
+          && (!checkSourceCoverage || !successor.antecedent.sourceCoverage.intersects(successor.rule.sourceCoverage));
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
@@ -358,6 +360,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     return successors;
   }
 
+  
   private int itemId = 0;
   
   /**
@@ -402,4 +405,112 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   public void dump(Derivation<TK, FV> hyp) {
     throw new UnsupportedOperationException();
   }
+  
+  
+  
+  /**
+   * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
+   * 
+   * @param source
+   * @param ruleList
+   * @param sourceInputProperties
+   * @param prefix
+   * @param scorer
+   * @param beams
+   * @return The beam at which standard decoding should begin.
+   */
+  @SuppressWarnings("unchecked")
+  protected int decodePrefix(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList, RuleGrid<TK,FV> ruleGrid, 
+      InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
+      List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace,
+      RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
+    if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
+    
+
+    TimeKeeper timer = TimingUtils.start();
+    boolean printDebug = false; // sourceInputId == 1022;
+    
+    int ruleQueryLimit = -1;  // Disable query limit. We might need some of these rules.
+    final RuleGrid<TK,FV> prefixGrid = new RuleGrid<>(ruleList, source, prefix, ruleQueryLimit); 
+    
+    // Add new rules to the rule grid
+    SyntheticRules.augmentRuleGrid(prefixGrid, prefix, sourceInputId, source, this, sourceInputProperties, prefixAlignCompounds);
+    timer.mark("PrefixAug");
+    
+    int prefixLength = prefix.size();
+    
+    final List<Beam<Derivation<TK,FV>>> tgtBeams = new ArrayList<>(prefixLength + 1);
+    tgtBeams.add(beams.get(0));
+    for (int i = 1; i <= prefixLength; ++i) {
+      tgtBeams.add(new BundleBeam<>(beamCapacity, filter, prefixGrid, recombinationHistory, maxDistortion, i, true));
+    }
+    
+    
+    final int maxTgtPhraseLength = prefixGrid.maxTargetLength();
+    int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
+    for (int i = 1; i <= prefixLength; ++i) {
+      int rootBeam = 0;
+      int minCoverage = i - maxTgtPhraseLength;
+      int startBeam = Math.max(rootBeam, minCoverage);
+
+      // Initialize the priority queue
+      Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
+      for (int j = startBeam; j < i; ++j) {
+        BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
+        for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true)) {
+            ++totalHypothesesGenerated;
+            if (consequent.derivation == null) ++numPruned;
+            pq.add(consequent);
+          }
+        }
+      }
+      
+      // Beam-filling
+      BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
+      int numPoppedItems = newBeam.size();
+      while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
+        final Item item = pq.poll();
+
+        // Derivations are null if they're pruned by an output constraint or have incompatible source coverage.
+        if (item.derivation != null) {
+          newBeam.put(item.derivation);
+          ++numPoppedItems;
+        }
+       
+        // Expand this consequent
+        for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
+            sourceInputId, outputSpace, false)) {
+          ++totalHypothesesGenerated;
+          if (consequent.derivation == null) ++numPruned;
+          pq.add(consequent);
+        }
+        
+      }
+      
+      
+      if (printDebug) {
+        System.err.println(newBeam.beamString(10));
+      }
+      
+      numRecombined += newBeam.recombined();
+      
+      //todo: target insertions
+      
+      
+    }
+    
+    timer.mark("PrefixDecoding");
+    
+    // Debug statistics
+    logger.info("input {}: Decoding time: {}", sourceInputId, timer);
+    logger.info("input {}: #derivations generated: {}  pruned: {}  recombined: {}", sourceInputId, 
+        totalHypothesesGenerated, numPruned, numRecombined);
+
+    
+    return 0;
+  }
+  
+  
+  
 }

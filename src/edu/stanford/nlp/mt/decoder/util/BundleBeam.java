@@ -36,6 +36,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   protected final RecombinationHistory<Derivation<TK,FV>> recombinationHistory;
   protected final RuleGrid<TK, FV> optionGrid;
   protected final int coverageCardinality;
+  protected final boolean isTargetCardinalityBeam; 
   /**
    * 
    * @param capacity
@@ -67,11 +68,38 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     this.sourceLength = optionGrid.gridDimension();
     this.distortionLimit = distortionLimit;
     this.coverageCardinality = coverageCardinality;
+    this.isTargetCardinalityBeam = true;
   }
+  
+  /**
+   * 
+   * @param capacity
+   * @param filter
+   * @param optionGrid
+   * @param recombinationHistory
+   * @param distortionLimit 
+   * @param coverageCardinality 
+   * @param maxPhraseLength 
+   */
+  public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter,
+      RuleGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, 
+      int distortionLimit, int coverageCardinality, boolean isTargetCardinalityBeam) {
+    recombinationHash = new RecombinationHash<>(filter);
+    this.capacity = capacity;
+    this.recombinationHistory = recombinationHistory;
+    this.optionGrid = optionGrid;
+    this.sourceLength = optionGrid.gridDimension();
+    this.distortionLimit = distortionLimit;
+    this.coverageCardinality = coverageCardinality;
+    this.isTargetCardinalityBeam = isTargetCardinalityBeam;
+  }
+  
+  
 
   @Override
   public Derivation<TK,FV> put(Derivation<TK,FV> derivation) {
-    if (derivation.sourceCoverage.cardinality() != coverageCardinality) {
+    if (isTargetCardinalityBeam ? derivation.targetSequence.size() != coverageCardinality :
+          derivation.sourceCoverage.cardinality() != coverageCardinality ) {
       throw new RuntimeException("Derivation cardinality does not match beam cardinality");
     }
 
@@ -98,7 +126,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * This method must be called once all hypotheses have been inserted into the beam.
    */
   private void groupBundles() {
-    // Group hypotheses by source source coverage
+    // Group hypotheses by source coverage
     List<Derivation<TK,FV>> derivationList = recombinationHash.derivations();
     assert derivationList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", derivationList.size(), capacity);
     final Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(derivationList.size() / 2);
