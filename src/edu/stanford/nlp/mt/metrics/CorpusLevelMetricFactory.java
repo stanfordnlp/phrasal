@@ -103,6 +103,11 @@ public final class CorpusLevelMetricFactory {
       emetric = new LinearCombinationMetric<>(new double[] {
           1.0, 1.0 }, new BLEUAfterPrefixMetric<String>(references),
           new NextPredictedWordMetric<>(references));
+
+    } else if (evalMetric.equals("100bleup-nextw/2")) {
+      emetric = new LinearCombinationMetric<>(new double[] {
+          1.0, 0.01 }, new BLEUAfterPrefixMetric<String>(references),
+          new NextPredictedWordMetric<>(references));
     
     } else if (evalMetric.equals("repetitionRate")) {
       emetric = new RepetitionRate<>();
