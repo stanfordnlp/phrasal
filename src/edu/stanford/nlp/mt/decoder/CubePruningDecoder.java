@@ -214,6 +214,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         // Derivations are null if they're pruned by an output constraint.
         if (item.derivation != null) {
           newBeam.put(item.derivation);
+          ++numPoppedItems;
           seenCompatiblePrefix = seenCompatiblePrefix || item.derivation.length >= targets.get(0).size();
         }
 
@@ -223,13 +224,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
-        }
-        
-        // If output constraints are enabled, keep searching until we find at least one
-        // compatible derivation.
-        outputConstrained = outputConstrained || item.derivation == null;
-        if (! outputConstrained || numPoppedItems < newBeam.capacity() - 1 || newBeam.size() > MIN_SIZE) {
-          ++numPoppedItems;
         }
       }
       
