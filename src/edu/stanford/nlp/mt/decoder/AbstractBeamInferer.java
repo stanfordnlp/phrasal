@@ -246,6 +246,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
    * @param beams
    * @return The beam at which standard decoding should begin.
    */
+  /*
   @Deprecated
   protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
@@ -335,7 +336,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     }
   }
   
-  
+  */
   
   /**
    * Query the phrase table and decide how to handle unknown words.

@@ -21,6 +21,7 @@ import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
+import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
@@ -351,7 +352,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     List<Item> successors = new ArrayList<>(2);
     for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule)
-          && (!checkSourceCoverage || !successor.antecedent.sourceCoverage.intersects(successor.rule.sourceCoverage));
+          && (!checkSourceCoverage 
+              || (!successor.antecedent.sourceCoverage.intersects(successor.rule.sourceCoverage)
+                  && checkReorderingConstraint(successor.antecedent.sourceCoverage, successor.rule.sourceCoverage)));
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
@@ -360,6 +363,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     return successors;
   }
 
+  private boolean checkReorderingConstraint(CoverageSet sourceCoverage, CoverageSet ruleCoverage) {
+    if(this.maxDistortion < 0) return true;
+    int firstCoverageGap = sourceCoverage.nextClearBit(0);
+    int lastPhrasePosition = ruleCoverage.length() - 1;
+    return lastPhrasePosition <= firstCoverageGap + maxDistortion;
+  }
   
   private int itemId = 0;
   
@@ -444,7 +453,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     for (int i = 1; i <= prefixLength; ++i) {
       tgtBeams.add(new BundleBeam<>(beamCapacity, filter, prefixGrid, recombinationHistory, maxDistortion, i, true));
     }
-    
     
     final int maxTgtPhraseLength = prefixGrid.maxTargetLength();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
