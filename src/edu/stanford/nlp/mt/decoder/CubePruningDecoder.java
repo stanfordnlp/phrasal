@@ -418,7 +418,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   
   
   /**
-   * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
+   * Populate the beams given the prefix. Returns the minimum source coverage cardinality.
    * 
    * @param source
    * @param ruleList
@@ -429,12 +429,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    * @return The beam at which standard decoding should begin.
    */
   @SuppressWarnings("unchecked")
-  protected int decodePrefix(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList, RuleGrid<TK,FV> ruleGrid, 
+  private int decodePrefix(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList, RuleGrid<TK,FV> ruleGrid, 
       InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
       List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace,
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory) {
     if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
-    
 
     TimeKeeper timer = TimingUtils.start();
     boolean printDebug = false; // sourceInputId == 1022;
@@ -464,7 +463,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Initialize the priority queue
       Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
-        BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
+        BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) tgtBeams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
           for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true)) {
             ++totalHypothesesGenerated;
@@ -475,7 +474,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       }
       
       // Beam-filling
-      BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
+      BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) tgtBeams.get(i);
       int numPoppedItems = newBeam.size();
       while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
         final Item item = pq.poll();
@@ -504,8 +503,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       numRecombined += newBeam.recombined();
       
       //todo: target insertions
-      
-      
+
     }
     
     timer.mark("PrefixDecoding");
@@ -516,9 +514,30 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         totalHypothesesGenerated, numPruned, numRecombined);
 
     
-    return 0;
+    return populateSourceBeams(tgtBeams, beams);
   }
   
-  
+  // returns the minimum source coverage cardinality
+  @SuppressWarnings("unchecked")
+  private int populateSourceBeams(List<Beam<Derivation<TK,FV>>> tgtBeams, List<Beam<Derivation<TK,FV>>> srcBeams) {
+    int maxTgtBeam = tgtBeams.size() - 1;
+    int minSrcCard = 0;
+    for(int i = 1; i <= maxTgtBeam; ++i) {
+      Beam<Derivation<TK,FV>> tgtBeam = tgtBeams.get(i);
+      boolean lastBeam = i == maxTgtBeam;
+      if(lastBeam && tgtBeam.size() > 0) minSrcCard = Integer.MAX_VALUE;
+      for(Derivation<TK, FV> d : tgtBeam) {
+        BundleBeam<TK,FV> srcBeam = (BundleBeam<TK,FV>) tgtBeams.get(i);
+        if(srcBeam.size() < srcBeam.capacity()) {
+          
+          //TODO: somehow mark non-goal derivations so that they will not be expanded in src-cardinality based search
+          
+          srcBeam.put(d, false);
+          if(lastBeam) minSrcCard = Math.min(minSrcCard, d.sourceCoverage.cardinality());
+        }
+      }
+    }
+    return minSrcCard;
+  }
   
 }
