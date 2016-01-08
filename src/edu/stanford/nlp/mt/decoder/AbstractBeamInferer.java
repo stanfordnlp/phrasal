@@ -94,9 +94,9 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   public List<RichTranslation<TK, FV>> nbest(Sequence<TK> source,
       int sourceInputId, InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct,
-      boolean diverse) {
+      NbestMode nbestMode) {
     return nbest(scorer, source, sourceInputId, sourceInputProperties,
-        outputSpace, targets, size, distinct, diverse);
+        outputSpace, targets, size, distinct, nbestMode);
   }
   
   /**
@@ -247,35 +247,45 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
       this.filteredSource = filteredSource;
     }
   }
-  
+
   /**
-   * This procedure could be made more efficient by not reconstructing the Derivation---and thus
-   * running the LM---for every lattice path. However, RichTranslation depends on Featurizable,
-   * which is currently difficult to reconstruct without rebuilding the whole derivation.
+   * n-best inference.
    */
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
       InputProperties sourceInputProperties,
       OutputSpace<TK, FV> outputSpace, List<Sequence<TK>> targets, int size, boolean distinct,
-      boolean diverse) {
+      NbestMode nbestMode) {
  
     if (outputSpace != null) outputSpace.setSourceSequence(source);
     final TimeKeeper timer = TimingUtils.start();
     
-    // Decoding
+    // Forward pass
     RecombinationHistory<Derivation<TK, FV>> recombinationHistory = new RecombinationHistory<>();
     Beam<Derivation<TK, FV>> beam = decode(scorer, source, sourceInputId, sourceInputProperties,
         recombinationHistory, outputSpace, targets, size);
     if (beam == null) return null; // Decoder failure
     timer.mark("Decode");    
 
-    // Nbest inference
-    List<RichTranslation<TK, FV>> nbestList = diverse ? 
-        diverseNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
-            outputSpace, size, distinct) :
-              standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
-                  outputSpace, size, distinct);
+    // Backward pass
+    List<RichTranslation<TK, FV>> nbestList;
+    if (nbestMode == NbestMode.Standard) {
+      nbestList = standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+          outputSpace, size, distinct);
+    
+    } else if (nbestMode == NbestMode.Diverse || nbestMode == NbestMode.Combined) {
+      nbestList = diverseNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+          outputSpace, size, distinct);
+      if (nbestMode == NbestMode.Combined) {
+        nbestList.addAll(standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+            outputSpace, size, distinct));
+        Collections.sort(nbestList);
+      }
+    
+    } else {
+      throw new RuntimeException("Unknown nbest mode: " + nbestMode.toString());
+    }
     timer.mark("Extraction");
     logger.info("Input {}: nbest timing {}", sourceInputId, timer);
 
@@ -283,6 +293,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   }
   
   /**
+   * Standard backward pass.
    * 
    * @param beam
    * @param recombinationHistory

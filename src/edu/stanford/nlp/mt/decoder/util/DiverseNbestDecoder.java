@@ -37,13 +37,12 @@ public class DiverseNbestDecoder<TK,FV> {
   private static final Logger logger = LogManager.getLogger(DiverseNbestDecoder.class.getName());
 
   private final int prefixLength;
+  private final List<Derivation<TK,FV>> markedNodes;
 
   // WSGDEBUG
-  private Derivation<TK,FV> oneBest;
-  private LongSet oneBestIds;
-  private final Sequence<TK> prefix;
-
-  private List<Derivation<TK,FV>> markedNodes;
+//  private Derivation<TK,FV> oneBest;
+//  private LongSet oneBestIds;
+//  private final Sequence<TK> prefix;
   
   /**
    * Constructor.
@@ -59,13 +58,14 @@ public class DiverseNbestDecoder<TK,FV> {
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory, 
       InputProperties sourceInputProperties, List<Sequence<TK>> targets) {
     final boolean prefixDecoding = sourceInputProperties.containsKey(InputProperty.TargetPrefix);
-    prefixLength = prefixDecoding ? targets.get(0).size() : 0;
+    this.prefixLength = prefixDecoding ? targets.get(0).size() : 0;
+    this.markedNodes = new ArrayList<>();
 
     // WSGDEBUG
-    this.prefix = targets.get(0);
+//    this.prefix = targets.get(0);
     
     // Max queue of nodes
-    Queue<Derivation<TK,FV>> unprocessed = new PriorityQueue<Derivation<TK,FV>>( 
+    Queue<Derivation<TK,FV>> unprocessed = new PriorityQueue<Derivation<TK,FV>>(goalBeam.size(),  
         new Comparator<Derivation<TK,FV>>() {
       @Override
       public int compare(Derivation<TK,FV> o1, Derivation<TK,FV> o2) {
@@ -74,19 +74,17 @@ public class DiverseNbestDecoder<TK,FV> {
       }
     });
     for (Derivation<TK,FV> d : goalBeam) {
-      if (this.oneBest == null) this.oneBest = d;
+//      if (this.oneBest == null) this.oneBest = d;
       unprocessed.add(d);
     }
     
-    LongSet visited = new LongOpenHashSet();
-    this.markedNodes = new ArrayList<>();
-
     // Walk back through the lattice
+    final LongSet visited = new LongOpenHashSet();
     while( ! unprocessed.isEmpty()) {
-      Derivation<TK,FV> child = unprocessed.poll();
+      final Derivation<TK,FV> child = unprocessed.poll();
       
       // WSGDEBUG
-      System.err.printf("%d <- %d%n", child.parent == null ? -1 : child.parent.id, child.id);
+//      System.err.printf("%d <- %d%n", child.parent == null ? -1 : child.parent.id, child.id);
       
       if (! visited.contains(child.id)) {
         visited.add(child.id);
@@ -105,8 +103,8 @@ public class DiverseNbestDecoder<TK,FV> {
             if (isNodeOfInterest(recombinedChild)) markedNodes.add(recombinedChild);
 
             // WSGDEBUG
-            System.err.printf("  %d <- %d%n", recombinedChild.parent == null ? -1 : 
-              recombinedChild.parent.id, recombinedChild.id);
+//            System.err.printf("  %d <- %d%n", recombinedChild.parent == null ? -1 : 
+//              recombinedChild.parent.id, recombinedChild.id);
 
             // Set parent
             if (recombinedChild.parent != null) {
@@ -135,12 +133,12 @@ public class DiverseNbestDecoder<TK,FV> {
     logger.info("Nodes in lattice: {}", visited.size());
     
     // WSGDEBUG
-    System.err.printf("%d / %d%n", markedNodes.size(), visited.size());
-    System.err.println(targets.get(0).toString());
-    System.err.println(oneBest);
-    System.err.println(oneBest.historyString());
-    System.err.println();
-    setOneBestPointers();
+//    System.err.printf("%d / %d%n", markedNodes.size(), visited.size());
+//    System.err.println(targets.get(0).toString());
+//    System.err.println(oneBest);
+//    System.err.println(oneBest.historyString());
+//    System.err.println();
+//    setOneBestPointers();
     
     // Sorting merely gives an estimate. Combination costs could change the final ordering.
     Collections.sort(markedNodes, new Comparator<Derivation<TK,FV>>() {
@@ -164,41 +162,41 @@ public class DiverseNbestDecoder<TK,FV> {
     }
     
     // WSGDEBUG
-    if (parentNode.isOneBest && completionScore > parentNode.completionScore) {
-      double goalScore = getGoalScore(child);
-      double bestChildGoalScore = getGoalScore(parentNode.bestChild);
-      System.err.println(prefix);
-      System.err.println(parentNode);
-      System.err.println(child);
-      System.err.println(child.id);
-      System.err.println(parentNode.bestChild);
-      System.err.println(parentNode.bestChild.id);
-      System.err.println(parentNode.bestChild.score - parentNode.score);
-      System.err.println(transitionScore);
-      System.err.println(child.isOneBest);
-      System.err.printf("%s %s %s %s%n", Double.toString(transitionScore), 
-          Double.toString(child.completionScore), 
-          Double.toString(completionScore), Double.toString(parentNode.completionScore));
-    }
-
+//    if (parentNode.isOneBest && completionScore > parentNode.completionScore) {
+//      double goalScore = getGoalScore(child);
+//      double bestChildGoalScore = getGoalScore(parentNode.bestChild);
+//      System.err.println(prefix);
+//      System.err.println(parentNode);
+//      System.err.println(child);
+//      System.err.println(child.id);
+//      System.err.println(parentNode.bestChild);
+//      System.err.println(parentNode.bestChild.id);
+//      System.err.println(parentNode.bestChild.score - parentNode.score);
+//      System.err.println(transitionScore);
+//      System.err.println(child.isOneBest);
+//      System.err.printf("%s %s %s %s%n", Double.toString(transitionScore), 
+//          Double.toString(child.completionScore), 
+//          Double.toString(completionScore), Double.toString(parentNode.completionScore));
+//    }
   }
 
-  private void setOneBestPointers() {
-    Derivation<TK,FV> p = oneBest;
-    oneBestIds = new LongOpenHashSet();
-    while (p.parent != null) {
-      oneBestIds.add(p.id);
-      p.isOneBest = true;
-      double transitionScore = p.score - p.parent.score;
-      double completionScore = transitionScore + p.completionScore;
-      System.err.printf("%s %s%n", Double.toString(transitionScore), Double.toString(p.completionScore));
-      p.parent.completionScore = completionScore;
-      p.parent.bestChild = p;
-      p = p.parent;
-    }
-  }
+//  private void setOneBestPointers() {
+//    Derivation<TK,FV> p = oneBest;
+//    oneBestIds = new LongOpenHashSet();
+//    while (p.parent != null) {
+//      oneBestIds.add(p.id);
+//      p.isOneBest = true;
+//      double transitionScore = p.score - p.parent.score;
+//      double completionScore = transitionScore + p.completionScore;
+//      System.err.printf("%s %s%n", Double.toString(transitionScore), Double.toString(p.completionScore));
+//      p.parent.completionScore = completionScore;
+//      p.parent.bestChild = p;
+//      p = p.parent;
+//    }
+//  }
 
   /**
+   * Extract the n-best list.
    * 
    * @param size
    * @param distinct 
@@ -210,9 +208,13 @@ public class DiverseNbestDecoder<TK,FV> {
     List<Derivation<TK,FV>> returnList = new ArrayList<>(size);
 
     // WSGDEBUG
-//  for (int i = 0, sz = Math.min(markedNodes.size(), size); i < sz; ++i) {
-    for (int i = 0, sz = markedNodes.size(); i < sz; ++i) {
-      
+//  for (int i = 0, sz = markedNodes.size(); i < sz; ++i) {
+
+    // TODO(spenceg) Remaining bugs
+    //
+    //  1) Sometimes duplicate derivations can be extracted. Probably has to do with recombination.
+    //
+    for (int i = 0, sz = Math.min(markedNodes.size(), size); i < sz; ++i) {
       Derivation<TK,FV> node = markedNodes.get(i);
       Derivation<TK,FV> finalDerivation = constructDerivation(node, sourceInputId, featurizer,
           scorer, heuristic, outputSpace);
@@ -220,28 +222,33 @@ public class DiverseNbestDecoder<TK,FV> {
     }
     Collections.sort(returnList);
 
-    // TODO(spenceg) Apply surface distinct constraint after sorting
-//    IntSet uniqSet = distinct ? new IntOpenHashSet(markedNodes.size()) : null;
-//    if (distinct) {
-//      Sequence<TK> target = extractTarget(node);
-//      int hashCode = target.hashCode();
-//      System.err.printf("%d %s%n", hashCode, target);
-//      if (uniqSet.contains(hashCode)) continue;
-//      else uniqSet.add(hashCode);
-//    }
+    // Apply distinctness after the sort. The ordering of markedNodes doesn't account for
+    // combination costs.
+    if (distinct) {
+      IntSet uniqSet = new IntOpenHashSet(markedNodes.size());
+      List<Derivation<TK,FV>> uniqList = new ArrayList<>(returnList.size());
+      for (Derivation<TK,FV> d : returnList) {
+        int hashCode = d.targetSequence.hashCode();
+        if (! uniqSet.contains(hashCode)) {
+          uniqSet.add(hashCode);
+          uniqList.add(d);
+        }
+      }
+      returnList = uniqList;
+    }
     
     // WSGDEBUG
-    System.err.printf("### %d: %d marked nodes ########%n", sourceInputId, markedNodes.size());
-    System.err.println(prefix);
-    System.err.println(oneBest);
-    System.err.println("-------");
-    returnList.stream().forEach(d -> {
-      System.err.println(d);
-    });
-    if (returnList.get(0).score < oneBest.score) {
-      System.err.println(returnList.get(0));
-      System.err.println(oneBest);
-    }
+//    System.err.printf("### %d: %d marked nodes ########%n", sourceInputId, markedNodes.size());
+//    System.err.println(prefix);
+//    System.err.println(oneBest);
+//    System.err.println("-------");
+//    returnList.stream().forEach(d -> {
+//      System.err.println(d);
+//    });
+//    if (returnList.get(0).score < oneBest.score) {
+//      System.err.println(returnList.get(0));
+//      System.err.println(oneBest);
+//    }
     
     return returnList;
   }
