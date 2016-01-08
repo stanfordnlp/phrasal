@@ -2,7 +2,7 @@
 
 Phrasal is licensed under the GPL (v3+). For details, please see the file LICENSE.txt in the root directory of this software package.
 
-Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
+Copyright (c) 2007-2016 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
 
 ## Installation
 
