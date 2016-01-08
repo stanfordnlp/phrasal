@@ -70,7 +70,9 @@ State<Derivation<TK, FV>> {
 
   // Only used for diverse n-best extraction
   public Derivation<TK,FV> bestChild;
-  public double bestChildScore;
+  public double completionScore;
+  // WSGDEBUG
+  public boolean isOneBest = false;
   
   /**
    * 

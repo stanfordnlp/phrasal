@@ -185,7 +185,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
-    boolean outputConstrained = false;
     boolean seenCompatiblePrefix = ! prefixEnabled;
     for (int i = startOfDecoding; i <= sourceLength; i++) {
       int rootBeam = prefilledBeams ? minSourceCoverage : 0;
@@ -217,8 +216,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           ++numPoppedItems;
           seenCompatiblePrefix = seenCompatiblePrefix || item.derivation.length >= targets.get(0).size();
         }
+        // else pruned items don't count against the pop limit
 
-        // Expand this consequent
+        // Expand this consequent.
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace)) {
           ++totalHypothesesGenerated;
