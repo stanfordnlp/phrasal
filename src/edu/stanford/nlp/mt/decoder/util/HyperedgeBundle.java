@@ -48,6 +48,7 @@ public class HyperedgeBundle<TK,FV> {
     if (expandedItems.cardinality() == 0) {
       // Top-left corner of the grid
       assert antecedent == null || (antecedent.itemId < 0 && antecedent.ruleId < 0);
+      System.err.println("top left corner " + itemList.size() + " " + ruleList.size());
       consequentList.add(new Consequent<TK,FV>(itemList.get(0), ruleList.get(0), this, 0, 0));
       expandedItems.set(0);
 

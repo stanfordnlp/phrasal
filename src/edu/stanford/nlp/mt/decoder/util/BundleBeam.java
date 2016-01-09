@@ -68,7 +68,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     this.sequenceLength = optionGrid.gridDimension();
     this.distortionLimit = distortionLimit;
     this.coverageCardinality = coverageCardinality;
-    this.isTargetCardinalityBeam = true;
+    this.isTargetCardinalityBeam = false;
   }
   
   /**
@@ -98,13 +98,25 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
 
   @Override
   public Derivation<TK,FV> put(Derivation<TK,FV> derivation) {
-    if (isTargetCardinalityBeam ? derivation.targetSequence.size() != coverageCardinality :
-          derivation.sourceCoverage.cardinality() != coverageCardinality ) {
+    return put(derivation, true);
+  }
+    
+    
+  public Derivation<TK,FV> put(Derivation<TK,FV> derivation, boolean logRecombination) {
+    if (!isTargetCardinalityBeam) {
+      if(derivation.sourceCoverage.cardinality() != coverageCardinality )
+        throw new RuntimeException("Derivation cardinality does not match beam cardinality");
+    }
+    else if(sequenceLength > coverageCardinality) {
+      if(derivation.targetSequence.size() != coverageCardinality)
+        throw new RuntimeException("Derivation cardinality does not match beam cardinality");
+    }
+    else if(coverageCardinality > derivation.targetSequence.size()) {
       throw new RuntimeException("Derivation cardinality does not match beam cardinality");
     }
 
     final Status status = recombinationHash.update(derivation);
-    if (recombinationHistory != null) {
+    if (recombinationHistory != null && logRecombination) {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
           recombinationHash.getLastRedundant());
     }
@@ -128,7 +140,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   private void groupBundles() {
     List<Derivation<TK,FV>> derivationList = recombinationHash.derivations();
     assert derivationList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", derivationList.size(), capacity);
-    
+
     if(!isTargetCardinalityBeam) {
       // Group hypotheses by source coverage
       final Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(derivationList.size() / 2);
@@ -142,7 +154,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       }
   
       // Make hyperedge bundles
-      bundles = new HashMap<>(2*coverageGroups.size());
+      bundles = new HashMap<>(optionGrid.maxSourceLength());
       for (CoverageSet coverage : coverageGroups.keySet()) {
         final List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
         Collections.sort(itemList);
@@ -162,12 +174,24 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       }
     }
     else { // i.e. isTargetCardinalityBeam == true
+      System.err.println("generating bundles from " + derivationList.size() + " derivations");
+      
+      bundles = new HashMap<>(optionGrid.maxTargetLength());
+      if(derivationList.isEmpty()) {
+        System.err.println("WARNING: beam is empty for target cardinality " + coverageCardinality);
+        return;
+      }
+      
       Collections.sort(derivationList);
       int endPosMax = Math.min(sequenceLength, coverageCardinality + optionGrid.maxTargetLength);
+      System.err.println("endPosMax = " + endPosMax + "; sequenceLength = " + sequenceLength + "; coverageCardinality = " + coverageCardinality + "; maxTargetLength = " + optionGrid.maxTargetLength  );
+      
       for(int endPos = coverageCardinality; endPos < endPosMax; ++endPos) {
         Range range = new Range(coverageCardinality, endPos);
         final List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
+        System.err.println("range: " + range.start + " " + range.end);
         if (ruleList.size() > 0) {
+          System.err.println("attaching " + ruleList.size() + " rules");
           final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(derivationList, ruleList);
           List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
           if (bundleList == null) {
@@ -191,6 +215,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       groupBundles();
     }
     int rangeSize = n - coverageCardinality;
+    if(bundles == null) System.err.println("NULLL!!");
     return bundles.getOrDefault(rangeSize, Collections.emptyList());
   }
   

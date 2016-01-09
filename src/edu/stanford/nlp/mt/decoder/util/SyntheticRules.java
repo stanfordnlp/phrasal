@@ -57,7 +57,7 @@ public final class SyntheticRules {
   private static final int MAX_SYNTHETIC_ORDER = 3;
   private static final int MAX_TARGET_ORDER = 4;
   
-  private static final boolean DEBUG = false;
+  private static final boolean DEBUG = true;
 
   private SyntheticRules() {}
 
@@ -297,9 +297,10 @@ public final class SyntheticRules {
    * @param inputProperties
    */
   @SuppressWarnings("unchecked")
-  public static <TK,FV> void augmentRuleGrid(RuleGrid<TK,FV> ruleGrid, 
+  public static <TK,FV> void augmentPrefixRuleGrid(RuleGrid<TK,FV> ruleGrid, 
       Sequence<TK> prefix, int sourceInputId, Sequence<TK> sourceSequence, 
       AbstractInferer<TK, FV> inferer, InputProperties inputProperties, boolean handleCompounds) {
+    System.err.println("augmentingRuleGrid");
 
     if (! (inferer.phraseGenerator instanceof DynamicTranslationModel)) {
       throw new RuntimeException("Synthetic rule generation requires DynamicTranslationModel");
@@ -335,22 +336,29 @@ public final class SyntheticRules {
     
     RuleCounter<TK, FV> ruleCounter = new RuleCounter<>(sourceSequence, prefix, tmList);
     
+    List<Set<Sequence<TK>>> existingTargetSides = new ArrayList<>(sourceSequence.size() * MAX_SYNTHETIC_ORDER);
+    for(int i = 0; i < sourceSequence.size() * MAX_SYNTHETIC_ORDER; ++i) existingTargetSides.add(null);
+
+    // these rules have already been filtered w.r.t. the target side, so there is only a small number
+    for(ConcreteRule<TK,FV> existingRule : ruleGrid) {
+      int index = existingRule.sourcePosition * MAX_SYNTHETIC_ORDER + existingRule.sourceCoverage.cardinality() - 1;
+      if(existingTargetSides.get(index) == null) existingTargetSides.set(index, new HashSet<>());
+      existingTargetSides.get(index).add(existingRule.abstractRule.target);
+    }
+       
     for (int order = 1; order <= MAX_SYNTHETIC_ORDER; ++order) {
       for (int i = 0, sz = sourceSequence.size() - order; i <= sz; ++i) {
         List<RuleBound> rules = extractRules(sym, i, order, MAX_TARGET_ORDER);
-        
-        List<ConcreteRule<TK,FV>> existingRules = ruleGrid.get(i, i + order - 1);
-        Set<Sequence<TK>> existingTargetSides = new HashSet<>(existingRules.size());
-        
-        for(ConcreteRule<TK,FV> existingRule : existingRules)
-          existingTargetSides.add(existingRule.abstractRule.target);
         
         for (RuleBound r : rules) {
           Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
           Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
           targetCoverage.set(r.ei, r.ej);
           prefixSourceCoverage.set(r.fi, r.fj);
-          if(existingTargetSides.contains(tgt)) {
+          
+          int index = i * MAX_SYNTHETIC_ORDER + order - 1;
+          Set<Sequence<TK>> matchingTgtSides = existingTargetSides.get(index);
+          if(matchingTgtSides != null && matchingTgtSides.contains(tgt)) {
             if (DEBUG) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
             continue;
           }

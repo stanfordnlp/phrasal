@@ -44,6 +44,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   Map<TK,List<Integer>> wordToPosition = null;
   Sequence<TK> prefix = null;
   int maxTargetLength = 0;
+  int maxSourceLength = 0;
   
   /**
    * Constructor.
@@ -96,7 +97,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     // phrase length.
     grid = new List[sequenceLength * sequenceLength];
     coverage = new CoverageSet(sequenceLength);
-    
+
     // Make prefix word type -> position
     wordToPosition = new HashMap<>();
     for (int i = 0, limit = prefix.size(); i < limit; ++i) {
@@ -150,6 +151,11 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     assert startPos <= endPos : String.format("Illegal span: [%d,%d]", startPos, endPos);
     assert endPos < sequenceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sequenceLength);
     
+    int targetLength = rule.abstractRule.target.size();
+    int sourceLength = rule.abstractRule.source.size();
+    if(targetLength > maxTargetLength) maxTargetLength = targetLength;
+    if(sourceLength > maxSourceLength) maxSourceLength = sourceLength;
+
     int offset = getIndex(startPos, endPos);
     if (grid[offset] == null) grid[offset] = new ArrayList<>();
     grid[offset].add(rule);
@@ -169,11 +175,14 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     List<Integer> matches = findTgtMatches(rule.abstractRule.target);
     
     for (int startPos : matches) {
+      System.err.println("add match for start pos " + startPos + ": " + rule);
       int targetLength = rule.abstractRule.target.size();
+      int sourceLength = rule.abstractRule.source.size();
       if(targetLength > maxTargetLength) maxTargetLength = targetLength;
+      if(sourceLength > maxSourceLength) maxSourceLength = sourceLength;
       
-      // We want to include phrases that straddle the boundary and store them under (startPos, prefix.size())
-      int endPos = Math.min(prefix.size(), startPos + targetLength - 1);
+      // We want to include phrases that straddle the boundary and store them under (startPos, prefix.size() - 1)
+      int endPos = Math.min(prefix.size() - 1, startPos + targetLength - 1);
       // Sanity checks
       assert startPos <= endPos : String.format("Illegal span: [%d,%d]", startPos, endPos);
       assert endPos < sequenceLength : String.format("End index out of bounds: [%d,%d] >= %d", startPos, endPos, sequenceLength);
@@ -344,5 +353,9 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   
   public int maxTargetLength() {
     return maxTargetLength;
+  }
+  
+  public int maxSourceLength() {
+    return maxSourceLength;
   }
 }
