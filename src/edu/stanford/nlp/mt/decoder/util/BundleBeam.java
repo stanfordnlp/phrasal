@@ -182,9 +182,11 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
         return;
       }
       
-      Collections.sort(derivationList);
+      final List<Derivation<TK,FV>> itemList = new ArrayList<>(derivationList);
+      
+      Collections.sort(itemList);
       int endPosMax = Math.min(sequenceLength, coverageCardinality + optionGrid.maxTargetLength);
-     // System.err.println("endPosMax = " + endPosMax + "; sequenceLength = " + sequenceLength + "; coverageCardinality = " + coverageCardinality + "; maxTargetLength = " + optionGrid.maxTargetLength  );
+      //System.err.println("endPosMax = " + endPosMax + "; sequenceLength = " + sequenceLength + "; coverageCardinality = " + coverageCardinality + "; maxTargetLength = " + optionGrid.maxTargetLength  );
       
       for(int endPos = coverageCardinality; endPos < endPosMax; ++endPos) {
         Range range = new Range(coverageCardinality, endPos);
@@ -192,7 +194,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
         //System.err.println("range: " + range.start + " " + range.end);
         if (ruleList.size() > 0) {
           //System.err.println("attaching " + ruleList.size() + " rules");
-          final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(derivationList, ruleList);
+          final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
           List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
           if (bundleList == null) {
             bundleList = new ArrayList<>();
@@ -222,7 +224,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * Reset this beam for search.
    */
   public void reset() {
-    groupBundles();
+    bundles = null;
   }
 
   @Override

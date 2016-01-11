@@ -34,6 +34,7 @@ public class HyperedgeBundle<TK,FV> {
     this.ruleList = sortedRuleList;
     this.itemList = sortedDerivationList;
     this.expandedItems = new BitSet(128);
+    expandedItems.clear();
   }
 
   /**

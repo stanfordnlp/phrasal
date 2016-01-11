@@ -362,6 +362,9 @@ public final class SyntheticRules {
           Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
           Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
           
+          targetCoverage.set(r.ei, r.ej);
+          prefixSourceCoverage.set(r.fi, r.fj);
+          
           int index = i * MAX_SYNTHETIC_ORDER + order - 1;
           Set<Sequence<TK>> matchingTgtSides = existingTargetSides.get(index);
           if(matchingTgtSides != null && matchingTgtSides.contains(tgt)) {
@@ -369,9 +372,6 @@ public final class SyntheticRules {
             continue;
           }
 
-          targetCoverage.set(r.ei, r.ej);
-          prefixSourceCoverage.set(r.fi, r.fj);
-          
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
           int[][] e2f = new int[tgt.size()][src.size()];
