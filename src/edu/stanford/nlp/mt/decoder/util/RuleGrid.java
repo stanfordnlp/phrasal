@@ -121,7 +121,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     //Collections.sort(filteredRuleList);
     
     this.size = filteredRuleList.size();
-    for (ConcreteRule<TK,FV> rule : ruleList) addTgtEntry(rule);
+    for (ConcreteRule<TK,FV> rule : ruleList) addTgtEntry(rule, true);
     logger.info("# prefix rules: {}/{}", this.size, ruleList.size());
   }  
   
@@ -135,7 +135,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    */
   public void addEntry(ConcreteRule<TK,FV> rule) {
     if(isSourceGrid) addSrcEntry(rule);
-    else addTgtEntry(rule);
+    else addTgtEntry(rule, true);
   }
   
   
@@ -169,18 +169,19 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    * 
    * @param rule
    */
-  private void addTgtEntry(ConcreteRule<TK,FV> rule) {
+  public void addTgtEntry(ConcreteRule<TK,FV> rule, boolean allowStraddle) {
     if (rule.abstractRule.target.size() == 0) return; // Source deletion rule
     
     List<Integer> matches = findTgtMatches(rule.abstractRule.target);
     
     for (int startPos : matches) {
-      System.err.println("add match for start pos " + startPos + ": " + rule);
+      //System.err.println("add match for start pos " + startPos + ": " + rule);
       int targetLength = rule.abstractRule.target.size();
       int sourceLength = rule.abstractRule.source.size();
       if(targetLength > maxTargetLength) maxTargetLength = targetLength;
       if(sourceLength > maxSourceLength) maxSourceLength = sourceLength;
       
+      if(!allowStraddle && startPos + targetLength > prefix.size()) continue;
       // We want to include phrases that straddle the boundary and store them under (startPos, prefix.size() - 1)
       int endPos = Math.min(prefix.size() - 1, startPos + targetLength - 1);
       // Sanity checks

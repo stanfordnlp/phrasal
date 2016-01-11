@@ -108,7 +108,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     TimeKeeper timer = TimingUtils.start();
     
-    boolean printDebug = true; // sourceInputId == 1022;
+    boolean printDebug = false; // sourceInputId == 1022;
     
     // Set the distortion limit
     if (sourceInputProperties.containsKey(InputProperty.DistortionLimit)) {
@@ -131,7 +131,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<ConcreteRule<TK,FV>> ruleList = phraseQuery.ruleList;
     logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
     
-    if (printDebug && false) {
+    if (printDebug) {
       for (ConcreteRule<TK,FV> rule : ruleList)
         System.err.println(rule);
     }
@@ -183,7 +183,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       timer.mark("Prefix Decoding");
     }
   
-    System.err.println("start main translation loop");
+    //System.err.println("start main translation loop");
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
@@ -204,7 +204,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           }
         }
       }
-      
+
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();
@@ -331,7 +331,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           && (!checkSourceCoverage 
               || (!successor.antecedent.sourceCoverage.intersects(successor.rule.sourceCoverage)
                  )// && checkReorderingConstraint(successor.antecedent.sourceCoverage, successor.rule.sourceCoverage))
-          && (!checkPrefixCompleted || successor.antecedent.prefixCompleted));
+          );//&& (!checkPrefixCompleted || successor.antecedent.prefixCompleted));
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
@@ -412,23 +412,23 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       RecombinationHistory<Derivation<TK, FV>> recombinationHistory, TimeKeeper timer) {
     if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
 
-    System.err.println("start prefix decoding");
-    boolean printDebug = true; // sourceInputId == 1022;
+    //System.err.println("start prefix decoding");
+    boolean printDebug = false; // sourceInputId == 1022;
     
     int ruleQueryLimit = -1;  // Disable query limit. We might need some of these rules.
     final RuleGrid<TK,FV> prefixGrid = new RuleGrid<>(ruleList, source, prefix, ruleQueryLimit); 
     
-    System.err.println("created prefix rule grid");
+    //System.err.println("created prefix rule grid");
 
     // Add new rules to the rule grid
     SyntheticRules.augmentPrefixRuleGrid(prefixGrid, prefix, sourceInputId, source, this, sourceInputProperties, prefixAlignCompounds);
     timer.mark("PrefixAug");
     
-    System.err.println("augmented prefix rule grid. maxTgtLength = " + prefixGrid.maxTargetLength());;
+    //System.err.println("augmented prefix rule grid. maxTgtLength = " + prefixGrid.maxTargetLength());;
     
     int prefixLength = prefix.size();
     
-    System.err.println("prefixLength = " + prefixLength + "; prefixGrid.gridDimension() = " + prefixGrid.gridDimension());
+    //System.err.println("prefixLength = " + prefixLength + "; prefixGrid.gridDimension() = " + prefixGrid.gridDimension());
     
     final List<Beam<Derivation<TK,FV>>> tgtBeams = new ArrayList<>(prefixLength + 1);
     
@@ -443,8 +443,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     final int maxTgtPhraseLength = prefixGrid.maxTargetLength();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
+    int lastRecoveredCardinality = 0;
     for (int i = 1; i <= prefixLength; ++i) {
-      System.err.println("i = " + i);
+      //System.err.println("i = " + i);
       int rootBeam = 0;
       int minCoverage = i - maxTgtPhraseLength;
       int startBeam = Math.max(rootBeam, minCoverage);
@@ -453,7 +454,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) tgtBeams.get(j);
-        System.err.println("consequent size " + i);
+        //System.err.println("consequent size " + i);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
           for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true, false)) {
             ++totalHypothesesGenerated;
@@ -482,27 +483,49 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
         }
-        
       }
       
+      if(i == prefixLength && newBeam.size() == 0) {
+        // Couldn't figure out how to extend any derivations in the beams. Walk back from this point
+        // to the first beam that has valid derivations in. Try to reset that beam by extending each
+        // derivation with target insertion rules.
+        int j;
+        for (j = i-1; j >= 0; --j) if (tgtBeams.get(j).size() > 0) break;
+        
+        if(j > lastRecoveredCardinality) {
+          lastRecoveredCardinality = j;
+          boolean derivationsExtended = false;
+          
+          logger.warn("No hypothesis for complete prefix found. Recovering by moving back to cardinality " + j + " and augmenting phrase grid.");
+          
+          Sequence<TK> extension = prefix.subsequence(j, j + 1);
+          int numRules = SyntheticRules.recoverAugmentPrefixRuleGrid(prefixGrid, extension, sourceInputId, source, this, sourceInputProperties);
+          derivationsExtended = derivationsExtended || numRules > 0;
+  
+          // sg: Reset search. This is some scary shit.
+          // jw: I don't actually think it is that scary. Because all beams with cardinality > j are empty, nothing happened in between that we could be messing up.
+          if (derivationsExtended) {
+            ((BundleBeam<TK,FV>) tgtBeams.get(j)).reset();
+            i = j + 1;
+          } // else we can't make any more progress, so continue with decoding, which will fail.
+        }
+        else {
+          logger.warn("No hypothesis for complete prefix found, but already tried to recover from cardinality " + j + ". Giving up.");
+          
+        }
+      }
       
       if (printDebug) {
         System.err.println(newBeam.beamString(10));
       }
-      
       numRecombined += newBeam.recombined();
-      
-      //todo: target insertions
-
     }
-    
     timer.mark("PrefixDecoding");
     
     // Debug statistics
-    logger.info("input {}: Decoding time: {}", sourceInputId, timer);
+    logger.info("input {}: Prefix decoding time: {}", sourceInputId, timer);
     logger.info("input {}: #derivations generated: {}  pruned: {}  recombined: {}", sourceInputId, 
         totalHypothesesGenerated, numPruned, numRecombined);
-
     
     return populateSourceBeams(tgtBeams, beams);
   }
@@ -510,27 +533,26 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   // returns the minimum source coverage cardinality
   @SuppressWarnings("unchecked")
   private int populateSourceBeams(List<Beam<Derivation<TK,FV>>> tgtBeams, List<Beam<Derivation<TK,FV>>> srcBeams) {
-    System.err.println("populate source beams");
+    //System.err.println("populate source beams");
     int maxTgtBeam = tgtBeams.size() - 1;
-    int minSrcCard = -1;
-    for(int i = 1; i <= maxTgtBeam; ++i) {
+    int minSrcCard = 0;
+
+    // We only propagate the final beam to standard source-cardinality search
+    for(int i = maxTgtBeam; i > 0; --i) {
       Beam<Derivation<TK,FV>> tgtBeam = tgtBeams.get(i);
-      boolean lastBeam = i == maxTgtBeam;
-      if(lastBeam && tgtBeam.size() > 0) minSrcCard = Integer.MAX_VALUE;
+      if(tgtBeam.size() == 0) continue;
+      
+      minSrcCard = Integer.MAX_VALUE;
       for(Derivation<TK, FV> d : tgtBeam) {
+        minSrcCard = Math.min(minSrcCard, d.sourceCoverage.cardinality());
         BundleBeam<TK,FV> srcBeam = (BundleBeam<TK,FV>) srcBeams.get(d.sourceCoverage.cardinality());
-        if(srcBeam.size() < srcBeam.capacity()) {
-          
-          //TODO: somehow mark non-goal derivations so that they will not be expanded in src-cardinality based search
-          
-          srcBeam.put(d, false);
-          if(lastBeam) minSrcCard = Math.min(minSrcCard, d.sourceCoverage.cardinality());
-        }
+        if(srcBeam.size() < srcBeam.capacity()) srcBeam.put(d, false);
       }
+      break;
     }
     
-    for(int i = 1; i < srcBeams.size(); ++i)
-      System.err.println("src beam " + i + " size = " + srcBeams.get(i).size());
+    //for(int i = 1; i < srcBeams.size(); ++i)
+      //System.err.println("src beam " + i + " size = " + srcBeams.get(i).size());
     return minSrcCard;
   }
   

@@ -174,7 +174,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       }
     }
     else { // i.e. isTargetCardinalityBeam == true
-      System.err.println("generating bundles from " + derivationList.size() + " derivations");
+      //System.err.println("generating bundles from " + derivationList.size() + " derivations");
       
       bundles = new HashMap<>(optionGrid.maxTargetLength());
       if(derivationList.isEmpty()) {
@@ -184,14 +184,14 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       
       Collections.sort(derivationList);
       int endPosMax = Math.min(sequenceLength, coverageCardinality + optionGrid.maxTargetLength);
-      System.err.println("endPosMax = " + endPosMax + "; sequenceLength = " + sequenceLength + "; coverageCardinality = " + coverageCardinality + "; maxTargetLength = " + optionGrid.maxTargetLength  );
+     // System.err.println("endPosMax = " + endPosMax + "; sequenceLength = " + sequenceLength + "; coverageCardinality = " + coverageCardinality + "; maxTargetLength = " + optionGrid.maxTargetLength  );
       
       for(int endPos = coverageCardinality; endPos < endPosMax; ++endPos) {
         Range range = new Range(coverageCardinality, endPos);
         final List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
-        System.err.println("range: " + range.start + " " + range.end);
+        //System.err.println("range: " + range.start + " " + range.end);
         if (ruleList.size() > 0) {
-          System.err.println("attaching " + ruleList.size() + " rules");
+          //System.err.println("attaching " + ruleList.size() + " rules");
           final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(derivationList, ruleList);
           List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
           if (bundleList == null) {
@@ -215,7 +215,6 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       groupBundles();
     }
     int rangeSize = n - coverageCardinality;
-    if(bundles == null) System.err.println("NULLL!!");
     return bundles.getOrDefault(rangeSize, Collections.emptyList());
   }
   
