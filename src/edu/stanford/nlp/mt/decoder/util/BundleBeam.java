@@ -178,7 +178,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
       
       bundles = new HashMap<>(optionGrid.maxTargetLength());
       if(derivationList.isEmpty()) {
-        System.err.println("WARNING: beam is empty for target cardinality " + coverageCardinality);
+        //System.err.println("WARNING: beam is empty for target cardinality " + coverageCardinality);
         return;
       }
       
