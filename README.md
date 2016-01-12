@@ -17,7 +17,7 @@ usually the default shell.
 
 1. Switch to the root of the Phrasal repository and execute: `gradle installDist`
 
-1. Set PHRASAL_HOME: `export PHRASAL_HOME=``pwd`` `
+1. Set PHRASAL_HOME: ``export PHRASAL_HOME=`pwd` ``
 
 1. Set CLASSPATH: `export CLASSPATH=$PHRASAL_HOME/build/install/phrasal/lib/*`
 
