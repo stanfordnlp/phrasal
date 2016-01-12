@@ -150,10 +150,9 @@ public class MosesCompoundSplitter {
   }
     
   private Sequence<IString> splitWord(IString word) {
-    List<List<Match>> matches = new ArrayList<List<Match>>();
-    for(int i = 0; i < word.length(); ++i) matches.add(null);
-    
     String lc = word.toString().toLowerCase();
+    List<List<Match>> matches = new ArrayList<List<Match>>();
+    for(int i = 0; i < lc.length(); ++i) matches.add(null);
     if(lcModel.getCount(lc) >= MAX_COUNT || !containsLetter(lc)) return new ArraySequence<IString>(new IString[]{ word });
     // TODO: do something with the word
     int length = lc.length();
