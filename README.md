@@ -7,8 +7,10 @@ Copyright (c) 2007-2016 The Board of Trustees of The Leland Stanford Junior Univ
 ## Installation
 
 We use [Gradle](http://gradle.org) to build Phrasal. Gradle will
-install all dependencies.  If you are on OS X, the easiest way to get
+install all dependencies.  You need Gradle version 2.1+.
+If you are on OS X, the easiest way to get
 Gradle is to install Homebrew and then to type `brew install gradle`.
+
 
 ### Linux / Mac OS X
 
