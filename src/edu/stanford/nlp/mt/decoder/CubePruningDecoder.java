@@ -224,7 +224,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
         }
-        
       }
       
       
