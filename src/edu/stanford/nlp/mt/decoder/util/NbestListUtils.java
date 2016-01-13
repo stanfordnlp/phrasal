@@ -27,25 +27,23 @@ public final class NbestListUtils {
    * @return
    */
   public static <TK,FV> List<RichTranslation<TK,FV>> mergeAndDedup(List<RichTranslation<TK,FV>> standard,
-      List<RichTranslation<TK,FV>> alt, int targetSize) {
+      List<RichTranslation<TK,FV>> alt, int maxAltItems) {
     
     IntSet hashCodeSet = new IntOpenHashSet(standard.size());
-    double minScore = Double.MAX_VALUE;
     for (RichTranslation<TK,FV> s : standard) {
       hashCodeSet.add(derivationHashCode(s.getFeaturizable().derivation));
-      if (s.getFeaturizable().derivation.score < minScore) minScore = s.getFeaturizable().derivation.score;
-      // WSGDEBUG
-//      System.err.println(s.getFeaturizable().derivation.id);
-//      System.err.println(s.getFeaturizable().derivation.historyString());
     }
     
     List<RichTranslation<TK,FV>> returnList = new ArrayList<>(standard);
-    
+
+    int numItems = 0;
     for (RichTranslation<TK,FV> t : alt) {
       int hashCode = derivationHashCode(t.getFeaturizable().derivation);
       if (! hashCodeSet.contains(hashCode)) {
         returnList.add(t);
+        ++numItems;
       }
+      if (numItems == maxAltItems) break;
     }
     Collections.sort(returnList);
     

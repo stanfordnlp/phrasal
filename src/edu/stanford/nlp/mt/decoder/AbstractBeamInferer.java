@@ -292,7 +292,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 //          sourceInputId, "", null, System.err);
       
       if (nbestMode == NbestMode.Combined) {
-        List<RichTranslation<TK, FV>> nbestList2 = standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+        List<RichTranslation<TK, FV>> standardList = standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
             outputSpace, size, distinct);
         
         // WSGDEBUG
@@ -305,11 +305,11 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 //            if (t.translation.equals(t2.translation) && t2.)
 //          }
 //        }
-        nbestList = NbestListUtils.mergeAndDedup(nbestList2, nbestList, size);
+        int maxAltItems = 10; // TODO(spenceg) Hardcoding some experimental params here
+        nbestList = NbestListUtils.mergeAndDedup(standardList, nbestList, maxAltItems);
 //        System.err.println();
 //        IOTools.writeNbest(nbestList.stream().map(m -> (RichTranslation<IString,String>) m).collect(Collectors.toList()), 
 //            sourceInputId, "", null, System.err);
-        
       }
     
     } else {

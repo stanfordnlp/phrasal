@@ -48,6 +48,9 @@ public class StateLatticeDecoder<S extends State<S>> implements
 //      System.err.printf("put %d%n", stateCounter);
       agenda.add(new CompositeState(goalState, stateCounter++));
     }
+    
+    // TODO(spenceg) Initialize the agenda here so that we can remove expandedFirstItem.
+    
   }
 
   @Override
