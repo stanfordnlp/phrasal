@@ -31,9 +31,10 @@ import edu.stanford.nlp.stats.Counter;
 public class MosesCompoundSplitter {
   
   private static String[] FILLERS = {"", "s", "es"};
-  private static int MIN_SIZE = 3; // the minimum number of characters is actually MIN_SIZE + 1
-  private static int MIN_COUNT = 5;
-  private static int MAX_COUNT = 5;
+  private static final int MIN_SIZE = 3; // the minimum number of characters is actually MIN_SIZE + 1
+  private static final int MIN_COUNT = 5;
+  private static final int MAX_COUNT = 5;
+  private static final int MAX_NUM_SPLITS = 1000000;
 
   
   private final boolean useUnigramProbs;
@@ -157,6 +158,7 @@ public class MosesCompoundSplitter {
     if(lcModel.getCount(lc) >= MAX_COUNT || !containsLetter(lc)) return new ArraySequence<IString>(new IString[]{ word });
     // TODO: do something with the word
     int length = lc.length();
+    
     for(int end = MIN_SIZE; end < length; ++end) {
       for(int start = 0; start <= end - MIN_SIZE; ++start) {
         if(start != 0 && matches.get(start - 1) == null) continue;
@@ -185,6 +187,7 @@ public class MosesCompoundSplitter {
     List<String> bestSplit = new ArrayList<>();
     List<String> reverseSplit = new ArrayList<>();
     
+    int numSplits = 0;
     boolean finished = false;
     while(!finished) {
       int pos = word.length() - 1;
@@ -211,6 +214,12 @@ public class MosesCompoundSplitter {
       if(score > bestScore) {
         bestScore = score;
         bestSplit = new ArrayList<>(reverseSplit);
+      }
+      
+      // safeguard to avoid (nearly) infinite running
+      if(++numSplits > MAX_NUM_SPLITS) {
+        finished = true;
+        break;
       }
       
       int splitPos = -1;
