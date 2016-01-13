@@ -29,6 +29,8 @@ public class StateLatticeDecoder<S extends State<S>> implements
   private final RecombinationHistory<S> recombinationHistory;
   public int maxAgendaSize = 0; 
 
+  private boolean expandedFirstItem = false;
+  
   /**
    * Constructor.
    * 
@@ -56,7 +58,9 @@ public class StateLatticeDecoder<S extends State<S>> implements
   public List<S> next() {
     final CompositeState best = agenda.poll();
     best.extractPath(); // Lazily expand the best path
-    for (int i = 0, sz = best.states.length; i < sz; i++) {
+    final int sz = expandedFirstItem ? Math.min(best.varPosition+1, best.states.length) : best.states.length;
+    expandedFirstItem = true;
+    for (int i = 0; i < sz; i++) {
       // Undo recombinations along the Viterbi path.
       final S currentState = (S) best.states[i];
       final List<S> recombinedStates = recombinationHistory.recombinations(currentState);
