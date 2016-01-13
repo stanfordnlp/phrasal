@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -362,9 +363,6 @@ public final class IOTools {
     }
     return wts;
   }
-  
-  
-  
 
   /**
    * Read weights from a file.
@@ -385,8 +383,7 @@ public final class IOTools {
    * @throws IOException
    */
   public static Counter<String> readWeightsPlain(String filename) throws IOException {
-    LineNumberReader reader = new LineNumberReader(new FileReader(filename));
-    
+    LineNumberReader reader = new LineNumberReader(new FileReader(filename));   
     Counter<String> wts = new ClassicCounter<String>();
     for (String line; (line = reader.readLine()) != null;) {
       String[] input = line.split(" ");
@@ -424,8 +421,9 @@ public final class IOTools {
       String outputType,
       Pattern featurePattern,
       PrintStream nbestListWriter) {
-    assert translations != null;
-    assert nbestListWriter != null;
+    Objects.requireNonNull(translations);
+    Objects.requireNonNull(outputType);
+    Objects.requireNonNull(nbestListWriter);
 
     StringBuilder sb = new StringBuilder(translations.size() * 500);
     String nl = System.getProperty("line.separator");
@@ -439,8 +437,9 @@ public final class IOTools {
       } else if (outputType.equals("nnlm-bolt")) {
         translation.nbestToMosesStringBuilder(sourceInputId, sb, featurePattern, true, true);
       } else {
-        sb.append(sourceInputId).append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ");
-        sb.append(translation.toString());
+        sb.append(sourceInputId).append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ")
+          .append(String.format("%.5f", translation.score)).append(" ").append(CompiledPhraseTable.FIELD_DELIM).append(" ")
+          .append(translation.translation.toString());
       }
       sb.append(nl);
     }

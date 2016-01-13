@@ -29,6 +29,10 @@ public class StateLatticeDecoder<S extends State<S>> implements
   private final RecombinationHistory<S> recombinationHistory;
   public int maxAgendaSize = 0; 
 
+  private int stateCounter = 0;
+  
+  private boolean expandedFirstItem = false;
+  
   /**
    * Constructor.
    * 
@@ -41,8 +45,8 @@ public class StateLatticeDecoder<S extends State<S>> implements
     
     // Initialize the agenda with list of goal nodes
     for (S goalState : goalStates) {
-      assert goalState != null;
-      agenda.add(new CompositeState(goalState));
+//      System.err.printf("put %d%n", stateCounter);
+      agenda.add(new CompositeState(goalState, stateCounter++));
     }
   }
 
@@ -56,12 +60,16 @@ public class StateLatticeDecoder<S extends State<S>> implements
   public List<S> next() {
     final CompositeState best = agenda.poll();
     best.extractPath(); // Lazily expand the best path
-    for (int i = 0, sz = best.states.length; i < sz; i++) {
+//    System.err.printf("get %d%n", best.id);
+    final int sz = expandedFirstItem ? Math.min(best.varPosition+1, best.states.length) : best.states.length;
+    expandedFirstItem = true;
+    for (int i = 0; i < sz; i++) {
       // Undo recombinations along the Viterbi path.
       final S currentState = (S) best.states[i];
       final List<S> recombinedStates = recombinationHistory.recombinations(currentState);
       for (S recombinedState : recombinedStates) {
-        CompositeState newComposite = new CompositeState(best, recombinedState, i);
+//        System.err.printf(" put %d (%d)%n", stateCounter, i);
+        CompositeState newComposite = new CompositeState(best, recombinedState, i, stateCounter++);
         agenda.add(newComposite);
       }
     }
@@ -84,10 +92,13 @@ public class StateLatticeDecoder<S extends State<S>> implements
     private CompositeState original;
     private State<S> varState;
     private int varPosition;
+    
+    public int id;
 
     @SuppressWarnings("unchecked")
-    public CompositeState(S goalState) {
+    public CompositeState(S goalState, int id) {
       Objects.requireNonNull(goalState);
+      this.id = id;
       
       // Expand goal states immediately.
       final int length = goalState.depth() + 1;
@@ -133,9 +144,10 @@ public class StateLatticeDecoder<S extends State<S>> implements
       }
     }
     
-    public CompositeState(CompositeState original, State<S> varState, int varPosition) {
+    public CompositeState(CompositeState original, State<S> varState, int varPosition, int id) {
       Objects.requireNonNull(original);
       Objects.requireNonNull(varState);
+      this.id = id;
       
       this.varState = varState;
       this.original = original;

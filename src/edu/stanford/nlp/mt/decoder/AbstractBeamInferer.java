@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ import edu.stanford.nlp.mt.decoder.util.BeamFactory;
 import edu.stanford.nlp.mt.decoder.util.DTUHypothesis;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.DiverseNbestDecoder;
+import edu.stanford.nlp.mt.decoder.util.NbestListUtils;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
@@ -31,6 +33,7 @@ import edu.stanford.nlp.mt.train.AlignmentSymmetrizer.SymmetrizationType;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.FeatureValues;
+import edu.stanford.nlp.mt.util.IOTools;
 import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
@@ -251,6 +254,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   /**
    * n-best inference.
    */
+  @SuppressWarnings("unchecked")
   @Override
   public List<RichTranslation<TK, FV>> nbest(Scorer<FV> scorer,
       Sequence<TK> source, int sourceInputId,
@@ -268,6 +272,11 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     if (beam == null) return null; // Decoder failure
     timer.mark("Decode");    
 
+    // WSGDEBUG
+//    Sequence<TK> prefix = targets.get(0);
+//    System.err.println("##############");
+//    System.err.println(prefix);
+    
     // Backward pass
     List<RichTranslation<TK, FV>> nbestList;
     if (nbestMode == NbestMode.Standard) {
@@ -277,10 +286,30 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     } else if (nbestMode == NbestMode.Diverse || nbestMode == NbestMode.Combined) {
       nbestList = diverseNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
           outputSpace, size, distinct);
+      
+      // WSGDEBUG
+//      IOTools.writeNbest(nbestList.stream().map(m -> (RichTranslation<IString,String>) m).collect(Collectors.toList()), 
+//          sourceInputId, "", null, System.err);
+      
       if (nbestMode == NbestMode.Combined) {
-        nbestList.addAll(standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
-            outputSpace, size, distinct));
-        Collections.sort(nbestList);
+        List<RichTranslation<TK, FV>> nbestList2 = standardNbest(beam, recombinationHistory, sourceInputProperties, sourceInputId, targets,
+            outputSpace, size, distinct);
+        
+        // WSGDEBUG
+//        System.err.println();
+//        IOTools.writeNbest(nbestList2.stream().map(m -> (RichTranslation<IString,String>) m).collect(Collectors.toList()), 
+//            sourceInputId, "", null, System.err);
+        
+//        for (RichTranslation<TK,FV> t : nbestList) {
+//          for (RichTranslation<TK,FV> t2: nbestList2) {
+//            if (t.translation.equals(t2.translation) && t2.)
+//          }
+//        }
+        nbestList = NbestListUtils.mergeAndDedup(nbestList2, nbestList, size);
+//        System.err.println();
+//        IOTools.writeNbest(nbestList.stream().map(m -> (RichTranslation<IString,String>) m).collect(Collectors.toList()), 
+//            sourceInputId, "", null, System.err);
+        
       }
     
     } else {
@@ -321,6 +350,18 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     return translationList;
   }
   
+  // WSGDEBUG
+  private String printIds(List<Derivation<TK, FV>> latticePath) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("[");
+    for (Derivation<TK,FV> d : latticePath) {
+      if (sb.length() > 1) sb.append(", ");
+      sb.append(d.id);
+    }
+    sb.append("]");
+    return sb.toString();
+  }
+  
   /**
    * Standard A* search through lattice.
    * 
@@ -352,6 +393,8 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     int numExtracted = 0;
     long nbestId = 0;    
     for (List<Derivation<TK, FV>> latticePath : latticeDecoder) {
+//      System.err.println(numExtracted);
+//      System.err.println(printIds(latticePath));
       ++numExtracted;
       if (numExtracted > MAX_POPPED_ITEMS) break;
 
@@ -398,6 +441,9 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         return null;
       }
       
+      // WSGDEBUG
+//      System.err.printf("$$ %d%n%s%n", nbestId, goalHyp.historyString());
+      
       if (withDTUs) {
         DTUHypothesis<TK, FV> dtuHyp = (DTUHypothesis<TK, FV>) goalHyp;
         if (!dtuHyp.isDone() || dtuHyp.hasExpired())
@@ -418,7 +464,8 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     // scores predicted by the lattice may not actually correspond to their real
     // scores.
     Collections.sort(translations, translationComparator);    
-    logger.info("Input {}: nbest #extracted {} max-agenda-size {}", sourceInputId, numExtracted, latticeDecoder.maxAgendaSize);
+    logger.info("Input {}: nbest #extracted {} max-agenda-size {}", sourceInputId, numExtracted, 
+        latticeDecoder.maxAgendaSize);
     
     return translations;
   }
