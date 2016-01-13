@@ -2,13 +2,15 @@
 
 Phrasal is licensed under the GPL (v3+). For details, please see the file LICENSE.txt in the root directory of this software package.
 
-Copyright (c) 2007-2015 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
+Copyright (c) 2007-2016 The Board of Trustees of The Leland Stanford Junior University. All Rights Reserved.
 
 ## Installation
 
 We use [Gradle](http://gradle.org) to build Phrasal. Gradle will
-install all dependencies.  If you are on OS X, the easiest way to get
+install all dependencies.  You need Gradle version 2.1+.
+If you are on OS X, the easiest way to get
 Gradle is to install Homebrew and then to type `brew install gradle`.
+
 
 ### Linux / Mac OS X
 
@@ -17,7 +19,7 @@ usually the default shell.
 
 1. Switch to the root of the Phrasal repository and execute: `gradle installDist`
 
-1. Set PHRASAL_HOME: `export PHRASAL_HOME=``pwd`` `
+1. Set PHRASAL_HOME: ``export PHRASAL_HOME=`pwd` ``
 
 1. Set CLASSPATH: `export CLASSPATH=$PHRASAL_HOME/build/install/phrasal/lib/*`
 
