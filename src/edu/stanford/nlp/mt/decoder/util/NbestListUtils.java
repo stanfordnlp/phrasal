@@ -35,20 +35,19 @@ public final class NbestListUtils {
     }
     
     List<RichTranslation<TK,FV>> returnList = new ArrayList<>(standard);
-
-    int numItems = 0;
-    for (RichTranslation<TK,FV> t : alt) {
+    for (int i = 0, sz = Math.min(maxAltItems, alt.size()); i < sz; ++i) {
+      RichTranslation<TK,FV> t = alt.get(i);
       int hashCode = derivationHashCode(t.getFeaturizable().derivation);
-      if (! hashCodeSet.contains(hashCode)) {
-        returnList.add(t);
-        ++numItems;
-      }
-      if (numItems == maxAltItems) break;
+      if (! hashCodeSet.contains(hashCode)) returnList.add(t);
     }
     Collections.sort(returnList);
     
     return returnList;
   }
+  
+  
+  // TODO(spenceg) Incorporate the prefix. Add uniques off the end of the prefix
+  
   
   private static <TK,FV> int derivationHashCode(Derivation<TK,FV> d) {
     int[] hashCodes = new int[d.depth];
