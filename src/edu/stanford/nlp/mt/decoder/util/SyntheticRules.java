@@ -55,7 +55,7 @@ public final class SyntheticRules {
   public static final String PHRASE_TABLE_NAME = "synthetic";
 
   private static final int MAX_SYNTHETIC_ORDER = 3;
-  private static final int MAX_TARGET_ORDER = 4;
+  private static final int MAX_TARGET_ORDER = 10;
   
   private static final boolean DEBUG = false;
 
@@ -209,40 +209,48 @@ public final class SyntheticRules {
    * @param sourceInputProperties
    * @return
    */
-  public static <TK,FV> int augmentRuleGrid(RuleGrid<TK, FV> ruleGrid, Sequence<TK> target, 
-      Derivation<TK, FV> d, int maxDistortion, int sourceInputId, AbstractInferer<TK, FV> inferer,
-      InputProperties sourceInputProperties) {
-    int numRules = 0;
-
-    // Baseline dense features
-    final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
-    float[] scores = new float[featureNames.length];
-    scores[0] = (float) Math.log(SYNTHETIC_PROB);
-    scores[1] = scores[0];
-    scores[2] = scores[0];
-    scores[3] = scores[0];
-    if (scores.length > FeatureTemplate.DENSE.getNumFeatures()) {
-      // Extended features
-      scores[4] = 0.0f;
-      scores[5] = -1.0f;
+  @SuppressWarnings("unchecked")
+  public static <TK,FV> int recoverAugmentPrefixRuleGrid(RuleGrid<TK, FV> ruleGrid, Sequence<TK> tgt, 
+      int sourceInputId, Sequence<TK> sourceSequence, AbstractInferer<TK, FV> inferer,
+      InputProperties inputProperties) {
+    if(DEBUG) System.err.println("recoverAugmentPrefixRuleGrid");
+    
+    if (! (inferer.phraseGenerator instanceof DynamicTranslationModel)) {
+      throw new RuntimeException("Synthetic rule generation requires DynamicTranslationModel");
     }
 
-    CoverageSet dCoverage = d.sourceCoverage;
-    int firstClearBit = dCoverage.nextClearBit(0);
-    for(int i = firstClearBit; 
-        (i - firstClearBit) < maxDistortion &&
-        i < d.sourceSequence.size();
-        i = dCoverage.nextClearBit(i+1)) {
-      Sequence<TK> source = d.sourceSequence.subsequence(i, i+1);
-      CoverageSet sourceCoverage = new CoverageSet(d.sourceSequence.size());
-      sourceCoverage.set(i);
-      Rule<TK> abstractRule = new Rule<>(scores, featureNames, target, source, 
-          UNIGRAM_ALIGNMENT, PHRASE_TABLE_NAME);
-      ConcreteRule<TK,FV> rule = new ConcreteRule<>(abstractRule, sourceCoverage, inferer.featurizer, 
-          inferer.scorer, d.sourceSequence, sourceInputId, sourceInputProperties);
-      ruleGrid.addEntry(rule);
-      if (DEBUG) System.err.printf("FallbackExt: %s%n", rule);
+    // Fetch translation models
+    final List<DynamicTranslationModel<FV>> tmList = new ArrayList<>(2);
+    tmList.add((DynamicTranslationModel<FV>) inferer.phraseGenerator);
+    if (inputProperties.containsKey(InputProperty.ForegroundTM)) {
+      tmList.add((DynamicTranslationModel<FV>) inputProperties.get(InputProperty.ForegroundTM));
+    }
+    final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
+    int numRules = 0;
+
+    int[][] e2f = {{ 0 }};
+    PhraseAlignment alignment = new PhraseAlignment(e2f);
+    
+    for(int i = 0; i < sourceSequence.size(); ++i) {
+      Sequence<TK> src = sourceSequence.subsequence(i, i + 1);
+      CoverageSet cov = new CoverageSet(sourceSequence.size());
+      cov.set(i);
+      
+      ConcreteRule<TK,FV> syntheticRule = null;
+       // Unigram rule
+      int cnt_f = 0, cnt_e = 0;
+      double cnt_fe = 0.0;
+      cnt_f = getFcount(src.get(0), tmList);
+      cnt_e = getEcount(tgt.get(0), tmList);
+      cnt_fe = getFEcount(src.get(0), tgt.get(0), tmList);
+      syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
+          cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
+          inputProperties, sourceSequence, sourceInputId, alignment);
+      
+      ruleGrid.addTgtEntry(syntheticRule, false);
+      if (DEBUG) System.err.printf("FallbackExt: %s%n", syntheticRule);
       ++numRules;
+
     }
     return numRules;
   }
@@ -297,9 +305,10 @@ public final class SyntheticRules {
    * @param inputProperties
    */
   @SuppressWarnings("unchecked")
-  public static <TK,FV> void augmentRuleGrid(RuleGrid<TK,FV> ruleGrid, 
+  public static <TK,FV> void augmentPrefixRuleGrid(RuleGrid<TK,FV> ruleGrid, 
       Sequence<TK> prefix, int sourceInputId, Sequence<TK> sourceSequence, 
       AbstractInferer<TK, FV> inferer, InputProperties inputProperties, boolean handleCompounds) {
+    if(DEBUG) System.err.println("augmentPrefixRuleGrid");
 
     if (! (inferer.phraseGenerator instanceof DynamicTranslationModel)) {
       throw new RuntimeException("Synthetic rule generation requires DynamicTranslationModel");
@@ -335,26 +344,34 @@ public final class SyntheticRules {
     
     RuleCounter<TK, FV> ruleCounter = new RuleCounter<>(sourceSequence, prefix, tmList);
     
+    List<Set<Sequence<TK>>> existingTargetSides = new ArrayList<>(sourceSequence.size() * MAX_SYNTHETIC_ORDER);
+    for(int i = 0; i < sourceSequence.size() * MAX_SYNTHETIC_ORDER; ++i) existingTargetSides.add(null);
+
+    // these rules have already been filtered w.r.t. the target side, so there is only a small number
+    for(ConcreteRule<TK,FV> existingRule : ruleGrid) {
+      int index = existingRule.sourcePosition * MAX_SYNTHETIC_ORDER + existingRule.sourceCoverage.cardinality() - 1;
+      if(existingTargetSides.get(index) == null) existingTargetSides.set(index, new HashSet<>());
+      existingTargetSides.get(index).add(existingRule.abstractRule.target);
+    }
+       
     for (int order = 1; order <= MAX_SYNTHETIC_ORDER; ++order) {
       for (int i = 0, sz = sourceSequence.size() - order; i <= sz; ++i) {
         List<RuleBound> rules = extractRules(sym, i, order, MAX_TARGET_ORDER);
         
-        List<ConcreteRule<TK,FV>> existingRules = ruleGrid.get(i, i + order - 1);
-        Set<Sequence<TK>> existingTargetSides = new HashSet<>(existingRules.size());
-        
-        for(ConcreteRule<TK,FV> existingRule : existingRules)
-          existingTargetSides.add(existingRule.abstractRule.target);
-        
         for (RuleBound r : rules) {
           Sequence<TK> src = sourceSequence.subsequence(r.fi, r.fj);
           Sequence<TK> tgt = prefix.subsequence(r.ei, r.ej);
+          
           targetCoverage.set(r.ei, r.ej);
           prefixSourceCoverage.set(r.fi, r.fj);
-          if(existingTargetSides.contains(tgt)) {
+          
+          int index = i * MAX_SYNTHETIC_ORDER + order - 1;
+          Set<Sequence<TK>> matchingTgtSides = existingTargetSides.get(index);
+          if(matchingTgtSides != null && matchingTgtSides.contains(tgt)) {
             if (DEBUG) System.err.println("skipping extraction of backoff phrase: " + src + " <<>> " + tgt);
             continue;
           }
-          
+
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
           int[][] e2f = new int[tgt.size()][src.size()];
@@ -392,7 +409,7 @@ public final class SyntheticRules {
                 cov, featureNames, inferer.scorer, inferer.featurizer, cnt_fe, cnt_e, cnt_f, 
                 inputProperties, sourceSequence, sourceInputId, alignment);
           }
-          ruleGrid.addEntry(syntheticRule);
+          ruleGrid.addTgtEntry(syntheticRule, false);
 
           if (DEBUG) System.err.printf("Ext: %s%n", syntheticRule);
         }
@@ -451,7 +468,7 @@ public final class SyntheticRules {
           ConcreteRule<TK,FV> syntheticRule = SyntheticRules.makeSyntheticRule(src, tgt, 
               cov, featureNames, inferer.scorer, inferer.featurizer, 
               SYNTHETIC_PROB, cnt_e, cnt_f, inputProperties, sourceSequence, sourceInputId, alignment);
-          ruleGrid.addEntry(syntheticRule);
+          ruleGrid.addTgtEntry(syntheticRule, false);
           finalTargetCoverage.set(ei, ej);
 
           if (DEBUG) System.err.printf("ExtUnk: %s%n", syntheticRule);

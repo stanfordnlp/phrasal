@@ -30,12 +30,13 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   protected final int capacity;
   protected int recombined = 0;
   protected final int distortionLimit;
-  protected final int sourceLength;
+  protected final int sequenceLength;
 
   protected Map<Integer,List<HyperedgeBundle<TK,FV>>> bundles;
   protected final RecombinationHistory<Derivation<TK,FV>> recombinationHistory;
   protected final RuleGrid<TK, FV> optionGrid;
   protected final int coverageCardinality;
+  protected final boolean isTargetCardinalityBeam; 
   /**
    * 
    * @param capacity
@@ -64,19 +65,58 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
     this.capacity = capacity;
     this.recombinationHistory = recombinationHistory;
     this.optionGrid = optionGrid;
-    this.sourceLength = optionGrid.gridDimension();
+    this.sequenceLength = optionGrid.gridDimension();
     this.distortionLimit = distortionLimit;
     this.coverageCardinality = coverageCardinality;
+    this.isTargetCardinalityBeam = false;
   }
+  
+  /**
+   * 
+   * @param capacity
+   * @param filter
+   * @param optionGrid
+   * @param recombinationHistory
+   * @param distortionLimit 
+   * @param coverageCardinality 
+   * @param maxPhraseLength 
+   */
+  public BundleBeam(int capacity, RecombinationFilter<Derivation<TK,FV>> filter,
+      RuleGrid<TK, FV> optionGrid, RecombinationHistory<Derivation<TK,FV>> recombinationHistory, 
+      int distortionLimit, int coverageCardinality, boolean isTargetCardinalityBeam) {
+    recombinationHash = new RecombinationHash<>(filter);
+    this.capacity = capacity;
+    this.recombinationHistory = recombinationHistory;
+    this.optionGrid = optionGrid;
+    this.sequenceLength = optionGrid.gridDimension();
+    this.distortionLimit = distortionLimit;
+    this.coverageCardinality = coverageCardinality;
+    this.isTargetCardinalityBeam = isTargetCardinalityBeam;
+  }
+  
+  
 
   @Override
   public Derivation<TK,FV> put(Derivation<TK,FV> derivation) {
-    if (derivation.sourceCoverage.cardinality() != coverageCardinality) {
+    return put(derivation, true);
+  }
+    
+    
+  public Derivation<TK,FV> put(Derivation<TK,FV> derivation, boolean logRecombination) {
+    if (!isTargetCardinalityBeam) {
+      if(derivation.sourceCoverage.cardinality() != coverageCardinality )
+        throw new RuntimeException("Derivation cardinality does not match beam cardinality");
+    }
+    else if(sequenceLength > coverageCardinality) {
+      if(derivation.targetSequence.size() != coverageCardinality)
+        throw new RuntimeException("Derivation cardinality does not match beam cardinality");
+    }
+    else if(coverageCardinality > derivation.targetSequence.size()) {
       throw new RuntimeException("Derivation cardinality does not match beam cardinality");
     }
 
     final Status status = recombinationHash.update(derivation);
-    if (recombinationHistory != null) {
+    if (recombinationHistory != null && logRecombination) {
       recombinationHistory.log(recombinationHash.getLastBestOnQuery(),
           recombinationHash.getLastRedundant());
     }
@@ -98,28 +138,62 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * This method must be called once all hypotheses have been inserted into the beam.
    */
   private void groupBundles() {
-    // Group hypotheses by source source coverage
     List<Derivation<TK,FV>> derivationList = recombinationHash.derivations();
     assert derivationList.size() <= capacity : String.format("Beam contents exceeds capacity: %d %d", derivationList.size(), capacity);
-    final Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(derivationList.size() / 2);
-    for (Derivation<TK,FV> derivation : derivationList) {
-      List<Derivation<TK,FV>> hypList = coverageGroups.get(derivation.sourceCoverage);
-      if (hypList == null) {
-        hypList = new ArrayList<>(32);
-        coverageGroups.put(derivation.sourceCoverage, hypList);
-      }
-      hypList.add(derivation);
-    }
 
-    // Make hyperedge bundles
-    bundles = new HashMap<>(2*coverageGroups.size());
-    for (CoverageSet coverage : coverageGroups.keySet()) {
-      final List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
+    if(!isTargetCardinalityBeam) {
+      // Group hypotheses by source coverage
+      final Map<CoverageSet,List<Derivation<TK,FV>>> coverageGroups = new HashMap<>(derivationList.size() / 2);
+      for (Derivation<TK,FV> derivation : derivationList) {
+        List<Derivation<TK,FV>> hypList = coverageGroups.get(derivation.sourceCoverage);
+        if (hypList == null) {
+          hypList = new ArrayList<>(32);
+          coverageGroups.put(derivation.sourceCoverage, hypList);
+        }
+        hypList.add(derivation);
+      }
+  
+      // Make hyperedge bundles
+      bundles = new HashMap<>(optionGrid.maxSourceLength());
+      for (CoverageSet coverage : coverageGroups.keySet()) {
+        final List<Derivation<TK,FV>> itemList = coverageGroups.get(coverage);
+        Collections.sort(itemList);
+        for (Range range : ranges(coverage)) {
+          assert range.start <= range.end : "Invalid range";
+          final List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
+          if (ruleList.size() > 0) {
+            final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
+            List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
+            if (bundleList == null) {
+              bundleList = new ArrayList<>();
+              bundles.put(range.size(), bundleList);
+            }
+            bundleList.add(bundle);
+          }
+        }
+      }
+    }
+    else { // i.e. isTargetCardinalityBeam == true
+      //System.err.println("generating bundles from " + derivationList.size() + " derivations");
+      
+      bundles = new HashMap<>(optionGrid.maxTargetLength());
+      if(derivationList.isEmpty()) {
+        //System.err.println("WARNING: beam is empty for target cardinality " + coverageCardinality);
+        return;
+      }
+      
+      final List<Derivation<TK,FV>> itemList = new ArrayList<>(derivationList);
+      
       Collections.sort(itemList);
-      for (Range range : ranges(coverage)) {
-        assert range.start <= range.end : "Invalid range";
+      int endPosMax = Math.min(sequenceLength, coverageCardinality + optionGrid.maxTargetLength);
+      //System.err.println("endPosMax = " + endPosMax + "; sequenceLength = " + sequenceLength + "; coverageCardinality = " + coverageCardinality + "; maxTargetLength = " + optionGrid.maxTargetLength  );
+      
+      for(int endPos = coverageCardinality; endPos < endPosMax; ++endPos) {
+        Range range = new Range(coverageCardinality, endPos);
         final List<ConcreteRule<TK,FV>> ruleList = optionGrid.get(range.start, range.end);
+        //System.err.println("range: " + range.start + " " + range.end);
         if (ruleList.size() > 0) {
+          //System.err.println("attaching " + ruleList.size() + " rules");
           final HyperedgeBundle<TK,FV> bundle = new HyperedgeBundle<>(itemList, ruleList);
           List<HyperedgeBundle<TK,FV>> bundleList = bundles.get(range.size());
           if (bundleList == null) {
@@ -150,7 +224,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
    * Reset this beam for search.
    */
   public void reset() {
-    groupBundles();
+    bundles = null;
   }
 
   @Override
@@ -163,7 +237,7 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
   protected List<Range> ranges(CoverageSet sourceCoverage) {
     List<Range> rangeList = new ArrayList<>();
     int firstCoverageGap = sourceCoverage.nextClearBit(0);
-    for (int startPos = firstCoverageGap; startPos < sourceLength; startPos++) {
+    for (int startPos = firstCoverageGap; startPos < sequenceLength; startPos++) {
       int endPosMax = sourceCoverage.nextSetBit(startPos);
 
       // Re-ordering constraint checks
@@ -174,9 +248,9 @@ public class BundleBeam<TK,FV> implements Beam<Derivation<TK,FV>> {
         //      if (distortionLimit >= 0 && startPos != firstCoverageGap) {
         if (distortionLimit >= 0) {
           endPosMax = Math.min(firstCoverageGap + distortionLimit + 1,
-              sourceLength);
+              sequenceLength);
         } else {
-          endPosMax = sourceLength;
+          endPosMax = sequenceLength;
         }
       }
       for (int endPos = startPos; endPos < endPosMax; endPos++) {

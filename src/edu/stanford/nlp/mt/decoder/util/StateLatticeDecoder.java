@@ -30,7 +30,6 @@ public class StateLatticeDecoder<S extends State<S>> implements
   public int maxAgendaSize = 0; 
 
   private int stateCounter = 0;
-  
   private boolean expandedFirstItem = false;
   
   /**
