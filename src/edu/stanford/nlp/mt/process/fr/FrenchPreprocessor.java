@@ -21,7 +21,7 @@ public class FrenchPreprocessor extends CoreNLPPreprocessor {
   
   public FrenchPreprocessor(boolean cased) {
     super(FrenchTokenizer.factory());
-    tf.setOptions("invertible=true,ptb3Escaping=false");
+    tf.setOptions("invertible=true,ptb3Escaping=false,untokenizable=allKeep");
     this.cased = cased;
   }
 
