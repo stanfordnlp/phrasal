@@ -95,11 +95,20 @@ public class MosesCompoundSplitter {
   
   public String process(String input) {
     Sequence<IString> tokenized = IStrings.toIStringSequence(input.split("\\s+"));
-    return process(tokenized).e().toString();
+    return process(tokenized).toString();
   }
   
   
-  public SymmetricalWordAlignment process(Sequence<IString> tokenizedInput) {
+  public Sequence<IString> process(Sequence<IString> tokenizedInput) {
+    return decompound(tokenizedInput).e();
+  }
+  
+  public SymmetricalWordAlignment process(SymmetricalWordAlignment tokenizedInput) { 
+    SymmetricalWordAlignment align = decompound(tokenizedInput.e());
+    return projectAlignment(tokenizedInput, align);
+  }
+  
+  private SymmetricalWordAlignment decompound(Sequence<IString> tokenizedInput) {
     int size = tokenizedInput.size();
     Sequence<IString> result = new ArraySequence<IString>(new IString[]{});
     int sizes[] = new int[size]; 
@@ -117,15 +126,12 @@ public class MosesCompoundSplitter {
     for(int i = 0, j = 0; i < size; ++i) {
       for(int k = 0; k < sizes[i]; ++k, ++j) rv.addAlign(i, j);
     }
+    
     return rv;
   }
   
-  public SymmetricalWordAlignment process(SymmetricalWordAlignment tokenizedInput) {
-    SymmetricalWordAlignment decompounded = process(tokenizedInput.e());
-    return projectAlignment(tokenizedInput, decompounded);
-  }
   
-  public SymmetricalWordAlignment projectAlignment(SymmetricalWordAlignment tokenizedInput, SymmetricalWordAlignment decompounded) {
+  private SymmetricalWordAlignment projectAlignment(SymmetricalWordAlignment tokenizedInput, SymmetricalWordAlignment decompounded) {
     assert(tokenizedInput.e().equals(decompounded.f()));
     SymmetricalWordAlignment rv = new SymmetricalWordAlignment(tokenizedInput.f(), decompounded.e());
     
