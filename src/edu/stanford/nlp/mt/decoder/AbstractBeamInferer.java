@@ -229,7 +229,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 //        IOTools.writeNbest(standardList.stream().map(m -> (RichTranslation<IString,String>) m).collect(Collectors.toList()), 
 //            sourceInputId, "", null, System.err);
         
-        int maxAltItems = nbestList.size(); // TODO(spenceg) Hardcoding some experimental params here
+        int maxAltItems = 10; // TODO(spenceg) Hardcoding some experimental params here
         nbestList = NbestListUtils.mergeAndDedup(standardList, nbestList, maxAltItems);
         
         // WSGDEBUG
