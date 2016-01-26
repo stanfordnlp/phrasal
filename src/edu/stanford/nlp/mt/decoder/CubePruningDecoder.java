@@ -193,7 +193,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, false, true)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, false)) {
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
@@ -216,44 +216,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
         // Expand this consequent.
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace, false, true)) {
+            sourceInputId, outputSpace, false)) {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
         }
       }
-      
-      
-      /*
-      // TODO(spenceg) Would be better if we could remove this.
-      // Couldn't figure out how to extend any derivations in the beams. Walk back from this point
-      // to the first beam that has valid derivations in. Try to reset that beam by extending each
-      // derivation with target insertion rules.
-      if (prefixEnabled && ! seenCompatiblePrefix && newBeam.size() == 0) {
-        if (i == 0) throw new RuntimeException("Couldn't decode null prefix?");
-        int j;
-        for (j = i-1; j >= 0; --j) {
-          if (beams.get(j).size() > 0) break;
-        }
-        boolean derivationsExtended = false;
-        for (Derivation<TK,FV> d : beams.get(j)) {
-          int prefixLength = d.length;
-          if (prefixLength >= targets.get(0).size()) break;
-
-          Sequence<TK> extension = targets.get(0).subsequence(prefixLength, prefixLength+1);
-          int numRules = SyntheticRules.augmentRuleGrid(ruleGrid, extension, d, maxDistortion, sourceInputId, 
-              this, sourceInputProperties);
-          derivationsExtended = derivationsExtended || numRules > 0;
-        }
-
-        // Reset search. This is some scary shit.
-        if (derivationsExtended) {
-          ((BundleBeam<TK,FV>) beams.get(j)).reset();
-          i -= 1;
-        } // else we can't make any more progress, so continue with decoding, which will fail.
-      }
-      */
-      
+          
       if (printDebug) {
         System.err.println(newBeam.beamString(10));
       }
@@ -312,26 +281,17 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace, 
-      boolean checkSourceCoverage, boolean checkPrefixCompleted) {
+      boolean checkSourceCoverage) {
     List<Item> successors = new ArrayList<>(2);
     for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule)
           && (!checkSourceCoverage || (!successor.antecedent.sourceCoverage.intersects(successor.rule.sourceCoverage) ));
-                 // && checkReorderingConstraint(successor.antecedent.sourceCoverage, successor.rule.sourceCoverage))
-          //&& (!checkPrefixCompleted || successor.antecedent.prefixCompleted));
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
       successors.add(new Item(derivation, successor));
     }
     return successors;
-  }
-
-  private boolean checkReorderingConstraint(CoverageSet sourceCoverage, CoverageSet ruleCoverage) {
-    if(this.maxDistortion < 0) return true;
-    int firstCoverageGap = sourceCoverage.nextClearBit(0);
-    int lastPhrasePosition = ruleCoverage.length() - 1;
-    return lastPhrasePosition <= firstCoverageGap + maxDistortion;
   }
   
   private int itemId = 0;
@@ -443,7 +403,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) tgtBeams.get(j);
         //System.err.println("card " + j + " consequent size " + i);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true, false)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true)) {
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
@@ -465,7 +425,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
        
         // Expand this consequent
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace, true, false)) {
+            sourceInputId, outputSpace, true)) {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
@@ -485,7 +445,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           lastRecoveredCardinality = j;
           boolean derivationsExtended = false;
           
-          logger.warn("No hypothesis for complete prefix found. Recovering by moving back to cardinality " + j + " and augmenting phrase grid for target word: " + prefix.get(j));
+          logger.info("No hypothesis for complete prefix found. Recovering by moving back to cardinality " + j + " and augmenting phrase grid for target word: " + prefix.get(j));
           
           Sequence<TK> extension = prefix.subsequence(j, j + 1);
           int numRules = SyntheticRules.recoverAugmentPrefixRuleGrid(prefixGrid, extension, sourceInputId, source, this, sourceInputProperties);
@@ -501,7 +461,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
         else {
           logger.warn("No hypothesis for complete prefix found, but already tried to recover from cardinality " + j + ". Giving up.");
-          
         }
       }
       

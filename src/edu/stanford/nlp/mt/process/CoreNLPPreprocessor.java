@@ -26,9 +26,15 @@ import edu.stanford.nlp.process.TokenizerFactory;
 public abstract class CoreNLPPreprocessor implements Preprocessor {
 
   protected final TokenizerFactory<CoreLabel> tf;
+  protected final MosesCompoundSplitter compoundSplitter;
 
   public CoreNLPPreprocessor(TokenizerFactory<CoreLabel> tf) {
+    this(tf, null);
+  }
+  
+  public CoreNLPPreprocessor(TokenizerFactory<CoreLabel> tf, MosesCompoundSplitter compoundSplitter) {
     this.tf = tf;
+    this.compoundSplitter = compoundSplitter;
   }
 
   /**
@@ -56,7 +62,11 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
       String string = tokenizer.next().get(TextAnnotation.class);
       outputStrings.add(string);
     }
-    return IStrings.toIStringSequence(outputStrings);
+    Sequence<IString> rv = IStrings.toIStringSequence(outputStrings);
+    
+    if(compoundSplitter != null) rv = compoundSplitter.process(rv);
+    
+    return rv;
   }
 
   @Override
@@ -97,6 +107,9 @@ public abstract class CoreNLPPreprocessor implements Preprocessor {
         inputToken = new StringBuilder();
       }
     }
+    
+    if(compoundSplitter != null) alignment = compoundSplitter.process(alignment);
+    
     return alignment;
   }
 

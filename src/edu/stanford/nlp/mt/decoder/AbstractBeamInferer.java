@@ -26,7 +26,6 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
-import edu.stanford.nlp.mt.decoder.util.PrefixRuleGrid;
 import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
 import edu.stanford.nlp.mt.tm.DTURule;
@@ -69,9 +68,6 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
   // Maximum threshold that only applies when generating distinct n-best lists
   private static final int MAX_POPPED_ITEMS = Phrasal.MAX_NBEST_SIZE * 3;
 
-  // TODO(spenceg) Relax this constraint once we consolidate LM scores
-  private static final int MAX_HYPS_PER_BEAM = 100;
-
   // Members
   protected final int beamCapacity;
   protected final BeamFactory.BeamType beamType;
@@ -105,243 +101,6 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
         outputSpace, targets, size, distinct, nbestMode);
   }
   
-  /**
-   * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
-   * 
-   * TODO(spenceg) This is less effective than the procedure in SyntheticRules, but an
-   * interesting idea for future work.
-   * 
-   * @param source
-   * @param ruleList
-   * @param sourceInputProperties
-   * @param prefix
-   * @param scorer
-   * @param beams
-   * @return The beam at which standard decoding should begin.
-   */
-  /*
-  @Deprecated
-  protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
-      InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
-      List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
-    
-    // Sort rule list by target
-    final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<>(ruleList, source, prefix);
-        
-    // Book-keeping
-    int[] hypsForBeam = new int[beams.size()];
-    int minSourceCoverage = Integer.MAX_VALUE;
-    
-    // Populate beams
-    int numHyps = 0;
-    for (int i = 0, sz = beams.size(); i < sz; ++i) {
-      final int beamCardinality = i;
-      for (Derivation<TK,FV> antecedent : beams.get(beamCardinality)) {
-        // Check the status of this antecedent
-        final int insertionPosition = antecedent.targetSequence.size();
-        if (insertionPosition >= prefix.size()) {
-          // Compatible derivation
-          minSourceCoverage = Math.min(minSourceCoverage, antecedent.sourceCoverage.cardinality());
-          continue;
-        }
-
-        // Hypothesis expansion
-        final List<ConcreteRule<TK,FV>> rulesForPosition = prefixGrid.get(insertionPosition);        
-        for (ConcreteRule<TK,FV> rule : rulesForPosition) {
-          if (antecedent.sourceCoverage.intersects(rule.sourceCoverage)) continue; // Check source coverage
-          CoverageSet sourceCoverage = antecedent.sourceCoverage.clone();
-          sourceCoverage.or(rule.sourceCoverage);
-          int succCardinality = sourceCoverage.cardinality();
-          if (hypsForBeam[succCardinality] > MAX_HYPS_PER_BEAM) continue; // Check beam capacity
-          Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, insertionPosition, 
-              antecedent, featurizer, scorer, heuristic, outputSpace);
-          assert succCardinality == successor.sourceCoverage.cardinality();
-          beams.get(succCardinality).put(successor);
-         
-          // Book-keeping
-          ++numHyps;
-          hypsForBeam[succCardinality]++;
-        }
-      }
-    }
-
-    if (minSourceCoverage > source.size()) {
-      // No compatible derivations
-      logger.warn("input {}: no compatible derivations. Decoding will fail", sourceInputId);
-      return -1;
-    } else {
-      logger.info("input {}: prefix filling derivations: {}  mincoverage: {}", sourceInputId, 
-          numHyps, minSourceCoverage);
-      return minSourceCoverage;
-    }
-  }*/
-  
-  
-  private class QueueElement implements Comparable<QueueElement> {
-    double score;
-    int sourceLength;
-    int hypId;
-    int ruleId;
-    
-    public QueueElement(Derivation<TK,FV> antecedent,
-        ConcreteRule<TK,FV> rule,
-        int sourceLength,
-        int hypId,
-        int ruleId) {
-      score = antecedent.score() + rule.isolationScore;
-      this.sourceLength = sourceLength;
-      this.hypId = hypId;
-      this.ruleId = ruleId;
-    }
-    
-    @Override
-    public int compareTo(QueueElement other) {
-      if(score > other.score) return -1;
-      if(score < other.score) return 1;
-      if(sourceLength < other.sourceLength) return -1;
-      if(hypId < other.hypId) return -1;
-      if(ruleId < other.ruleId) return -1;
-      return 0;
-    }
-  }
-  
-  private void expandQueue(PriorityQueue<QueueElement> q, 
-                           List<List<Derivation<TK,FV>>> chart, 
-                           PrefixRuleGrid<TK,FV> prefixGrid,
-                           int sourceLength,
-                           int hypId,
-                           int ruleId) {
-    if(chart.get(sourceLength).size() <= hypId)
-      return;
-    
-    Derivation<TK,FV> antecedent = chart.get(sourceLength).get(hypId);
-    final int insertionPosition = antecedent.targetSequence.size();
-    
-    // now add new candidates to the queue. (cube pruning)
-    int nextRuleId = ruleId;
-    ConcreteRule<TK,FV> nextRule = prefixGrid.get(insertionPosition, sourceLength, nextRuleId);
-    boolean noRules = nextRule == null;
-    
-    while (nextRule != null) {
-      if(antecedent.sourceCoverage.intersects(nextRule.sourceCoverage)) { 
-        ++nextRuleId;
-        nextRule = prefixGrid.get(insertionPosition, sourceLength, nextRuleId);
-        continue;
-      }
-      q.add(new QueueElement(antecedent, nextRule, sourceLength, hypId, nextRuleId));
-      break;
-    }
-    
-    boolean startWithNextAntecedent =
-        ruleId == 1 || (ruleId == 0 && (nextRuleId > 0 || noRules) );
-    
-    if(startWithNextAntecedent)
-      expandQueue(q, chart, prefixGrid, sourceLength, hypId + 1, 0); 
-  }
-  
-  /**
-   * Populate the beams given the prefix. Returns 0 if the prefix is of length 0.
-   * 
-   * @param source
-   * @param ruleList
-   * @param sourceInputProperties
-   * @param prefix
-   * @param scorer
-   * @param beams
-   * @return The beam at which standard decoding should begin.
-   */
-  /*
-  @Deprecated
-  protected int prefixFillBeams(Sequence<TK> source, List<ConcreteRule<TK,FV>> ruleList,
-      InputProperties sourceInputProperties, Sequence<TK> prefix, Scorer<FV> scorer, 
-      List<Beam<Derivation<TK,FV>>> beams, int sourceInputId, OutputSpace<TK, FV> outputSpace) {
-    if (source == null || source.size() == 0 || prefix == null || prefix.size() == 0) return 0;
-    
-    // Sort rule list by target
-    final PrefixRuleGrid<TK,FV> prefixGrid = new PrefixRuleGrid<>(ruleList, source, prefix);
-   
-    // Special case. Uncovered material at the beginning of a prefix. Just append to the null
-    // hypothesis
-//    List<ConcreteRule<TK,FV>> nullRules = prefixGrid.get(0);
-//    if (nullRules.size() == 0) {
-//      int start = 0;
-//      int end = Math.max(prefixGrid.getTargetCoverage().nextSetBit(0), prefix.size());
-//      Sequence<TK> nullTarget = prefix.subsequence(start, end);
-//      beams.get(0).iterator().next().targetSequence = nullTarget;
-//    }
-    
-    // Book-keeping
-    int minSourceCoverage = Integer.MAX_VALUE;
-    
-    // Populate beams
-    int numHyps = 0;
-    for (int beamCardinality = 1, sz = beams.size(); beamCardinality < sz; ++beamCardinality) {
-      System.err.println("cardinality: " + beamCardinality);
-      
-      int hypsForBeam = 0;
-      int maxSourceLength = Math.min(prefixGrid.maxSourceLength(), beamCardinality);
-      Beam<Derivation<TK,FV>> beam = beams.get(beamCardinality);
-      
-      PriorityQueue<QueueElement> q = new PriorityQueue<>();
-      
-      // The chart stores the hypotheses that can be expanded to beamCardinality
-      // chart.get(i).get(j) is the jth best hypothesis with cardinality (beamCardinality - i - 1)
-      List<List<Derivation<TK,FV>>> chart = new ArrayList<>(maxSourceLength);
-      for (int srcLen = 0; srcLen < maxSourceLength; ++srcLen){
-        System.err.println("srcLen: " + srcLen);
-        chart.add(new ArrayList<>(MAX_HYPS_PER_BEAM));
-        
-        for (Derivation<TK,FV> antecedent : beams.get(beamCardinality - srcLen - 1))
-          if(antecedent.targetSequence.size() < prefix.size())
-            chart.get(srcLen).add(antecedent);
-        
-        // initialize queue
-        if(!chart.get(srcLen).isEmpty()) {
-          expandQueue(q, chart, prefixGrid, srcLen, 0, 0);
-        }
-      }
-      
-      while(hypsForBeam < MAX_HYPS_PER_BEAM && !q.isEmpty()) {
-        QueueElement e = q.poll();
-        System.err.println("polling score = " + e.score + " " + e.hypId + " " +e.ruleId);
-        Derivation<TK,FV> antecedent = chart.get(e.sourceLength).get(e.hypId);
-        final int insertionPosition = antecedent.targetSequence.size();
-        
-        // generate new hypothesis
-        ConcreteRule<TK,FV> rule = prefixGrid.get(insertionPosition, e.sourceLength, e.ruleId);
-        CoverageSet sourceCoverage = antecedent.sourceCoverage.clone();
-        sourceCoverage.or(rule.sourceCoverage);
-        Derivation<TK,FV> successor = new Derivation<>(sourceInputId, rule, insertionPosition, 
-            antecedent, featurizer, scorer, heuristic, outputSpace);
-        
-        assert beamCardinality == successor.sourceCoverage.cardinality();        
-        beam.put(successor);
-        ++numHyps;
-        ++hypsForBeam;
-
-        if (successor.targetSequence.size() >= prefix.size()) {
-          // Compatible derivation
-          minSourceCoverage = Math.min(minSourceCoverage, antecedent.sourceCoverage.cardinality());
-        }
-        
-        // now add new candidates to the queue. 
-        expandQueue(q, chart, prefixGrid, e.sourceLength, e.hypId, e.ruleId + 1);
-      }
-    }
-
-    if (minSourceCoverage > source.size()) {
-      // No compatible derivations
-      logger.warn("input {}: no compatible derivations. Decoding will fail", sourceInputId);
-      return -1;
-    } else {
-      logger.info("input {}: prefix filling derivations: {}  mincoverage: {}", sourceInputId, 
-          numHyps, minSourceCoverage);
-      return minSourceCoverage;
-    }
-  }
-  
-  */
   
   /**
    * Query the phrase table and decide how to handle unknown words.
@@ -470,7 +229,7 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
 //        IOTools.writeNbest(standardList.stream().map(m -> (RichTranslation<IString,String>) m).collect(Collectors.toList()), 
 //            sourceInputId, "", null, System.err);
         
-        int maxAltItems = 5; // TODO(spenceg) Hardcoding some experimental params here
+        int maxAltItems = nbestList.size(); // TODO(spenceg) Hardcoding some experimental params here
         nbestList = NbestListUtils.mergeAndDedup(standardList, nbestList, maxAltItems);
         
         // WSGDEBUG

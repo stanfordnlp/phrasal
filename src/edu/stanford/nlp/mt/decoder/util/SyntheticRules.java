@@ -1061,6 +1061,15 @@ public final class SyntheticRules {
       }
        
     }
+    
+    // if we still have no alignment points, return the full alignment matrix
+    if(alignment.isEmpty()) {
+      for(int j = 0; j < alignment.fSize(); ++j)
+        for(int i = 0; i < alignment.eSize(); ++i)
+          alignment.addAlign(j, i);
+    }
+    
+    
   }
 }
 
