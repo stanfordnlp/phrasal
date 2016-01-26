@@ -43,7 +43,7 @@ public class DiverseNbestDecoder<TK,FV> {
   // WSGDEBUG
   private Derivation<TK,FV> oneBest;
   private LongSet oneBestIds;
-  private final Sequence<TK> prefix;
+  //private final Sequence<TK> prefix;
   
   /**
    * Constructor.
@@ -63,7 +63,7 @@ public class DiverseNbestDecoder<TK,FV> {
     this.markedNodes = new ArrayList<>();
 
     // WSGDEBUG
-    this.prefix = targets.get(0);
+    //this.prefix = targets.get(0);
     
     // Max queue of nodes
     Queue<Derivation<TK,FV>> unprocessed = new PriorityQueue<Derivation<TK,FV>>(goalBeam.size(),  
