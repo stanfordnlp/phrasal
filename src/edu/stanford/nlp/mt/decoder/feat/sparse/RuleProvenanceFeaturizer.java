@@ -1,7 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +24,8 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
   public static final String SOURCE_WORDS = FEATURE_NAME + ":srcWrd";  
   public static final String TARGET_WORDS = FEATURE_NAME + ":tgtWrd";
 
+  public static final String UNK_TM = "edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator";
+  
   private final boolean wordFeatures;
   
   private ConcurrentHashMap<String, String> phraseFeatMap = null;
@@ -64,7 +65,7 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
   
   @Override
   public List<FeatureValue<String>> ruleFeaturize(Featurizable<IString, String> f) {
-    if(f.phraseTableName.equals(Phrasal.TM_BACKGROUND_NAME)) return null;
+    if(f.phraseTableName.equals(Phrasal.TM_BACKGROUND_NAME) || f.phraseTableName.equals(UNK_TM)) return null;
     
     List<FeatureValue<String>> features = new ArrayList<>();
     features.add(new FeatureValue<>(getFeatureName(f.phraseTableName, phraseFeatMap, FEATURE_NAME), 1.0));
