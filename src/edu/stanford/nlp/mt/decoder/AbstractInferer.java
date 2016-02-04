@@ -38,19 +38,4 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     filterUnknownWords = builder.filterUnknownWords;
     unknownWordModel = builder.unknownWordModel;
   }
-
-  /**
-   * Constructor.
-   * 
-   * @param inferer
-   */
-  protected AbstractInferer(AbstractInferer<TK, FV> inferer) {
-    featurizer = inferer.featurizer;
-    phraseGenerator = inferer.phraseGenerator;
-    scorer = inferer.scorer;
-    heuristic = inferer.heuristic;
-    filter = inferer.filter;
-    filterUnknownWords = inferer.filterUnknownWords;
-    unknownWordModel = inferer.unknownWordModel;
-  }
 }

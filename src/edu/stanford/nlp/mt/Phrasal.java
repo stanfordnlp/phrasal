@@ -27,6 +27,7 @@ import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
+import edu.stanford.nlp.mt.decoder.Inferer.NbestMode;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
@@ -209,8 +210,8 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
     OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, 
-        RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
+        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, 
+        FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER, SOURCE_CLASS_MAP, TARGET_CLASS_MAP,
@@ -299,6 +300,7 @@ public class Phrasal {
   private PrintStream nbestListWriter;
   private int nbestListSize;
   private boolean distinctNbest = false;
+  private NbestMode nbestMode = NbestMode.Standard;
 
   /**
    * Internal alignment options
@@ -842,33 +844,26 @@ public class Phrasal {
     // determine if we need to generate n-best lists
     final List<String> nbestOpt = config.get(NBEST_LIST_OPT);
     if (nbestOpt != null) {
-      if (nbestOpt.size() == 1) {
-        nbestListSize = Integer.parseInt(nbestOpt.get(0));
-        assert nbestListSize >= 0;
-        logger.info("Generating n-best lists (size: {})", nbestListSize);
-
-      } else if (nbestOpt.size() >= 2 && nbestOpt.size() <= 4) {
-        final String nbestListFilename = nbestOpt.get(0);
-        nbestListSize = Integer.parseInt(nbestOpt.get(1));
-        assert nbestListSize >= 0;
-
-        if (!nbestListFilename.equals("default")) {
-          nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
-        }
-
-        if (nbestOpt.size() >= 3) {
-          nbestListOutputType = nbestOpt.get(2);
-        }
-
-        if (nbestOpt.size() >= 4) {
-          nBestListFeaturePattern = Pattern.compile(nbestOpt.get(3));
-        }
-
-        logger.info("Generating n-best lists to: {} (size: {})", nbestListFilename, nbestListSize);
-
-      } else {
-        logger.fatal("{} requires 1 to 4 arguments, not {}", NBEST_LIST_OPT, nbestOpt.size());
-        throw new RuntimeException();
+      nbestListSize = Integer.parseInt(nbestOpt.get(0));
+      assert nbestListSize >= 0;
+      logger.info("n-best list size: {}", nbestListSize);
+      
+      if (nbestOpt.size() > 1) {
+        nbestMode = NbestMode.valueOf(nbestOpt.get(1));
+        logger.info("n-best list mode: {}", nbestMode);
+      }
+      if (nbestOpt.size() > 2) {
+        final String nbestListFilename = nbestOpt.get(2);
+        nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
+        logger.info("n-best list filename: {}", nbestListFilename);
+      }
+      if (nbestOpt.size() > 3) {
+        nbestListOutputType = nbestOpt.get(3);
+        logger.info("n-best list filename: {}", nbestListOutputType);
+      }
+      if (nbestOpt.size() > 4) {
+        nBestListFeaturePattern = Pattern.compile(nbestOpt.get(4));
+        logger.info("n-best list feature pattern: {}", nbestOpt.get(4));
       }
 
     } else {
@@ -1213,7 +1208,7 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, outputSpace,
-          outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
+          outputSpace.getAllowableSequences(), numTranslations, distinctNbest, nbestMode);
 
       // Decoder failure
       if (translations == null) translations = Collections.emptyList();
