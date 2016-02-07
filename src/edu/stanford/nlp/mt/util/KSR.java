@@ -19,37 +19,47 @@ public class KSR {
     int ksrTyped = 0;
     int ksrTotal = 0;
     Sequence<IString> nextPrefix = null;
+
+    Sequence<IString> bestMatch = getBestMatch(translations, nbest_size, reference, previousPrefixSize);
     
-    if(translations == null || translations.size() == 0) {
+    if(bestMatch == null || bestMatch.size() < previousPrefixSize) {
       for(int i = previousPrefixSize; i < reference.size(); ++i) {
         // space after the word: + 1 keystroke
         ksrTotal += reference.get(i).length() + 1;
       }
       ksrTyped = ksrTotal;
     } 
-    else {
-      Sequence<IString> bestMatch = getBestMatch(translations, nbest_size, reference, previousPrefixSize);
-      int next = previousPrefixSize;
-      for( ; next < bestMatch.size(); ++next) {
-        // count 1 key stroke for accepting a word
-        ksrTyped += 1;
-        ksrTotal += bestMatch.get(next).length() + 1;
+    int next = previousPrefixSize;
+    
+    if(bestMatch.size() < previousPrefixSize) {
+      for(int i = previousPrefixSize; i < reference.size(); ++i) {
+        ksrTotal += reference.get(i).length() + 1;
       }
-      
-      if(reference.size() > next) {
-        // type the next word
-        int length = reference.get(next).length() + 1;
-        ksrTyped += length;
-        ksrTotal += length;
-        if(reference.size() > next + 1) nextPrefix = bestMatch.concat(reference.subsequence(next, next + 1));// else we're finished
-      } 
+      ksrTyped = ksrTotal;
+      return new KSR(ksrTyped, ksrTotal, nextPrefix);
     }
+    
+    for( ; next < bestMatch.size(); ++next) {
+      // count 1 key stroke for accepting a word
+      ksrTyped += 1;
+      ksrTotal += bestMatch.get(next).length() + 1;
+    }
+    
+    if(reference.size() > next) {
+      // type the next word
+      int length = reference.get(next).length() + 1;
+      ksrTyped += length;
+      ksrTotal += length;
+      if(reference.size() > next + 1) nextPrefix = bestMatch.concat(reference.subsequence(next, next + 1));// else we're finished
+    } 
     
     return new KSR(ksrTyped, ksrTotal, nextPrefix);
   }
 
   private static Sequence<IString> getBestMatch(List<RichTranslation<IString, String>> translations, 
       int nbest_size, Sequence<IString> reference, int previousPrefixSize) {
+    if(translations == null || translations.size() == 0) return null;
+      
     Sequence<IString> bestMatch = null;
     int bestMatchSize = -1;
     int n = 1;
@@ -61,6 +71,8 @@ public class KSR {
         ++matchSize;
       }
         
+      matchSize = Math.min(matchSize, entry.translation.size());
+      
       if(matchSize > bestMatchSize) {
         bestMatchSize = matchSize;
         bestMatch = entry.translation.subsequence(0, matchSize);
