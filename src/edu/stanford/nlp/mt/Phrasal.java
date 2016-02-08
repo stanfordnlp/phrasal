@@ -27,6 +27,7 @@ import edu.stanford.nlp.mt.decoder.AbstractBeamInferer;
 import edu.stanford.nlp.mt.decoder.AbstractBeamInfererBuilder;
 import edu.stanford.nlp.mt.decoder.DTUDecoder;
 import edu.stanford.nlp.mt.decoder.Inferer;
+import edu.stanford.nlp.mt.decoder.Inferer.NbestMode;
 import edu.stanford.nlp.mt.decoder.InfererBuilderFactory;
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
@@ -68,6 +69,7 @@ import edu.stanford.nlp.mt.util.IString;
 import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
+import edu.stanford.nlp.mt.util.KSR;
 import edu.stanford.nlp.mt.util.RichTranslation;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
@@ -76,6 +78,7 @@ import edu.stanford.nlp.mt.util.TargetClassMap;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
 import edu.stanford.nlp.mt.util.TokenUtils;
+import edu.stanford.nlp.mt.util.WordPredictionAccuracy;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.stats.Counters;
@@ -160,10 +163,16 @@ public class Phrasal {
         .append(" file : File specifying properties of each source input.").append(nl).append("  -")
         .append(FEATURE_AUGMENTATION).append(" mode : Feature augmentation mode [all|dense|extended].").append(nl)
         .append("  -").append(WRAP_BOUNDARY)
-        .append(" boolean : Add boundary tokens around each input sentence (default: false).").append(nl);
+        .append(" boolean : Add boundary tokens around each input sentence (default: false).").append(nl)
+        .append("  -").append(KSR_NBEST_SIZE)
+        .append(" int : size of n-best list for KSR computation (default: 0, i.e. no KSR computation).").append(nl)
+        .append("  -").append(WPA_NBEST_SIZE)
+        .append(" int : size of n-best list for word prediction accuracy computation (default: 0, i.e. no WPA computation).").append(nl)
+        .append("  -").append(REFERENCE)
+        .append(" String : reference file for KSR/WPA computation.").append(nl);
     return sb.toString();
   }
-
+  
   private static final Logger logger = LogManager.getLogger(Phrasal.class);
 
   public static final String INPUT_FILE_OPT = "text";
@@ -201,6 +210,9 @@ public class Phrasal {
   public static final String INPUT_PROPERTIES = "input-properties";
   public static final String FEATURE_AUGMENTATION = "feature-augmentation";
   public static final String WRAP_BOUNDARY = "wrap-boundary";
+  public static final String KSR_NBEST_SIZE = "ksr_nbest_size";
+  public static final String WPA_NBEST_SIZE = "wpa_nbest_size";
+  public static final String REFERENCE = "reference";
 
   private static final Set<String> REQUIRED_FIELDS = new HashSet<>();
   private static final Set<String> OPTIONAL_FIELDS = new HashSet<>();
@@ -209,12 +221,12 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
     OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, 
-        RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
+        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, 
+        FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER, SOURCE_CLASS_MAP, TARGET_CLASS_MAP,
-        PRINT_MODEL_SCORES, INPUT_PROPERTIES, FEATURE_AUGMENTATION, WRAP_BOUNDARY));
+        PRINT_MODEL_SCORES, INPUT_PROPERTIES, FEATURE_AUGMENTATION, WRAP_BOUNDARY, KSR_NBEST_SIZE, WPA_NBEST_SIZE, REFERENCE));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -299,6 +311,7 @@ public class Phrasal {
   private PrintStream nbestListWriter;
   private int nbestListSize;
   private boolean distinctNbest = false;
+  private NbestMode nbestMode = NbestMode.Standard;
 
   /**
    * Internal alignment options
@@ -335,6 +348,13 @@ public class Phrasal {
    * Add boundary tokens flag.
    */
   private final boolean wrapBoundary;
+  
+  /**
+   * For simulating KSR and word prediction accuracy
+   */
+  private final int ksr_nbest_size;
+  private final int wpa_nbest_size;
+  private final String references;
 
   /**
    * Pre/post processing filters.
@@ -842,33 +862,26 @@ public class Phrasal {
     // determine if we need to generate n-best lists
     final List<String> nbestOpt = config.get(NBEST_LIST_OPT);
     if (nbestOpt != null) {
-      if (nbestOpt.size() == 1) {
-        nbestListSize = Integer.parseInt(nbestOpt.get(0));
-        assert nbestListSize >= 0;
-        logger.info("Generating n-best lists (size: {})", nbestListSize);
-
-      } else if (nbestOpt.size() >= 2 && nbestOpt.size() <= 4) {
-        final String nbestListFilename = nbestOpt.get(0);
-        nbestListSize = Integer.parseInt(nbestOpt.get(1));
-        assert nbestListSize >= 0;
-
-        if (!nbestListFilename.equals("default")) {
-          nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
-        }
-
-        if (nbestOpt.size() >= 3) {
-          nbestListOutputType = nbestOpt.get(2);
-        }
-
-        if (nbestOpt.size() >= 4) {
-          nBestListFeaturePattern = Pattern.compile(nbestOpt.get(3));
-        }
-
-        logger.info("Generating n-best lists to: {} (size: {})", nbestListFilename, nbestListSize);
-
-      } else {
-        logger.fatal("{} requires 1 to 4 arguments, not {}", NBEST_LIST_OPT, nbestOpt.size());
-        throw new RuntimeException();
+      nbestListSize = Integer.parseInt(nbestOpt.get(0));
+      assert nbestListSize >= 0;
+      logger.info("n-best list size: {}", nbestListSize);
+      
+      if (nbestOpt.size() > 1) {
+        nbestMode = NbestMode.valueOf(nbestOpt.get(1));
+        logger.info("n-best list mode: {}", nbestMode);
+      }
+      if (nbestOpt.size() > 2) {
+        final String nbestListFilename = nbestOpt.get(2);
+        nbestListWriter = IOTools.getWriterFromFile(nbestListFilename);
+        logger.info("n-best list filename: {}", nbestListFilename);
+      }
+      if (nbestOpt.size() > 3) {
+        nbestListOutputType = nbestOpt.get(3);
+        logger.info("n-best list filename: {}", nbestListOutputType);
+      }
+      if (nbestOpt.size() > 4) {
+        nBestListFeaturePattern = Pattern.compile(nbestOpt.get(4));
+        logger.info("n-best list feature pattern: {}", nbestOpt.get(4));
       }
 
     } else {
@@ -889,6 +902,12 @@ public class Phrasal {
     if (alignmentOpt != null && alignmentOpt.size() == 1) {
       alignmentWriter = IOTools.getWriterFromFile(alignmentOpt.get(0));
     }
+    
+    ksr_nbest_size = config.containsKey(KSR_NBEST_SIZE) ?
+        Integer.valueOf(config.get(KSR_NBEST_SIZE).get(0)) : 0;
+    wpa_nbest_size = config.containsKey(WPA_NBEST_SIZE) ?
+        Integer.valueOf(config.get(WPA_NBEST_SIZE).get(0)) : 0;
+    references = config.containsKey(REFERENCE) ? config.get(REFERENCE).get(0) : null;
   }
 
   /**
@@ -902,14 +921,28 @@ public class Phrasal {
     public final InputProperties inputProps;
     public final int sourceInputId;
     public final List<Sequence<IString>> targets;
-
+    
+    public int ksr_nbest_size = 0;
+    public int wpa_nbest_size = 0;
+    public final Sequence<IString> reference;
+    
     public DecoderInput(Sequence<IString> seq, int sourceInputId, List<Sequence<IString>> targets,
         InputProperties inputProps) {
+      this(seq, sourceInputId, targets, inputProps, 0, 0, null);
+    }
+
+    public DecoderInput(Sequence<IString> seq, int sourceInputId, List<Sequence<IString>> targets,
+        InputProperties inputProps, int ksr_nbest_size, int wpa_nbest_size, Sequence<IString> reference) {
       this.source = seq;
       this.sourceInputId = sourceInputId;
       this.inputProps = inputProps;
       this.targets = targets;
+      this.ksr_nbest_size = ksr_nbest_size;
+      this.wpa_nbest_size = wpa_nbest_size;
+      this.reference = reference;
     }
+    
+    
   }
 
   /**
@@ -923,13 +956,27 @@ public class Phrasal {
     public final Sequence<IString> bestTranslation;
     public final int sourceInputId;
     public final int sourceLength;
+    public final int ksrTyped;
+    public final int ksrTotal;
+    public final int wpaCorrect;
+    public final int wpaTotal;
 
     public DecoderOutput(int sourceLength, List<RichTranslation<IString, String>> translations,
         Sequence<IString> bestTranslation, int sourceInputId) {
+      this(sourceLength, translations, bestTranslation, sourceInputId, 0, 0, 0, 0);
+    }
+    
+    public DecoderOutput(int sourceLength, List<RichTranslation<IString, String>> translations,
+        Sequence<IString> bestTranslation, int sourceInputId, 
+        int ksrTyped, int ksrTotal, int wpaCorrect, int wpaTotal) {
       this.sourceLength = sourceLength;
       this.translations = translations;
       this.bestTranslation = bestTranslation;
       this.sourceInputId = sourceInputId;
+      this.ksrTyped = ksrTyped;
+      this.ksrTotal = ksrTotal;
+      this.wpaCorrect = wpaCorrect;
+      this.wpaTotal = wpaTotal;
     }
   }
 
@@ -979,7 +1026,64 @@ public class Phrasal {
         }
       }
 
-      return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId);
+      int ksrTyped = 0;
+      int ksrTotal = 0;
+      int wpaCorrect = 0;
+      int wpaTotal = 0;
+      
+      int previousPrefixSize = input.targets != null && input.targets.size() > 0 ? 
+          input.targets.get(0).size() : 0;
+      if(input.ksr_nbest_size > 0 && input.reference != null) {
+        if(previousPrefixSize > 0) {
+          System.err.println("ERROR: KSR can not be combined with forced or prefix decoding.");
+          System.exit(-1);
+        }
+        InputProperties ksrProps = new InputProperties(input.inputProps);
+        ksrProps.put(InputProperty.TargetPrefix, true);
+        
+        List<RichTranslation<IString, String>> ksrTranslations = translations;
+        KSR ksrResult = null;
+        while(true) {
+          ksrResult = KSR.getNextPrefix(ksrTranslations, ksr_nbest_size, input.reference, previousPrefixSize);
+          ksrTyped += ksrResult.ksrTyped;
+          ksrTotal += ksrResult.ksrTotal;  
+          if(ksrResult.nextPrefix == null) break;
+          
+          ksrTranslations = decode(input.source, input.sourceInputId, infererId, nbestListSize, 
+              Collections.singletonList(ksrResult.nextPrefix), ksrProps);
+          
+          previousPrefixSize = ksrResult.nextPrefix.size();         
+        }
+      }
+      
+      if(input.wpa_nbest_size > 0 && input.reference != null) {
+        if(WordPredictionAccuracy.correctPrediction(translations, wpa_nbest_size, input.reference, previousPrefixSize)) {
+          ++wpaCorrect;
+        }
+        ++wpaTotal;
+          
+        if(previousPrefixSize == 0 ){ // otherwise we only want to know wpa for the specified prefix
+          // check all prefixes
+          List<RichTranslation<IString, String>> wpaTranslations;
+          InputProperties wpaProps = new InputProperties(input.inputProps);
+          wpaProps.put(InputProperty.TargetPrefix, true);
+          ++previousPrefixSize;
+          for(; previousPrefixSize < input.reference.size(); ++previousPrefixSize) {
+            wpaTranslations = decode(input.source, input.sourceInputId, infererId, nbestListSize, 
+                Collections.singletonList(input.reference.subsequence(0, previousPrefixSize)), wpaProps);
+    
+            if(WordPredictionAccuracy.correctPrediction(wpaTranslations, wpa_nbest_size, input.reference, previousPrefixSize)) {
+              ++wpaCorrect;
+            }
+            ++wpaTotal;
+          }
+         
+        }
+      }
+      
+      
+      return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId, 
+          ksrTyped, ksrTotal, wpaCorrect, wpaTotal);
     }
 
     @Override
@@ -1068,6 +1172,18 @@ public class Phrasal {
     // Sanity check -- Set each thread's model to the current global model.
     this.scorers.stream().forEach(scorer -> scorer.updateWeights(globalModel));
 
+    int ksrTyped = 0;
+    int ksrTotal = 0;
+    int wpaCorrect = 0;
+    int wpaTotal = 0;
+    
+    boolean doEval = references != null && (ksr_nbest_size > 0 || wpa_nbest_size > 0);
+    
+    final LineNumberReader refReader = doEval ?
+        new LineNumberReader(new InputStreamReader(new FileInputStream(new File(references)), 
+            IOTools.DEFAULT_ENCODING))
+        : null;
+    
     final long startTime = TimingUtils.startTime();
     int sourceInputId = 0;
     for (String line; (line = reader.readLine()) != null; ++sourceInputId) {
@@ -1085,7 +1201,17 @@ public class Phrasal {
       final List<Sequence<IString>> targets = forceDecodeReferences == null ? null
           : forceDecodeReferences.get(sourceInputId);
 
-      wrapper.put(new DecoderInput(source, sourceInputId, targets, inputProps));
+      Sequence<IString> ref = null;
+      if(doEval) {
+        String refLine = refReader.readLine();
+        if(refLine == null) {
+          System.err.println("ERROR: reference file is too short");
+          System.exit(-1);
+        }
+        ref = IStrings.tokenize(refLine);
+      }
+      
+      wrapper.put(new DecoderInput(source, sourceInputId, targets, inputProps, ksr_nbest_size, wpa_nbest_size, ref));
       for (DecoderOutput result; (result = wrapper.poll()) != null;) {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
@@ -1094,6 +1220,10 @@ public class Phrasal {
               result.translations.get(0) : null;
           bestTranslationList.add(best);
         }
+        ksrTyped += result.ksrTyped;
+        ksrTotal += result.ksrTotal;
+        wpaCorrect += result.wpaCorrect;
+        wpaTotal += result.wpaTotal;
       }
     }
 
@@ -1109,11 +1239,21 @@ public class Phrasal {
             : null;
         bestTranslationList.add(best);
       }
+      ksrTyped += result.ksrTyped;
+      ksrTotal += result.ksrTotal;
+      wpaCorrect += result.wpaCorrect;
+      wpaTotal += result.wpaTotal;
     }
 
     final double totalTime = TimingUtils.elapsedSeconds(startTime);
     final double segmentsPerSec = sourceInputId / totalTime;
     logger.info("Decoding at {} segments/sec (total: {} sec)", segmentsPerSec, totalTime);
+    
+    reader.close();
+    if(refReader != null) refReader.close();
+    
+    if(ksrTotal > 0) logger.info("KSR: {} / {} = {}", ksrTyped, ksrTotal, ((double) ksrTyped) / ksrTotal);
+    if(wpaTotal > 0) logger.info("Word prediction accuracy: {} / {} = {}", wpaCorrect, wpaTotal, ((double) wpaCorrect) / wpaTotal);
     return bestTranslationList;
   }
 
@@ -1213,7 +1353,7 @@ public class Phrasal {
     List<RichTranslation<IString, String>> translations = new ArrayList<>(1);
     if (numTranslations > 1) {
       translations = inferers.get(threadId).nbest(source, sourceInputId, inputProperties, outputSpace,
-          outputSpace.getAllowableSequences(), numTranslations, distinctNbest);
+          outputSpace.getAllowableSequences(), numTranslations, distinctNbest, nbestMode);
 
       // Decoder failure
       if (translations == null) translations = Collections.emptyList();

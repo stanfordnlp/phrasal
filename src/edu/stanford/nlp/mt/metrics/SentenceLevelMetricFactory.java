@@ -66,6 +66,9 @@ public final class SentenceLevelMetricFactory {
     } else if (scoreMetricStr.equals("bleup-nextw/2")) {
       return scoreMetricStr;
       
+    } else if (scoreMetricStr.equals("100bleup-nextw/2")) {
+      return scoreMetricStr;
+      
     } else if (scoreMetricStr.equals("2bleu-ter") || scoreMetricStr.equals("2bleun-ter")) {
       return scoreMetricStr;
     
@@ -231,6 +234,12 @@ public final class SentenceLevelMetricFactory {
       metrics.add(new LocalNextPredictedWordMetric<>());
       return new SLLinearCombinationMetric<>(new double[]{1.0, 1.0}, metrics);
       
+      } else if (scoreMetricStr.equals("100bleup-nextw/2")) {  
+        List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
+        metrics.add(new SLBLEUAfterPrefix<>(DEFAULT_ORDER, true));
+        metrics.add(new LocalNextPredictedWordMetric<>());
+        return new SLLinearCombinationMetric<>(new double[]{1.0, 0.01}, metrics);
+              
     } else {
 			String[] s = matchLinearCombMetricPattern(scoreMetricStr);
 			if(s!=null) {

@@ -44,7 +44,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   // of MultiBeamDecoder
   public static final int DEFAULT_BEAM_SIZE = 1200;
   public static final int DEFAULT_MAX_DISTORTION = -1;
-  
+
   // TODO(spenceg) May need to cap the number of popped items to keep it from running forever.
   
   protected int maxDistortion;
@@ -212,8 +212,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           newBeam.put(item.derivation);
           ++numPoppedItems;
         }
+        // else pruned items don't count against the pop limit
 
-        // Expand this consequent
+        // Expand this consequent.
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace, false)) {
           ++totalHypothesesGenerated;
@@ -253,18 +254,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
                 coveredTokens, sourceLength);
           }
           
-          StringBuilder sb = new StringBuilder();
-          sb.append(" ||| ");
-         
-          Derivation<TK, FV> best = beam.iterator().next();
-          
-          while(best.featurizable != null) {
-            sb.insert(0,best.featurizable.rule + " (" + best.featurizable.rule.abstractRule.phraseTableName + ") ");
-            sb.insert(0, " ||| ");
-            best = best.parent;
+          if (printDebug) {
+            Derivation<TK, FV> best = beam.iterator().next();
+            logger.info("input {}: best derivation {}", sourceInputId, best.historyString());
           }
-          
-          logger.info("Best derivation: " + sb.toString());
           
           return beam;
         }
