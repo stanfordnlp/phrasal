@@ -77,7 +77,7 @@ public class KSR {
       }
         
       int prefixSize = 0;
-      if(entry.translation.size() > matchSize) {
+      if(entry.translation.size() > matchSize && reference.size() > matchSize) {
         String hypWord = entry.translation.get(matchSize).toString();
         String refWord = reference.get(matchSize).toString();
         while(prefixSize < hypWord.length() && prefixSize < refWord.length() && hypWord.charAt(prefixSize) == refWord.charAt(prefixSize))
