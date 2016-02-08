@@ -66,7 +66,7 @@ public class KSR {
       
     Sequence<IString> bestMatch = null;
     int bestMatchSize = -1;
-    int bestPrefixSize = -1;
+    int bestPrefixSize = 0;
     int n = 1;
     for(RichTranslation<IString, String> entry : translations) {
       int matchSize = previousPrefixSize;
