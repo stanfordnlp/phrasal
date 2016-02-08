@@ -26,7 +26,7 @@ import edu.stanford.nlp.stats.Counter;
 public class RepetitionRate<TK, FV> extends AbstractMetric<TK, FV> {
   public static final int DEFAULT_MAX_NGRAM_ORDER = 4;
   public static final int SLIDING_WINDOW_SIZE = 1000;
-  List<Sequence<TK>> corpus;
+  private List<Sequence<TK>> corpus;
 
   /**
    *
