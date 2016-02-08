@@ -32,10 +32,8 @@ public final class MetricUtils {
    * 
    * @param <TK>
    */
-  static public <TK> Counter<Sequence<TK>> getNGramCounts(
-      Sequence<TK> sequence, int maxOrder) {
-    Counter<Sequence<TK>> counts = new ClassicCounter<Sequence<TK>>();
-
+  static public <TK> Counter<Sequence<TK>> getNGramCounts(Sequence<TK> sequence, int maxOrder) {
+    Counter<Sequence<TK>> counts = new ClassicCounter<>();
     int sz = sequence.size();
     for (int i = 0; i < sz; i++) {
       int jMax = Math.min(sz, i + maxOrder);
