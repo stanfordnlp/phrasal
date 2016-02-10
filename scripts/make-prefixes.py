@@ -43,7 +43,7 @@ def make_prefixes(src_file, tgt_file, samples_per_sent, allPrefixes):
             for f,e in zip(src,tgt):
                 e_tok = e.split()
                 e_len = len(e_tok)
-                for l in xrange(1, e_len - 1):       
+                for l in xrange(1, e_len):       
                     srcout.write(f + os.linesep)
                     tgtout.write(' '.join(e_tok[0:e_len]) + os.linesep)
                     prfout.write(' '.join(e_tok[0:e_len-l]) + os.linesep)
