@@ -69,7 +69,7 @@ def main():
     parser.add_argument('-a','--all-prefixes',
                         dest='all',
                         type=bool,
-                        default=false,
+                        default=False,
                         help='Create all prefixes. Overides --samples-per-sent.')
     args = parser.parse_args()
     
