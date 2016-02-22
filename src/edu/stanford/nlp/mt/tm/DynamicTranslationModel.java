@@ -644,8 +644,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       this.j = j;
     }
   }
-  
-  
+
   /**
    * Perform a source lookup into the underlying suffix array. Performs whitespace tokenization
    * of the input.
@@ -655,11 +654,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    * @return
    */
   public List<ParallelSuffixArrayEntry> lookupSource(String sourceQuery, int numResults) {
+    return lookupSource(sourceQuery, numResults, false);
+  }
+  
+  /**
+   * Perform a source lookup into the underlying suffix array. Performs whitespace tokenization
+   * of the input.
+   * 
+   * @param sourceQuery
+   * @param numResults
+   * @param exactMatch
+   * @return
+   */
+  public List<ParallelSuffixArrayEntry> lookupSource(String sourceQuery, int numResults, boolean exactMatch) {
     final int[] sourcePhrase = toTMArray(IStrings.tokenize(sourceQuery));
     for (int id : sourcePhrase) {
       if (id < 0) return Collections.emptyList();
     }
-    SuffixArraySample sample = sa.sample(sourcePhrase, numResults);
+    SuffixArraySample sample = sa.sample(sourcePhrase, numResults, exactMatch);
     return sample.samples.stream().map(s -> s.getParallelEntry()).collect(Collectors.toList());
   }
   

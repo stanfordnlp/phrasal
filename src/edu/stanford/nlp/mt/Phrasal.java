@@ -1056,6 +1056,8 @@ public class Phrasal {
         }
       }
       
+      previousPrefixSize = input.targets != null && input.targets.size() > 0 ?
+          input.targets.get(0).size() : 0;
       if(input.wpa_nbest_size > 0 && input.reference != null) {
         if(WordPredictionAccuracy.correctPrediction(translations, wpa_nbest_size, input.reference, previousPrefixSize)) {
           ++wpaCorrect;

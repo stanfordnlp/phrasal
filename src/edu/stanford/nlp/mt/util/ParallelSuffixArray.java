@@ -696,6 +696,19 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
   }
   
   /**
+   * Return a sample of sentences from this suffix array.
+   * 
+   * @param sourceQuery
+   * @param maxSamples
+   * @param exactMatch
+   * @return
+   */
+  public SuffixArraySample sample(final int[] sourceQuery, int maxSamples, boolean exactMatch) {
+    return sample(sourceQuery, maxSamples, 0, -1, exactMatch);
+  }
+
+
+  /**
    * Return a sample of sentences from the suffix array.
    * 
    * @param sourceQuery
@@ -705,6 +718,20 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    * @return
    */
   public SuffixArraySample sample(final int[] sourceQuery, int maxSamples, int minBound, int maxBound) {
+    return sample(sourceQuery, maxSamples, minBound, maxBound, false);
+  }
+  
+  /**
+   * Return a sample of sentences from the suffix array.
+   * 
+   * @param sourceQuery
+   * @param maxSamples
+   * @param minBound
+   * @param maxBound
+   * @param exactMatch
+   * @return
+   */
+  public SuffixArraySample sample(final int[] sourceQuery, int maxSamples, int minBound, int maxBound, boolean exactMatch) {
     if (sourceQuery.length == 0) return new SuffixArraySample(Collections.emptyList(), -1, -1);
     int lb = maxBound > minBound ? findBound(sourceQuery, true, true, minBound, maxBound) :
       findBound(sourceQuery, true, true, minBound);
@@ -718,7 +745,8 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     // Stratified sample through the list of positions
     List<SentencePair> samples = new ArrayList<>(maxSamples);
     for (int i = lb; i <= ub && samples.size() < maxSamples; i += stepSize) {
-      samples.add(new SentencePair(srcSuffixArray[i]));
+      SentencePair sp = new SentencePair(srcSuffixArray[i]);
+      if(!exactMatch || sp.sourceLength() == sourceQuery.length) samples.add(sp);
     }
     return new SuffixArraySample(samples, lb, ub);
   }
