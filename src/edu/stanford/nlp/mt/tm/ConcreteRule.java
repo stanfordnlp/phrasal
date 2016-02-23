@@ -227,7 +227,10 @@ public class ConcreteRule<TK,FV> implements Comparable<ConcreteRule<TK,FV>> {
 
   @Override
   public int compareTo(ConcreteRule<TK,FV> o) {
-    return (int) Math.signum(o.isolationScore - this.isolationScore);
+    int cmp = (int) Math.signum(o.isolationScore - this.isolationScore);
+    if(cmp == 0) cmp = o.abstractRule.id - this.abstractRule.id;
+    if(cmp == 0) cmp = o.sourcePosition - this.sourcePosition;
+    return cmp;
   }
   
   @Override
