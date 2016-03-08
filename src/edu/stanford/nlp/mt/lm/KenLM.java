@@ -45,6 +45,25 @@ public class KenLM {
   private native int getOrder(long kenLMPtr);
 
   /**
+   * Constructor.
+   * 
+   * @param filename
+   */
+  public KenLM(String filename) {
+    this(filename, (long)(1 << 20), DEFAULT_LOAD_METHOD);
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param filename
+   * @param loadMethod
+   */
+  public KenLM(String filename, LoadMethod loadMethod) {
+    this(filename, (long)(1 << 20), loadMethod.ordinal());
+  }
+  
+  /**
    * Constructor for multi-threaded queries.
    * 
    * @param filename
@@ -64,14 +83,6 @@ public class KenLM {
     order = getOrder(kenLMPtr);
     bos = index("<s>");
     eos = index("</s>");
-  }
-
-  public KenLM(String filename) {
-    this(filename, (long)(1 << 20), DEFAULT_LOAD_METHOD);
-  }
-
-  public KenLM(String filename, LoadMethod loadMethod) {
-    this(filename, (long)(1 << 20), loadMethod.ordinal());
   }
 
   /**
