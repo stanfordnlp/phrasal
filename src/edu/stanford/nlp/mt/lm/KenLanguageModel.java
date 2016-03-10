@@ -26,6 +26,7 @@ public class KenLanguageModel implements LanguageModel<IString> {
   private static final int[] EMPTY_INT_ARRAY = new int[0];
   private static final KenLMState ZERO_LENGTH_STATE = new KenLMState(0.0f, EMPTY_INT_ARRAY, 0);
   public static final String KENLM_LIBRARY_NAME = "PhrasalKenLM";
+  public static final String LAZY_TAG = "lazy:";
   
   static {
     try {
@@ -52,8 +53,16 @@ public class KenLanguageModel implements LanguageModel<IString> {
    * @param filename
    */
   public KenLanguageModel(String filename) {
-    model = new KenLM(filename);
-    name = String.format("KenLM(%s)", filename);
+    String realFilename = filename;
+   
+    if(filename.startsWith(LAZY_TAG)) {
+      realFilename = filename.substring(LAZY_TAG.length());
+      model = new KenLM(realFilename, KenLM.LoadMethod.LAZY);
+    }
+    else {
+      model = new KenLM(realFilename);
+    }
+    name = String.format("KenLM(%s)", realFilename);
     initializeIdTable();
   }
 
