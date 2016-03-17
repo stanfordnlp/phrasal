@@ -1094,6 +1094,7 @@ public class Phrasal {
       if(input.oracle_nbest_size > 0 && input.reference != null) {
         Sequence<IString> oracle = WordPredictionAccuracy.getBestMatch(translations, oracle_nbest_size, input.reference, previousPrefixSize);
         logger.info("SEGMENT {} oracle translation: {}", input.sourceInputId, oracle);
+        bestTranslation = oracle;
       }
       
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId, 
@@ -1191,7 +1192,7 @@ public class Phrasal {
     int wpaCorrect = 0;
     int wpaTotal = 0;
     
-    boolean doEval = references != null && (ksr_nbest_size > 0 || wpa_nbest_size > 0);
+    boolean doEval = references != null && (ksr_nbest_size > 0 || wpa_nbest_size > 0 || oracle_nbest_size > 0);
     
     final LineNumberReader refReader = doEval ?
         new LineNumberReader(new InputStreamReader(new FileInputStream(new File(references)), 
