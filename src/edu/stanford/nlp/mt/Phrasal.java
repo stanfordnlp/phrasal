@@ -1092,7 +1092,8 @@ public class Phrasal {
       previousPrefixSize = input.targets != null && input.targets.size() > 0 ?
           input.targets.get(0).size() : 0;
       if(input.oracle_nbest_size > 0 && input.reference != null) {
-        bestTranslation = WordPredictionAccuracy.getBestMatch(translations, oracle_nbest_size, input.reference, previousPrefixSize);
+        Sequence<IString> oracle = WordPredictionAccuracy.getBestMatch(translations, oracle_nbest_size, input.reference, previousPrefixSize);
+        logger.info("SEGMENT {} oracle translation: {}", input.sourceInputId, oracle);
       }
       
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId, 
