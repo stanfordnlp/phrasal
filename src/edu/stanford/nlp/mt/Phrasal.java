@@ -212,6 +212,7 @@ public class Phrasal {
   public static final String WRAP_BOUNDARY = "wrap-boundary";
   public static final String KSR_NBEST_SIZE = "ksr_nbest_size";
   public static final String WPA_NBEST_SIZE = "wpa_nbest_size";
+  public static final String ORACLE_NBEST_SIZE = "oracle_nbest_size";
   public static final String REFERENCE = "reference";
 
   private static final Set<String> REQUIRED_FIELDS = new HashSet<>();
@@ -226,7 +227,7 @@ public class Phrasal {
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER, SOURCE_CLASS_MAP, TARGET_CLASS_MAP,
-        PRINT_MODEL_SCORES, INPUT_PROPERTIES, FEATURE_AUGMENTATION, WRAP_BOUNDARY, KSR_NBEST_SIZE, WPA_NBEST_SIZE, REFERENCE));
+        PRINT_MODEL_SCORES, INPUT_PROPERTIES, FEATURE_AUGMENTATION, WRAP_BOUNDARY, KSR_NBEST_SIZE, WPA_NBEST_SIZE, ORACLE_NBEST_SIZE, REFERENCE));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
     ALL_RECOGNIZED_FIELDS.addAll(OPTIONAL_FIELDS);
   }
@@ -354,6 +355,7 @@ public class Phrasal {
    */
   private final int ksr_nbest_size;
   private final int wpa_nbest_size;
+  private final int oracle_nbest_size;
   private final String references;
 
   /**
@@ -907,6 +909,8 @@ public class Phrasal {
         Integer.valueOf(config.get(KSR_NBEST_SIZE).get(0)) : 0;
     wpa_nbest_size = config.containsKey(WPA_NBEST_SIZE) ?
         Integer.valueOf(config.get(WPA_NBEST_SIZE).get(0)) : 0;
+    oracle_nbest_size = config.containsKey(ORACLE_NBEST_SIZE) ?
+        Integer.valueOf(config.get(ORACLE_NBEST_SIZE).get(0)) : 0;
     references = config.containsKey(REFERENCE) ? config.get(REFERENCE).get(0) : null;
   }
 
@@ -924,21 +928,23 @@ public class Phrasal {
     
     public int ksr_nbest_size = 0;
     public int wpa_nbest_size = 0;
+    public int oracle_nbest_size = 0;
     public final Sequence<IString> reference;
     
     public DecoderInput(Sequence<IString> seq, int sourceInputId, List<Sequence<IString>> targets,
         InputProperties inputProps) {
-      this(seq, sourceInputId, targets, inputProps, 0, 0, null);
+      this(seq, sourceInputId, targets, inputProps, 0, 0, 0, null);
     }
 
     public DecoderInput(Sequence<IString> seq, int sourceInputId, List<Sequence<IString>> targets,
-        InputProperties inputProps, int ksr_nbest_size, int wpa_nbest_size, Sequence<IString> reference) {
+        InputProperties inputProps, int ksr_nbest_size, int wpa_nbest_size, int oracle_nbest_size, Sequence<IString> reference) {
       this.source = seq;
       this.sourceInputId = sourceInputId;
       this.inputProps = inputProps;
       this.targets = targets;
       this.ksr_nbest_size = ksr_nbest_size;
       this.wpa_nbest_size = wpa_nbest_size;
+      this.oracle_nbest_size = oracle_nbest_size;
       this.reference = reference;
     }
     
@@ -1083,6 +1089,11 @@ public class Phrasal {
         }
       }
       
+      previousPrefixSize = input.targets != null && input.targets.size() > 0 ?
+          input.targets.get(0).size() : 0;
+      if(input.oracle_nbest_size > 0 && input.reference != null) {
+        bestTranslation = WordPredictionAccuracy.getBestMatch(translations, oracle_nbest_size, input.reference, previousPrefixSize);
+      }
       
       return new DecoderOutput(input.source.size(), translations, bestTranslation, input.sourceInputId, 
           ksrTyped, ksrTotal, wpaCorrect, wpaTotal);
@@ -1213,7 +1224,7 @@ public class Phrasal {
         ref = IStrings.tokenize(refLine);
       }
       
-      wrapper.put(new DecoderInput(source, sourceInputId, targets, inputProps, ksr_nbest_size, wpa_nbest_size, ref));
+      wrapper.put(new DecoderInput(source, sourceInputId, targets, inputProps, ksr_nbest_size, wpa_nbest_size, oracle_nbest_size, ref));
       for (DecoderOutput result; (result = wrapper.poll()) != null;) {
         if (outputToConsole) {
           processConsoleResult(result.translations, result.bestTranslation, result.sourceLength, result.sourceInputId);
