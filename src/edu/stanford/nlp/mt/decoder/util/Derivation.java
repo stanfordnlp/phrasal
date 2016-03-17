@@ -72,7 +72,7 @@ State<Derivation<TK, FV>> {
   public Derivation<TK,FV> bestChild;
   public double completionScore;
   // WSGDEBUG
-  public boolean isOneBest = false;
+//  public boolean isOneBest = false;
   
   /**
    * 

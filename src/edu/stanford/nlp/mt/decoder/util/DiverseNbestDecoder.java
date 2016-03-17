@@ -41,8 +41,8 @@ public class DiverseNbestDecoder<TK,FV> {
   private final List<Derivation<TK,FV>> markedNodes;
 
   // WSGDEBUG
-  private Derivation<TK,FV> oneBest;
-  private LongSet oneBestIds;
+//  private Derivation<TK,FV> oneBest;
+//  private LongSet oneBestIds;
   //private final Sequence<TK> prefix;
   
   /**
@@ -76,7 +76,7 @@ public class DiverseNbestDecoder<TK,FV> {
     });
     for (Derivation<TK,FV> d : goalBeam) {
       // WSGDEBUG
-      if (this.oneBest == null) this.oneBest = d;
+//      if (this.oneBest == null) this.oneBest = d;
       
       unprocessed.add(d);
     }
@@ -148,7 +148,7 @@ public class DiverseNbestDecoder<TK,FV> {
 //    System.err.println(oneBest);
 //    System.err.println(oneBest.historyString());
 //    System.err.println();
-    setOneBestPointers();
+//    setOneBestPointers();
     
     // Sorting merely gives an estimate. Combination costs could change the final ordering.
     // Sort the return list
@@ -191,20 +191,20 @@ public class DiverseNbestDecoder<TK,FV> {
 //    }
   }
 
-  private void setOneBestPointers() {
-    Derivation<TK,FV> p = oneBest;
-    oneBestIds = new LongOpenHashSet();
-    while (p.parent != null) {
-      oneBestIds.add(p.id);
-      p.isOneBest = true;
-      double transitionScore = p.score - p.parent.score;
-      double completionScore = transitionScore + p.completionScore;
-//      System.err.printf("%s %s%n", Double.toString(transitionScore), Double.toString(p.completionScore));
-      p.parent.completionScore = completionScore;
-      p.parent.bestChild = p;
-      p = p.parent;
-    }
-  }
+//  private void setOneBestPointers() {
+//    Derivation<TK,FV> p = oneBest;
+//    oneBestIds = new LongOpenHashSet();
+//    while (p.parent != null) {
+//      oneBestIds.add(p.id);
+//      p.isOneBest = true;
+//      double transitionScore = p.score - p.parent.score;
+//      double completionScore = transitionScore + p.completionScore;
+////      System.err.printf("%s %s%n", Double.toString(transitionScore), Double.toString(p.completionScore));
+//      p.parent.completionScore = completionScore;
+//      p.parent.bestChild = p;
+//      p = p.parent;
+//    }
+//  }
 
   /**
    * Extract the n-best list.
