@@ -64,6 +64,7 @@ public class MakeWordClasses {
   private final int vocabThreshold;
   private List<IString> effectiveVocabulary;
   private final boolean normalizeDigits;
+  private final boolean writeUnkClass;
 
   private double currentObjectiveValue = 0.0;
   
@@ -90,6 +91,8 @@ public class MakeWordClasses {
     this.inputEncoding = properties.getProperty("encoding", IOTools.DEFAULT_ENCODING);
 
     this.normalizeDigits = PropertiesUtils.getBool(properties, "normdigits", true);
+    
+    this.writeUnkClass = PropertiesUtils.getBool(properties, "writeunk", false);
 
     this.outputFormat = OutputFormat.valueOf(
         properties.getProperty("format", OutputFormat.TSV.toString()).toUpperCase());
@@ -167,6 +170,7 @@ public class MakeWordClasses {
         Counter<NgramHistory> unkHistories = historyCount.getCounter(TokenUtils.UNK_TOKEN);
         Counters.addInPlace(unkHistories, histories);
         historyCount.remove(word);
+        if(writeUnkClass) System.out.printf("%s\t%d%n", word.toString(), numClasses);       
       }
     }
 
