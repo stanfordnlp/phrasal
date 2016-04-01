@@ -114,10 +114,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     } else {
       this.maxDistortion = defaultDistortion;
     }
+    InputProperties inputProperties = sourceInputProperties;
+    if(foregroundModel != null && !inputProperties.containsKey(InputProperty.ForegroundTM)) {
+      inputProperties.put(InputProperty.ForegroundTM, foregroundModel);
+    }
     
     // TM (phrase table) query for applicable rules
     final PhraseQuery<TK,FV> phraseQuery = 
-        getRules(source, sourceInputProperties, targets, sourceInputId, scorer);
+        getRules(source, inputProperties, targets, sourceInputId, scorer);
     source = phraseQuery.filteredSource;
     timer.mark("TM query");
     
@@ -134,11 +138,11 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     // Force decoding---if it is enabled, then filter the rule set according
     // to the references
-    outputSpace.filter(ruleList, this, sourceInputProperties);
+    outputSpace.filter(ruleList, this, inputProperties);
     
-    assert sourceInputProperties.containsKey(InputProperty.RuleQueryLimit);
+    assert inputProperties.containsKey(InputProperty.RuleQueryLimit);
     final RuleGrid<TK,FV> ruleGrid = new RuleGrid<>(ruleList, source, 
-        (int) sourceInputProperties.get(InputProperty.RuleQueryLimit));
+        (int) inputProperties.get(InputProperty.RuleQueryLimit));
     if ( ! ruleGrid.isCoverageComplete()) {
       logger.warn("input {}: Incomplete source coverage", sourceInputId);
     }
@@ -151,7 +155,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // Setup the beams
     List<List<ConcreteRule<TK,FV>>> ruleListList = Collections.singletonList(ruleList);
     Derivation<TK, FV> nullHypothesis = new Derivation<>(sourceInputId, source, 
-        sourceInputProperties, heuristic, scorer, ruleListList, outputSpace);
+        inputProperties, heuristic, scorer, ruleListList, outputSpace);
     nullBeam.put(nullHypothesis);
     final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
@@ -166,9 +170,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     int startOfDecoding = 1;
     int minSourceCoverage = 0;
     boolean prefilledBeams = false;
-    if (sourceInputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
+    if (inputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
       if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
-      minSourceCoverage = decodePrefix(source, ruleList, sourceInputProperties, targets.get(0), 
+      minSourceCoverage = decodePrefix(source, ruleList, inputProperties, targets.get(0), 
           scorer, beams, sourceInputId, outputSpace, recombinationHistory, timer);
       if (minSourceCoverage < 0) {
         logger.warn("input {}: PREFIX DECODING FAILURE", sourceInputId);

@@ -201,6 +201,7 @@ public class Phrasal {
   public static final String LINEAR_DISTORTION_OPT = "linear-distortion-options";
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String INDEPENDENT_PHRASE_TABLES = "independent-phrase-tables";
+  public static final String FOREGROUND_TM = "foreground-tm-file";
   public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
   public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
   public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
@@ -224,7 +225,7 @@ public class Phrasal {
         DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, 
         FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
-        MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, LANGUAGE_MODEL_OPT,
+        MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, FOREGROUND_TM, LANGUAGE_MODEL_OPT,
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER, SOURCE_CLASS_MAP, TARGET_CLASS_MAP,
         PRINT_MODEL_SCORES, INPUT_PROPERTIES, FEATURE_AUGMENTATION, WRAP_BOUNDARY, KSR_NBEST_SIZE, WPA_NBEST_SIZE, REFERENCE));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -601,12 +602,17 @@ public class Phrasal {
         .<String> factory(translationModelFile, factoryOptions);
     primaryModel.setName(TM_BACKGROUND_NAME);
     
+    TranslationModel<IString, String> foregroundModel = null;
+    
     final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new ArrayList<>();
     if (primaryModel instanceof DynamicTranslationModel) {
       // we can NOT use a CombinedTranslationModel here due to "instanceof DynamicTranslationModel" used for ruleGrid augmentation
       translationModel = primaryModel; //new CombinedTranslationModel<>(primaryModel, ruleQueryLimit);
       logger.info("Translation model mode: dynamic");
-      
+      if (config.get(FOREGROUND_TM) != null) {
+         foregroundModel = TranslationModelFactory.<String> factory(config.get(FOREGROUND_TM).get(0), factoryOptions);
+         foregroundModel.setName(TM_FOREGROUND_NAME);
+      }
     } else {
       logger.info("Translation model mode: static");
       final List<TranslationModel<IString, String>> translationModels = new ArrayList<>();
@@ -766,6 +772,7 @@ public class Phrasal {
 
     // Link the final featurizer and the phrase table
     translationModel.setFeaturizer(featurizer);
+    if(foregroundModel != null) foregroundModel.setFeaturizer(featurizer);
 
     // Create Scorer / weight vector
     this.globalModel = new ClassicCounter<String>();
@@ -827,6 +834,7 @@ public class Phrasal {
         infererBuilder.setUnknownWordModel(oovModel, dropUnknownWords);
         infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((TranslationModel<IString, String>) translationModel.clone());
+        if(foregroundModel != null) infererBuilder.setForegroundModel((TranslationModel<IString, String>) foregroundModel.clone());
         final Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, globalModel, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
