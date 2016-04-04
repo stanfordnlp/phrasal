@@ -208,6 +208,27 @@ public final class SentenceLevelMetricFactory {
       return new SLLinearCombinationMetric<>(
         new double[]{1.0/3.0, 1.0/3.0, 1.0/3.0}, metrics);
     
+    } else if (scoreMetricStr.equals("bleu-bp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(3);
+      metrics.add(new BLEUGain<>());
+      metrics.add(new LengthPenaltyBleu<>());
+      return new SLLinearCombinationMetric<>(
+        new double[]{0.5, 0.5}, metrics);
+    
+    } else if (scoreMetricStr.equals("2bleu-bp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(3);
+      metrics.add(new BLEUGain<>());
+      metrics.add(new LengthPenaltyBleu<>());
+      return new SLLinearCombinationMetric<>(
+        new double[]{2.0/3.0, 1.0/3.0}, metrics);
+    
+    } else if (scoreMetricStr.equals("4bleu-bp/2")) {
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(3);
+      metrics.add(new BLEUGain<>());
+      metrics.add(new LengthPenaltyBleu<>());
+      return new SLLinearCombinationMetric<>(
+        new double[]{0.8, 0.2}, metrics);
+      
     } else if (scoreMetricStr.equals("bleunX2ter")) {
       List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
       metrics.add(new BLEUGain<>(true));
@@ -234,11 +255,11 @@ public final class SentenceLevelMetricFactory {
       metrics.add(new LocalNextPredictedWordMetric<>());
       return new SLLinearCombinationMetric<>(new double[]{1.0, 1.0}, metrics);
       
-      } else if (scoreMetricStr.equals("100bleup-nextw/2")) {  
-        List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
-        metrics.add(new SLBLEUAfterPrefix<>(DEFAULT_ORDER, true));
-        metrics.add(new LocalNextPredictedWordMetric<>());
-        return new SLLinearCombinationMetric<>(new double[]{1.0, 0.01}, metrics);
+    } else if (scoreMetricStr.equals("100bleup-nextw/2")) {  
+      List<SentenceLevelMetric<IString,String>> metrics = new ArrayList<>(2);
+      metrics.add(new SLBLEUAfterPrefix<>(DEFAULT_ORDER, true));
+      metrics.add(new LocalNextPredictedWordMetric<>());
+      return new SLLinearCombinationMetric<>(new double[]{1.0, 0.01}, metrics);
               
     } else {
 			String[] s = matchLinearCombMetricPattern(scoreMetricStr);
