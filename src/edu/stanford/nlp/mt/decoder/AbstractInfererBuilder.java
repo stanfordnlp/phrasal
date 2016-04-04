@@ -16,6 +16,7 @@ import edu.stanford.nlp.mt.tm.TranslationModel;
 abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<TK, FV> {
   protected FeatureExtractor<TK, FV> incrementalFeaturizer;
   protected TranslationModel<TK,FV> phraseGenerator;
+  protected TranslationModel<TK,FV> foregroundModel = null;
   protected Scorer<FV> scorer;
   protected SearchHeuristic<TK, FV> heuristic;
   protected RecombinationFilter<Derivation<TK, FV>> filter;
@@ -37,6 +38,12 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
   public InfererBuilder<TK, FV> setPhraseGenerator(
       TranslationModel<TK,FV> phraseGenerator) {
     this.phraseGenerator = phraseGenerator;
+    return this;
+  }
+  
+  public InfererBuilder<TK, FV> setForegroundModel(
+      TranslationModel<TK,FV> foregroundModel) {
+    this.foregroundModel = foregroundModel;
     return this;
   }
 

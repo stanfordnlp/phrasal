@@ -40,9 +40,11 @@ public class DiverseNbestDecoder<TK,FV> {
   private final int prefixLength;
   private final List<Derivation<TK,FV>> markedNodes;
 
+  private boolean isIncompleteLattice = false;
+  
   // WSGDEBUG
-  private Derivation<TK,FV> oneBest;
-  private LongSet oneBestIds;
+//  private Derivation<TK,FV> oneBest;
+//  private LongSet oneBestIds;
   //private final Sequence<TK> prefix;
   
   /**
@@ -76,7 +78,7 @@ public class DiverseNbestDecoder<TK,FV> {
     });
     for (Derivation<TK,FV> d : goalBeam) {
       // WSGDEBUG
-      if (this.oneBest == null) this.oneBest = d;
+//      if (this.oneBest == null) this.oneBest = d;
       
       unprocessed.add(d);
     }
@@ -130,11 +132,10 @@ public class DiverseNbestDecoder<TK,FV> {
               double completionScore = transitionScore + bestChild.completionScore;
               recombinedChild.bestChild = bestChild;
               recombinedChild.completionScore = completionScore;
-            } else {
-              // Must be a list of goal nodes
-              if (! (recombinedChild.isDone() && child.isDone())) {
-                throw new RuntimeException();
-              }
+            } else if (! (recombinedChild.isDone() && child.isDone())) {
+              logger.warn("Incomplete lattice. Probably the output of decoder backoff.");
+              this.isIncompleteLattice = true;
+              return;
             }
           }        
         }
@@ -148,7 +149,7 @@ public class DiverseNbestDecoder<TK,FV> {
 //    System.err.println(oneBest);
 //    System.err.println(oneBest.historyString());
 //    System.err.println();
-    setOneBestPointers();
+//    setOneBestPointers();
     
     // Sorting merely gives an estimate. Combination costs could change the final ordering.
     // Sort the return list
@@ -191,20 +192,20 @@ public class DiverseNbestDecoder<TK,FV> {
 //    }
   }
 
-  private void setOneBestPointers() {
-    Derivation<TK,FV> p = oneBest;
-    oneBestIds = new LongOpenHashSet();
-    while (p.parent != null) {
-      oneBestIds.add(p.id);
-      p.isOneBest = true;
-      double transitionScore = p.score - p.parent.score;
-      double completionScore = transitionScore + p.completionScore;
-//      System.err.printf("%s %s%n", Double.toString(transitionScore), Double.toString(p.completionScore));
-      p.parent.completionScore = completionScore;
-      p.parent.bestChild = p;
-      p = p.parent;
-    }
-  }
+//  private void setOneBestPointers() {
+//    Derivation<TK,FV> p = oneBest;
+//    oneBestIds = new LongOpenHashSet();
+//    while (p.parent != null) {
+//      oneBestIds.add(p.id);
+//      p.isOneBest = true;
+//      double transitionScore = p.score - p.parent.score;
+//      double completionScore = transitionScore + p.completionScore;
+////      System.err.printf("%s %s%n", Double.toString(transitionScore), Double.toString(p.completionScore));
+//      p.parent.completionScore = completionScore;
+//      p.parent.bestChild = p;
+//      p = p.parent;
+//    }
+//  }
 
   /**
    * Extract the n-best list.
@@ -216,6 +217,8 @@ public class DiverseNbestDecoder<TK,FV> {
   public List<Derivation<TK,FV>> decode(int size, boolean distinct, int sourceInputId, 
       FeatureExtractor<TK, FV> featurizer, Scorer<FV> scorer, SearchHeuristic<TK, FV> heuristic, 
       OutputSpace<TK, FV> outputSpace) {
+    if (isIncompleteLattice) return Collections.emptyList();
+    
     List<Derivation<TK,FV>> returnList = new ArrayList<>(size);
 
     // WSGDEBUG
@@ -224,7 +227,7 @@ public class DiverseNbestDecoder<TK,FV> {
     //
     //  1) Sometimes duplicate derivations can be extracted. Probably has to do with recombination.
     //
-  for (int i = 0, sz = markedNodes.size(); i < sz; ++i) {
+    for (int i = 0, sz = markedNodes.size(); i < sz; ++i) {
 //    for (int i = 0, sz = Math.min(markedNodes.size(), size); i < sz; ++i) {
       Derivation<TK,FV> node = markedNodes.get(i);
       Derivation<TK,FV> finalDerivation = constructDerivation(node, sourceInputId, featurizer,

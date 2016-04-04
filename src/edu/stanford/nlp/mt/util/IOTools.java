@@ -7,10 +7,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -290,6 +292,44 @@ public final class IOTools {
     }
   }
   
+  
+  /**
+   * Deserialize an object.
+   * Only supports BIN and BIN_GZ SerializationMode.
+   * 
+   * If the specified file does not exist or is empty, then this call returns null.
+   * 
+   * @param inputStream
+   * @param type
+   * @param mode
+   * @return
+   * @throws IOException
+   * @throws ClassNotFoundException
+   */
+  public static <T> T deserialize(InputStream inStream, Class<T> type, SerializationMode mode) {
+    try {
+      T object;
+      if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
+        Kryo kryo = new Kryo();
+        kryo.setReferences(false);
+        Input input = new Input(mode == SerializationMode.BIN_GZ ? 
+            new GZIPInputStream(inStream) : inStream);
+        object = kryo.readObject(input, type);
+        
+      } else {
+        throw new UnsupportedOperationException();
+      }
+
+      return object;
+      
+    } catch (KryoException  | IOException e) {
+      logger.error("Unable to deserialize {} (mode: {})", mode);
+      logger.error("Deserialization exception", e);
+      throw new RuntimeException(e);
+    }
+  }
+  
+  
   /**
    * Serialize an object. The serialization mode is selected automatically.
    * 
@@ -336,6 +376,34 @@ public final class IOTools {
     
     } catch (KryoException | IOException e) {
       logger.error("Unable to serialize {} (mode: {})", filename, mode);
+      logger.error("Serialization exception", e);
+      throw new RuntimeException(e);
+    }
+  }
+  
+  /**
+   * Serialize an object.
+   * Only supports BIN and BIN_GZ SerializationMode.
+   * 
+   * @param outputStream
+   * @param o
+   * @throws IOException
+   */
+  public static void serialize(OutputStream outStream, Object o, SerializationMode mode) {
+    try {
+      if (mode == SerializationMode.BIN || mode == SerializationMode.BIN_GZ) {
+        Kryo kryo = new Kryo();
+        kryo.setReferences(false);
+        Output output = mode == SerializationMode.BIN_GZ ? new Output(new GZIPOutputStream(
+            outStream)) : new Output(outStream);
+        kryo.writeObject(output, o);
+        output.close();
+
+      } else {
+        logger.warn("Unsupported serialization mode: {} file: {}", mode);
+      }
+    
+    } catch (KryoException | IOException e) {
       logger.error("Serialization exception", e);
       throw new RuntimeException(e);
     }

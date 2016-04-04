@@ -171,7 +171,7 @@ public class PhraseAlignment {
         alignments = (rightPos < t2s.length ? t2s[rightPos] : null); // t2s(rightPos);
         if (alignments != null) {
           // System.err.print("right " + rightPos + ": " + Util.intArrayToString(alignments));
-          srcAvgPos = ArrayMath.mean(alignments);
+          srcAvgPos = (int) ArrayMath.mean(alignments);
           break;
         }
         
@@ -184,7 +184,7 @@ public class PhraseAlignment {
         alignments = (leftPos < t2s.length ? t2s[leftPos] : null); // t2s(leftPos);
         if (alignments != null) {
           // System.err.print("left " + leftPos + ": " + Util.intArrayToString(alignments));
-          srcAvgPos = ArrayMath.mean(alignments);
+          srcAvgPos = (int) ArrayMath.mean(alignments);
           break;
         }
         

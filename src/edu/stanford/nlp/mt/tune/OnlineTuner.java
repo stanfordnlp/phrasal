@@ -116,6 +116,7 @@ public final class OnlineTuner {
 
   // Train a local translation model.
   private boolean localTMTraining;
+  private String localTMoutFile = "";
   //private int faDistortionLimit = 15;
   
   // minimum number of times we need to see a feature 
@@ -262,8 +263,9 @@ public final class OnlineTuner {
    * @param trainLocalTM
    * @param faDistortionLimit
    */
-  private void trainLocalTM(boolean trainLocalTM) { 
+  private void trainLocalTM(boolean trainLocalTM, String localTMoutFile) { 
     this.localTMTraining = trainLocalTM;
+    this.localTMoutFile = localTMoutFile;
   }
   
   /**
@@ -740,6 +742,10 @@ public final class OnlineTuner {
       logger.info("Epoch {} elapsed time: {} seconds", epoch, elapsedTime);
       double approxObjectiveValue = approximateObjective(nbestLists, epoch, corpusLevelMetricStr);
       if (approxObjectiveValue > maxObjectiveValue) maxObjectiveEpoch = epoch;
+      if(localTMTraining && localTMoutFile != "") {
+        DynamicTranslationModel<String> localTM  = (DynamicTranslationModel<String>) getLocalTM(corpus);
+        IOTools.serialize(localTMoutFile, localTM);
+      }
     }
     
     saveFinalWeights(currentWts, maxObjectiveEpoch, numEpochs);
@@ -992,6 +998,7 @@ public final class OnlineTuner {
     optionMap.put("s", 0);
     optionMap.put("rand", 1);
     optionMap.put("localTM", 0);
+    optionMap.put("localTMout", 1);
     optionMap.put("seq", 0);
     //optionMap.put("faDistLimit", 1);    
     optionMap.put("niw", 1);    
@@ -1030,6 +1037,7 @@ public final class OnlineTuner {
       .append("   -s         : Wrap references and source inputs in boundary tokens").append(nl)
       .append("   -rand      : Randomize dev set before tuning (default: true)").append(nl)
       .append("   -localTM   : Incrementally train a local translation model on the dev data. (default: false)").append(nl)
+      .append("   -localTMout: Output file for local translation model. (default: none)").append(nl)
       .append("   -seq       : Enforce a strictly sequential optimization - this will make multi-threading pointless. (default: false)").append(nl)
       //.append("   -faDistLimit : distortion limit for forced alignment in localTM training (default: 15)").append(nl)
       .append("   -niw       : normalize the initial weights file (default: false)").append(nl)
@@ -1070,6 +1078,7 @@ public final class OnlineTuner {
     boolean outputSingleBest = PropertiesUtils.getBool(opts, "sb", false);
     boolean outputPrefixDecoding = PropertiesUtils.getBool(opts, "pd", false);
     boolean trainLocalTM = PropertiesUtils.getBool(opts, "localTM", false);
+    String localTMoutFile = PropertiesUtils.getString(opts, "localTMout", "");
     //int faDistortionLimit = PropertiesUtils.getInt(opts, "faDistLimit", 15);
     boolean enforceStrictlySequential = PropertiesUtils.getBool(opts, "seq", false);
     boolean normalizeInitialWeights = PropertiesUtils.getBool(opts, "niw", false);
@@ -1116,7 +1125,7 @@ public final class OnlineTuner {
       tuner.outputSingleBest(outputSingleBest);
       tuner.outputPrefixDecoding(outputPrefixDecoding);
       tuner.enforceStrictlySequential(enforceStrictlySequential);
-      tuner.trainLocalTM(trainLocalTM);
+      tuner.trainLocalTM(trainLocalTM, localTMoutFile);
       tuner.run(numEpochs, batchSize, slScoreMetric, clMetricString, weightWriteOutInterval);
 
       final double elapsedTime = TimingUtils.elapsedSeconds(startTime);
