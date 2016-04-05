@@ -59,6 +59,7 @@ public final class MetricUtils {
   static public <TK> Counter<Sequence<TK>> getMaxNGramCounts(
       List<Sequence<TK>> sequences, double[] seqWeights, int maxOrder) {
     Counter<Sequence<TK>> maxCounts = new ClassicCounter<Sequence<TK>>();
+    maxCounts.setDefaultReturnValue(0.0);
     if(seqWeights != null && seqWeights.length != sequences.size()) {
       throw new RuntimeException("Improper weight vector for sequences.");
     }
@@ -69,7 +70,7 @@ public final class MetricUtils {
       for (Sequence<TK> ngram : counts.keySet()) {
         double weight = seqWeights == null ? 1.0 : seqWeights[seqId];
         double countValue = weight * counts.getCount(ngram);
-        double currentMax = maxCounts.containsKey(ngram) ? maxCounts.getCount(ngram) : 0.0;
+        double currentMax = maxCounts.getCount(ngram);
         maxCounts.setCount(ngram, Math.max(countValue, currentMax));
       }
       ++seqId;
