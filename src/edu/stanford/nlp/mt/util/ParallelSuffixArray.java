@@ -498,15 +498,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
         return false;
       } else {
         Span otherSpan = (Span) o;
-        if (this.tokens.length == otherSpan.tokens.length) {
-          for (int i = 0; i < tokens.length; ++i) {
-            if (tokens[i] != otherSpan.tokens[i]) {
-              return false;
-            }
-          }
-          return true;
-        }
-        return false;
+        return Arrays.equals(this.tokens, otherSpan.tokens);
       }
     }
     @Override

@@ -209,6 +209,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       String name) throws IOException {
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<FV> tm = IOTools.deserialize(filename, DynamicTranslationModel.class);
+    if (tm == null) {
+      logger.error("File not found: {}", filename);
+      throw new IOException("File not found: " + filename);
+    }
     timer.mark("Deserialization");
     tm.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;

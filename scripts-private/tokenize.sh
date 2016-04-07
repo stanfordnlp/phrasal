@@ -60,7 +60,7 @@ DE_TOK="java $JAVA_OPTS edu.stanford.nlp.process.PTBTokenizer -preserveLines -op
 
 # Chinese segmenter path, where segment.sh is located
 # Should point to latest distribution of the Chinese segmenter
-ZH_SEG_PATH="/u/nlp/distrib/stanford-segmenter-2013-11-12"
+ZH_SEG_PATH="/home/rayder441/packages/stanford-segmenter-2015-12-09"
 ZH_SEG="$ZH_SEG_PATH/segment.sh"
 
 # Spanish tokenizer setup (same parameters as French)
