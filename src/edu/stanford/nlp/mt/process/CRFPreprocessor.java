@@ -1,11 +1,11 @@
 package edu.stanford.nlp.mt.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import edu.stanford.nlp.ie.crf.CRFClassifier;
-import edu.stanford.nlp.ling.CoreAnnotations.AnswerAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
 import edu.stanford.nlp.mt.util.IString;
@@ -49,7 +49,7 @@ public abstract class CRFPreprocessor implements Preprocessor {
   
   @Override
   public Sequence<IString> process(String input) {
-    IString[] outputSequence = segment(input);
+    String[] outputSequence = segment(input);
     Sequence<IString> rv = IStrings.toIStringSequence(outputSequence);
     return rv;
   }
@@ -58,18 +58,22 @@ public abstract class CRFPreprocessor implements Preprocessor {
   public SymmetricalWordAlignment processAndAlign(String input) {
     input = input.trim();
     String[] inputTokens = input.split("\\s+");
-    IString[] outputSequence = segment(input);
+    IString[] outputSequence = IStrings.toIStringArray(segment(input));
 
     // Whitespace tokenization of input, create alignment
     Sequence<IString> inputSequence = IStrings.tokenize(input);
     assert inputSequence.size() == inputTokens.length;
- 
+    
     SymmetricalWordAlignment alignment = new SymmetricalWordAlignment(inputSequence, 
         new ArraySequence<IString>(true, outputSequence));
 
     // Generate the alignments
     StringBuilder inputToken = new StringBuilder();
     for (int i = 0, j = 0, limit = outputSequence.length; j < limit; ++j) {
+      if (i >= inputTokens.length) {
+        System.err.println("WARNING: Non-invertible input: " + input);
+        break;
+      }
       String inputTokenPart = outputSequence[j].toString();
       alignment.addAlign(i, j);
 
@@ -77,31 +81,20 @@ public abstract class CRFPreprocessor implements Preprocessor {
       if (inputTokens[i].length() == inputToken.toString().length()) {
         ++i;
         inputToken = new StringBuilder();
-        if (i >= inputTokens.length) {
-          System.err.println("WARNING: Non-invertible input: " + input);
-          break;
-        }
       }
     }
     
     return alignment;
   }
   
-  private IString[] segment(String input) {
+  private String[] segment(String input) {
     List<List<CoreLabel>> crfOut = crfSegmenter.classify(input.trim());
-    System.err.println("segmented docs size: " + crfOut.size());
-
     List<CoreLabel> outputTokens = new ArrayList<>();
     for(List<CoreLabel> doc : crfOut) outputTokens.addAll(doc);    
-    
-    IString[] outputSequence = new IString[outputTokens.size()];
-    for (int i = 0; i < outputSequence.length; ++i) {
-      String outputToken = outputTokens.get(i).get(AnswerAnnotation.class);
-      outputSequence[i] = new IString(outputToken);
-    }
-    
-    return outputSequence;
+    return getSegmentedText(outputTokens, crfSegmenter);
   }
+  
+  abstract protected String[] getSegmentedText(List<CoreLabel> doc, CRFClassifier<CoreLabel> crfSegmenter);
   
 
   @Override
