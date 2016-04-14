@@ -47,6 +47,7 @@ import edu.stanford.nlp.mt.decoder.util.OutputSpace;
 import edu.stanford.nlp.mt.decoder.util.OutputSpaceFactory;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.ScorerFactory;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.metrics.MetricUtils;
 import edu.stanford.nlp.mt.process.Postprocessor;
 import edu.stanford.nlp.mt.process.Preprocessor;
@@ -294,6 +295,11 @@ public class Phrasal {
   private final TranslationModel<IString, String> translationModel;
 
   /**
+   * language model
+   */
+  private final LanguageModel<IString> languageModel;
+  
+  /**
    * Whether to filter unknown words in the output
    */
   private boolean dropUnknownWords = false;
@@ -408,6 +414,15 @@ public class Phrasal {
   }
 
   /**
+   * Access the decoder's language model.
+   *
+   * @return
+   */
+  public LanguageModel<IString> getLanguageModel() {
+    return languageModel;
+  }
+  
+  /**
    * Return the input properties loaded with the ini file.
    *
    * @return
@@ -445,8 +460,14 @@ public class Phrasal {
       ConcreteRule.setLinearDistortionType(ConcreteRule.LinearDistortionType.last_contiguous_segment.name());
   }
 
+  public Phrasal(Map<String, List<String>> config) 
+      throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException,
+      InvocationTargetException, NoSuchMethodException, ClassNotFoundException{
+    this(config, null);
+  }
+
   @SuppressWarnings("unchecked")
-  public Phrasal(Map<String, List<String>> config)
+  public Phrasal(Map<String, List<String>> config, LanguageModel<IString> lm)
       throws IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException,
       InvocationTargetException, NoSuchMethodException, ClassNotFoundException {
     // Check for required parameters
@@ -737,17 +758,25 @@ public class Phrasal {
 
     // Create feature extractor
     final String lgModel = config.containsKey(LANGUAGE_MODEL_OPT) ? config.get(LANGUAGE_MODEL_OPT).get(0) : null;
-
     final String featureAugmentationMode = config.containsKey(FEATURE_AUGMENTATION)
         ? config.get(FEATURE_AUGMENTATION).get(0) : null;
 
-    if (lgModel != null) {
+    if(lm != null) {
+      logger.info("Using provided language model object: {}", lm.getName());
+      languageModel = lm;
+      featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps, lm, 
+          FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
+          FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
+    }
+    else if (lgModel != null) {
       logger.info("Language model: {}", lgModel);
+      languageModel = FeaturizerFactory.makeLM(lgModel);
       featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
           FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
           FactoryUtil.makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
           FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
     } else {
+      languageModel = null;
       featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
           FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
           FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
@@ -1491,7 +1520,18 @@ public class Phrasal {
    * @throws IOException
    */
   public static Phrasal loadDecoder(String phrasalIniFile) throws IOException {
-    return loadDecoder(IOTools.readConfigFile(phrasalIniFile));
+    return loadDecoder(IOTools.readConfigFile(phrasalIniFile), null);
+  }
+  
+  /**
+   * Load an instance of Phrasal from an ini file, reusing the given language model.
+   *
+   * @param phrasalIniFile
+   * @param lm
+   * @throws IOException
+   */
+  public static Phrasal loadDecoder(String phrasalIniFile, LanguageModel<IString> lm) throws IOException {
+    return loadDecoder(IOTools.readConfigFile(phrasalIniFile), lm);
   }
 
   /**
@@ -1501,9 +1541,20 @@ public class Phrasal {
    * @return
    */
   public static Phrasal loadDecoder(Map<String, List<String>> config) {
+    return loadDecoder(config, null);
+  }
+  
+  /**
+   * Load an instance of Phrasal from a parsed ini file, reusing the given language model.
+   *
+   * @param config
+   * @param lm
+   * @return
+   */
+  public static Phrasal loadDecoder(Map<String, List<String>> config, LanguageModel<IString> lm) {
     try {
       Phrasal.initStaticMembers(config);
-      final Phrasal phrasal = new Phrasal(config);
+      final Phrasal phrasal = new Phrasal(config, lm);
 
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override

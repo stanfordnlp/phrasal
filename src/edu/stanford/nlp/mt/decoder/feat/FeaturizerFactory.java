@@ -17,6 +17,7 @@ import edu.stanford.nlp.mt.decoder.feat.base.SourceGapFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.TargetGapFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.UnknownWordFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.WordPenaltyFeaturizer;
+import edu.stanford.nlp.mt.lm.LanguageModel;
 import edu.stanford.nlp.mt.lm.LanguageModelFactory;
 import edu.stanford.nlp.mt.util.FactoryUtil;
 import edu.stanford.nlp.mt.util.IString;
@@ -61,7 +62,32 @@ public final class FeaturizerFactory {
    */
   public static FeatureExtractor<IString, String> factory(
       String featurizerName, boolean withGaps, String...featurizerSpecs) {
-    final Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
+    return factory(featurizerName, withGaps, null, featurizerSpecs);
+  }
+  
+  /**
+   * Create the language model.
+   * 
+   * @param filePath
+   * @return
+   */
+  public static LanguageModel<IString> makeLM(String filePath) throws IOException {
+    if(filePath == null) return null;
+    return LanguageModelFactory.load(filePath);
+  }
+    
+  /**
+   * Get a feature extractor.
+   * 
+   * @param featurizerName
+   * @param withGaps
+   * @param use given language model
+   * @param featurizerSpecs
+   * @return
+   */
+  public static FeatureExtractor<IString, String> factory(
+      String featurizerName, boolean withGaps, LanguageModel<IString> lm, String...featurizerSpecs) {
+  final Map<String, String> paramPairs = FactoryUtil.getParamPairs(featurizerSpecs);
     
     // Linear distortion
     final float futureCostDelay = paramPairs.containsKey(LINEAR_DISTORTION_COST) ? 
@@ -91,10 +117,16 @@ public final class FeaturizerFactory {
         if (withGaps) featurizers.addAll(gapFeaturizers);
 
         // ARPA LM
-        String lm = paramPairs.get(ARPA_LM_PARAMETER);
-        DerivationFeaturizer<IString, String> arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-            LanguageModelFactory.load(lm));
-        featurizers.add(arpaLmFeaturizer);
+        LanguageModel<IString> myLM = null; 
+        if(lm != null) myLM = lm;
+        else {
+          String lmPath = paramPairs.get(ARPA_LM_PARAMETER);
+          if(lmPath != null) myLM = LanguageModelFactory.load(lmPath);
+        }
+        if(myLM != null) {
+          DerivationFeaturizer<IString, String> arpaLmFeaturizer = new NGramLanguageModelFeaturizer(myLM);
+          featurizers.add(arpaLmFeaturizer);
+        }
 
         // Precomputed phrase to phrase translation scores
         featurizers.add(new TranslationModelFeaturizer());
@@ -110,10 +142,14 @@ public final class FeaturizerFactory {
 
         DerivationFeaturizer<IString, String> arpaLmFeaturizer;
         // ARPA LM
-        String lm = paramPairs.get(ARPA_LM_PARAMETER);
-        if (lm != null) {
-          arpaLmFeaturizer = new NGramLanguageModelFeaturizer(
-              LanguageModelFactory.load(lm));
+        LanguageModel<IString> myLM = null; 
+        if(lm != null) myLM = lm;
+        else {
+          String lmPath = paramPairs.get(ARPA_LM_PARAMETER);
+          if(lmPath != null) myLM = LanguageModelFactory.load(lmPath);
+        }
+        if (myLM != null) {
+          arpaLmFeaturizer = new NGramLanguageModelFeaturizer(myLM);
           featurizers.add(arpaLmFeaturizer);
         }
 
