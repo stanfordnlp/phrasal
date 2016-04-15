@@ -771,9 +771,8 @@ public class Phrasal {
     else if (lgModel != null) {
       logger.info("Language model: {}", lgModel);
       languageModel = FeaturizerFactory.makeLM(lgModel);
-      featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps,
+      featurizer = FeaturizerFactory.factory(FeaturizerFactory.MOSES_DENSE_FEATURES, withGaps, languageModel,
           FactoryUtil.makePair(FeaturizerFactory.GAP_PARAMETER, gapType),
-          FactoryUtil.makePair(FeaturizerFactory.ARPA_LM_PARAMETER, lgModel),
           FactoryUtil.makePair(FeaturizerFactory.LINEAR_DISTORTION_COST, String.valueOf(distortionCost)));
     } else {
       languageModel = null;
