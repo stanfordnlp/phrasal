@@ -30,7 +30,8 @@ public class OverrideBinwts {
       Counter<String> overridesW = IOTools.readWeightsPlain(overrides);
       System.err.println("read weights from  " + overrides + ":");
       for(Entry<String,Double> entry : overridesW.entrySet()) {
-        weights.setCount(entry.getKey(), entry.getValue());
+        if(entry.getValue() == 0) weights.remove(entry.getKey());
+        else weights.setCount(entry.getKey(), entry.getValue());
         System.err.println("setting feature: " + entry.getKey() + " = " + entry.getValue());
       }
     }
