@@ -238,7 +238,8 @@ public class FeatureExtractor<TK, FV> extends
           }
         }
       }
-    } else if (featureAugmentationMode >= 3) {
+    } 
+    if (featureAugmentationMode >= 3) {
       // Prefix mode
       for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
         FeatureValue<FV> fv = featureValues.get(i);
