@@ -34,7 +34,9 @@ def make_prefixes(src_file, tgt_file, samples_per_sent, allPrefixes):
                     e_tok = e.split()
                     e_len = len(e_tok)
                     # l := the suffix length
-                    l = i % e_len
+                    l = 0
+                    if e_len > 0:
+                        l = i % e_len
                     srcout.write(f + os.linesep)
                     tgtout.write(' '.join(e_tok[0:e_len]) + os.linesep)
                     prfout.write(' '.join(e_tok[0:e_len-l]) + os.linesep)
