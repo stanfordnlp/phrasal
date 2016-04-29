@@ -15,25 +15,26 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.LineIndexedCorpus;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 /**
  * Moore-Lewis's "Intelligent Selection of Language Model Training Data" (ACL2010).
- * 
- * @author Thang Luong <lmthang@stanford.edu>, 2013
+ *
+ * @author Thang Luong lmthang@stanford.edu, 2013
  *
  */
 public class MooreLewisCorpusSelection {
+
   private KenLanguageModel inKenLM;
   private KenLanguageModel outKenLM;
   private LineIndexedCorpus data;
   private double[] crossEntDiffScores; // cross-entropy diff scores
-  
+
   private IString startToken;
   private IString endToken;
   private int order;
-  
-  static public void usage() {
+
+  public static void usage() {
     System.err.println("Usage:\n\tjava ...MooreLewisCorpusSelection " +
         "(selectionSize) (inDomainKenLM) (outDomainKenLM) (data) (outPrefix) "
         + "[lenThreshold] [isRemoveRepetition]");
@@ -60,15 +61,15 @@ public class MooreLewisCorpusSelection {
       System.err.println("! Can't load data file " + dataFile);
       e.printStackTrace();
     }
-  
+
     // cross-entropy diff scores
     crossEntDiffScores = new double[data.size()];
-    
+
     // others
     startToken = inKenLM.getStartToken();
     endToken = inKenLM.getEndToken();
     order = inKenLM.order();
-    if(!startToken.equals(outKenLM.getStartToken()) || !endToken.equals(outKenLM.getEndToken()) 
+    if(!startToken.equals(outKenLM.getStartToken()) || !endToken.equals(outKenLM.getEndToken())
         || order != outKenLM.order()){
       System.err.println("mismatch in either startToken, endToken, or order between in-domain and out-domain KenLMs");
       System.exit(1);
@@ -76,58 +77,58 @@ public class MooreLewisCorpusSelection {
   }
 
   // smallest values first
-  class SentenceScoreComparator implements Comparator<Integer> {
+  private class SentenceScoreComparator implements Comparator<Integer> {
     @Override
-    public int compare(Integer o1, Integer o2) {         
+    public int compare(Integer o1, Integer o2) {
        return (int)Math.signum(crossEntDiffScores[o1]-crossEntDiffScores[o2]);
-    }      
+    }
   }
-  
+
   public double computeCrossEntDiff(String line){
     return computeCrossEntDiff(line.split("\\s+"));
   }
-  
+
   public double computeCrossEntDiff(String[] tokens){
     // build sequence of IString
-    Sequence<IString> seq = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+    Sequence<IString> seq = new ArraySequence<>(true, IStrings.toIStringArray(tokens));
     Sequence<IString> sequence = Sequences.wrapStartEnd(seq, startToken, endToken);
 
-    // compute entropy diff = -1/N*log p_in - (-1/N*log p_out) 
+    // compute entropy diff = -1/N*log p_in - (-1/N*log p_out)
     int numNgrams = (sequence.size()<order)?1 : (sequence.size()-order+1); // N
     return -inKenLM.score(sequence, 1, null).getScore()/numNgrams + outKenLM.score(sequence, 1, null).getScore()/numNgrams;
   }
-  
-  
+
+
   public void select(String outPrefix, int selectionSize, int lenThreshold, boolean isRemoveRepetition) throws IOException {
-    PriorityQueue<Integer> Q = new PriorityQueue<Integer>(crossEntDiffScores.length, new SentenceScoreComparator());
+    PriorityQueue<Integer> Q = new PriorityQueue<>(crossEntDiffScores.length, new SentenceScoreComparator());
     int count=0;
-    
+
     for (String line : data) {
       String[] tokens = line.split("\\s+");
       if(tokens.length>=lenThreshold){ // >= lenThreshold tokens
         crossEntDiffScores[count] = computeCrossEntDiff(tokens);
         Q.add(count);
       }
-      
-      
+
+
       if(++count % 100000 == 0){
         System.err.print(" (" + count/1000 + "K) ");
       }
-    }    
+    }
     System.err.println("Done! Num lines = " + count);
 
     // init print writers
     System.err.println("# Output sorted cross-entropy diff scores ...");
     PrintWriter selectedDataPW = new PrintWriter(new OutputStreamWriter(
-        new FileOutputStream(outPrefix + ".data"), "UTF-8"));  
+        new FileOutputStream(outPrefix + ".data"), "UTF-8"));
     PrintWriter selectedScorePW = new PrintWriter(new OutputStreamWriter(
-        new FileOutputStream(outPrefix + ".score"), "UTF-8"));  
+        new FileOutputStream(outPrefix + ".score"), "UTF-8"));
     PrintWriter selectedLinePW = new PrintWriter(new OutputStreamWriter(
         new FileOutputStream(outPrefix + ".line"), "UTF-8"));
 
     // picking up smallest cross-entropy diff values first
     count = 0;
-    Set<String> uniqueLines = new HashSet<String>(); 
+    Set<String> uniqueLines = new HashSet<>();
     while(!Q.isEmpty()){
       int lineId = Q.poll();
       String line = data.get(lineId);
@@ -136,19 +137,19 @@ public class MooreLewisCorpusSelection {
         selectedScorePW.println(crossEntDiffScores[lineId]);
         selectedLinePW.println(lineId); // 0-based index
         uniqueLines.add(line);
-        
+
         count++;
         if(count==selectionSize){
           break;
         }
       }
     }
-    
+
     selectedDataPW.close();
     selectedScorePW.close();
     selectedLinePW.close();
   }
-  
+
   public static void main(String[] args) throws IOException {
     if (args.length<5 || args.length>7) {
       System.err.print("Input arguments (count=" + args.length + "):");
@@ -164,10 +165,10 @@ public class MooreLewisCorpusSelection {
     String dataFile = args[3];
     String outPrefix = args[4];
     int lenThreshold = (args.length>=6)? Integer.parseInt(args[5]):1; // select sentences >= lenThreshold tokens
-    boolean isRemoveRepetition = (args.length==7)? Boolean.parseBoolean(args[6]):false;
-    
+    boolean isRemoveRepetition = args.length == 7 && Boolean.parseBoolean(args[6]);
+
     MooreLewisCorpusSelection mlcs = new MooreLewisCorpusSelection(inDomainKenLMFile, outDomainKenLMFile, dataFile);
-    
+
     // MooreLewis selection
     mlcs.select(outPrefix, selectionSize, lenThreshold, isRemoveRepetition);
   }
