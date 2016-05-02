@@ -15,7 +15,7 @@ import edu.stanford.nlp.mt.util.IStrings;
 import edu.stanford.nlp.mt.util.LineIndexedCorpus;
 import edu.stanford.nlp.mt.util.Sequence;
 import edu.stanford.nlp.mt.util.Sequences;
-import edu.stanford.nlp.mt.util.SimpleSequence;
+import edu.stanford.nlp.mt.util.ArraySequence;
 
 /**
  * extension of Moore-Lewis's "Intelligent Selection of Language Model Training Data" (ACL2010)
@@ -31,16 +31,16 @@ public class ModifiedMooreLewisCorpusSelection {
   private KenLanguageModel inKenLMTarget;
   private KenLanguageModel outKenLMSource;
   private KenLanguageModel outKenLMTarget;
-  
+
   private LineIndexedCorpus dataSource;
   private LineIndexedCorpus dataTarget;
   private double[] perpDiffScores; // cross-entropy diff scores
-  
+
   private IString startToken;
   private IString endToken;
   private int order;
-  
-  static public void usage() {
+
+  public static void usage() {
     System.err.println("Usage:\n\tjava ...ModifiedMooreLewisCorpusSelection " +
         "(selectionSize) (inDomainKenLMPrefix) (outDomainKenLMPredix) (dataPrefix) (outPrefix) "
         + "[lenThreshold] [isRemoveRepetition] [targetWeight]");
@@ -54,7 +54,7 @@ public class ModifiedMooreLewisCorpusSelection {
   public ModifiedMooreLewisCorpusSelection(String inDomainKenLMFilePrefix,
 		  String outDomainKenLMFilePrefix, String dataFilePrefix){
     // in-domain KenLM
-	
+
 	String inDomainKenLMFileSource = inDomainKenLMFilePrefix + ".src";
 	String inDomainKenLMFileTarget = inDomainKenLMFilePrefix + ".targ";
     System.err.println("# Loading in-domain KenLM " + inDomainKenLMFileSource);
@@ -72,7 +72,7 @@ public class ModifiedMooreLewisCorpusSelection {
 
     checkConsistency(inKenLMSource, outKenLMSource);
     checkConsistency(inKenLMTarget, outKenLMTarget);
-    
+
     // data file
     String dataFileSource = dataFilePrefix + ".src";
     String dataFileTarget = dataFilePrefix + ".targ";
@@ -84,20 +84,20 @@ public class ModifiedMooreLewisCorpusSelection {
       System.err.println("! Can't load data file " + dataFilePrefix);
       e.printStackTrace();
     }
-    
+
     assert dataSource.size() == dataTarget.size():
     	"bitexts should have the same size on both source and target";
     // cross-entropy diff scores
     perpDiffScores = new double[dataSource.size()];
-    
+
     // others
   }
-  
+
   private void checkConsistency(KenLanguageModel inKenLM, KenLanguageModel outKenLM) {
 	startToken = inKenLM.getStartToken();
 	endToken = inKenLM.getEndToken();
 	order = inKenLM.order();
-	if(!startToken.equals(outKenLM.getStartToken()) || !endToken.equals(outKenLM.getEndToken()) 
+	if(!startToken.equals(outKenLM.getStartToken()) || !endToken.equals(outKenLM.getEndToken())
 	   || order != outKenLM.order()){
 	  System.err.println("mismatch in either startToken, endToken, or order between in-domain and out-domain KenLMs");
 	  System.exit(1);
@@ -105,33 +105,33 @@ public class ModifiedMooreLewisCorpusSelection {
   }
 
   // smallest values first
-  class SentenceScoreComparator implements Comparator<Integer> {
+  private class SentenceScoreComparator implements Comparator<Integer> {
     @Override
-    public int compare(Integer o1, Integer o2) {         
+    public int compare(Integer o1, Integer o2) {
        return (int)Math.signum(perpDiffScores[o1]-perpDiffScores[o2]);
-    }      
+    }
   }
-  
-  public double computePerpDiff(String lineSource, String lineTarget, double targetWeight){
+
+  private double computePerpDiff(String lineSource, String lineTarget, double targetWeight){
     double scoreTarget = computeSinglePerpDiff(lineTarget.split("\\s+"), inKenLMTarget, outKenLMTarget);
     double scoreSource = computeSinglePerpDiff(lineSource.split("\\s+"), inKenLMSource, outKenLMSource);
     return targetWeight*scoreTarget + (1-targetWeight)*scoreSource;
   }
-  
+
   // (in|out)KenLM can be either source or target
-  public double computeSinglePerpDiff(String[] tokens, KenLanguageModel inKenLM, KenLanguageModel outKenLM){
+  private double computeSinglePerpDiff(String[] tokens, KenLanguageModel inKenLM, KenLanguageModel outKenLM){
     // build sequence of IString
-    Sequence<IString> seq = new SimpleSequence<IString>(true, IStrings.toIStringArray(tokens));
+    Sequence<IString> seq = new ArraySequence<>(true, IStrings.toIStringArray(tokens));
     Sequence<IString> sequence = Sequences.wrapStartEnd(seq, startToken, endToken);
 
-    // compute entropy diff = -1/N*log p_in - (-1/N*log p_out) 
+    // compute entropy diff = -1/N*log p_in - (-1/N*log p_out)
     int numNgrams = (sequence.size()<order)?1 : (sequence.size()-order+1); // N
     return Math.exp(-inKenLM.score(sequence, 1, null).getScore()/numNgrams) - Math.exp(-outKenLM.score(sequence, 1, null).getScore()/numNgrams);
   }
-  
-  public void select(String outPrefix, int selectionSize, 
+
+  public void select(String outPrefix, int selectionSize,
 		  int lenThreshold, boolean isRemoveRepetition, double targetWeight) throws IOException {
-    PriorityQueue<Integer> Q = new PriorityQueue<Integer>(perpDiffScores.length, new SentenceScoreComparator());
+    PriorityQueue<Integer> Q = new PriorityQueue<>(perpDiffScores.length, new SentenceScoreComparator());
     int i = 0;
     for (; i<dataTarget.size(); i++) {
       String[] tokens = dataTarget.get(i).split("\\s+");
@@ -142,24 +142,24 @@ public class ModifiedMooreLewisCorpusSelection {
       if((i+1) % 100000 == 0){
         System.err.print(" (" + i/1000 + "K) ");
       }
-    }    
+    }
     System.err.println("Done! Num lines = " + i);
 
     // init print writers
     System.err.println("# Output sorted cross-entropy diff scores ...");
     PrintWriter selectedDataPWSource = new PrintWriter(new OutputStreamWriter(
-        new FileOutputStream(outPrefix + ".data.source"), "UTF-8"));  
+        new FileOutputStream(outPrefix + ".data.source"), "UTF-8"));
     PrintWriter selectedDataPWTarget = new PrintWriter(new OutputStreamWriter(
-            new FileOutputStream(outPrefix + ".data.target"), "UTF-8"));  
-    
+            new FileOutputStream(outPrefix + ".data.target"), "UTF-8"));
+
     PrintWriter selectedScorePW = new PrintWriter(new OutputStreamWriter(
-        new FileOutputStream(outPrefix + ".score"), "UTF-8"));  
+        new FileOutputStream(outPrefix + ".score"), "UTF-8"));
     PrintWriter selectedLinePW = new PrintWriter(new OutputStreamWriter(
         new FileOutputStream(outPrefix + ".line"), "UTF-8"));
 
     // picking up smallest cross-entropy diff values first
     i = 0;
-    Set<String> uniqueLines = new HashSet<String>(); 
+    Set<String> uniqueLines = new HashSet<>();
     while(!Q.isEmpty()){
       int lineId = Q.poll();
       String lineSource = dataSource.get(lineId);
@@ -170,23 +170,23 @@ public class ModifiedMooreLewisCorpusSelection {
     	selectedDataPWTarget.println(lineTarget);
         selectedScorePW.println(perpDiffScores[lineId]);
         selectedLinePW.println(lineId); // 0-based index
-        
+
         if(!isRemoveRepetition)
         	uniqueLines.add(lineCombined);
-        
+
         i++;
         if(i==selectionSize){
           break;
         }
       }
     }
-    
+
     selectedDataPWSource.close();
     selectedDataPWTarget.close();
     selectedScorePW.close();
     selectedLinePW.close();
   }
-  
+
   public static void main(String[] args) throws IOException {
     if (args.length<5 || args.length>8) {
       System.err.print("Input arguments (count=" + args.length + "):");
@@ -202,11 +202,11 @@ public class ModifiedMooreLewisCorpusSelection {
     String dataFile = args[3];
     String outPrefix = args[4];
     int lenThreshold = (args.length>=6)? Integer.parseInt(args[5]):1; // select sentences >= lenThreshold tokens
-    boolean isRemoveRepetition = (args.length==7)? Boolean.parseBoolean(args[6]):false;
+    boolean isRemoveRepetition = (args.length == 7) && Boolean.parseBoolean(args[6]);
     double targetWeight = (args.length==8)? Double.parseDouble(args[7]):0.5;
-    
+
     ModifiedMooreLewisCorpusSelection mmlcs = new ModifiedMooreLewisCorpusSelection(inDomainKenLMFile, outDomainKenLMFile, dataFile);
-    
+
     // MooreLewis selection
     mmlcs.select(outPrefix, selectionSize, lenThreshold, isRemoveRepetition, targetWeight);
   }
