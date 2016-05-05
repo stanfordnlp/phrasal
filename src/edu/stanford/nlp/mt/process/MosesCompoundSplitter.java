@@ -55,6 +55,7 @@ public class MosesCompoundSplitter {
   }
   
   private void loadModel(String modelFileName) throws IOException {
+    System.err.println("Loading MosesCompoundSplitter from " + modelFileName);
     LineNumberReader reader = new LineNumberReader(new FileReader(modelFileName));
     
     lcModel = new ClassicCounter<String>();
