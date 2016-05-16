@@ -20,7 +20,6 @@ import edu.stanford.nlp.mt.decoder.util.RuleGrid;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
 import edu.stanford.nlp.mt.tm.ConcreteRule;
-import edu.stanford.nlp.mt.util.CoverageSet;
 import edu.stanford.nlp.mt.util.Featurizable;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
@@ -212,7 +211,13 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         final Item item = pq.poll();
 
         // Derivations are null if they're pruned by an output constraint.
-        if (item.derivation != null) {
+        if (item.derivation != null && (Double.isInfinite(item.derivation.score) || Double.isNaN(item.derivation.score))) {
+          // this normally happens when there's something brain dead about
+          // the baseline model/featurizers,
+          // like log(p) values that equal -inf for some featurizers.
+          logger.warn("Generated derivation with invalid score: {}", item.derivation);
+          ++numPoppedItems;
+        } else if (item.derivation != null) {
           newBeam.put(item.derivation);
           ++numPoppedItems;
         }
