@@ -52,6 +52,10 @@ public enum InputProperty {
   
   // in tuning, decode with these prefix lengths for evaluation
   // Type: int[]
-  PrefixLengths
+  PrefixLengths,
+  
+  // Flag that is true if the last word of the prefix may be incomplete
+  // Type: Boolean
+  AllowIncompletePrefix
   
 }

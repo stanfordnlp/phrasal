@@ -41,6 +41,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
   private final int size;
   private int ruleQueryLimit;
   private boolean isSourceGrid = true;
+  private boolean allowIncompletePrefix = false;
   Map<TK,List<Integer>> wordToPosition = null;
   Sequence<TK> prefix = null;
   int maxTargetLength = 0;
@@ -88,8 +89,23 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
    */
   @SuppressWarnings("unchecked")
   public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, Sequence<TK> prefix, int ruleQueryLimit) {
+    this(ruleList, source, prefix, ruleQueryLimit, false);
+  }
+  
+  /**
+   * Constructor for prefix decoding rule grid. 
+   * The rules will be organized by target position.
+   * 
+   * @param ruleList
+   * @param sequence
+   * @param ruleQueryLimit
+   * @param prefixGrid
+   */
+  @SuppressWarnings("unchecked")
+  public RuleGrid(List<ConcreteRule<TK,FV>> ruleList, Sequence<TK> source, Sequence<TK> prefix, int ruleQueryLimit, boolean allowIncompletePrefix) {
     isSourceGrid = false;
     sequenceLength = prefix.size();
+    this.allowIncompletePrefix = allowIncompletePrefix;
     this.prefix = prefix;
     isSorted = new BitSet();
     this.ruleQueryLimit = ruleQueryLimit < 0 ? Integer.MAX_VALUE : ruleQueryLimit;
@@ -110,18 +126,9 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
       positionList.add(i);
     }
     
-    // Find the prefix rules
-    List<ConcreteRule<TK, FV>> filteredRuleList = new ArrayList<>(ruleList.size()/20);
-    for (ConcreteRule<TK,FV> rule : ruleList) {
-      if(prefix.contains(rule.abstractRule.target))
-        filteredRuleList.add(rule);
-    }
-    
-    // todo: sort based on additional prefix-isolation scores 
-    //Collections.sort(filteredRuleList);
-    
-    this.size = filteredRuleList.size();
-    for (ConcreteRule<TK,FV> rule : ruleList) addTgtEntry(rule, true);
+    int numRules = 0;
+    for (ConcreteRule<TK,FV> rule : ruleList) numRules += addTgtEntry(rule, true);
+    this.size = numRules;
     logger.info("# prefix rules: {}/{}", this.size, ruleList.size());
   }  
   
@@ -162,18 +169,19 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     isSorted.clear(offset);
     coverage.or(rule.sourceCoverage);
   }
-  
+
   
   /**
    * Add a new entry to the rule table organized by target position.
    * 
    * @param rule
    */
-  public void addTgtEntry(ConcreteRule<TK,FV> rule, boolean allowStraddle) {
-    if (rule.abstractRule.target.size() == 0) return; // Source deletion rule
+  public int addTgtEntry(ConcreteRule<TK,FV> rule, boolean allowStraddle) {
+    if (rule.abstractRule.target.size() == 0) return 0; // Source deletion rule
     
     List<Integer> matches = findTgtMatches(rule.abstractRule.target);
     
+    int rv = 0;
     for (int startPos : matches) {
       //System.err.println("add match for start pos " + startPos + ": " + rule);
       int targetLength = rule.abstractRule.target.size();
@@ -191,9 +199,11 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
       if (grid[offset] == null) grid[offset] = new ArrayList<>();
       grid[offset].add(rule);
       isSorted.clear(offset);
+      ++rv;
       
       coverage.set(startPos, endPos + 1);
     }
+    return rv;
   }
   
   /**
@@ -208,6 +218,12 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     return wordToPosition.getOrDefault(targetPhrase.get(0), Collections.emptyList()).stream().filter(pIdx -> {
       for (int i = 0, sz = targetPhrase.size(), psz = prefix.size(); i < sz && pIdx+i < psz; ++i) {
         if ( ! targetPhrase.get(i).equals(prefix.get(pIdx+i))) {
+          if(allowIncompletePrefix && pIdx + i == prefix.size() - 1) {
+            String prefixWord = prefix.get(pIdx + i).toString();
+            String phraseWord = targetPhrase.get(i).toString();
+            if(phraseWord.startsWith(prefixWord)) return true; 
+          }
+          
           return false;
         }
       }

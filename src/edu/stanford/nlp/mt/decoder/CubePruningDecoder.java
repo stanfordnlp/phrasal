@@ -370,9 +370,14 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
 
     //System.err.println("start prefix decoding");
     boolean printDebug = false; // sourceInputId == 1022;
+
+    boolean allowIncompletePrefix = false;
+    if (sourceInputProperties.containsKey(InputProperty.AllowIncompletePrefix)) {
+      allowIncompletePrefix = (boolean) sourceInputProperties.get(InputProperty.AllowIncompletePrefix);
+    }
     
     int ruleQueryLimit = -1;  // Disable query limit. We might need some of these rules.
-    final RuleGrid<TK,FV> prefixGrid = new RuleGrid<>(ruleList, source, prefix, ruleQueryLimit); 
+    final RuleGrid<TK,FV> prefixGrid = new RuleGrid<>(ruleList, source, prefix, ruleQueryLimit, allowIncompletePrefix); 
     
     //System.err.println("created prefix rule grid");
 
