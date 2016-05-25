@@ -218,7 +218,7 @@ public class RuleGrid<TK,FV> implements Iterable<ConcreteRule<TK,FV>> {
     return wordToPosition.getOrDefault(targetPhrase.get(0), Collections.emptyList()).stream().filter(pIdx -> {
       for (int i = 0, sz = targetPhrase.size(), psz = prefix.size(); i < sz && pIdx+i < psz; ++i) {
         if ( ! targetPhrase.get(i).equals(prefix.get(pIdx+i))) {
-          if(allowIncompletePrefix && pIdx + i == prefix.size() - 1) {
+          if(allowIncompletePrefix && pIdx + i == psz - 1) {
             String prefixWord = prefix.get(pIdx + i).toString();
             String phraseWord = targetPhrase.get(i).toString();
             if(phraseWord.startsWith(prefixWord)) return true; 

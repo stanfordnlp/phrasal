@@ -1376,8 +1376,11 @@ public class Phrasal {
     // Output space of the decoder
     final boolean targetsArePrefixes = inputProperties.containsKey(InputProperty.TargetPrefix)
         ? (boolean) inputProperties.get(InputProperty.TargetPrefix) : false;
+    final boolean allowIncompletePrefix = (inputProperties.containsKey(InputProperty.AllowIncompletePrefix)) 
+        ?  (boolean) inputProperties.get(InputProperty.AllowIncompletePrefix) : false;
     final OutputSpace<IString, String> outputSpace = OutputSpaceFactory.getOutputSpace(sourceInputId, targets,
-        targetsArePrefixes, translationModel.maxLengthSource(), translationModel.maxLengthTarget(), wrapBoundary);
+        targetsArePrefixes, translationModel.maxLengthSource(), translationModel.maxLengthTarget(), 
+        wrapBoundary, allowIncompletePrefix);
 
     // Configure the translation model
     if (inputProperties.containsKey(InputProperty.ForegroundTM)) {

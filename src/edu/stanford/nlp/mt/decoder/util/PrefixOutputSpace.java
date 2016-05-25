@@ -28,19 +28,35 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
   
   private final Sequence<IString> allowablePrefix;
   private final int allowablePrefixLength;
+  private boolean allowIncompletePrefix = false; // allow the last word of the prefix to be incomplete
+  private String lastPrefixWord = null;
 
   /**
    * Constructor.
    * 
-   * @param sourceSequence
    * @param allowablePrefix
    * @param sourceInputId
    */
   public PrefixOutputSpace(Sequence<IString> allowablePrefix, int sourceInputId) {
-    this.allowablePrefix = allowablePrefix;
-    this.allowablePrefixLength = allowablePrefix.size();
+    this(allowablePrefix, sourceInputId, false);
   }
 
+  
+  /**
+   * Constructor.
+   * 
+   * @param allowablePrefix
+   * @param sourceInputId
+   * @param allowIncompletePrefix
+   */
+  public PrefixOutputSpace(Sequence<IString> allowablePrefix, int sourceInputId, boolean allowIncompletePrefix) {
+    this.allowablePrefix = allowablePrefix;
+    this.allowablePrefixLength = allowablePrefix.size();
+    this.allowIncompletePrefix = allowIncompletePrefix;
+    if(allowIncompletePrefix) {
+      lastPrefixWord = allowablePrefix.get(allowablePrefixLength - 1).toString();
+    }
+  }
 
   @Override
   public void setSourceSequence(Sequence<IString> sourceSequence) {
@@ -66,15 +82,31 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
 
   private boolean exactMatch(Sequence<IString> prefix, Sequence<IString> rule) {
     if (prefix == null) {
-      return allowablePrefix.size() > rule.size() ? allowablePrefix.startsWith(rule) :
-        rule.startsWith(allowablePrefix);
-
+      if(allowablePrefix.size() > rule.size()) return allowablePrefix.startsWith(rule);
+      
+      int upperBound = allowablePrefix.size();
+      for (int i = 0; i < upperBound; i++) {
+        IString next = rule.get(i);
+        if ( ! allowablePrefix.get(i).equals(next)) {
+          if(allowIncompletePrefix && i == upperBound - 1) {
+            String phraseWord = next.toString();
+            if(phraseWord.startsWith(lastPrefixWord)) return true; 
+          } 
+          return false;
+        }
+      }
+      return true;
     } else {
       int prefixLength = prefix.size();
       int upperBound = Math.min(prefixLength + rule.size(), allowablePrefixLength);
       for (int i = 0; i < upperBound; i++) {
         IString next = i >= prefixLength ? rule.get(i-prefixLength) : prefix.get(i);
         if ( ! allowablePrefix.get(i).equals(next)) {
+          if(allowIncompletePrefix && i == allowablePrefixLength - 1) {
+            String phraseWord = next.toString();
+            if(phraseWord.startsWith(lastPrefixWord)) return true; 
+          }
+          
           return false;
         }
       }
