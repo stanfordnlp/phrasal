@@ -52,8 +52,8 @@ public class PrefixOutputSpace implements OutputSpace<IString, String> {
   public PrefixOutputSpace(Sequence<IString> allowablePrefix, int sourceInputId, boolean allowIncompletePrefix) {
     this.allowablePrefix = allowablePrefix;
     this.allowablePrefixLength = allowablePrefix.size();
-    this.allowIncompletePrefix = allowIncompletePrefix;
-    if(allowIncompletePrefix) {
+    this.allowIncompletePrefix = allowIncompletePrefix && allowablePrefixLength > 0;
+    if(this.allowIncompletePrefix) {
       lastPrefixWord = allowablePrefix.get(allowablePrefixLength - 1).toString();
     }
   }
