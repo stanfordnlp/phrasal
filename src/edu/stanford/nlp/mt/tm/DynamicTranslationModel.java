@@ -115,7 +115,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static enum FeatureTemplate {
     DENSE(4), 
     DENSE_EXT(6), 
-    DENSE_EXT_LOPEZ(8);
+    DENSE_EXT_LOPEZ(8),
+    DENSE_EXT_GREEN(9);
   
     private final int numFeatures;
     
@@ -792,14 +793,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private List<Rule<IString>> samplesToRules(List<SentencePair> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
-    // Extract rules from sentence pairs
-    final List<SampledRule> rules = new ArrayList<>(2*samples.size());
-    for (SentencePair sample : samples) rules.addAll(extractRules(sample, order, maxTargetPhrase));
+    // Extract the raw rules from sampled sentence pairs
+    final List<SampledRule> rawRuleList = new ArrayList<>(2*samples.size());
+    for (SentencePair sample : samples) rawRuleList.addAll(extractRules(sample, order, maxTargetPhrase));
     
-    // Collect counts
-    Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rules.size());
-    Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rules.size()) : null;
-    for (SampledRule rule : rules) {
+    // Collect counts for raw rules
+    Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rawRuleList.size());
+    Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rawRuleList.size()) : null;
+    for (SampledRule rule : rawRuleList) {
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       if (alTemps == null) {
@@ -819,26 +820,27 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
     }
 
-    // Choose the best alignment template
+    // Choose the max alignment template for each src/tgt pair
     // for each src => target rule.
-    List<TargetSpan> keys = new ArrayList<>(tgtToTemplate.keySet());
-    List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.size());
-    int[] histogram = new int[keys.size()];
-    final int ef_denom = rules.size();
+    List<TargetSpan> tgtSpanList = new ArrayList<>(tgtToTemplate.keySet());
+    List<SampledRule> maxRuleList = new ArrayList<>(tgtToTemplate.size());
+    int[] histogram = new int[tgtSpanList.size()];
+    final int ef_denom = rawRuleList.size();
     for (int i = 0; i < histogram.length; ++i) {
-      TargetSpan tgtSpan = keys.get(i);
+      TargetSpan tgtSpan = tgtSpanList.get(i);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       // Note that the argmax alignment is chosen independent of the model.
       AlignmentTemplate maxAlignment = Counters.argmax(alTemps);
       SampledRule maxRule = maxAlignment.rule;
       scoreLex(maxRule);
-      ruleList.add(maxRule);
+      maxRuleList.add(maxRule);
       histogram[i] = (int) alTemps.totalCount();
     }
     
-    List<Rule<IString>> scoredRules = new ArrayList<>(ruleList.size());
-    for (int r = 0, sz = ruleList.size(); r < sz; ++r) {
-      final SampledRule rule = ruleList.get(r);
+    // Score the max rules
+    List<Rule<IString>> scoredRules = new ArrayList<>(maxRuleList.size());
+    for (int r = 0, sz = maxRuleList.size(); r < sz; ++r) {
+      final SampledRule rule = maxRuleList.get(r);
       float[] scores = new float[featureTemplate.getNumFeatures()];
       int eCnt = sa.count(rule.tgt, false);
       assert eCnt > 0 : Arrays.toString(rule.tgt);
@@ -853,19 +855,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       scores[2] = (float) (Math.log(histogram[r]) -  Math.log(ef_denom));
       scores[3] = (float) Math.log(rule.lex_e_f);
 
-      if (featureTemplate == FeatureTemplate.DENSE_EXT) {
+      if (featureTemplate == FeatureTemplate.DENSE_EXT || featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ ||
+          featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
+        // Log count of this rule
         scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
-        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
-      
-      } else if (featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ) {
-        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
-        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
-        
+        // Unique rule indicator
+        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;      
+      }
+      if (featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ || featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
         // See A. Lopez dissertation p.103
-        scores[6] = (float) (Math.log(rules.size()) - Math.log(samples.size()));
+        scores[6] = (float) (Math.log(rawRuleList.size()) - Math.log(samples.size()));
         
-        // Add the sampling rate. I had this idea while ago. Not sure if it's good....
+        // Add the sampling rate. I had this idea awhile ago. Not sure if it's good....
         scores[7] = (float) Math.log(sampleRate);
+      }
+      if (featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
+        // Whole sentence indicator
+        scores[8] = rule.isFullSentence() ? -1.0f : 0.0f;
       }
 
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);

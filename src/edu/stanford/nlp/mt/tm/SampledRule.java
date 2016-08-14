@@ -72,6 +72,15 @@ public class SampledRule {
   public int targetLength() { return tgt.length; }
   
   /**
+   * True if this rule is a full sentence. False otherwise.
+   * 
+   * @return
+   */
+  public boolean isFullSentence() {
+    return sourceLength() == this.sentencePair.sourceLength() && targetLength() == this.sentencePair.targetLength();
+  }
+  
+  /**
    * Word-based lexicalized reordering classes. Forward orientation.
    * 
    * @return

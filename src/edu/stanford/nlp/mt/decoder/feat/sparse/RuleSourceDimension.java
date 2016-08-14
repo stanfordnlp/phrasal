@@ -1,6 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -25,10 +25,8 @@ public class RuleSourceDimension implements RuleFeaturizer<IString, String> {
   @Override
   public List<FeatureValue<String>> ruleFeaturize(
       Featurizable<IString, String> f) {
-    List<FeatureValue<String>> features = new LinkedList<>();
     String featureString = String.format("%s:%d",FEATURE_NAME, f.sourcePhrase.size());
-    features.add(new FeatureValue<String>(featureString, 1.0));
-    return features;
+    return Collections.singletonList(new FeatureValue<>(featureString, 1.0));
   }
 
   @Override
