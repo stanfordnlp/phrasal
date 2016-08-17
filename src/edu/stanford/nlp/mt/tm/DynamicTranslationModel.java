@@ -116,7 +116,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     DENSE(4), 
     DENSE_EXT(6), 
     DENSE_EXT_LOPEZ(8),
-    DENSE_EXT_GREEN(9);
+    DENSE_EXT_GREEN(10);
   
     private final int numFeatures;
     
@@ -866,12 +866,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         // See A. Lopez dissertation p.103
         scores[6] = (float) (Math.log(rawRuleList.size()) - Math.log(samples.size()));
         
-        // Add the sampling rate. I had this idea awhile ago. Not sure if it's good....
+        // Add the sampling rate. Sort of suggested by both Lopez and Germann.
         scores[7] = (float) Math.log(sampleRate);
       }
       if (featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
         // Whole sentence indicator
         scores[8] = rule.isFullSentence() ? -1.0f : 0.0f;
+        
+        // Target raw count -- Similar to Devlin and Matsoukas' (2012) Ngram frequency feature.
+        scores[9] = (float) Math.log(eCnt);
       }
 
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);

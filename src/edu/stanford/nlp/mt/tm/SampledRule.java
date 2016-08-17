@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
-import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
 import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
@@ -91,8 +90,8 @@ public class SampledRule {
         e1 = tgtStartInclusive - 1; 
 //        e2 = tgtEndExclusive;
     
-    boolean connectedMonotone = isPhraseAligned(e1, f1, RelativePos.NW);
-    boolean connectedSwap = isPhraseAligned(e1, f2, RelativePos.NE);
+    boolean connectedMonotone = isPhraseAligned(e1, f1);
+    boolean connectedSwap = isPhraseAligned(e1, f2);
 
     // Determine if Monotone or Swap:
     if (connectedMonotone && !connectedSwap)
@@ -114,8 +113,8 @@ public class SampledRule {
 //        e1 = tgtStartInclusive - 1, 
         e2 = tgtEndExclusive;
     
-    boolean connectedMonotone = isPhraseAligned(e2, f2, RelativePos.SE);
-    boolean connectedSwap = isPhraseAligned(e2, f1, RelativePos.SW);
+    boolean connectedMonotone = isPhraseAligned(e2, f2);
+    boolean connectedSwap = isPhraseAligned(e2, f1);
     
     // Determine if Monotone or Swap:
     if (connectedMonotone && !connectedSwap)
@@ -127,18 +126,18 @@ public class SampledRule {
   }
   
   /**
-   * Determine if position (ei,fi) is aligned (at the phrase level).
+   * Determine if position (ei,fi) is aligned (at the phrase level). This is the word-based model
+   * implemented in Moses.
    * 
    * @param ei
    * @param fi
    * @param pos
    * @return
    */
-  private boolean isPhraseAligned(int ei, int fi,
-      RelativePos pos) {
+  private boolean isPhraseAligned(int ei, int fi) {
     assert (fi >= -1 && ei >= -1);
-    assert (fi <= sentencePair.sourceLength() && ei <= sentencePair.targetLength()) : String.format("%d %d %d %d", fi, sentencePair.sourceLength(),
-        ei, sentencePair.targetLength());
+    assert (fi <= sentencePair.sourceLength() && ei <= sentencePair.targetLength()) : 
+      String.format("%d %d %d %d", fi, sentencePair.sourceLength(), ei, sentencePair.targetLength());
     if (fi == -1 && ei == -1)
       return true;
     if (fi == -1 || ei == -1)
