@@ -139,7 +139,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient int sampleSize;
   protected transient String[] featureNames;
   protected transient String name;
+  
+  // Lexicalized reordering
   protected transient boolean reorderingEnabled;
+  protected transient DynamicReorderingModel lexModel;
   
   // Caches
   public transient LexCoocTable coocTable;
@@ -395,8 +398,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * Turn on the reordering features.
    */
-  public void setReorderingScores() {
+  public void setReorderingScores(boolean hierarchical) {
     this.reorderingEnabled = true;
+    this.lexModel = hierarchical ? new HierarchicalReorderingModel() : new WordBasedReorderingModel();
   }
   
   /**
@@ -809,14 +813,15 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
       alTemps.incrementCount(new AlignmentTemplate(rule));
       
-      if (reorderingCounts != null) {
+      // Lexicalized reordering
+      if (reorderingEnabled) {
         ReorderingCounts counts = reorderingCounts.get(rule);
         if (counts == null) {
           counts = new ReorderingCounts();
           reorderingCounts.put(rule, counts);
         }
-        counts.incrementForward(rule.forwardOrientation());
-        counts.incrementBackward(rule.backwardOrientation());
+        counts.incrementForward(lexModel.forwardOrientation(rule));
+        counts.incrementBackward(lexModel.backwardOrientation(rule));
       }
     }
 
@@ -877,11 +882,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         scores[9] = (float) Math.log(eCnt);
       }
 
+      // Create the rule
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);
-      if (this.reorderingEnabled) {
+      
+      if (reorderingEnabled) {
         scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
-        scoredRule.forwardOrientation = rule.forwardOrientation();
-        scoredRule.backwardOrientation = rule.backwardOrientation();
+        scoredRule.forwardOrientation = lexModel.forwardOrientation(rule);
+        scoredRule.backwardOrientation = lexModel.backwardOrientation(rule);
       }
       scoredRules.add(scoredRule);
     }
@@ -1242,7 +1249,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     String inputFile = args[1];
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
-    tm.setReorderingScores();
+    tm.setReorderingScores(false);
     timer.mark("Load");
     tm.createQueryCache(FeatureTemplate.DENSE_EXT_LOPEZ);
     timer.mark("Cache creation");

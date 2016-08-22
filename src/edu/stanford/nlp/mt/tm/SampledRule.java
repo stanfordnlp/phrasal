@@ -2,7 +2,6 @@ package edu.stanford.nlp.mt.tm;
 
 import java.util.Arrays;
 
-import edu.stanford.nlp.mt.train.LexicalReorderingFeatureExtractor.ReorderingTypes;
 import edu.stanford.nlp.mt.util.MurmurHash2;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 
@@ -78,83 +77,6 @@ public class SampledRule {
   public boolean isFullSentence() {
     return sourceLength() == this.sentencePair.sourceLength() && targetLength() == this.sentencePair.targetLength();
   }
-  
-  /**
-   * Word-based lexicalized reordering classes. Forward orientation.
-   * 
-   * @return
-   */
-  public ReorderingTypes forwardOrientation() {
-    final int f1 = srcStartInclusive - 1, 
-        f2 = srcEndExclusive, 
-        e1 = tgtStartInclusive - 1; 
-//        e2 = tgtEndExclusive;
-    
-    boolean connectedMonotone = isPhraseAligned(e1, f1);
-    boolean connectedSwap = isPhraseAligned(e1, f2);
-
-    // Determine if Monotone or Swap:
-    if (connectedMonotone && !connectedSwap)
-      return ReorderingTypes.monotone;
-    if (!connectedMonotone && connectedSwap)
-      return ReorderingTypes.swap;
-
-    return ReorderingTypes.discont1;
-  }
-  
-  /**
-   * Word-based lexicalized reordering classes. Backward orientation.
-   * 
-   * @return
-   */
-  public ReorderingTypes backwardOrientation() {
-    final int f1 = srcStartInclusive - 1, 
-        f2 = srcEndExclusive, 
-//        e1 = tgtStartInclusive - 1, 
-        e2 = tgtEndExclusive;
-    
-    boolean connectedMonotone = isPhraseAligned(e2, f2);
-    boolean connectedSwap = isPhraseAligned(e2, f1);
-    
-    // Determine if Monotone or Swap:
-    if (connectedMonotone && !connectedSwap)
-      return ReorderingTypes.monotone;
-    if (!connectedMonotone && connectedSwap)
-      return ReorderingTypes.swap;
-    
-    return ReorderingTypes.discont1;
-  }
-  
-  /**
-   * Determine if position (ei,fi) is aligned (at the phrase level). This is the word-based model
-   * implemented in Moses.
-   * 
-   * @param ei
-   * @param fi
-   * @param pos
-   * @return
-   */
-  private boolean isPhraseAligned(int ei, int fi) {
-    assert (fi >= -1 && ei >= -1);
-    assert (fi <= sentencePair.sourceLength() && ei <= sentencePair.targetLength()) : 
-      String.format("%d %d %d %d", fi, sentencePair.sourceLength(), ei, sentencePair.targetLength());
-    if (fi == -1 && ei == -1)
-      return true;
-    if (fi == -1 || ei == -1)
-      return false;
-    if (fi == sentencePair.sourceLength() && ei == sentencePair.targetLength())
-      return true;
-    if (fi == sentencePair.sourceLength() || ei == sentencePair.targetLength())
-      return false;
-    if (sentencePair.isSourceUnaligned(fi)) 
-      return false;
-
-    // Word-phrase reordering as in Moses:
-    for (int eIndex : sentencePair.f2e(fi))
-      if (eIndex == ei)
-        return true;
-    return false;
-  }  
 
   @Override
   public String toString() {

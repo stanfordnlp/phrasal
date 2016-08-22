@@ -94,12 +94,12 @@ public class DynamicTMBuilder {
    */
   private static String symmetrize(String sourceFile,
       String targetFile, String feAlign, String efAlign, SymmetrizationType type) throws IOException {    
-    try (LineNumberReader fReader = IOTools.getReaderFromFile(sourceFile)) {
+    String outFileName = getSymmetrizationFilename(Paths.get(sourceFile).getParent());
+    try (LineNumberReader fReader = IOTools.getReaderFromFile(sourceFile);
       LineNumberReader eReader = IOTools.getReaderFromFile(targetFile);
       LineNumberReader feReader = IOTools.getReaderFromFile(feAlign);
       LineNumberReader efReader = IOTools.getReaderFromFile(efAlign);
-      String outFileName = getSymmetrizationFilename(Paths.get(sourceFile).getParent());
-      PrintStream alignFile = IOTools.getWriterFromFile(outFileName);
+      PrintStream alignFile = IOTools.getWriterFromFile(outFileName)) {
       
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
         if (fReader.getLineNumber() % 10000 == 0) 
@@ -146,10 +146,6 @@ public class DynamicTMBuilder {
         throw new RuntimeException();
       }
       
-      alignFile.close();
-      eReader.close();
-      feReader.close();
-      efReader.close();
       logger.info("Symmetrized {} lines.", fReader.getLineNumber());
       return outFileName;
     }

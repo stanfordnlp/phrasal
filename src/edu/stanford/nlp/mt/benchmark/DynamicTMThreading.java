@@ -36,7 +36,7 @@ public final class DynamicTMThreading {
     int numThreads = Integer.parseInt(args[2]);
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, "benchmark");
-    tm.setReorderingScores();
+    tm.setReorderingScores(false);
     timer.mark("Load");
     tm.createQueryCache(FeatureTemplate.DENSE_EXT);
     timer.mark("Cache creation");
