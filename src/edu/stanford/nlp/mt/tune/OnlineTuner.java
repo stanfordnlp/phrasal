@@ -40,7 +40,6 @@ import edu.stanford.nlp.mt.tm.DynamicTranslationModel.FeatureTemplate;
 import edu.stanford.nlp.mt.tm.TranslationModel;
 import edu.stanford.nlp.mt.train.DynamicTMBuilder;
 import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
-import edu.stanford.nlp.mt.train.WordAlignment;
 import edu.stanford.nlp.mt.tune.OnlineUpdateRule.UpdaterState;
 import edu.stanford.nlp.mt.tune.optimizers.OptimizerUtils;
 import edu.stanford.nlp.mt.util.FeatureValue;
@@ -692,7 +691,7 @@ public final class OnlineTuner {
             runtime.maxMemory());
         int[] batch = makeBatch(indices, t, batchSize);
         int inputId = (epoch*numBatches) + t;
-        TranslationModel<IString,String> localTM  = localTMTraining && t > 0 ? getLocalTM(corpus) : null;
+        TranslationModel<IString,String> localTM  = localTMTraining && t > 0 ? getLocalTM(corpus, (DynamicTranslationModel<String>) decoder.getTranslationModel()) : null;
         
         ProcessorInput input = makeInput(batch, inputId, currentWts, localTM);
         wrapper.put(input);
@@ -743,7 +742,7 @@ public final class OnlineTuner {
       double approxObjectiveValue = approximateObjective(nbestLists, epoch, corpusLevelMetricStr);
       if (approxObjectiveValue > maxObjectiveValue) maxObjectiveEpoch = epoch;
       if(localTMTraining && localTMoutFile != "") {
-        DynamicTranslationModel<String> localTM  = (DynamicTranslationModel<String>) getLocalTM(corpus);
+        DynamicTranslationModel<String> localTM  = (DynamicTranslationModel<String>) getLocalTM(corpus, (DynamicTranslationModel<String>) decoder.getTranslationModel());
         IOTools.serialize(localTMoutFile, localTM);
       }
     }
@@ -751,11 +750,11 @@ public final class OnlineTuner {
     saveFinalWeights(currentWts, maxObjectiveEpoch, numEpochs);
   }
   
-  private TranslationModel<IString,String> getLocalTM(ParallelCorpus corpus) {
+  private TranslationModel<IString,String> getLocalTM(ParallelCorpus corpus, DynamicTranslationModel<String> backgroundTM) {
     DynamicTMBuilder tmBuilder = new DynamicTMBuilder(corpus);
     TranslationModel<IString,String> localTM = tmBuilder.build();
     // Don't use extended features for the foreground model. They have different semantics.
-    ((DynamicTranslationModel<String>) localTM).configureAsForegroundTM(FeatureTemplate.DENSE);
+    ((DynamicTranslationModel<String>) localTM).configureAsForegroundTM(backgroundTM, FeatureTemplate.DENSE);
     return localTM;
   }
 

@@ -97,7 +97,7 @@ public class FlatPhraseExtractor extends AbstractPhraseExtractor {
         if (!admissible)
           continue;
 
-        // See how much we can expand the phrase to cover unaligned words:
+        // See how much we can expand the source span to cover unaligned words
         int F1 = f1, F2 = f2;
         int lastF1 = Math.max(0, f2 - maxPhraseLenF + 1);
         while (F1 > lastF1 && sent.f2e(F1 - 1).isEmpty()) {

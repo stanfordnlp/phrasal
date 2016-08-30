@@ -131,7 +131,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private static final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
   
   // Parameters
-  protected transient boolean initialized;
+  protected transient boolean initialized; // TODO(spenceg) Unused, but don't remove so that we don't break serialized models.
   protected transient int maxSourcePhrase;
   protected transient int maxTargetPhrase;
   protected transient FeatureTemplate featureTemplate;
@@ -155,9 +155,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * No-arg constructor for deserialization. Creates caches
    */
-  public DynamicTranslationModel() {
-    initialized = false;
-  }
+  public DynamicTranslationModel() {}
   
   /**
    * Constructor.
@@ -178,7 +176,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public DynamicTranslationModel(ParallelSuffixArray suffixArray, String name) {
     this.sa = suffixArray;
-    this.initialized = false;
     this.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     this.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     this.sampleSize = DEFAULT_SAMPLE_SIZE;
@@ -222,6 +219,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
     tm.name = name;
+    tm.reorderingEnabled = false;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
     
     if (initializeSystemVocabulary) tm.populateSystemVocabulary();
@@ -237,6 +235,25 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return tm;
   }
   
+  /**
+   * Initialize the TM programmatically.
+   * 
+   * @param initializeSystemVocabulary
+   */
+  public void initialize(boolean initializeSystemVocabulary) {
+    TimeKeeper timer = TimingUtils.start();
+
+    if (initializeSystemVocabulary) populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    createIdArrays();
+    timer.mark("Vocabulary setup");
+    
+    // Lex cache must be created before any rules can be scored.
+    createLexCoocTable(sa.getVocabulary().size());
+    timer.mark("Cooc table");
+
+    logger.info("Timing: {}", timer);
+  }  
 
   @Override
   public void write(Kryo kryo, Output output) {
@@ -247,17 +264,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public void read(Kryo kryo, Input input) {
     sa = kryo.readObject(input, ParallelSuffixArray.class);
   }
-  
+
   /**
-   * Configure this TM as a foreground translation model.
+   * Configure this TM as a foreground model. Copy configuration parameters from a backgroundTM during setup.
+   * Permit a different feature template, a useful option for tuning.
    * 
-   * @param name
+   * @param backgroundTM
+   * @param t
    */
-  public synchronized void configureAsForegroundTM(FeatureTemplate t) {
+  public synchronized void configureAsForegroundTM(DynamicTranslationModel<FV> backgroundTM, FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
-    maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
-    maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
-    sampleSize = DEFAULT_SAMPLE_SIZE;
+    maxSourcePhrase = backgroundTM.maxSourcePhrase;
+    maxTargetPhrase = backgroundTM.maxTargetPhrase;
+    sampleSize = backgroundTM.sampleSize;
+    if (backgroundTM.reorderingEnabled) {
+      boolean doHierarchical = backgroundTM.lexModel instanceof HierarchicalReorderingModel;
+      setReorderingScores(doHierarchical);
+    }
+    
     this.name = Phrasal.TM_FOREGROUND_NAME;
     setFeatureTemplate(t);
     
@@ -379,6 +403,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     });
   }
   
+  /**
+   * Number of parallel segments in the underlying corpus.
+   * 
+   * @return
+   */
   public int bitextSize() {
     return sa.numSentences();
   }
@@ -396,11 +425,22 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
-   * Turn on the reordering features.
+   * Enable lexicalized reordering feature extraction.
+   * 
+   * @param hierarchical
    */
   public void setReorderingScores(boolean hierarchical) {
     this.reorderingEnabled = true;
     this.lexModel = hierarchical ? new HierarchicalReorderingModel() : new WordBasedReorderingModel();
+  }
+  
+  /**
+   * Returns true if reordering is enabled.
+   * 
+   * @return
+   */
+  public boolean getReorderingEnabled() {
+    return reorderingEnabled;
   }
   
   /**
@@ -1249,7 +1289,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     String inputFile = args[1];
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
-    tm.setReorderingScores(false);
+    tm.setReorderingScores(true);
     timer.mark("Load");
     tm.createQueryCache(FeatureTemplate.DENSE_EXT_LOPEZ);
     timer.mark("Cache creation");
