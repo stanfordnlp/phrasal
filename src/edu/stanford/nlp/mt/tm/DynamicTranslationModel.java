@@ -925,6 +925,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Create the rule
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);
       
+      // WSGDEBUG
+      scoredRule.fSourcePos = rule.srcStartInclusive;
+//      if (scoredRule.source.toString().equals("الرسول علي +ه") && 
+//          scoredRule.target.toString().equals("be upon him")) {
+//        System.err.println();
+//      }
+      
       if (reorderingEnabled) {
         scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
         scoredRule.forwardOrientation = lexModel.forwardOrientation(rule);
@@ -949,7 +956,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Sequence<IString> sourceSpan, int[] tm2Sys) {
     PhraseAlignment alignment = new PhraseAlignment(rule.e2f());
     Sequence<IString> tgtSeq = toSequence(rule.tgt);
-    return new Rule<IString>(scores, featureNames, tgtSeq, sourceSpan, alignment, name);
+    return new Rule<>(scores, featureNames, tgtSeq, sourceSpan, alignment, name);
   }
   
   /**

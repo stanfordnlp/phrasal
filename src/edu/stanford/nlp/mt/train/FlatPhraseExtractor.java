@@ -11,6 +11,8 @@ import java.util.*;
  */
 public class FlatPhraseExtractor extends AbstractPhraseExtractor {
 
+  
+  
   @Override
   public Object clone() throws CloneNotSupportedException {
     return super.clone();
@@ -19,7 +21,6 @@ public class FlatPhraseExtractor extends AbstractPhraseExtractor {
   public FlatPhraseExtractor(Properties prop, AlignmentTemplates alTemps,
       List<AbstractFeatureExtractor> extractors) {
     super(prop, alTemps, extractors);
-    System.err.println("Using flat phrase extractor (fast version).");
   }
 
   @Override

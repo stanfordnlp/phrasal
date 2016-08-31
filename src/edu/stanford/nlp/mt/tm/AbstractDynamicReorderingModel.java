@@ -22,7 +22,7 @@ public abstract class AbstractDynamicReorderingModel implements DynamicReorderin
         f2 = rule.srcEndExclusive, 
         e1 = rule.tgtStartInclusive - 1; 
     //          e2 = tgtEndExclusive;
-
+   
     final boolean connectedMonotone = isPhraseAligned(rule, e1, f1, RelativePos.NW);
     final boolean connectedSwap = isPhraseAligned(rule, e1, f2, RelativePos.NE);
 

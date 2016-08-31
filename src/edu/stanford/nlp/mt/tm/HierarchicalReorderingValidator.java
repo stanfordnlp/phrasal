@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import edu.stanford.nlp.mt.train.AbstractPhraseExtractor;
 import edu.stanford.nlp.mt.train.AlignmentGrid;
 import edu.stanford.nlp.mt.train.AlignmentTemplateInstance;
 import edu.stanford.nlp.mt.train.AlignmentTemplates;
@@ -47,21 +48,20 @@ public final class HierarchicalReorderingValidator {
     // Setup the baseline feature extractor
     Index<String> featureIndex = new HashIndex<>();
     PhrasalSourceFilter f = new PhrasalSourceFilter(Integer.MAX_VALUE, false);
-//    AlignmentTemplates alTemps = new AlignmentTemplates(new Properties(), f);
     LexicalReorderingFeatureExtractor lexExtractor = new LexicalReorderingFeatureExtractor();
-    Properties lexExtractorProp = new Properties();
-    lexExtractorProp.setProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, Boolean.toString(true));
-    lexExtractorProp.setProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT, "msd-bidirectional-fe");
-    lexExtractor.init(lexExtractorProp, featureIndex, new AlignmentTemplates(new Properties(), f));
-//    List<AbstractFeatureExtractor> featurizers = Collections.singletonList(lexExtractor);
-    
-    // Compare extraction over the bitext
-    final InputProperties inProps = new InputProperties();
-    
+    final Properties properties = new Properties();
+    properties.setProperty(PhraseExtract.LEX_REORDERING_HIER_OPT, Boolean.toString(true));
+    properties.setProperty(PhraseExtract.LEX_REORDERING_TYPE_OPT, "msd-bidirectional-fe");
+    lexExtractor.init(properties, featureIndex, new AlignmentTemplates(properties, f));
+    AbstractPhraseExtractor.setPhraseExtractionProperties(properties);
+
+    // Iterate line-by-line over aligned data
     try (LineNumberReader fReader = IOTools.getReaderFromFile(sourceFile);
         LineNumberReader eReader = IOTools.getReaderFromFile(targetFile);
         LineNumberReader feReader = IOTools.getReaderFromFile(feAlign)) {
   
+      final InputProperties inProps = new InputProperties();
+      int numRules = 0, numMismatches = 0;
       for (String fLine; (fLine = fReader.readLine()) != null; ) {
         String eLine = eReader.readLine();
         String aLine = feReader.readLine();
@@ -78,9 +78,9 @@ public final class HierarchicalReorderingValidator {
                 Collectors.mapping((ConcreteRule<IString, String> r) -> r, Collectors.toList())));
         
         // Extract the baseline unrestricted rules
-        FlatPhraseExtractor extractor = new FlatPhraseExtractor(new Properties(), new AlignmentTemplates(new Properties(), f), 
+        FlatPhraseExtractor extractor = new FlatPhraseExtractor(properties, new AlignmentTemplates(properties, f), 
             Collections.emptyList());
-        SymmetricalWordAlignment sent = new SymmetricalWordAlignment(new Properties());
+        SymmetricalWordAlignment sent = new SymmetricalWordAlignment(properties);
         sent.init(fLine, eLine, aLine);
         extractor.extractPhrases(sent);
         AlignmentGrid alGrid = extractor.getAlGrid();
@@ -88,11 +88,19 @@ public final class HierarchicalReorderingValidator {
           // See if rule was also extracted by the dynamic model.
           List<ConcreteRule<IString,String>> sourceRules = sourceToRules.getOrDefault(alTemp.f(), Collections.emptyList());
           List<ConcreteRule<IString,String>> matchingRules = sourceRules.stream().filter(r -> {
-            return alTemp.e().equals(r.abstractRule.target);
+            // WSGDEBUG
+            return alTemp.fStartPos() == r.abstractRule.fSourcePos && alTemp.e().equals(r.abstractRule.target);
+            
+//            return alTemp.e().equals(r.abstractRule.target);
           }).collect(Collectors.toList());
           if (matchingRules.isEmpty()) {
-            System.out.println("Dynamic TM did not extract: " + alTemp.toString(true));
+//            System.out.println("WARNING: dynamic TM did not extract: " + alTemp.toString(true));
             continue;
+          }
+          
+          if (alTemp.f().toString().equals("الرسول علي +ه") && alTemp.e().toString().equals("be upon him") &&
+              alTemp.fStartPos() == 0) {
+            System.err.println();
           }
           
           ConcreteRule<IString,String> rule = matchingRules.get(0);
@@ -100,14 +108,20 @@ public final class HierarchicalReorderingValidator {
           ReorderingTypes dynBwd = rule.abstractRule.backwardOrientation;
           ReorderingTypes fwd = lexExtractor.getReorderingType(alTemp, alGrid, true);
           ReorderingTypes bwd = lexExtractor.getReorderingType(alTemp, alGrid, false);
-          if (dynFwd != fwd) {
-            System.err.printf("FWD: %s || %s%n", rule.toString(), alTemp.toString(true));
-          }
-          if (dynBwd != bwd) {
-            System.err.printf("BWD: %s || %s%n", rule.toString(), alTemp.toString(true));            
+          
+          ++numRules;
+          if (dynFwd != fwd || dynBwd != bwd) {
+            System.out.printf("INCORRECT: %s fwd: %s/%s  bwd: %s/%s%n", rule.toString(), fwd, dynFwd,
+                bwd, dynBwd);
+            ++numMismatches;
+          } else {
+//            System.out.printf("CORRECT: %s (%s,%s)%n", rule.toString(), fwd, bwd);
           }
         }
       }
+      System.out.println();
+      System.out.println("========================");
+      System.out.printf("rules: %d errors %d%n", numRules, numMismatches);
     }
   }
 }

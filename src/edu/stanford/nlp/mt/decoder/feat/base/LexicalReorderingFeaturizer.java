@@ -132,9 +132,7 @@ public class LexicalReorderingFeaturizer extends
   }
    
   @Override
-  public void initialize(int sourceInputId,
-      Sequence<IString> foreign) {
-  }
+  public void initialize(int sourceInputId, Sequence<IString> foreign) {}
 
   @Override
   public List<FeatureValue<String>> featurize(

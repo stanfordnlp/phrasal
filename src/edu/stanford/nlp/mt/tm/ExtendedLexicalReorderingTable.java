@@ -70,17 +70,17 @@ public class ExtendedLexicalReorderingTable {
     f, e, fe
   }
 
-  static final ReorderingTypes[] msdPositionMapping = {
+  public static final ReorderingTypes[] msdPositionMapping = {
       ReorderingTypes.monotoneWithPrevious, ReorderingTypes.swapWithPrevious,
       ReorderingTypes.discontinuousWithPrevious };
 
-  static final ReorderingTypes[] msdBidirectionalPositionMapping = {
+  public static final ReorderingTypes[] msdBidirectionalPositionMapping = {
       ReorderingTypes.monotoneWithPrevious, ReorderingTypes.swapWithPrevious,
       ReorderingTypes.discontinuousWithPrevious,
       ReorderingTypes.monotoneWithNext, ReorderingTypes.swapWithNext,
       ReorderingTypes.discontinuousWithNext };
 
-  static final ReorderingTypes[] msd2BidirectionalPositionMapping = {
+  public static final ReorderingTypes[] msd2BidirectionalPositionMapping = {
       ReorderingTypes.monotoneWithPrevious, ReorderingTypes.swapWithPrevious,
       ReorderingTypes.discontinuousWithPrevious,
       ReorderingTypes.discontinuous2WithPrevious,
@@ -88,7 +88,7 @@ public class ExtendedLexicalReorderingTable {
       ReorderingTypes.discontinuousWithNext,
       ReorderingTypes.discontinuous2WithNext };
 
-  static final ReorderingTypes[] msd2cBidirectionalPositionMapping = {
+  public static final ReorderingTypes[] msd2cBidirectionalPositionMapping = {
       ReorderingTypes.monotoneWithPrevious, ReorderingTypes.swapWithPrevious,
       ReorderingTypes.discontinuousWithPrevious,
       ReorderingTypes.discontinuous2WithPrevious,
@@ -98,11 +98,11 @@ public class ExtendedLexicalReorderingTable {
       ReorderingTypes.discontinuous2WithNext,
       ReorderingTypes.containmentWithNext };
 
-  static final ReorderingTypes[] monotonicityPositionalMapping = {
+  public static final ReorderingTypes[] monotonicityPositionalMapping = {
       ReorderingTypes.monotoneWithPrevious,
       ReorderingTypes.nonMonotoneWithPrevious };
 
-  static final ReorderingTypes[] monotonicityBidirectionalMapping = {
+  public static final ReorderingTypes[] monotonicityBidirectionalMapping = {
       ReorderingTypes.monotoneWithPrevious,
       ReorderingTypes.nonMonotoneWithPrevious,
       ReorderingTypes.monotoneWithNext, ReorderingTypes.nonMonotoneWithNext };
