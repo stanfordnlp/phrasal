@@ -58,9 +58,6 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public float[] reoderingScores;
   public ReorderingTypes forwardOrientation;
   public ReorderingTypes backwardOrientation;
-
-  // WSGDEBUG
-  public int fSourcePos = -1;
   
   /**
    * Constructor for synthetic rules, which typically are generated at runtime

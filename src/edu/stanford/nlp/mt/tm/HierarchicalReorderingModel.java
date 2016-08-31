@@ -90,7 +90,7 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     int min_j = Math.min(j_p, min(a_i_p));
     int min_i = Math.min(i_p, min(a_j_p));
 
-    while (min_i < i_p || min_j < j_p) {
+    while (min_i <= i_p || min_j <= j_p) {
       for (; j_p >= min_j; --j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);
@@ -138,7 +138,7 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     int min_j = Math.min(j_p, min(a_i_p));
     int max_i = Math.max(i_p, max(a_j_p));
 
-    while (max_i >= i_p || min_j < j_p) {
+    while (max_i >= i_p || min_j <= j_p) {
       for (; j_p >= min_j; --j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);
@@ -187,7 +187,7 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     int max_j = Math.max(j_p, max(a_i_p));
     int min_i = Math.min(i_p, min(a_j_p));
 
-    while (min_i < i_p || max_j >= j_p) {
+    while (min_i <= i_p || max_j >= j_p) {
       for (; j_p <= max_j; ++j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);

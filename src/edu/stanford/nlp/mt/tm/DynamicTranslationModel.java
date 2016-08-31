@@ -925,13 +925,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       // Create the rule
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);
       
-      // WSGDEBUG
-      scoredRule.fSourcePos = rule.srcStartInclusive;
-//      if (scoredRule.source.toString().equals("الرسول علي +ه") && 
-//          scoredRule.target.toString().equals("be upon him")) {
-//        System.err.println();
-//      }
-      
       if (reorderingEnabled) {
         scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
         scoredRule.forwardOrientation = lexModel.forwardOrientation(rule);
