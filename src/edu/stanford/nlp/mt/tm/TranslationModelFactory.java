@@ -45,7 +45,7 @@ public class TranslationModelFactory {
     int dynamicSampleSize = DynamicTranslationModel.DEFAULT_SAMPLE_SIZE;
     FeatureTemplate dynamicTemplate = FeatureTemplate.DENSE_EXT;
     int dynamicPhraseLength = DynamicTranslationModel.DEFAULT_MAX_PHRASE_LEN;
-    boolean doReordering = false;
+    String reorderingType = null;
     for (final String option : options) {
       final String[] fields = option.split(SEPARATOR);
       final String key = fields[0];
@@ -61,7 +61,7 @@ public class TranslationModelFactory {
       } else if (key.equals(DYNAMIC_PHRASE_LENGTH)) {
         dynamicPhraseLength = Integer.valueOf(value);
       } else if (key.equalsIgnoreCase(DYNAMIC_REORDERING)) {
-        doReordering = true;
+        reorderingType = value;
       } else {
         logger.warn("Unknown key/value pair: {}", option);
       }
@@ -79,8 +79,10 @@ public class TranslationModelFactory {
       ((DynamicTranslationModel) translationModel).setMaxSourcePhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).setMaxTargetPhrase(dynamicPhraseLength);
       ((DynamicTranslationModel) translationModel).createQueryCache(dynamicTemplate);
-      if (doReordering)
-        ((DynamicTranslationModel) translationModel).setReorderingScores();
+      if (reorderingType != null) {
+        boolean doHierarchical = reorderingType.equals("hier");
+        ((DynamicTranslationModel) translationModel).setReorderingScores(doHierarchical);
+      }
 
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename)

@@ -3,7 +3,7 @@ package edu.stanford.nlp.mt.train;
 import java.util.*;
 
 /**
- * The preferred way of instanciating PhraseExtractor is to extend
+ * The preferred way of instantiating PhraseExtractor is to extend
  * AbstractPhraseExtractor. Its constructor takes a list of
  * AbstractFeatureExtractor as argument, which are then used in
  * {@link #addPhraseToIndex(WordAlignment,int,int,int,int,boolean,float)}. where

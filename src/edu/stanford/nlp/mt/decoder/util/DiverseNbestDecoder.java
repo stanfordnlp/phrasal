@@ -15,11 +15,9 @@ import org.apache.logging.log4j.Logger;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
-import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.InputProperties;
 import edu.stanford.nlp.mt.util.InputProperty;
 import edu.stanford.nlp.mt.util.Sequence;
-import edu.stanford.nlp.mt.util.Sequences;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -269,13 +267,13 @@ public class DiverseNbestDecoder<TK,FV> {
     return returnList;
   }
 
-  private double getGoalScore(Derivation<TK, FV> node) {
-    while(!node.isDone()) {
-      System.err.println(node.id);
-      node = node.bestChild;
-    }
-    return node.score;
-  }
+//  private double getGoalScore(Derivation<TK, FV> node) {
+//    while(!node.isDone()) {
+//      System.err.println(node.id);
+//      node = node.bestChild;
+//    }
+//    return node.score;
+//  }
 
   /**
    * Construct a new derivation from a node of interest.
@@ -334,22 +332,22 @@ public class DiverseNbestDecoder<TK,FV> {
    * @param node
    * @return
    */
-  private Sequence<TK> extractTarget(Derivation<TK, FV> node) {
-    final List<TK> tokens = new LinkedList<>();
-    // Walk backward
-    Derivation<TK,FV> p = node;
-    while (p != null) {
-      Sequence<TK> target = p.rule == null ? Sequences.emptySequence() : p.rule.abstractRule.target;
-      for (int i = target.size() - 1; i >= 0; --i) tokens.add(0, target.get(i));
-      p = p.parent;
-    }
-    // Walk forward
-    p = node.bestChild;
-    while (p != null) {
-      Sequence<TK> target = p.rule.abstractRule.target;
-      for (int i = 0, sz = target.size(); i < sz; ++i) tokens.add(target.get(i));
-      p = p.bestChild;
-    }
-    return new ArraySequence<>(tokens);
-  }
+//  private Sequence<TK> extractTarget(Derivation<TK, FV> node) {
+//    final List<TK> tokens = new LinkedList<>();
+//    // Walk backward
+//    Derivation<TK,FV> p = node;
+//    while (p != null) {
+//      Sequence<TK> target = p.rule == null ? Sequences.emptySequence() : p.rule.abstractRule.target;
+//      for (int i = target.size() - 1; i >= 0; --i) tokens.add(0, target.get(i));
+//      p = p.parent;
+//    }
+//    // Walk forward
+//    p = node.bestChild;
+//    while (p != null) {
+//      Sequence<TK> target = p.rule.abstractRule.target;
+//      for (int i = 0, sz = target.size(); i < sz; ++i) tokens.add(target.get(i));
+//      p = p.bestChild;
+//    }
+//    return new ArraySequence<>(tokens);
+//  }
 }

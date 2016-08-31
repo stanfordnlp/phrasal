@@ -12,7 +12,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 // Release version
-version = '3.5.2'
+version = '3.6.0'
 
 // Gradle application plugin
 mainClassName = "edu.stanford.nlp.mt.Phrasal"
@@ -86,6 +86,9 @@ tasks.withType(Test) {
     systemProperty "java.library.path", "src-cc"
 }
 
+//
+// Dependencies and other build tasks
+//
 repositories {
     mavenCentral()
 }
@@ -106,11 +109,11 @@ dependencies {
   // lilt/core Maven dependencies
   compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.6.0'
   compile group: 'com.esotericsoftware', name: 'kryo', version: '3.0.1'
-  compile group: 'it.unimi.dsi', name: 'fastutil', version: '7.0.7'
-  compile group: 'com.google.guava', name: 'guava', version: '18.0'
-  compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.5'
-  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.5'
-  compile group: 'com.lmax', name: 'disruptor', version: '3.3.2'
+  compile group: 'it.unimi.dsi', name: 'fastutil', version: '7.0.12'
+  compile group: 'com.google.guava', name: 'guava', version: '19.0'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.6.2'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.6.2'
+  compile group: 'com.lmax', name: 'disruptor', version: '3.3.5'
   
   // Test dependencies
   testCompile group: 'junit', name: 'junit', version: '4.12'
@@ -138,3 +141,20 @@ eclipse {
     }
   }
 }
+
+//
+// Buildscript setup
+//
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.owasp:dependency-check-gradle:1.4.2'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
+    }
+}
+apply plugin: 'com.github.ben-manes.versions'
+apply plugin: 'org.owasp.dependencycheck'
+

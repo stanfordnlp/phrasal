@@ -115,7 +115,8 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static enum FeatureTemplate {
     DENSE(4), 
     DENSE_EXT(6), 
-    DENSE_EXT_LOPEZ(8);
+    DENSE_EXT_LOPEZ(8),
+    DENSE_EXT_GREEN(10);
   
     private final int numFeatures;
     
@@ -130,7 +131,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   private static final Logger logger = LogManager.getLogger(DynamicTranslationModel.class);
   
   // Parameters
-  protected transient boolean initialized;
+  protected transient boolean initialized; // TODO(spenceg) Unused, but don't remove so that we don't break serialized models.
   protected transient int maxSourcePhrase;
   protected transient int maxTargetPhrase;
   protected transient FeatureTemplate featureTemplate;
@@ -138,7 +139,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient int sampleSize;
   protected transient String[] featureNames;
   protected transient String name;
+  
+  // Lexicalized reordering
   protected transient boolean reorderingEnabled;
+  protected transient DynamicReorderingModel lexModel;
   
   // Caches
   public transient LexCoocTable coocTable;
@@ -151,9 +155,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   /**
    * No-arg constructor for deserialization. Creates caches
    */
-  public DynamicTranslationModel() {
-    initialized = false;
-  }
+  public DynamicTranslationModel() {}
   
   /**
    * Constructor.
@@ -174,7 +176,6 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   public DynamicTranslationModel(ParallelSuffixArray suffixArray, String name) {
     this.sa = suffixArray;
-    this.initialized = false;
     this.maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
     this.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     this.sampleSize = DEFAULT_SAMPLE_SIZE;
@@ -218,6 +219,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     tm.maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
     tm.sampleSize = DEFAULT_SAMPLE_SIZE;
     tm.name = name;
+    tm.reorderingEnabled = false;
     tm.setFeatureTemplate(FeatureTemplate.DENSE);
     
     if (initializeSystemVocabulary) tm.populateSystemVocabulary();
@@ -233,6 +235,25 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     return tm;
   }
   
+  /**
+   * Initialize the TM programmatically.
+   * 
+   * @param initializeSystemVocabulary
+   */
+  public void initialize(boolean initializeSystemVocabulary) {
+    TimeKeeper timer = TimingUtils.start();
+
+    if (initializeSystemVocabulary) populateSystemVocabulary();
+    // Id arrays must be created after any modification of the system vocabulary.
+    createIdArrays();
+    timer.mark("Vocabulary setup");
+    
+    // Lex cache must be created before any rules can be scored.
+    createLexCoocTable(sa.getVocabulary().size());
+    timer.mark("Cooc table");
+
+    logger.info("Timing: {}", timer);
+  }  
 
   @Override
   public void write(Kryo kryo, Output output) {
@@ -243,17 +264,24 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public void read(Kryo kryo, Input input) {
     sa = kryo.readObject(input, ParallelSuffixArray.class);
   }
-  
+
   /**
-   * Configure this TM as a foreground translation model.
+   * Configure this TM as a foreground model. Copy configuration parameters from a backgroundTM during setup.
+   * Permit a different feature template, a useful option for tuning.
    * 
-   * @param name
+   * @param backgroundTM
+   * @param t
    */
-  public synchronized void configureAsForegroundTM(FeatureTemplate t) {
+  public synchronized void configureAsForegroundTM(DynamicTranslationModel<FV> backgroundTM, FeatureTemplate t) {
     TimeKeeper timer = TimingUtils.start();
-    maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
-    maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
-    sampleSize = DEFAULT_SAMPLE_SIZE;
+    maxSourcePhrase = backgroundTM.maxSourcePhrase;
+    maxTargetPhrase = backgroundTM.maxTargetPhrase;
+    sampleSize = backgroundTM.sampleSize;
+    if (backgroundTM.reorderingEnabled) {
+      boolean doHierarchical = backgroundTM.lexModel instanceof HierarchicalReorderingModel;
+      setReorderingScores(doHierarchical);
+    }
+    
     this.name = Phrasal.TM_FOREGROUND_NAME;
     setFeatureTemplate(t);
     
@@ -375,6 +403,11 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     });
   }
   
+  /**
+   * Number of parallel segments in the underlying corpus.
+   * 
+   * @return
+   */
   public int bitextSize() {
     return sa.numSentences();
   }
@@ -392,10 +425,22 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
-   * Turn on the reordering features.
+   * Enable lexicalized reordering feature extraction.
+   * 
+   * @param hierarchical
    */
-  public void setReorderingScores() {
+  public void setReorderingScores(boolean hierarchical) {
     this.reorderingEnabled = true;
+    this.lexModel = hierarchical ? new HierarchicalReorderingModel() : new WordBasedReorderingModel();
+  }
+  
+  /**
+   * Returns true if reordering is enabled.
+   * 
+   * @return
+   */
+  public boolean getReorderingEnabled() {
+    return reorderingEnabled;
   }
   
   /**
@@ -792,14 +837,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
    */
   private List<Rule<IString>> samplesToRules(List<SentencePair> samples, final int order, 
       double sampleRate, Sequence<IString> sourceSpan) {
-    // Extract rules from sentence pairs
-    final List<SampledRule> rules = new ArrayList<>(2*samples.size());
-    for (SentencePair sample : samples) rules.addAll(extractRules(sample, order, maxTargetPhrase));
+    // Extract the raw rules from sampled sentence pairs
+    final List<SampledRule> rawRuleList = new ArrayList<>(2*samples.size());
+    for (SentencePair sample : samples) rawRuleList.addAll(extractRules(sample, order, maxTargetPhrase));
     
-    // Collect counts
-    Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rules.size());
-    Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rules.size()) : null;
-    for (SampledRule rule : rules) {
+    // Collect counts for raw rules
+    Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rawRuleList.size());
+    Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rawRuleList.size()) : null;
+    for (SampledRule rule : rawRuleList) {
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       if (alTemps == null) {
@@ -808,37 +853,39 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
       alTemps.incrementCount(new AlignmentTemplate(rule));
       
-      if (reorderingCounts != null) {
+      // Lexicalized reordering
+      if (reorderingEnabled) {
         ReorderingCounts counts = reorderingCounts.get(rule);
         if (counts == null) {
           counts = new ReorderingCounts();
           reorderingCounts.put(rule, counts);
         }
-        counts.incrementForward(rule.forwardOrientation());
-        counts.incrementBackward(rule.backwardOrientation());
+        counts.incrementForward(lexModel.forwardOrientation(rule));
+        counts.incrementBackward(lexModel.backwardOrientation(rule));
       }
     }
 
-    // Choose the best alignment template
+    // Choose the max alignment template for each src/tgt pair
     // for each src => target rule.
-    List<TargetSpan> keys = new ArrayList<>(tgtToTemplate.keySet());
-    List<SampledRule> ruleList = new ArrayList<>(tgtToTemplate.size());
-    int[] histogram = new int[keys.size()];
-    final int ef_denom = rules.size();
+    List<TargetSpan> tgtSpanList = new ArrayList<>(tgtToTemplate.keySet());
+    List<SampledRule> maxRuleList = new ArrayList<>(tgtToTemplate.size());
+    int[] histogram = new int[tgtSpanList.size()];
+    final int ef_denom = rawRuleList.size();
     for (int i = 0; i < histogram.length; ++i) {
-      TargetSpan tgtSpan = keys.get(i);
+      TargetSpan tgtSpan = tgtSpanList.get(i);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       // Note that the argmax alignment is chosen independent of the model.
       AlignmentTemplate maxAlignment = Counters.argmax(alTemps);
       SampledRule maxRule = maxAlignment.rule;
       scoreLex(maxRule);
-      ruleList.add(maxRule);
+      maxRuleList.add(maxRule);
       histogram[i] = (int) alTemps.totalCount();
     }
     
-    List<Rule<IString>> scoredRules = new ArrayList<>(ruleList.size());
-    for (int r = 0, sz = ruleList.size(); r < sz; ++r) {
-      final SampledRule rule = ruleList.get(r);
+    // Score the max rules
+    List<Rule<IString>> scoredRules = new ArrayList<>(maxRuleList.size());
+    for (int r = 0, sz = maxRuleList.size(); r < sz; ++r) {
+      final SampledRule rule = maxRuleList.get(r);
       float[] scores = new float[featureTemplate.getNumFeatures()];
       int eCnt = sa.count(rule.tgt, false);
       assert eCnt > 0 : Arrays.toString(rule.tgt);
@@ -853,26 +900,35 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       scores[2] = (float) (Math.log(histogram[r]) -  Math.log(ef_denom));
       scores[3] = (float) Math.log(rule.lex_e_f);
 
-      if (featureTemplate == FeatureTemplate.DENSE_EXT) {
+      if (featureTemplate == FeatureTemplate.DENSE_EXT || featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ ||
+          featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
+        // Log count of this rule
         scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
-        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
-      
-      } else if (featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ) {
-        scores[4] = adjustedCount > 1 ? (float) Math.log(adjustedCount) : 0.0f;
-        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;
-        
+        // Unique rule indicator
+        scores[5] = adjustedCount == 1 ? -1.0f : 0.0f;      
+      }
+      if (featureTemplate == FeatureTemplate.DENSE_EXT_LOPEZ || featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
         // See A. Lopez dissertation p.103
-        scores[6] = (float) (Math.log(rules.size()) - Math.log(samples.size()));
+        scores[6] = (float) (Math.log(rawRuleList.size()) - Math.log(samples.size()));
         
-        // Add the sampling rate. I had this idea while ago. Not sure if it's good....
+        // Add the sampling rate. Sort of suggested by both Lopez and Germann.
         scores[7] = (float) Math.log(sampleRate);
       }
+      if (featureTemplate == FeatureTemplate.DENSE_EXT_GREEN) {
+        // Whole sentence indicator
+        scores[8] = rule.isFullSentence() ? -1.0f : 0.0f;
+        
+        // Target raw count -- Similar to Devlin and Matsoukas' (2012) Ngram frequency feature.
+        scores[9] = (float) Math.log(eCnt);
+      }
 
+      // Create the rule
       Rule<IString> scoredRule = convertRule(rule, scores, featureNames, sourceSpan, this.tm2Sys);
-      if (this.reorderingEnabled) {
+      
+      if (reorderingEnabled) {
         scoredRule.reoderingScores = reorderingCounts.get(rule).getFeatureVector();
-        scoredRule.forwardOrientation = rule.forwardOrientation();
-        scoredRule.backwardOrientation = rule.backwardOrientation();
+        scoredRule.forwardOrientation = lexModel.forwardOrientation(rule);
+        scoredRule.backwardOrientation = lexModel.backwardOrientation(rule);
       }
       scoredRules.add(scoredRule);
     }
@@ -893,7 +949,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       Sequence<IString> sourceSpan, int[] tm2Sys) {
     PhraseAlignment alignment = new PhraseAlignment(rule.e2f());
     Sequence<IString> tgtSeq = toSequence(rule.tgt);
-    return new Rule<IString>(scores, featureNames, tgtSeq, sourceSpan, alignment, name);
+    return new Rule<>(scores, featureNames, tgtSeq, sourceSpan, alignment, name);
   }
   
   /**
@@ -1233,7 +1289,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     String inputFile = args[1];
     TimeKeeper timer = TimingUtils.start();
     DynamicTranslationModel<String> tm = DynamicTranslationModel.load(fileName, true, DEFAULT_NAME);
-    tm.setReorderingScores();
+    tm.setReorderingScores(true);
     timer.mark("Load");
     tm.createQueryCache(FeatureTemplate.DENSE_EXT_LOPEZ);
     timer.mark("Cache creation");

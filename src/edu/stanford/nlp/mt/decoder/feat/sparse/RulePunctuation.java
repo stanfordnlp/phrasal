@@ -66,7 +66,7 @@ public class RulePunctuation implements RuleFeaturizer<IString, String> {
     if(consistency && (puncDiff == 0 || !checkConsistent(f.sourcePhrase, f.targetPhrase)) ) {
       features.add(new FeatureValue<>(INCONSISTENT, 1.0));
     }
-    // only fires if one side contains only punctutation
+    // only fires if one side contains only punctuation
     if(excessWords) {
       if(numSourcePunc == f.sourcePhrase.size()) {
         if(f.targetPhrase.size() > numTargetPunc)

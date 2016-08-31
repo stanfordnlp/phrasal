@@ -780,9 +780,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
   public class SentencePair {
     public final int wordPosition;
     
-    // TODO(spenceg) Would need to encode this directly into the bitext as well
-    // as a second negative number after the pointer into the other side of the
-    // bitext.
+    // TODO(spenceg) The character offset would yield a sentence id for e.g., bitext tuning.
 //    public final int sentenceId;
     
     public final int srcStartInclusive;

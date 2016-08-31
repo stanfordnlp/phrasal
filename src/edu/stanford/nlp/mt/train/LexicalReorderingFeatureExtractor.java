@@ -209,7 +209,7 @@ public class LexicalReorderingFeatureExtractor extends AbstractFeatureExtractor 
   public void featurizeSentence(SymmetricalWordAlignment sent, AlignmentGrid alGrid) {
   }
 
-  private ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp,
+  public ReorderingTypes getReorderingType(AlignmentTemplateInstance alTemp,
       AlignmentGrid alGrid, boolean forward) {
 
     WordAlignment sent = alTemp.getWordAlignment();

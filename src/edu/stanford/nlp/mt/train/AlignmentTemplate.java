@@ -132,6 +132,11 @@ public class AlignmentTemplate {
       System.err.println("String representation: " + Arrays.toString(align));
     }
   }
+  
+  @Override
+  public String toString() {
+    return toString(false);
+  }
 
   public String toString(boolean withAlign) {
     StringBuilder buf = new StringBuilder();

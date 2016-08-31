@@ -58,7 +58,7 @@ public class Rule<T> implements Comparable<Rule<T>>{
   public float[] reoderingScores;
   public ReorderingTypes forwardOrientation;
   public ReorderingTypes backwardOrientation;
-
+  
   /**
    * Constructor for synthetic rules, which typically are generated at runtime
    * and contained faked-up scores and/or alignments.

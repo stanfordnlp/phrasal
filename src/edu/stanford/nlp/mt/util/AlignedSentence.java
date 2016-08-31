@@ -50,7 +50,8 @@ public class AlignedSentence implements Serializable {
   }
 
   /**
-   * Compress a set of alignment links into an integer array.
+   * Compress a set of alignment links into an integer array. Links are stored as 1-indexed 8-bit
+   * integers so that 0 indicates an unaligned word.
    * 
    * @param algn
    * @return
@@ -61,14 +62,32 @@ public class AlignedSentence implements Serializable {
       if (algn[i] == null) continue;
       List<Integer> points = new ArrayList<>(algn[i]);
       int al = 0;
-      for (int j = 0, sz = Math.min(MAX_FERTILITY, points.size()); 
-          j < sz; ++j) {
+      for (int j = 0, sz = Math.min(MAX_FERTILITY, points.size()); j < sz; ++j) {
         int pos = (points.get(j)+1) << (j*8);
         al |= pos;
       }
       flatArr[i] = al;
     }
     return flatArr;
+  }
+  
+  /**
+   * Decompress a set of alignment links.
+   * 
+   * @param al
+   * @return
+   */
+  public static int[] expand(int al) {
+    if (al == 0) return new int[0];
+    final int numLinks = ((31 - Integer.numberOfLeadingZeros(al)) / 8) + 1;
+    final int[] links = new int[numLinks];
+    for (int i = 0; i < numLinks; ++i) {
+      int pos = i * 8;
+      int mask = 0xff << pos;
+      int lnk = (al & mask) >>> pos;
+      links[i] = lnk - 1;
+    }
+    return links;
   }
   
   public int[] f2e(int i) {
@@ -90,20 +109,7 @@ public class AlignedSentence implements Serializable {
     if (i < 0 || i >= target.length) throw new IndexOutOfBoundsException();
     return e2f[i] == 0;
   }
-  
-  public static int[] expand(int al) {
-    if (al == 0) return new int[0];
-    final int numLinks = ((31 - Integer.numberOfLeadingZeros(al)) / 8) + 1;
-    final int[] links = new int[numLinks];
-    for (int i = 0; i < numLinks; ++i) {
-      int pos = i * 8;
-      int mask = 0xff << pos;
-      int lnk = (al & mask) >>> pos;
-      links[i] = lnk - 1;
-    }
-    return links;
-  }
-  
+    
   public int sourceLength() { return source.length; }
   
   public int targetLength() { return target.length; }

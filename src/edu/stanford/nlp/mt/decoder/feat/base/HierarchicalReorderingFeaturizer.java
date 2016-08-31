@@ -1,7 +1,12 @@
 package edu.stanford.nlp.mt.decoder.feat.base;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 
 import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerState;
@@ -149,7 +154,28 @@ public class HierarchicalReorderingFeaturizer extends
   final String[] featureTags;
   final ExtendedLexicalReorderingTable mlrt;
   private BitSet tmpCoverage = new BitSet();
+  private final ReorderingTypes[] positionalMapping;
 
+  /**
+   * Constructor for reflection loading. For dynamic lex re-ordering.
+   */
+  public HierarchicalReorderingFeaturizer() {
+    // Dynamic model
+    has2Disc = false;
+    hasContainment = false;
+    this.mlrt = null;
+    this.positionalMapping = ExtendedLexicalReorderingTable.msdBidirectionalPositionMapping;
+    this.featureTags = Arrays.stream(ExtendedLexicalReorderingTable.msdBidirectionalPositionMapping).map(m -> 
+    String.format("%s:%s", FEATURE_PREFIX, m)).toArray(String[]::new);
+  }
+  
+  /**
+   * Constructor.
+   * 
+   * @param mlrt
+   * @param args
+   * @throws IOException
+   */
   public HierarchicalReorderingFeaturizer(ExtendedLexicalReorderingTable mlrt, List<String> args) throws IOException {
     this.mlrt = mlrt;
     String modelType = mlrt.filetype;
@@ -187,6 +213,7 @@ public class HierarchicalReorderingFeaturizer extends
     System.err.printf("Backward orientation: %s\n",
         backwardOrientationComputation);
 
+    this.positionalMapping = mlrt.positionalMapping;
     featureTags = new String[mlrt.positionalMapping.length];
     for (int i = 0; i < mlrt.positionalMapping.length; i++)
       featureTags[i] = String.format("%s:%s", FEATURE_PREFIX,
@@ -197,19 +224,20 @@ public class HierarchicalReorderingFeaturizer extends
   public List<FeatureValue<String>> featurize(
       Featurizable<IString, String> f) {
 
-    List<FeatureValue<String>> values = new ArrayList<FeatureValue<String>>();
+    List<FeatureValue<String>> values = new ArrayList<>();
 
     boolean locallyMonotone = f.linearDistortion == 0;
     boolean locallySwapping = (f.prior != null && f.derivation.rule.sourceCoverage
         .length() == f.prior.sourcePosition);
     boolean discont2 = (f.prior != null && fEnd(f) <= fStart(f.prior));
 
-    float[] scores = mlrt
-        .getReorderingScores(f.derivation.rule.abstractRule);
-    float[] priorScores = (f.prior == null ? null : mlrt
-        .getReorderingScores(f.prior.derivation.rule.abstractRule));
+    float[] scores = mlrt == null ? f.rule.abstractRule.reoderingScores : 
+      mlrt.getReorderingScores(f.derivation.rule.abstractRule);
+    float[] priorScores = (f.prior == null ? null : 
+      (mlrt == null ? f.rule.abstractRule.reoderingScores : mlrt.getReorderingScores(f.prior.derivation.rule.abstractRule)));
 
-    ReorderingTypes forwardOrientation = ReorderingTypes.discontinuousWithPrevious, backwardOrientation = ReorderingTypes.discontinuousWithNext;
+    ReorderingTypes forwardOrientation = ReorderingTypes.discontinuousWithPrevious, 
+        backwardOrientation = ReorderingTypes.discontinuousWithNext;
 
     if (DETAILED_DEBUG) {
       CoverageSet fCoverage = f.derivation.sourceCoverage;
@@ -324,10 +352,10 @@ public class HierarchicalReorderingFeaturizer extends
     }
 
     // Create feature functions:
-    for (int i = 0; i < mlrt.positionalMapping.length; i++) {
-      ReorderingTypes type = mlrt.positionalMapping[i];
+    for (int i = 0; i < positionalMapping.length; i++) {
+      ReorderingTypes type = positionalMapping[i];
       if (type == forwardOrientation || type == backwardOrientation) {
-        if (!usePrior(mlrt.positionalMapping[i])) {
+        if (!usePrior(positionalMapping[i])) {
           boolean firstInDTU = f.getSegmentIdx() == 0;
           if (scores != null && firstInDTU) {
             values.add(new FeatureValue<String>(featureTags[i], scores[i], true));
@@ -375,13 +403,13 @@ public class HierarchicalReorderingFeaturizer extends
       ReorderingTypes finalBackwardOrientation = (fEndPos == fLen) ? ReorderingTypes.monotoneWithNext
           : ReorderingTypes.discontinuousWithNext;
 
-      float[] finalScores = mlrt
-          .getReorderingScores(f.derivation.rule.abstractRule);
+      float[] finalScores = mlrt == null ? f.rule.abstractRule.reoderingScores : 
+        mlrt.getReorderingScores(f.derivation.rule.abstractRule);
       // Create feature functions:
-      for (int i = 0; i < mlrt.positionalMapping.length; ++i) {
-        ReorderingTypes type = mlrt.positionalMapping[i];
+      for (int i = 0; i < positionalMapping.length; ++i) {
+        ReorderingTypes type = positionalMapping[i];
         if (type == finalBackwardOrientation) {
-          if (usePrior(mlrt.positionalMapping[i])) {
+          if (usePrior(positionalMapping[i])) {
             if (finalScores != null)
               values.add(new FeatureValue<String>(featureTags[i],
                   finalScores[i], true));
@@ -576,7 +604,7 @@ public class HierarchicalReorderingFeaturizer extends
         AlignmentGrid.printDecoderGrid(f, System.err);
         System.err.println();
       }
-      Deque<String> lines = new LinkedList<String>();
+      Deque<String> lines = new LinkedList<>();
       while (f != null) {
         HierBlock hb = (HierBlock) f.getState(this);
         lines.addFirst(String.format("cs=%s sz=%d (M,S)=(%d,%d) (M,S)=(%d,%d)",
