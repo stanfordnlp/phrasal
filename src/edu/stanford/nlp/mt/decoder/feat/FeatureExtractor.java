@@ -22,11 +22,13 @@ import edu.stanford.nlp.mt.util.Sequence;
  * @param <FV>
  */
 public class FeatureExtractor<TK, FV> extends 
-    DerivationFeaturizer<TK, FV> implements RuleFeaturizer<TK, FV>,
+    DerivationFeaturizer<TK, FV> 
+    implements RuleFeaturizer<TK, FV>, RerankingFeaturizer<TK, FV>, 
     Cloneable {
   
   private List<Featurizer<TK, FV>> featurizers;
   private final int numDerivationFeaturizers;
+  private final int numRerankingFeaturizers;
   private int featureAugmentationMode = -1;
   private ConcurrentHashMap<String, String> prefixFeatMap = null;
   private ConcurrentHashMap<String, String> straddleFeatMap = null;
@@ -51,13 +53,18 @@ public class FeatureExtractor<TK, FV> extends
       String featureAugmentationMode) {
     this.featurizers = new ArrayList<>(featurizers);
     int id = -1;
+    int numRerankers = 0;
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
         DerivationFeaturizer<TK, FV> sfeaturizer = (DerivationFeaturizer<TK, FV>) featurizer;
         sfeaturizer.setId(++id);
       }
+      else if (featurizer instanceof RerankingFeaturizer) {
+        numRerankers++;
+      }
     }
     this.numDerivationFeaturizers = id + 1;
+    this.numRerankingFeaturizers= numRerankers;
     
     setFeatureAugmentationMode(featureAugmentationMode);
     
@@ -161,6 +168,16 @@ public class FeatureExtractor<TK, FV> extends
   }
 
   /**
+   * Returns the number of <code>RerankingFeaturizer</code>s.
+   * 
+   * @return
+   */
+  public int getNumRerankingFeaturizers() {
+    return numRerankingFeaturizers;
+  }
+
+  
+  /**
    * Extract derivation features.
    */
   @Override
@@ -193,7 +210,7 @@ public class FeatureExtractor<TK, FV> extends
       if (featurizer instanceof RuleFeaturizer) {
         RuleFeaturizer<TK, FV> ruleFeaturizer = (RuleFeaturizer<TK, FV>) featurizer;
         List<FeatureValue<FV>> listFeatureValues = 
-            ((RuleFeaturizer<TK, FV>) featurizer).ruleFeaturize(f);
+            ruleFeaturizer.ruleFeaturize(f);
         if (listFeatureValues != null) {
           boolean doNotCache = ruleFeaturizer.isolationScoreOnly();
           for (FeatureValue<FV> fv : listFeatureValues) {
@@ -208,6 +225,29 @@ public class FeatureExtractor<TK, FV> extends
     
     return featureValues;
   }
+  
+  /**
+   * Extract reranking features.
+   */
+  public List<FeatureValue<FV>> rerankingFeaturize(Featurizable<TK, FV> f) {
+    List<FeatureValue<FV>> featureValues = new ArrayList<>();
+    for (Featurizer<TK, FV> featurizer : featurizers) {
+      if (featurizer instanceof RerankingFeaturizer) {
+        List<FeatureValue<FV>> listFeatureValues = 
+            ((RerankingFeaturizer<TK,FV>) featurizer).rerankingFeaturize(f);
+        if (listFeatureValues != null) {
+          for (FeatureValue<FV> fv : listFeatureValues) {
+            featureValues.add(fv);
+          }
+        }
+      }
+    }
+    
+    //no augmentation of reranking features
+    
+    return featureValues;
+  }
+
  
   private static final String[] NO_GENRE = new String[]{""};
   private static final String PREFIX = "PRF";
@@ -300,7 +340,6 @@ public class FeatureExtractor<TK, FV> extends
     }
     return rv;
   }
-  
 
   @Override
   public void initialize(int sourceInputId,
@@ -308,6 +347,23 @@ public class FeatureExtractor<TK, FV> extends
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof DerivationFeaturizer) {
         ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, sourceSequence);
+      }
+      else if (featurizer instanceof RerankingFeaturizer) {
+        ((RerankingFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, sourceSequence, null);
+      }
+    }
+  }
+  
+
+  @Override
+  public void initialize(int sourceInputId,
+      Sequence<TK> sourceSequence, Sequence<TK> targetPrefix) {
+    for (Featurizer<TK, FV> featurizer : featurizers) {
+      if (featurizer instanceof DerivationFeaturizer) {
+        ((DerivationFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, sourceSequence);
+      }
+      else if (featurizer instanceof RerankingFeaturizer) {
+        ((RerankingFeaturizer<TK,FV>) featurizer).initialize(sourceInputId, sourceSequence, targetPrefix);
       }
     }
   }

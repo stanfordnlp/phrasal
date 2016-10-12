@@ -203,7 +203,8 @@ public class DTUDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
 
     int totalHypothesesGenerated = 1;
 
-    featurizer.initialize(sourceInputId, source);
+    // no reranking in DTU decoder
+    featurizer.initialize(sourceInputId, source, null);
 
     // main translation loop
     long decodeLoopTime = -System.currentTimeMillis();

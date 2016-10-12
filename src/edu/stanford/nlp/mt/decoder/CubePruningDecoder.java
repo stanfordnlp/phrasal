@@ -162,15 +162,20 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, recombinationHistory, maxDistortion, i));
     }
 
+    Sequence<TK> targetPrefix = null;
+    if (inputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
+      if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
+      targetPrefix = targets.get(0);
+    }
+    
     // Initialize feature extractors
-    featurizer.initialize(sourceInputId, source);
+    featurizer.initialize(sourceInputId, source, targetPrefix);
     
     // Prefix decoding
     int startOfDecoding = 1;
     int minSourceCoverage = 0;
     boolean prefilledBeams = false;
-    if (inputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
-      if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
+    if (targetPrefix != null) {
       minSourceCoverage = decodePrefix(source, ruleList, inputProperties, targets.get(0), 
           scorer, beams, sourceInputId, outputSpace, recombinationHistory, timer);
       if (minSourceCoverage < 0) {

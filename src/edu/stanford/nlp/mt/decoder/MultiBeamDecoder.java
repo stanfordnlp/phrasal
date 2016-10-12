@@ -168,6 +168,7 @@ public class MultiBeamDecoder<TK, FV> extends AbstractBeamInferer<TK, FV> {
     }
 
     // Initialize feature extractors
+    // no reranking in MultiBeamDecoder
     featurizer.initialize(sourceInputId, source);
 
     // main translation loop---beam expansion

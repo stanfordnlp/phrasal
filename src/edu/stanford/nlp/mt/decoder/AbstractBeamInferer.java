@@ -20,6 +20,7 @@ import edu.stanford.nlp.mt.decoder.util.Derivation;
 import edu.stanford.nlp.mt.decoder.util.DiverseNbestDecoder;
 import edu.stanford.nlp.mt.decoder.util.NbestListUtils;
 import edu.stanford.nlp.mt.decoder.util.OutputSpace;
+import edu.stanford.nlp.mt.decoder.util.Reranker;
 import edu.stanford.nlp.mt.decoder.util.Scorer;
 import edu.stanford.nlp.mt.decoder.util.StateLatticeDecoder;
 import edu.stanford.nlp.mt.decoder.util.SyntheticRules;
@@ -218,7 +219,12 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     }
     timer.mark("Extraction");
     logger.info("Input {}: nbest timing {}", sourceInputId, timer);
-
+    
+    if(featurizer.getNumRerankingFeaturizers() > 0) {
+      Reranker<TK, FV> reranker = new Reranker<>(featurizer, scorer);
+      reranker.rerank(nbestList);
+    }
+   
     return nbestList;
   }
   
