@@ -133,9 +133,17 @@ public class FeatureExtractor<TK, FV> extends
         .clone();
     featurizer.featurizers = new ArrayList<>();
     for (Featurizer<TK, FV> f : featurizers) {
-      featurizer.featurizers
-          .add(f instanceof NeedsCloneable ? (DerivationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f)
-              .clone() : f);
+      if(f instanceof NeedsCloneable) {
+        if(f instanceof RerankingFeaturizer) {
+          featurizer.featurizers.add((RerankingFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f));
+        }
+        else {
+          featurizer.featurizers.add((DerivationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f));
+        }
+      }
+      else 
+        featurizer.featurizers.add(f);
+          
     }
     return featurizer;
   }
@@ -247,9 +255,6 @@ public class FeatureExtractor<TK, FV> extends
             }
           }
         }
-        
-        
-        
       }
     }
     
