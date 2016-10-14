@@ -229,21 +229,35 @@ public class FeatureExtractor<TK, FV> extends
   /**
    * Extract reranking features.
    */
-  public List<FeatureValue<FV>> rerankingFeaturize(Featurizable<TK, FV> f) {
-    List<FeatureValue<FV>> featureValues = new ArrayList<>();
+  public List<List<FeatureValue<FV>>> rerankingFeaturize(List<Featurizable<TK, FV>> f) {
+    List<List<FeatureValue<FV>>> featureValues = new ArrayList<>();
+    for(int i = 0; i < f.size(); ++i) {
+      featureValues.add(new ArrayList<>());
+    }
+    
     for (Featurizer<TK, FV> featurizer : featurizers) {
       if (featurizer instanceof RerankingFeaturizer) {
-        List<FeatureValue<FV>> listFeatureValues = 
+        List<List<FeatureValue<FV>>> listFeatureValues = 
             ((RerankingFeaturizer<TK,FV>) featurizer).rerankingFeaturize(f);
+        
         if (listFeatureValues != null) {
-          for (FeatureValue<FV> fv : listFeatureValues) {
-            featureValues.add(fv);
+          for(int i = 0; i < f.size(); ++i) {
+            if (listFeatureValues.get(i) != null) {
+              featureValues.get(i).addAll(listFeatureValues.get(i));
+            }
           }
         }
+        
+        
+        
       }
     }
     
-    //no augmentation of reranking features
+    if(featureAugmentationMode >= 0) {
+      for(int i = 0; i < f.size(); ++i) {
+        augmentFeatures(f.get(i), featureValues.get(i), true);
+      }
+    }
     
     return featureValues;
   }
@@ -253,7 +267,7 @@ public class FeatureExtractor<TK, FV> extends
   private static final String PREFIX = "PRF";
   private static final String PREFIX_BOUNDARY_STRADDLE = PREFIX + "-" + "STR";
   private static final String AFTER_PREFIX = PREFIX + "-" + "AFT";
-  
+
   /**
    * Feature space augmentation a la Daume III (2007).
    * 
@@ -262,6 +276,17 @@ public class FeatureExtractor<TK, FV> extends
    */
   @SuppressWarnings("unchecked")
   private void augmentFeatures(Featurizable<TK, FV> f, List<FeatureValue<FV>> featureValues) {
+    augmentFeatures(f, featureValues, false);
+  }
+  
+  /**
+   * Feature space augmentation a la Daume III (2007).
+   * 
+   * @param f
+   * @param featureValues
+   */
+  @SuppressWarnings("unchecked")
+  private void augmentFeatures(Featurizable<TK, FV> f, List<FeatureValue<FV>> featureValues, boolean noPrefix) {
     String[] genres = (String[]) f.sourceInputProperties.get(InputProperty.Domain);
     if (genres == null) genres = NO_GENRE;
     
@@ -279,7 +304,7 @@ public class FeatureExtractor<TK, FV> extends
         }
       }
     } 
-    if (featureAugmentationMode >= 3) {
+    if (!noPrefix && featureAugmentationMode >= 3) {
       // Prefix mode
       for(int i = 0, sz = featureValues.size(); i < sz; ++i) {
         FeatureValue<FV> fv = featureValues.get(i);

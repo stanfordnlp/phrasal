@@ -21,6 +21,7 @@ import edu.stanford.nlp.mt.train.SymmetricalWordAlignment;
  * @param <TK>
  * @param <FV>
  */
+
 public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV> {
   private static final long serialVersionUID = 6683028704195476157L;
   
