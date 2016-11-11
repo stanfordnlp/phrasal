@@ -225,6 +225,9 @@ public final class SyntheticRules {
     if (inputProperties.containsKey(InputProperty.ForegroundTM)) {
       tmList.add((DynamicTranslationModel<FV>) inputProperties.get(InputProperty.ForegroundTM));
     }
+    if (inputProperties.containsKey(InputProperty.TermbaseTM)) {
+      tmList.add((DynamicTranslationModel<FV>) inputProperties.get(InputProperty.TermbaseTM));
+    }
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
     int numRules = 0;
 
@@ -324,6 +327,9 @@ public final class SyntheticRules {
     tmList.add((DynamicTranslationModel<FV>) inferer.phraseGenerator);
     if (inputProperties.containsKey(InputProperty.ForegroundTM)) {
       tmList.add((DynamicTranslationModel<FV>) inputProperties.get(InputProperty.ForegroundTM));
+    }
+    if (inputProperties.containsKey(InputProperty.TermbaseTM)) {
+      tmList.add((DynamicTranslationModel<FV>) inputProperties.get(InputProperty.TermbaseTM));
     }
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
 

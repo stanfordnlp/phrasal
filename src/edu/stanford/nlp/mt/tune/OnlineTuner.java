@@ -754,7 +754,7 @@ public final class OnlineTuner {
     DynamicTMBuilder tmBuilder = new DynamicTMBuilder(corpus);
     TranslationModel<IString,String> localTM = tmBuilder.build();
     // Don't use extended features for the foreground model. They have different semantics.
-    ((DynamicTranslationModel<String>) localTM).configureAsForegroundTM(backgroundTM, FeatureTemplate.DENSE);
+    ((DynamicTranslationModel<String>) localTM).configureAsForegroundTM(backgroundTM, FeatureTemplate.DENSE, Phrasal.TM_FOREGROUND_NAME);
     return localTM;
   }
 

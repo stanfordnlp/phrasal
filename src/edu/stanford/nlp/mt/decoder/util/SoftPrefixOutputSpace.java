@@ -67,6 +67,7 @@ public class SoftPrefixOutputSpace implements OutputSpace<IString, String> {
     List<DynamicTranslationModel<String>> tmList = new ArrayList<>();
     tmList.add((DynamicTranslationModel<String>) inferer.phraseGenerator);
     if (inputProperties.containsKey(InputProperty.ForegroundTM)) tmList.add((DynamicTranslationModel) inputProperties.get(InputProperty.ForegroundTM));
+    if (inputProperties.containsKey(InputProperty.TermbaseTM)) tmList.add((DynamicTranslationModel) inputProperties.get(InputProperty.TermbaseTM));
     DynamicTranslationModel<String> backgroundModel = (DynamicTranslationModel<String>) inferer.phraseGenerator;
     
 
