@@ -439,6 +439,9 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
       tmList.add((DynamicTranslationModel<FV>) sourceInputProperties.get(InputProperty.ForegroundTM));
     }
+    if (sourceInputProperties.containsKey(InputProperty.TermbaseTM)) {
+      tmList.add((DynamicTranslationModel<FV>) sourceInputProperties.get(InputProperty.TermbaseTM));
+    }
     
     SymmetricalWordAlignment alignment = SyntheticRules.bidirAlign((Sequence<IString>)source, (Sequence<IString>)target, tmList, prefixAlignCompounds, SymmetrizationType.grow_diag_final_and);
       

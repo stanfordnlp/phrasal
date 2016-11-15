@@ -117,6 +117,9 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     if(foregroundModel != null && !inputProperties.containsKey(InputProperty.ForegroundTM)) {
       inputProperties.put(InputProperty.ForegroundTM, foregroundModel);
     }
+    if(termbaseModel != null && !inputProperties.containsKey(InputProperty.TermbaseTM)) {
+      inputProperties.put(InputProperty.TermbaseTM, termbaseModel);
+    }
     
     // TM (phrase table) query for applicable rules
     final PhraseQuery<TK,FV> phraseQuery = 

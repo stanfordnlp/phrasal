@@ -178,11 +178,20 @@ public class CombinedTranslationModel<TK,FV> implements TranslationModel<TK,FV> 
 
     // Support for decoder-local translation models
     List<TranslationModel<TK,FV>> translationModels = models;
-    if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
-      TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+    boolean foreground = sourceInputProperties.containsKey(InputProperty.ForegroundTM);
+    boolean termbase = sourceInputProperties.containsKey(InputProperty.TermbaseTM);
+    if (foreground || termbase) {
       translationModels = new ArrayList<>(models);
-      translationModels.add(tm);
+      if(foreground) {
+        TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+        translationModels.add(tm);
+      }
+      if(termbase) {
+        TranslationModel<TK,FV> tm = (TranslationModel) sourceInputProperties.get(InputProperty.TermbaseTM);
+        translationModels.add(tm);
+      }
     }
+    
     
     final Map<CoverageSet, List<List<ConcreteRule<TK,FV>>>> ruleLists = 
         new HashMap<>(source.size() * source.size());
