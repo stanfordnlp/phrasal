@@ -42,6 +42,10 @@ public enum InputProperty {
   // Type: TranslationModel
   ForegroundTM,
   
+  // A termbase translation model.
+  // Type: TranslationModel
+  TermbaseTM,
+  
   // A weight vector
   // Type: Counter<String>
   ModelWeights,

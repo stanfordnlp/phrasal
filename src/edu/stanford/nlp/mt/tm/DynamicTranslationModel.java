@@ -266,13 +266,13 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
 
   /**
-   * Configure this TM as a foreground model. Copy configuration parameters from a backgroundTM during setup.
+   * Configure this TM as a foreground or termbase model. Copy configuration parameters from a backgroundTM during setup.
    * Permit a different feature template, a useful option for tuning.
    * 
    * @param backgroundTM
    * @param t
    */
-  public synchronized void configureAsForegroundTM(DynamicTranslationModel<FV> backgroundTM, FeatureTemplate t) {
+  public synchronized void configureAsForegroundTM(DynamicTranslationModel<FV> backgroundTM, FeatureTemplate t, String name) {
     TimeKeeper timer = TimingUtils.start();
     maxSourcePhrase = backgroundTM.maxSourcePhrase;
     maxTargetPhrase = backgroundTM.maxTargetPhrase;
@@ -282,7 +282,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       setReorderingScores(doHierarchical);
     }
     
-    this.name = Phrasal.TM_FOREGROUND_NAME;
+    this.name = name;
     setFeatureTemplate(t);
     
     createIdArrays();
@@ -604,14 +604,30 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 //    logger.info("input {}: TM timing {}", sourceInputId, timer);
     
     // Concatenate foreground model rules
-    if (sourceInputProperties.containsKey(InputProperty.ForegroundTM)) {
-      DynamicTranslationModel<FV> foregroundTM = 
-          (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+    boolean foreground = sourceInputProperties.containsKey(InputProperty.ForegroundTM);
+    boolean termbase = sourceInputProperties.containsKey(InputProperty.TermbaseTM);
+    if (foreground || termbase) {
       final InputProperties fgProperties = new InputProperties(sourceInputProperties);
       fgProperties.remove(InputProperty.ForegroundTM);
-      int bgSize = concreteRules.size();
-      concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
-      logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
+      fgProperties.remove(InputProperty.TermbaseTM);
+      
+      if(foreground) {
+        DynamicTranslationModel<FV> foregroundTM = 
+            (DynamicTranslationModel) sourceInputProperties.get(InputProperty.ForegroundTM);
+      
+        int bgSize = concreteRules.size();
+        concreteRules.addAll(foregroundTM.getRules(source, fgProperties, sourceInputId, scorer));
+        logger.info("input {}: adding {} rules from foreground model", sourceInputId, concreteRules.size() - bgSize);
+      }
+      
+      if(termbase) {
+        DynamicTranslationModel<FV> termbaseTM = 
+            (DynamicTranslationModel) sourceInputProperties.get(InputProperty.TermbaseTM);
+      
+        int bgSize = concreteRules.size();
+        concreteRules.addAll(termbaseTM.getRules(source, fgProperties, sourceInputId, scorer));
+        logger.info("input {}: adding {} rules from termbase model", sourceInputId, concreteRules.size() - bgSize);
+      }
     }
     
     return concreteRules;

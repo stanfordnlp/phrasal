@@ -17,6 +17,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
   protected FeatureExtractor<TK, FV> incrementalFeaturizer;
   protected TranslationModel<TK,FV> phraseGenerator;
   protected TranslationModel<TK,FV> foregroundModel = null;
+  protected TranslationModel<TK,FV> termbaseModel = null;
   protected Scorer<FV> scorer;
   protected SearchHeuristic<TK, FV> heuristic;
   protected RecombinationFilter<Derivation<TK, FV>> filter;
@@ -47,6 +48,12 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
     return this;
   }
 
+  public InfererBuilder<TK, FV> setTermbaseModel(
+      TranslationModel<TK,FV> termbaseModel) {
+    this.termbaseModel = termbaseModel;
+    return this;
+  }
+  
   @Override
   public InfererBuilder<TK, FV> setScorer(Scorer<FV> scorer) {
     this.scorer = scorer;

@@ -24,6 +24,7 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
   protected final boolean filterUnknownWords;
   protected final TranslationModel<TK,FV> unknownWordModel;
   public final TranslationModel<TK,FV> foregroundModel;
+  public final TranslationModel<TK,FV> termbaseModel;
 
   /**
    * Constructor.
@@ -39,5 +40,6 @@ abstract public class AbstractInferer<TK, FV> implements Inferer<TK, FV> {
     filterUnknownWords = builder.filterUnknownWords;
     unknownWordModel = builder.unknownWordModel;
     foregroundModel = builder.foregroundModel;
+    termbaseModel = builder.termbaseModel;
   }
 }
