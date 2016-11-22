@@ -111,9 +111,9 @@ dependencies {
   compile group: 'com.esotericsoftware', name: 'kryo', version: '3.0.1'
   compile group: 'it.unimi.dsi', name: 'fastutil', version: '7.0.12'
   compile group: 'com.google.guava', name: 'guava', version: '19.0'
-  compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.6.2'
-  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.6.2'
-  compile group: 'com.lmax', name: 'disruptor', version: '3.3.5'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.7'
+  compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
+  compile group: 'com.lmax', name: 'disruptor', version: '3.3.6'
   
   // Test dependencies
   testCompile group: 'junit', name: 'junit', version: '4.12'

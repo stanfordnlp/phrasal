@@ -23,23 +23,28 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
   public static final String FEATURE_NAME = "PRV";
   public static final String SOURCE_WORDS = FEATURE_NAME + ":srcWrd";  
   public static final String TARGET_WORDS = FEATURE_NAME + ":tgtWrd";
+  public static final String FULL_SEGMENT = FEATURE_NAME + ":fullSegment";
 
   public static final String UNK_TM = "edu.stanford.nlp.mt.tm.UnknownWordPhraseGenerator";
   
   private final boolean wordFeatures;
+  private final boolean fullSegmentFeature; // requires feature set DENSE_EXT_GREEN
   
   private ConcurrentHashMap<String, String> phraseFeatMap = null;
   private ConcurrentHashMap<String, String> srcWordsFeatMap = null;
   private ConcurrentHashMap<String, String> tgtWordsFeatMap = null;
+  private ConcurrentHashMap<String, String> fullSegmentFeatMap = null;
   
   public RuleProvenanceFeaturizer(String...args) {
     Properties opts = FeatureUtils.argsToProperties(args);
     wordFeatures = opts.containsKey("wordFeatures");
+    fullSegmentFeature = opts.containsKey("fullSegmentFeature");
     initFeatureMaps();
   }
   
   public RuleProvenanceFeaturizer() {
     wordFeatures = false;
+    fullSegmentFeature = false;
     initFeatureMaps();
   }
   
@@ -48,6 +53,9 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
     if(wordFeatures) {
       srcWordsFeatMap = new ConcurrentHashMap<>();
       tgtWordsFeatMap = new ConcurrentHashMap<>();
+    }
+    if(fullSegmentFeature) {
+      fullSegmentFeatMap = new ConcurrentHashMap<>();
     }
   }
   
@@ -73,6 +81,13 @@ public class RuleProvenanceFeaturizer implements RuleFeaturizer<IString, String>
     if(wordFeatures) {
       features.add(new FeatureValue<>(getFeatureName(f.phraseTableName, srcWordsFeatMap, SOURCE_WORDS), f.sourcePhrase.size()));
       features.add(new FeatureValue<>(getFeatureName(f.phraseTableName, tgtWordsFeatMap, TARGET_WORDS), f.targetPhrase.size()));
+    }
+    
+    if(fullSegmentFeature && 
+        (f.phraseTableName.equals(Phrasal.TM_FOREGROUND_NAME) || f.phraseTableName.equals(Phrasal.TM_TERMBASE_NAME)) &&
+        f.rule.abstractRule.scores.length >= 10 && // i.e. using DENSE_EXT_GREEN feature template
+        f.rule.abstractRule.scores[8] != 0.0) { // i.e. phrase is a full segment
+      features.add(new FeatureValue<>(getFeatureName(f.phraseTableName, fullSegmentFeatMap, FULL_SEGMENT), 1.0));
     }
     
     return features;

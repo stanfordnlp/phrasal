@@ -203,6 +203,7 @@ public class Phrasal {
   public static final String DROP_UNKNOWN_WORDS = "drop-unknown-words";
   public static final String INDEPENDENT_PHRASE_TABLES = "independent-phrase-tables";
   public static final String FOREGROUND_TM = "foreground-tm-file";
+  public static final String TERMBASE = "termbase-file";
   public static final String ALIGNMENT_OUTPUT_FILE = "alignment-output-file";
   public static final String PREPROCESSOR_FILTER = "preprocessor-filter";
   public static final String POSTPROCESSOR_FILTER = "postprocessor-filter";
@@ -227,7 +228,7 @@ public class Phrasal {
         DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, 
         FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
-        MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, FOREGROUND_TM, LANGUAGE_MODEL_OPT,
+        MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, FOREGROUND_TM, TERMBASE, LANGUAGE_MODEL_OPT,
         ALIGNMENT_OUTPUT_FILE, PREPROCESSOR_FILTER, POSTPROCESSOR_FILTER, SOURCE_CLASS_MAP, TARGET_CLASS_MAP,
         PRINT_MODEL_SCORES, INPUT_PROPERTIES, FEATURE_AUGMENTATION, WRAP_BOUNDARY, KSR_NBEST_SIZE, WPA_NBEST_SIZE, ORACLE_NBEST_SIZE, REFERENCE));
     ALL_RECOGNIZED_FIELDS.addAll(REQUIRED_FIELDS);
@@ -239,6 +240,7 @@ public class Phrasal {
    */
   public static final String TM_BACKGROUND_NAME = "background-tm";
   public static final String TM_FOREGROUND_NAME = "foreground-tm";
+  public static final String TM_TERMBASE_NAME = "termbase-tm";
   
   public static final int MAX_NBEST_SIZE = 1000;
 
@@ -626,6 +628,7 @@ public class Phrasal {
     primaryModel.setName(TM_BACKGROUND_NAME);
     
     TranslationModel<IString, String> foregroundModel = null;
+    TranslationModel<IString, String> termbaseModel = null;
     
     final List<DerivationFeaturizer<IString, String>> lexReorderFeaturizers = new ArrayList<>();
     if (primaryModel instanceof DynamicTranslationModel) {
@@ -636,6 +639,10 @@ public class Phrasal {
          foregroundModel = TranslationModelFactory.<String> factory(config.get(FOREGROUND_TM).get(0), factoryOptions);
          foregroundModel.setName(TM_FOREGROUND_NAME);
       }
+      if (config.get(TERMBASE) != null) {
+        termbaseModel = TranslationModelFactory.<String> factory(config.get(TERMBASE).get(0), factoryOptions);
+        termbaseModel.setName(TM_TERMBASE_NAME);
+     }
     } else {
       logger.info("Translation model mode: static");
       final List<TranslationModel<IString, String>> translationModels = new ArrayList<>();
@@ -803,6 +810,7 @@ public class Phrasal {
     // Link the final featurizer and the phrase table
     translationModel.setFeaturizer(featurizer);
     if(foregroundModel != null) foregroundModel.setFeaturizer(featurizer);
+    if(termbaseModel != null) termbaseModel.setFeaturizer(featurizer);
 
     // Create Scorer / weight vector
     this.globalModel = new ClassicCounter<String>();
@@ -865,6 +873,7 @@ public class Phrasal {
         infererBuilder.setFeaturizer((FeatureExtractor<IString, String>) featurizer.clone());
         infererBuilder.setPhraseGenerator((TranslationModel<IString, String>) translationModel.clone());
         if(foregroundModel != null) infererBuilder.setForegroundModel((TranslationModel<IString, String>) foregroundModel.clone());
+        if(termbaseModel != null) infererBuilder.setTermbaseModel((TranslationModel<IString, String>) termbaseModel.clone());
         final Scorer<String> scorer = ScorerFactory.factory(ScorerFactory.SPARSE_SCORER, globalModel, null);
         infererBuilder.setScorer(scorer);
         scorers.add(scorer);
@@ -1390,6 +1399,13 @@ public class Phrasal {
       tm.setName(TM_FOREGROUND_NAME);
       logger.info("Configured foreground translation model for thread {}: {}", threadId, tm.getName());
     }
+    if (inputProperties.containsKey(InputProperty.TermbaseTM)) {
+      final TranslationModel<IString, String> tm = (TranslationModel<IString, String>) inputProperties
+          .get(InputProperty.TermbaseTM);
+      tm.setFeaturizer(featurizer);
+      tm.setName(TM_TERMBASE_NAME);
+      logger.info("Configured termbase translation model for thread {}: {}", threadId, tm.getName());
+    }
     if (inputProperties.containsKey(InputProperty.ModelWeights)) {
       final Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.ModelWeights);
       this.scorers.get(threadId).updateWeights(weights);
@@ -1460,6 +1476,13 @@ public class Phrasal {
       tm.setFeaturizer(featurizer);
       tm.setName(TM_FOREGROUND_NAME);
       logger.info("Configured foreground translation model for thread {}: {}", threadId, tm.getName());
+    }
+    if (inputProperties.containsKey(InputProperty.TermbaseTM)) {
+      final TranslationModel<IString, String> tm = (TranslationModel<IString, String>) inputProperties
+          .get(InputProperty.TermbaseTM);
+      tm.setFeaturizer(featurizer);
+      tm.setName(TM_TERMBASE_NAME);
+      logger.info("Configured termbase translation model for thread {}: {}", threadId, tm.getName());
     }
     if (inputProperties.containsKey(InputProperty.ModelWeights)) {
       final Counter<String> weights = (Counter<String>) inputProperties.get(InputProperty.ModelWeights);
