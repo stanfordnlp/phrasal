@@ -135,10 +135,10 @@ public class FeatureExtractor<TK, FV> extends
     for (Featurizer<TK, FV> f : featurizers) {
       if(f instanceof NeedsCloneable) {
         if(f instanceof RerankingFeaturizer) {
-          featurizer.featurizers.add((RerankingFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f));
+          featurizer.featurizers.add((RerankingFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f).clone());
         }
         else {
-          featurizer.featurizers.add((DerivationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f));
+          featurizer.featurizers.add((DerivationFeaturizer<TK, FV>) ((NeedsCloneable<TK, FV>) f).clone());
         }
       }
       else 
