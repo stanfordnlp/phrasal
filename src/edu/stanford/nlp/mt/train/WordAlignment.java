@@ -27,7 +27,11 @@ public interface WordAlignment {
 
   public SortedSet<Integer> f2e(int i);
 
+  public SortedSet<Integer>[] f2e();
+  
   public SortedSet<Integer> e2f(int i);
+
+  public SortedSet<Integer>[] e2f();
 
   public int f2eSize(int i, int min, int max);
 
