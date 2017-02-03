@@ -50,7 +50,7 @@ public class FlatNBestListTest extends TestCase {
   }
 
   public void testToString() throws IOException {
-    String strRep = nbestList.toString();
+    String strRep = nbestList.toString().replaceAll("\r\n", "\n"); // replaceAll: fixes test on Windows platforms
     assertEquals(156305, strRep.length());
   }
 
