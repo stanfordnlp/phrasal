@@ -198,7 +198,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int minCoverage = i - maxPhraseLength;
       int startBeam = Math.max(rootBeam, minCoverage);
 
-      startTime =  System.nanoTime();
+      startTime =  System.currentTimeMillis();
       // Initialize the priority queue
       Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
@@ -212,7 +212,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
       }
       
-      pqInit += System.nanoTime() - startTime;
+      pqInit += System.currentTimeMillis() - startTime;
 
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
@@ -233,7 +233,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
         // else pruned items don't count against the pop limit
 
-        startTime =  System.nanoTime();
+        startTime =  System.currentTimeMillis();
         // Expand this consequent.
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
             sourceInputId, outputSpace, false, timeContainer)) {
@@ -241,7 +241,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
         }
-        pqExpand += System.nanoTime() - startTime;
+        pqExpand += System.currentTimeMillis() - startTime;
       }
           
       if (printDebug) {
@@ -254,7 +254,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     
     // Debug statistics
     logger.info("input {}: Decoding time: {}; pqInit: {}, pqExpand: {}, nextSuccessors: {}, buildDerivation: {}", 
-        sourceInputId, timer, pqInit, pqExpand, timeContainer.nextSuccessors, timeContainer.buildDerivation);
+        sourceInputId, timer, (float)pqInit/1000.0, (float)pqExpand/1000.0, (float)timeContainer.nextSuccessors/1000.0, (float)timeContainer.buildDerivation/1000.0);
     logger.info("input {}: #derivations generated: {}  pruned: {}  recombined: {}", sourceInputId, 
         totalHypothesesGenerated, numPruned, numRecombined);
 
