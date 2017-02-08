@@ -189,23 +189,30 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     // main translation loop---beam expansion
     final int maxPhraseLength = phraseGenerator.maxLengthSource();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
+    long pqInit = 0, pqExpand = 0;
+    long startTime;
+    TimeContainer timeContainer = new TimeContainer();
+
     for (int i = startOfDecoding; i <= sourceLength; i++) {
       int rootBeam = prefilledBeams ? minSourceCoverage : 0;
       int minCoverage = i - maxPhraseLength;
       int startBeam = Math.max(rootBeam, minCoverage);
 
+      startTime =  System.nanoTime();
       // Initialize the priority queue
       Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, false)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, false, timeContainer)) {
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
           }
         }
       }
+      
+      pqInit += System.nanoTime() - startTime;
 
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
@@ -226,13 +233,15 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         }
         // else pruned items don't count against the pop limit
 
+        startTime =  System.nanoTime();
         // Expand this consequent.
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace, false)) {
+            sourceInputId, outputSpace, false, timeContainer)) {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
         }
+        pqExpand += System.nanoTime() - startTime;
       }
           
       if (printDebug) {
@@ -244,7 +253,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     timer.mark("Inference");
     
     // Debug statistics
-    logger.info("input {}: Decoding time: {}", sourceInputId, timer);
+    logger.info("input {}: Decoding time: {}; pqInit: {}, pqExpand: {}, nextSuccessors: {}, buildDerivation: {}", 
+        sourceInputId, timer, pqInit, pqExpand, timeContainer.nextSuccessors, timeContainer.buildDerivation);
     logger.info("input {}: #derivations generated: {}  pruned: {}  recombined: {}", sourceInputId, 
         totalHypothesesGenerated, numPruned, numRecombined);
 
@@ -281,6 +291,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     return null;
   }
 
+  private class TimeContainer {
+    public long nextSuccessors = 0;
+    public long buildDerivation = 0;
+    public long startTime = 0;
+  }
+  
   /**
    * Searches for consequents, always returning at least one and at most two.
    * 
@@ -293,14 +309,19 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
    */
   private List<Item> generateConsequentsFrom(Consequent<TK, FV> antecedent, 
       HyperedgeBundle<TK, FV> bundle, int sourceInputId, OutputSpace<TK, FV> outputSpace, 
-      boolean checkSourceCoverage) {
+      boolean checkSourceCoverage, TimeContainer timeContainer) {
     List<Item> successors = new ArrayList<>(2);
-    for(Consequent<TK, FV> successor : bundle.nextSuccessors(antecedent)) {
+    timeContainer.startTime = System.currentTimeMillis();
+    List<Consequent<TK, FV>> nextSuccessors = bundle.nextSuccessors(antecedent);
+    timeContainer.nextSuccessors += System.currentTimeMillis() - timeContainer.startTime;
+    for(Consequent<TK, FV> successor : nextSuccessors) {
       boolean buildDerivation = outputSpace.allowableContinuation(successor.antecedent.featurizable, successor.rule)
           && (!checkSourceCoverage || (!successor.antecedent.sourceCoverage.intersects(successor.rule.sourceCoverage) ));
+      timeContainer.startTime = System.currentTimeMillis();
       Derivation<TK, FV> derivation = buildDerivation ? new Derivation<>(sourceInputId,
           successor.rule, successor.antecedent.length, successor.antecedent, featurizer, scorer, 
           heuristic, outputSpace) : null;
+      timeContainer.buildDerivation += System.currentTimeMillis() - timeContainer.startTime;
       successors.add(new Item(derivation, successor));
     }
     return successors;
@@ -408,6 +429,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final int maxTgtPhraseLength = prefixGrid.maxTargetLength();
     int totalHypothesesGenerated = 1, numRecombined = 0, numPruned = 0;
     int lastRecoveredCardinality = 0;
+    TimeContainer timeContainer = new TimeContainer();
     for (int i = 1; i <= prefixLength; ++i) {
       //System.err.println("i = " + i);
       int rootBeam = 0;
@@ -420,7 +442,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) tgtBeams.get(j);
         //System.err.println("card " + j + " consequent size " + i);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
-          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true)) {
+          for(Item consequent : generateConsequentsFrom(null, bundle, sourceInputId, outputSpace, true, timeContainer)) {
             ++totalHypothesesGenerated;
             if (consequent.derivation == null) ++numPruned;
             pq.add(consequent);
@@ -442,7 +464,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
        
         // Expand this consequent
         for(Item consequent : generateConsequentsFrom(item.consequent, item.consequent.bundle, 
-            sourceInputId, outputSpace, true)) {
+            sourceInputId, outputSpace, true, timeContainer)) {
           ++totalHypothesesGenerated;
           if (consequent.derivation == null) ++numPruned;
           pq.add(consequent);
@@ -489,7 +511,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     timer.mark("PrefixDecoding");
     
     // Debug statistics
-    logger.info("input {}: Prefix decoding time: {}", sourceInputId, timer);
+    logger.info("input {}: Prefix decoding time: {}; nextSuccessors: {}, buildDerivation: {}", 
+        sourceInputId, timer, timeContainer.nextSuccessors, timeContainer.buildDerivation);
     logger.info("input {}: #derivations generated: {}  pruned: {}  recombined: {}", sourceInputId, 
         totalHypothesesGenerated, numPruned, numRecombined);
     
