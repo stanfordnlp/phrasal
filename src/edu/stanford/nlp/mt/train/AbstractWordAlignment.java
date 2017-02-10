@@ -22,7 +22,6 @@ import edu.stanford.nlp.mt.util.Sequence;
  * 
  * @author Michel Galley
  */
-
 public class AbstractWordAlignment implements WordAlignment {
 
   protected Integer id;
@@ -229,5 +228,15 @@ public class AbstractWordAlignment implements WordAlignment {
       if (!ss.isEmpty())
         return false;
     return true;
+  }
+
+  @Override
+  public SortedSet<Integer>[] f2e() {
+    return f2e;
+  }
+
+  @Override
+  public SortedSet<Integer>[] e2f() {
+    return e2f;
   }
 }

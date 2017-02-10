@@ -49,7 +49,7 @@ public class SymmetricalWordAlignment extends AbstractWordAlignment {
         UNALIGN_BOUNDARY_MARKERS_OPT, "false"));
   }
 
-  SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
+  public SymmetricalWordAlignment(Sequence<IString> f, Sequence<IString> e,
       SortedSet<Integer>[] f2e, SortedSet<Integer>[] e2f) {
     super(f, e, f2e, e2f);
     if (f2e == null && e2f == null)
