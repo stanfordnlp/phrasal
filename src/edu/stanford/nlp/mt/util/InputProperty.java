@@ -60,6 +60,10 @@ public enum InputProperty {
   
   // Flag that is true if the last word of the prefix may be incomplete
   // Type: Boolean
-  AllowIncompletePrefix
+  AllowIncompletePrefix,
+  
+  //Sentence based beam size
+  // Type: Integer
+  BeamSize
   
 }

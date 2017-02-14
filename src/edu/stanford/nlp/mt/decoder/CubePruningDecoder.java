@@ -121,6 +121,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       inputProperties.put(InputProperty.TermbaseTM, termbaseModel);
     }
     
+    final int localBeamCapacity = sourceInputProperties.containsKey(InputProperty.BeamSize) ?
+        (int) sourceInputProperties.get(InputProperty.BeamSize) :
+          beamCapacity;
+    
     // TM (phrase table) query for applicable rules
     final PhraseQuery<TK,FV> phraseQuery = 
         getRules(source, inputProperties, targets, sourceInputId, scorer);
@@ -151,7 +155,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     timer.mark("Rulegrid");
     
     // Fill Beam 0 (root)...only has one cube
-    BundleBeam<TK,FV> nullBeam = new BundleBeam<>(beamCapacity, filter, ruleGrid, 
+    BundleBeam<TK,FV> nullBeam = new BundleBeam<>(localBeamCapacity, filter, ruleGrid, 
           recombinationHistory, maxDistortion, 0);
   
     // Setup the beams
@@ -162,7 +166,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<Beam<Derivation<TK,FV>>> beams = new ArrayList<>(sourceLength+1);
     beams.add(nullBeam);
     for (int i = 1; i <= sourceLength; ++i) {
-      beams.add(new BundleBeam<>(beamCapacity, filter, ruleGrid, recombinationHistory, maxDistortion, i));
+      beams.add(new BundleBeam<>(localBeamCapacity, filter, ruleGrid, recombinationHistory, maxDistortion, i));
     }
 
     // Initialize feature extractors
@@ -195,7 +199,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int startBeam = Math.max(rootBeam, minCoverage);
 
       // Initialize the priority queue
-      Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
+      Queue<Item> pq = new PriorityQueue<>(2*localBeamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) beams.get(j);
         for (HyperedgeBundle<TK,FV> bundle : bundleBeam.getBundlesForConsequentSize(i)) {
@@ -210,7 +214,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) beams.get(i);
       int numPoppedItems = newBeam.size();
-      while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
+      while (numPoppedItems < localBeamCapacity && ! pq.isEmpty()) {
         final Item item = pq.poll();
 
         // Derivations are null if they're pruned by an output constraint.
@@ -379,6 +383,10 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       allowIncompletePrefix = (boolean) sourceInputProperties.get(InputProperty.AllowIncompletePrefix);
     }
     
+    final int localBeamCapacity = sourceInputProperties.containsKey(InputProperty.BeamSize) ?
+        (int) sourceInputProperties.get(InputProperty.BeamSize) :
+          beamCapacity;
+    
     int ruleQueryLimit = -1;  // Disable query limit. We might need some of these rules.
     final RuleGrid<TK,FV> prefixGrid = new RuleGrid<>(ruleList, source, prefix, ruleQueryLimit, allowIncompletePrefix); 
     
@@ -397,12 +405,12 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final List<Beam<Derivation<TK,FV>>> tgtBeams = new ArrayList<>(prefixLength + 1);
     
     // null beam
-    BundleBeam<TK,FV> nullBeam = new BundleBeam<>(beamCapacity, filter, prefixGrid, recombinationHistory, maxDistortion, 0, true);
+    BundleBeam<TK,FV> nullBeam = new BundleBeam<>(localBeamCapacity, filter, prefixGrid, recombinationHistory, maxDistortion, 0, true);
     for(Derivation<TK,FV> d : beams.get(0)) nullBeam.put(d, false);
     tgtBeams.add(nullBeam);
     
     for (int i = 1; i <= prefixLength; ++i) {
-      tgtBeams.add(new BundleBeam<>(beamCapacity, filter, prefixGrid, recombinationHistory, maxDistortion, i, true));
+      tgtBeams.add(new BundleBeam<>(localBeamCapacity, filter, prefixGrid, recombinationHistory, maxDistortion, i, true));
     }
     
     final int maxTgtPhraseLength = prefixGrid.maxTargetLength();
@@ -415,7 +423,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       int startBeam = Math.max(rootBeam, minCoverage);
 
       // Initialize the priority queue
-      Queue<Item> pq = new PriorityQueue<>(2*beamCapacity);
+      Queue<Item> pq = new PriorityQueue<>(2*localBeamCapacity);
       for (int j = startBeam; j < i; ++j) {
         BundleBeam<TK,FV> bundleBeam = (BundleBeam<TK,FV>) tgtBeams.get(j);
         //System.err.println("card " + j + " consequent size " + i);
@@ -431,7 +439,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
       // Beam-filling
       BundleBeam<TK,FV> newBeam = (BundleBeam<TK, FV>) tgtBeams.get(i);
       int numPoppedItems = newBeam.size();
-      while (numPoppedItems < beamCapacity && ! pq.isEmpty()) {
+      while (numPoppedItems < localBeamCapacity && ! pq.isEmpty()) {
         final Item item = pq.poll();
 
         // Derivations are null if they're pruned by an output constraint or have incompatible source coverage.
