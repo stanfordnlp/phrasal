@@ -475,5 +475,9 @@ public abstract class AbstractBeamInferer<TK, FV> extends AbstractInferer<TK, FV
     return beams;
   }
 
+  public int getBeamSize() {
+    return beamCapacity;
+  }
+  
   abstract public void dump(Derivation<TK, FV> hyp);
 }
