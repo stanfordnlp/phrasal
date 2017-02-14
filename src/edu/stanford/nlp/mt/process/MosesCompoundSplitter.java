@@ -30,7 +30,7 @@ import edu.stanford.nlp.stats.Counter;
  */
 public class MosesCompoundSplitter {
   
-  private static String[] FILLERS = {"", "s", "es"};
+  private static String[] FILLERS = {"", "s", "es", "-", "en"};
   private static final int MIN_SIZE = 3; // the minimum number of characters is actually MIN_SIZE + 1
   private static final int MIN_COUNT = 5;
   private static final int MAX_COUNT = 5;
@@ -71,7 +71,7 @@ public class MosesCompoundSplitter {
         reader.close();
         throw new IOException("Illegal input in model file, line " + reader.getLineNumber() + ": " + line);
       }
-      int cnt = Integer.parseInt(input[2]);
+      long cnt = Long.parseLong(input[2]);
       totalCount += cnt;
       String tc = input[1];
       if(cnt < minCnt || tc.length() < MIN_SIZE + 1) continue; // these will never be used for splitting anyway
