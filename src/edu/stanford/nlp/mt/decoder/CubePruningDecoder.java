@@ -124,8 +124,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final int localBeamCapacity = sourceInputProperties.containsKey(InputProperty.BeamSize) ?
         (int) sourceInputProperties.get(InputProperty.BeamSize) :
           beamCapacity;
-        
-    logger.info("input {}: beam size {}", sourceInputId, localBeamCapacity);
     
     // TM (phrase table) query for applicable rules
     final PhraseQuery<TK,FV> phraseQuery = 
@@ -137,7 +135,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     if (source.size() == 0) return null;
     final int sourceLength = source.size();
     final List<ConcreteRule<TK,FV>> ruleList = phraseQuery.ruleList;
-    logger.info("input {}: rule query size {}", sourceInputId, ruleList.size());
+    logger.info("input {}: rule query size {}, beam size {}", sourceInputId, ruleList.size(), localBeamCapacity);
     
     if (printDebug) {
       for (ConcreteRule<TK,FV> rule : ruleList)
