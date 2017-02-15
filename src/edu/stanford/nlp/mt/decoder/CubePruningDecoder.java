@@ -124,6 +124,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final int localBeamCapacity = sourceInputProperties.containsKey(InputProperty.BeamSize) ?
         (int) sourceInputProperties.get(InputProperty.BeamSize) :
           beamCapacity;
+        
+    logger.info("input {}: beam size {}", sourceInputId, localBeamCapacity);
     
     // TM (phrase table) query for applicable rules
     final PhraseQuery<TK,FV> phraseQuery = 
