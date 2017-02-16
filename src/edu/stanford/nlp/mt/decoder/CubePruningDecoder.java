@@ -386,8 +386,6 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     final int localBeamCapacity = sourceInputProperties.containsKey(InputProperty.BeamSize) ?
         (int) sourceInputProperties.get(InputProperty.BeamSize) :
           beamCapacity;
-    
-    logger.info("Decoding with beam size " + localBeamCapacity);
         
     int ruleQueryLimit = -1;  // Disable query limit. We might need some of these rules.
     final RuleGrid<TK,FV> prefixGrid = new RuleGrid<>(ruleList, source, prefix, ruleQueryLimit, allowIncompletePrefix); 
