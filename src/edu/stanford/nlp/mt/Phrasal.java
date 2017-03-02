@@ -33,6 +33,7 @@ import edu.stanford.nlp.mt.decoder.feat.DerivationFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
 import edu.stanford.nlp.mt.decoder.feat.Featurizer;
 import edu.stanford.nlp.mt.decoder.feat.FeaturizerFactory;
+import edu.stanford.nlp.mt.decoder.feat.PrefixExtender;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.HierarchicalReorderingFeaturizer;
 import edu.stanford.nlp.mt.decoder.feat.base.LexicalReorderingFeaturizer;
@@ -134,8 +135,9 @@ public class Phrasal {
         .append("  -").append(DISTORTION_LIMIT)
         .append(" num [cost] : Hard distortion limit and delay cost (default cost: 0.0).").append(nl).append("  -")
         .append(ADDITIONAL_FEATURIZERS).append(" class [class] : List of additional feature functions.").append(nl)
-        .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.")
-        .append(nl).append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)")
+        .append("  -").append(DISABLED_FEATURIZERS).append(" class [class] : List of baseline featurizers to disable.").append(nl)
+        .append("  -").append(PREFIX_EXTENDER).append(" class : Prefix extender class for reflection constructor.").append(nl)
+        .append("  -").append(NUM_THREADS).append(" num : Number of decoding threads (default: 1)")
         .append(nl).append("  -").append(USE_ITG_CONSTRAINTS)
         .append(" boolean : Use ITG constraints for decoding (multibeam search only)").append(nl).append("  -")
         .append(RECOMBINATION_MODE).append(" name : Recombination mode [pharoah,exact,dtu] (default: exact).")
@@ -193,6 +195,7 @@ public class Phrasal {
   public static final String DISTORTION_LIMIT = "distortion-limit";
   public static final String ADDITIONAL_FEATURIZERS = "additional-featurizers";
   public static final String DISABLED_FEATURIZERS = "disabled-featurizers";
+  public static final String PREFIX_EXTENDER = "prefix-extender";
   public static final String NUM_THREADS = "threads";
   public static final String USE_ITG_CONSTRAINTS = "use-itg-constraints";
   public static final String RECOMBINATION_MODE = "recombination-mode";
@@ -225,7 +228,7 @@ public class Phrasal {
   static {
     REQUIRED_FIELDS.add(TRANSLATION_TABLE_OPT);
     OPTIONAL_FIELDS.addAll(Arrays.asList(INPUT_FILE_OPT,WEIGHTS_FILE, REORDERING_MODEL, DISTORTION_LIMIT, ADDITIONAL_FEATURIZERS,
-        DISABLED_FEATURIZERS, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, 
+        DISABLED_FEATURIZERS, PREFIX_EXTENDER, OPTION_LIMIT_OPT, NBEST_LIST_OPT, DISTINCT_NBEST_LIST_OPT, 
         FORCE_DECODE, PREFIX_ALIGN_COMPOUNDS, RECOMBINATION_MODE, SEARCH_ALGORITHM, BEAM_SIZE, WEIGHTS_FILE, MAX_SENTENCE_LENGTH, MIN_SENTENCE_LENGTH,
         USE_ITG_CONSTRAINTS, NUM_THREADS, GAPS_OPT, GAPS_IN_FUTURE_COST_OPT, LINEAR_DISTORTION_OPT,
         MAX_PENDING_PHRASES_OPT, DROP_UNKNOWN_WORDS, INDEPENDENT_PHRASE_TABLES, FOREGROUND_TM, TERMBASE, LANGUAGE_MODEL_OPT,
@@ -762,6 +765,76 @@ public class Phrasal {
         throw new RuntimeException();
       }
     }
+    
+    PrefixExtender<IString, String> prefixExtender = null;
+    if (config.containsKey(PREFIX_EXTENDER)) {
+      final List<String> tokens = config.get(PREFIX_EXTENDER);
+      String extenderName = null;
+      String args = null;
+      for (final String token : tokens) {
+        Featurizer<IString, String> featurizer = null;
+        if (extenderName == null) {
+          if (token.endsWith("()")) {
+            final String name = token.replaceFirst("\\(\\)$", "");
+            final Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory.loadFeaturizer(name);
+            featurizer = featurizerClass.newInstance();
+            logger.info("Prefix extender: {}.", name);
+            assert(featurizer instanceof PrefixExtender);
+            prefixExtender = (PrefixExtender<IString, String>) featurizer;
+            break;
+            
+          } else if (token.contains("(")) {
+            if (token.endsWith(")")) {
+              extenderName = token.replaceFirst("\\(.*", "");
+              args = token.replaceFirst("^.*\\(", "");
+              args = args.substring(0, args.length() - 1);
+              args = args.replaceAll("\\s*,\\s*", ",");
+              args = args.replaceAll("^\\s+", "");
+              args = args.replaceAll("\\s+$", "");
+              final String[] argsList = args.split(",");
+              logger.info("Prefix extender: {}. Args: {}", extenderName, Arrays.toString(argsList));
+              final Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory
+                  .loadFeaturizer(extenderName);
+              featurizer = featurizerClass.getConstructor(argsList.getClass()).newInstance(new Object[] { argsList });
+              assert(featurizer instanceof PrefixExtender);
+              prefixExtender = (PrefixExtender<IString, String>) featurizer;
+              extenderName = null;
+              break;
+              
+            } else {
+              extenderName = token.replaceFirst("\\(.*", "");
+              args = token.replaceFirst(".*\\(", "");
+            }
+          } else {
+            logger.fatal("Error: '(' expected immediately after prefix extender name {}", token);
+            logger.fatal("Note that no whitespace between '(' and the associated prefix extender name is allowed");
+            throw new RuntimeException();
+          }
+        } else {
+          if (token.endsWith(")")) {
+            args += " " + token.substring(0, token.length() - 1);
+            args = args.replaceAll("\\s*,\\s*", ",");
+            args = args.replaceAll("^\\s+", "");
+            args = args.replaceAll("\\s+$", "");
+            final String[] argsList = args.split(",");
+            logger.info("Prefix extender: {}. Args: {}", extenderName, Arrays.toString(argsList));
+            final Class<Featurizer<IString, String>> featurizerClass = FeaturizerFactory.loadFeaturizer(extenderName);
+            featurizer = featurizerClass.getConstructor(argsList.getClass()).newInstance((Object) argsList);
+            assert(featurizer instanceof PrefixExtender);
+            prefixExtender = (PrefixExtender<IString, String>) featurizer;
+            extenderName = null;
+            break;
+            
+          } else {
+            args += " " + token;
+          }
+        }
+      }
+      if (extenderName != null) {
+        logger.fatal("Error: no ')' found for prefix extender {}", extenderName);
+        throw new RuntimeException();
+      }
+    }
 
     // Create feature extractor
     final String lgModel = config.containsKey(LANGUAGE_MODEL_OPT) ? config.get(LANGUAGE_MODEL_OPT).get(0) : null;
@@ -879,6 +952,7 @@ public class Phrasal {
         scorers.add(scorer);
         infererBuilder.setSearchHeuristic((SearchHeuristic<IString, String>) heuristic.clone());
         infererBuilder.setRecombinationFilter((RecombinationFilter<Derivation<IString, String>>) filter.clone());
+        if(prefixExtender != null) infererBuilder.setPrefixExtender((PrefixExtender<IString, String>) prefixExtender.clone());
 
       } catch (final CloneNotSupportedException e) {
         logger.fatal("Could not clone an inferer member", e);

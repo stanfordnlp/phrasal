@@ -9,6 +9,7 @@ import java.util.Queue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import edu.stanford.nlp.mt.decoder.feat.PrefixExtender;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationHistory;
 import edu.stanford.nlp.mt.decoder.util.Beam;
 import edu.stanford.nlp.mt.decoder.util.BundleBeam;
@@ -49,6 +50,8 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
   protected int maxDistortion;
   protected final int defaultDistortion;
   
+  protected final PrefixExtender<TK, FV> prefixExtender;
+  
   static public <TK, FV> CubePruningDecoderBuilder<TK, FV> builder() {
     return new CubePruningDecoderBuilder<TK, FV>();
   }
@@ -57,6 +60,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     super(builder);
     maxDistortion = builder.maxDistortion;
     defaultDistortion = builder.maxDistortion;
+    prefixExtender = builder.prefixExtender;
 
     if (maxDistortion != -1) {
       logger.info("Cube pruning decoder {}. Distortion limit: {}", builder.decoderId, 
@@ -169,6 +173,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     if (inputProperties.containsKey(InputProperty.TargetPrefix) && targets != null && targets.size() > 0) {
       if (targets.size() > 1) logger.warn("Decoding to multiple prefixes is not supported. Choosing the first one.");
       targetPrefix = targets.get(0);
+      if(prefixExtender != null) targetPrefix = prefixExtender.extendPrefix(sourceInputId, source, targetPrefix, inputProperties);
     }
     
     // Initialize feature extractors

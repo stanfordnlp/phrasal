@@ -1,6 +1,7 @@
 package edu.stanford.nlp.mt.decoder;
 
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
+import edu.stanford.nlp.mt.decoder.feat.PrefixExtender;
 import edu.stanford.nlp.mt.decoder.h.SearchHeuristic;
 import edu.stanford.nlp.mt.decoder.recomb.RecombinationFilter;
 import edu.stanford.nlp.mt.decoder.util.Derivation;
@@ -23,6 +24,7 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
   protected RecombinationFilter<Derivation<TK, FV>> filter;
   protected boolean filterUnknownWords;
   protected TranslationModel<TK, FV> unknownWordModel;
+  protected PrefixExtender<TK, FV> prefixExtender = null;
 
   @Override
   abstract public Inferer<TK, FV> newInferer();
@@ -78,6 +80,12 @@ abstract public class AbstractInfererBuilder<TK, FV> implements InfererBuilder<T
   public InfererBuilder<TK, FV> setRecombinationFilter(
       RecombinationFilter<Derivation<TK, FV>> recombinationFilter) {
     this.filter = recombinationFilter;
+    return this;
+  }
+  
+  public InfererBuilder<TK, FV> setPrefixExtender(
+      PrefixExtender<TK, FV> prefixExtender) {
+    this.prefixExtender = prefixExtender;
     return this;
   }
 
