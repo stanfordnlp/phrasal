@@ -184,7 +184,7 @@ public class CubePruningDecoder<TK,FV> extends AbstractBeamInferer<TK, FV> {
     int minSourceCoverage = 0;
     boolean prefilledBeams = false;
     if (targetPrefix != null) {
-      minSourceCoverage = decodePrefix(source, ruleList, inputProperties, targets.get(0), 
+      minSourceCoverage = decodePrefix(source, ruleList, inputProperties, targetPrefix, 
           scorer, beams, sourceInputId, outputSpace, recombinationHistory, timer);
       if (minSourceCoverage < 0) {
         logger.warn("input {}: PREFIX DECODING FAILURE", sourceInputId);
