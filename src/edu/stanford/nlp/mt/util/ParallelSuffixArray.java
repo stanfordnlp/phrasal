@@ -840,7 +840,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
           fromSentenceOffset(srcBitext[srcEndExclusive]), tgtEndExclusive);
       
       // Set the start of the query
-      wordPosition = corpusPosition - srcStartInclusive;
+      wordPosition = corpusPosition - tgtStartInclusive;
     }
     
     public int sourceLength() {
