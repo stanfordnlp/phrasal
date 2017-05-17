@@ -765,7 +765,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     // Stratified sample through the list of positions
     List<SentencePair> samples = new ArrayList<>(maxSamples);
     for (int i = lb; i <= ub && samples.size() < maxSamples; i += stepSize) {
-      samples.add(new SentencePair(srcSuffixArray[i]));
+      samples.add(new SentencePair(tgtSuffixArray[i], true));
     }
     return new SuffixArraySample(samples, lb, ub);
   }
@@ -778,6 +778,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
    *
    */
   public class SentencePair {
+    
     public final int wordPosition;
     
     // TODO(spenceg) The character offset would yield a sentence id for e.g., bitext tuning.
@@ -809,6 +810,34 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       assert tgtEndExclusive > 0 : String.valueOf(tgtEndExclusive);
       assert fromSentenceOffset(tgtBitext[tgtEndExclusive]) == srcEndExclusive : String.format("%d %d", 
           fromSentenceOffset(tgtBitext[tgtEndExclusive]), srcEndExclusive);
+      
+      // Set the start of the query
+      wordPosition = corpusPosition - srcStartInclusive;
+    }
+    
+    // Actually, this always creates a sentence pair from a target example
+    // But add the additional parameter so that there are two different constructors
+    private SentencePair(int corpusPosition, boolean isTarget) {
+      // Find source span
+      int j = corpusPosition;
+      assert tgtBitext[j] >= 0;
+      // Walk forward
+      while (tgtBitext[j] >= 0) j++;
+      tgtEndExclusive = j;
+      // Walk backward
+      j = corpusPosition - 1;
+      while (j >= 0 && tgtBitext[j] >= 0) j--;
+      tgtStartInclusive = j + 1;
+      assert corpusPosition >= tgtStartInclusive : String.format("%d %d", corpusPosition, tgtStartInclusive);
+      
+      // Find the target span
+      srcStartInclusive = j == -1 ? 0 : fromSentenceOffset(tgtBitext[j]) + 1;
+      srcEndExclusive = fromSentenceOffset(tgtBitext[tgtEndExclusive]);
+      assert srcStartInclusive < srcEndExclusive : String.format("tgt: %d %d", srcStartInclusive, 
+          srcEndExclusive);
+      assert srcEndExclusive > 0 : String.valueOf(srcEndExclusive);
+      assert fromSentenceOffset(srcBitext[srcEndExclusive]) == tgtEndExclusive : String.format("%d %d", 
+          fromSentenceOffset(srcBitext[srcEndExclusive]), tgtEndExclusive);
       
       // Set the start of the query
       wordPosition = corpusPosition - srcStartInclusive;
