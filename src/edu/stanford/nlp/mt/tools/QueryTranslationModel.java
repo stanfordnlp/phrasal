@@ -29,11 +29,10 @@ public class QueryTranslationModel {
     final String tmFile = args[0];
     try {
       TranslationModel<IString,String> tm = TranslationModelFactory.factory(tmFile);
-//      try(LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in))) {
+      try(LineNumberReader reader = new LineNumberReader(new InputStreamReader(System.in))) {
         int sourceId = 0;
         InputProperties inProps = new InputProperties();
-//        for (String line; (line = reader.readLine()) != null; ) {
-        String line = "my";
+        for (String line; (line = reader.readLine()) != null; ) {
           Sequence<IString> source = IStrings.tokenize(line);
           List<ConcreteRule<IString,String>> ruleList = 
               tm.getRules(source, inProps, sourceId++, null);
@@ -42,8 +41,8 @@ public class QueryTranslationModel {
             System.out.println(rule);
           }
           System.out.println("################");
-//        }
-//      }
+        }
+      }
 
     } catch (IOException e) {
       e.printStackTrace();
