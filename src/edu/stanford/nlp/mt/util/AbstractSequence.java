@@ -127,6 +127,14 @@ abstract public class AbstractSequence<T> implements Sequence<T> {
     }
     return false;
   }
+  
+  @Override
+  public boolean contains(T element) {
+    for (int i = 0; i < size(); i++) {
+      if(get(i).equals(element)) return true;
+    }
+    return false;
+  }
 
   @Override
   public boolean startsWith(Sequence<T> prefix) {

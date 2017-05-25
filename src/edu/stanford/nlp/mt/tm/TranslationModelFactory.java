@@ -23,6 +23,7 @@ public class TranslationModelFactory {
   public static final String DYNAMIC_PHRASE_LENGTH = "dyn-plen";
   public static final String DYNAMIC_REORDERING = "dyn-reorder";
   public static final String DYNAMIC_IDENTITY = "dyn-ident";
+  public static final String DYNAMIC_FILTER_INCORRECT_NUMERIC = "dyn-filterIncorrectNumericPhrases";
   public static final String SEPARATOR = ":";
 
   public static final String DYNAMIC_TAG = "dyn:";
@@ -44,6 +45,7 @@ public class TranslationModelFactory {
     String featurePrefix = null;
     boolean setSystemIndex = true;
     boolean addIdentityTranslations = false;
+    boolean filterIncorrectNumeric = false;
     int dynamicSampleSize = DynamicTranslationModel.DEFAULT_SAMPLE_SIZE;
     FeatureTemplate dynamicTemplate = FeatureTemplate.DENSE_EXT;
     int dynamicPhraseLength = DynamicTranslationModel.DEFAULT_MAX_PHRASE_LEN;
@@ -66,6 +68,8 @@ public class TranslationModelFactory {
         reorderingType = value;
       } else if (key.equals(DYNAMIC_IDENTITY)) {
         addIdentityTranslations = Boolean.valueOf(value);
+      } else if (key.equals(DYNAMIC_FILTER_INCORRECT_NUMERIC)) {
+        filterIncorrectNumeric = Boolean.valueOf(value);
       } else {
         logger.warn("Unknown key/value pair: {}", option);
       }
@@ -90,6 +94,7 @@ public class TranslationModelFactory {
       if (addIdentityTranslations) {
         ((DynamicTranslationModel) translationModel).addPhraseGenerator(new IdentityPhraseGenerator());
       }
+      ((DynamicTranslationModel) translationModel).setFilterIncorrectNumeric(filterIncorrectNumeric);
 
     } else {
       translationModel = featurePrefix == null ? new CompiledPhraseTable<FV>(filename)
