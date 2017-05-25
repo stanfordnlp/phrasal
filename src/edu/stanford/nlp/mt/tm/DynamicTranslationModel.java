@@ -152,6 +152,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient int[] sys2TM;
   protected transient int[] tm2Sys;
   
+  // additional phrase generators
+  protected List<TranslationModel<IString, FV> > additionalPhraseGenerators = null;
+  
   /**
    * No-arg constructor for deserialization. Creates caches
    */
@@ -469,6 +472,17 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public void setSampleSize(int sz) {
     this.sampleSize = sz;
   }
+
+  /**
+   * Add a phrase generator.
+   * 
+   * @param phraseGenerator
+   */
+  public void addPhraseGenerator(TranslationModel<IString, FV> tm) {
+    if(additionalPhraseGenerators == null) additionalPhraseGenerators = new ArrayList<TranslationModel<IString, FV>>();
+    tm.setFeaturizer(featurizer);
+    additionalPhraseGenerators.add(tm);
+  }
   
   /**
    * Inject the TM vocabulary into the system vocabulary.
@@ -629,6 +643,23 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         logger.info("input {}: adding {} rules from termbase model", sourceInputId, concreteRules.size() - bgSize);
       }
     }
+    
+    logger.info("all rules: " + concreteRules.toString());
+    
+    // now handle additional phrase generators
+    if(additionalPhraseGenerators != null) {
+      for(TranslationModel<IString, FV> tm: additionalPhraseGenerators) {
+        int bgSize = concreteRules.size();
+        
+        List<ConcreteRule<IString, FV>> rules = tm.getRules(source, sourceInputProperties, sourceInputId, scorer);
+        logger.info("rules added: " + rules.toString());
+        
+        
+        concreteRules.addAll(tm.getRules(source, sourceInputProperties, sourceInputId, scorer));
+        logger.info("input {}: adding {} rules from phrase generator {}", sourceInputId, concreteRules.size() - bgSize, tm.getName());
+      }
+    }
+    
     
     return concreteRules;
   }

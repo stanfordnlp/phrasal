@@ -22,6 +22,7 @@ public class TranslationModelFactory {
   public static final String DYNAMIC_FEATURE_TEMPLATE = "dyn-feat";
   public static final String DYNAMIC_PHRASE_LENGTH = "dyn-plen";
   public static final String DYNAMIC_REORDERING = "dyn-reorder";
+  public static final String DYNAMIC_IDENTITY = "dyn-ident";
   public static final String SEPARATOR = ":";
 
   public static final String DYNAMIC_TAG = "dyn:";
@@ -42,6 +43,7 @@ public class TranslationModelFactory {
     // Parse options
     String featurePrefix = null;
     boolean setSystemIndex = true;
+    boolean addIdentityTranslations = false;
     int dynamicSampleSize = DynamicTranslationModel.DEFAULT_SAMPLE_SIZE;
     FeatureTemplate dynamicTemplate = FeatureTemplate.DENSE_EXT;
     int dynamicPhraseLength = DynamicTranslationModel.DEFAULT_MAX_PHRASE_LEN;
@@ -62,6 +64,8 @@ public class TranslationModelFactory {
         dynamicPhraseLength = Integer.valueOf(value);
       } else if (key.equalsIgnoreCase(DYNAMIC_REORDERING)) {
         reorderingType = value;
+      } else if (key.equals(DYNAMIC_IDENTITY)) {
+        addIdentityTranslations = Boolean.valueOf(value);
       } else {
         logger.warn("Unknown key/value pair: {}", option);
       }
@@ -82,6 +86,9 @@ public class TranslationModelFactory {
       if (reorderingType != null) {
         boolean doHierarchical = reorderingType.equals("hier");
         ((DynamicTranslationModel) translationModel).setReorderingScores(doHierarchical);
+      }
+      if (addIdentityTranslations) {
+        ((DynamicTranslationModel) translationModel).addPhraseGenerator(new IdentityPhraseGenerator());
       }
 
     } else {
