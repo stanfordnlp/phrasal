@@ -282,6 +282,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     maxSourcePhrase = backgroundTM.maxSourcePhrase;
     maxTargetPhrase = backgroundTM.maxTargetPhrase;
     sampleSize = backgroundTM.sampleSize;
+    filterIncorrectNumeric = backgroundTM.filterIncorrectNumeric;
     if (backgroundTM.reorderingEnabled) {
       boolean doHierarchical = backgroundTM.lexModel instanceof HierarchicalReorderingModel;
       setReorderingScores(doHierarchical);
@@ -656,17 +657,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
       }
     }
     
-    logger.info("all rules: " + concreteRules.toString());
-    
     // now handle additional phrase generators
     if(additionalPhraseGenerators != null) {
       for(TranslationModel<IString, FV> tm: additionalPhraseGenerators) {
         int bgSize = concreteRules.size();
-        
-        List<ConcreteRule<IString, FV>> rules = tm.getRules(source, sourceInputProperties, sourceInputId, scorer);
-        logger.info("rules added: " + rules.toString());
-        
-        
         concreteRules.addAll(tm.getRules(source, sourceInputProperties, sourceInputId, scorer));
         logger.info("input {}: adding {} rules from phrase generator {}", sourceInputId, concreteRules.size() - bgSize, tm.getName());
       }
