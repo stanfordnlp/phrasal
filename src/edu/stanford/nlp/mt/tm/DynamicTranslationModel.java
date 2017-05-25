@@ -50,6 +50,7 @@ import edu.stanford.nlp.mt.util.Sequences;
 import edu.stanford.nlp.mt.util.ArraySequence;
 import edu.stanford.nlp.mt.util.TimingUtils;
 import edu.stanford.nlp.mt.util.TimingUtils.TimeKeeper;
+import edu.stanford.nlp.mt.util.TokenUtils;
 import edu.stanford.nlp.mt.util.Vocabulary;
 import edu.stanford.nlp.stats.ClassicCounter;
 import edu.stanford.nlp.stats.Counter;
@@ -137,6 +138,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   protected transient FeatureTemplate featureTemplate;
   protected transient RuleFeaturizer<IString, FV> featurizer;
   protected transient int sampleSize;
+  protected transient boolean filterIncorrectNumeric;
   protected transient String[] featureNames;
   protected transient String name;
   
@@ -151,6 +153,9 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   // Vocabulary translation arrays
   protected transient int[] sys2TM;
   protected transient int[] tm2Sys;
+  
+  // additional phrase generators
+  protected transient List<TranslationModel<IString, FV> > additionalPhraseGenerators = null;
   
   /**
    * No-arg constructor for deserialization. Creates caches
@@ -277,6 +282,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     maxSourcePhrase = backgroundTM.maxSourcePhrase;
     maxTargetPhrase = backgroundTM.maxTargetPhrase;
     sampleSize = backgroundTM.sampleSize;
+    filterIncorrectNumeric = backgroundTM.filterIncorrectNumeric;
     if (backgroundTM.reorderingEnabled) {
       boolean doHierarchical = backgroundTM.lexModel instanceof HierarchicalReorderingModel;
       setReorderingScores(doHierarchical);
@@ -469,6 +475,27 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public void setSampleSize(int sz) {
     this.sampleSize = sz;
   }
+
+  /**
+   * Set flag to filter incorrect numeric rules.
+   * 
+   * @param sz
+   */
+  public void setFilterIncorrectNumeric(boolean flag) {
+    this.filterIncorrectNumeric = flag;
+  }
+
+  
+  /**
+   * Add a phrase generator.
+   * 
+   * @param phraseGenerator
+   */
+  public void addPhraseGenerator(TranslationModel<IString, FV> tm) {
+    if(additionalPhraseGenerators == null) additionalPhraseGenerators = new ArrayList<TranslationModel<IString, FV>>();
+    tm.setFeaturizer(featurizer);
+    additionalPhraseGenerators.add(tm);
+  }
   
   /**
    * Inject the TM vocabulary into the system vocabulary.
@@ -629,6 +656,16 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         logger.info("input {}: adding {} rules from termbase model", sourceInputId, concreteRules.size() - bgSize);
       }
     }
+    
+    // now handle additional phrase generators
+    if(additionalPhraseGenerators != null) {
+      for(TranslationModel<IString, FV> tm: additionalPhraseGenerators) {
+        int bgSize = concreteRules.size();
+        concreteRules.addAll(tm.getRules(source, sourceInputProperties, sourceInputId, scorer));
+        logger.info("input {}: adding {} rules from phrase generator {}", sourceInputId, concreteRules.size() - bgSize, tm.getName());
+      }
+    }
+    
     
     return concreteRules;
   }
@@ -857,10 +894,33 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     final List<SampledRule> rawRuleList = new ArrayList<>(2*samples.size());
     for (SentencePair sample : samples) rawRuleList.addAll(extractRules(sample, order, maxTargetPhrase));
     
+    List<IString> numbers = null;
+    
+    if(filterIncorrectNumeric) {
+      for(IString token: sourceSpan) {
+        if(TokenUtils.isNumbersWithPunctuation(token.toString())) {
+          if(numbers == null) numbers = new ArrayList<>();
+          numbers.add(token);
+        }
+      }
+    }
+    
     // Collect counts for raw rules
     Map<TargetSpan,Counter<AlignmentTemplate>> tgtToTemplate = new HashMap<>(rawRuleList.size());
     Map<SampledRule,ReorderingCounts> reorderingCounts = reorderingEnabled ? new HashMap<>(rawRuleList.size()) : null;
     for (SampledRule rule : rawRuleList) {
+      if(filterIncorrectNumeric && numbers != null) {
+        Sequence<IString> tgt = toSequence(rule.tgt);
+        boolean incorrect = false;
+        for(IString num: numbers) {
+          if(!tgt.contains(num)) {
+            incorrect = true;
+            break;
+          }
+        }
+        if(incorrect) continue;
+      }
+      
       TargetSpan tgtSpan = new TargetSpan(rule.tgt);
       Counter<AlignmentTemplate> alTemps = tgtToTemplate.get(tgtSpan);
       if (alTemps == null) {

@@ -61,6 +61,14 @@ public interface Sequence<T> extends Iterable<T>, Comparable<Sequence<T>>, Seria
    * @return
    */
   public boolean contains(Sequence<T> subsequence);
+
+  /**
+   * True if this sequence contains the element. Otherwise, false.
+   * 
+   * @param element
+   * @return
+   */
+  public boolean contains(T element);
   
   /**
    * Convert to String with the specified delimiter.
