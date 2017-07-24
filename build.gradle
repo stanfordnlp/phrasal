@@ -123,7 +123,7 @@ dependencies {
   extraCompile sourceSets.test.output
   extraCompile configurations.testCompile
   extraRuntime configurations.testRuntime
-  extraCompile group: 'com.google.code.gson', name: 'gson', version: '2.3.1'
+  extraCompile group: 'com.google.code.gson', name: 'gson', version: '2.6.2'
   extraCompile group: 'org.eclipse.jetty', name: 'jetty-continuation', version: '9.2.1.v20140609'
   extraCompile group: 'org.eclipse.jetty', name: 'jetty-server', version: '9.2.1.v20140609'
   extraCompile group: 'org.eclipse.jetty', name: 'jetty-annotations', version: '9.2.1.v20140609'
