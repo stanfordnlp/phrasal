@@ -304,6 +304,28 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   }
   
   /**
+   * Configure this TM as a terminology model. 
+   * 
+   * @param name
+   */
+  public synchronized void configureAsTerminologyModel(String name) {
+    TimeKeeper timer = TimingUtils.start();
+    maxSourcePhrase = DEFAULT_MAX_PHRASE_LEN;
+    maxTargetPhrase = DEFAULT_MAX_PHRASE_LEN;
+    sampleSize = DEFAULT_SAMPLE_SIZE;
+    name = name;
+    reorderingEnabled = false;
+    setFeatureTemplate(FeatureTemplate.DENSE);
+    
+    createIdArrays();
+    timer.mark("Id arrays");
+    createLexCoocTable(sa.getVocabulary().size());
+    timer.mark("Cooc table");
+    logger.info("Timing results: {}", timer);
+  }
+  
+  
+  /**
    * Create a query cache of frequent rules. Extract rules from
    * the cache in parallel.
    * 
