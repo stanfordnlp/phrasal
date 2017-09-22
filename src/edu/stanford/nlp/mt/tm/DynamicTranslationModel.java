@@ -262,12 +262,36 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
 
   @Override
   public void write(Kryo kryo, Output output) {
+    output.writeInt(maxSourcePhrase);
+    output.writeInt(maxTargetPhrase);
+    output.writeInt(sampleSize);
+    output.writeString(name);
+    output.writeBoolean(reorderingEnabled);
     kryo.writeObject(output, sa);
   }
 
   @Override
   public void read(Kryo kryo, Input input) {
+    TimeKeeper timer = TimingUtils.start();
+    
+    maxSourcePhrase = input.readInt();
+    maxTargetPhrase = input.readInt();
+    sampleSize = input.readInt();
+    name = input.readString();
+    reorderingEnabled = input.readBoolean();
     sa = kryo.readObject(input, ParallelSuffixArray.class);
+    
+    setFeatureTemplate(FeatureTemplate.DENSE);
+    
+    timer.mark("deserialization");
+    
+    createIdArrays();
+    timer.mark("Vocabulary setup");
+    
+    createLexCoocTable(sa.getVocabulary().size());
+    timer.mark("Cooc table");
+
+    logger.info("Timing: {}", timer);
   }
 
   /**
