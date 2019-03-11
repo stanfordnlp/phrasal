@@ -41,7 +41,7 @@ compileJava {
 
     // File encoding
     options.encoding = 'UTF-8'
-    
+
     //enable incremental compilation
     options.incremental = true
 }
@@ -93,7 +93,7 @@ repositories {
     mavenCentral()
 }
 
-task listDeps << {
+task listDeps {
     configurations.compile.each { File file -> println file.name }
 }
 
@@ -105,7 +105,7 @@ task copyDeps(type: Copy) {
 dependencies {
   // TERp jars that are no longer available on the web.
   compile fileTree(dir: 'lib', include: '*.jar')
-  
+
   // lilt/core Maven dependencies
   compile group: 'edu.stanford.nlp', name: 'stanford-corenlp', version: '3.6.0'
   compile group: 'com.esotericsoftware', name: 'kryo', version: '3.0.1'
@@ -114,7 +114,7 @@ dependencies {
   compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.7'
   compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.7'
   compile group: 'com.lmax', name: 'disruptor', version: '3.3.6'
-  
+
   // Test dependencies
   testCompile group: 'junit', name: 'junit', version: '4.12'
 
@@ -157,4 +157,3 @@ buildscript {
 }
 apply plugin: 'com.github.ben-manes.versions'
 apply plugin: 'org.owasp.dependencycheck'
-
