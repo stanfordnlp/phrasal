@@ -1,8 +1,6 @@
 package edu.stanford.nlp.mt.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import edu.stanford.nlp.math.ArrayMath;
@@ -32,7 +30,7 @@ public class PhraseAlignment {
   private static final Map<String, PhraseAlignment> map = new ConcurrentHashMap<>(1000);
   
   private String str;
-  private final int[][] t2s;
+  private final Set<Integer>[] t2s;
 
   private PhraseAlignment(String s) {
     // System.err.println("align: "+s);
@@ -41,16 +39,16 @@ public class PhraseAlignment {
       t2s = null;
     } else {
       String[] els = s.split("\\s+");
-      t2s = new int[els.length][];
+      t2s = new TreeSet[els.length];
       for (int i = 0; i < t2s.length; ++i) {
         // System.err.printf("(%d): %s\n",i,els[i]);
         if (!els[i].equals("()")) {
           String[] els2 = els[i].split(",");
-          t2s[i] = new int[els2.length];
-          for (int j = 0; j < t2s[i].length; ++j) {
+          t2s[i] = new TreeSet<>();
+          for (int j = 0; j < els2.length; ++j) {
             // System.err.printf("(%d): %s\n",j,els2[j]);
             String num = els2[j].replaceAll("[()]", "");
-            t2s[i][j] = Integer.parseInt(num);
+            t2s[i].add(Integer.parseInt(num));
           }
         }
       }
@@ -58,7 +56,7 @@ public class PhraseAlignment {
     str = s.intern();
   }
 
-  public PhraseAlignment(int[][] e2f) {
+  public PhraseAlignment(Set<Integer>[] e2f) {
     this.t2s = e2f;
   }
 
@@ -78,11 +76,11 @@ public class PhraseAlignment {
     return str.hashCode();
   }
 
-  public int[] t2s(int i) {
-    return (t2s != null) ? (i < t2s.length ? t2s[i] : null) : new int[] { i };
+  public Set<Integer> t2s(int i) {
+    return (t2s != null) ? (i < t2s.length ? t2s[i] : null) : new TreeSet(Arrays.asList(new int[] { i }));
   }
 
-  private static String toStr(int[][] alignmentGrid) {
+  private static String toStr(Set<Integer>[] alignmentGrid) {
     StringBuilder sb = new StringBuilder();
     for (int ei=0; ei<alignmentGrid.length; ++ei) {
       if (ei>0) sb.append(' ');
@@ -142,6 +140,14 @@ public class PhraseAlignment {
     return (t2s != null) ? t2s.length : 0;
   }
 
+  public int alignmentMean(Set<Integer> alignment) {
+    if (alignment.size() == 0){
+      return 0;
+    }
+    int sum = alignment.stream().reduce(0, Integer::sum);
+    return sum/alignment.size();
+  }
+
   /**
    * Find average of source positions that correspond to the current tgtPos 
    * w.r.t to the given phrase alignment.
@@ -162,7 +168,7 @@ public class PhraseAlignment {
     int distance = 0;
     
     // System.err.println("findSrcAvgPos tgtPos=" + tgtPos + ", alignment=" + alignment);
-    int[] alignments;
+    Set<Integer> alignments;
     while(true){
       // look right
       int rightPos = tgtPos + distance;
@@ -171,7 +177,8 @@ public class PhraseAlignment {
         alignments = (rightPos < t2s.length ? t2s[rightPos] : null); // t2s(rightPos);
         if (alignments != null) {
           // System.err.print("right " + rightPos + ": " + Util.intArrayToString(alignments));
-          srcAvgPos = (int) ArrayMath.mean(alignments);
+
+          srcAvgPos = alignmentMean(alignments);
           break;
         }
         
@@ -184,7 +191,7 @@ public class PhraseAlignment {
         alignments = (leftPos < t2s.length ? t2s[leftPos] : null); // t2s(leftPos);
         if (alignments != null) {
           // System.err.print("left " + leftPos + ": " + Util.intArrayToString(alignments));
-          srcAvgPos = (int) ArrayMath.mean(alignments);
+          srcAvgPos = alignmentMean(alignments);
           break;
         }
         

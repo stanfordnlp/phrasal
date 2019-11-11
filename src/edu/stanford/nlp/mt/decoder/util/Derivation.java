@@ -1,6 +1,8 @@
 package edu.stanford.nlp.mt.decoder.util;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicLong;
 
 import edu.stanford.nlp.mt.decoder.feat.FeatureExtractor;
@@ -251,7 +253,7 @@ State<Derivation<TK, FV>> {
       Scorer<FV> scorer, int sourceInputId) {
     // Manufacture a new rule
     Sequence<TK> ruleTarget = rule.abstractRule.target.concat(targetSpan);
-    int[][] e2f = new int[ruleTarget.size()][];
+    Set<Integer>[] e2f = new TreeSet[ruleTarget.size()];
     for (int i = 0; i < rule.abstractRule.target.size(); ++i) {
       e2f[i] = rule.abstractRule.alignment.t2s(i);
     }

@@ -18,13 +18,13 @@ public class AlignedSentence implements Serializable {
   // 256-1, since 0 is used to indicate a null alignment in the compact
   // representation.
   public static final int MAX_SENTENCE_LENGTH = 256 - 1;
-  public static final int MAX_FERTILITY = 4;
+  public static final int MAX_FERTILITY = 300;
   
   public int[] source;
   public int[] target;
 
-  protected int[] f2e;
-  protected int[] e2f;
+  protected Set<Integer>[] f2e;
+  protected Set<Integer>[] e2f;
   
   /**
    * No-arg constructor for deserialization.
@@ -45,8 +45,8 @@ public class AlignedSentence implements Serializable {
     if (target.length > MAX_SENTENCE_LENGTH) throw new IllegalArgumentException();
     this.source = source;
     this.target = target;
-    this.f2e = flatten(f2e);
-    this.e2f = flatten(e2f);
+    this.f2e = f2e;
+    this.e2f = e2f;
   }
 
   /**
@@ -90,24 +90,24 @@ public class AlignedSentence implements Serializable {
     return links;
   }
   
-  public int[] f2e(int i) {
+  public Set<Integer> f2e(int i) {
     if (i < 0 || i >= source.length) throw new IndexOutOfBoundsException();
-    return expand(f2e[i]);
+    return f2e[i];
   }
   
-  public int[] e2f(int i) {
+  public Set<Integer> e2f(int i) {
     if (i < 0 || i >= target.length) throw new IndexOutOfBoundsException();
-    return expand(e2f[i]);
+    return e2f[i];
   }
   
   public boolean isSourceUnaligned(int i) {
     if (i < 0 || i >= source.length) throw new IndexOutOfBoundsException();
-    return f2e[i] == 0;
+    return f2e[i].size() == 0;
   }
   
   public boolean isTargetUnaligned(int i) {
     if (i < 0 || i >= target.length) throw new IndexOutOfBoundsException();
-    return e2f[i] == 0;
+    return e2f[i].size() == 0;
   }
     
   public int sourceLength() { return source.length; }

@@ -4,6 +4,11 @@ import edu.stanford.nlp.math.ArrayMath;
 import edu.stanford.nlp.mt.train.AlignmentGrid.RelativePos;
 import edu.stanford.nlp.mt.util.ParallelSuffixArray.SentencePair;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * The hierarchical model of Galley and Manning (2008).
  * 
@@ -29,13 +34,13 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     return arr.length == 0 ? Integer.MAX_VALUE : ArrayMath.min(arr);
   }
 
-  private static final int[] EMPTY_ARRAY = new int[0];
+  private static final Set<Integer> EMPTY_ARRAY = new TreeSet<>();
 
-  private static final int[] e2f(SentencePair sentencePair, int i) {
+  private static final Set<Integer> e2f(SentencePair sentencePair, int i) {
     return (i < 0 || i >= sentencePair.targetLength()) ? EMPTY_ARRAY : sentencePair.e2f(i);
   }
 
-  private static final int[] f2e(SentencePair sentencePair, int j) {
+  private static final Set<Integer> f2e(SentencePair sentencePair, int j) {
     return (j < 0 || j >= sentencePair.sourceLength()) ? EMPTY_ARRAY : sentencePair.f2e(j);
   }
 
@@ -82,26 +87,27 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     if (i_p < 0 && j_p < 0) return false;
 
     // Alignment outside of block?
-    int[] a_i_p = e2f(sentencePair, i_p);
-    int[] a_j_p = f2e(sentencePair, j_p);
-    if (max(a_j_p) > ei || max(a_i_p) > fj) return false;
+    Set<Integer> a_i_p = e2f(sentencePair, i_p);
+    Set<Integer> a_j_p = f2e(sentencePair, j_p);
+
+    if (Collections.max(a_j_p) > ei || Collections.max(a_i_p) > fj) return false;
 
     // This alignment point is part of a rule that orients with the corner ei,fj
-    int min_j = Math.min(j_p, min(a_i_p));
-    int min_i = Math.min(i_p, min(a_j_p));
+    int min_j = Math.min(j_p, Collections.min(a_i_p));
+    int min_i = Math.min(i_p, Collections.min(a_j_p));
 
     while (min_i <= i_p || min_j <= j_p) {
       for (; j_p >= min_j; --j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);
-        if (max(a_j_p) > ei) return false;
-        min_i = Math.min(min_i, min(a_j_p));
+        if (Collections.max(a_j_p) > ei) return false;
+        min_i = Math.min(min_i, Collections.min(a_j_p));
       }
       for (; i_p >= min_i; --i_p) {
         if (sentencePair.isTargetUnaligned(i_p)) continue;
         a_i_p = e2f(sentencePair, i_p);
-        if (max(a_i_p) > fj) return false;
-        min_j = Math.min(min_j, min(a_i_p));
+        if (Collections.max(a_i_p) > fj) return false;
+        min_j = Math.min(min_j, Collections.min(a_i_p));
       }
     }
 
@@ -130,26 +136,26 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     if (i_p == tgtLen && j_p < 0) return false;
 
     // Alignment outside of block?
-    int[] a_i_p = e2f(sentencePair, i_p);
-    int[] a_j_p = f2e(sentencePair, j_p);
-    if (min(a_j_p) < ei || max(a_i_p) > fj) return false;
+    Set<Integer> a_i_p = e2f(sentencePair, i_p);
+    Set<Integer> a_j_p = f2e(sentencePair, j_p);
+    if (Collections.min(a_j_p) < ei || Collections.max(a_i_p) > fj) return false;
 
     // This alignment point is part of a rule that orients with the corner ei,fj
-    int min_j = Math.min(j_p, min(a_i_p));
-    int max_i = Math.max(i_p, max(a_j_p));
+    int min_j = Math.min(j_p, Collections.min(a_i_p));
+    int max_i = Math.max(i_p, Collections.max(a_j_p));
 
     while (max_i >= i_p || min_j <= j_p) {
       for (; j_p >= min_j; --j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);
-        if (min(a_j_p) < ei) return false;
-        max_i = Math.max(max_i, max(a_j_p));
+        if (Collections.min(a_j_p) < ei) return false;
+        max_i = Math.max(max_i, Collections.max(a_j_p));
       }
       for (; i_p <= max_i; ++i_p) {
         if (sentencePair.isTargetUnaligned(i_p)) continue;
         a_i_p = e2f(sentencePair, i_p);
-        if (max(a_i_p) > fj) return false;
-        min_j = Math.min(min_j, min(a_i_p));
+        if (Collections.max(a_i_p) > fj) return false;
+        min_j = Math.min(min_j, Collections.min(a_i_p));
       }
     }
 
@@ -179,26 +185,26 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     if (i_p < 0 && j_p == srcLen) return false;
 
     // Alignment outside of block?
-    int[] a_i_p = e2f(sentencePair, i_p);
-    int[] a_j_p = f2e(sentencePair, j_p);
-    if (max(a_j_p) > ei || min(a_i_p) < fj) return false;
+    Set<Integer> a_i_p = e2f(sentencePair, i_p);
+    Set<Integer> a_j_p = f2e(sentencePair, j_p);
+    if (Collections.max(a_j_p) > ei || Collections.min(a_i_p) < fj) return false;
 
     // This alignment point is part of a rule that orients with the corner ei,fj
-    int max_j = Math.max(j_p, max(a_i_p));
-    int min_i = Math.min(i_p, min(a_j_p));
+    int max_j = Math.max(j_p, Collections.max(a_i_p));
+    int min_i = Math.min(i_p, Collections.min(a_j_p));
 
     while (min_i <= i_p || max_j >= j_p) {
       for (; j_p <= max_j; ++j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);
-        if (max(a_j_p) > ei) return false;
-        min_i = Math.min(min_i, min(a_j_p));
+        if (Collections.max(a_j_p) > ei) return false;
+        min_i = Math.min(min_i, Collections.min(a_j_p));
       }
       for (; i_p >= min_i; --i_p) {
         if (sentencePair.isTargetUnaligned(i_p)) continue;
         a_i_p = e2f(sentencePair, i_p);
-        if (min(a_i_p) < fj) return false;
-        max_j = Math.max(max_j, max(a_i_p));
+        if (Collections.min(a_i_p) < fj) return false;
+        max_j = Math.max(max_j, Collections.max(a_i_p));
       }
     }
 
@@ -228,26 +234,26 @@ public class HierarchicalReorderingModel extends AbstractDynamicReorderingModel 
     if (i_p == tgtLen && j_p == srcLen) return false;
 
     // Alignment outside of block?
-    int[] a_i_p = e2f(sentencePair, i_p);
-    int[] a_j_p = f2e(sentencePair, j_p);
-    if (min(a_j_p) < ei || min(a_i_p) < fj) return false;
+    Set<Integer> a_i_p = e2f(sentencePair, i_p);
+    Set<Integer> a_j_p = f2e(sentencePair, j_p);
+    if (Collections.min(a_j_p) < ei || Collections.min(a_i_p) < fj) return false;
 
     // This alignment point is part of a rule that orients with the corner ei,fj
-    int max_j = Math.max(j_p, max(a_i_p));
-    int max_i = Math.max(i_p, max(a_j_p));
+    int max_j = Math.max(j_p, Collections.max(a_i_p));
+    int max_i = Math.max(i_p, Collections.max(a_j_p));
 
     while (max_i >= i_p || max_j >= j_p) {
       for (; j_p <= max_j; ++j_p) {
         if (sentencePair.isSourceUnaligned(j_p)) continue;
         a_j_p = f2e(sentencePair, j_p);
-        if (min(a_j_p) < ei) return false;
-        max_i = Math.max(max_i, max(a_j_p));
+        if (Collections.min(a_j_p) < ei) return false;
+        max_i = Math.max(max_i, Collections.max(a_j_p));
       }
       for (; i_p <= max_i; ++i_p) {
         if (sentencePair.isTargetUnaligned(i_p)) continue;
         a_i_p = e2f(sentencePair, i_p);
-        if (min(a_i_p) < fj) return false;
-        max_j = Math.max(max_j, max(a_i_p));
+        if (Collections.min(a_i_p) < fj) return false;
+        max_j = Math.max(max_j, Collections.max(a_i_p));
       }
     }
 

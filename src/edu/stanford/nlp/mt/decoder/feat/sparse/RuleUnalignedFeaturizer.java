@@ -1,9 +1,6 @@
 package edu.stanford.nlp.mt.decoder.feat.sparse;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import edu.stanford.nlp.mt.decoder.feat.FeatureUtils;
 import edu.stanford.nlp.mt.decoder.feat.RuleFeaturizer;
@@ -47,8 +44,8 @@ public class RuleUnalignedFeaturizer implements RuleFeaturizer<IString, String> 
     int numTargetInsertions = 0;
     BitSet sourceAligned = new BitSet(f.sourcePhrase.size());
     for (int i = 0, sz = f.targetPhrase.size(); i < sz; ++i) {
-      int[] t2s = a.t2s(i);
-      if (t2s == null || t2s.length == 0) {
+      Set<Integer> t2s = a.t2s(i);
+      if (t2s == null || t2s.size() == 0) {
         ++numTargetInsertions;
       } else {
         for (int j : t2s) sourceAligned.set(j);

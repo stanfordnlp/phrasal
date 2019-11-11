@@ -34,6 +34,6 @@ public class WordBasedReorderingModel extends AbstractDynamicReorderingModel {
     if (fi == rule.sentencePair.sourceLength() || ei == rule.sentencePair.targetLength())
       return false;
 
-    return rule.sentencePair.isSourceUnaligned(fi) ? false : ArrayMath.indexOf(ei, rule.sentencePair.f2e(fi)) >= 0;
+    return rule.sentencePair.isSourceUnaligned(fi) ? false : rule.sentencePair.f2e(fi).contains(ei);
   }
 }

@@ -4,12 +4,7 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -39,9 +34,9 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
   private static final Logger logger = LogManager.getLogger(ParallelSuffixArray.class);
   
   protected int[] srcBitext;
-  protected int[] f2e;
+  protected Set<Integer>[] f2e;
   protected int[] tgtBitext;
-  protected int[] e2f;
+  protected Set<Integer>[] e2f;
   protected int[] srcSuffixArray; 
   protected int[] tgtSuffixArray;
   
@@ -86,8 +81,8 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
   public void write(Kryo kryo, Output output) {
     writeArray(srcBitext, output);
     writeArray(tgtBitext, output);
-    writeArray(e2f, output);
-    writeArray(f2e, output);
+    writeSets(e2f, output);
+    writeSets(f2e, output);
     writeArray(srcSuffixArray, output);
     writeArray(tgtSuffixArray, output);
     output.writeInt(numSentences, true);
@@ -99,16 +94,36 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     output.writeInts(arr, true);
   }
 
+  private static void writeSets(Set<Integer>[] sets, Output output) {
+    output.writeInt(sets.length, true);
+    for (Set<Integer> set: sets){
+      int[] setPrimitive = set.stream().mapToInt(a -> a).toArray();
+      writeArray(setPrimitive, output);
+    }
+  }
+
   @Override
   public void read(Kryo kryo, Input input) {
     srcBitext = readArray(input);
     tgtBitext = readArray(input);
-    e2f = readArray(input);
-    f2e = readArray(input);
+    e2f = readSets(input);
+    f2e = readSets(input);
     srcSuffixArray = readArray(input);
     tgtSuffixArray = readArray(input);
     numSentences = input.readInt(true);
     vocabulary = kryo.readObject(input, Vocabulary.class);
+  }
+
+  private static Set<Integer>[] readSets(Input input) {
+    int setLength = input.readInt(true);
+    Set<Integer>[] inputSets = new TreeSet[setLength];
+    for(int i = 0; i < setLength; i++){
+      inputSets[i] = new TreeSet();
+      for (int inputSetElement: readArray(input)){
+        inputSets[i].add(inputSetElement);
+      }
+    }
+    return inputSets;
   }
   
   private static int[] readArray(Input input) {
@@ -193,11 +208,11 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     final int srcLength = numSourcePositions + numSentences;
     if (srcLength < 0) throw new RuntimeException("Maximum source bitext size exceeded");
     srcBitext = new int[srcLength];
-    f2e = new int[srcLength];
+    f2e = new TreeSet[srcLength];
     final int tgtLength = numTargetPositions + numSentences;
     if (tgtLength < 0) throw new RuntimeException("Maximum target bitext size exceeded");
     tgtBitext = new int[tgtLength];
-    e2f = new int[tgtLength];
+    e2f = new TreeSet[tgtLength];
     
     // Create the arrays and read the files again
     try (LineNumberReader fReader = IOTools.getReaderFromFile(source)) {
@@ -213,15 +228,17 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
           logger.info("Discarding parallel example {}", fReader.getLineNumber());
         } else {
           System.arraycopy(sentence.source, 0, srcBitext, srcOffset, sentence.sourceLength());
-          System.arraycopy(sentence.f2e, 0, f2e, srcOffset, sentence.f2e.length);
+//          System.arraycopy(sentence.f2e, 0, f2e, srcOffset, sentence.f2e.length);
           System.arraycopy(sentence.target, 0, tgtBitext, tgtOffset, sentence.targetLength());
-          System.arraycopy(sentence.e2f, 0, e2f, tgtOffset, sentence.e2f.length);
+//          System.arraycopy(sentence.e2f, 0, e2f, tgtOffset, sentence.e2f.length);
           srcOffset += sentence.sourceLength();
           tgtOffset += sentence.targetLength();
           // Source points to target
           srcBitext[srcOffset] = toSentenceOffset(tgtOffset);
           // Target points to source
           tgtBitext[tgtOffset] = toSentenceOffset(srcOffset);
+          f2e = sentence.f2e;
+          e2f = sentence.e2f;
           ++srcOffset;
           ++tgtOffset;
         }        
@@ -247,10 +264,10 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
     int numTargetPositions = corpus.numTargetPositions();
     int srcLength = numSourcePositions + numSentences;
     srcBitext = new int[srcLength];
-    f2e = new int[srcLength];
+    f2e = new TreeSet[srcLength];
     int tgtLength = numTargetPositions + numSentences;
     tgtBitext = new int[tgtLength];
-    e2f = new int[tgtLength];
+    e2f = new TreeSet[tgtLength];
     int srcOffset = 0;
     int tgtOffset = 0;
     for (AlignedSentence sentence : corpus) {
@@ -863,7 +880,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       return tgtBitext[bitextPos];
     }
     
-    public int[] f2e(int startInclusive, int endExclusive) {
+    public Set<Integer>[] f2e(int startInclusive, int endExclusive) {
       if (startInclusive >= endExclusive) throw new IllegalArgumentException();
       int bitextStartInclusive = srcStartInclusive + startInclusive;
       int bitextEndExclusive = srcStartInclusive + endExclusive;
@@ -871,13 +888,13 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       return Arrays.copyOfRange(f2e, bitextStartInclusive, bitextEndExclusive);
     }
     
-    public int[] f2e(int i) {
+    public Set<Integer> f2e(int i) {
       int bitextPos = srcStartInclusive + i;
       if (bitextPos < srcStartInclusive || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
-      return AlignedSentence.expand(f2e[bitextPos]);
+      return f2e[bitextPos];
     }
     
-    public int[] e2f(int startInclusive, int endExclusive) {
+    public Set<Integer>[] e2f(int startInclusive, int endExclusive) {
       if (startInclusive >= endExclusive) throw new IllegalArgumentException();
       int bitextStartInclusive = tgtStartInclusive + startInclusive;
       int bitextEndExclusive = tgtStartInclusive + endExclusive;
@@ -885,22 +902,22 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
       return Arrays.copyOfRange(e2f, bitextStartInclusive, bitextEndExclusive);
     }
     
-    public int[] e2f(int i) {
+    public Set<Integer> e2f(int i) {
       int bitextPos = tgtStartInclusive + i;
       if (bitextPos < tgtStartInclusive || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
-      return AlignedSentence.expand(e2f[bitextPos]);
+      return e2f[bitextPos];
     }
     
     public boolean isSourceUnaligned(int i) {
       int bitextPos = srcStartInclusive + i;
       if (bitextPos < srcStartInclusive || bitextPos >= srcEndExclusive) throw new ArrayIndexOutOfBoundsException();
-      return f2e[bitextPos] == 0;
+      return f2e[bitextPos].size() == 0;
     }
     
     public boolean isTargetUnaligned(int i) {
       int bitextPos = tgtStartInclusive + i;
       if (bitextPos < tgtStartInclusive || bitextPos >= tgtEndExclusive) throw new ArrayIndexOutOfBoundsException();
-      return e2f[bitextPos] == 0;
+      return e2f[bitextPos].size() == 0;
     }
     
     public ParallelSuffixArrayEntry getParallelEntry() {

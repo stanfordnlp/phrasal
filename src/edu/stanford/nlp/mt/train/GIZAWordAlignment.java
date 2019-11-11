@@ -219,7 +219,7 @@ public class GIZAWordAlignment extends AbstractWordAlignment {
    * @param f2e
    * @return
    */
-  public static String toGizaString(int[][] f2e) {
+  public static String toGizaString(Set<Integer>[] f2e) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < f2e.length; ++i) {
       for (int j : f2e[i]) {

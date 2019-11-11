@@ -1,11 +1,7 @@
 package edu.stanford.nlp.mt.decoder.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -231,7 +227,7 @@ public final class SyntheticRules {
     final String[] featureNames = (String[]) inferer.phraseGenerator.getFeatureNames().toArray();
     int numRules = 0;
 
-    int[][] e2f = {{ 0 }};
+    Set<Integer>[] e2f = new Set[] { Collections.singleton(0) };
     PhraseAlignment alignment = new PhraseAlignment(e2f);
     
     for(int i = 0; i < sourceSequence.size(); ++i) {
@@ -380,10 +376,11 @@ public final class SyntheticRules {
 
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(r.fi, r.fj);
-          int[][] e2f = new int[tgt.size()][src.size()];
+          Set<Integer>[] e2f = new TreeSet[tgt.size()];
           for (int eIdx = r.ei; eIdx < r.ej; ++eIdx) {
-            e2f[eIdx - r.ei] = sym.e2f(eIdx).stream().mapToInt(a -> a - r.fi).toArray();
+            e2f[eIdx - r.ei] = sym.e2f(eIdx).stream().mapToInt(a -> a - r.fi).boxed().collect(Collectors.toCollection(() -> new TreeSet()));
           }
+
           PhraseAlignment alignment = new PhraseAlignment(e2f);
 
           ConcreteRule<TK,FV> syntheticRule = null;
@@ -464,9 +461,9 @@ public final class SyntheticRules {
           CoverageSet cov = new CoverageSet(sourceSequence.size());
           cov.set(fi, fj);   
 
-          int[][] e2f = new int[tgt.size()][src.size()];
+          Set<Integer>[] e2f = new TreeSet[tgt.size()];
           for (int k = 0; k < tgt.size() && k < src.size(); ++k) {
-            e2f[k] = new int[] { k } ;
+            e2f[k] = Collections.singleton(k);
           }
           PhraseAlignment alignment = new PhraseAlignment(e2f);
 

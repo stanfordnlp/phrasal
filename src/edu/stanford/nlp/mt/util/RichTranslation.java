@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
+import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
@@ -240,7 +241,7 @@ public class RichTranslation<TK, FV> extends ScoredFeaturizedTranslation<TK, FV>
         throw new RuntimeException("Alignments are not enabled. Cannot extract alignments from translation.");
       }
       for (int i = 0; i < tgtLength; ++i) {
-        int[] sIndices = al.t2s(i);
+        Set<Integer> sIndices = al.t2s(i);
         if (sIndices != null) {
           final int tgtIndex = tgtPosition + i;
           for (int srcOffset : sIndices) {

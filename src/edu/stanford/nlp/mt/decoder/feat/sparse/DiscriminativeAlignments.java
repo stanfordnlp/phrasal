@@ -81,7 +81,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
 
     // Target-side alignments
     for (int i = 0; i < tgtLength; ++i) {
-      int[] alignments = alignment.t2s(i);
+      Set<Integer> alignments = alignment.t2s(i);
       if (alignments == null) {
         if (addTargetInsertions) {
           IString tgtWord = f.targetPhrase.get(i);
@@ -90,7 +90,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         }
 
       } else {
-        if (alignments.length > 1) {
+        if (alignments.size() > 1) {
           hasMultipleAlignments.set(i);
         }
         for (int j : alignments) {
@@ -117,7 +117,7 @@ public class DiscriminativeAlignments implements RuleFeaturizer<IString,String> 
         for (int tgtIndex : alignments) {
           alignedTargetWords.add(targetRepresentation(f.targetPhrase.get(tgtIndex)));
           if (hasMultipleAlignments.get(tgtIndex)) {
-            int[] srcIndices = alignment.t2s(tgtIndex);
+            Set<Integer> srcIndices = alignment.t2s(tgtIndex);
             for (int sIndex : srcIndices) {
               IString srcToken = f.sourcePhrase.get(sIndex);
               alignedSourceWords.add(sourceRepresentation(srcToken));

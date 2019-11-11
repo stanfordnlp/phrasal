@@ -3,12 +3,7 @@ package edu.stanford.nlp.mt.tm;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,7 +69,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
   public static final int DEFAULT_MAX_PHRASE_LEN = 12;
   private static final int RULE_CACHE_THRESHOLD = 10000;
   private static final double MIN_LEX_PROB = 1e-5;
-  private static final int MAX_FERTILITY = 5;
+  private static final int MAX_FERTILITY = 300;
   
   /**
    * Parallelize TM queries. 
@@ -402,7 +397,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
           // See {@link edu.stanford.nlp.mt.train.MosesPharoahFeatureExtractor#FeaturizeSentence}
           // TODO(spenceg) Maybe we should discriminate? Will greatly increase the size of the
           // of the cooc table.
-          int[] tgtAlign = s.f2e(i);
+          Set<Integer> tgtAlign = s.f2e(i);
           for (int j : tgtAlign) {
             int tgtId = s.target(j);
             coocTable.addCooc(srcId, tgtId);
@@ -1104,8 +1099,10 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     private final int hashCode;
     public AlignmentTemplate(SampledRule rule) {
       this.rule = rule;
-      this.hashCode = MurmurHash2.hash32(rule.f2eAll(), rule.sourceLength(), 1) ^ 
-          MurmurHash2.hash32(rule.e2fAll(), rule.targetLength(), 1);
+      String e2fString = String.join(",", org.apache.commons.lang3.ArrayUtils.toStringArray(rule.e2fAll()));
+      String f2eString = String.join(",", org.apache.commons.lang3.ArrayUtils.toStringArray(rule.f2eAll()));
+      this.hashCode = MurmurHash2.hash32(e2fString, rule.sourceLength(), 1) ^
+          MurmurHash2.hash32(f2eString, rule.targetLength(), 1);
     }
     @Override
     public String toString() { return rule.toString(); }
@@ -1174,14 +1171,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         feSum = c_f_e / (double) c_e;
         
       } else {
-        int[] tgtAlign = rule.sentencePair.f2e(i);
+        Set<Integer> tgtAlign = rule.sentencePair.f2e(i);
         for (int j : tgtAlign) {
           int tgtId = rule.sentencePair.target(j);
           int c_f_e = coocTable.getJointCount(srcId, tgtId);
           int c_e = coocTable.getTgtMarginal(tgtId);
           feSum += (c_f_e / (double) c_e);
         }
-        feSum /= (double) tgtAlign.length;
+        feSum /= (double) tgtAlign.size();
       }
       if (feSum == 0.0) feSum = MIN_LEX_PROB;
       lex_f_e *= feSum;
@@ -1199,14 +1196,14 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
         efSum = c_e_f / (double) c_f;
         
       } else {
-        int[] srcAlign = rule.sentencePair.e2f(i);
+        Set<Integer> srcAlign = rule.sentencePair.e2f(i);
         for (int j : srcAlign) {
           final int srcId = rule.sentencePair.source(j);
           int c_e_f = coocTable.getJointCount(srcId, tgtId);
           int c_f = coocTable.getSrcMarginal(srcId);
           efSum += (c_e_f / (double) c_f);
         }
-        efSum /= (double) srcAlign.length;
+        efSum /= (double) srcAlign.size();
         
       }
       if (efSum == 0.0) efSum = MIN_LEX_PROB;
@@ -1325,7 +1322,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     for(int sourcePos = startSource; sourcePos < endSource; sourcePos++) {
       assert sourcePos < sentencePair.sourceLength() : String.format("[%d,%d) %d %d ", startSource, endSource, sourcePos, sentencePair.sourceLength());
       if ( ! sentencePair.isSourceUnaligned(sourcePos)) {
-        int[] targetPositions = sentencePair.f2e(sourcePos);
+        Set<Integer> targetPositions = sentencePair.f2e(sourcePos);
         for(int targetPos : targetPositions) {
           if (targetPos < minTarget) {
             minTarget = targetPos;
@@ -1342,7 +1339,7 @@ public class DynamicTranslationModel<FV> implements TranslationModel<IString,FV>
     // Admissibility check
     for (int i = minTarget; i <= maxTarget; ++i) {
       if ( ! sentencePair.isTargetUnaligned(i)) {
-        int[] srcPositions = sentencePair.e2f(i);
+        Set<Integer> srcPositions = sentencePair.e2f(i);
         for (int sourcePos : srcPositions) {
           if (sourcePos < startSource || sourcePos >= endSource) {
             // Failed check

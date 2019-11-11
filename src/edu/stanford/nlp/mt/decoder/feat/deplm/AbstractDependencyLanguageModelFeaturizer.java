@@ -106,7 +106,7 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
     PhraseAlignment alignment =  f.rule.abstractRule.alignment;
 
     for (int i = 0; i < tgtLength; ++i) {
-      int[] alignments = alignment.t2s(i);
+      Set<Integer> alignments = alignment.t2s(i);
       if (alignments != null) {
         for (int j : alignments) {
           s2t.get(j).add(i);
@@ -279,10 +279,10 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       IString tgtToken = f.targetPhrase.get(i);
       if (tgtToken.length() == 0 || TokenUtils.isPunctuation(tgtToken.toString()))
         continue;
-      if (alignment.t2s(i) == null || alignment.t2s(i).length < 1) {
+      if (alignment.t2s(i) == null || alignment.t2s(i).size() < 1) {
         // Unaligned -- try to attach to the next translated word in the rule
         // Check if there is a next word in the phrase and whether it is aligned
-        if ((i + 1) < targetLength && alignment.t2s(i+1) != null && alignment.t2s(i+1).length > 0) {
+        if ((i + 1) < targetLength && alignment.t2s(i+1) != null && alignment.t2s(i+1).size() > 0) {
           DepLMSubState subState = state.getSubState(i+1);
           if (subState == null)
             subState = state.addSubState(i+1);
@@ -299,8 +299,8 @@ public abstract class AbstractDependencyLanguageModelFeaturizer extends Derivati
       
       Integer sourceHeadIndex = null;
       int sourceDepIndex = -1;
-      for (int j = 0; j < alignment.t2s(i).length; j++) {
-        int srcIndex = alignment.t2s(i)[j] + f.sourcePosition;
+      for (int j = 0; j < alignment.t2s(i).size(); j++) {
+        int srcIndex = (int)alignment.t2s(i).toArray()[j] + f.sourcePosition;
         // Heuristic: choose the leftmost aligned token in the case of multiple alignments
         // TODO: Is this the best/right heuristic?
         if (sourceHeadIndex == null && this.dependent2Head.get(srcIndex) != null) {
