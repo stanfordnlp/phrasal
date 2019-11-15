@@ -125,7 +125,7 @@ public class ParallelCorpus implements Iterable<AlignedSentence>, Serializable {
       }
       if (f2e[srcPos] == null) f2e[srcPos] = new TreeSet<>();
       Arrays.stream(point.substring(splitIdx+1, point.length()).split(","))
-      .mapToInt(tgtStr -> Integer.parseInt(tgtStr)).sorted().forEach(tgtPos -> {
+      .mapToInt(Integer::parseInt).sorted().forEach(tgtPos -> {
         if (tgtPos < 0 || tgtPos >= targetLen) {
           logger.error("Target length: {}  target index: {} alignmentStr: {}", targetLen, tgtPos, alignStr);
           throw new ArrayIndexOutOfBoundsException();
