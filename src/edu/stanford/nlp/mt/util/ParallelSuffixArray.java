@@ -91,7 +91,7 @@ public class ParallelSuffixArray implements Serializable,KryoSerializable {
 
   private static void writeArray(int[] arr, Output output) {
     output.writeInt(arr.length, true);
-    output.writeInts(arr, true);
+    output.writeInts(arr, 0, arr.length, true);
   }
 
   private static void writeSets(Set<Integer>[] sets, Output output) {
