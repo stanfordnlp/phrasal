@@ -6,11 +6,22 @@ Copyright (c) 2007-2016 The Board of Trustees of The Leland Stanford Junior Univ
 
 ## Installation
 
-We use [Gradle](http://gradle.org) to build Phrasal. Gradle will
-install all dependencies.  You need Gradle version 2.1+.
-If you are on OS X, the easiest way to get
-Gradle is to install Homebrew and then to type `brew install gradle`.
+We use [Gradle](http://gradle.org) to build Phrasal. It is installed via
+the gradle wrapper.  You can run `./gradlew` and the wrapper
+will install the correct version.
 
+## Deploying to Nexus
+
+* Configure your `~/.gradle/gradle.properties` to include these fields:
+
+```
+nexusUrl=https://nexus-jx.lilt.com
+nexusUsername=[username]
+nexusPassword=[password]
+```
+* Bump the `version` number in `build.gradle`
+* Run `./gradlew build uploadArchives`.  The artifact will be uploaded as `phrasal` inside the
+  group `com.lilt`, with the specified version.
 
 ### Linux / Mac OS X
 
