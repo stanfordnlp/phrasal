@@ -13,7 +13,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 // Release version
-version = '3.7.0'
+version = '3.7.1-SNAPSHOT'
 
 repositories {
     maven {
