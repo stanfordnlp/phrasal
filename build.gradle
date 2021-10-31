@@ -86,11 +86,7 @@ repositories {
 }
 
 task listDeps {
-  // doLast {
-  //   configurations.compile.each { File file -> println file.name }
-  // }
   doLast {
-    println('doing last')
     configurations.implementation.api.each { File file -> println file.name }
   }
 }
