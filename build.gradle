@@ -27,14 +27,6 @@ jar {
     }
 }
 
-// uploadArchives {
-//     repositories {
-//        flatDir {
-//            dirs 'repos'
-//        }
-//     }
-// }
-
 compileJava {
     //enable compilation in a separate daemon process
     options.fork = true
