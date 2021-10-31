@@ -6,6 +6,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'application'
 apply plugin: 'idea'
+apply plugin: 'maven-publish'
 
 // Gradle java plugin
 sourceCompatibility = 1.8
@@ -24,6 +25,16 @@ jar {
         attributes 'Implementation-Title': 'Stanford Phrasal',
                    'Implementation-Version': version,
 		   'Main-Class': 'edu.stanford.nlp.mt.Phrasal'
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'edu.stanford.nlp.mt'
+            artifactId = 'Phrasal'
+            version = '3.6.0'
+        }
     }
 }
 
