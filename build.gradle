@@ -31,8 +31,8 @@ jar {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'edu.stanford.nlp.mt'
-            artifactId = 'Phrasal'
+            groupId = 'edu.stanford.nlp'
+            artifactId = 'Stanford Phrasal'
             version = '3.6.0'
         }
     }

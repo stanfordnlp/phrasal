@@ -7,7 +7,7 @@ Copyright (c) 2007-2016 The Board of Trustees of The Leland Stanford Junior Univ
 ## Installation
 
 We use [Gradle](http://gradle.org) to build Phrasal. Gradle will
-install all dependencies.  You need Gradle version 2.1+.
+install all dependencies.  You need Gradle version 7.2+.
 If you are on OS X, the easiest way to get
 Gradle is to install Homebrew and then to type `brew install gradle`.
 
@@ -31,7 +31,7 @@ usually the default shell.
 
 ### Windows
 
-Follow the Linux instructions above. Then be sure to execute `gradle startupScripts` to generate a .bat file.
+Follow the Linux instructions above. Then be sure to execute `gradle startScripts` to generate a .bat file.
 
 ## Citation
 
@@ -41,7 +41,7 @@ If you use Phrasal for research, then please cite the following paper:
 @inproceedings{Green2014,
  author = {Spence Green and Daniel Cer and Christopher D. Manning},
  title = {Phrasal: A Toolkit for New Directions in Statistical Machine Translation},
- booktitle = {In Proceddings of the Ninth Workshop on Statistical Machine Translation},
+ booktitle = {In Proceedings of the Ninth Workshop on Statistical Machine Translation},
  year = {2014}
 }
 ```
