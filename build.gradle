@@ -23,7 +23,7 @@ applicationDefaultJvmArgs = ["-ea", "-server", "-XX:+UseParallelGC", "-XX:+UsePa
 jar {
     manifest {
         attributes 'Implementation-Title': 'Stanford Phrasal',
-                   'Implementation-Version': version,
+                   'Implementation-Version': archiveVersion.get(),
 		   'Main-Class': 'edu.stanford.nlp.mt.Phrasal'
     }
 }
@@ -153,11 +153,10 @@ eclipse {
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
     }
     dependencies {
         classpath 'org.owasp:dependency-check-gradle:1.4.2'
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.13.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.11.1'
     }
 }
 apply plugin: 'com.github.ben-manes.versions'
